@@ -11,17 +11,10 @@ const SECURITY_CONFIG = {
   demoDaysLimit: 14, 
 };
 
-const CRYPTO = {
-  encrypt: (str) => btoa(encodeURIComponent(str)),
-  decrypt: (str) => { try { return decodeURIComponent(atob(str)); } catch { return null; } }
-};
-
 const LS = {
   get: (k, d) => {
     try {
-      // جلب البيانات وفك تشفيرها تلقائياً بـ AES عبر ملف المساعدة
       const decryptedData = getAndDecrypt(k);
-      // إذا عثر على بيانات صحيحة أرجعها، وإلا أرجع القيمة الافتراضية d
       return decryptedData !== null ? decryptedData : d;
     } catch { 
       return d; 
@@ -29,7 +22,6 @@ const LS = {
   },
   set: (k, v) => { 
     try { 
-      // تشفير البيانات وحفظها بـ AES تلقائياً
       encryptAndSave(k, v);
     } catch {} 
   }
@@ -225,7 +217,6 @@ const Students = ({ students, setStudents }) => {
     setModal(null);
   };
 
-  // 📥 دالة تصدير بيانات الطلاب المحدثة
   const exportToExcel = (filterType = "all") => {
     const dataToExport = filterType === "paid" ? students.filter(s => s.paid) : students;
     if (dataToExport.length === 0) { alert("لا توجد بيانات للتصدير!"); return; }
@@ -300,7 +291,6 @@ const Attendance = ({ students, attendance, setAttendance }) => {
     });
   };
 
-  // 📊 دالة تصدير التقرير الشهري الشامل لجميع الحضور
   const exportMonthlyReport = () => {
     const allDates = [...new Set(attendance.map(a => a.date))].sort();
     if (allDates.length === 0) { alert("لا توجد سجلات حضور لتصديرها!"); return; }
@@ -310,7 +300,7 @@ const Attendance = ({ students, attendance, setAttendance }) => {
       allDates.forEach(date => {
         const dayRecord = attendance.find(a => a.date === date);
         if (dayRecord) {
-          if (dayRecord.present.includes(student.id)) studentRow.push("حاضر");
+          if (dayRecord.present.includes(student.id)) studentRow.push("حاضer");
           else if (dayRecord.absent.includes(student.id)) studentRow.push("غائب");
           else studentRow.push("—");
         } else { studentRow.push("—"); }
@@ -325,7 +315,6 @@ const Attendance = ({ students, attendance, setAttendance }) => {
     link.click();
   };
 
-  // 📋 دالة تصدير حضور طالب فردي
   const exportStudentAttendance = (studentId, studentName) => {
     const studentAttendance = attendance
       .filter(a => a.present.includes(studentId))
@@ -475,54 +464,25 @@ export default function App() {
     { id: "reminders", label: "🤖 شات بوت iBots" }
   ];
 
+  // دالة عرض الصفحة المحددة ديناميكياً بناءً على قيمة الـ state (page)
+  const renderPage = () => {
+    switch (page) {
+      case "dashboard": return <Dashboard students={students} payments={payments} teacher={teacher} />;
+      case "students": return <Students students={students} setStudents={setStudents} />;
+      case "attendance": return <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />;
+      case "payments": return <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />;
+      case "reminders": return <Reminders teacher={teacher} />;
+      default: return <Dashboard students={students} payments={payments} teacher={teacher} />;
+    }
+  };
+
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", display:"flex", flexDirection:"column", direction:"rtl", boxSizing:"border-box" }}>
       
       {/* Top Navbar */}
       <div style={{ height:60, background:C.surface, borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", zIndex:1000 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"transparent", border:"none", color:C.gold, fontSize:22, cursor:"pointer", display:"block" }} className="menu-toggle-btn">☰</button>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"transparent", border:"none", color:C.gold, fontSize:22, cursor:"pointer" }}>☰</button>
           <h3 style={{ color:C.gold, fontWeight:900, fontSize:"1.1rem", margin:0 }}>🕌 الحلقة الذكية</h3>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <Badge color={C.amber}>⌛ {getDaysLeft()} يوم</Badge>
-          <Badge color={C.green}>{students.length}/5 طلاب</Badge>
-        </div>
-      </div>
-
-      <div style={{ flex:1, display:"flex", position:"relative" }}>
-        {/* Sidebar */}
-        <div style={{ 
-          width: 230, background: C.surface, borderLeft: `1px solid ${C.border}`, padding: 12, 
-          display: menuOpen ? "flex" : "none", flexDirection: "column", gap: 4,
-          position: "absolute", right: 0, top: 0, bottom: 0, zIndex: 999, height:"100%"
-        }} className="responsive-sidebar">
-          {navItems.map(item => (
-            <button key={item.id} onClick={() => { setPage(item.id); setMenuOpen(false); }} style={{ width:"100%", padding:"10px 12px", background:page===item.id?"rgba(201,168,76,0.1)":"transparent", color:page===item.id?C.gold:C.text, border:"none", borderRadius:8, textAlign:"right", cursor:"pointer", fontFamily:"'Cairo'", fontWeight:600, fontSize:"0.82rem" }}>{item.label}</button>
-          ))}
-          <button onClick={() => setIsLogged(false)} style={{ marginTop:"auto", background:"transparent", border:`1px solid ${C.red}30`, color:C.red, padding:6, borderRadius:8, cursor:"pointer", fontFamily:"'Cairo'", fontSize:"0.75rem" }}>تسجيل الخروج</button>
-          <div style={{ fontSize:"0.65rem", color:C.muted, textAlign:"center", marginTop:10 }}>{SECURITY_CONFIG.watermark}</div>
-        </div>
-
-        {/* Workspace */}
-        <div style={{ flex:1, padding:16, boxSizing:"border-box", width:"100%", overflowX:"hidden" }}>
-          {page === "dashboard" && <Dashboard students={students} payments={payments} teacher={teacher} />}
-          {page === "students" && <Students students={students} setStudents={setStudents} />}
-          {page === "attendance" && <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />}
-          {page === "payments" && <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />}
-          {page === "reminders" && <Reminders teacher={teacher} />}
-        </div>
-      </div>
-
-      <style>{`
-        @media (min-width: 769px) {
-          .responsive-sidebar { display: flex !important; position: static !important; height: auto !important; }
-          .menu-toggle-btn { display: none !important; }
-        }
-        @media (max-width: 768px) {
-          .responsive-sidebar { width: 100% !important; max-width: 240px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
-        }
-      `}</style>
-    </div>
-  );
-}
+        <div style={{ display:"flex", alignItems:"
