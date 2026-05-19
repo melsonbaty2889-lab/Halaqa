@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 // ═══════════════════════════════════════════════
 const SECURITY_CONFIG = {
   allowedHost: window.location.hostname,
-  watermark: "Licensed to The Win Route / Business Online Egypt © 2026",
+  watermark: "Licensed to The Win Route © 2026",
   demoDaysLimit: 14, // صلاحية الفترة التجريبية 14 يوم
 };
 
