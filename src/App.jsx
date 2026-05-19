@@ -417,4 +417,103 @@ const Reminders = ({ teacher }) => {
         </div>
       </Card>
       <Card style={{ minHeight:340, display:"flex", flexDirection:"column" }}>
-        <div style={{ flex:1, background:"#080F18", borderRadius
+        <div style={{ flex:1, background:"#080F18", borderRadius:12, padding:12, display:"flex", flexDirection:"column", overflowY:"auto" }}>
+          <div style={{ background:C.card, padding:10, borderRadius:"10px 10px 0 10px", maxWidth:"85%", fontSize:"0.8rem", whiteSpace:"pre-line", lineHeight:1.4, marginBottom:10 }}>{currentBot.msg}</div>
+          {currentBot.options.map((o, i) => o.link && (
+            <a key={i} href={o.next==="paid_confirm"?`https://wa.me/2${teacher.phone}`:teacher.systemeLink} target="_blank" rel="noreferrer" style={{ background:g.gold, color:"#111", padding:"6px 12px", borderRadius:8, fontSize:"0.75rem", fontWeight:700, textDecoration:"none", alignSelf:"flex-start", marginBottom:8 }}>{o.label}</a>
+          ))}
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:8 }}>
+          {currentBot.options.map((o, i) => !o.link && <button key={i} onClick={() => setBotState(o.next)} style={{ background:C.surface, border:`1px solid ${C.gold}20`, color:C.gold, padding:8, borderRadius:8, fontFamily:"'Cairo'", fontSize:"0.78rem", cursor:"pointer", textAlign:"right" }}>🔹 {o.label}</button>)}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════
+// MAIN COMPONENT WRAPPER (RESPONSIVE LAYOUT)
+// ═══════════════════════════════════════════════
+export default function App() {
+  const [isLogged, setIsLogged] = useState(false); const [page, setPage] = useState("dashboard");
+  const [students, setStudents] = useState(() => LS.get("halqa_v_students", SAMPLE_STUDENTS));
+  const [payments, setPayments] = useState(() => LS.get("halqa_v_payments", SAMPLE_PAYMENTS));
+  const [attendance, setAttendance] = useState(() => LS.get("halqa_v_attendance", SAMPLE_ATTENDANCE));
+  const [menuOpen, setMenuOpen] = useState(false);
+  const teacher = DEMO_TEACHER;
+
+  const isPirated = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== SECURITY_CONFIG.allowedHost;
+  const [installDate, setInstallDate] = useState(() => LS.get("halqa_security_init", null));
+  
+  useEffect(() => { if (!installDate) { const d = new Date().toISOString().split("T")[0]; LS.set("halqa_security_init", d); setInstallDate(d); } }, [installDate]);
+  useEffect(() => { LS.set("halqa_v_students", students); }, [students]);
+  useEffect(() => { LS.set("halqa_v_payments", payments); }, [payments]);
+  useEffect(() => { LS.set("halqa_v_attendance", attendance); }, [attendance]);
+
+  const getDaysLeft = () => {
+    if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
+    const diff = Math.abs(new Date() - new Date(installDate));
+    return Math.max(0, SECURITY_CONFIG.demoDaysLimit - Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  };
+
+  if (isPirated) return <div style={{ background:"#050A10", color:C.red, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl" }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>🚫 خطأ في ترخيص النظام</h2></Card></div>;
+  if (getDaysLeft() <= 0) return <div style={{ background:C.bg, color:C.text, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl", padding:16 }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>⏳ انتهت صلاحية الديمو</h2><Btn onClick={() => window.open(teacher.systemeLink)} style={{ width:"100%", marginTop:12 }}>🚀 ترقية الحساب الآن</Btn></Card></div>;
+  if (!isLogged) return <LoginPage onLogin={() => setIsLogged(true)} />;
+
+  const navItems = [
+    { id: "dashboard", label: "📊 لوحة التحكم" }, { id: "students", label: "👨‍🎓 دليل الطلاب" },
+    { id: "attendance", label: "📅 كشف الحضور" }, { id: "payments", label: "💰 الحسابات والمحافظ" },
+    { id: "reminders", label: "🤖 شات بوت iBots" }
+  ];
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", display:"flex", flexDirection:"column", direction:"rtl", boxSizing:"border-box" }}>
+      
+      {/* Top Navbar */}
+      <div style={{ height:60, background:C.surface, borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", zIndex:1000 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"transparent", border:"none", color:C.gold, fontSize:22, cursor:"pointer", display:"block" }} className="menu-toggle-btn">☰</button>
+          <h3 style={{ color:C.gold, fontWeight:900, fontSize:"1.1rem", margin:0 }}>🕌 الحلقة الذكية</h3>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <Badge color={C.amber}>⌛ {getDaysLeft()} يوم</Badge>
+          <Badge color={C.green}>{students.length}/5 طلاب</Badge>
+        </div>
+      </div>
+
+      <div style={{ flex:1, display:"flex", position:"relative" }}>
+        {/* Sidebar */}
+        <div style={{ 
+          width: 230, background: C.surface, borderLeft: `1px solid ${C.border}`, padding: 12, 
+          display: menuOpen ? "flex" : "none", flexDirection: "column", gap: 4,
+          position: "absolute", right: 0, top: 0, bottom: 0, zIndex: 999, height:"100%"
+        }} className="responsive-sidebar">
+          {navItems.map(item => (
+            <button key={item.id} onClick={() => { setPage(item.id); setMenuOpen(false); }} style={{ width:"100%", padding:"10px 12px", background:page===item.id?"rgba(201,168,76,0.1)":"transparent", color:page===item.id?C.gold:C.text, border:"none", borderRadius:8, textAlign:"right", cursor:"pointer", fontFamily:"'Cairo'", fontWeight:600, fontSize:"0.82rem" }}>{item.label}</button>
+          ))}
+          <button onClick={() => setIsLogged(false)} style={{ marginTop:"auto", background:"transparent", border:`1px solid ${C.red}30`, color:C.red, padding:6, borderRadius:8, cursor:"pointer", fontFamily:"'Cairo'", fontSize:"0.75rem" }}>تسجيل الخروج</button>
+          <div style={{ fontSize:"0.65rem", color:C.muted, textAlign:"center", marginTop:10 }}>{SECURITY_CONFIG.watermark}</div>
+        </div>
+
+        {/* Workspace */}
+        <div style={{ flex:1, padding:16, boxSizing:"border-box", width:"100%", overflowX:"hidden" }}>
+          {page === "dashboard" && <Dashboard students={students} payments={payments} teacher={teacher} />}
+          {page === "students" && <Students students={students} setStudents={setStudents} />}
+          {page === "attendance" && <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />}
+          {page === "payments" && <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />}
+          {page === "reminders" && <Reminders teacher={teacher} />}
+        </div>
+      </div>
+
+      <style>{`
+        @media (min-width: 769px) {
+          .responsive-sidebar { display: flex !important; position: static !important; height: auto !important; }
+          .menu-toggle-btn { display: none !important; }
+        }
+        @media (max-width: 768px) {
+          .responsive-sidebar { width: 100% !important; max-width: 240px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        }
+      `}</style>
+    </div>
+  );
+}
