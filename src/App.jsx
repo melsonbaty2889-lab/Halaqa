@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+// 1. استيراد دالات التشفير وفك التشفير الآمنة من ملف securityUtils
+import { encryptAndSave, getAndDecrypt } from "./securityUtils";
 
 // ═══════════════════════════════════════════════
 // 🔒 SECURITY & STORAGE (تأمين النسخة التجريبية وحفظ البيانات)
@@ -17,13 +19,20 @@ const CRYPTO = {
 const LS = {
   get: (k, d) => {
     try {
-      const enc = localStorage.getItem(k);
-      if (!enc) return d;
-      const dec = CRYPTO.decrypt(enc);
-      return dec ? JSON.parse(dec) : d;
-    } catch { return d; }
+      // جلب البيانات وفك تشفيرها تلقائياً بـ AES عبر ملف المساعدة
+      const decryptedData = getAndDecrypt(k);
+      // إذا عثر على بيانات صحيحة أرجعها، وإلا أرجع القيمة الافتراضية d
+      return decryptedData !== null ? decryptedData : d;
+    } catch { 
+      return d; 
+    }
   },
-  set: (k, v) => { try { localStorage.setItem(k, CRYPTO.encrypt(JSON.stringify(v))); } catch{} }
+  set: (k, v) => { 
+    try { 
+      // تشفير البيانات وحفظها بـ AES تلقائياً
+      encryptAndSave(k, v);
+    } catch {} 
+  }
 };
 
 // ═══════════════════════════════════════════════
