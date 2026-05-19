@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ═══════════════════════════════════════════════
-// STORAGE
+// STORAGE (إدارة البيانات المحلية)
 // ═══════════════════════════════════════════════
 const LS = {
   get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
@@ -9,7 +9,7 @@ const LS = {
 };
 
 // ═══════════════════════════════════════════════
-// SAMPLE DATA
+// SAMPLE DATA (البيانات التجريبية الافتراضية)
 // ═══════════════════════════════════════════════
 const DEMO_TEACHER = {
   name: "الشيخ أحمد محمود",
@@ -90,7 +90,7 @@ const BOT_FLOWS = {
 };
 
 // ═══════════════════════════════════════════════
-// DESIGN TOKENS
+// DESIGN TOKENS (ألوان وهوية النظام)
 // ═══════════════════════════════════════════════
 const C = {
   bg: "#0C1520",
@@ -114,7 +114,7 @@ const g = {
 };
 
 // ═══════════════════════════════════════════════
-// REUSABLE COMPONENTS
+// REUSABLE COMPONENTS (العناصر المشتركة)
 // ═══════════════════════════════════════════════
 const Badge = ({ children, color = C.green }) => (
   <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, fontSize:"0.72rem", fontWeight:700, background:`${color}1A`, color, border:`1px solid ${color}33` }}>
@@ -191,7 +191,7 @@ const TH = ({ children }) => <th style={{ padding:"10px 14px", textAlign:"right"
 const TD = ({ children, style={} }) => <td style={{ padding:"12px 14px", fontSize:"0.84rem", borderBottom:`1px solid rgba(255,255,255,0.04)`, color:C.text, ...style }}>{children}</td>;
 
 // ═══════════════════════════════════════════════
-// LOGIN PAGE
+// LOGIN PAGE (صفحة تسجيل الدخول)
 // ═══════════════════════════════════════════════
 const LoginPage = ({ onLogin }) => {
   const [user, setUser] = useState("");
@@ -214,11 +214,9 @@ const LoginPage = ({ onLogin }) => {
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo',sans-serif", direction:"rtl", padding:20 }}>
-      {/* BG pattern */}
       <div style={{ position:"fixed", inset:0, backgroundImage:"radial-gradient(ellipse 70% 50% at 50% 0%,rgba(201,168,76,0.08) 0%,transparent 70%)", pointerEvents:"none" }} />
 
       <div style={{ width:"100%", maxWidth:400, position:"relative" }}>
-        {/* Logo */}
         <div style={{ textAlign:"center", marginBottom:36 }}>
           <div style={{ width:72, height:72, background:g.gold, borderRadius:22, display:"flex", alignItems:"center", justifyContent:"center", fontSize:34, margin:"0 auto 16px", boxShadow:"0 8px 32px rgba(201,168,76,0.35)" }}>🕌</div>
           <h1 style={{ fontSize:"1.6rem", fontWeight:800, color:C.gold, marginBottom:4 }}>الحلقة الذكية</h1>
@@ -251,7 +249,7 @@ const LoginPage = ({ onLogin }) => {
 };
 
 // ═══════════════════════════════════════════════
-// DASHBOARD
+// DASHBOARD (لوحة التحكم الرئيسية)
 // ═══════════════════════════════════════════════
 const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
   const total = students.length;
@@ -276,7 +274,6 @@ const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
         <p style={{ fontSize:"0.82rem", color:C.muted, marginTop:3 }}>ملخص حلقتك — مايو ٢٠٢٥</p>
       </div>
 
-      {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))", gap:14, marginBottom:20 }}>
         {stats.map((s,i) => (
           <div key={i} style={{ background:C.card, border:`1px solid ${s.color}22`, borderRadius:16, padding:"18px 20px", position:"relative", overflow:"hidden" }}>
@@ -290,7 +287,6 @@ const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-        {/* Last attendance */}
         <Card>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
             <h3 style={{ fontSize:"0.9rem", fontWeight:700 }}>📋 آخر جلسة</h3>
@@ -307,9 +303,7 @@ const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
           ))}
         </Card>
 
-        {/* Right column */}
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-          {/* Top memorizers */}
           <Card>
             <h3 style={{ fontSize:"0.9rem", fontWeight:700, marginBottom:14 }}>🏆 أفضل الحفاظ</h3>
             {top.map((s,i) => (
@@ -324,7 +318,6 @@ const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
             ))}
           </Card>
 
-          {/* Unpaid alert */}
           {unpaid.length > 0 && (
             <div style={{ background:`${C.amber}0A`, border:`1px solid ${C.amber}25`, borderRadius:14, padding:16 }}>
               <div style={{ fontSize:"0.82rem", color:C.amber, fontWeight:700, marginBottom:10 }}>⚠️ لم يسددوا رسوم مايو</div>
@@ -342,7 +335,6 @@ const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
         </div>
       </div>
 
-      {/* Quick actions */}
       <Card style={{ marginTop:16 }}>
         <h3 style={{ fontSize:"0.9rem", fontWeight:700, marginBottom:14 }}>⚡ إجراءات سريعة</h3>
         <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
@@ -357,7 +349,10 @@ const Dashboard = ({ students, payments, attendance, teacher, setPage }) => {
 };
 
 // ═══════════════════════════════════════════════
-// STUDENTS
+// STUDENTS (إدارة شؤون الطلاب وبيانات الحفظ)
+// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// STUDENTS (نسخة محددة بـ 5 طلاب للـ Demo)
 // ═══════════════════════════════════════════════
 const Students = ({ students, setStudents }) => {
   const [search, setSearch] = useState("");
@@ -372,6 +367,14 @@ const Students = ({ students, setStudents }) => {
 
   const doSave = () => {
     if (!form.name || !form.phone) return;
+    
+    // 🔒 قفل النسخة التجريبية: يمنع إضافة أكثر من 5 طلاب
+    if (modal === "add" && students.length >= 5) {
+      alert("⚠️ عذراً، هذه نسخة تجريبية وتسمح بإضافة حتى 5 طلاب فقط لمعاينة النظام.\n\nللحصول على نسخة مخصصة لمركزك تستوعب عدداً غير محدود من الطلاب مع حفظ سحابي آمن للبيانات، يرجى التواصل معنا للاشتراك.");
+      setModal(null);
+      return;
+    }
+
     if (modal === "add") {
       setStudents(p => [...p, { id:Date.now(), ...form, age:+form.age||0, memorized:+form.memorized||0, joined:new Date().toISOString().split("T")[0], paid:false, paidDate:null, attendance:100 }]);
     } else {
@@ -447,7 +450,7 @@ const Students = ({ students, setStudents }) => {
 };
 
 // ═══════════════════════════════════════════════
-// PAYMENTS
+// PAYMENTS (إدارة الحسابات والاشتراكات)
 // ═══════════════════════════════════════════════
 const Payments = ({ students, payments, setPayments, setStudents, teacher }) => {
   const [modal, setModal] = useState(false);
@@ -519,7 +522,7 @@ const Payments = ({ students, payments, setPayments, setStudents, teacher }) => 
       <Modal open={modal} onClose={() => setModal(false)} title="تسجيل دفعة جديدة">
         <Select label="الطالب" value={form.studentId} onChange={e => setForm(p => ({ ...p, studentId:e.target.value }))} options={[{ value:"", label:"اختر الطالب..." }, ...students.map(s => ({ value:s.id, label:s.name }))]} />
         <Input label="المبلغ (ج.م)" value={form.amount} onChange={e => setForm(p => ({ ...p, amount:e.target.value }))} type="number" />
-        <Input label="الشهر" value={form.month} onChange={e => setForm(p => ({ ...p, month:form.month }))} />
+        <Input label="الشهر" value={form.month} onChange={e => setForm(p => ({ ...p, month:e.target.value }))} />
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
           <Btn variant="ghost" onClick={() => setModal(false)}>إلغاء</Btn>
           <Btn onClick={doSave} disabled={!form.studentId}>✓ تأكيد الدفع</Btn>
@@ -530,7 +533,7 @@ const Payments = ({ students, payments, setPayments, setStudents, teacher }) => 
 };
 
 // ═══════════════════════════════════════════════
-// ATTENDANCE
+// ATTENDANCE (دفتر الحضور والغياب الإلكتروني)
 // ═══════════════════════════════════════════════
 const Attendance = ({ students, attendance, setAttendance }) => {
   const [selected, setSelected] = useState(new Set(students.map(s => s.id)));
@@ -603,7 +606,7 @@ const Attendance = ({ students, attendance, setAttendance }) => {
 };
 
 // ═══════════════════════════════════════════════
-// REMINDERS & CHATBOT
+// REMINDERS & CHATBOT (نظام الرسائل والدردشة المؤتمتة)
 // ═══════════════════════════════════════════════
 const Reminders = ({ students, teacher }) => {
   const [botState, setBotState] = useState("start");
@@ -612,7 +615,7 @@ const Reminders = ({ students, teacher }) => {
   const sendAllUnpaid = () => {
     const unpaid = students.filter(s => !s.paid);
     if (unpaid.length === 0) return alert("كل الطلاب قاموا بالسداد! 🎉");
-    if (confirm(`هل تود فتح رابط تذكير لـ ${unpaid.length} طلاب عبر الواتساب؟`)) {
+    if (confirm(`هل تود فتح روابط تذكير لـ ${unpaid.length} طلاب عبر الواتساب؟`)) {
       unpaid.forEach((s, idx) => {
         setTimeout(() => {
           const msg = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته، نذكركم بلطف بسداد رسوم حلقة التحفيظ لشهر مايو بقيمة ${teacher.fee} ج.م. جزاكم الله خيراً 🌙`);
@@ -624,7 +627,6 @@ const Reminders = ({ students, teacher }) => {
 
   return (
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, alignItems:"start" }}>
-      {/* Notifications Management */}
       <Card>
         <PageHeader title="نظام التذكيرات الآلي" sub="أرسل رسائل المتابعة والتذكير بنقرة واحدة" />
         <p style={{ fontSize:"0.82rem", color:C.text, marginBottom:16, lineHeight:1.5 }}>
@@ -648,20 +650,17 @@ const Reminders = ({ students, teacher }) => {
         </div>
       </Card>
 
-      {/* Chatbot Preview */}
       <Card style={{ display:"flex", flexDirection:"column", minHeight:400 }}>
         <div style={{ borderBottom:`1px solid ${C.border}`, paddingBottom:12, marginBottom:14 }}>
           <Badge color={C.purple}>🤖 محاكاة شات بوت iBots</Badge>
           <h3 style={{ fontSize:"0.95rem", fontWeight:700, color:C.text, marginTop:5 }}>شاشة العميل (واتساب)</h3>
         </div>
 
-        {/* Chat Box Bubble */}
         <div style={{ flex:1, background:"#080F18", borderRadius:12, padding:14, marginBottom:14, display:"flex", flexDirection:"column", justifyContent:"flex-start" }}>
           <div style={{ background:C.card, border:`1px solid ${C.border}`, padding:"10px 14px", borderRadius:"12px 12px 0 12px", maxWidth:"85%", alignSelf:"flex-start", marginBottom:12, whiteSpace:"pre-line", fontSize:"0.82rem", color:C.text, lineHeight:1.5 }}>
             {currentBot.msg}
           </div>
 
-          {/* Render Link option inside message block if any */}
           {currentBot.options.map((o, i) => o.link && (
             <a key={i} href={o.next === "registered" ? teacher.systemeLink : "#"} target="_blank" rel="noreferrer" style={{ display:"inline-block", background:g.gold, color:"#111", padding:"8px 12px", borderRadius:8, fontSize:"0.78rem", fontWeight:700, textDecoration:"none", alignSelf:"flex-start", marginBottom:10 }}>
               {o.label}
@@ -669,7 +668,6 @@ const Reminders = ({ students, teacher }) => {
           ))}
         </div>
 
-        {/* User choices buttons */}
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
           {currentBot.options.map((o, i) => !o.link && (
             <button key={i} onClick={() => setBotState(o.next)} style={{ width:"100%", background:C.surface, border:`1px solid ${C.gold}40`, color:C.gold, padding:"8px", borderRadius:8, fontFamily:"'Cairo',sans-serif", fontSize:"0.8rem", cursor:"pointer", textAlign:"right", paddingRight:14, transition:"background 0.2s" }}>
@@ -683,7 +681,7 @@ const Reminders = ({ students, teacher }) => {
 };
 
 // ═══════════════════════════════════════════════
-// REPORTS
+// REPORTS (التقارير والإحصائيات العامة)
 // ═══════════════════════════════════════════════
 const Reports = ({ students, payments }) => {
   const totalStudents = students.length;
@@ -705,7 +703,7 @@ const Reports = ({ students, payments }) => {
             </div>
             <div style={{ display:"flex", justifyContent:"space-between" }}>
               <span>نسبة السداد الشهرية:</span>
-              <span style={{ color:C.blue, fontWeight:700 }}>{Math.round((paidStudents/totalStudents)*100)}%</span>
+              <span style={{ color:C.blue, fontWeight:700 }}>{totalStudents ? Math.round((paidStudents / totalStudents) * 100) : 0}%</span>
             </div>
             <div style={{ display:"flex", justifyContent:"space-between" }}>
               <span>المبالغ المتبقية في ذمة أولياء الأمور:</span>
@@ -719,11 +717,11 @@ const Reports = ({ students, payments }) => {
           <div style={{ display:"flex", flexDirection:"column", gap:8, fontSize:"0.84rem" }}>
             <div style={{ display:"flex", justifyContent:"space-between" }}>
               <span>متوسط عدد الصفحات المحفوظة للطلاب:</span>
-              <span style={{ color:C.gold, fontWeight:700 }}>{Math.round(students.reduce((a,b)=>a+b.memorized, 0)/totalStudents)} صفحة</span>
+              <span style={{ color:C.gold, fontWeight:700 }}>{totalStudents ? Math.round(students.reduce((a,b)=>a+b.memorized, 0)/totalStudents) : 0} صفحة</span>
             </div>
             <div style={{ display:"flex", justifyContent:"space-between" }}>
               <span>نسبة الحضور العام للحلقة:</span>
-              <span style={{ color:C.green, fontWeight:700 }}>{Math.round(students.reduce((a,b)=>a+b.attendance, 0)/totalStudents)}%</span>
+              <span style={{ color:C.green, fontWeight:700 }}>{totalStudents ? Math.round(students.reduce((a,b)=>a+b.attendance, 0)/totalStudents) : 0}%</span>
             </div>
           </div>
         </Card>
@@ -733,14 +731,13 @@ const Reports = ({ students, payments }) => {
 };
 
 // ═══════════════════════════════════════════════
-// MAIN APPLICATION WRAPPER
+// MAIN APPLICATION WRAPPER (الحاوية والموجّه الرئيسي)
 // ═══════════════════════════════════════════════
 export default function App() {
   const [isLogged, setIsLogged] = useState(() => LS.get("halqa_logged", false));
   const [page, setPage] = useState("dashboard");
   const [sideOpen, setSideOpen] = useState(true);
 
-  // States with LocalStorage synchronization
   const [teacher, setTeacher] = useState(() => LS.get("halqa_teacher", DEMO_TEACHER));
   const [students, setStudents] = useState(() => LS.get("halqa_students", SAMPLE_STUDENTS));
   const [payments, setPayments] = useState(() => LS.get("halqa_payments", SAMPLE_PAYMENTS));
@@ -769,14 +766,13 @@ export default function App() {
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", display:"flex", direction:"rtl" }}>
-      {/* Sidebar */}
+      {/* القائمة الجانبية Sidebar */}
       <div style={{ width:sideOpen?240:0, background:C.surface, borderLeft:`1px solid ${C.border}`, display:"flex", flexDirection:"column", overflow:"hidden", transition:"width 0.2s ease", flexShrink:0 }}>
         <div style={{ height:58, borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", padding:"0 18px", gap:10, flexShrink:0 }}>
           <span style={{ fontSize:22 }}>🕌</span>
           <span style={{ fontWeight:800, fontSize:"0.95rem", color:C.gold, whiteSpace:"nowrap" }}>الحلقة الذكية v1.0</span>
         </div>
 
-        {/* Navigation Items */}
         <div style={{ flex:1, padding:"14px 10px", display:"flex", flexDirection:"column", gap:4 }}>
           {NAV.map(n => {
             const active = page === n.id;
@@ -789,7 +785,6 @@ export default function App() {
           })}
         </div>
 
-        {/* Logged Teacher Info Profile */}
         {sideOpen && (
           <div style={{ padding:14, borderTop:`1px solid ${C.border}`, background:"rgba(0,0,0,0.12)" }}>
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -803,9 +798,9 @@ export default function App() {
         )}
       </div>
 
-      {/* Main View Container */}
+      {/* منطقة العمل الرئيسية Main Content */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-        {/* Topbar */}
+        {/* الشريط العلوي Topbar */}
         <div style={{ height:58, background:"#080F18", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", padding:"0 22px", gap:14, flexShrink:0 }}>
           <button onClick={() => setSideOpen(p => !p)} style={{ background:"none", border:"none", color:C.gold, fontSize:20, cursor:"pointer", padding:4 }}>☰</button>
           <span style={{ fontSize:"0.84rem", color:C.muted }}>{NAV.find(n => n.id===page)?.label}</span>
@@ -816,7 +811,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Workspace Pages Body Router */}
+        {/* موجه عرض الصفحات Workspace Page Router */}
         <div style={{ flex:1, overflowY:"auto", padding:"24px 28px" }}>
           {page === "dashboard" && <Dashboard students={students} payments={payments} attendance={attendance} teacher={teacher} setPage={setPage} />}
           {page === "students" && <Students students={students} setStudents={setStudents} />}
