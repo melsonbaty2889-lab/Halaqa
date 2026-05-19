@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 // 🔒 SECURITY & STORAGE (تأمين النسخة التجريبية وحفظ البيانات)
 // ═══════════════════════════════════════════════
 const SECURITY_CONFIG = {
-  allowedHost: window.location.hostname,
+  allowedHost: "smart-halaqa.vercel.app",
   watermark: "Licensed to The Win Route © 2026",
   demoDaysLimit: 14, // صلاحية الفترة التجريبية 14 يوم
 };
