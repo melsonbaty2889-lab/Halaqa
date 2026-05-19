@@ -1,10 +1,10 @@
-Import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 // ═══════════════════════════════════════════════
 // 🔒 SECURITY & STORAGE (تأمين النسخة التجريبية وحفظ البيانات)
 // ═══════════════════════════════════════════════
 const SECURITY_CONFIG = {
-  allowedHost: "smart-halaqa.vercel.app", // تم ربط الدومين الخاص بك مباشرة هنا
+  allowedHost: "smart-halaqa.vercel.app",
   watermark: "Licensed to The Win Route © 2026",
   demoDaysLimit: 14, 
 };
@@ -100,7 +100,7 @@ const Input = ({ label, value, onChange, type="text", placeholder="", as="input"
   <div style={{ marginBottom:12, width:"100%", boxSizing:"border-box" }}>
     {label && <label style={{ fontSize:"0.75rem", color:C.muted, marginBottom:5, display:"block", fontWeight:600 }}>{label}</label>}
     {as === "textarea"
-      ? <textarea value={value} onChange={onChange} placeholder={placeholder} style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px", color:C.text, fontFamily:"'Cairo',sans-serif", fontSize:"0.85rem", outline:"none", resize:"vertical", minHeight:60, boxSizing:"border-box" }} /=>
+      ? <textarea value={value} onChange={onChange} placeholder={placeholder} style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px", color:C.text, fontFamily:"'Cairo',sans-serif", fontSize:"0.85rem", outline:"none", resize:"vertical", minHeight:60, boxSizing:"border-box" }} />
       : <input type={type} value={value} onChange={onChange} placeholder={placeholder} style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 14px", color:C.text, fontFamily:"'Cairo',sans-serif", fontSize:"0.85rem", outline:"none", boxSizing:"border-box" }} />
     }
   </div>
@@ -136,7 +136,7 @@ const PageHeader = ({ title, sub, action }) => (
       <h2 style={{ fontSize:"1.2rem", fontWeight:800, color:C.gold }}>{title}</h2>
       {sub && <p style={{ fontSize:"0.78rem", color:C.muted, marginTop:2 }}>{sub}</p>}
     </div>
-    {action}
+    <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{action}</div>
   </div>
 );
 
@@ -162,7 +162,7 @@ const LoginPage = ({ onLogin }) => {
   );
 };
 
-const Dashboard = ({ students, payments, teacher, setPage }) => {
+const Dashboard = ({ students, payments, teacher }) => {
   const total = students.length; const paid = students.filter(s => s.paid).length;
   const monthRev = payments.reduce((a, p) => a + p.amount, 0);
   return (
@@ -216,9 +216,35 @@ const Students = ({ students, setStudents }) => {
     setModal(null);
   };
 
+  // 📥 دالة تصدير بيانات الطلاب المحدثة
+  const exportToExcel = (filterType = "all") => {
+    const dataToExport = filterType === "paid" ? students.filter(s => s.paid) : students;
+    if (dataToExport.length === 0) { alert("لا توجد بيانات للتصدير!"); return; }
+    const headers = ["اسم الطالب", "ولي الأمر", "الهاتف", "العمر", "السورة", "الحفظ", "الحالة"];
+    const csvContent = [
+      headers.join(","),
+      ...dataToExport.map(s => [`"${s.name}"`, `"${s.parent}"`, `"${s.phone}"`, s.age, `"${s.surah}"`, s.memorized, s.paid ? "مسدد" : "معلق"].join(","))
+    ].join("\n");
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Students_${filterType}_${new Date().toLocaleDateString('ar-EG')}.csv`;
+    link.click();
+  };
+
   return (
     <div>
-      <PageHeader title="دليل الطلاب والتحفيظ" sub={`إدارة شؤون الطلاب الحاليين (${students.length}/5)`} action={<Btn onClick={() => { if(students.length>=5){alert("⚠️ تجاوزت الحد!");return;} setForm(empty); setModal("add"); }}>＋ إضافة طالب</Btn>} />
+      <PageHeader 
+        title="دليل الطلاب والتحفيظ" 
+        sub={`إدارة شؤون الطلاب الحاليين (${students.length}/5)`} 
+        action={
+          <>
+            <Btn variant="secondary" onClick={() => exportToExcel("all")} style={{ fontSize: "0.75rem" }}>📥 تصدير الكل</Btn>
+            <Btn variant="secondary" onClick={() => exportToExcel("paid")} style={{ fontSize: "0.75rem" }}>💰 المسددون</Btn>
+            <Btn onClick={() => { if(students.length>=5){alert("⚠️ تجاوزت الحد!");return;} setForm(empty); setModal("add"); }}>＋ إضافة طالب</Btn>
+          </>
+        } 
+      />
       <Card style={{ marginBottom:14, padding:"8px 16px" }}><input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 ابحث باسم الطالب أو ولي الأمر..." style={{ width:"100%", background:"transparent", border:"none", color:C.text, fontFamily:"'Cairo'", fontSize:"0.82rem", outline:"none" }} /></Card>
       <Card style={{ overflowX:"auto" }}>
         <table style={{ width:"100%", borderCollapse:"collapse" }}>
@@ -265,16 +291,68 @@ const Attendance = ({ students, attendance, setAttendance }) => {
     });
   };
 
+  // 📊 دالة تصدير التقرير الشهري الشامل لجميع الحضور
+  const exportMonthlyReport = () => {
+    const allDates = [...new Set(attendance.map(a => a.date))].sort();
+    if (allDates.length === 0) { alert("لا توجد سجلات حضور لتصديرها!"); return; }
+    const headers = ["اسم الطالب", ...allDates];
+    const rows = students.map(student => {
+      const studentRow = [student.name];
+      allDates.forEach(date => {
+        const dayRecord = attendance.find(a => a.date === date);
+        if (dayRecord) {
+          if (dayRecord.present.includes(student.id)) studentRow.push("حاضر");
+          else if (dayRecord.absent.includes(student.id)) studentRow.push("غائب");
+          else studentRow.push("—");
+        } else { studentRow.push("—"); }
+      });
+      return studentRow;
+    });
+    const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Monthly_Attendance_Report.csv`;
+    link.click();
+  };
+
+  // 📋 دالة تصدير حضور طالب فردي
+  const exportStudentAttendance = (studentId, studentName) => {
+    const studentAttendance = attendance
+      .filter(a => a.present.includes(studentId))
+      .map(a => ({ date: a.date, status: "حاضر" }));
+    if (studentAttendance.length === 0) { alert(`لا توجد سجلات حضور مسجلة لـ ${studentName}`); return; }
+    const headers = ["التاريخ", "الحالة"];
+    const csvContent = [headers.join(","), ...studentAttendance.map(a => [`"${a.date}"`, `"${a.status}"`].join(","))].join("\n");
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Attendance_${studentName.replace(/\s+/g, '_')}.csv`;
+    link.click();
+  };
+
   return (
     <div>
-      <PageHeader title="سجل الحضور والغياب" action={<input type="date" value={activeDate} onChange={e => setActiveDate(e.target.value)} style={{ background:C.card, border:`1px solid ${C.border}`, color:C.text, padding:"6px 12px", borderRadius:10, fontFamily:"'Cairo'" }} />} />
+      <PageHeader 
+        title="سجل الحضور والغياب" 
+        action={
+          <>
+            <Btn variant="secondary" onClick={exportMonthlyReport}>📊 تصدير التقرير الشامل</Btn>
+            <input type="date" value={activeDate} onChange={e => setActiveDate(e.target.value)} style={{ background:C.card, border:`1px solid ${C.border}`, color:C.text, padding:"6px 12px", borderRadius:10, fontFamily:"'Cairo'" }} />
+          </>
+        } 
+      />
       <Card style={{ overflowX:"auto" }}>
         <table style={{ width:"100%", borderCollapse:"collapse" }}>
           <thead><tr><TH>اسم الطالب</TH><TH>رقم التواصل</TH><TH style={{ textAlign:"center" }}>التحضير اليومي</TH></tr></thead>
           <tbody>
             {students.map(s => (
               <tr key={s.id}>
-                <TD><b>{s.name}</b></TD><TD>{s.phone}</TD>
+                <TD>
+                  <b>{s.name}</b>
+                  <button onClick={() => exportStudentAttendance(s.id, s.name)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", marginRight: "10px", fontSize: "0.7rem", fontFamily:"'Cairo'" }} title="تصدير سجل حضور الطالب">📋 كشف فردي</button>
+                </TD>
+                <TD>{s.phone}</TD>
                 <TD style={{ textAlign:"center", whiteSpace:"nowrap" }}>
                   <Btn variant={current.present.includes(s.id)?"primary":"ghost"} style={{ padding:"4px 10px", fontSize:"0.75rem", marginLeft:6 }} onClick={() => toggle(s.id, "p")}>✓ حاضر</Btn>
                   <Btn variant={current.absent.includes(s.id)?"danger":"ghost"} style={{ padding:"4px 10px", fontSize:"0.75rem" }} onClick={() => toggle(s.id, "a")}>× غائب</Btn>
@@ -339,105 +417,4 @@ const Reminders = ({ teacher }) => {
         </div>
       </Card>
       <Card style={{ minHeight:340, display:"flex", flexDirection:"column" }}>
-        <div style={{ flex:1, background:"#080F18", borderRadius:12, padding:12, display:"flex", flexDirection:"column", overflowY:"auto" }}>
-          <div style={{ background:C.card, padding:10, borderRadius:"10px 10px 0 10px", maxWidth:"85%", fontSize:"0.8rem", whiteSpace:"pre-line", lineHeight:1.4, marginBottom:10 }}>{currentBot.msg}</div>
-          {currentBot.options.map((o, i) => o.link && (
-            <a key={i} href={o.next==="paid_confirm"?`https://wa.me/2${teacher.phone}`:teacher.systemeLink} target="_blank" rel="noreferrer" style={{ background:g.gold, color:"#111", padding:"6px 12px", borderRadius:8, fontSize:"0.75rem", fontWeight:700, textDecoration:"none", alignSelf:"flex-start", marginBottom:8 }}>{o.label}</a>
-          ))}
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:8 }}>
-          {currentBot.options.map((o, i) => !o.link && <button key={i} onClick={() => setBotState(o.next)} style={{ background:C.surface, border:`1px solid ${C.gold}20`, color:C.gold, padding:8, borderRadius:8, fontFamily:"'Cairo'", fontSize:"0.78rem", cursor:"pointer", textAlign:"right" }}>🔹 {o.label}</button>)}
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════
-// MAIN COMPONENT WRAPPER (RESPONSIVE LAYOUT)
-// ═══════════════════════════════════════════════
-export default function App() {
-  const [isLogged, setIsLogged] = useState(false); const [page, setPage] = useState("dashboard");
-  const [students, setStudents] = useState(() => LS.get("halqa_v_students", SAMPLE_STUDENTS));
-  const [payments, setPayments] = useState(() => LS.get("halqa_v_payments", SAMPLE_PAYMENTS));
-  const [attendance, setAttendance] = useState(() => LS.get("halqa_v_attendance", SAMPLE_ATTENDANCE));
-  const [menuOpen, setMenuOpen] = useState(false); // لإدارة قائمة الموبايل
-  const teacher = DEMO_TEACHER;
-
-  const isPirated = window.location.hostname !== "localhost" && window.location.hostname !== SECURITY_CONFIG.allowedHost;
-  const [installDate, setInstallDate] = useState(() => LS.get("halqa_security_init", null));
-  
-  useEffect(() => { if (!installDate) { const d = new Date().toISOString().split("T")[0]; LS.set("halqa_security_init", d); setInstallDate(d); } }, [installDate]);
-  useEffect(() => { LS.set("halqa_v_students", students); }, [students]);
-  useEffect(() => { LS.set("halqa_v_payments", payments); }, [payments]);
-  useEffect(() => { LS.set("halqa_v_attendance", attendance); }, [attendance]);
-
-  const getDaysLeft = () => {
-    if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
-    const diff = Math.abs(new Date() - new Date(installDate));
-    return Math.max(0, SECURITY_CONFIG.demoDaysLimit - Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  };
-
-  if (isPirated) return <div style={{ background:"#050A10", color:C.red, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl" }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>🚫 خطأ في ترخيص النظام</h2></Card></div>;
-  if (getDaysLeft() <= 0) return <div style={{ background:C.bg, color:C.text, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl", padding:16 }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>⏳ انتهت صلاحية الديمو</h2><Btn onClick={() => window.open(teacher.systemeLink)} style={{ width:"100%", marginTop:12 }}>🚀 ترقية الحساب الآن</Btn></Card></div>;
-  if (!isLogged) return <LoginPage onLogin={() => setIsLogged(true)} />;
-
-  const navItems = [
-    { id: "dashboard", label: "📊 لوحة التحكم" }, { id: "students", label: "👨‍🎓 دليل الطلاب" },
-    { id: "attendance", label: "📅 كشف الحضور" }, { id: "payments", label: "💰 الحسابات والمحافظ" },
-    { id: "reminders", label: "🤖 شات بوت iBots" }
-  ];
-
-  return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", display:"flex", flexDirection:"column", direction:"rtl", boxSizing:"border-box" }}>
-      
-      {/* Top Navbar Header responsive */}
-      <div style={{ height:60, background:C.surface, borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", sticky:"top", zIndex:1000 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          {/* زر الموبايل لفتح القائمة الجانبية */}
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"transparent", border:"none", color:C.gold, fontSize:22, cursor:"pointer", display:"block" }} className="menu-toggle-btn">☰</button>
-          <h3 style={{ color:C.gold, fontWeight:900, fontSize:"1.1rem", margin:0 }}>🕌 الحلقة الذكية</h3>
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <Badge color={C.amber}>⌛ {getDaysLeft()} يوم</Badge>
-          <Badge color={C.green}>{students.length}/5 طلاب</Badge>
-        </div>
-      </div>
-
-      <div style={{ flex:1, display:"flex", position:"relative" }}>
-        {/* Sidebar Navigation Menu */}
-        <div style={{ 
-          width: 230, background: C.surface, borderLeft: `1px solid ${C.border}`, padding: 12, 
-          display: menuOpen ? "flex" : "none", flexDirection: "column", gap: 4,
-          position: "absolute", right: 0, top: 0, bottom: 0, zIndex: 999, height:"100%"
-        }} className="responsive-sidebar">
-          {navItems.map(item => (
-            <button key={item.id} onClick={() => { setPage(item.id); setMenuOpen(false); }} style={{ width:"100%", padding:"10px 12px", background:page===item.id?"rgba(201,168,76,0.1)":"transparent", color:page===item.id?C.gold:C.text, border:"none", borderRadius:8, textAlign:"right", cursor:"pointer", fontFamily:"'Cairo'", fontWeight:600, fontSize:"0.82rem" }}>{item.label}</button>
-          ))}
-          <button onClick={() => setIsLogged(false)} style={{ marginTop:"auto", background:"transparent", border:`1px solid ${C.red}30`, color:C.red, padding:6, borderRadius:8, cursor:"pointer", fontFamily:"'Cairo'", fontSize:"0.75rem" }}>تسجيل الخروج</button>
-          <div style={{ fontSize:"0.65rem", color:C.muted, textAlign:"center", marginTop:10 }}>{SECURITY_CONFIG.watermark}</div>
-        </div>
-
-        {/* Main Workspace Content Area */}
-        <div style={{ flex:1, padding:16, boxSizing:"border-box", width:"100%", overflowX:"hidden" }}>
-          {page === "dashboard" && <Dashboard students={students} payments={payments} teacher={teacher} setPage={setPage} />}
-          {page === "students" && <Students students={students} setStudents={setStudents} />}
-          {page === "attendance" && <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />}
-          {page === "payments" && <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />}
-          {page === "reminders" && <Reminders teacher={teacher} />}
-        </div>
-      </div>
-
-      {/* CSS مدمج لضمان عمل القائمة الجانبية تلقائياً على الشاشات الكبيرة والصغيرة */}
-      <style>{`
-        @media (min-width: 769px) {
-          .responsive-sidebar { display: flex !important; position: static !important; height: auto !important; }
-          .menu-toggle-btn { display: none !important; }
-        }
-        @media (max-width: 768px) {
-          .responsive-sidebar { width: 100% !important; max-width: 240px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
-        }
-      `}</style>
-    </div>
-  );
-}
+        <div style={{ flex:1, background:"#080F18", borderRadius
