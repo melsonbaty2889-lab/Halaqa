@@ -449,7 +449,7 @@ const Reminders = ({ teacher, botState, setBotState, botFlows }) => {
         </div>
       </Card>
       <Card style={{ minHeight:340, display:"flex", flexDirection:"column" }}>
-        <div style={{ flex:1, background:"#080F18", borderRadius:12, padding:12, display:"flex", flexDirection:"column", overflowY:"auto" }}>
+        <div style={{ minHeight: 240, flex:1, background:"#080F18", borderRadius:12, padding:12, display:"flex", flexDirection:"column", overflowY:"auto" }}>
           <div style={{ background:C.card, padding:10, borderRadius:"10px 10px 0 10px", maxWidth:"85%", fontSize:"0.8rem", whiteSpace:"pre-line", lineHeight:1.4, marginBottom:10 }}>{currentBot.msg}</div>
           {currentBot.options.map((o, i) => o.link && (
             <a key={i} href={o.next==="paid_confirm"?`https://wa.me/2${teacher.phone}`:teacher.systemeLink} target="_blank" rel="noreferrer" style={{ background:g.gold, color:"#111", padding:"6px 12px", borderRadius:8, fontSize:"0.75rem", fontWeight:700, textDecoration:"none", alignSelf:"flex-start", marginBottom:8 }}>{o.label}</a>
