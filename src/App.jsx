@@ -28,9 +28,8 @@ const LS = {
 };
 
 // ═══════════════════════════════════════════════
-// DATA & CONFIG
+// DATA & CONFIG (القيم الافتراضية للمعلم)
 // ═══════════════════════════════════════════════
-// 1. القيم الافتراضية للنظام في حال لم يسجل المعلم بياناته بعد
 const DEFAULT_TEACHER_CONFIG = {
   name: "الشيخ أحمد محمود",
   phone: "01012345678",
@@ -42,31 +41,6 @@ const DEFAULT_TEACHER_CONFIG = {
   vodafoneCash: "01012345678",
   instaPayId: "teacher@instapay"
 };
-
-// داخل مكون الـ App الأساسي:
-function App() {
-  // 2. قراءة البيانات مشفرة من الـ Local Storage أو تحميل الافتراضية
-  const [teacherConfig, setTeacherConfig] = useState(() => {
-    return LS.get('halqa_teacher_config', DEFAULT_TEACHER_CONFIG);
-  });
-
-  // حالة للتحكم في فتح وإغلاق نافذة الإعدادات (Modal)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
-  // حالة مؤقتة لتخزين المدخلات أثناء الكتابة في الفورم
-  const [formData, setFormData] = useState({ ...teacherConfig });
-
-  // 3. دالة حفظ الإعدادات وتشفيرها فوراً
-  const handleSaveSettings = (e) => {
-    e.preventDefault();
-    setTeacherConfig(formData);
-    LS.set('halqa_teacher_config', formData); // سيتم التشفير تلقائياً هنا بفضل كود LS.set
-    setIsSettingsOpen(false);
-    alert("✔️ تم حفظ وتشفير إعدادات الحساب بنجاح!");
-  };
-
-  // ... بقية الأكواد الخاصة بك
-}
 
 const SAMPLE_STUDENTS = [
   { id: 1, name: "أحمد محمد علي", parent: "محمد علي", phone: "01012345678", age: 10, joined: "2026-05-01", paid: true, paidDate: "2026-05-01", surah: "البقرة", memorized: 12, attendance: 90, notes: "" },
@@ -83,19 +57,6 @@ const SAMPLE_PAYMENTS = [
 ];
 
 const SAMPLE_ATTENDANCE = [{ id: 1, date: "2026-05-19", present: [1, 3, 4], absent: [2, 5] }];
-
-const BOT_FLOWS = {
-  start: { msg: "السلام عليكم 🌙\nأهلًا بك في نظام حلقة القرآن الكريم\n\nاختر من القائمة المتاحة لتلبية طلبك فوراً:", options: [{ label: "📝 تسجيل طالب جديد", next: "register" }, { label: "💰 دفع الرسوم الشهرية", next: "payment_options" }, { label: "📅 مواعيد الحلقة", next: "schedule" }, { label: "📞 التواصل مع المحفظ", next: "contact" }] },
-  register: { msg: "ممتاز! 📝\n\nلتسجيل طالب جديد، يرجى الضغط على الرابط أدناه لملء استمارة الاشتراك وتحديد طريقة الدفع المفضلة لك:", options: [{ label: "🔗 فتح استمارة التسجيل", next: "registered", link: true }] },
-  registered: { msg: "✅ تم فتح الاستمارة!\n\nبعد ملء البيانات وتحويل الرسوم، يرجى إرسال لقطة شاشة (Screenshot) للتأكيد.\n\nهل تحتاج شيئًا آخر؟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
-  payment_options: { msg: "💰 رسوم الاشتراك الشهري هي (٩٩٩ جنيه).\n\nيرجى اختيار وسيلة الدفع المناسبة لك لتعجيل التفعيل:", options: [{ label: "💳 دفع إلكتروني (فيزا / كارت)", next: "pay_systeme" }, { label: "📱 فودافون كاش (Vodafone Cash)", next: "pay_vodafone" }, { label: "⚡ انستا باي (InstaPay)", next: "pay_instapay" }, { label: "🏠 رجوع", next: "start" }] },
-  pay_systeme: { msg: "💳 للدفع الآمن عبر بطاقتك البنكية:\n\nاضغط على الرابط أدناه لإتمام العملية عبر بوابتنا الرقمية في Systeme:", options: [{ label: "💳 ادفع الآن بالفيزا", next: "paid_confirm", link: true }, { label: "🔄 تغيير طريقة الدفع", next: "payment_options" }] },
-  pay_vodafone: { msg: `📱 للدفع عبر فودافون كاش:\n\nيرجى تحويل مبلغ (٩٩٩ جنيه) إلى الرقم التالي:\n📞 ${DEMO_TEACHER.vodafoneCash}\n\n⚠️ بعد التحويل، يرجى التقاط صورة لإيصال التحويل وإرسالها للمحفظ لتفعيل الحساب فوراً.`, options: [{ label: "📲 إرسال الإيصال عبر واتساب", next: "paid_confirm", link: true }, { label: "🔄 رجوع", next: "payment_options" }] },
-  pay_instapay: { msg: `⚡ للدفع الفوري عبر انستا باي:\n\nيرجى التحويل إلى العنوان التالي:\n🆔 ${DEMO_TEACHER.instaPayId}\n\nتأكد من إرسال تأكيد التحويل عبر المحادثة هنا لجرد الحساب المالي.`, options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
-  paid_confirm: { msg: "🎉 جزاكم الله خيراً! تم تسجيل طلب الدفع.\n\nيقوم النظام حالياً بمراجعة التحويلات وسيقوم المحفظ بالتفعيل فوراً 🌟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
-  schedule: { msg: `📅 مواعيد الحلقة:\n\n🕓 ${DEMO_TEACHER.schedule}\n📍 المكان: ${DEMO_TEACHER.location}`, options: [{ label: "🏠 رجوع", next: "start" }] },
-  contact: { msg: `📞 للتواصل المباشر مع الشيخ:\n\n👤 ${DEMO_TEACHER.name}\n📱 ${DEMO_TEACHER.phone}\n\nنحن في خدمتكم دائماً.`, options: [{ label: "🏠 رجوع", next: "start" }] }
-};
 
 const C = { bg: "#0C1520", surface: "#111C2A", card: "#162030", border: "rgba(201,168,76,0.12)", gold: "#C9A84C", text: "#E4DAC8", muted: "rgba(228,218,200,0.4)", green: "#34D399", red: "#EF4444", amber: "#F59E0B", blue: "#60A5FA", purple: "#A78BFA" };
 const g = { gold: "linear-gradient(135deg, #C9A84C, #E8C97A)" };
@@ -200,7 +161,7 @@ const Dashboard = ({ students, payments, teacher }) => {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:20 }}>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{total} / 5</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب (الحد التجريبي)</div></Card>
-        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين هذا الشهر</div></Card>
+        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين this month</div></Card>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.gold }}>{monthRev.toLocaleString()} ج.م</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>مداخيل شهر مايو</div></Card>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:14 }}>
@@ -326,7 +287,7 @@ const Attendance = ({ students, attendance, setAttendance }) => {
       allDates.forEach(date => {
         const dayRecord = attendance.find(a => a.date === date);
         if (dayRecord) {
-          if (dayRecord.present.includes(student.id)) studentRow.push("حاضer");
+          if (dayRecord.present.includes(student.id)) studentRow.push("حاضر");
           else if (dayRecord.absent.includes(student.id)) studentRow.push("غائب");
           else studentRow.push("—");
         } else { studentRow.push("—"); }
@@ -429,8 +390,8 @@ const Payments = ({ students, payments, setPayments, setStudents, teacher }) => 
   );
 };
 
-const Reminders = ({ teacher }) => {
-  const [botState, setBotState] = useState("start"); const currentBot = BOT_FLOWS[botState] || BOT_FLOWS.start;
+const Reminders = ({ teacher, botState, setBotState, botFlows }) => {
+  const currentBot = botFlows[botState] || botFlows.start;
   return (
     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16 }}>
       <Card>
@@ -464,7 +425,36 @@ export default function App() {
   const [payments, setPayments] = useState(() => LS.get("halqa_v_payments", SAMPLE_PAYMENTS));
   const [attendance, setAttendance] = useState(() => LS.get("halqa_v_attendance", SAMPLE_ATTENDANCE));
   const [menuOpen, setMenuOpen] = useState(false);
-  const teacher = DEMO_TEACHER;
+
+  // ⚙️ الحالات الديناميكية الجديدة الخاصة بإعدادات المعلم المطور
+  const [teacherConfig, setTeacherConfig] = useState(() => {
+    return LS.get('halqa_teacher_config', DEFAULT_TEACHER_CONFIG);
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [formData, setFormData] = useState({ ...teacherConfig });
+
+  // تفعيل الشات بوت ديناميكياً بناءً على بيانات الحساب المحدثة
+  const [botState, setBotState] = useState("start");
+  const BOT_FLOWS = {
+    start: { msg: "السلام عليكم 🌙\nأهلًا بك في نظام حلقة القرآن الكريم\n\nاختر من القائمة المتاحة لتلبية طلبك فوراً:", options: [{ label: "📝 تسجيل طالب جديد", next: "register" }, { label: "💰 دفع الرسوم الشهرية", next: "payment_options" }, { label: "📅 مواعيد الحلقة", next: "schedule" }, { label: "📞 التواصل مع المحفظ", next: "contact" }] },
+    register: { msg: "ممتاز! 📝\n\nلتسجيل طالب جديد، يرجى الضغط على الرابط أدناه لملء استمارة الاشتراك وتحديد طريقة الدفع المفضلة لك:", options: [{ label: "🔗 فتح استمارة التسجيل", next: "registered", link: true }] },
+    registered: { msg: "✅ تم فتح الاستمارة!\n\nبعد ملء البيانات وتحويل الرسوم، يرجى إرسال لقطة شاشة (Screenshot) للتأكيد.\n\nهل تحتاج شيئًا آخر؟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
+    payment_options: { msg: `💰 رسوم الاشتراك الشهري هي (${teacherConfig.fee} جنيه).\n\nيرجى اختيار وسيلة الدفع المناسبة لك لتعجيل التفعيل:`, options: [{ label: "💳 دفع إلكتروني (فيزا / كارت)", next: "pay_systeme" }, { label: "📱 فودافون كاش (Vodafone Cash)", next: "pay_vodafone" }, { label: "⚡ انستا باي (InstaPay)", next: "pay_instapay" }, { label: "🏠 رجوع", next: "start" }] },
+    pay_systeme: { msg: "💳 للدفع الآمن عبر بطاقتك البنكية:\n\nاضغط على الرابط أدناه لإتمام العملية عبر بوابتنا الرقمية في Systeme:", options: [{ label: "💳 ادفع الآن بالفيزا", next: "paid_confirm", link: true }, { label: "🔄 تغيير طريقة الدفع", next: "payment_options" }] },
+    pay_vodafone: { msg: `📱 للدفع عبر فودافون كاش:\n\nيرجى تحويل مبلغ (${teacherConfig.fee} جنيه) إلى الرقم التالي:\n📞 ${teacherConfig.vodafoneCash}\n\n⚠️ بعد التحويل، يرجى التقاط صورة لإيصال التحويل وإرسالها للمحفظ لتفعيل الحساب فوراً.`, options: [{ label: "📲 إرسال الإيصال عبر واتساب", next: "paid_confirm", link: true }, { label: "🔄 رجوع", next: "payment_options" }] },
+    pay_instapay: { msg: `⚡ للدفع الفوري عبر انستا باي:\n\nيرجى التحويل إلى العنوان التالي:\n🆔 ${teacherConfig.instaPayId}\n\nتأكد من إرسال تأكيد التحويل عبر المحادثة هنا لجرد الحساب المالي.`, options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
+    paid_confirm: { msg: "🎉 جزاكم الله خيراً! تم تسجيل طلب الدفع.\n\nيقوم النظام حالياً بمراجعة التحويلات وسيقوم المحفظ بالتفعيل فوراً 🌟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
+    schedule: { msg: `📅 مواعيد الحلقة:\n\n🕓 ${teacherConfig.schedule}\n📍 المكان: ${teacherConfig.location}`, options: [{ label: "🏠 رجوع", next: "start" }] },
+    contact: { msg: `📞 للتواصل المباشر مع الشيخ:\n\n👤 ${teacherConfig.name}\n📱 ${teacherConfig.phone}\n\nنحن في خدمتكم دائماً.`, options: [{ label: "🏠 رجوع", next: "start" }] }
+  };
+
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    setTeacherConfig(formData);
+    LS.set('halqa_teacher_config', formData);
+    setIsSettingsOpen(false);
+    alert("✔️ تم حفظ وتشفير إعدادات الحساب بنجاح!");
+  };
 
   const isPirated = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== SECURITY_CONFIG.allowedHost;
   const [installDate, setInstallDate] = useState(() => LS.get("halqa_security_init", null));
@@ -481,7 +471,7 @@ export default function App() {
   };
 
   if (isPirated) return <div style={{ background:"#050A10", color:C.red, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl" }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>🚫 خطأ في ترخيص النظام</h2></Card></div>;
-  if (getDaysLeft() <= 0) return <div style={{ background:C.bg, color:C.text, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl", padding:16 }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>⏳ انتهت صلاحية الديمو</h2><Btn onClick={() => window.open(teacher.systemeLink)} style={{ width:"100%", marginTop:12 }}>🚀 ترقية الحساب الآن</Btn></Card></div>;
+  if (getDaysLeft() <= 0) return <div style={{ background:C.bg, color:C.text, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl", padding:16 }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>⏳ انتهت صلاحية الديمو</h2><Btn onClick={() => window.open(teacherConfig.systemeLink)} style={{ width:"100%", marginTop:12 }}>🚀 ترقية الحساب الآن</Btn></Card></div>;
   if (!isLogged) return <LoginPage onLogin={() => setIsLogged(true)} />;
 
   const navItems = [
@@ -490,51 +480,76 @@ export default function App() {
     { id: "reminders", label: "🤖 شات بوت iBots" }
   ];
 
-  // دالة عرض الصفحة المحددة ديناميكياً بناءً على قيمة الـ state (page)
   const renderPage = () => {
     switch (page) {
-      case "dashboard": return <Dashboard students={students} payments={payments} teacher={teacher} />;
+      case "dashboard": return <Dashboard students={students} payments={payments} teacher={teacherConfig} />;
       case "students": return <Students students={students} setStudents={setStudents} />;
       case "attendance": return <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />;
-      case "payments": return <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />;
-      case "reminders": return <Reminders teacher={teacher} />;
-      default: return <Dashboard students={students} payments={payments} teacher={teacher} />;
+      case "payments": return <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacherConfig} />;
+      case "reminders": return <Reminders teacher={teacherConfig} botState={botState} setBotState={setBotState} botFlows={BOT_FLOWS} />;
+      default: return <Dashboard students={students} payments={payments} teacher={teacherConfig} />;
     }
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", display:"flex", flexDirection:"column", direction:"rtl", boxSizing:"border-box" }}>
-      
-      {/* Top Navbar */}
-      <div style={{ height:60, background:C.surface, borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", zIndex:1000 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"transparent", border:"none", color:C.gold, fontSize:22, cursor:"pointer" }}>☰</button>
-          <h3 style={{ color:C.gold, fontWeight:900, fontSize:"1.1rem", margin:0 }}>🕌 الحلقة الذكية</h3>
+    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", direction:"rtl", display:"flex", boxSizing:"border-box" }}>
+      {/* القائمة الجانبية (Sidebar) */}
+      <div style={{ width: menuOpen ? 240 : 70, background:C.surface, borderLeft:`1px solid ${C.border}`, display:"flex", flexDirection:"column", transition:"all 0.3s ease", position:"relative", zIndex:1000 }}>
+        <div style={{ padding:16, display:"flex", alignItems:"center", justifyContent:menuOpen?"space-between":"center", borderBottom:`1px solid ${C.border}` }}>
+          {menuOpen && <span style={{ fontWeight:800, color:C.gold, fontSize:"0.95rem" }}>🕌 الحلقة الذكية</span>}
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"none", border:"none", color:C.gold, fontSize:20, cursor:"pointer" }}>☰</button>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <Badge color={C.amber}>⌛ {getDaysLeft()} يوم</Badge>
-          <Badge color={C.green}>{students.length}/5 طلاب</Badge>
-        </div>
-      </div>
-
-      <div style={{ flex:1, display:"flex", position:"relative" }}>
-        {/* Sidebar */}
-        <div style={{ width: 240, background: C.surface, borderLeft: `1px solid ${C.border}`, display: menuOpen ? "flex" : "none", flexDirection: "column", padding: 12, gap: 4, boxSizing: "border-box" }}>
+        <div style={{ flex:1, padding:"12px 6px", display:"flex", flexDirection:"column", gap:6 }}>
           {navItems.map(item => (
-            <button key={item.id} onClick={() => { setPage(item.id); setMenuOpen(false); }} style={{ width: "100%", background: page === item.id ? `${C.gold}15` : "transparent", border: "none", color: page === item.id ? C.gold : C.text, padding: "10px 14px", borderRadius: 10, cursor: "pointer", textAlign: "right", fontFamily: "'Cairo'", fontSize: "0.85rem", fontWeight: page === item.id ? 700 : 500, display: "flex", alignItems: "center" }}>
-              {item.label}
+            <button key={item.id} onClick={() => setPage(item.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px", borderRadius:12, border:"none", background:page===item.id?`${C.gold}15`:"transparent", color:page===item.id?C.gold:C.text, fontSize:"0.85rem", fontWeight:600, cursor:"pointer", textAlign:"right", transition:"0.2s" }}>
+              {menuOpen ? item.label : item.label.split(" ")[0]}
             </button>
           ))}
-          <div style={{ marginTop: "auto", padding: 10, fontSize: "0.7rem", color: C.muted, borderTop: `1px solid ${C.border}`, textAlign: "center" }}>
-            {SECURITY_CONFIG.watermark}
-          </div>
+          
+          <hr style={{ border:"none", borderTop:`1px solid ${C.border}`, margin:"10px 0" }} />
+          
+          {/* زر فتح الإعدادات المتناسق */}
+          <button 
+            onClick={() => { setFormData({ ...teacherConfig }); setIsSettingsOpen(true); }} 
+            style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px", borderRadius:12, border:"none", background:"transparent", color:C.amber, fontSize:"0.85rem", fontWeight:600, cursor:"pointer", textAlign:"right" }}
+          >
+            {menuOpen ? "⚙️ إعدادات الحساب" : "⚙️"}
+          </button>
         </div>
-
-        {/* Content Area */}
-        <div style={{ flex: 1, padding: 20, boxSizing: "border-box", overflowY: "auto" }}>
-          {renderPage()}
+        <div style={{ padding:12, fontSize:"0.65rem", color:C.muted, textAllign:"center", borderTop:`1px solid ${C.border}` }}>
+          {menuOpen ? `⏳ متبقي ${getDaysLeft()} يوم` : `${getDaysLeft()}ي`}
         </div>
       </div>
+
+      {/* المحتوى الرئيسي */}
+      <div style={{ flex:1, padding:24, overflowX:"hidden", boxSizing:"border-box" }}>
+        {renderPage()}
+      </div>
+
+      {/* نافذة إعدادات الحساب المطور (Settings Modal) */}
+      <Modal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="⚙️ إعدادات الحساب وتخصيص النظام">
+        <form onSubmit={handleSaveSettings} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <h4 style={{ fontSize:"0.78rem", color:C.gold, borderBottom:`1px solid ${C.border}`, paddingBottom:4, margin:0 }}>البيانات الشخصية والإعلانية</h4>
+          <Input label="اسم المحفظ / الشيخ" value={formData.name} onChange={e => setFormData({...formData, name:e.target.value})} />
+          <Input label="رقم الهاتف" value={formData.phone} onChange={e => setFormData({...formData, phone:e.target.value})} />
+          <Input label="العنوان والمنطقة" value={formData.location} onChange={e => setFormData({...formData, location:e.target.value})} />
+          <Input label="نبذة تعريفية (Bio)" as="textarea" value={formData.bio} onChange={e => setFormData({...formData, bio:e.target.value})} />
+          <Input label="مواعيد الحلقات الرسمية" value={formData.schedule} onChange={e => setFormData({...formData, schedule:e.target.value})} />
+          
+          <h4 style={{ fontSize:"0.78rem", color:C.gold, borderBottom:`1px solid ${C.border}`, paddingBottom:4, margin:"10px 0 0 0" }}>المحافظ والاشتراكات الفورية</h4>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+            <Input label="قيمة الاشتراك (ج.م)" type="number" value={formData.fee} onChange={e => setFormData({...formData, fee: +e.target.value || 0})} />
+            <Input label="رقم فودافون كاش" value={formData.vodafoneCash} onChange={e => setFormData({...formData, vodafoneCash:e.target.value})} />
+          </div>
+          <Input label="معرّف انستا باي (InstaPay ID)" value={formData.instaPayId} onChange={e => setFormData({...formData, instaPayId:e.target.value})} />
+          <Input label="رابط صفحة الهبوط والتسجيل (Systeme.io)" value={formData.systemeLink} onChange={e => setFormData({...formData, systemeLink:e.target.value})} />
+          
+          <div style={{ display:"flex", gap:8, marginTop:10 }}>
+            <Btn type="submit" style={{ flex:1 }}>حفظ وتشفير البيانات 💾</Btn>
+            <Btn type="button" variant="ghost" onClick={() => setIsSettingsOpen(false)}>إلغاء</Btn>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
