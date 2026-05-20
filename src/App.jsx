@@ -30,17 +30,43 @@ const LS = {
 // ═══════════════════════════════════════════════
 // DATA & CONFIG
 // ═══════════════════════════════════════════════
-const DEMO_TEACHER = {
+// 1. القيم الافتراضية للنظام في حال لم يسجل المعلم بياناته بعد
+const DEFAULT_TEACHER_CONFIG = {
   name: "الشيخ أحمد محمود",
   phone: "01012345678",
   location: "مدينة نصر، القاهرة",
-  bio: "حافظ للقرآن الكريم برواية حفص عن عاصم، خبرة ١٥ عامًا في تحفيظ القرآن للأطفال والكبار",
-  schedule: "السبت والاثنين والأربعاء — ٤:٠٠ عصرًا",
+  bio: "حافظ للقرآن الكريم برواية حفص عن عاصم، خبرة 15 عاماً في تحفيظ القرآن للأطفال والكبار",
+  schedule: "السبت والاثنين والأربعاء - 4:00 عصراً",
   fee: 999,
   systemeLink: "https://systeme.io/halqa-register",
-  vodafoneCash: "01012345678", 
-  instaPayId: "teacher@instapay", 
+  vodafoneCash: "01012345678",
+  instaPayId: "teacher@instapay"
 };
+
+// داخل مكون الـ App الأساسي:
+function App() {
+  // 2. قراءة البيانات مشفرة من الـ Local Storage أو تحميل الافتراضية
+  const [teacherConfig, setTeacherConfig] = useState(() => {
+    return LS.get('halqa_teacher_config', DEFAULT_TEACHER_CONFIG);
+  });
+
+  // حالة للتحكم في فتح وإغلاق نافذة الإعدادات (Modal)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  // حالة مؤقتة لتخزين المدخلات أثناء الكتابة في الفورم
+  const [formData, setFormData] = useState({ ...teacherConfig });
+
+  // 3. دالة حفظ الإعدادات وتشفيرها فوراً
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    setTeacherConfig(formData);
+    LS.set('halqa_teacher_config', formData); // سيتم التشفير تلقائياً هنا بفضل كود LS.set
+    setIsSettingsOpen(false);
+    alert("✔️ تم حفظ وتشفير إعدادات الحساب بنجاح!");
+  };
+
+  // ... بقية الأكواد الخاصة بك
+}
 
 const SAMPLE_STUDENTS = [
   { id: 1, name: "أحمد محمد علي", parent: "محمد علي", phone: "01012345678", age: 10, joined: "2026-05-01", paid: true, paidDate: "2026-05-01", surah: "البقرة", memorized: 12, attendance: 90, notes: "" },
