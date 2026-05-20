@@ -458,6 +458,7 @@ export default function App() {
 
   // تفعيل الشات بوت ديناميكياً بناءً على بيانات الحساب المحدثة
   const [botState, setBotState] = useState("start");
+  
   const BOT_FLOWS = {
     start: { msg: "السلام عليكم 🌙\nأهلًا بك في نظام حلقة القرآن الكريم\n\nاختر من القائمة المتاحة لتلبية طلبك فوراً:", options: [{ label: "📝 تسجيل طالب جديد", next: "register" }, { label: "💰 دفع الرسوم الشهرية", next: "payment_options" }, { label: "📅 مواعيد الحلقة", next: "schedule" }, { label: "📞 التواصل مع المحفظ", next: "contact" }] },
     register: { msg: "ممتاز! 📝\n\nلتسجيل طالب جديد، يرجى الضغط على الرابط أدناه لملء استمارة الاشتراك وتحديد طريقة الدفع المفضلة لك:", options: [{ label: "🔗 فتح استمارة التسجيل", next: "registered", link: true }] },
@@ -483,7 +484,6 @@ export default function App() {
   const handleSendWhatsAppReminder = (student) => {
     const message = `السلام عليكم يا فندم، نود تذكيركم بمصروفات الحلقة الذكية المستحقة للطالب (${student.name}) لشهر مايو.\n\nالمبلغ المستحق: ${teacherConfig.fee} ج.م\n\nيمكنكم التحويل الفوري لتجديد الاشتراك عبر:\n📱 فودافون كاش: ${teacherConfig.vodafoneCash}\n⚡ انستا باي: ${teacherConfig.instaPayId}\n\nجزاكم الله خيراً وجعله في ميزان حسناتكم! ✨`;
     const encodedMessage = encodeURIComponent(message);
-    // تنظيف رقم الهاتف وإزالة أي مسافات
     const cleanPhone = student.phone.trim();
     const whatsappUrl = `https://wa.me/2${cleanPhone}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
@@ -500,7 +500,6 @@ export default function App() {
       attendance: attendance
     };
     
-    // تحويل البيانات لنص JSON منظم ولطيف
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
@@ -520,21 +519,19 @@ export default function App() {
       try {
         const parsedData = JSON.parse(event.target.result);
         
-        // التحقق من سلامة بنية الملف قبل الحفظ لحماية السيستم
         if (parsedData.students && parsedData.payments && parsedData.teacher) {
           setTeacherConfig(parsedData.teacher);
           setStudents(parsedData.students);
           setPayments(parsedData.payments);
           if (parsedData.attendance) setAttendance(parsedData.attendance);
 
-          // الحفظ المباشر المشفر في الـ Local Storage
           LS.set('halqa_teacher_config', parsedData.teacher);
           LS.set('halqa_v_students', parsedData.students);
           LS.set('halqa_v_payments', parsedData.payments);
           if (parsedData.attendance) LS.set('halqa_v_attendance', parsedData.attendance);
 
           alert("✔️ تم استعادة النسخة الاحتياطية وكافة بيانات الطلاب والحسابات بنجاح تام!");
-          window.location.reload(); // تحديث الصفحة لتحديث الذاكرة
+          window.location.reload();
         } else {
           alert("❌ خطأ: ملف النسخة الاحتياطية غير صالحة أو تالفة!");
         }
