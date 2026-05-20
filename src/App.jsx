@@ -242,6 +242,16 @@ const Students = ({ students, setStudents, onSendReminder }) => {
     setModal(null);
   };
 
+  const handleAddStudentClick = () => {
+    if (students.length >= 5) {
+      alert("⚠️ لقد استهلكت الحد الأقصى للنسخة التجريبية (5 طلاب).\n\nيرجى التواصل مع الدعم الفني لشركة (The Win Route) لتفعيل النسخة المدفوعة وفتح عدد غير محدود من الطلاب! 🚀");
+      window.open("https://wa.me/201017403485?text=" + encodeURIComponent("مرحباً، أود ترقية نظام الحلقة الذكية للاشتراك في النسخة المدفوعة لفتح حد الطلاب."), "_blank");
+      return;
+    }
+    setForm(empty);
+    setModal("add");
+  };
+
   const exportToExcel = (filterType = "all") => {
     const dataToExport = filterType === "paid" ? students.filter(s => s.paid) : students;
     if (dataToExport.length === 0) { alert("لا توجد بيانات للتصدير!"); return; }
@@ -266,7 +276,7 @@ const Students = ({ students, setStudents, onSendReminder }) => {
           <>
             <Btn variant="secondary" onClick={() => exportToExcel("all")} style={{ fontSize: "0.75rem" }}>📥 تصدير الكل</Btn>
             <Btn variant="secondary" onClick={() => exportToExcel("paid")} style={{ fontSize: "0.75rem" }}>💰 المسددون</Btn>
-            <Btn onClick={() => { if(students.length>=5){alert("⚠️ تجاوزت الحد!");return;} setForm(empty); setModal("add"); }}>＋ إضافة طالب</Btn>
+            <Btn onClick={handleAddStudentClick}>＋ إضافة طالب</Btn>
           </>
         } 
       />
@@ -602,9 +612,15 @@ export default function App() {
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", direction:"rtl", display:"flex", boxSizing:"border-box" }}>
       {/* القائمة الجانبية (Sidebar) */}
       <div style={{ width: menuOpen ? 240 : 70, background:C.surface, borderLeft:`1px solid ${C.border}`, display:"flex", flexDirection:"column", transition:"all 0.3s ease", position:"relative", zIndex:1000 }}>
-        <div style={{ padding:16, display:"flex", alignItems:"center", justifyContent:menuOpen?"space-between":"center", borderBottom:`1px solid ${C.border}` }}>
-          {menuOpen && <span style={{ fontWeight:800, color:C.gold, fontSize:"0.95rem" }}>🕌 الحلقة الذكية</span>}
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"none", border:"none", color:C.gold, fontSize:20, cursor:"pointer" }}>☰</button>
+        <div style={{ padding:16, display:"flex", flexDirection:"column", gap:8, borderBottom:`1px solid ${C.border}` }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:menuOpen?"space-between":"center" }}>
+            {menuOpen && <span style={{ fontWeight:800, color:C.gold, fontSize:"0.95rem" }}>🕌 الحلقة الذكية</span>}
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"none", border:"none", color:C.gold, fontSize:20, cursor:"pointer" }}>☰</button>
+          </div>
+          {/* عداد الأيام التجريبية المضاء الثابت في الأعلى */}
+          <div style={{ background: "rgba(235,166,60,0.1)", border: "1px solid rgba(235,166,60,0.2)", borderRadius: 8, padding: "6px 4px", textAlign: "center", color: C.amber, fontSize: "0.72rem", fontWeight: 700, marginTop: 4 }}>
+            {menuOpen ? `⏳ النسخة التجريبية: متبقي ${getDaysLeft()} يوم` : `⏳ ${getDaysLeft()}ي`}
+          </div>
         </div>
         <div style={{ flex:1, padding:"12px 6px", display:"flex", flexDirection:"column", gap:6 }}>
           {navItems.map(item => (
@@ -624,7 +640,7 @@ export default function App() {
           </button>
         </div>
         <div style={{ padding:12, fontSize:"0.65rem", color:C.muted, textAlign:"center", borderTop:`1px solid ${C.border}` }}>
-          {menuOpen ? `⏳ متبقي ${getDaysLeft()} يوم` : `${getDaysLeft()}ي`}
+          {SECURITY_CONFIG.watermark.split(" ").slice(-1)[0]}
         </div>
       </div>
 
