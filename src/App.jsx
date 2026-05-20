@@ -485,4 +485,30 @@ export default function App() {
           <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"transparent", border:"none", color:C.gold, fontSize:22, cursor:"pointer" }}>☰</button>
           <h3 style={{ color:C.gold, fontWeight:900, fontSize:"1.1rem", margin:0 }}>🕌 الحلقة الذكية</h3>
         </div>
-        <div style={{ display:"flex", alignItems:"
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <Badge color={C.amber}>⌛ {getDaysLeft()} يوم</Badge>
+          <Badge color={C.green}>{students.length}/5 طلاب</Badge>
+        </div>
+      </div>
+
+      <div style={{ flex:1, display:"flex", position:"relative" }}>
+        {/* Sidebar */}
+        <div style={{ width: 240, background: C.surface, borderLeft: `1px solid ${C.border}`, display: menuOpen ? "flex" : "none", flexDirection: "column", padding: 12, gap: 4, boxSizing: "border-box" }}>
+          {navItems.map(item => (
+            <button key={item.id} onClick={() => { setPage(item.id); setMenuOpen(false); }} style={{ width: "100%", background: page === item.id ? `${C.gold}15` : "transparent", border: "none", color: page === item.id ? C.gold : C.text, padding: "10px 14px", borderRadius: 10, cursor: "pointer", textAlign: "right", fontFamily: "'Cairo'", fontSize: "0.85rem", fontWeight: page === item.id ? 700 : 500, display: "flex", alignItems: "center" }}>
+              {item.label}
+            </button>
+          ))}
+          <div style={{ marginTop: "auto", padding: 10, fontSize: "0.7rem", color: C.muted, borderTop: `1px solid ${C.border}`, textAlign: "center" }}>
+            {SECURITY_CONFIG.watermark}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div style={{ flex: 1, padding: 20, boxSizing: "border-box", overflowY: "auto" }}>
+          {renderPage()}
+        </div>
+      </div>
+    </div>
+  );
+}
