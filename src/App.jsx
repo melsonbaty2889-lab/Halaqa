@@ -68,7 +68,7 @@ const Badge = ({ children, color = C.green }) => (
   <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, fontSize:"0.72rem", fontWeight:700, background:`${color}1A`, color, border:`1px solid ${color}33`, whiteSpace:"nowrap" }}>{children}</span>
 );
 
-const Btn = ({ children, onClick, variant="primary", style={}, disabled=false }) => {
+const Btn = ({ children, onClick, variant="primary", style={}, disabled=false, type="button" }) => {
   const styles = {
     primary: { background: g.gold, color:"#1A1208" },
     secondary: { background:`${C.gold}15`, color:C.gold, border:`1px solid ${C.gold}30` },
@@ -76,7 +76,7 @@ const Btn = ({ children, onClick, variant="primary", style={}, disabled=false })
     danger: { background:`${C.red}15`, color:C.red, border:`1px solid ${C.red}30` },
   };
   return (
-    <button onClick={onClick} disabled={disabled} style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", gap:6, padding:"8px 14px", borderRadius:10, border:"none", cursor:disabled?"not-allowed":"pointer", fontFamily:"'Cairo',sans-serif", fontSize:"0.8rem", fontWeight:600, opacity:disabled?0.5:1, ...styles[variant], ...style }}>{children}</button>
+    <button type={type} onClick={onClick} disabled={disabled} style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", gap:6, padding:"8px 14px", borderRadius:10, border:"none", cursor:disabled?"not-allowed":"pointer", fontFamily:"'Cairo',sans-serif", fontSize:"0.8rem", fontWeight:600, opacity:disabled?0.5:1, ...styles[variant], ...style }}>{children}</button>
   );
 };
 
@@ -150,7 +150,7 @@ const LoginPage = ({ onLogin }) => {
   );
 };
 
-const Dashboard = ({ students, payments, teacher }) => {
+const Dashboard = ({ students, payments, teacher, onSendReminder }) => {
   const total = students.length; const paid = students.filter(s => s.paid).length;
   const monthRev = payments.reduce((a, p) => a + p.amount, 0);
   return (
@@ -161,17 +161,31 @@ const Dashboard = ({ students, payments, teacher }) => {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:20 }}>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{total} / 5</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب (الحد التجريبي)</div></Card>
-        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين this month</div></Card>
+        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين هذا الشهر</div></Card>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.gold }}>{monthRev.toLocaleString()} ج.م</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>مداخيل شهر مايو</div></Card>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:14 }}>
         <Card style={{ overflowX:"auto" }}>
           <h3 style={{ fontSize:"0.85rem", fontWeight:700, marginBottom:10 }}>📋 نظرة على الحفظ والمتابعة</h3>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr><TH>اسم الطالب</TH><TH>السورة</TH><TH>الإنجاز</TH><TH>الحالة</TH></tr></thead>
+            <thead><tr><TH>اسم الطالب</TH><TH>السورة</TH><TH>الإنجاز</TH><TH>الحالة / التذكير</TH></tr></thead>
             <tbody>
               {students.slice(0, 3).map(s => (
-                <tr key={s.id}><TD>{s.name}</TD><TD>{s.surah || "—"}</TD><TD><Badge color={C.purple}>{s.memorized} ص</Badge></TD><TD><Badge color={s.paid?C.green:C.amber}>{s.paid?"مسدد":"معلق"}</Badge></TD></tr>
+                <tr key={s.id}>
+                  <TD>{s.name}</TD>
+                  <TD>{s.surah || "—"}</TD>
+                  <TD><Badge color={C.purple}>{s.memorized} ص</Badge></TD>
+                  <TD>
+                    {s.paid ? (
+                      <Badge color={C.green}>مسدد</Badge>
+                    ) : (
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <Badge color={C.amber}>معلق</Badge>
+                        <button onClick={() => onSendReminder(s)} style={{ background:"transparent", border:"none", color:C.green, cursor:"pointer", fontSize:"0.75rem", padding:0, fontFamily:"'Cairo'" }} title="إرسال تذكير سداد بالواتساب">📱 تذكير</button>
+                      </div>
+                    )}
+                  </TD>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -188,7 +202,7 @@ const Dashboard = ({ students, payments, teacher }) => {
   );
 };
 
-const Students = ({ students, setStudents }) => {
+const Students = ({ students, setStudents, onSendReminder }) => {
   const [search, setSearch] = useState(""); const [modal, setModal] = useState(null);
   const empty = { name:"", parent:"", phone:"", age:"", surah:"", memorized:"", notes:"" };
   const [form, setForm] = useState(empty);
@@ -235,14 +249,23 @@ const Students = ({ students, setStudents }) => {
       <Card style={{ marginBottom:14, padding:"8px 16px" }}><input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 ابحث باسم الطالب أو ولي الأمر..." style={{ width:"100%", background:"transparent", border:"none", color:C.text, fontFamily:"'Cairo'", fontSize:"0.82rem", outline:"none" }} /></Card>
       <Card style={{ overflowX:"auto" }}>
         <table style={{ width:"100%", borderCollapse:"collapse" }}>
-          <thead><tr><TH>الطالب</TH><TH>ولي الأمر</TH><TH>الهاتف</TH><TH>السورة</TH><TH>الحفظ</TH><TH>السداد</TH><TH></TH></tr></thead>
+          <thead><tr><TH>الطالب</TH><TH>ولي الأمر</TH><TH>الهاتف</TH><TH>السورة</TH><TH>الحفظ</TH><TH>السداد والتحصيل</TH><TH></TH></tr></thead>
           <tbody>
             {filtered.map(s => (
               <tr key={s.id}>
                 <TD><b>{s.name}</b><div style={{ fontSize:"0.7rem", color:C.muted }}>العمر: {s.age}</div></TD>
                 <TD>{s.parent}</TD><TD>{s.phone}</TD><TD>{s.surah || "—"}</TD>
                 <TD><Badge color={C.purple}>{s.memorized} ص</Badge></TD>
-                <TD><Badge color={s.paid?C.green:C.amber}>{s.paid?"مسدد":"معلق"}</Badge></TD>
+                <TD>
+                  {s.paid ? (
+                    <Badge color={C.green}>مسدد</Badge>
+                  ) : (
+                    <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                      <Badge color={C.amber}>معلق</Badge>
+                      <Btn variant="ghost" style={{ padding:"2px 6px", fontSize:"0.7rem", borderColor:C.green, color:C.green }} onClick={() => onSendReminder(s)}>📱 تذكير سداد</Btn>
+                    </div>
+                  )}
+                </TD>
                 <TD><div style={{ display:"flex", gap:4 }}><Btn variant="ghost" style={{ padding:"4px 8px", fontSize:"0.72rem" }} onClick={() => { setForm(s); setModal(s); }}>تعديل</Btn><Btn variant="danger" style={{ padding:"4px 8px", fontSize:"0.72rem" }} onClick={() => setStudents(p => p.filter(x => x.id !== s.id))}>حذف</Btn></div></TD>
               </tr>
             ))}
@@ -426,7 +449,7 @@ export default function App() {
   const [attendance, setAttendance] = useState(() => LS.get("halqa_v_attendance", SAMPLE_ATTENDANCE));
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // ⚙️ الحالات الديناميكية الجديدة الخاصة بإعدادات المعلم المطور
+  // ⚙️ الحالات الديناميكية الخاصة بإعدادات المعلم المطور
   const [teacherConfig, setTeacherConfig] = useState(() => {
     return LS.get('halqa_teacher_config', DEFAULT_TEACHER_CONFIG);
   });
@@ -456,6 +479,72 @@ export default function App() {
     alert("✔️ تم حفظ وتشفير إعدادات الحساب بنجاح!");
   };
 
+  // 📱 ميزة الأولوية الثانية: إرسال تذكير سداد مجهز ديناميكياً عبر الواتساب واجهة Click-to-Chat
+  const handleSendWhatsAppReminder = (student) => {
+    const message = `السلام عليكم يا فندم، نود تذكيركم بمصروفات الحلقة الذكية المستحقة للطالب (${student.name}) لشهر مايو.\n\nالمبلغ المستحق: ${teacherConfig.fee} ج.م\n\nيمكنكم التحويل الفوري لتجديد الاشتراك عبر:\n📱 فودافون كاش: ${teacherConfig.vodafoneCash}\n⚡ انستا باي: ${teacherConfig.instaPayId}\n\nجزاكم الله خيراً وجعله في ميزان حسناتكم! ✨`;
+    const encodedMessage = encodeURIComponent(message);
+    // تنظيف رقم الهاتف وإزالة أي مسافات
+    const cleanPhone = student.phone.trim();
+    const whatsappUrl = `https://wa.me/2${cleanPhone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
+  // 📦 ميزة الأولوية الأولى: تصدير النسخة الاحتياطية الشاملة والمشفرة كملف JSON
+  const handleExportBackup = () => {
+    const backupData = {
+      version: "2026.1",
+      exportDate: new Date().toISOString(),
+      teacher: teacherConfig,
+      students: students,
+      payments: payments,
+      attendance: attendance
+    };
+    
+    // تحويل البيانات لنص JSON منظم ولطيف
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `halqa_backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  // 📥 ميزة الأولوية الأولى: استيراد وقراءة ملف النسخة الاحتياطية وتحديث النظام فوراً
+  const handleImportBackup = (e) => {
+    const fileReader = new FileReader();
+    const file = e.target.files[0];
+    if (!file) return;
+
+    fileReader.onload = (event) => {
+      try {
+        const parsedData = JSON.parse(event.target.result);
+        
+        // التحقق من سلامة بنية الملف قبل الحفظ لحماية السيستم
+        if (parsedData.students && parsedData.payments && parsedData.teacher) {
+          setTeacherConfig(parsedData.teacher);
+          setStudents(parsedData.students);
+          setPayments(parsedData.payments);
+          if (parsedData.attendance) setAttendance(parsedData.attendance);
+
+          // الحفظ المباشر المشفر في الـ Local Storage
+          LS.set('halqa_teacher_config', parsedData.teacher);
+          LS.set('halqa_v_students', parsedData.students);
+          LS.set('halqa_v_payments', parsedData.payments);
+          if (parsedData.attendance) LS.set('halqa_v_attendance', parsedData.attendance);
+
+          alert("✔️ تم استعادة النسخة الاحتياطية وكافة بيانات الطلاب والحسابات بنجاح تام!");
+          window.location.reload(); // تحديث الصفحة لتحديث الذاكرة
+        } else {
+          alert("❌ خطأ: ملف النسخة الاحتياطية غير صالحة أو تالفة!");
+        }
+      } catch (error) {
+        alert("❌ فشل قراءة الملف! تأكد من اختيار ملف .json صحيح تم تصديره من النظام.");
+      }
+    };
+    fileReader.readAsText(file);
+  };
+
   const isPirated = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== SECURITY_CONFIG.allowedHost;
   const [installDate, setInstallDate] = useState(() => LS.get("halqa_security_init", null));
   
@@ -482,12 +571,12 @@ export default function App() {
 
   const renderPage = () => {
     switch (page) {
-      case "dashboard": return <Dashboard students={students} payments={payments} teacher={teacherConfig} />;
-      case "students": return <Students students={students} setStudents={setStudents} />;
+      case "dashboard": return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
+      case "students": return <Students students={students} setStudents={setStudents} onSendReminder={handleSendWhatsAppReminder} />;
       case "attendance": return <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />;
       case "payments": return <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacherConfig} />;
       case "reminders": return <Reminders teacher={teacherConfig} botState={botState} setBotState={setBotState} botFlows={BOT_FLOWS} />;
-      default: return <Dashboard students={students} payments={payments} teacher={teacherConfig} />;
+      default: return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
     }
   };
 
@@ -516,7 +605,7 @@ export default function App() {
             {menuOpen ? "⚙️ إعدادات الحساب" : "⚙️"}
           </button>
         </div>
-        <div style={{ padding:12, fontSize:"0.65rem", color:C.muted, textAllign:"center", borderTop:`1px solid ${C.border}` }}>
+        <div style={{ padding:12, fontSize:"0.65rem", color:C.muted, textAlign:"center", borderTop:`1px solid ${C.border}` }}>
           {menuOpen ? `⏳ متبقي ${getDaysLeft()} يوم` : `${getDaysLeft()}ي`}
         </div>
       </div>
@@ -526,8 +615,20 @@ export default function App() {
         {renderPage()}
       </div>
 
-      {/* نافذة إعدادات الحساب المطور (Settings Modal) */}
-      <Modal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="⚙️ إعدادات الحساب وتخصيص النظام">
+      {/* نافذة إعدادات الحساب وتخصيص النظام + النسخ الاحتياطي */}
+      <Modal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="⚙️ إعدادات الحساب والنسخ الاحتياطي">
+        {/* أدوات النسخة الاحتياطية (Backup & Restore) */}
+        <div style={{ padding:12, background:"rgba(201,168,76,0.05)", border:`1px dashed ${C.border}`, borderRadius:12, marginBottom:16, display:"flex", flexDirection:"column", gap:10 }}>
+          <span style={{ fontSize:"0.78rem", fontWeight:700, color:C.gold }}>📦 أدوات حماية وإدارة البيانات محلياً:</span>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+            <Btn variant="secondary" onClick={handleExportBackup} style={{ fontSize:"0.75rem", padding:"6px 10px" }}>📥 تحميل نسخة (.json)</Btn>
+            <label style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", gap:6, padding:"6px 10px", borderRadius:10, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", color:C.text, fontSize:"0.75rem", fontWeight:600, cursor:"pointer" }}>
+              ⚡ استعادة نسخة
+              <input type="file" accept=".json" onChange={handleImportBackup} style={{ display:"none" }} />
+            </label>
+          </div>
+        </div>
+
         <form onSubmit={handleSaveSettings} style={{ display:"flex", flexDirection:"column", gap:12 }}>
           <h4 style={{ fontSize:"0.78rem", color:C.gold, borderBottom:`1px solid ${C.border}`, paddingBottom:4, margin:0 }}>البيانات الشخصية والإعلانية</h4>
           <Input label="اسم المحفظ / الشيخ" value={formData.name} onChange={e => setFormData({...formData, name:e.target.value})} />
