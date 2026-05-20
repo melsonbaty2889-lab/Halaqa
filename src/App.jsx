@@ -9,7 +9,7 @@ const SECRET_KEY = "TheWinRoute_Secret_2026";
 // 🔒 SECURITY & STORAGE (تأمين الحفظ والتشفير الفوري)
 // ═══════════════════════════════════════════════
 const SECURITY_CONFIG = {
-  allowedHost: "smart-halaqa.vercel.app",
+  allowedHostSuffix: "vercel.app", // السماح بجميع النطاقات الفرعية لفيرسيل
   watermark: "Licensed to The Win Route © 2026",
   demoDaysLimit: 14, 
 };
@@ -496,7 +496,7 @@ export default function App() {
   const BOT_FLOWS = {
     start: { msg: "السلام عليكم 🌙\nأهلًا بك في نظام حلقة القرآن الكريم\n\nاختر من القائمة المتاحة لتلبية طلبك فوراً:", options: [{ label: "📝 تسجيل طالب جديد", next: "register" }, { label: "💰 دفع الرسوم الشهرية", next: "payment_options" }, { label: "📅 مواعيد الحلقة", next: "schedule" }, { label: "📞 التواصل مع المحفظ", next: "contact" }] },
     register: { msg: "ممتاز! 📝\n\nلتسجيل طالب جديد، يرجى الضغط على الرابط أدناه لملء استمارة الاشتراك وتحديد طريقة الدفع المفضلة لك:", options: [{ label: "🔗 فتح استمارة التسجيل", next: "registered", link: true }] },
-    registered: { msg: "✅ تم فتح الاستمارة!\n\nبعد ملء البيانات وتحويل الرسوم، يرجى إرسال لقطة شاشة (Screenshot) للتأكيد.\n\nهل تحتاج شيئًا آخر؟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
+    registered: { msg: "✅ تم فتح الاستمارة!\n\nبعد ملء البيانات وتحويل الرسوم، يرجى إرسال لقطة شاشة (Screenshot) للتأكيد.\n\nهل تحتاج شيئاً آخر؟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
     payment_options: { msg: `💰 رسوم الاشتراك الشهري هي (${teacherConfig.fee} جنيه).\n\nيرجى اختيار وسيلة الدفع المناسبة لك لتعجيل التفعيل:`, options: [{ label: "💳 دفع إلكتروني (فيزا / كارت)", next: "pay_systeme" }, { label: "📱 فودافون كاش (Vodafone Cash)", next: "pay_vodafone" }, { label: "⚡ انستا باي (InstaPay)", next: "pay_instapay" }, { label: "🏠 رجوع", next: "start" }] },
     pay_systeme: { msg: "💳 للدفع الآمن عبر بطاقتك البنكية:\n\nاضغط على الرابط أدناه لإتمام العملية عبر بوابتنا الرقمية في Systeme:", options: [{ label: "💳 ادفع الآن بالفيزا", next: "paid_confirm", link: true }, { label: "🔄 تغيير طريقة الدفع", next: "payment_options" }] },
     pay_vodafone: { msg: `📱 للدفع عبر فودافون كاش:\n\nيرجى تحويل مبلغ (${teacherConfig.fee} جنيه) إلى الرقم التالي:\n📞 ${teacherConfig.vodafoneCash}\n\n⚠️ بعد التحويل، يرجى التقاط صورة لإيصال التحويل وإرسالها للمحفظ لتفعيل الحساب فوراً.`, options: [{ label: "📲 إرسال الإيصال عبر واتساب", next: "paid_confirm", link: true }, { label: "🔄 رجوع", next: "payment_options" }] },
@@ -573,7 +573,11 @@ export default function App() {
     fileReader.readAsText(file);
   };
 
-  const isPirated = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== SECURITY_CONFIG.allowedHost;
+  // فحص مرن يقبل لوكال هوست أو أي نطاق ينتهي بـ vercel.app
+  const isPirated = typeof window !== "undefined" && 
+                    window.location.hostname !== "localhost" && 
+                    !window.location.hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
+                    
   const [installDate, setInstallDate] = useState(() => LS.get("halqa_security_init", null));
   
   useEffect(() => { if (!installDate) { const d = new Date().toISOString().split("T")[0]; LS.set("halqa_security_init", d); setInstallDate(d); } }, [installDate]);
