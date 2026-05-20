@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-// 1. استيراد دالات التشفير وفك التشفير الآمنة من ملف securityUtils
-import { encryptAndSave, getAndDecrypt } from "./securityUtils";
+// استيراد مكتبة التشفير المعتمدة في المشروع
+import CryptoJS from "crypto-js";
+
+// مفتاح التشفير الآمن للمشروع
+const SECRET_KEY = "TheWinRoute_Secret_2026";
 
 // ═══════════════════════════════════════════════
-// 🔒 SECURITY & STORAGE (تأمين النسخة التجريبية وحفظ البيانات)
+// 🔒 SECURITY & STORAGE (تأمين الحفظ والتشفير الفوري)
 // ═══════════════════════════════════════════════
 const SECURITY_CONFIG = {
   allowedHost: "smart-halaqa.vercel.app",
@@ -11,18 +14,39 @@ const SECURITY_CONFIG = {
   demoDaysLimit: 14, 
 };
 
+// كائن معالجة التشفير الداخلي المستقر
+const CRYPTO = {
+  encrypt: (str) => {
+    try {
+      return CryptoJS.AES.encrypt(encodeURIComponent(str), SECRET_KEY).toString();
+    } catch (e) {
+      return "";
+    }
+  },
+  decrypt: (str) => {
+    try {
+      const bytes = CryptoJS.AES.decrypt(str, SECRET_KEY);
+      return decodeURIComponent(bytes.toString(CryptoJS.enc.Utf8));
+    } catch (e) {
+      return null;
+    }
+  }
+};
+
 const LS = {
   get: (k, d) => {
     try {
-      const decryptedData = getAndDecrypt(k);
-      return decryptedData !== null ? decryptedData : d;
+      const enc = localStorage.getItem(k);
+      if (!enc) return d;
+      const dec = CRYPTO.decrypt(enc);
+      return dec ? JSON.parse(dec) : d;
     } catch { 
       return d; 
     }
   },
   set: (k, v) => { 
     try { 
-      encryptAndSave(k, v);
+      localStorage.setItem(k, CRYPTO.encrypt(JSON.stringify(v)));
     } catch {} 
   }
 };
@@ -480,7 +504,6 @@ export default function App() {
     alert("✔️ تم حفظ وتشفير إعدادات الحساب بنجاح!");
   };
 
-  // 📱 ميزة الأولوية الثانية: إرسال تذكير سداد مجهز ديناميكياً عبر الواتساب واجهة Click-to-Chat
   const handleSendWhatsAppReminder = (student) => {
     const message = `السلام عليكم يا فندم، نود تذكيركم بمصروفات الحلقة الذكية المستحقة للطالب (${student.name}) لشهر مايو.\n\nالمبلغ المستحق: ${teacherConfig.fee} ج.م\n\nيمكنكم التحويل الفوري لتجديد الاشتراك عبر:\n📱 فودافون كاش: ${teacherConfig.vodafoneCash}\n⚡ انستا باي: ${teacherConfig.instaPayId}\n\nجزاكم الله خيراً وجعله في ميزان حسناتكم! ✨`;
     const encodedMessage = encodeURIComponent(message);
@@ -489,7 +512,6 @@ export default function App() {
     window.open(whatsappUrl, "_blank");
   };
 
-  // 📦 ميزة الأولوية الأولى: تصدير النسخة الاحتياطية الشاملة والمشفرة كملف JSON
   const handleExportBackup = () => {
     const backupData = {
       version: "2026.1",
@@ -509,7 +531,6 @@ export default function App() {
     downloadAnchor.remove();
   };
 
-  // 📥 ميزة الأولوية الأولى: استيراد وقراءة ملف النسخة الاحتياطية وتحديث النظام فوراً
   const handleImportBackup = (e) => {
     const fileReader = new FileReader();
     const file = e.target.files[0];
