@@ -1,35 +1,25 @@
 import { useState, useEffect } from "react";
-// استيراد مكتبة التشفير المعتمدة في المشروع
 import CryptoJS from "crypto-js";
 
-// مفتاح التشفير الآمن للمشروع
 const SECRET_KEY = "TheWinRoute_Secret_2026";
 
-// ═══════════════════════════════════════════════
-// 🔒 SECURITY & STORAGE (تأمين الحفظ والتشفير الفوري)
-// ═══════════════════════════════════════════════
 const SECURITY_CONFIG = {
-  allowedHostSuffix: "vercel.app", // السماح بجميع النطاقات الفرعية لفيرسيل
+  allowedHostSuffix: "vercel.app", 
   watermark: "Licensed to The Win Route © 2026",
   demoDaysLimit: 14, 
 };
 
-// كائن معالجة التشفير الداخلي المستقر
 const CRYPTO = {
   encrypt: (str) => {
     try {
       return CryptoJS.AES.encrypt(encodeURIComponent(str), SECRET_KEY).toString();
-    } catch (e) {
-      return "";
-    }
+    } catch (e) { return ""; }
   },
   decrypt: (str) => {
     try {
       const bytes = CryptoJS.AES.decrypt(str, SECRET_KEY);
       return decodeURIComponent(bytes.toString(CryptoJS.enc.Utf8));
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 };
 
@@ -40,20 +30,13 @@ const LS = {
       if (!enc) return d;
       const dec = CRYPTO.decrypt(enc);
       return dec ? JSON.parse(dec) : d;
-    } catch { 
-      return d; 
-    }
+    } catch { return d; }
   },
   set: (k, v) => { 
-    try { 
-      localStorage.setItem(k, CRYPTO.encrypt(JSON.stringify(v)));
-    } catch {} 
+    try { localStorage.setItem(k, CRYPTO.encrypt(JSON.stringify(v))); } catch {} 
   }
 };
 
-// ═══════════════════════════════════════════════
-// DATA & CONFIG (القيم الافتراضية للمعلم)
-// ═══════════════════════════════════════════════
 const DEFAULT_TEACHER_CONFIG = {
   name: "الشيخ أحمد محمود",
   phone: "01012345678",
@@ -85,9 +68,6 @@ const SAMPLE_ATTENDANCE = [{ id: 1, date: "2026-05-19", present: [1, 3, 4], abse
 const C = { bg: "#0C1520", surface: "#111C2A", card: "#162030", border: "rgba(201,168,76,0.12)", gold: "#C9A84C", text: "#E4DAC8", muted: "rgba(228,218,200,0.4)", green: "#34D399", red: "#EF4444", amber: "#F59E0B", blue: "#60A5FA", purple: "#A78BFA" };
 const g = { gold: "linear-gradient(135deg, #C9A84C, #E8C97A)" };
 
-// ═══════════════════════════════════════════════
-// REUSABLE COMPONENTS
-// ═══════════════════════════════════════════════
 const Badge = ({ children, color = C.green }) => (
   <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, fontSize:"0.72rem", fontWeight:700, background:`${color}1A`, color, border:`1px solid ${color}33`, whiteSpace:"nowrap" }}>{children}</span>
 );
@@ -155,9 +135,6 @@ const PageHeader = ({ title, sub, action }) => (
 const TH = ({ children }) => <th style={{ padding:"12px", textAlign:"right", fontSize:"0.72rem", color:C.muted, fontWeight:700, borderBottom:`1px solid ${C.border}`, whiteSpace:"nowrap" }}>{children}</th>;
 const TD = ({ children }) => <td style={{ padding:"12px", fontSize:"0.82rem", borderBottom:`1px solid rgba(255,255,255,0.03)`, color:C.text, whiteSpace:"nowrap" }}>{children}</td>;
 
-// ═══════════════════════════════════════════════
-// SECTIONS CODES
-// ═══════════════════════════════════════════════
 const LoginPage = ({ onLogin }) => {
   const [user, setUser] = useState(""); const [pass, setPass] = useState("");
   return (
@@ -473,9 +450,6 @@ const Reminders = ({ teacher, botState, setBotState, botFlows }) => {
   );
 };
 
-// ═══════════════════════════════════════════════
-// MAIN COMPONENT WRAPPER (RESPONSIVE LAYOUT)
-// ═══════════════════════════════════════════════
 export default function App() {
   const [isLogged, setIsLogged] = useState(false); const [page, setPage] = useState("dashboard");
   const [students, setStudents] = useState(() => LS.get("halqa_v_students", SAMPLE_STUDENTS));
@@ -483,14 +457,12 @@ export default function App() {
   const [attendance, setAttendance] = useState(() => LS.get("halqa_v_attendance", SAMPLE_ATTENDANCE));
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // ⚙️ الحالات الديناميكية الخاصة بإعدادات المعلم المطور
   const [teacherConfig, setTeacherConfig] = useState(() => {
     return LS.get('halqa_teacher_config', DEFAULT_TEACHER_CONFIG);
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [formData, setFormData] = useState({ ...teacherConfig });
 
-  // تفعيل الشات بوت ديناميكياً بناءً على بيانات الحساب المحدثة
   const [botState, setBotState] = useState("start");
   
   const BOT_FLOWS = {
@@ -531,7 +503,6 @@ export default function App() {
       payments: payments,
       attendance: attendance
     };
-    
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
@@ -545,35 +516,21 @@ export default function App() {
     const fileReader = new FileReader();
     const file = e.target.files[0];
     if (!file) return;
-
     fileReader.onload = (event) => {
       try {
         const parsedData = JSON.parse(event.target.result);
-        
         if (parsedData.students && parsedData.payments && parsedData.teacher) {
-          setTeacherConfig(parsedData.teacher);
-          setStudents(parsedData.students);
-          setPayments(parsedData.payments);
+          setTeacherConfig(parsedData.teacher); setStudents(parsedData.students); setPayments(parsedData.payments);
           if (parsedData.attendance) setAttendance(parsedData.attendance);
-
-          LS.set('halqa_teacher_config', parsedData.teacher);
-          LS.set('halqa_v_students', parsedData.students);
-          LS.set('halqa_v_payments', parsedData.payments);
-          if (parsedData.attendance) LS.set('halqa_v_attendance', parsedData.attendance);
-
-          alert("✔️ تم استعادة النسخة الاحتياطية وكافة بيانات الطلاب والحسابات بنجاح تام!");
-          window.location.reload();
-        } else {
-          alert("❌ خطأ: ملف النسخة الاحتياطية غير صالحة أو تالفة!");
-        }
-      } catch (error) {
-        alert("❌ فشل قراءة الملف! تأكد من اختيار ملف .json صحيح تم تصديره من النظام.");
-      }
+          LS.set('halqa_teacher_config', parsedData.teacher); LS.set('halqa_v_students', parsedData.students);
+          LS.set('halqa_v_payments', parsedData.payments); if (parsedData.attendance) LS.set('halqa_v_attendance', parsedData.attendance);
+          alert("✔️ تم استعادة النسخة الاحتياطية بنجاح!"); window.location.reload();
+        } else { alert("❌ خطأ: ملف النسخة الاحتياطية غير صالحة!"); }
+      } catch (error) { alert("❌ فشل قراءة الملف!"); }
     };
     fileReader.readAsText(file);
   };
 
-  // فحص مرن يقبل لوكال هوست أو أي نطاق ينتهي بـ vercel.app
   const isPirated = typeof window !== "undefined" && 
                     window.location.hostname !== "localhost" && 
                     !window.location.hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
@@ -601,45 +558,26 @@ export default function App() {
     { id: "reminders", label: "🤖 شات بوت iBots" }
   ];
 
-  const renderPage = () => {
-    switch (page) {
-      case "dashboard": return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
-      case "students": return <Students students={students} setStudents={setStudents} onSendReminder={handleSendWhatsAppReminder} />;
-      case "attendance": return <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />;
-      case "payments": return <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacherConfig} />;
-      case "reminders": return <Reminders teacher={teacherConfig} botState={botState} setBotState={setBotState} botFlows={BOT_FLOWS} />;
-      default: return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
-    }
-  };
-
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Cairo',sans-serif", direction:"rtl", display:"flex", boxSizing:"border-box" }}>
-      {/* القائمة الجانبية (Sidebar) */}
       <div style={{ width: menuOpen ? 240 : 70, background:C.surface, borderLeft:`1px solid ${C.border}`, display:"flex", flexDirection:"column", transition:"all 0.3s ease", position:"relative", zIndex:1000 }}>
         <div style={{ padding:16, display:"flex", flexDirection:"column", gap:8, borderBottom:`1px solid ${C.border}` }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:menuOpen?"space-between":"center" }}>
             {menuOpen && <span style={{ fontWeight:800, color:C.gold, fontSize:"0.95rem" }}>🕌 الحلقة الذكية</span>}
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"none", border:"none", color:C.gold, fontSize:20, cursor:"pointer" }}>☰</button>
           </div>
-          {/* عداد الأيام التجريبية المضاء الثابت في الأعلى */}
           <div style={{ background: "rgba(235,166,60,0.1)", border: "1px solid rgba(235,166,60,0.2)", borderRadius: 8, padding: "6px 4px", textAlign: "center", color: C.amber, fontSize: "0.72rem", fontWeight: 700, marginTop: 4 }}>
             {menuOpen ? `⏳ النسخة التجريبية: متبقي ${getDaysLeft()} يوم` : `⏳ ${getDaysLeft()}ي`}
           </div>
         </div>
         <div style={{ flex:1, padding:"12px 6px", display:"flex", flexDirection:"column", gap:6 }}>
           {navItems.map(item => (
-            <button key={item.id} onClick={() => setPage(item.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px", borderRadius:12, border:"none", background:page===item.id?`${C.gold}15`:"transparent", color:page===item.id?C.gold:C.text, fontSize:"0.85rem", fontWeight:600, cursor:"pointer", textAlign:"right", transition:"0.2s" }}>
+            <button key={item.id} onClick={() => setPage(item.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px", borderRadius:12, border:"none", background:page===item.id?`${C.gold}15`:"transparent", color:page===item.id?C.gold:C.text, fontSize:"0.85rem", fontWeight:600, cursor:"pointer", textAlign:"right" }}>
               {menuOpen ? item.label : item.label.split(" ")[0]}
             </button>
           ))}
-          
           <hr style={{ border:"none", borderTop:`1px solid ${C.border}`, margin:"10px 0" }} />
-          
-          {/* زر فتح الإعدادات المتناسق */}
-          <button 
-            onClick={() => { setFormData({ ...teacherConfig }); setIsSettingsOpen(true); }} 
-            style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px", borderRadius:12, border:"none", background:"transparent", color:C.amber, fontSize:"0.85rem", fontWeight:600, cursor:"pointer", textAlign:"right" }}
-          >
+          <button onClick={() => { setFormData({ ...teacherConfig }); setIsSettingsOpen(true); }} style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px", borderRadius:12, border:"none", background:"transparent", color:C.amber, fontSize:"0.85rem", fontWeight:600, cursor:"pointer", textAlign:"right" }}>
             {menuOpen ? "⚙️ إعدادات الحساب" : "⚙️"}
           </button>
         </div>
@@ -648,14 +586,11 @@ export default function App() {
         </div>
       </div>
 
-      {/* المحتوى الرئيسي */}
       <div style={{ flex:1, padding:24, overflowX:"hidden", boxSizing:"border-box" }}>
         {renderPage()}
       </div>
 
-      {/* نافذة إعدادات الحساب وتخصيص النظام + النسخ الاحتياطي */}
       <Modal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="⚙️ إعدادات الحساب والنسخ الاحتياطي">
-        {/* أدوات النسخة الاحتياطية (Backup & Restore) */}
         <div style={{ padding:12, background:"rgba(201,168,76,0.05)", border:`1px dashed ${C.border}`, borderRadius:12, marginBottom:16, display:"flex", flexDirection:"column", gap:10 }}>
           <span style={{ fontSize:"0.78rem", fontWeight:700, color:C.gold }}>📦 أدوات حماية وإدارة البيانات محلياً:</span>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
