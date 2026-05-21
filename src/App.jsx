@@ -556,18 +556,33 @@ export default function App() {
                     window.location.hostname !== "localhost" && 
                     !window.location.hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
                     
-  const [installDate, setInstallDate] = useState(() => LS.get("halqa_security_init", null));
-  
-  useEffect(() => { if (!installDate) { const d = new Date().toISOString().split("T")[0]; LS.set("halqa_security_init", d); setInstallDate(d); } }, [installDate]);
+    // 1. التأكد من قراءة وحفظ تاريخ التثبيت بشكل صحيح باستخدام دالة LS المحدثة
+  const [installDate, setInstallDate] = useState(() => {
+    const saved = LS.get("halqa_security_init");
+    if (saved) return saved;
+    const today = new Date().toISOString().split("T")[0];
+    LS.set("halqa_security_init", today);
+    return today;
+  });
+
+  // 2. مزامنة البيانات الأخرى في الـ localStorage
   useEffect(() => { LS.set("halqa_v_students", students); }, [students]);
   useEffect(() => { LS.set("halqa_v_payments", payments); }, [payments]);
   useEffect(() => { LS.set("halqa_v_attendance", attendance); }, [attendance]);
 
+  // 3. دالة حساب الأيام المتبقية مع حماية ضد الـ NaN
   const getDaysLeft = () => {
     if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
-    const diff = Math.abs(new Date() - new Date(installDate));
-    return Math.max(0, SECURITY_CONFIG.demoDaysLimit - Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    try {
+      const diff = Math.abs(new Date() - new Date(installDate));
+      const daysUsed = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      const daysLeft = SECURITY_CONFIG.demoDaysLimit - daysUsed;
+      return isNaN(daysLeft) ? SECURITY_CONFIG.demoDaysLimit : Math.max(0, daysLeft);
+    } catch (e) {
+      return SECURITY_CONFIG.demoDaysLimit;
+    }
   };
+
 
   const renderPage = () => {
     switch (page) {
