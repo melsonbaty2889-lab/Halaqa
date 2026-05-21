@@ -172,7 +172,7 @@ const LoginPage = ({ onLogin }) => {
   );
 };
 
-const Dashboard = ({ students, payments, teacher, onSendReminder }) => {
+const Dashboard = ({ students, payments, teacher, onSendReminder, isFullyActivated }) => {
   const total = students.length; const paid = students.filter(s => s.paid).length;
   const monthRev = payments.reduce((a, p) => a + p.amount, 0);
   return (
@@ -182,7 +182,7 @@ const Dashboard = ({ students, payments, teacher, onSendReminder }) => {
         <p style={{ fontSize:"0.78rem", color:C.muted }}>إليك ملخص سريع لأداء وإحصائيات الحلقة القرآنية اليوم</p>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:20 }}>
-        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{total} / 5</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب (الحد التجريبي)</div></Card>
+        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{isFullyActivated ? `${total} / ∞` : `${total} / 5`}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب الحركيين</div></Card>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين this month</div></Card>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.gold }}>{monthRev.toLocaleString()} ج.م</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>مداخيل شهر مايو</div></Card>
       </div>
@@ -224,7 +224,7 @@ const Dashboard = ({ students, payments, teacher, onSendReminder }) => {
   );
 };
 
-const Students = ({ students, setStudents, onSendReminder }) => {
+const Students = ({ students, setStudents, onSendReminder, isFullyActivated, teacherPhone }) => {
   const [search, setSearch] = useState(""); const [modal, setModal] = useState(null);
   const empty = { name:"", parent:"", phone:"", age:"", surah:"", memorized:"", notes:"" };
   const [form, setForm] = useState(empty);
@@ -241,9 +241,9 @@ const Students = ({ students, setStudents, onSendReminder }) => {
   };
 
   const handleAddStudentClick = () => {
-    if (students.length >= 5) {
-      alert("⚠️ لقد استهلكت الحد الأقصى للنسخة التجريبية (5 طلاب).\n\nيرجى التواصل مع الدعم الفني لشركة (The Win Route) لتفعيل النسخة المدفوعة وفتح عدد غير محدود من الطلاب! 🚀");
-      window.open("https://wa.me/201017403485?text=" + encodeURIComponent("مرحباً، أود ترقية نظام الحلقة الذكية للاشتراك في النسخة المدفوعة لفتح حد الطلاب."), "_blank");
+    if (!isFullyActivated && students.length >= 5) {
+      alert("⚠️ لقد استهلكت الحد الأقصى للنسخة التجريبية (5 طلاب).\n\nيرجى التواصل لتفعيل النسخة الكاملة لفتح عدد غير محدود من الطلاب! 🚀");
+      window.open(`https://wa.me/2${teacherPhone}?text=` + encodeURIComponent("مرحباً، أود ترقية نظام الحلقة الذكية للاشتراك في النسخة الكاملة لفتح حد الطلاب."), "_blank");
       return;
     }
     setForm(empty);
@@ -269,7 +269,7 @@ const Students = ({ students, setStudents, onSendReminder }) => {
     <div>
       <PageHeader 
         title="دليل الطلاب والتحفيظ" 
-        sub={`إدارة شؤون الطلاب الحاليين (${students.length}/5)`} 
+        sub={isFullyActivated ? `إدارة شؤون الطلاب الحاليين (${students.length})` : `إدارة شؤون الطلاب الحاليين (${students.length}/5)`} 
         action={
           <>
             <Btn variant="secondary" onClick={() => exportToExcel("all")} style={{ fontSize: "0.75rem" }}>📥 تصدير الكل</Btn>
@@ -556,7 +556,7 @@ export default function App() {
                     window.location.hostname !== "localhost" && 
                     !window.location.hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
                     
-  // 1. قراءة أو إنشاء تاريخ التثبيت (التجربة التلقائية 14 يوماً)
+  // قراءة أو إنشاء تاريخ التثبيت (التجربة التلقائية 14 يوماً)
   const [installDate, setInstallDate] = useState(() => {
     const saved = LS.get("halqa_security_init");
     if (saved) return saved;
@@ -607,13 +607,12 @@ export default function App() {
     }
   };
 
-
   const renderPage = () => {
     switch (page) {
       case "dashboard":
-        return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
+        return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} isFullyActivated={isFullyActivated} />;
       case "students":
-        return <Students students={students} setStudents={setStudents} onSendReminder={handleSendWhatsAppReminder} />;
+        return <Students students={students} setStudents={setStudents} onSendReminder={handleSendWhatsAppReminder} isFullyActivated={isFullyActivated} teacherPhone={teacherConfig.phone} />;
       case "attendance":
         return <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />;
       case "payments":
@@ -621,12 +620,66 @@ export default function App() {
       case "reminders":
         return <Reminders teacher={teacherConfig} botState={botState} setBotState={setBotState} botFlows={BOT_FLOWS} />;
       default:
-        return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
+        return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} isFullyActivated={isFullyActivated} />;
     }
   };
 
   if (isPirated) return <div style={{ background:"#050A10", color:C.red, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl" }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>🚫 خطأ في ترخيص النظام</h2></Card></div>;
-  if (getDaysLeft() <= 0) return <div style={{ background:C.bg, color:C.text, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl", padding:16 }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>⏳ انتهت صلاحية الديمو</h2><Btn onClick={() => window.open(teacherConfig.systemeLink)} style={{ width:"100%", marginTop:12 }}>🚀 ترقية الحساب الآن</Btn></Card></div>;
+  
+  // شاشة القفل عند انتهاء الـ 14 يوماً مع إمكانية التفعيل بالكود دون تعديل السورس
+  if (!isFullyActivated && getDaysLeft() <= 0) {
+    return (
+      <div style={{
+        background: C.bg, color: C.text, minHeight: "100vh", 
+        display: "flex", flexDirection: "column", alignItems: "center", 
+        justifyContent: "center", fontFamily: "'Cairo', sans-serif", direction: "rtl", padding: "16px"
+      }}>
+        <Card style={{ maxWidth: 440, padding: "32px", textAlign: "center", border: `1px solid ${C.red}40` }}>
+          <div style={{ fontSize: "3rem", marginBottom: "12px" }}>🔒</div>
+          <h2 style={{ color: C.red, fontSize: "1.4rem", fontWeight: 800, marginBottom: "8px" }}>انتهت الفترة التجريبية!</h2>
+          <p style={{ color: C.muted, fontSize: "0.85rem", lineHeight: "1.6", marginBottom: "20px" }}>
+            لقد استمتعت بتجربة "الحلقة الذكية" لمدة 14 يوماً. لاستمرار إدارة مجموعاتك وحساباتك بأمان تام وحفظ بياناتك الحالية، يرجى ترقية وتفعيل النسخة الكاملة والمستمرة.
+          </p>
+          
+          <a 
+            href={`https://wa.me/201552518406?text=${encodeURIComponent("مرحباً، انتهت الفترة التجريبية لـ نظام الحلقة الذكية وأود شراء كود التفعيل المباشر للنسخة الدائمة.")}`}
+            target="_blank" 
+            rel="noreferrer"
+            style={{
+              display: "block", background: g.gold, color: "#1A1208", padding: "12px", 
+              borderRadius: "10px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "20px"
+            }}
+          >
+            📱 اضغط هنا لشراء كود التفعيل الفوري عبر الواتساب
+          </a>
+
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: "20px" }}>
+            <label style={{ display: "block", textAlign: "right", marginBottom: "8px", fontSize: "0.75rem", color: C.muted, fontWeight: 600 }}>إذا قمت باستلام كود التفعيل، أدخله في الخانة أدناه:</label>
+            <input 
+              type="text" 
+              placeholder="ضع كود التفعيل المشفر هنا..." 
+              value={activationCode}
+              onChange={(e) => setActivationCode(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${C.border}`, 
+                background: "rgba(255,255,255,0.04)", color: C.text, textAlign: "center", marginBottom: "12px", boxSizing: "border-box", fontFamily: "monospace", fontSize: "0.9rem"
+              }}
+            />
+            <button 
+              onClick={handleActivation}
+              style={{
+                width: "100%", padding: "10px", borderRadius: "10px", border: "none", 
+                background: `linear-gradient(135deg, ${C.green}, #059669)`, color: "#fff", fontWeight: "bold", fontSize: "0.85rem", cursor: "pointer"
+              }}
+            >
+              تأكيد تفعيل النظام الذكي 🚀
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   if (!isLogged) return <LoginPage onLogin={() => setIsLogged(true)} />;
 
   const navItems = [
@@ -643,8 +696,8 @@ export default function App() {
             {menuOpen && <span style={{ fontWeight:800, color:C.gold, fontSize:"0.95rem" }}>🕌 الحلقة الذكية</span>}
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:"none", border:"none", color:C.gold, fontSize:20, cursor:"pointer" }}>☰</button>
           </div>
-          <div style={{ background: "rgba(235,166,60,0.1)", border: "1px solid rgba(235,166,60,0.2)", borderRadius: 8, padding: "6px 4px", textAlign: "center", color: C.amber, fontSize: "0.72rem", fontWeight: 700, marginTop: 4 }}>
-            {menuOpen ? `⏳ النسخة التجريبية: متبقي ${getDaysLeft()} يوم` : `⏳ ${getDaysLeft()}ي`}
+          <div style={{ background: isFullyActivated ? "rgba(52,211,153,0.1)" : "rgba(235,166,60,0.1)", border: isFullyActivated ? `1px solid ${C.green}30` : "1px solid rgba(235,166,60,0.2)", borderRadius: 8, padding: "6px 4px", textAlign: "center", color: isFullyActivated ? C.green : C.amber, fontSize: "0.72rem", fontWeight: 700, marginTop: 4 }}>
+            {isFullyActivated ? (menuOpen ? "✓ النسخة الكاملة مفعّلة" : "✓") : (menuOpen ? `⏳ متبقي ${getDaysLeft()} يوم تجريبي` : `⏳ ${getDaysLeft()}ي`)}
           </div>
         </div>
         <div style={{ flex:1, padding:"12px 6px", display:"flex", flexDirection:"column", gap:6 }}>
