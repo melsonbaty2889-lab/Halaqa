@@ -56,7 +56,9 @@ const LS = {
       console.error("LS Set Error:", e);
     }
   }
-  // قائمة الأجزاء (1 إلى 30)
+};
+
+// قائمة الأجزاء (1 إلى 30)
 const QURAN_JUZS = Array.from({ length: 30 }, (_, i) => "الجزء " + (i + 1));
 
 // قائمة سور القرآن الكريم كاملة مرتبة
@@ -75,7 +77,6 @@ const QURAN_SURAS = [
   "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
 ];
 
-
 const DEFAULT_TEACHER_CONFIG = {
   name: "الشيخ أحمد محمود",
   phone: "01012345678",
@@ -89,11 +90,11 @@ const DEFAULT_TEACHER_CONFIG = {
 };
 
 const SAMPLE_STUDENTS = [
-  { id: 1, name: "أحمد محمد علي", parent: "محمد علي", phone: "01012345678", age: 10, joined: "2026-05-01", paid: true, paidDate: "2026-05-01", surah: "البقرة", memorized: 12, attendance: 90, notes: "" },
-  { id: 2, name: "يوسف عبدالرحمن", parent: "عبدالرحمن سالم", phone: "01123456789", age: 9, joined: "2026-05-02", paid: false, paidDate: null, surah: "آل عمران", memorized: 8, attendance: 75, notes: "يحتاج متابعة" },
-  { id: 3, name: "عمر خالد حسن", parent: "خالد حسن", phone: "01234567890", age: 11, joined: "2026-04-20", paid: true, paidDate: "2026-05-03", surah: "النساء", memorized: 20, attendance: 95, notes: "" },
-  { id: 4, name: "إبراهيم سامي", parent: "سامي إبراهيم", phone: "01098765432", age: 8, joined: "2026-05-10", paid: true, paidDate: "2026-05-01", surah: "الفاتحة", memorized: 3, attendance: 85, notes: "" },
-  { id: 5, name: "زياد طارق", parent: "طارق زياد", phone: "01187654321", age: 12, joined: "2026-04-01", paid: false, paidDate: null, surah: "المائدة", memorized: 25, attendance: 60, notes: "غياب متكرر" },
+  { id: 1, name: "أحمد محمد علي", parent: "محمد علي", phone: "01012345678", age: 10, joined: "2026-05-01", paid: true, paidDate: "2026-05-01", surah: "البقرة", juz: "الجزء 1", page: 12, attendance: 90, notes: "" },
+  { id: 2, name: "يوسف عبدالرحمن", parent: "عبدالرحمن سالم", phone: "01123456789", age: 9, joined: "2026-05-02", paid: false, paidDate: null, surah: "آل عمران", juz: "الجزء 3", page: 55, attendance: 75, notes: "يحتاج متابعة" },
+  { id: 3, name: "عمر خالد حسن", parent: "خالد حسن", phone: "01234567890", age: 11, joined: "2026-04-20", paid: true, paidDate: "2026-05-03", surah: "النساء", juz: "الجزء 5", page: 100, attendance: 95, notes: "" },
+  { id: 4, name: "إبراهيم سامي", parent: "سامي إبراهيم", phone: "01098765432", age: 8, joined: "2026-05-10", paid: true, paidDate: "2026-05-01", surah: "الفاتحة", juz: "الجزء 1", page: 3, attendance: 85, notes: "" },
+  { id: 5, name: "زياد طارق", parent: "طارق زياد", phone: "01187654321", age: 12, joined: "2026-04-01", paid: false, paidDate: null, surah: "المائدة", juz: "الجزء 6", page: 115, attendance: 60, notes: "غياب متكرر" },
 ];
 
 const SAMPLE_PAYMENTS = [
@@ -200,21 +201,25 @@ const Dashboard = ({ students, payments, teacher, onSendReminder, isFullyActivat
         <p style={{ fontSize:"0.78rem", color:C.muted }}>إليك ملخص سريع لأداء وإحصائيات الحلقة القرآنية اليوم</p>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:20 }}>
-        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{isFullyActivated ? `${total} / ∞` : `${total} / 5`}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب الحركيين</div></Card>
-        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين this month</div></Card>
+        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{isFullyActivated ? `${total} / ∞` : `${total} / 5`}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب الحاليين</div></Card>
+        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين هذا الشهر</div></Card>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.gold }}>{monthRev.toLocaleString()} ج.م</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>مداخيل شهر مايو</div></Card>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:14 }}>
         <Card style={{ overflowX:"auto" }}>
           <h3 style={{ fontSize:"0.85rem", fontWeight:700, marginBottom:10 }}>📋 نظرة على الحفظ والمتابعة</h3>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr><TH>اسم الطالب</TH><TH>السورة</TH><TH>الإنجاز</TH><TH>الحالة / التذكير</TH></tr></thead>
+            <thead><tr><TH>اسم الطالب</TH><TH>المحفوظ الحالي</TH><TH>الحالة / التذكير</TH></tr></thead>
             <tbody>
               {students.slice(0, 3).map(s => (
                 <tr key={s.id}>
                   <TD>{s.name}</TD>
-                  <TD>{s.surah || "—"}</TD>
-                  <TD><Badge color={C.purple}>{s.memorized} ص</Badge></TD>
+                  <TD>
+                    <div style={{ fontSize: "0.8rem" }}>
+                      {s.surah ? <span style={{ color: C.gold, fontWeight: "bold" }}>سورة {s.surah}</span> : "—"}
+                      <div style={{ fontSize: "0.7rem", color: C.muted }}>{s.juz || ""} {s.page ? `• صـ ${s.page}` : ""}</div>
+                    </div>
+                  </TD>
                   <TD>
                     {s.paid ? (
                       <Badge color={C.green}>مسدد</Badge>
@@ -244,16 +249,16 @@ const Dashboard = ({ students, payments, teacher, onSendReminder, isFullyActivat
 
 const Students = ({ students, setStudents, onSendReminder, isFullyActivated, teacherPhone }) => {
   const [search, setSearch] = useState(""); const [modal, setModal] = useState(null);
-  const empty = { name:"", parent:"", phone:"", age:"", surah:"", memorized:"", notes:"" };
+  const empty = { name:"", parent:"", phone:"", age:"", surah:"", juz:"", page:"", notes:"" };
   const [form, setForm] = useState(empty);
   const filtered = students.filter(s => s.name.includes(search) || s.parent.includes(search));
 
   const doSave = () => {
     if (!form.name || !form.phone) return;
     if (modal === "add") {
-      setStudents(p => [...p, { id:Date.now(), ...form, age:+form.age||0, memorized:+form.memorized||0, joined:new Date().toISOString().split("T")[0], paid:false }]);
+      setStudents(p => [...p, { id:Date.now(), ...form, age:+form.age||0, page:+form.page||0, joined:new Date().toISOString().split("T")[0], paid:false }]);
     } else {
-      setStudents(p => p.map(s => s.id === modal.id ? { ...s, ...form, age:+form.age||0, memorized:+form.memorized||0 } : s));
+      setStudents(p => p.map(s => s.id === modal.id ? { ...s, ...form, age:+form.age||0, page:+form.page||0 } : s));
     }
     setModal(null);
   };
@@ -268,13 +273,28 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
     setModal("add");
   };
 
+  const handleEditStudentClick = (student) => {
+    setForm({ ...student });
+    setModal(student);
+  };
+
+  const handleDeleteStudent = (id) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا الطالب نهائياً؟")) {
+      setStudents(p => p.filter(s => s.id !== id));
+    }
+  };
+
+  const handleMarkAsPaid = (id) => {
+    setStudents(p => p.map(s => s.id === id ? { ...s, paid: true, paidDate: new Date().toISOString().split("T")[0] } : s));
+  };
+
   const exportToExcel = (filterType = "all") => {
     const dataToExport = filterType === "paid" ? students.filter(s => s.paid) : students;
     if (dataToExport.length === 0) { alert("لا توجد بيانات للتصدير!"); return; }
-    const headers = ["اسم الطالب", "ولي الأمر", "الهاتف", "العمر", "السورة", "الحفظ", "الحالة"];
+    const headers = ["اسم الطالب", "ولي الأمر", "الهاتف", "العمر", "السورة", "الجزء", "الصفحة", "الحالة"];
     const csvContent = [
       headers.join(","),
-      ...dataToExport.map(s => [`"${s.name}"`, `"${s.parent}"`, `"${s.phone}"`, s.age, `"${s.surah}"`, s.memorized, s.paid ? "مسدد" : "معلق"].join(","))
+      ...dataToExport.map(s => [`"${s.name}"`, `"${s.parent}"`, `"${s.phone}"`, s.age, `"${s.surah || ''}"`, `"${s.juz || ''}"`, s.page || 0, s.paid ? "مسدد" : "معلق"].join(","))
     ].join("\n");
     const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -283,7 +303,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
     link.click();
   };
 
-    return (
+  return (
     <div>
       <PageHeader
         title="دليل الحلقات والمحفوظ"
@@ -327,7 +347,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
                     {s.surah && <span style={{ color: "#C9A84C", fontWeight: "bold" }}>📖 سورة {s.surah}</span>}
                     <div style={{ display: "flex", gap: "6px", fontSize: "0.75rem", color: C.muted }}>
                       {s.juz && <span>{s.juz}</span>}
-                      {s.page && <span>📄 صـ {s.page}</span>}
+                      {s.page ? <span>📄 صـ {s.page}</span> : null}
                     </div>
                     {!s.surah && !s.juz && !s.page && <span style={{ color: C.muted }}>-</span>}
                   </div>
@@ -366,7 +386,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
           <select 
             value={form.surah || ""} 
             onChange={(e) => setForm({...form, surah: e.target.value})}
-            style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.4)", outline: "none" }}
+            style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.4)", outline: "none", fontFamily:"'Cairo'" }}
           >
             <option value="">اختر السورة...</option>
             {QURAN_SURAS.map((sura) => (
@@ -382,7 +402,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
             <select 
               value={form.juz || ""} 
               onChange={(e) => setForm({...form, juz: e.target.value})}
-              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", outline: "none" }}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", outline: "none", fontFamily:"'Cairo'" }}
             >
               <option value="">اختر...</option>
               {QURAN_JUZS.map((juz) => (
@@ -400,7 +420,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
               placeholder="1-604"
               value={form.page || ""} 
               onChange={(e) => setForm({...form, page: e.target.value})}
-              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center", outline: "none" }}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center", outline: "none", fontFamily:"'Cairo'" }}
             />
           </div>
 
@@ -411,7 +431,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
               placeholder="سنوات"
               value={form.age || ""} 
               onChange={(e) => setForm({...form, age: e.target.value})}
-              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center", outline: "none" }}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center", outline: "none", fontFamily:"'Cairo'" }}
             />
           </div>
         </div>
@@ -420,7 +440,6 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
       </Modal>
     </div>
   );
-
 };
 
 const Attendance = ({ students, attendance, setAttendance }) => {
@@ -592,11 +611,11 @@ export default function App() {
   
   const BOT_FLOWS = {
     start: { msg: "السلام عليكم 🌙\nأهلًا بك في نظام حلقة القرآن الكريم\n\nاختر من القائمة المتاحة لتلبية طلبك فوراً:", options: [{ label: "📝 تسجيل طالب جديد", next: "register" }, { label: "💰 دفع الرسوم الشهرية", next: "payment_options" }, { label: "📅 مواعيد الحلقة", next: "schedule" }, { label: "📞 التواصل مع المحفظ", next: "contact" }] },
-    register: { msg: "ممتاز! 📝\n\nلتسجيل طالب جديد، يرجى الضغط على الرابط أدناه لملء استمارة الاشتراك وتحديد طريقة الدفع المفضلة لك:", options: [{ label: "🔗 فتح استمارة التسجيل", next: "registered", link: true }] },
-    registered: { msg: "✅ تم فتح الاستمارة!\n\nبعد ملء البيانات وتحويل الرسوم، يرجى إرسال لقطة شاشة (Screenshot) للتأكيد.\n\nهل تحتاج شيئاً آخر؟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
+    register: { msg: "ممتاز! 📝\n\nلتسجيل طالب جديد, يرجى الضغط على الرابط أدناه لملء استمارة الاشتراك وتحديد طريقة الدفع المفضلة لك:", options: [{ label: "🔗 فتح استمارة التسجيل", next: "registered", link: true }] },
+    registered: { msg: "✅ تم فتح الاستمارة!\n\nبعد ملء البيانات وتحويل الرسوم, يرجى إرسال لقطة شاشة (Screenshot) للتأكيد.\n\nهل تحتاج شيئاً آخر؟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
     payment_options: { msg: `💰 رسوم الاشتراك الشهري هي (${teacherConfig.fee} جنيه).\n\nيرجى اختيار وسيلة الدفع المناسبة لك لتعجيل التفعيل:`, options: [{ label: "💳 دفع إلكتروني (فيزا / كارت)", next: "pay_systeme" }, { label: "📱 فودافون كاش (Vodafone Cash)", next: "pay_vodafone" }, { label: "⚡ انستا باي (InstaPay)", next: "pay_instapay" }, { label: "🏠 رجوع", next: "start" }] },
     pay_systeme: { msg: "💳 للدفع الآمن عبر بطاقتك البنكية:\n\nاضغط على الرابط أدناه لإتمام العملية عبر بوابتنا الرقمية في Systeme:", options: [{ label: "💳 ادفع الآن بالفيزا", next: "paid_confirm", link: true }, { label: "🔄 تغيير طريقة الدفع", next: "payment_options" }] },
-    pay_vodafone: { msg: `📱 للدفع عبر فودافون كاش:\n\nيرجى تحويل مبلغ (${teacherConfig.fee} جنيه) إلى الرقم التالي:\n📞 ${teacherConfig.vodafoneCash}\n\n⚠️ بعد التحويل، يرجى التقاط صورة لإيصال التحويل وإرسالها للمحفظ لتفعيل الحساب فوراً.`, options: [{ label: "📲 إرسال الإيصال عبر واتساب", next: "paid_confirm", link: true }, { label: "🔄 رجوع", next: "payment_options" }] },
+    pay_vodafone: { msg: `📱 للدفع عبر فودافون كاش:\n\nيرجى تحويل مبلغ (${teacherConfig.fee} جنيه) إلى الرقم التالي:\n📞 ${teacherConfig.vodafoneCash}\n\n⚠️ بعد التحويل, يرجى التقاط صورة لإيصال التحويل وإرسالها للمحفظ لتفعيل الحساب فوراً.`, options: [{ label: "📲 إرسال الإيصال عبر واتساب", next: "paid_confirm", link: true }, { label: "🔄 رجوع", next: "payment_options" }] },
     pay_instapay: { msg: `⚡ للدفع الفوري عبر انستا باي:\n\nيرجى التحويل إلى العنوان التالي:\n🆔 ${teacherConfig.instaPayId}\n\nتأكد من إرسال تأكيد التحويل عبر المحادثة هنا لجرد الحساب المالي.`, options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
     paid_confirm: { msg: "🎉 جزاكم الله خيراً! تم تسجيل طلب الدفع.\n\nيقوم النظام حالياً بمراجعة التحويلات وسيقوم المحفظ بالتفعيل فوراً 🌟", options: [{ label: "🏠 القائمة الرئيسية", next: "start" }] },
     schedule: { msg: `📅 مواعيد الحلقة:\n\n🕓 ${teacherConfig.schedule}\n📍 المكان: ${teacherConfig.location}`, options: [{ label: "🏠 رجوع", next: "start" }] },
@@ -612,7 +631,7 @@ export default function App() {
   };
 
   const handleSendWhatsAppReminder = (student) => {
-    const message = `السلام عليكم يا فندم، نود تذكيركم بمصروفات الحلقة الذكية المستحقة للطالب (${student.name}) لشهر مايو.\n\nالمبلغ المستحق: ${teacherConfig.fee} ج.م\n\nيمكنكم التحويل الفوري لتجديد الاشتراك عبر:\n📱 فودافون كاش: ${teacherConfig.vodafoneCash}\n⚡ انستا باي: ${teacherConfig.instaPayId}\n\nجزاكم الله خيراً وجعله في ميزان حسناتكم! ✨`;
+    const message = `السلام عليكم يا فندم, نود تذكيركم بمصروفات الحلقة الذكية المستحقة للطالب (${student.name}) لشهر مايو.\n\nالمبلغ المستحق: ${teacherConfig.fee} ج.م\n\nيمكنكم التحويل الفوري لتجديد الاشتراك عبر:\n📱 فودافون كاش: ${teacherConfig.vodafoneCash}\n⚡ انستا باي: ${teacherConfig.instaPayId}\n\nجزاكم الله خيراً وجعله في ميزان حسناتكم! ✨`;
     const encodedMessage = encodeURIComponent(message);
     const cleanPhone = student.phone.trim();
     const whatsappUrl = `https://wa.me/2${cleanPhone}?text=${encodedMessage}`;
@@ -660,8 +679,7 @@ export default function App() {
                     window.location.hostname !== "localhost" && 
                     !window.location.hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
                     
-  // قراءة أو إنشاء تاريخ التثبيت (التجربة التلقائية 14 يوماً)
-  const [installDate, setInstallDate] = useState(() => {
+  const [installDate] = useState(() => {
     const saved = LS.get("halqa_security_init");
     if (saved) return saved;
     const today = new Date().toISOString().split("T")[0];
@@ -669,17 +687,14 @@ export default function App() {
     return today;
   });
 
-  // قراءة حالة التفعيل المدفوع من الجهاز
   const [isFullyActivated, setIsFullyActivated] = useState(() => {
     return LS.get("halqa_is_active") === true;
   });
 
-  // مزامنة البيانات في الـ localStorage
   useEffect(() => { LS.set("halqa_v_students", students); }, [students]);
   useEffect(() => { LS.set("halqa_v_payments", payments); }, [payments]);
   useEffect(() => { LS.set("halqa_v_attendance", attendance); }, [attendance]);
 
-  // حساب الأيام المتبقية للفترة التجريبية
   const getDaysLeft = () => {
     if (isFullyActivated) return 365; 
     if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
@@ -693,46 +708,40 @@ export default function App() {
     }
   };
 
-  // دالة التحقق من كود التفعيل تلقائياً
   const [activationCode, setActivationCode] = useState("");
   const handleActivation = () => {
-  try {
-    // 1. فك التشفير
-    const decrypted = CRYPTO.decrypt(activationCode);
-    if (!decrypted) {
-      alert("❌ كود التفعيل غير صحيح، يرجى التواصل مع الدعم.");
-      return;
-    }
-
-    // 2. قراءة البيانات كـ JSON
-    const licenseData = JSON.parse(decrypted);
-
-    if (licenseData && licenseData.status === "ACTIVE") {
-      const expireDate = new Date(licenseData.expiresAt);
-      const today = new Date();
-
-      // 3. فحص الصلاحية الزمنية
-      if (today > expireDate) {
-        alert("⚠️ عذراً، هذا الكود انتهت فترة صلاحيته الرسمية.");
+    try {
+      const decrypted = CRYPTO.decrypt(activationCode);
+      if (!decrypted) {
+        alert("❌ كود التفعيل غير صحيح، يرجى التواصل مع الدعم.");
         return;
       }
 
-      // 4. حفظ حالة التفعيل الكاملة وبيانات المشترك
-      LS.set("halqa_is_active", true);
-      LS.set("halqa_license_info", licenseData);
-      setIsFullyActivated(true);
+      const licenseData = JSON.parse(decrypted);
 
-      alert(`🎉 تم تفعيل النسخة الكاملة بنجاح! مرحباً بك يا ${licenseData.clientName}`);
-      window.location.reload();
-    } else {
-      alert("❌ كود التفعيل غير صالح.");
+      if (licenseData && licenseData.status === "ACTIVE") {
+        const expireDate = new Date(licenseData.expiresAt);
+        const today = new Date();
+
+        if (today > expireDate) {
+          alert("⚠️ عذراً، هذا الكود انتهت فترة صلاحيته الرسمية.");
+          return;
+        }
+
+        LS.set("halqa_is_active", true);
+        LS.set("halqa_license_info", licenseData);
+        setIsFullyActivated(true);
+
+        alert(`🎉 تم تفعيل النسخة الكاملة بنجاح! مرحباً بك يا ${licenseData.clientName}`);
+        window.location.reload();
+      } else {
+        alert("❌ كود التفعيل غير صالح.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("❌ حدث خطأ أثناء معالجة كود التفعيل.");
     }
-  } catch (e) {
-    console.error(e);
-    alert("❌ حدث خطأ أثناء معالجة كود التفعيل.");
-  }
-};
-
+  };
 
   const renderPage = () => {
     switch (page) {
@@ -753,7 +762,6 @@ export default function App() {
 
   if (isPirated) return <div style={{ background:"#050A10", color:C.red, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl" }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>🚫 خطأ في ترخيص النظام</h2></Card></div>;
   
-  // شاشة القفل عند انتهاء الـ 14 يوماً مع إمكانية التفعيل بالكود دون تعديل السورس
   if (!isFullyActivated && getDaysLeft() <= 0) {
     return (
       <div style={{
@@ -769,17 +777,16 @@ export default function App() {
           </p>
           
           <a 
-  href={`https://wa.me/2015525184067?text=${encodeURIComponent("مرحباً، انتهت الفترة التجريبية لـ نظام الحلقة الذكية وأود شراء كود التفعيل المباشر للنسخة الدائمة.")}`}
-  target="_blank" 
-  rel="noreferrer"
-  style={{
-    display: "block", background: g.gold, color: "#1A1208", padding: "12px", 
-    borderRadius: "10px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "20px"
-  }}
->
-  📱 اضغط هنا لشراء كود التفعيل الفوري عبر الواتساب
-</a>
-
+            href={`https://wa.me/2015525184067?text=${encodeURIComponent("مرحباً، انتهت الفترة التجريبية لـ نظام الحلقة الذكية وأود شراء كود التفعيل المباشر للنسخة الدائمة.")}`}
+            target="_blank" 
+            rel="noreferrer"
+            style={{
+              display: "block", background: g.gold, color: "#1A1208", padding: "12px", 
+              borderRadius: "10px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "20px"
+            }}
+          >
+            📱 اضغط هنا لشراء كود التفعيل الفوري عبر الواتساب
+          </a>
 
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: "20px" }}>
             <label style={{ display: "block", textAlign: "right", marginBottom: "8px", fontSize: "0.75rem", color: C.muted, fontWeight: 600 }}>إذا قمت باستلام كود التفعيل، أدخله في الخانة أدناه:</label>
