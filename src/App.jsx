@@ -1,20 +1,16 @@
 import { useState, useEffect } from "react";
-import CryptoJS from "crypto-js";
-
-const SECRET_KEY = "TheWinRoute_Secret_2026";
 
 const SECURITY_CONFIG = {
-  allowedHostSuffix: "vercel.app", 
+  allowedHostSuffix: "vercel.app",
   watermark: "Licensed to The Win Route © 2026",
-  demoDaysLimit: 14, 
+  demoDaysLimit: 14
 };
 
 const CRYPTO = {
   encrypt: (str) => {
     try {
-      if (str === undefined || str === null) return "";
-      const cleanStr = String(str);
-      return CryptoJS.AES.encrypt(encodeURIComponent(cleanStr), SECRET_KEY).toString();
+      if (!str) return "";
+      return btoa(encodeURIComponent(String(str)));
     } catch (e) {
       console.error("Encryption error:", e);
       return "";
@@ -23,9 +19,7 @@ const CRYPTO = {
   decrypt: (str) => {
     try {
       if (!str || typeof str !== "string") return "";
-      const bytes = CryptoJS.AES.decrypt(str, SECRET_KEY);
-      const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-      return decryptedStr ? decodeURIComponent(decryptedStr) : "";
+      return decodeURIComponent(atob(str));
     } catch (e) {
       console.error("Decryption error:", e);
       return "";
@@ -41,13 +35,12 @@ const LS = {
       const dec = CRYPTO.decrypt(enc);
       if (!dec || dec.trim() === "") return d;
       
-      // حماية إضافية للتحقق من أن النص هو فعلياً JSON صالح قبل عمل parse له
       if (dec.startsWith("{") || dec.startsWith("[")) {
         return JSON.parse(dec);
       }
       return dec;
     } catch (e) {
-      console.error("LS Get Error, using default:", e);
+      console.error("LS Get Error:", e);
       return d;
     }
   },
@@ -64,6 +57,7 @@ const LS = {
     }
   }
 };
+
 
 
 const DEFAULT_TEACHER_CONFIG = {
