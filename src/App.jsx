@@ -449,14 +449,22 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
 
 const Attendance = ({ students, attendance, setAttendance }) => {
   const [activeDate, setActiveDate] = useState(new Date().toISOString().split("T")[0]);
+  
+  // تأمين جلب البيانات لليوم الحالي بشكل صحيح لتجنب الـ undefined
   const current = attendance.find(a => a.date === activeDate) || { present: [], absent: [] };
 
   const toggle = (id, type) => {
     setAttendance(prev => {
       const rest = prev.filter(a => a.date !== activeDate);
       let r = prev.find(a => a.date === activeDate) || { id: Date.now(), date: activeDate, present: [], absent: [] };
-      r.present = r.present.filter(x => x !== id); r.absent = r.absent.filter(x => x !== id);
-      if (type === "p") r.present.push(id); if (type === "a") r.absent.push(id);
+      
+      // تنظيف المعرف من القائمتين أولاً لمنع التكرار
+      r.present = (r.present || []).filter(x => x !== id); 
+      r.absent = (r.absent || []).filter(x => x !== id);
+      
+      if (type === "p") r.present.push(id); 
+      if (type === "a") r.absent.push(id);
+      
       return [...rest, r];
     });
   };
@@ -470,8 +478,8 @@ const Attendance = ({ students, attendance, setAttendance }) => {
       allDates.forEach(date => {
         const dayRecord = attendance.find(a => a.date === date);
         if (dayRecord) {
-          if (dayRecord.present.includes(student.id)) studentRow.push("حاضر");
-          else if (dayRecord.absent.includes(student.id)) studentRow.push("غائب");
+          if (dayRecord.present?.includes(student.id)) studentRow.push("حاضر");
+          else if (dayRecord.absent?.includes(student.id)) studentRow.push("غائب");
           else studentRow.push("—");
         } else { studentRow.push("—"); }
       });
@@ -485,11 +493,20 @@ const Attendance = ({ students, attendance, setAttendance }) => {
     link.click();
   };
 
+  // 🛠️ تم إصلاح المنطق هنا لفحص مصفوفات الحضور والغياب بدقة لتشغيل الكشف الفردي
   const exportStudentAttendance = (studentId, studentName) => {
     const studentAttendance = attendance
-      .filter(a => a.present.includes(studentId))
-      .map(a => ({ date: a.date, status: "حاضر" }));
-    if (studentAttendance.length === 0) { alert(`لا توجد سجلات حضور مسجلة لـ ${studentName}`); return; }
+      .filter(a => (a.present && a.present.includes(studentId)) || (a.absent && a.absent.includes(studentId)))
+      .map(a => ({
+        date: a.date,
+        status: a.present.includes(studentId) ? "حاضر" : "غائب"
+      }));
+
+    if (studentAttendance.length === 0) { 
+      alert(`لا توجد سجلات حضور أو غياب مسجلة للتاريخ الحالي لـ ${studentName}`); 
+      return; 
+    }
+    
     const headers = ["التاريخ", "الحالة"];
     const csvContent = [headers.join(","), ...studentAttendance.map(a => [`"${a.date}"`, `"${a.status}"`].join(","))].join("\n");
     const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -506,7 +523,12 @@ const Attendance = ({ students, attendance, setAttendance }) => {
         action={
           <>
             <Btn variant="secondary" onClick={exportMonthlyReport}>📊 تصدير التقرير الشامل</Btn>
-            <input type="date" value={activeDate} onChange={e => setActiveDate(e.target.value)} style={{ background:C.card, border:`1px solid ${C.border}`, color:C.text, padding:"10px 14px", borderRadius:10, fontFamily:"'Cairo'", outline: "none", fontSize: "0.85rem" }} />
+            <input 
+              type="date" 
+              value={activeDate} 
+              onChange={e => setActiveDate(e.target.value)} 
+              style={{ background:C.card, border:`1px solid ${C.border}`, color:C.text, padding:"10px 14px", borderRadius:10, fontFamily:"'Cairo'", outline: "none", fontSize: "0.85rem" }} 
+            />
           </>
         } 
       />
@@ -514,31 +536,37 @@ const Attendance = ({ students, attendance, setAttendance }) => {
         <table style={{ width:"100%", borderCollapse:"collapse" }}>
           <thead><tr><TH>اسم الطالب</TH><TH>رقم التواصل</TH><TH style={{ textAlign:"center" }}>التحضير اليومي</TH></tr></thead>
           <tbody>
-            {students.map(s => (
-              <tr key={s.id}>
-                <TD>
-                  <b style={{ color: C.text }}>{s.name}</b>
-                  <button onClick={() => exportStudentAttendance(s.id, s.name)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", marginRight: "12px", fontSize: "0.75rem", fontFamily:"'Cairo'", fontWeight: 600 }} title="تصدير سجل حضور الطالب">📋 كشف فردي</button>
-                </TD>
-                <TD style={{ fontFamily: "monospace" }}>{s.phone}</TD>
-                <TD style={{ textAlign:"center", whiteSpace:"nowrap" }}>
-                  <Btn 
-                    variant={current.present.includes(s.id) ? "success" : "ghost"} 
-                    style={{ padding:"6px 14px", fontSize:"0.8rem", marginLeft:8, border: current.present.includes(s.id) ? "none" : `1px solid ${C.green}`, color: current.present.includes(s.id) ? "#0C1520" : C.green }} 
-                    onClick={() => toggle(s.id, "p")}
-                  >
-                    ✓ حاضر
-                  </Btn>
-                  <Btn 
-                    variant={current.absent.includes(s.id) ? "failed" : "ghost"} 
-                    style={{ padding:"6px 14px", fontSize:"0.8rem", border: current.absent.includes(s.id) ? "none" : `1px solid ${C.red}`, color: current.absent.includes(s.id) ? "#fff" : C.red }} 
-                    onClick={() => toggle(s.id, "a")}
-                  >
-                    × غائب
-                  </Btn>
-                </TD>
-              </tr>
-            ))}
+            {students.map(s => {
+              // التحقق من حالة الطالب الحالية في اليوم المختار لشغل ألوان الأزرار بكفاءة
+              const isPresent = current.present && current.present.includes(s.id);
+              const isAbsent = current.absent && current.absent.includes(s.id);
+
+              return (
+                <tr key={s.id}>
+                  <TD>
+                    <b style={{ color: C.text }}>{s.name}</b>
+                    <button onClick={() => exportStudentAttendance(s.id, s.name)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", marginRight: "12px", fontSize: "0.75rem", fontFamily:"'Cairo'", fontWeight: 600 }} title="تصدير سجل حضور الطالب">📋 كشف فردي</button>
+                  </TD>
+                  <TD style={{ fontFamily: "monospace" }}>{s.phone}</TD>
+                  <TD style={{ textAlign:"center", whiteSpace:"nowrap" }}>
+                    <Btn 
+                      variant={isPresent ? "success" : "ghost"} 
+                      style={{ padding:"6px 14px", fontSize:"0.8rem", marginLeft:8, border: isPresent ? "none" : `1px solid ${C.green}`, color: isPresent ? "#0C1520" : C.green }} 
+                      onClick={() => toggle(s.id, "p")}
+                    >
+                      ✓ حاضر
+                    </Btn>
+                    <Btn 
+                      variant={isAbsent ? "failed" : "ghost"} 
+                      style={{ padding:"6px 14px", fontSize:"0.8rem", border: isAbsent ? "none" : `1px solid ${C.red}`, color: isAbsent ? "#fff" : C.red }} 
+                      onClick={() => toggle(s.id, "a")}
+                    >
+                      × غائب
+                    </Btn>
+                  </TD>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </Card>
