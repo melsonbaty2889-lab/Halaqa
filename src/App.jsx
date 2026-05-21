@@ -283,56 +283,90 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
     link.click();
   };
 
-  return (
+    return (
     <div>
-      <PageHeader 
-        title="دليل الطلاب والتحفيظ" 
-        sub={isFullyActivated ? `إدارة شؤون الطلاب الحاليين (${students.length})` : `إدارة شؤون الطلاب الحاليين (${students.length}/5)`} 
+      <PageHeader
+        title="دليل الحلقات والمحفوظ"
+        sub={isFullyActivated ? `إدارة شؤون الطلاب الحاليين (${students.length})` : `إدارة شؤون الطلاب الحاليين (${students.length}/5)`}
         action={
           <>
             <Btn variant="secondary" onClick={() => exportToExcel("all")} style={{ fontSize: "0.75rem" }}>📥 تصدير الكل</Btn>
-            <Btn variant="secondary" onClick={() => exportToExcel("paid")} style={{ fontSize: "0.75rem" }}>💰 المسددون</Btn>
-            <Btn onClick={handleAddStudentClick}>＋ إضافة طالب</Btn>
+            <Btn variant="secondary" onClick={() => exportToExcel("paid")} style={{ fontSize: "0.75rem" }}>🔥 المدفوعين</Btn>
+            <Btn onClick={handleAddStudentClick}>+ إضافة طالب</Btn>
           </>
-        } 
+        }
       />
-      <Card style={{ marginBottom:14, padding:"8px 16px" }}><input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 ابحث باسم الطالب أو ولي الأمر..." style={{ width:"100%", background:"transparent", border:"none", color:C.text, fontFamily:"'Cairo'", fontSize:"0.82rem", outline:"none" }} /></Card>
-      <Card style={{ overflowX:"auto" }}>
-        <table style={{ width:"100%", borderCollapse:"collapse" }}>
-          <thead><tr><TH>الطالب</TH><TH>ولي الأمر</TH><TH>الهاتف</TH><TH>السورة</TH><TH>الحفظ</TH><TH>السداد والتحصيل</TH><TH></TH></tr></thead>
+
+      <Card style={{ marginBottom: 14, padding: "8px 16px" }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث باسم الطالب أو رقم الهاتف..." style={{ width: "100%", padding: "8px", background: "transparent", border: "none", color: "#fff", outline: "none" }} />
+      </Card>
+
+      <Card style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <TH>الطالب</TH>
+              <TH>ولي الأمر</TH>
+              <TH>الهاتف</TH>
+              <TH>المحفوظ الحالي</TH>
+              <TH>الحالة</TH>
+              <TH>السداد والتفاصيل</TH>
+            </tr>
+          </thead>
           <tbody>
             {filtered.map(s => (
               <tr key={s.id}>
-                <TD><b>{s.name}</b><div style={{ fontSize:"0.7rem", color:C.muted }}>العمر: {s.age}</div></TD>
-                <TD>{s.parent}</TD><TD>{s.phone}</TD><TD>{s.surah || "—"}</TD>
-                <TD><Badge color={C.purple}>{s.memorized} ص</Badge></TD>
+                <TD>
+                  <b>{s.name}</b>
+                  <div style={{ fontSize: "0.7rem", color: C.muted }}>العمر: {s.age || "-"} سنوات</div>
+                </TD>
+                <TD>{s.parent}</TD>
+                <TD>{s.phone}</TD>
+                <TD>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {s.surah && <span style={{ color: "#C9A84C", fontWeight: "bold" }}>📖 سورة {s.surah}</span>}
+                    <div style={{ display: "flex", gap: "6px", fontSize: "0.75rem", color: C.muted }}>
+                      {s.juz && <span>{s.juz}</span>}
+                      {s.page && <span>📄 صـ {s.page}</span>}
+                    </div>
+                    {!s.surah && !s.juz && !s.page && <span style={{ color: C.muted }}>-</span>}
+                  </div>
+                </TD>
                 <TD>
                   {s.paid ? (
-                    <Badge color={C.green}>مسدد</Badge>
+                    <Badge color={C.green}>مُسدد</Badge>
                   ) : (
-                    <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <Badge color={C.amber}>معلق</Badge>
-                      <Btn variant="ghost" style={{ padding:"2px 6px", fontSize:"0.7rem", borderColor:C.green, color:C.green }} onClick={() => onSendReminder(s)}>📱 تذكير سداد</Btn>
+                      <Btn variant="ghost" style={{ padding: "2px 4px", fontSize: "0.7rem", borderColor: C.green, color: C.green }} onClick={() => handleMarkAsPaid(s.id)}>تفعيل</Btn>
                     </div>
                   )}
                 </TD>
-                <TD><div style={{ display:"flex", gap:4 }}><Btn variant="ghost" style={{ padding:"4px 8px", fontSize:"0.72rem" }} onClick={() => { setForm(s); setModal(s); }}>تعديل</Btn><Btn variant="danger" style={{ padding:"4px 8px", fontSize:"0.72rem" }} onClick={() => setStudents(p => p.filter(x => x.id !== s.id))}>حذف</Btn></div></TD>
+                <TD>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <Btn variant="ghost" style={{ padding: "4px 8px", fontSize: "0.75rem" }} onClick={() => handleEditStudentClick(s)}>تعديل</Btn>
+                    <Btn variant="ghost" style={{ padding: "4px 8px", fontSize: "0.75rem", borderColor: C.red, color: C.red }} onClick={() => handleDeleteStudent(s.id)}>حذف</Btn>
+                  </div>
+                </TD>
               </tr>
             ))}
           </tbody>
         </table>
       </Card>
-      <Modal open={!!modal} onClose={() => setModal(null)} title={modal === "add" ? "إضافة طالب جديد" : "تعديل طالب"}>
-        <Input label="اسم الطالب رباعي *" value={form.name} onChange={e => setForm({...form, name:e.target.value})} />
-        <Input label="اسم ولي الأمر *" value={form.parent} onChange={e => setForm({...form, parent:e.target.value})} />
-        <Input label="رقم الهاتف (واتساب) *" value={form.phone} onChange={e => setForm({...form, phone:e.target.value})} />
-                {/* قائمة اختيار السورة الحالية */}
+
+      {/* النافذة المنبثقة لإضافة وتعديل بيانات الطلاب باحترافية */}
+      <Modal open={!!modal} onClose={() => setModal(null)} title={modal === "add" ? "سجل طالب جديد" : "تعديل بيانات الطالب"}>
+        <Input label="اسم الطالب رباعي *" value={form.name || ""} onChange={e => setForm({ ...form, name: e.target.value })} />
+        <Input label="اسم ولي الأمر" value={form.parent || ""} onChange={e => setForm({ ...form, parent: e.target.value })} />
+        <Input label="رقم الهاتف (واتساب) *" value={form.phone || ""} onChange={e => setForm({ ...form, phone: e.target.value })} />
+        
+        {/* حقل اختيار السورة المنسدل */}
         <div style={{ marginBottom: "12px" }}>
-          <label style={{ display: "block", color: "#C9A84C", fontSize: "0.9rem", marginBottom: "5px", fontWeight: "bold" }}>📖 السورة الحالية:</label>
+          <label style={{ display: "block", color: "#C9A84C", fontSize: "0.85rem", marginBottom: "5px", fontWeight: "bold" }}>📖 السورة الحالية:</label>
           <select 
             value={form.surah || ""} 
             onChange={(e) => setForm({...form, surah: e.target.value})}
-            style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.4)" }}
+            style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.4)", outline: "none" }}
           >
             <option value="">اختر السورة...</option>
             {QURAN_SURAS.map((sura) => (
@@ -341,16 +375,14 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
           </select>
         </div>
 
-        {/* شبكة تجمع الجزء، رقم الصفحة، والعمر في سطر واحد لتوفير المساحة */}
+        {/* سطر الحفظ الرقمي والعمر */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "15px" }}>
-          
-          {/* الاختيار الذكي للجزء */}
           <div>
-            <span style={{ fontSize: "0.8rem", color: "#bbb", display: "block", marginBottom: "4px" }}>الجزء</span>
+            <span style={{ fontSize: "0.75rem", color: "#bbb", display: "block", marginBottom: "4px" }}>الجزء</span>
             <select 
               value={form.juz || ""} 
               onChange={(e) => setForm({...form, juz: e.target.value})}
-              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)" }}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", outline: "none" }}
             >
               <option value="">اختر...</option>
               {QURAN_JUZS.map((juz) => (
@@ -359,9 +391,8 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
             </select>
           </div>
 
-          {/* إدخال رقم الصفحة */}
           <div>
-            <span style={{ fontSize: "0.8rem", color: "#bbb", display: "block", marginBottom: "4px" }}>رقم الصفحة</span>
+            <span style={{ fontSize: "0.75rem", color: "#bbb", display: "block", marginBottom: "4px" }}>رقم الصفحة</span>
             <input 
               type="number" 
               min="1" 
@@ -369,28 +400,27 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
               placeholder="1-604"
               value={form.page || ""} 
               onChange={(e) => setForm({...form, page: e.target.value})}
-              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center" }}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center", outline: "none" }}
             />
           </div>
 
-          {/* إدخال عمر الطالب (المسترجع من الكود القديم) */}
           <div>
-            <span style={{ fontSize: "0.8rem", color: "#bbb", display: "block", marginBottom: "4px" }}>عمر الطالب</span>
+            <span style={{ fontSize: "0.75rem", color: "#bbb", display: "block", marginBottom: "4px" }}>العمر</span>
             <input 
               type="number" 
-              placeholder="العمر"
+              placeholder="سنوات"
               value={form.age || ""} 
               onChange={(e) => setForm({...form, age: e.target.value})}
-              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center" }}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center", outline: "none" }}
             />
           </div>
-
         </div>
 
-        <Btn onClick={doSave} style={{ width:"100%", justifyContent:"center", marginTop:8 }}>حفظ البيانات</Btn>
+        <Btn onClick={doSave} style={{ width: "100%", justifyContent: "center", marginTop: 8 }}>حفظ البيانات 💾</Btn>
       </Modal>
     </div>
   );
+
 };
 
 const Attendance = ({ students, attendance, setAttendance }) => {
