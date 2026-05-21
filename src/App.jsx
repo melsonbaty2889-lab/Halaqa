@@ -58,8 +58,6 @@ const LS = {
   }
 };
 
-
-
 const DEFAULT_TEACHER_CONFIG = {
   name: "الشيخ أحمد محمود",
   phone: "01012345678",
@@ -185,7 +183,7 @@ const Dashboard = ({ students, payments, teacher, onSendReminder }) => {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:20 }}>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.blue }}>{total} / 5</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>إجمالي الطلاب (الحد التجريبي)</div></Card>
-        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين هذا الشهر</div></Card>
+        <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.green }}>{paid}</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>الطلاب المسددين this month</div></Card>
         <Card><div style={{ fontSize:"1.6rem", fontWeight:900, color:C.gold }}>{monthRev.toLocaleString()} ج.م</div><div style={{ fontSize:"0.75rem", color:C.muted, marginTop:4 }}>مداخيل شهر مايو</div></Card>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:14 }}>
@@ -569,6 +567,23 @@ export default function App() {
     if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
     const diff = Math.abs(new Date() - new Date(installDate));
     return Math.max(0, SECURITY_CONFIG.demoDaysLimit - Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  };
+
+  const renderPage = () => {
+    switch (page) {
+      case "dashboard":
+        return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
+      case "students":
+        return <Students students={students} setStudents={setStudents} onSendReminder={handleSendWhatsAppReminder} />;
+      case "attendance":
+        return <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />;
+      case "payments":
+        return <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacherConfig} />;
+      case "reminders":
+        return <Reminders teacher={teacherConfig} botState={botState} setBotState={setBotState} botFlows={BOT_FLOWS} />;
+      default:
+        return <Dashboard students={students} payments={payments} teacher={teacherConfig} onSendReminder={handleSendWhatsAppReminder} />;
+    }
   };
 
   if (isPirated) return <div style={{ background:"#050A10", color:C.red, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cairo'", direction:"rtl" }}><Card style={{ maxWidth:400, textAlign:"center" }}><h2>🚫 خطأ في ترخيص النظام</h2></Card></div>;
