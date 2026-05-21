@@ -642,16 +642,17 @@ export default function App() {
           </p>
           
           <a 
-            href={`https://wa.me/201552518406?text=${encodeURIComponent("مرحباً، انتهت الفترة التجريبية لـ نظام الحلقة الذكية وأود شراء كود التفعيل المباشر للنسخة الدائمة.")}`}
-            target="_blank" 
-            rel="noreferrer"
-            style={{
-              display: "block", background: g.gold, color: "#1A1208", padding: "12px", 
-              borderRadius: "10px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "20px"
-            }}
-          >
-            📱 اضغط هنا لشراء كود التفعيل الفوري عبر الواتساب
-          </a>
+  href={`https://wa.me/2015525184067?text=${encodeURIComponent("مرحباً، انتهت الفترة التجريبية لـ نظام الحلقة الذكية وأود شراء كود التفعيل المباشر للنسخة الدائمة.")}`}
+  target="_blank" 
+  rel="noreferrer"
+  style={{
+    display: "block", background: g.gold, color: "#1A1208", padding: "12px", 
+    borderRadius: "10px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "20px"
+  }}
+>
+  📱 اضغط هنا لشراء كود التفعيل الفوري عبر الواتساب
+</a>
+
 
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: "20px" }}>
             <label style={{ display: "block", textAlign: "right", marginBottom: "8px", fontSize: "0.75rem", color: C.muted, fontWeight: 600 }}>إذا قمت باستلام كود التفعيل، أدخله في الخانة أدناه:</label>
