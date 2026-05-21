@@ -565,18 +565,19 @@ export default function App() {
     return today;
   });
 
-  // 2. قراءة حالة التفعيل المدفوع من الجهاز
+  // قراءة حالة التفعيل المدفوع من الجهاز
   const [isFullyActivated, setIsFullyActivated] = useState(() => {
     return LS.get("halqa_is_active") === true;
   });
 
+  // مزامنة البيانات في الـ localStorage
   useEffect(() => { LS.set("halqa_v_students", students); }, [students]);
   useEffect(() => { LS.set("halqa_v_payments", payments); }, [payments]);
   useEffect(() => { LS.set("halqa_v_attendance", attendance); }, [attendance]);
 
-  // 3. حساب الأيام المتبقية للفترة التجريبية
+  // حساب الأيام المتبقية للفترة التجريبية
   const getDaysLeft = () => {
-    if (isFullyActivated) return 365; // إذا كان مفعلاً مدفوعاً نخفي القيود
+    if (isFullyActivated) return 365; 
     if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
     try {
       const diff = Math.abs(new Date() - new Date(installDate));
@@ -588,12 +589,11 @@ export default function App() {
     }
   };
 
-  // 4. دالة التحقق من كود التفعيل تلقائياً بدون تدخل منك
+  // دالة التحقق من كود التفعيل تلقائياً
   const [activationCode, setActivationCode] = useState("");
   const handleActivation = () => {
     try {
       const decrypted = CRYPTO.decrypt(activationCode);
-      // الكود السري المشترك الذي ستعطيه للمشترين (يمكنك تغييره هنا)
       if (decrypted && decrypted === "HALQA_PREMIUM_ACCESS_2026") {
         LS.set("halqa_is_active", true);
         setIsFullyActivated(true);
