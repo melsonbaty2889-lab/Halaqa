@@ -12,7 +12,7 @@ const SECURITY_CONFIG = {
 const CRYPTO = {
   encrypt: (str) => {
     try {
-      if (!str) return "";
+      if (str === undefined || str === null) return "";
       const cleanStr = String(str);
       return CryptoJS.AES.encrypt(encodeURIComponent(cleanStr), SECRET_KEY).toString();
     } catch (e) {
@@ -25,8 +25,7 @@ const CRYPTO = {
       if (!str || typeof str !== "string") return "";
       const bytes = CryptoJS.AES.decrypt(str, SECRET_KEY);
       const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-      if (!decryptedStr) return "";
-      return decodeURIComponent(decryptedStr);
+      return decryptedStr ? decodeURIComponent(decryptedStr) : "";
     } catch (e) {
       console.error("Decryption error:", e);
       return "";
@@ -34,20 +33,38 @@ const CRYPTO = {
   }
 };
 
-
 const LS = {
   get: (k, d) => {
     try {
       const enc = localStorage.getItem(k);
       if (!enc) return d;
       const dec = CRYPTO.decrypt(enc);
-      return dec ? JSON.parse(dec) : d;
-    } catch { return d; }
+      if (!dec || dec.trim() === "") return d;
+      
+      // حماية إضافية للتحقق من أن النص هو فعلياً JSON صالح قبل عمل parse له
+      if (dec.startsWith("{") || dec.startsWith("[")) {
+        return JSON.parse(dec);
+      }
+      return dec;
+    } catch (e) {
+      console.error("LS Get Error, using default:", e);
+      return d;
+    }
   },
-  set: (k, v) => { 
-    try { localStorage.setItem(k, CRYPTO.encrypt(JSON.stringify(v))); } catch {} 
+  set: (k, v) => {
+    try {
+      if (v === undefined || v === null) return;
+      const str = typeof v === "object" ? JSON.stringify(v) : String(v);
+      const enc = CRYPTO.encrypt(str);
+      if (enc) {
+        localStorage.setItem(k, enc);
+      }
+    } catch (e) {
+      console.error("LS Set Error:", e);
+    }
   }
 };
+
 
 const DEFAULT_TEACHER_CONFIG = {
   name: "الشيخ أحمد محمود",
