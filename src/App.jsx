@@ -593,31 +593,29 @@ export default function App() {
   const [activationCode, setActivationCode] = useState("");
   const handleActivation = () => {
   try {
-    // 1. فك تشفير الكود الذي أدخله المستخدم
+    // 1. فك التشفير
     const decrypted = CRYPTO.decrypt(activationCode);
-    
     if (!decrypted) {
-      alert("❌ كود التفعيل غير صحيح، يرجى التأكد من الكود أو التواصل مع الدعم.");
+      alert("❌ كود التفعيل غير صحيح، يرجى التواصل مع الدعم.");
       return;
     }
 
-    // 2. محاولة قراءة البيانات المفككة ككائن JSON
+    // 2. قراءة البيانات كـ JSON
     const licenseData = JSON.parse(decrypted);
 
-    // 3. التحقق من وجود المعايير الأساسية داخل الكود
     if (licenseData && licenseData.status === "ACTIVE") {
       const expireDate = new Date(licenseData.expiresAt);
       const today = new Date();
 
-      // 4. فحص ما إذا كان الاشتراك قد انتهى تاريخه
+      // 3. فحص الصلاحية الزمنية
       if (today > expireDate) {
-        alert("⚠️ عذراً، هذا الكود انتهت فترة صلاحيته الرسمية. يرجى تجديد الاشتراك.");
+        alert("⚠️ عذراً، هذا الكود انتهت فترة صلاحيته الرسمية.");
         return;
       }
 
-      // 5. إذا كان الكود سليماً وصالحاً، يتم حفظ التفعيل
+      // 4. حفظ حالة التفعيل الكاملة وبيانات المشترك
       LS.set("halqa_is_active", true);
-      LS.set("halqa_license_info", licenseData); // حفظ معلومات المشترك محلياً
+      LS.set("halqa_license_info", licenseData);
       setIsFullyActivated(true);
 
       alert(`🎉 تم تفعيل النسخة الكاملة بنجاح! مرحباً بك يا ${licenseData.clientName}`);
@@ -626,7 +624,7 @@ export default function App() {
       alert("❌ كود التفعيل غير صالح.");
     }
   } catch (e) {
-    console.error("Activation Error:", e);
+    console.error(e);
     alert("❌ حدث خطأ أثناء معالجة كود التفعيل.");
   }
 };
