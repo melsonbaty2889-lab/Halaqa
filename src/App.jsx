@@ -556,7 +556,7 @@ export default function App() {
                     window.location.hostname !== "localhost" && 
                     !window.location.hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
                     
-    // 1. التأكد من قراءة وحفظ تاريخ التثبيت بشكل صحيح باستخدام دالة LS المحدثة
+  // 1. قراءة أو إنشاء تاريخ التثبيت (التجربة التلقائية 14 يوماً)
   const [installDate, setInstallDate] = useState(() => {
     const saved = LS.get("halqa_security_init");
     if (saved) return saved;
@@ -565,13 +565,18 @@ export default function App() {
     return today;
   });
 
-  // 2. مزامنة البيانات الأخرى في الـ localStorage
+  // 2. قراءة حالة التفعيل المدفوع من الجهاز
+  const [isFullyActivated, setIsFullyActivated] = useState(() => {
+    return LS.get("halqa_is_active") === true;
+  });
+
   useEffect(() => { LS.set("halqa_v_students", students); }, [students]);
   useEffect(() => { LS.set("halqa_v_payments", payments); }, [payments]);
   useEffect(() => { LS.set("halqa_v_attendance", attendance); }, [attendance]);
 
-  // 3. دالة حساب الأيام المتبقية مع حماية ضد الـ NaN
+  // 3. حساب الأيام المتبقية للفترة التجريبية
   const getDaysLeft = () => {
+    if (isFullyActivated) return 365; // إذا كان مفعلاً مدفوعاً نخفي القيود
     if (!installDate) return SECURITY_CONFIG.demoDaysLimit;
     try {
       const diff = Math.abs(new Date() - new Date(installDate));
@@ -580,6 +585,25 @@ export default function App() {
       return isNaN(daysLeft) ? SECURITY_CONFIG.demoDaysLimit : Math.max(0, daysLeft);
     } catch (e) {
       return SECURITY_CONFIG.demoDaysLimit;
+    }
+  };
+
+  // 4. دالة التحقق من كود التفعيل تلقائياً بدون تدخل منك
+  const [activationCode, setActivationCode] = useState("");
+  const handleActivation = () => {
+    try {
+      const decrypted = CRYPTO.decrypt(activationCode);
+      // الكود السري المشترك الذي ستعطيه للمشترين (يمكنك تغييره هنا)
+      if (decrypted && decrypted === "HALQA_PREMIUM_ACCESS_2026") {
+        LS.set("halqa_is_active", true);
+        setIsFullyActivated(true);
+        alert("🎉 تم تفعيل النسخة الكاملة بنجاح! شكراً لاشتراكك.");
+        window.location.reload();
+      } else {
+        alert("❌ كود التفعيل غير صحيح، يرجى التأكد من الكود أو التواصل مع الدعم.");
+      }
+    } catch (e) {
+      alert("حدث خطأ أثناء التفعيل.");
     }
   };
 
