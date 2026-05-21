@@ -12,16 +12,28 @@ const SECURITY_CONFIG = {
 const CRYPTO = {
   encrypt: (str) => {
     try {
-      return CryptoJS.AES.encrypt(encodeURIComponent(str), SECRET_KEY).toString();
-    } catch (e) { return ""; }
+      if (!str) return "";
+      const cleanStr = String(str);
+      return CryptoJS.AES.encrypt(encodeURIComponent(cleanStr), SECRET_KEY).toString();
+    } catch (e) {
+      console.error("Encryption error:", e);
+      return "";
+    }
   },
   decrypt: (str) => {
     try {
+      if (!str || typeof str !== "string") return "";
       const bytes = CryptoJS.AES.decrypt(str, SECRET_KEY);
-      return decodeURIComponent(bytes.toString(CryptoJS.enc.Utf8));
-    } catch (e) { return null; }
+      const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+      if (!decryptedStr) return "";
+      return decodeURIComponent(decryptedStr);
+    } catch (e) {
+      console.error("Decryption error:", e);
+      return "";
+    }
   }
 };
+
 
 const LS = {
   get: (k, d) => {
