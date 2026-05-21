@@ -57,7 +57,7 @@ const LS = {
     }
   }
   // قائمة الأجزاء (1 إلى 30)
-const QURAN_JUZS = Array.from({ length: 30 }, (_, i) => `الجزء ${i + 1}`);
+const QURAN_JUZS = Array.from({ length: 30 }, (_, i) => "الجزء " + (i + 1));
 
 // قائمة سور القرآن الكريم كاملة مرتبة
 const QURAN_SURAS = [
@@ -326,11 +326,67 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
         <Input label="اسم الطالب رباعي *" value={form.name} onChange={e => setForm({...form, name:e.target.value})} />
         <Input label="اسم ولي الأمر *" value={form.parent} onChange={e => setForm({...form, parent:e.target.value})} />
         <Input label="رقم الهاتف (واتساب) *" value={form.phone} onChange={e => setForm({...form, phone:e.target.value})} />
-        <Input label="السورة الحالية" value={form.surah} onChange={e => setForm({...form, surah:e.target.value})} />
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-          <Input label="العمر" type="number" value={form.age} onChange={e => setForm({...form, age:e.target.value})} />
-          <Input label="الصفحات المحفوظة" type="number" value={form.memorized} onChange={e => setForm({...form, memorized:e.target.value})} />
+                {/* قائمة اختيار السورة الحالية */}
+        <div style={{ marginBottom: "12px" }}>
+          <label style={{ display: "block", color: "#C9A84C", fontSize: "0.9rem", marginBottom: "5px", fontWeight: "bold" }}>📖 السورة الحالية:</label>
+          <select 
+            value={form.surah || ""} 
+            onChange={(e) => setForm({...form, surah: e.target.value})}
+            style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.4)" }}
+          >
+            <option value="">اختر السورة...</option>
+            {QURAN_SURAS.map((sura) => (
+              <option key={sura} value={sura}>{sura}</option>
+            ))}
+          </select>
         </div>
+
+        {/* شبكة تجمع الجزء، رقم الصفحة، والعمر في سطر واحد لتوفير المساحة */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "15px" }}>
+          
+          {/* الاختيار الذكي للجزء */}
+          <div>
+            <span style={{ fontSize: "0.8rem", color: "#bbb", display: "block", marginBottom: "4px" }}>الجزء</span>
+            <select 
+              value={form.juz || ""} 
+              onChange={(e) => setForm({...form, juz: e.target.value})}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)" }}
+            >
+              <option value="">اختر...</option>
+              {QURAN_JUZS.map((juz) => (
+                <option key={juz} value={juz}>{juz}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* إدخال رقم الصفحة */}
+          <div>
+            <span style={{ fontSize: "0.8rem", color: "#bbb", display: "block", marginBottom: "4px" }}>رقم الصفحة</span>
+            <input 
+              type="number" 
+              min="1" 
+              max="604"
+              placeholder="1-604"
+              value={form.page || ""} 
+              onChange={(e) => setForm({...form, page: e.target.value})}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center" }}
+            />
+          </div>
+
+          {/* إدخال عمر الطالب (المسترجع من الكود القديم) */}
+          <div>
+            <span style={{ fontSize: "0.8rem", color: "#bbb", display: "block", marginBottom: "4px" }}>عمر الطالب</span>
+            <input 
+              type="number" 
+              placeholder="العمر"
+              value={form.age || ""} 
+              onChange={(e) => setForm({...form, age: e.target.value})}
+              style={{ width: "100%", padding: "10px", background: "#222", color: "#fff", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)", textAlign: "center" }}
+            />
+          </div>
+
+        </div>
+
         <Btn onClick={doSave} style={{ width:"100%", justifyContent:"center", marginTop:8 }}>حفظ البيانات</Btn>
       </Modal>
     </div>
