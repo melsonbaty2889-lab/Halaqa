@@ -68,3 +68,15 @@ const PageHeader = ({ title, sub, action }) => (
 
 const TH = ({ children, style={} }) => <th style={{ padding:"14px 12px", textAlign:"right", fontSize:"0.75rem", color:C.gold, fontWeight:700, borderBottom:`2px solid ${C.border}`, whiteSpace:"nowrap", ...style }}>{children}</th>;
 const TD = ({ children, style={} }) => <td style={{ padding:"14px 12px", fontSize:"0.85rem", borderBottom:`1px solid rgba(255,255,255,0.04)`, color:C.text, whiteSpace:"nowrap", textAlign:"right", ...style }}>{children}</td>;
+
+export {
+  Badge,
+  Btn,
+  Card,
+  Input,
+  Select,
+  Modal,
+  PageHeader,
+  TH,
+  TD
+};
