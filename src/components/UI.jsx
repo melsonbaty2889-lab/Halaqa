@@ -4,22 +4,12 @@ const Badge = ({ children, color = C.green }) => (
   <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"4px 12px", borderRadius:20, fontSize:"0.72rem", fontWeight:700, background:`${color}1A`, color, border:`1px solid ${color}33`, whiteSpace:"nowrap" }}>{children}</span>
 );
 
-const Btn = ({
-  children,
-  onClick,
-  variant = "primary",
-  style = {},
-  disabled = false,
-  type = "button"
-}) => {
-  const [hover, setHover] = useState(false);
-  const [active, setActive] = useState(false);
-
+const Btn = ({ children, onClick, variant="primary", style={}, disabled=false, type="button" }) => {
   const styles = {
-    primary: { background: g.gold, color: "#1A1208" },
-    secondary: { background: `${C.gold}15`, color: C.gold, border: `1px solid ${C.gold}30` },
-    ghost: { background: "rgba(255,255,255,0.04)", color: C.text, border: "1px solid rgba(255,255,255,0.08)" },
-    danger: { background: `${C.red}15`, color: C.red, border: `1px solid ${C.red}30` },
+    primary: { background: g.gold, color:"#1A1208" },
+    secondary: { background:`${C.gold}15`, color:C.gold, border:`1px solid ${C.gold}30` },
+    ghost: { background:"rgba(255,255,255,0.04)", color:C.text, border:"1px solid rgba(255,255,255,0.08)" },
+    danger: { background:`${C.red}15`, color:C.red, border:`1px solid ${C.red}30` },
     success: { background: C.green, color: "#0C1520", fontWeight: "bold" },
     failed: { background: C.red, color: "#fff", fontWeight: "bold" }
   };
@@ -29,30 +19,20 @@ const Btn = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onMouseDown={() => setActive(true)}
-      onMouseUp={() => setActive(false)}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        padding: "10px 16px",
-        borderRadius: 10,
-        border: "none",
-        cursor: disabled ? "not-allowed" : "pointer",
-        fontFamily: "'Cairo', sans-serif",
-        fontSize: "0.8rem",
-        fontWeight: 600,
-        opacity: disabled ? 0.5 : 1,
-        transition: "all 0.2s ease",
-        transform: active
-          ? "scale(0.96)"
-          : hover
-          ? "scale(1.02)"
-          : "scale(1)",
-        boxShadow: hover && !disabled ? "0 6px 18px rgba(0,0,0,0.15)" : "none",
+        display:"inline-flex",
+        alignItems:"center",
+        justifyContent:"center",
+        gap:6,
+        padding:"10px 16px",
+        borderRadius:10,
+        border:"none",
+        cursor:disabled?"not-allowed":"pointer",
+        fontFamily:"'Cairo',sans-serif",
+        fontSize:"0.8rem",
+        fontWeight:600,
+        opacity:disabled?0.5:1,
+        transition:"all 0.2s ease",
         ...styles[variant],
         ...style
       }}
