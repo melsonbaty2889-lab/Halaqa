@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { C, g } from "./constants/colors";
 
 const SECURITY_CONFIG = {
   allowedHostSuffix: "vercel.app",
@@ -104,9 +105,6 @@ const SAMPLE_PAYMENTS = [
 ];
 
 const SAMPLE_ATTENDANCE = [{ id: 1, date: "2026-05-19", present: [1, 3, 4], absent: [2, 5] }];
-
-const C = { bg: "#0C1520", surface: "#111C2A", card: "#162030", border: "rgba(201,168,76,0.12)", gold: "#C9A84C", text: "#E4DAC8", muted: "rgba(228,218,200,0.4)", green: "#34D399", red: "#EF4444", amber: "#F59E0B", blue: "#60A5FA", purple: "#A78BFA" };
-const g = { gold: "linear-gradient(135deg, #C9A84C, #E8C97A)" };
 
 const Badge = ({ children, color = C.green }) => (
   <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"4px 12px", borderRadius:20, fontSize:"0.72rem", fontWeight:700, background:`${color}1A`, color, border:`1px solid ${color}33`, whiteSpace:"nowrap" }}>{children}</span>
