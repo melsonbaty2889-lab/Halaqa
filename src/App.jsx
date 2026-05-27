@@ -634,14 +634,38 @@ export default function App() {
     }
   }, []);
 
-  const handleLogin = (user, pass) => {
-    if (user === "admin" && pass === "1234") {
-      setIsLoggedIn(true);
-    } else {
-      alert("اسم المستخدم أو كلمة المرور غير صحيحة! ❌");
-    }
-  };
+  const handleLogin = async (email, password) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
+    if (error) {
+      console.log("Login error:", error.message);
+      alert("بيانات الدخول غير صحيحة");
+      return;
+    }
+
+    const session = data?.session;
+    const user = data?.user;
+
+    if (!session?.access_token || !user?.id) {
+      alert("جلسة غير صالحة");
+      return;
+    }
+
+    // لا تعتمد فقط على state
+    setIsLoggedIn(true);
+
+    // حفظ session بشكل آمن (اختياري)
+    await supabase.auth.setSession(session);
+
+  } catch (err) {
+    console.log("Unexpected error:", err);
+    alert("حدث خطأ غير متوقع");
+  }
+};
   const sendWhatsAppReminder = (student) => {
     const message = `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم بموعد سداد اشتراك حلقة القرآن الكريم لشهر مايو للابن/الابنة: *${student.name}*.\nالمبلغ المطلوب: *${teacher.fee} ج.م*.\nيمكنكم التحويل عبر:\n- فودافون كاش: ${teacher.vodafoneCash}\n- انستا باي: ${teacher.instaPayId}\nشاكرين ومقدرين حسن تعاونكم وجزاكم الله خيراً.`;
     window.open(`https://wa.me/2${student.phone}?text=${encodeURIComponent(message)}`, "_blank");
