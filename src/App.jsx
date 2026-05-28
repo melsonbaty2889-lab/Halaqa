@@ -643,27 +643,17 @@ export default function App() {
     });
 
     if (error) {
-      console.log("Login error:", error.message);
+      console.log(error);
       alert("بيانات الدخول غير صحيحة");
       return;
     }
 
-    const session = data?.session;
-    const user = data?.user;
-
-    if (!session?.access_token || !user?.id) {
-      alert("جلسة غير صالحة");
-      return;
+    if (data?.user) {
+      setIsLoggedIn(true);
     }
 
-    // لا تعتمد فقط على state
-    setIsLoggedIn(true);
-
-    // حفظ session بشكل آمن (اختياري)
-    await supabase.auth.setSession(session);
-
   } catch (err) {
-    console.log("Unexpected error:", err);
+    console.log(err);
     alert("حدث خطأ غير متوقع");
   }
 };
