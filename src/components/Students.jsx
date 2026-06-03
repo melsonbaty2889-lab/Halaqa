@@ -1,46 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient'; // تأكد من صحة مسار ملف السيرفر لديك
 
-export default function Students({ currentTeacher = { id: null, academy_id: null } }) {
+export default function Students() {
   // حالات إدارة البيانات (States)
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [currentTeacher, setCurrentTeacher] = useState({ id: null, academy_id: null });
   
   // حالات حقول الإدخال لطالب جديد
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
 
-  // 1. جلب الطلاب المشتركين في هذه الأكاديمية تلقائياً عند فتح الشاشة
+  // جلب بيانات المعلم والطلاب تلقائياً بمجرد فتح الشاشة
   useEffect(() => {
-    fetchStudents();
-  }, [currentTeacher]);
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
 
-  const fetchStudents = async () => {
-    try {
-      setLoading(true);
-      let query = supabase.from('students').select('*');
-      
-      // إذا كان المستخدم مسجل كمعلم/مدير، جلب طلاب الأكاديمية الخاصة به فقط
-      if (currentTeacher?.academy_id) {
-        query = query.eq('academy_id', currentTeacher.academy_id);
+        // 1. معرفة المستخدم الحالي المسجل دخوله في النظام
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          console.warn('لم يتم العثور على جلسة تسجيل دخول نشطة');
+          setLoading(false);
+          return;
+        }
+
+        // 2. جلب الـ academy_id والـ staff id الخاص بهذا المستخدم من جدول staff
+        const { data: staffData, error: staffError } = await supabase
+          .from('staff')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (staffError) throw staffError;
+
+        if (staffData) {
+          setCurrentTeacher(staffData);
+          
+          // 3. جلب طلاب هذه الأكاديمية فقط بناءً على الـ academy_id المكتشفة
+          const { data: studentsData, error: studentsError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('academy_id', staffData.academy_id)
+            .order('created_at', { ascending: false });
+
+          if (studentsError) throw studentsError;
+          setStudents(studentsData || []);
+        }
+
+      } catch (error) {
+        console.error('خطأ أثناء جلب البيانات من السيرفر:', error.message);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) throw error;
-      setStudents(data || []);
-    } catch (error) {
-      console.error('خطأ في جلب بيانات الطلاب:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadDashboardData();
+  }, []);
 
-  // 2. دالة إرسال وحفظ طالب جديد في السيرفر الحقيقي
+  // دالة إرسال وحفظ طالب جديد في السيرفر
   const handleRegisterStudent = async (e) => {
     e.preventDefault();
     if (!name.trim()) return alert('برجاء كتابة اسم الطالب أولاً');
+    if (!currentTeacher.academy_id) return alert('عفواً، لم يتم التعرف على الأكاديمية الخاصة بك بالسيرفر بعد.');
 
     try {
       const { data, error } = await supabase
@@ -50,8 +74,8 @@ export default function Students({ currentTeacher = { id: null, academy_id: null
             name: name,
             parent_phone: phone,
             current_surah: currentSurah || 'لم يحدد بعد',
-            academy_id: currentTeacher?.academy_id, // ربط الأكاديمية (نظام الـ SaaS)
-            teacher_id: currentTeacher?.id          // ربط المحفظ المسؤول
+            academy_id: currentTeacher.academy_id, // ربط تلقائي ومضمون 100%
+            teacher_id: currentTeacher.id
           }
         ])
         .select();
@@ -60,10 +84,8 @@ export default function Students({ currentTeacher = { id: null, academy_id: null
 
       alert('تم تسجيل الطالب في السيرفر بنجاح! 🎉');
       
-      // تحديث الجدول محلياً فوراً بالاسم الجديد
       if (data) setStudents([data[0], ...students]);
       
-      // إغلاق الاستمارة وتصفير الخانات
       setName('');
       setPhone('');
       setCurrentSurah('');
@@ -95,9 +117,9 @@ export default function Students({ currentTeacher = { id: null, academy_id: null
       {/* جدول عرض الطلاب الذكي */}
       <div className="bg-[#1C2541] rounded-xl overflow-hidden border border-gray-800 shadow-xl">
         {loading ? (
-          <div className="p-10 text-center text-gray-400">جاري تحميل سجلات الطلاب من السيرفر...</div>
+          <div className="p-10 text-center text-gray-400 animate-pulse">جاري فحص الصلاحيات وجلب سجلات الطلاب من السيرفر العالمي...</div>
         ) : students.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">لا يوجد طلاب مسجلين حالياً. اضغط على "إضافة طالب" للبدء.</div>
+          <div className="p-10 text-center text-gray-400">لا يوجد طلاب مسجلين حالياً في أكاديميتك. اضغط على "إضافة طالب" للبدء.</div>
         ) : (
           <table className="w-full text-right border-collapse">
             <thead>
@@ -127,7 +149,7 @@ export default function Students({ currentTeacher = { id: null, academy_id: null
       {/* النافذة المنبثقة (Modal) لإضافة طالب جديد */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-[#1C2541] border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in" dir="rtl">
+          <div className="bg-[#1C2541] border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl" dir="rtl">
             <div className="bg-[#232F52] p-4 border-b border-gray-700 flex justify-between items-center">
               <h3 className="text-lg font-bold text-[#F4D068]">تسجيل طالب جديد بالحلقة</h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
