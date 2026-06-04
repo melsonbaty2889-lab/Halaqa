@@ -1,104 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; // تأكد من صحة مسار ملف السيرفر لديك
+import { fetchAllStudents, insertNewStudent } from '../api/students';
+import { supabase } from '../lib/supabase'; // للاستعلام المباشر عن الـ staff الحالي عند اللزوم
 
 export default function Students() {
-  // حالات إدارة البيانات (States)
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentTeacher, setCurrentTeacher] = useState({ id: null, academy_id: null });
   
-  // حالات حقول الإدخال لطالب جديد
+  // حقول الإدخال
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
 
-  // جلب البيانات تلقائياً بمجرد فتح الشاشة
   useEffect(() => {
-    loadDashboardData();
+    loadData();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
 
-      // 1. محاولة معرفة المستخدم الحالي (إن وجد)
+      // جلب المحفظ الحالي من جدول staff بناءً على الـ Auth
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
-        // 2. جلب بيانات الأكاديمية إذا كانت مسجلة مسبقاً
         const { data: staffData } = await supabase
-          .from('staff')
+          .from('staff') // تم التعديل من واقع السكربت ليتطابق مع جدول staff الجديد
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (staffData) {
-          setCurrentTeacher(staffData);
-        }
+        if (staffData) setCurrentTeacher(staffData);
       }
 
-      // 3. جلب جميع الطلاب من السيرفر مباشرة (مفتوحة ومضمونة للتأكد من الاتصال)
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (studentsError) throw studentsError;
-      setStudents(studentsData || []);
+      // استدعاء دالة الـ API التي أعدنا بناءها
+      const { data, error } = await fetchAllStudents();
+      if (error) throw new Error(error);
+      setStudents(data || []);
 
     } catch (error) {
-      console.error('خطأ أثناء جلب البيانات:', error.message);
+      console.error('خطأ في تحميل البيانات:', error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // دالة إرسال وحفظ طالب جديد في السيرفر الفعلي
   const handleRegisterStudent = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return alert('برجاء كتابة اسم الطالب أولاً');
+    if (!name.trim()) return alert('برجاء كتابة اسم الطالب');
 
     try {
-      // تجهيز بيانات الطالب (تسمح بوجود قيم فارغة للأكاديمية والمحفظ في مرحلة التأسيس)
-      const studentPayload = {
-        name: name,
-        parent_phone: phone || null,
-        current_surah: currentSurah || 'لم يحدد بعد'
+      const payload = {
+        name,
+        parent_phone: phone,
+        current_surah: currentSurah,
+        academy_id: currentTeacher.academy_id,
+        teacher_id: currentTeacher.id
       };
 
-      // إذا كانت بيانات المحفظ والأكاديمية متوفرة يتم ربطها تلقائياً
-      if (currentTeacher.academy_id) studentPayload.academy_id = currentTeacher.academy_id;
-      if (currentTeacher.id) studentPayload.teacher_id = currentTeacher.id;
+      const { data: newStudent, error } = await insertNewStudent(payload);
+      if (error) throw new Error(error);
 
-      const { data, error } = await supabase
-        .from('students')
-        .insert([studentPayload])
-        .select();
+      alert('تم تسجيل الطالب بنجاح! 🎉');
+      if (newStudent) setStudents([newStudent, ...students]);
 
-      if (error) throw error;
-
-      alert('تم إرسال الطالب بنجاح وظهر في قاعدة البيانات! 🎉');
-      
-      // تحديث واجهة المستخدم فوراً بالسطر الجديد
-      if (data) setStudents([data[0], ...students]);
-      
-      // إغلاق المودال وتصفير الخانات
+      // تصفير الخانات وإغلاق المودال
       setName('');
       setPhone('');
       setCurrentSurah('');
       setShowModal(false);
 
     } catch (error) {
-      console.error('خطأ في عملية التسجيل:', error.message);
-      alert('فشلت عملية الحفظ بالسيرفر: ' + error.message);
+      alert('فشل الحفظ: ' + error.message);
     }
   };
 
   return (
     <div className="p-6 bg-[#0B132B] min-h-screen text-white text-right" dir="rtl">
-      
-      {/* الرأس والزر الرئيسي */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#F4D068]">دليل الحلقات والمحفوظ</h1>
@@ -112,14 +90,11 @@ export default function Students() {
         </button>
       </div>
 
-      {/* جدول عرض الطلاب الذكي */}
       <div className="bg-[#1C2541] rounded-xl overflow-hidden border border-gray-800 shadow-xl">
         {loading ? (
-          <div className="p-10 text-center text-gray-400 animate-pulse">جاري الاتصال بـ Supabase وجلب السجلات...</div>
+          <div className="p-10 text-center text-gray-400 animate-pulse">جاري جلب البيانات من السيرفر...</div>
         ) : students.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">
-            الجدول في السيرفر فارغ حالياً تماماً. اضغط على <span className="text-[#F4D068] font-bold">"إضافة طالب للحلقة"</span> لتجربة إدخال أول سطر!
-          </div>
+          <div className="p-10 text-center text-gray-400">الجدول فارغ حالياً. اضغط على إضافة طالب لتجربة النظام!</div>
         ) : (
           <table className="w-full text-right border-collapse">
             <thead>
@@ -146,10 +121,9 @@ export default function Students() {
         )}
       </div>
 
-      {/* النافذة المنبثقة (Modal) لإضافة طالب جديد */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-[#1C2541] border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl" dir="rtl">
+          <div className="bg-[#1C2541] border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="bg-[#232F52] p-4 border-b border-gray-700 flex justify-between items-center">
               <h3 className="text-lg font-bold text-[#F4D068]">تسجيل طالب جديد بالحلقة</h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
@@ -166,34 +140,28 @@ export default function Students() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">رقم هاتف ولي الأمر (واتساب)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">رقم هاتف ولي الأمر</label>
                 <input 
                   type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-[#0B132B] border border-gray-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-[#F4D068]"
-                  placeholder="مثال: 010XXXXXXXX"
+                  placeholder="010XXXXXXXX"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">السورة الحالية المعين عليها</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">السورة الحالية</label>
                 <input 
                   type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
                   className="w-full bg-[#0B132B] border border-gray-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-[#F4D068]"
-                  placeholder="مثال: سورة تبارك"
+                  placeholder="مثال: سورة الملك"
                 />
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button 
-                  type="submit" 
-                  className="w-full bg-[#F4D068] hover:bg-amber-500 text-black font-bold py-2.5 rounded-lg transition-colors"
-                >
-                  حفظ في السيرفر 💾
+                <button type="submit" className="w-full bg-[#F4D068] hover:bg-amber-500 text-black font-bold py-2.5 rounded-lg transition-colors">
+                  حفظ وتأكيد 💾
                 </button>
-                <button 
-                  type="button" onClick={() => setShowModal(false)}
-                  className="w-1/2 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-lg transition-colors"
-                >
+                <button type="button" onClick={() => setShowModal(false)} className="w-1/2 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-lg transition-colors">
                   إلغاء
                 </button>
               </div>
@@ -201,7 +169,6 @@ export default function Students() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
