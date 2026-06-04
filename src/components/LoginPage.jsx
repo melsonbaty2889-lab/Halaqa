@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../supabaseClient'; // تأكد من صحة مسار ملف سوبابيز في مشروعك
+import { supabase } from '../lib/supabase';
 
 export default function LoginPage() {
   // حالتان: false تعني تسجيل دخول، و true تعني إنشاء أكاديمية جديدة
