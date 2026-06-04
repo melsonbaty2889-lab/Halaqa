@@ -46,34 +46,51 @@ export default function Students() {
   };
 
   const handleRegisterStudent = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) return alert('برجاء كتابة اسم الطالب');
+  e.preventDefault();
+  if (!name.trim()) return alert('برجاء كتابة اسم الطالب');
 
-    try {
-      const payload = {
-        name,
-        parent_phone: phone,
-        current_surah: currentSurah,
-        academy_id: currentTeacher.academy_id,
-        teacher_id: currentTeacher.id
-      };
+  try {
+    // 🔔 رسالة تتبع 1: للتأكد من أن الزر يضغط ويعمل
+    alert('1. تم الضغط على الزر وبدء المعالجة...');
 
-      const { data: newStudent, error } = await insertNewStudent(payload);
-      if (error) throw new Error(error);
+    const payload = {
+      name,
+      parent_phone: phone,
+      current_surah: currentSurah,
+      academy_id: currentTeacher?.academy_id || null,
+      teacher_id: currentTeacher?.id || null
+    };
 
-      alert('تم تسجيل الطالب بنجاح! 🎉');
-      if (newStudent) setStudents([newStudent, ...students]);
+    // 🔔 رسالة تتبع 2: لرؤية البيانات قبل إرسالها لسوبابيز
+    alert('2. البيانات المستعدة للإرسال هي: ' + JSON.stringify(payload));
 
-      // تصفير الخانات وإغلاق المودال
-      setName('');
-      setPhone('');
-      setCurrentSurah('');
-      setShowModal(false);
+    alert('3. جاري الاتصال بـ Supabase الآن... انتظر لحظة');
+    
+    const { data: newStudent, error } = await insertNewStudent(payload);
 
-    } catch (error) {
-      alert('فشل الحفظ: ' + error.message);
+    // 🔔 رسالة تتبع 3: في حال حدوث خطأ راجع من السيرفر نفسه
+    if (error) {
+      alert('❌ خطأ من سيرفر سوبابيز: ' + JSON.stringify(error));
+      throw new Error(error);
     }
-  };
+
+    // 🔔 رسالة تتبع 4: نجاح العملية بالكامل واستلام السطر الجديد
+    alert('4. 🎉 سوبابيز نجح وأعاد البيانات بنجاح: ' + JSON.stringify(newStudent));
+    
+    if (newStudent) {
+      setStudents([newStudent, ...students]);
+    }
+
+    setName('');
+    setPhone('');
+    setCurrentSurah('');
+    setShowModal(false);
+
+  } catch (error) {
+    // 🔔 رسالة تتبع 5: في حال انهيار الكود بالكامل
+    alert('💥 حدث انهيار في الـ Catch: ' + error.message);
+  }
+};
 
   return (
     <div className="p-6 bg-[#0B132B] min-h-screen text-white text-right" dir="rtl">
