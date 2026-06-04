@@ -37,13 +37,11 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
   const empty = { name:"", parent:"", phone:"", age:"", surah:"", juz:"", page:"", notes:"" };
   const [form, setForm] = useState(empty);
   
-  // تصفية البحث بأمان وحماية ضد القيم الفارغة
   const filtered = students.filter(s => (s.name || "").includes(search) || (s.parent || "").includes(search));
 
   const openAdd = () => { setForm(empty); setModal("add"); };
   const openEdit = (student) => { setForm(student); setModal(student); };
 
-  // 🚀 دالة الحفظ السحابية المتكاملة مع الـ Multi-Tenant
   const doSave = async () => {
     if (!form.name || !form.phone) {
       alert("يرجى إدخال اسم الطالب ورقم الهاتف الأساسي");
@@ -64,7 +62,7 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
       juz: form.juz || "",
       page: +form.page || 0,
       notes: form.notes || "",
-      academy_id: academyId // الربط بالأكاديمية الحالية لمنع التداخل
+      academy_id: academyId 
     };
 
     try {
@@ -94,7 +92,6 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
     }
   };
 
-  // 🗑️ دالة الحذف السحابي النهائي
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من حذف هذا الطالب نهائياً من السيرفر السحابي؟")) {
       try {
@@ -128,7 +125,6 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
         />
       </Card>
 
-      {/* عرض جدول البيانات بانتظام وتوافق احترافي */}
       <Card style={{ padding: 0, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "right" }}>
           <thead>
@@ -167,7 +163,6 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
         </table>
       </Card>
 
-      {/* مودال الإضافة والتعديل */}
       {modal && (
         <Modal title={modal === "add" ? "إضافة طالب جديد للحلقة" : "تعديل بيانات الطالب"} onClose={() => setModal(null)}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
@@ -200,21 +195,18 @@ const Attendance = ({ students, attendance, setAttendance }) => { return <div st
 const Payments = ({ students, payments, setPayments, setStudents, teacher }) => { return <div style={{padding: 24}}><Card><h3>الخزينة والمالية وإيصالات الدفع قيد التشغيل 💰</h3><p style={{color: C.muted, marginTop: 8}}>جاري تهيئة كشوف المحاسبة السريعة وإرسال التذكيرات المالية للأولياء.</p></Card></div>; };
 const Settings = ({ teacher, setTeacher }) => { return <div style={{padding: 24}}><Card><h3>إعدادات الأكاديمية وحفظ البيانات ⚙️</h3><p style={{color: C.muted, marginTop: 8}}>إعدادات ترخيص النظام، وتحديث بيانات السداد الحالية لمعلم الحلقة.</p></Card></div>; };
 
-// --- المكون الرئيسي (App) المحدث بالكامل بنظام الـ SaaS السحابي الموزّع ---
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isFullyActivated, setIsFullyActivated] = useState(true);
 
-  // حالات جلب ومزامنة البيانات الحقيقية من Supabase
   const [students, setStudents] = useState([]);
   const [payments, setPayments] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [teacher, setTeacher] = useState({ name: "جاري المزامنة...", phone: "" });
   const [academyId, setAcademyId] = useState(null);
 
-  // 🔐 1. الاستماع الفوري لحالة تسجيل الدخول من Supabase Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -229,14 +221,12 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 📡 2. بمجرد توفر الجلسة المفتوحة، يتم سحب هوية الأكاديمية والطلاب المطابقين فوراً
   useEffect(() => {
     if (!session?.user) return;
 
     const loadCloudAcademyData = async () => {
       setLoading(true);
       try {
-        // أ. جلب بيانات المعلم وعلاقته التنظيمية (الأكاديمية) من الـ Staff
         const { data: staffData, error: staffError } = await supabase
           .from('staff')
           .select('academy_id, full_name, phone')
@@ -253,7 +243,6 @@ export default function App() {
             fee: 999
           });
 
-          // ب. جلب قائمة الطلاب التابعين لهذا المستأجر السحابي المحدّد
           const { data: studentsData, error: studentsError } = await supabase
             .from('students')
             .select('*')
@@ -273,7 +262,6 @@ export default function App() {
     loadCloudAcademyData();
   }, [session]);
 
-  // الحماية الأمنية المضمنة للتحقق من سلامة نطاق الترخيص لشركاء النجاح
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
@@ -290,14 +278,13 @@ export default function App() {
 
   if (loading) return <div style={{ color: C.gold, textAlign: 'center', marginTop: '20%', fontFamily: "'Cairo'", fontSize: '1.2rem' }}>جاري تشغيل نظام الحلقة السحابي الذكي ومزامنة البيانات السيرفر... ⏳</div>;
 
-  // في حال غياب الجلسة، تحويل فوري لصفحة تسجيل وتأسيس الأكاديمية الجديدة
   if (!session) return <LoginPage />;
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Cairo', sans-serif", direction: "rtl", display: "flex" }}>
       
-      {/* Sidebar القائمة الجانبية للتنقل الاحترافي المنظم */}
-      <aside style={{ width: 260, background: C.surface, borderLeft: `1px solid ${C.border}`, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 20 }}>
+      {/* Sidebar */}
+      <aside style={{ width: 260, background: C.surface, borderLeft: `1px solid ${C.border}`, display: "flex", flexDirection: "column", justifyBetween: "space-between", padding: 20 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, padding: "0 8px" }}>
             <span style={{ fontSize: 24 }}>🕌</span>
@@ -338,7 +325,8 @@ export default function App() {
 
       {/* منطقة العرض الديناميكي ومفاتيح التحويل */}
       <main style={{ flex: 1, padding: 32, boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
-        {activeTab === "dashboard" && <Dashboard session={session} />}
+        {/* 👈 تم التعديل هنا لتمرير دالة التنقل للوحة التحكم بنجاح */}
+        {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
         
         {activeTab === "students" && (
           <Students 
@@ -347,7 +335,7 @@ export default function App() {
             onSendReminder={sendWhatsAppReminder} 
             isFullyActivated={isFullyActivated} 
             teacherPhone={teacher.phone}
-            academyId={academyId} // 👈 تمرير معرف الأكاديمية السحابي بأمان تفتيشي كامل
+            academyId={academyId} 
           />
         )}
         
