@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllStudents, insertNewStudent } from '../api/students';
-import { supabase } from '../lib/supabase'; // للاستعلام المباشر عن الـ staff الحالي عند اللزوم
+import { supabase } from '../lib/supabase'; // الاتصال المباشر بالسيرفر
 
 export default function Students() {
   const [students, setStudents] = useState([]);
@@ -21,11 +20,11 @@ export default function Students() {
     try {
       setLoading(true);
 
-      // جلب المحفظ الحالي من جدول staff بناءً على الـ Auth
+      // 1. جلب المحفظ الحالي من جدول staff بناءً على الـ Auth
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: staffData } = await supabase
-          .from('staff') // تم التعديل من واقع السكربت ليتطابق مع جدول staff الجديد
+          .from('staff')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
@@ -33,12 +32,17 @@ export default function Students() {
         if (staffData) setCurrentTeacher(staffData);
       }
 
-      // استدعاء دالة الـ API التي أعدنا بناءها
-      const { data, error } = await fetchAllStudents();
-      if (error) throw new Error(error);
+      // 2. جلب الطلاب مباشرة من جدول students وترتيبهم من الأحدث للأقدم
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       setStudents(data || []);
 
     } catch (error) {
+      alert('💥 خطأ أثناء تحميل جدول الطلاب: ' + error.message);
       console.error('خطأ في تحميل البيانات:', error.message);
     } finally {
       setLoading(false);
@@ -46,51 +50,54 @@ export default function Students() {
   };
 
   const handleRegisterStudent = async (e) => {
-  e.preventDefault();
-  if (!name.trim()) return alert('برجاء كتابة اسم الطالب');
+    e.preventDefault();
+    if (!name.trim()) return alert('برجاء كتابة اسم الطالب');
 
-  try {
-    // 🔔 رسالة تتبع 1: للتأكد من أن الزر يضغط ويعمل
-    alert('1. تم الضغط على الزر وبدء المعالجة...');
+    try {
+      // 🔔 رسالة تتبع 1: للتأكد من أن الزر يضغط ويعمل
+      alert('1. تم الضغط على الزر وبدء المعالجة...');
 
-    const payload = {
-      name,
-      parent_phone: phone,
-      current_surah: currentSurah,
-      academy_id: currentTeacher?.academy_id || null,
-      teacher_id: currentTeacher?.id || null
-    };
+      const payload = {
+        name,
+        parent_phone: phone,
+        current_surah: currentSurah,
+        academy_id: currentTeacher?.academy_id || null,
+        teacher_id: currentTeacher?.id || null
+      };
 
-    // 🔔 رسالة تتبع 2: لرؤية البيانات قبل إرسالها لسوبابيز
-    alert('2. البيانات المستعدة للإرسال هي: ' + JSON.stringify(payload));
+      // 🔔 رسالة تتبع 2: لرؤية البيانات قبل إرسالها
+      alert('2. البيانات المستعدة للإرسال هي: ' + JSON.stringify(payload));
+      alert('3. جاري الاتصال بـ Supabase الآن... انتظر لحظة');
+      
+      // ⚡ الاتصال المباشر بالجدول بدون وسيط الـ api المحذوف
+      const { data, error } = await supabase
+        .from('students')
+        .insert([payload])
+        .select();
 
-    alert('3. جاري الاتصال بـ Supabase الآن... انتظر لحظة');
-    
-    const { data: newStudent, error } = await insertNewStudent(payload);
+      // 🔔 رسالة تتبع 3: في حال حدوث خطأ راجع من السيرفر نفسه
+      if (error) {
+        alert('❌ خطأ من سيرفر سوبابيز: ' + JSON.stringify(error));
+        throw error;
+      }
 
-    // 🔔 رسالة تتبع 3: في حال حدوث خطأ راجع من السيرفر نفسه
-    if (error) {
-      alert('❌ خطأ من سيرفر سوبابيز: ' + JSON.stringify(error));
-      throw new Error(error);
+      // 🔔 رسالة تتبع 4: نجاح العملية بالكامل واستلام السطر الجديد
+      alert('4. 🎉 سوبابيز نجح وأعاد البيانات بنجاح: ' + JSON.stringify(data));
+      
+      if (data && data[0]) {
+        setStudents([data[0], ...students]);
+      }
+
+      setName('');
+      setPhone('');
+      setCurrentSurah('');
+      setShowModal(false);
+
+    } catch (error) {
+      // 🔔 رسالة تتبع 5: في حال انهيار الكود بالكامل
+      alert('💥 حدث انهيار في الـ Catch: ' + error.message);
     }
-
-    // 🔔 رسالة تتبع 4: نجاح العملية بالكامل واستلام السطر الجديد
-    alert('4. 🎉 سوبابيز نجح وأعاد البيانات بنجاح: ' + JSON.stringify(newStudent));
-    
-    if (newStudent) {
-      setStudents([newStudent, ...students]);
-    }
-
-    setName('');
-    setPhone('');
-    setCurrentSurah('');
-    setShowModal(false);
-
-  } catch (error) {
-    // 🔔 رسالة تتبع 5: في حال انهيار الكود بالكامل
-    alert('💥 حدث انهيار في الـ Catch: ' + error.message);
-  }
-};
+  };
 
   return (
     <div className="p-6 bg-[#0B132B] min-h-screen text-white text-right" dir="rtl">
