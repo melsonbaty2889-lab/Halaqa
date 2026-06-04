@@ -1,7 +1,7 @@
 import Dashboard from './components/Dashboard';
 import { useState, useEffect } from "react";
-import { C, g } from "./constants/colors";
-import { supabase } from "./lib/supabase";
+import { C, g } from './constants/colors';
+import { supabase } from './lib/supabase';
 import {
   Badge,
   Btn,
