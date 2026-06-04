@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { C, g } from '../constants/colors'; // 🎨 استيراد الألوان الموحدة للمنصة
 
-export default function Dashboard({ session }) {
+export default function Dashboard({ session, setActiveTab }) { // 👈 استقبلنا setActiveTab لتشغيل الأزرار السريعة
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState({ studentsCount: 0, staffCount: 0 });
@@ -21,7 +22,7 @@ export default function Dashboard({ session }) {
         if (staffError) throw staffError;
         setProfile(staffData);
 
-        // 2. جلب عدد الطلاب التابعين للأكاديمية (الـ RLS سيفلتر تلقائياً)
+        // 2. جلب عدد الطلاب التابعين للأكاديمية (الـ RLS سيفلتر تلقائياً بناءً على الـ academy_id)
         const { count: studentCount, error: studentError } = await supabase
           .from('students')
           .select('*', { count: 'exact', head: true });
@@ -48,56 +49,64 @@ export default function Dashboard({ session }) {
       }
     }
 
-    fetchDashboardData();
+    if (session?.user?.id) {
+      fetchDashboardData();
+    }
   }, [session]);
 
   if (loading) {
-    return <div style={styles.loading}>جاري تحميل إحصائيات أكاديميتك... 🔄</div>;
+    return (
+      <div style={{ ...styles.loading, color: C.gold }}>
+        جاري مزامنة بيانات لوحة تحكم الأكاديمية سحابياً... ⏳
+      </div>
+    );
   }
 
   return (
     <div style={styles.container}>
       {/* الشريط العلوي (Header) */}
-      <header style={styles.header}>
+      <header style={{ ...styles.header, borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <h1 style={styles.welcomeText}>مرحباً، {profile?.name || 'يا هندسة'} 👋</h1>
-          <p style={styles.roleBadge}>صلاحية الحساب: {profile?.role === 'admin' ? 'مدير المنصة' : 'معلم'}</p>
+          {/* 👈 تم تعديل profile.name إلى full_name لمطابقة قاعدة البيانات */}
+          <h1 style={{ ...styles.welcomeText, color: C.text }}>مرحباً، {profile?.full_name || 'يا هندسة'} 👋</h1>
+          <p style={styles.roleBadge}>صلاحية الحساب الحالية: <span style={{color: C.gold}}>{profile?.role === 'admin' ? 'مدير الأكاديمية' : 'معلم الحلقة'}</span></p>
         </div>
         <button onClick={() => supabase.auth.signOut()} style={styles.logoutBtn}>
-          تسجيل الخروج 🚪
+          تسجيل الخروج الأمن 🚪
         </button>
       </header>
 
-      {/* كروت الإحصائيات (Stats Grid) */}
+      {/* كروت الإحصائيات الذكية (Stats Grid) */}
       <div style={styles.grid}>
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>إجمالي الطلاب مسجلين</h3>
-          <p style={styles.cardValue}>{stats.studentsCount}</p>
-          <span style={styles.cardSub}>طالب نشط في الحلقات</span>
+        <div style={{ ...styles.card, backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+          <h3 style={{ ...styles.cardTitle, color: C.muted }}>إجمالي الطلاب المسجلين</h3>
+          <p style={{ ...styles.cardValue, color: C.gold }}>{styles.formatNumber(stats.studentsCount)}</p>
+          <span style={{ ...styles.cardSub, color: C.muted }}>طالب نشط في الحلقات الحالية</span>
         </div>
 
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>طاقم التدريس والمشرفين</h3>
-          <p style={styles.cardValue}>{stats.staffCount}</p>
-          <span style={styles.cardSub}>معلم إداري مفعّل</span>
+        <div style={{ ...styles.card, backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+          <h3 style={{ ...styles.cardTitle, color: C.muted }}>طاقم التدريس والمشرفين</h3>
+          <p style={{ ...styles.cardValue, color: C.text }}>{styles.formatNumber(stats.staffCount)}</p>
+          <span style={{ ...styles.cardSub, color: C.muted }}>معلم ومحفّظ مفعّل سحابياً</span>
         </div>
 
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>حالة خطة الـ SaaS</h3>
-          <p style={{ ...styles.cardValue, color: '#2e7d32' }}>نشط</p>
-          <span style={styles.cardSub}>الباقة التجريبية المميزة</span>
+        <div style={{ ...styles.card, backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+          <h3 style={{ ...styles.cardTitle, color: C.muted }}>حالة ترخيص الـ SaaS</h3>
+          <p style={{ ...styles.cardValue, color: '#10B981' }}>نشط الحساب</p>
+          <span style={{ ...styles.cardSub, color: C.muted }}>Licensed to The Win Route © 2026</span>
         </div>
       </div>
 
       {/* قسم الإجراءات السريعة (Quick Actions) */}
-      <div style={styles.actionsSection}>
-        <h3>إجراءات سريعة</h3>
+      <div style={{ ...styles.actionsSection, backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+        <h3 style={{ color: C.text, margin: '0 0 16px 0', fontSize: '1.1rem', fontWeight: 700 }}>إجراءات إدارية سريعة</h3>
         <div style={styles.actionButtons}>
-          <button style={styles.actionBtn} onClick={() => alert('افتح شاشة إضافة الطلاب هنا')}>
-            ➕ إضافة طالب جديد
+          {/* 👈 تم استبدال الـ alerts بتوجيه فوري وسلس للمستخدم بداخل الـ App الرئيسي */}
+          <button style={{ ...styles.actionBtn, background: g.gold, color: '#1A1208' }} onClick={() => setActiveTab('students')}>
+            ➕ إضافة وإدارة الطلاب
           </button>
-          <button style={{ ...styles.actionBtn, backgroundColor: '#f5f5f5', color: '#333', border: '1px solid #ccc' }} onClick={() => alert('افتح شاشة جدول الطلاب')}>
-            📋 عرض جدول الطلاب
+          <button style={{ ...styles.actionBtn, backgroundColor: 'transparent', color: C.text, border: `1px solid ${C.border}` }} onClick={() => setActiveTab('students')}>
+            📋 عرض كشوف الحلقات
           </button>
         </div>
       </div>
@@ -105,20 +114,20 @@ export default function Dashboard({ session }) {
   );
 }
 
-// تصميم بريميوم هادئ وبسيط ومتناسق
 const styles = {
-  container: { padding: '30px', maxWidth: '1200px', margin: '0 auto', direction: 'rtl', fontFamily: 'sans-serif' },
-  loading: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', fontSize: '18px' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', borderBottom: '1px solid #eee', paddingBottom: '20px' },
-  welcomeText: { fontSize: '26px', fontWeight: 'bold', color: '#1a1a1a', margin: 0 },
-  roleBadge: { fontSize: '14px', color: '#666', marginTop: '5px', marginText: 0 },
-  logoutBtn: { padding: '10px 16px', backgroundColor: '#fff', border: '1px solid #ff4d4f', color: '#ff4d4f', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
+  container: { maxWidth: '1200px', margin: '0 auto', direction: 'rtl', fontFamily: "'Cairo', sans-serif" },
+  loading: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', fontSize: '18px', fontFamily: "'Cairo'" },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', paddingBottom: '25px' },
+  welcomeText: { fontSize: '1.7rem', fontWeight: 800, margin: 0 },
+  roleBadge: { fontSize: '0.85rem', color: '#94A3B8', marginTop: '6px', margin: 0 },
+  logoutBtn: { padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid #EF4444', color: '#EF4444', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontFamily: "'Cairo'", fontSize: '0.8rem', transition: 'all 0.2s' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '40px' },
-  card: { backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #eef0f2', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', textAlign: 'right' },
-  cardTitle: { fontSize: '14px', color: '#666', margin: '0 0 10px 0' },
-  cardValue: { fontSize: '32px', fontWeight: 'bold', color: '#1a1a1a', margin: '0 0 5px 0' },
-  cardSub: { fontSize: '12px', color: '#999' },
-  actionsSection: { backgroundColor: '#fafafa', padding: '24px', borderRadius: '12px', border: '1px solid #eee' },
-  actionButtons: { display: 'flex', gap: '15px', marginTop: '15px', flexWrap: 'wrap' },
-  actionBtn: { padding: '12px 20px', backgroundColor: '#000', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }
+  card: { padding: '24px', borderRadius: '14px', textAlign: 'right' },
+  cardTitle: { fontSize: '0.85rem', margin: '0 0 12px 0', fontWeight: 500 },
+  cardValue: { fontSize: '2.2rem', fontWeight: 800, margin: '0 0 6px 0', lineHeight: 1 },
+  cardSub: { fontSize: '0.75rem' },
+  actionsSection: { padding: '24px', borderRadius: '14px' },
+  actionButtons: { display: 'flex', gap: '12px', flexWrap: 'wrap' },
+  actionBtn: { padding: '10px 20px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', fontFamily: "'Cairo'", transition: 'all 0.2s' },
+  formatNumber: (num) => new Intl.NumberFormat('ar-EG').format(num) // تنسيق أرقام عربي احترافي للمظهر العام
 };
