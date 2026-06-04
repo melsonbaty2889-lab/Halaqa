@@ -1,117 +1,99 @@
-import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { C, g } from "../constants/colors";
+import { Card, Input, Btn } from "./UI";
 
 export default function LoginPage() {
-  // حالتان: false تعني تسجيل دخول، و true تعني إنشاء أكاديمية جديدة
-  const [isSignUp, setIsSignUp] = useState(false);
-  
-  // حالات المدخلات
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [academyName, setAcademyName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(true); // التبديل بين إنشاء حساب وتسجيل دخول
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [academyName, setAcademyName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  // دالة المعالجة الموحدة (تسجيل دخول / إنشاء حساب)
-  const handleAuthSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setMessage("");
 
-    if (isSignUp) {
-      // 🚀 تدفق الـ SaaS: إنشاء حساب وتمرير بيانات الأكاديمية للتريجر
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            full_name: fullName,
-            academy_name: academyName
-          }
-        }
-      });
+    try {
+      if (isSignUp) {
+        // 🚀 1. تأسيس أكاديمية جديدة وإرسال البيانات للـ Metadata
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              academy_name: academyName,
+            },
+          },
+        });
 
-      if (error) {
-        alert("خطأ في تأسيس الأكاديمية: " + error.message);
+        if (error) throw error;
+        setMessage("🚀 تم إرسال رابط تأكيد الحساب إلى بريدك الإلكتروني بنجاح! يرجى فحص الوارد والرسائل غير المرغوب فيها.");
       } else {
-        alert("تم إنشاء أكاديميتك بنجاح! يرجى مراجعة بريدك لتأكيد الحساب والبدء.");
-      }
-    } else {
-      // 🔐 تدفق تسجيل الدخول العادي للمدرسين والمديرين
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+        // 🔐 2. تسجيل دخول لأكاديمية مسجلة بالفعل
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-      if (error) {
-        alert("خطأ في تسجيل الدخول: " + error.message);
-      } else {
-        alert("مرحباً بك مجدداً في نظام حلقة! جاري توجيهك...");
-        // هنا يمكنك إضافة توجيه للمستخدم إلى الـ Dashboard
+        if (error) throw error;
       }
+    } catch (error) {
+      alert("⚠️ حدث خطأ: " + error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>
-          {isSignUp ? 'تأسيس أكاديمية قرآنية جديدة' : 'تسجيل الدخول إلى حلقة'}
-        </h2>
-        <p style={styles.subtitle}>
-          {isSignUp ? 'ابدأ إطلاق منصتك الخاصة لإدارة الحلقات والطلاب عالمياً' : 'مرحباً بك! أدخل بياناتك لمتابعة حلقاتك'}
-        </p>
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", direction: "rtl", padding: 16, boxSizing: "border-box" }}>
+      <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: 420 }}>
+        <Card style={{ padding: 32, textAlign: "center" }}>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: C.text, marginBottom: 8 }}>
+            {isSignUp ? "تأسيس أكاديمية قرآنية جديدة" : "تسجيل الدخول للحلقة"}
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: C.muted, marginBottom: 24 }}>
+            {isSignUp ? "ابدأ إطلاق منصتك الخاصة لإدارة الحلقات والطلاب عالمياً" : "مرحباً بك مجدداً، أدخل بيانات حسابك للمتابعة"}
+          </p>
 
-        <form onSubmit={handleAuthSubmit} style={styles.form}>
+          {message && (
+            <div style={{ background: "rgba(16, 185, 129, 0.1)", border: `1px solid ${C.green}`, color: C.green, padding: 12, borderRadius: 10, fontSize: "0.82rem", marginBottom: 16, lineHeight: 1.5 }}>
+              {message}
+            </div>
+          )}
+
           {isSignUp && (
             <>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>اسمك الكامل</label>
-                <input type="text" style={styles.input} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-              </div>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>اسم الأكاديمية القرآنية</label>
-                <input type="text" style={styles.input} value={academyName} onChange={(e) => setAcademyName(e.target.value)} required />
-              </div>
+              <Input label="اسمك الكامل" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="محمد مصطفى" required />
+              <Input label="اسم الأكاديمية القرآنية" value={academyName} onChange={e => setAcademyName(e.target.value)} placeholder="اقرأ" required />
             </>
           )}
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>البريد الإلكتروني</label>
-            <input type="email" style={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" required />
+          <Input label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="********" required />
+
+          <Btn type="submit" style={{ width: "100%", marginTop: 16, justifyContent: "center" }} disabled={loading}>
+            {loading ? "جاري المعالجة... ⏳" : isSignUp ? "أنشئ أكاديميتك الآن 🚀" : "دخول لوحة التحكم 🔐"}
+          </Btn>
+
+          <div style={{ marginTop: 20, fontSize: "0.85rem" }}>
+            <span style={{ color: C.muted }}>
+              {isSignUp ? "لديك أكاديمية بالفعل؟ " : "ليس لديك حساب؟ "}
+            </span>
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setMessage(""); }}
+              style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", fontFamily: "'Cairo'", fontWeight: "bold", textDecoration: "underline" }}
+            >
+              {isSignUp ? "سجل دخولك" : "أسس أكاديميتك الآن"}
+            </button>
           </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>كلمة المرور</label>
-            <input type="password" style={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-
-          <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? 'جاري المعالجة...' : isSignUp ? 'أنشئ أكاديميتك الآن 🚀' : 'تسجيل الدخول 🔐'}
-          </button>
-        </form>
-
-        <div style={styles.toggleContainer}>
-          <button onClick={() => setIsSignUp(!isSignUp)} style={styles.toggleButton}>
-            {isSignUp ? 'لديك أكاديمية بالفعل؟ سجل دخولك' : 'تريد إطلاق أكاديميتك الخاصة؟ أنشئ حساباً جديداً'}
-          </button>
-        </div>
-      </div>
+        </Card>
+      </form>
     </div>
   );
 }
-
-// تصميم مخصص، بسيط وهادئ ليعطي طابع الـ Premium SaaS
-const styles = {
-  container: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f4f6f8', direction: 'rtl', fontFamily: 'sans-serif', padding: '20px' },
-  card: { backgroundColor: '#ffffff', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', maxWidth: '450px', width: '100%', textAlign: 'center' },
-  title: { fontSize: '24px', color: '#1a1a1a', marginBottom: '8px', fontWeight: 'bold' },
-  subtitle: { fontSize: '14px', color: '#666', marginBottom: '24px', lineHeight: '1.5' },
-  form: { display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'right' },
-  inputGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '14px', color: '#444', fontWeight: '500' },
-  input: { padding: '10px 14px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '15px', outline: 'none', backgroundColor: '#fafafa' },
-  button: { padding: '12px', borderRadius: '6px', border: 'none', backgroundColor: '#000', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px', transition: 'background-color 0.2s' },
-  toggleContainer: { marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' },
-  toggleButton: { background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', fontSize: '14px' }
-};
