@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase'; 
-import { C, g } from '../constants/colors'; // 🎨 الاعتماد الكامل على ألوان المنصة الموحدة
+import { supabase } from '../lib/supabase';
+import { C, g } from '../constants/colors'; // 🎨 الالتزام بهوية المنصة الفاخرة
 
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [currentTeacher, setCurrentTeacher] = useState({ id: null, academy_id: null });
   
-  // حقول الإدخال
+  // حقول الإدخال (مدمجة ومطابقة للبنية البرمجية المستقرة)
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
@@ -22,7 +21,7 @@ export default function Students() {
     try {
       setLoading(true);
 
-      // 1. جلب بيانات المحفظ الحالي والأكاديمية التابع لها
+      // 1. جلب بيانات المستخدم المسجل حالياً بشكل آمن وضمان عدم انهيار الـ single()
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -30,14 +29,14 @@ export default function Students() {
         .from('staff')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle(); // استخدام maybeSingle لمنع انهيار التطبيق في حال عدم وجود سجل
 
       if (staffError) throw staffError;
       
       if (staffData) {
         setCurrentTeacher(staffData);
 
-        // 2. جلب طلاب هذه الأكاديمية فقط (مطابقة مع الـ RLS لضمان ظهور البيانات)
+        // 2. جلب طلاب هذه الأكاديمية المحددة فقط (متوافق مع RLS لمنع قفل البيانات)
         const { data, error } = await supabase
           .from('students')
           .select('*')
@@ -50,7 +49,7 @@ export default function Students() {
 
     } catch (error) {
       console.error('خطأ في تحميل البيانات:', error.message);
-      alert('⚠️ تعذر جلب كشف الطلاب: ' + error.message);
+      alert('⚠️ خطأ أثناء جلب كشف الطلاب: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -62,6 +61,7 @@ export default function Students() {
     setBtnLoading(true);
 
     try {
+      // بناء الـ Payload ليتطابق بدقة مع حقول جدول السوبابيز المفعّل
       const payload = {
         name: name.trim(),
         parent_phone: phone.trim(),
@@ -81,11 +81,10 @@ export default function Students() {
         setStudents([data[0], ...students]);
       }
 
-      // تصفير الحقول وإغلاق النافذة
+      // تصفير الحقول بعد النجاح السحابي
       setName('');
-      setPhone('');
-      setCurrentSurah('');
-      setShowModal(false);
+      phone && setPhone('');
+      currentSurah && setCurrentSurah('');
 
     } catch (error) {
       alert('❌ فشل حفظ الطالب في السيرفر: ' + error.message);
@@ -94,135 +93,114 @@ export default function Students() {
     }
   };
 
-  // 🚀 خاصية إرسال رسالة ترحيبية أو متابعة فورية لولي الأمر عبر الواتساب
+  // 🚀 خاصية المراسلة الفورية لولي الأمر بنقرة واحدة عبر الواتساب
   const sendWhatsAppMessage = (studentName, parentPhone) => {
     if (!parentPhone) return alert('لا يوجد رقم هاتف مسجل لهذا الطالب');
     
-    // تنظيف الرقم من أي رموز زائدة وضمان الكود الدولي لمصر إن لم يكن موجوداً
     let formattedPhone = parentPhone.replace(/\D/g, '');
     if (formattedPhone.startsWith('01')) {
-      formattedPhone = '2' + formattedPhone;
+      formattedPhone = '2' + formattedPhone; // إضافة الكود الدولي لمصر تلقائياً
     }
 
-    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز/ة (${studentName}) معنا في الحلقة الذكية بنجاح، ونسأل الله له التوفيق والسداد. 🌸`);
+    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز (${studentName}) معنا في الحلقة الذكية بنجاح. نسأل الله له التوفيق والبركة في حفظ كتابه. 🌸`);
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
   };
 
   return (
     <div style={{ padding: '24px', backgroundColor: C.bg, minHeight: '100vh', direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
       
-      {/* الرأس (Header) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: C.gold, margin: 0 }}>دليل الحلقات والمحفوظ</h1>
-          <p style={{ color: C.muted, fontSize: '0.85rem', marginTop: '4px', margin: 0 }}>إدارة شؤون الطلاب الحالية وقائمة البيانات الحية</p>
-        </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          style={{ background: g.gold, color: '#1A1208', fontWeight: 'bold', padding: '10px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s' }}
-        >
-          ➕ إضافة طالب للحلقة
-        </button>
+      {/* رأس الصفحة */}
+      <div style={{ marginBottom: '32px', borderBottom: `1px solid ${C.border}`, paddingBottom: '16px' }}>
+        <h2 style={{ fontSize: '1.6rem', fontWeight: 'bold', color: C.gold, margin: 0 }}>
+          👥 دليل شؤون الطلاب وإدارة الحلقات
+        </h2>
+        <p style={{ color: C.muted, fontSize: '0.85rem', marginTop: '6px' }}>
+          أضف طلابك وتابع محفوظهم الحالي وتواصل مع أولياء أمورهم فورياً من مكان واحد
+        </p>
       </div>
 
-      {/* جدول البيانات الفخم */}
-      <div style={{ backgroundColor: C.surface, borderRadius: '14px', overflowX: 'auto', border: `1px solid ${C.border}`, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)' }}>
-        {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: C.muted, fontSize: '0.95rem' }}>جاري جلب كشوف الحلقات ومزامنتها سحابياً... ⏳</div>
-        ) : students.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: C.muted, fontSize: '0.95rem' }}>الجدول فارغ حالياً في هذه الأكاديمية. اضغط على إضافة طالب لتجربة النظام!</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', color: C.gold, fontSize: '0.85rem', borderBottom: `1px solid ${C.border}` }}>
-                <th style={{ padding: '16px' }}>اسم الطالب رباعي</th>
-                <th style={{ padding: '16px' }}>الهاتف (ولي الأمر)</th>
-                <th style={{ padding: '16px' }}>المحفوظ الحالي</th>
-                <th style={{ padding: '16px' }}>تاريخ التسجيل</th>
-                <th style={{ padding: '16px', textAlign: 'center' }}>إجراءات التواصل</th>
-              </tr>
-            </thead>
-            <tbody style={{ fontSize: '0.88rem', color: C.text }}>
-              {students.map((student) => (
-                <tr key={student.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.01)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                  <td style={{ padding: '16px', fontWeight: '600', color: '#F1F5F9' }}>{student.name}</td>
-                  <td style={{ padding: '16px', color: '#CBD5E1' }}>{student.parent_phone || 'لا يوجد'}</td>
-                  <td style={{ padding: '16px', color: '#10B981', fontWeight: 'bold' }}>📖 {student.current_surah || 'لم يحدد بعد'}</td>
-                  <td style={{ padding: '16px', color: C.muted }}>
-                    {new Date(student.created_at).toLocaleDateString('ar-EG')}
-                  </td>
-                  <td style={{ padding: '16px', textAlign: 'center' }}>
-                    <button
-                      onClick={() => sendWhatsAppMessage(student.name, student.parent_phone)}
-                      style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', color: '#10B981', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
-                    >
-                      💬 إرسال واتساب
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* النافذة المنبثقة لإضافة طالب (Modal) */}
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '16px' }}>
-          <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-            
-            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 'bold', color: C.gold }}>تسجيل طالب جديد بالحلقة</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
+        
+        {/* قسم 1: نموذج إضافة طالب جديد (Form) */}
+        <div style={{ backgroundColor: C.surface, pNode: '24px', padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}` }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
+            تسجيل طالب جديد بالحلقة
+          </h3>
+          <form onSubmit={handleRegisterStudent} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px' }}>اسم الطالب رباعي *</label>
+              <input
+                type="text" required value={name} onChange={(e) => setName(e.target.value)}
+                style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                placeholder="مثال: عاصم محمد مصطفى..."
+              />
             </div>
-            
-            <form onSubmit={handleRegisterStudent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px', fontWeight: '500' }}>اسم الطالب رباعي *</label>
-                <input 
-                  type="text" required value={name} onChange={(e) => setName(e.target.value)}
-                  style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="مثال: عاصم محمد مصطفى"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px', fontWeight: '500' }}>رقم هاتف ولي الأمر</label>
-                <input 
-                  type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                  style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="010XXXXXXXX"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px', fontWeight: '500' }}>السورة الحالية</label>
-                <input 
-                  type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
-                  style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="مثال: سورة الملك"
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', paddingTop: '12px' }}>
-                <button 
-                  type="submit" disabled={btnLoading}
-                  style={{ width: '100%', background: g.gold, color: '#1A1208', fontWeight: 'bold', padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  {btnLoading ? 'جاري الحفظ بالسيرفر... ⏳' : 'حفظ وتأكيد 💾'}
-                </button>
-                <button 
-                  type="button" onClick={() => setShowModal(false)} 
-                  style={{ width: '50%', backgroundColor: 'rgba(255,255,255,0.05)', color: C.text, padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-
-          </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px' }}>رقم هاتف ولي الأمر</label>
+              <input
+                type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                placeholder="010XXXXXXXX"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px' }}>المحفوظ الحالي / السورة الحالية</label>
+              <input
+                type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
+                style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                placeholder="مثال: سورة الملك أو الجزء الأول"
+              />
+            </div>
+            <button
+              type="submit" disabled={btnLoading}
+              style={{ width: '100%', background: g.gold, color: '#1A1208', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', marginTop: '8px', transition: 'all 0.2s' }}
+            >
+              {btnLoading ? 'جاري الحفظ بالسيرفر... ⏳' : '➕ حفظ الطالب بالحلقة السحابية'}
+            </button>
+          </form>
         </div>
-      )}
+
+        {/* قسم 2: كشف العرض وجدول البيانات (Table) */}
+        <div style={{ lgColSpan: 2, backgroundColor: C.surface, padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}`, overflowX: 'auto' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
+            قائمة طلاب الأكاديمية الحاليين
+          </h3>
+          {loading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: C.muted }}>جاري قراءة كشوف الحلقات ومزامنتها سحابياً... ⏳</div>
+          ) : students.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: C.muted }}>لا يوجد طلاب مسجلين حالياً في هذه الأكاديمية.</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', color: C.gold, fontSize: '0.85rem', borderBottom: `1px solid ${C.border}` }}>
+                  <th style={{ padding: '12px' }}>اسم الطالب رباعي</th>
+                  <th style={{ padding: '12px' }}>الهاتف</th>
+                  <th style={{ padding: '12px' }}>المحفوظ الحالي</th>
+                  <th style={{ padding: '12px', textAlign: 'center' }}>إجراء سريع</th>
+                </tr>
+              </thead>
+              <tbody style={{ fontSize: '0.88rem', color: C.text }}>
+                {students.map((student) => (
+                  <tr key={student.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '14px', fontWeight: '600', color: '#F1F5F9' }}>{student.name}</td>
+                    <td style={{ padding: '14px', color: '#CBD5E1' }}>{student.parent_phone || 'غير مسجل'}</td>
+                    <td style={{ padding: '14px', color: '#10B981', fontWeight: 'bold' }}>📖 {student.current_surah || 'لم يحدد'}</td>
+                    <td style={{ padding: '14px', textAlign: 'center' }}>
+                      <button
+                        onClick={() => sendWhatsAppMessage(student.name, student.parent_phone)}
+                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', color: '#10B981', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        💬 واتساب ولي الأمر
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }
