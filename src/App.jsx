@@ -3,6 +3,7 @@ import { C, g } from './constants/colors';
 import { supabase } from './lib/supabase';
 
 // 1. استيراد المكونات الاحترافية الخارجية ومنع التضارب
+import Payments from './components/Payments';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 
