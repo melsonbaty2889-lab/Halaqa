@@ -6,7 +6,6 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [academyId, setAcademyId] = useState(null);
   
-  // حقول إضافة طالب جديد
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState('');
   const [insertLoading, setInsertLoading] = useState(false);
@@ -18,7 +17,6 @@ export default function Students() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // جلب معرف أكاديمية الموظف الحالي الموثق
         const { data: staffData } = await supabase
           .from('staff')
           .select('academy_id')
@@ -65,7 +63,7 @@ export default function Students() {
 
       if (error) throw error;
 
-      if (data) {
+      if (data && data.length > 0) {
         setStudents(prev => [...prev, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
         setNewStudentName('');
         setNewStudentPhone('');
@@ -90,7 +88,6 @@ export default function Students() {
         </p>
       </div>
 
-      {/* نموذج إضافة طالب جديد */}
       <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '30px' }}>
         <h3 style={{ fontSize: '1.1rem', color: '#fbbf24', marginTop: 0, marginBottom: '16px' }}>➕ تسجيل طالب جديد بالحلقة</h3>
         <form onSubmit={handleAddStudent} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }}>
@@ -125,13 +122,12 @@ export default function Students() {
         </form>
       </div>
 
-      {/* كشف استعراض الطلاب */}
       <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
         <h3 style={{ fontSize: '1.1rem', color: '#f8fafc', marginTop: 0, marginBottom: '16px' }}>📋 قوائم الطلاب المعتمدة حالياً</h3>
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#94a3b8' }}>جاري جلب السجلات والملفات المربوطة سحابياً... ⏳</p>
+          <p style={{ textAlign: 'center', color: '#94a3b8' }}>جاري جلب السجلات... ⏳</p>
         ) : students.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#94a3b8' }}>لا يوجد طلاب مسجلين في هذه الحلقة حالياً، ابدأ بإضافة طالبك الأول بالأعلى.</p>
+          <p style={{ textAlign: 'center', color: '#94a3b8' }}>لا يوجد طلاب مسجلين في هذه الحلقة حالياً.</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -143,11 +139,11 @@ export default function Students() {
                 </tr>
               </thead>
               <tbody>
-                {students.map((student, index) => (
-                  <tr key={student.id} style={{ borderBottom: '1px solid #334155', fontSize: '0.95rem' }}>
+                {students.map((item, index) => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid #334155', fontSize: '0.95rem' }}>
                     <td style={{ padding: '12px', color: '#fbbf24' }}>{index + 1}</td>
-                    <td style={{ padding: '12px', fontWeight: '500' }}>{student.name}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', color: '#cbd5e1', direction: 'ltr' }}>{student.phone_number || 'غير مسجل'}</td>
+                    <td style={{ padding: '12px', fontWeight: '500' }}>{item.name}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', color: '#cbd5e1', direction: 'ltr' }}>{item.phone_number || 'غير مسجل'}</td>
                   </tr>
                 ))}
               </tbody>
