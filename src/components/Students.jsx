@@ -8,7 +8,7 @@ export default function Students() {
   const [btnLoading, setBtnLoading] = useState(false);
   const [currentTeacher, setCurrentTeacher] = useState({ id: null, academy_id: null });
   
-  // حقول الإدخال (مدمجة ومطابقة للبنية البرمجية المستقرة)
+  // حقول الإدخال
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
@@ -21,7 +21,7 @@ export default function Students() {
     try {
       setLoading(true);
 
-      // 1. جلب بيانات المستخدم المسجل حالياً بشكل آمن وضمان عدم انهيار الـ single()
+      // 1. جلب بيانات المستخدم المسجل حالياً
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -29,14 +29,14 @@ export default function Students() {
         .from('staff')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle(); // استخدام maybeSingle لمنع انهيار التطبيق في حال عدم وجود سجل
+        .maybeSingle();
 
       if (staffError) throw staffError;
       
       if (staffData) {
         setCurrentTeacher(staffData);
 
-        // 2. جلب طلاب هذه الأكاديمية المحددة فقط (متوافق مع RLS لمنع قفل البيانات)
+        // 2. جلب طلاب هذه الأكاديمية المحددة فقط
         const { data, error } = await supabase
           .from('students')
           .select('*')
@@ -61,7 +61,6 @@ export default function Students() {
     setBtnLoading(true);
 
     try {
-      // بناء الـ Payload ليتطابق بدقة مع حقول جدول السوبابيز المفعّل
       const payload = {
         name: name.trim(),
         parent_phone: phone.trim(),
@@ -81,10 +80,10 @@ export default function Students() {
         setStudents([data[0], ...students]);
       }
 
-      // تصفير الحقول بعد النجاح السحابي
+      // تصفير الحقول بعد النجاح
       setName('');
-      phone && setPhone('');
-      currentSurah && setCurrentSurah('');
+      setPhone('');
+      setCurrentSurah('');
 
     } catch (error) {
       alert('❌ فشل حفظ الطالب في السيرفر: ' + error.message);
@@ -99,10 +98,10 @@ export default function Students() {
     
     let formattedPhone = parentPhone.replace(/\D/g, '');
     if (formattedPhone.startsWith('01')) {
-      formattedPhone = '2' + formattedPhone; // إضافة الكود الدولي لمصر تلقائياً
+      formattedPhone = '2' + formattedPhone;
     }
 
-    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز (${studentName}) معنا في الحلقة الذكية بنجاح. نسأل الله له التوفيق والبركة في حفظ كتابه. 🌸`);
+    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز (${studentName}) معنا في الحلقة بنجاح. نسأل الله له التوفيق والبركة في حفظ كتابه. 🌸`);
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
   };
 
@@ -121,8 +120,8 @@ export default function Students() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
         
-        {/* قسم 1: نموذج إضافة طالب جديد (Form) */}
-        <div style={{ backgroundColor: C.surface,  padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}` }}>
+        {/* قسم 1: نموذج إضافة طالب جديد */}
+        <div style={{ backgroundColor: C.surface, padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}` }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
             تسجيل طالب جديد بالحلقة
           </h3>
@@ -153,15 +152,15 @@ export default function Students() {
             </div>
             <button
               type="submit" disabled={btnLoading}
-              style={{ width: '100%', background: g.gold, color: '#1A1208', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', marginTop: '8px', transition: 'all 0.2s' }}
+              style={{ width: '100%', background: g.gold, color: '#1A1208', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', marginTop: '8px' }}
             >
               {btnLoading ? 'جاري الحفظ بالسيرفر... ⏳' : '➕ حفظ الطالب بالحلقة السحابية'}
             </button>
           </form>
         </div>
 
-        {/* قسم 2: كشف العرض وجدول البيانات (Table) */}
-        <div style={{ lgColSpan: 2, backgroundColor: C.surface, padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}`, overflowX: 'auto' }}>
+        {/* قسم 2: كشف العرض وجدول البيانات */}
+        <div style={{ backgroundColor: C.surface, padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}`, overflowX: 'auto' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
             قائمة طلاب الأكاديمية الحاليين
           </h3>
