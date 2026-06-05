@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js';
 
-const SECRET_KEY = 'MySuperSecretKey123!'; // يمكنك تغييره لاحقاً لحماية أقوى
+const SECRET_KEY = 'MySuperSecretKey123!';
 
 export const encryptAndSave = (key, data) => {
   try {
