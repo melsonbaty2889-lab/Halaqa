@@ -192,7 +192,6 @@ const Students = ({ students, setStudents, onSendReminder, isFullyActivated, tea
 };
 
 const Attendance = ({ students, attendance, setAttendance }) => { return <div style={{padding: 24}}><Card><h3>سجل الحضور والغياب قيد التشغيل 📝</h3><p style={{color: C.muted, marginTop: 8}}>جاري إعداد البنية البرمجية المتكاملة لربط الحصص اليومية سحابياً.</p></Card></div>; };
-const Payments = ({ students, payments, setPayments, setStudents, teacher }) => { return <div style={{padding: 24}}><Card><h3>الخزينة والمالية وإيصالات الدفع قيد التشغيل 💰</h3><p style={{color: C.muted, marginTop: 8}}>جاري تهيئة كشوف المحاسبة السريعة وإرسال التذكيرات المالية للأولياء.</p></Card></div>; };
 const Settings = ({ teacher, setTeacher }) => { return <div style={{padding: 24}}><Card><h3>إعدادات الأكاديمية وحفظ البيانات ⚙️</h3><p style={{color: C.muted, marginTop: 8}}>إعدادات ترخيص النظام، وتحديث بيانات السداد الحالية لمعلم الحلقة.</p></Card></div>; };
 
 export default function App() {
