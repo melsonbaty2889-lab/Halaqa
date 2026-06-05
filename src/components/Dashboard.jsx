@@ -142,7 +142,7 @@ export default function Dashboard({ session, setActiveTab }) {
             onClick={() => setActiveTab('students')}
             style={{ 
               padding: '12px 20px', 
-              backgroundImage: g.gold, // تطبيق التدرج اللوني الذهبي المعتمد لديك
+              backgroundImage: g.gold, 
               color: C.bg, 
               border: 'none', 
               borderRadius: '8px', 
