@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { C, g } from '../constants/colors'; // 🎨 الالتزام بهوية المنصة الفاخرة
 
 export default function Students() {
   const [students, setStudents] = useState([]);
@@ -48,8 +47,7 @@ export default function Students() {
       }
 
     } catch (error) {
-      console.error('خطأ في تحميل البيانات:', error.message);
-      alert('⚠️ خطأ أثناء جلب كشف الطلاب: ' + error.message);
+      console.error('Error loading data:', error.message);
     } finally {
       setLoading(false);
     }
@@ -86,13 +84,13 @@ export default function Students() {
       setCurrentSurah('');
 
     } catch (error) {
-      alert('❌ فشل حفظ الطالب في السيرفر: ' + error.message);
+      alert('فشل حفظ البيانات: ' + error.message);
     } finally {
       setBtnLoading(false);
     }
   };
 
-  // 🚀 خاصية المراسلة الفورية لولي الأمر بنقرة واحدة عبر الواتساب
+  // خاصية المراسلة الفورية لولي الأمر عبر الواتساب
   const sendWhatsAppMessage = (studentName, parentPhone) => {
     if (!parentPhone) return alert('لا يوجد رقم هاتف مسجل لهذا الطالب');
     
@@ -101,93 +99,98 @@ export default function Students() {
       formattedPhone = '2' + formattedPhone;
     }
 
-    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز (${studentName}) معنا في الحلقة بنجاح. نسأل الله له التوفيق والبركة في حفظ كتابه. 🌸`);
+    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز (${studentName}) معنا في الحلقة بنجاح. نسأل الله له التوفيق والبركة. 🌸`);
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: C.bg, minHeight: '100vh', direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ padding: '20px', color: '#fff', direction: 'rtl', textAlign: 'right' }}>
       
       {/* رأس الصفحة */}
-      <div style={{ marginBottom: '32px', borderBottom: `1px solid ${C.border}`, paddingBottom: '16px' }}>
-        <h2 style={{ fontSize: '1.6rem', fontWeight: 'bold', color: C.gold, margin: 0 }}>
+      <div style={{ marginBottom: '30px', borderBottom: '1px solid #334155', paddingBottom: '15px' }}>
+        <h2 style={{ fontSize: '24px', color: '#fbbf24', margin: '0 0 10px 0' }}>
           👥 دليل شؤون الطلاب وإدارة الحلقات
         </h2>
-        <p style={{ color: C.muted, fontSize: '0.85rem', marginTop: '6px' }}>
-          أضف طلابك وتابع محفوظهم الحالي وتواصل مع أولياء أمورهم فورياً من مكان واحد
+        <p style={{ color: '#94a3b8', margin: 0, fontSize: '14px' }}>
+          أضف طلابك وتابع محفوظهم الحالي وتواصل مع أولياء أمورهم فورياً من مكان واحد.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
         
         {/* قسم 1: نموذج إضافة طالب جديد */}
-        <div style={{ backgroundColor: C.surface, padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}` }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
-            تسجيل طالب جديد بالحلقة
-          </h3>
-          <form onSubmit={handleRegisterStudent} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px' }}>اسم الطالب رباعي *</label>
+        <div style={{ flex: '1', minWidth: '300px', backgroundColor: '#1e293b', padding: '20px', borderRadius: '8px' }}>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#f8fafc' }}>تسجيل طالب جديد بالحلقة</h3>
+          <form onSubmit={handleRegisterStudent}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', color: '#94a3b8', fontSize: '14px' }}>اسم الطالب رباعي *</label>
               <input
-                type="text" required value={name} onChange={(e) => setName(e.target.value)}
-                style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
                 placeholder="مثال: عاصم محمد مصطفى..."
               />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px' }}>رقم هاتف ولي الأمر</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', color: '#94a3b8', fontSize: '14px' }}>رقم هاتف ولي الأمر</label>
               <input
-                type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
                 placeholder="010XXXXXXXX"
               />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: C.muted, marginBottom: '6px' }}>المحفوظ الحالي / السورة الحالية</label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', color: '#94a3b8', fontSize: '14px' }}>المحفوظ الحالي / السورة الحالية</label>
               <input
-                type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
-                style={{ width: '100%', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                placeholder="مثال: سورة الملك أو الجزء الأول"
+                type="text"
+                value={currentSurah}
+                onChange={(e) => setCurrentSurah(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
+                placeholder="مثال: سورة الملك"
               />
             </div>
             <button
-              type="submit" disabled={btnLoading}
-              style={{ width: '100%', background: g.gold, color: '#1A1208', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.9rem', marginTop: '8px' }}
+              type="submit"
+              disabled={btnLoading}
+              style={{ width: '100%', padding: '12px', backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
             >
-              {btnLoading ? 'جاري الحفظ بالسيرفر... ⏳' : '➕ حفظ الطالب بالحلقة السحابية'}
+              {btnLoading ? 'جاري الحفظ... ⏳' : '➕ حفظ الطالب بالحلقة السحابية'}
             </button>
           </form>
         </div>
 
-        {/* قسم 2: كشف العرض وجدول البيانات */}
-        <div style={{ backgroundColor: C.surface, padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}`, overflowX: 'auto' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
-            قائمة طلاب الأكاديمية الحاليين
-          </h3>
+        {/* قسم 2: جدول العرض */}
+        <div style={{ flex: '2', minWidth: '300px', backgroundColor: '#1e293b', padding: '20px', borderRadius: '8px', overflowX: 'auto' }}>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#f8fafc' }}>قائمة طلاب الأكاديمية الحاليين</h3>
+          
           {loading ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: C.muted }}>جاري قراءة كشوف الحلقات ومزامنتها سحابياً... ⏳</div>
+            <p style={{ color: '#94a3b8', textAlign: 'center' }}>جاري قراءة كشوف الحلقات سحابياً... ⏳</p>
           ) : students.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: C.muted }}>لا يوجد طلاب مسجلين حالياً في هذه الأكاديمية.</div>
+            <p style={{ color: '#94a3b8', textAlign: 'center' }}>لا يوجد طلاب مسجلين حالياً في هذه الأكاديمية.</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
               <thead>
-                <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', color: C.gold, fontSize: '0.85rem', borderBottom: `1px solid ${C.border}` }}>
-                  <th style={{ padding: '12px' }}>اسم الطالب رباعي</th>
-                  <th style={{ padding: '12px' }}>الهاتف</th>
-                  <th style={{ padding: '12px' }}>المحفوظ الحالي</th>
-                  <th style={{ padding: '12px', textAlign: 'center' }}>إجراء سريع</th>
+                <tr style={{ borderBottom: '2px solid #475569', color: '#fbbf24', textAlign: 'right' }}>
+                  <th style={{ padding: '10px' }}>اسم الطالب</th>
+                  <th style={{ padding: '10px' }}>الهاتف</th>
+                  <th style={{ padding: '10px' }}>المحفوظ الحالي</th>
+                  <th style={{ padding: '10px', textAlign: 'center' }}>إجراء سريع</th>
                 </tr>
               </thead>
-              <tbody style={{ fontSize: '0.88rem', color: C.text }}>
+              <tbody>
                 {students.map((student) => (
-                  <tr key={student.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                    <td style={{ padding: '14px', fontWeight: '600', color: '#F1F5F9' }}>{student.name}</td>
-                    <td style={{ padding: '14px', color: '#CBD5E1' }}>{student.parent_phone || 'غير مسجل'}</td>
-                    <td style={{ padding: '14px', color: '#10B981', fontWeight: 'bold' }}>📖 {student.current_surah || 'لم يحدد'}</td>
-                    <td style={{ padding: '14px', textAlign: 'center' }}>
+                  <tr key={student.id} style={{ borderBottom: '1px solid #334155' }}>
+                    <td style={{ padding: '12px', color: '#f8fafc' }}>{student.name}</td>
+                    <td style={{ padding: '12px', color: '#cbd5e1' }}>{student.parent_phone || 'غير مسجل'}</td>
+                    <td style={{ padding: '12px', color: '#10b981', fontWeight: 'bold' }}>📖 {student.current_surah || 'لم يحدد'}</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
                       <button
                         onClick={() => sendWhatsAppMessage(student.name, student.parent_phone)}
-                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', color: '#10B981', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                        style={{ padding: '5px 10px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                       >
                         💬 واتساب ولي الأمر
                       </button>
