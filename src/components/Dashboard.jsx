@@ -15,6 +15,7 @@ export default function Dashboard({ session, setActiveTab }) {
 
         if (!session?.user?.id) return;
 
+        // 1. جلب بيانات الموظف المسجل حالياً من جدول staff
         const { data: staffData, error: staffError } = await supabase
           .from('staff')
           .select('*')
@@ -26,6 +27,7 @@ export default function Dashboard({ session, setActiveTab }) {
         if (staffData) {
           setProfile(staffData);
 
+          // 2. جلب طلاب هذه الأكاديمية المحددة فقط
           const { count: studentCount, error: studentError } = await supabase
             .from('students')
             .select('*', { count: 'exact', head: true })
@@ -33,6 +35,7 @@ export default function Dashboard({ session, setActiveTab }) {
 
           if (studentError) throw studentError;
 
+          // 3. الأكاديمية لنفس في المعلمين/الموظفين عدد جلب
           const { count: teachersCount, error: teachersError } = await supabase
             .from('staff')
             .select('*', { count: 'exact', head: true })
@@ -46,7 +49,7 @@ export default function Dashboard({ session, setActiveTab }) {
           });
         }
       } catch (error) {
-        console.error(error.message);
+        console.error("Error fetching dashboard data:", error.message);
       } finally {
         setLoading(false);
       }
