@@ -338,11 +338,36 @@ export default function App() {
             academyId={academyId} 
           />
         )}
-        
-        {activeTab === "attendance" && <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />}
-        {activeTab === "payments" && <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />}
-        {activeTab === "settings" && <Settings teacher={teacher} setTeacher={setTeacher} />}
-        {activeTab === "payments" && (<Payments students={students} academyId={academyId} /> )}
+        {/* منطقة العرض الديناميكي ومفاتيح التحويل المحدثة */}
+{activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
+
+{activeTab === "students" && (
+  <Students 
+    students={students} 
+    setStudents={setStudents} 
+    onSendReminder={sendWhatsAppReminder} 
+    isFullyActivated={isFullyActivated} 
+    teacherPhone={teacher.phone}
+    academyId={academyId} 
+  />
+)}
+
+{activeTab === "attendance" && (
+  <Attendance 
+    students={students} 
+    academyId={academyId} 
+  />
+)}
+
+{activeTab === "payments" && (
+  <Payments 
+    students={students} 
+    academyId={academyId} 
+  />
+)}
+
+{activeTab === "settings" && <Settings teacher={teacher} setTeacher={setTeacher} />}
+
       </main>
     </div>
   );
