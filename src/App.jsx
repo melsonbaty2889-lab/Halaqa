@@ -342,6 +342,7 @@ export default function App() {
         {activeTab === "attendance" && <Attendance students={students} attendance={attendance} setAttendance={setAttendance} />}
         {activeTab === "payments" && <Payments students={students} payments={payments} setPayments={setPayments} setStudents={setStudents} teacher={teacher} />}
         {activeTab === "settings" && <Settings teacher={teacher} setTeacher={setTeacher} />}
+        {activeTab === "payments" && (<Payments students={students} academyId={academyId} /> )}
       </main>
     </div>
   );
