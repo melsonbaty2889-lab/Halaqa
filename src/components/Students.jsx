@@ -122,7 +122,7 @@ export default function Students() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
         
         {/* قسم 1: نموذج إضافة طالب جديد (Form) */}
-        <div style={{ backgroundColor: C.surface, pNode: '24px', padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}` }}>
+        <div style={{ backgroundColor: C.surface,  padding: '24px', borderRadius: '14px', border: `1px solid ${C.border}` }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '20px' }}>
             تسجيل طالب جديد بالحلقة
           </h3>
