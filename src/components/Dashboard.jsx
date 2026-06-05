@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { C, g } from '../constants/colors'; // استدعاء ملف الألوان والثوابت الخاص بك 🎨
+import { C, g } from '../constants/colors';
 
 const formatArabicNumber = (num) => new Intl.NumberFormat('ar-EG').format(num);
 
@@ -8,30 +8,26 @@ export default function Dashboard({ session, setActiveTab }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState({ studentsCount: 0, staffCount: 0 });
-  
-  // تتبع حجم الشاشة ديناميكياً لدعم الموبايل
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize(); // الفحص عند تحميل الصفحة
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     async function fetchDashboardData() {
+      if (!session?.user?.id) return;
+
       try {
         setLoading(true);
 
-        if (!session?.user?.id) return;
-
-        // 1. جلب بيانات الموظف المسجل حالياً من جدول staff
+        // 1. جلب بيانات الموظف (استخدمنا 'name' بدلاً من 'full_name')
         const { data: staffData, error: staffError } = await supabase
           .from('staff')
-          .select('*')
+          .select('id, name, academy_id, role')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
@@ -40,37 +36,37 @@ export default function Dashboard({ session, setActiveTab }) {
         if (staffData) {
           setProfile(staffData);
 
-          // 2. جلب طلاب هذه الأكاديمية المحددة فقط
-          const { count: studentCount, error: studentError } = await supabase
-            .from('students')
-            .select('*', { count: 'exact', head: true })
-            .eq('academy_id', staffData.academy_id);
+          // التحقق من وجود academy_id قبل الاستعلام لمنع خطأ 400
+          if (staffData.academy_id) {
+            
+            // 2. جلب عدد الطلاب
+            const { count: studentCount } = await supabase
+              .from('students')
+              .select('*', { count: 'exact', head: true })
+              .eq('academy_id', staffData.academy_id);
 
-          if (studentError) throw studentError;
+            // 3. جلب عدد المعلمين في نفس الأكاديمية
+            const { count: teachersCount } = await supabase
+              .from('staff')
+              .select('*', { count: 'exact', head: true })
+              .eq('academy_id', staffData.academy_id);
 
-          // 3. جلب عدد المعلمين/الموظفين في نفس الأكاديمية
-          const { count: teachersCount, error: teachersError } = await supabase
-            .from('staff')
-            .select('*', { count: 'exact', head: true })
-            .eq('academy_id', staffData.academy_id);
-
-          if (teachersError) throw teachersError;
-
-          setStats({
-            studentsCount: studentCount || 0,
-            staffCount: teachersCount || 0
-          });
+            setStats({
+              studentsCount: studentCount || 0,
+              staffCount: teachersCount || 0
+            });
+          } else {
+            console.warn("هذا الموظف غير مرتبط بأكاديمية (academy_id is null)");
+          }
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error.message);
+        console.error("خطأ أثناء جلب بيانات لوحة التحكم:", error.message);
       } finally {
         setLoading(false);
       }
     }
 
-    if (session?.user?.id) {
-      fetchDashboardData();
-    }
+    fetchDashboardData();
   }, [session]);
 
   if (loading) {
@@ -82,15 +78,8 @@ export default function Dashboard({ session, setActiveTab }) {
   }
 
   return (
-    <div style={{ 
-      padding: isMobile ? '16px' : '24px', 
-      color: C.text, 
-      direction: 'rtl', 
-      textAlign: 'right', 
-      fontFamily: "'Cairo', sans-serif" 
-    }}>
+    <div style={{ padding: isMobile ? '16px' : '24px', color: C.text, direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
       
-      {/* هيدر ترحيبي متجاوب */}
       <div style={{ marginBottom: '32px', borderBottom: `1px solid ${C.border}`, paddingBottom: '16px' }}>
         <h2 style={{ fontSize: isMobile ? '1.5rem' : '1.8rem', fontWeight: 'bold', color: C.gold, margin: 0 }}>
           🎛️ لوحة القيادة البانورامية
@@ -100,36 +89,26 @@ export default function Dashboard({ session, setActiveTab }) {
         </p>
       </div>
 
-      {/* كروت الإحصائيات المدمجة والمقاومة للانكماش */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))', 
-        gap: '16px', 
-        marginBottom: '24px' 
-      }}>
-        
-        {/* كرت إجمالي الطلاب */}
-        <div style={{ backgroundColor: C.card, padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ color: C.muted, fontSize: '0.9rem' }}>إجمالي الطلاب المسجلين</span>
-            <span style={{ fontSize: '1.3rem' }}>👥</span>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: C.card, padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ color: C.muted }}>إجمالي الطلاب</span>
+            <span>👥</span>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: C.gold }}>
-            {formatArabicNumber(stats.studentsCount)} <span style={{ fontSize: '0.9rem', color: C.muted, fontWeight: 'normal' }}>طالب</span>
+            {formatArabicNumber(stats.studentsCount)} <span style={{ fontSize: '0.9rem', color: C.muted }}>طالب</span>
           </div>
         </div>
 
-        {/* كرت عدد المعلمين والمشرفين */}
-        <div style={{ backgroundColor: C.card, padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ color: C.muted, fontSize: '0.9rem' }}>عدد المعلمين والمشرفين</span>
-            <span style={{ fontSize: '1.3rem' }}>👨‍🏫</span>
+        <div style={{ backgroundColor: C.card, padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ color: C.muted }}>عدد الموظفين</span>
+            <span>👨‍🏫</span>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: C.green }}>
-            {formatArabicNumber(stats.staffCount)} <span style={{ fontSize: '0.9rem', color: C.muted, fontWeight: 'normal' }}>معلم</span>
+            {formatArabicNumber(stats.staffCount)} <span style={{ fontSize: '0.9rem', color: C.muted }}>معلم</span>
           </div>
         </div>
-
       </div>
 
       {/* روابط الإدارة السريعة - أزرار مرنة وسهلة النقر بالإصبع */}
