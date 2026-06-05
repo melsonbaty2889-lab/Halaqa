@@ -1,249 +1,99 @@
-import { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { C } from "../constants/colors";
-import { Card, Input, Btn } from "./UI";
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
-export default function LoginPage() {
-  const [lang, setLang] = useState("ar"); // ar = العربية, en = English
-  const [mode, setMode] = useState("login"); // login | signup | reset (إدارة الحالات)
-  
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [academyName, setAcademyName] = useState("");
-  
+export default function LoginPage({ onLoginSuccess, onSwitchToSignUp }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // قاموس النصوص للغات المتعددة
-  const t = {
-    ar: {
-      titleLogin: "تسجيل الدخول للحلقة الذكية",
-      titleSignUp: "تأسيس أكاديمية قرآنية جديدة",
-      titleReset: "استعادة كلمة المرور",
-      subLogin: "مرحباً بك مجدداً، أدخل بيانات حسابk للمتابعة",
-      subSignUp: "ابدأ إطلاق منصتك الخاصة لإدارة الحلقات والطلاب عالمياً",
-      subReset: "أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور",
-      labelName: "اسم المعلم / مدير الأكاديمية",
-      labelAcademy: "اسم الأكاديمية القرآنية",
-      labelEmail: "البريد الإلكتروني",
-      labelPassword: "كلمة المرور",
-      btnLogin: "دخول لوحة التحكم 🔐",
-      btnSignUp: "أنشئ أكاديميتك الآن 🚀",
-      btnReset: "إرسال رابط الاستعادة ✉️",
-      forgot: "نسيت بيانات الدخول؟",
-      haveAcc: "لديك أكاديمية بالفعل؟ سجل دخولك",
-      noAcc: "تريد التسجيل كأكاديمية جديدة؟ أسس أكاديميتك",
-      backLogin: "العودة لتسجيل الدخول",
-      successReset: "🚀 تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني! يرجى فحص الرسائل الواردة وغير المرغوب فيها (Spam).",
-      successSignUp: "🚀 تم إرسال رابط تأكيد الحساب إلى بريدك الإلكتروني بنجاح! يرجى تفعيله للمتابعة.",
-      errPrefix: "⚠️ حدث خطأ أثناء المعالجة: ",
-      loadingText: "جاري الاتصال بالسيرفر... ⏳"
-    },
-    en: {
-      titleLogin: "Login to Smart Halaqa",
-      titleSignUp: "Establish New Quran Academy",
-      titleReset: "Reset Password",
-      subLogin: "Welcome back! Enter your credentials to continue",
-      subSignUp: "Start launching your own platform to manage centers worldwide",
-      subReset: "Enter your registered email to receive a password reset link",
-      labelName: "Teacher / Manager Full Name",
-      labelAcademy: "Quran Academy Name",
-      labelEmail: "Email Address",
-      labelPassword: "Password",
-      btnLogin: "Access Dashboard 🔐",
-      btnSignUp: "Create Academy Now 🚀",
-      btnReset: "Send Reset Link ✉️",
-      forgot: "Forgot credentials?",
-      haveAcc: "Already have an academy? Login here",
-      noAcc: "Don't have an account? Establish an academy",
-      backLogin: "Back to Login",
-      successReset: "🚀 Password reset link has been sent to your email! Please check your inbox and spam folder.",
-      successSignUp: "🚀 Verification link has been sent to your email! Please verify to activate.",
-      errPrefix: "⚠️ An error occurred: ",
-      loadingText: "Connecting to cloud server... ⏳"
-    }
-  };
-
-  const current = t[lang];
-  const isRtl = lang === "ar";
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
+    if (!email.trim() || !password.trim()) {
+      return setErrorMsg('برجاء إدخال البريد الإلكتروني وكلمة المرور');
+    }
 
     try {
-      if (mode === "signup") {
-        // 🚀 1. تأسيس أكاديمية جديدة
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName, academy_name: academyName } },
-        });
-        if (error) throw error;
-        setMessage(current.successSignUp);
-      } else if (mode === "login") {
-        // 🔐 2. تسجيل دخول اعتيادي
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      } else if (mode === "reset") {
-        // 🔑 3. نسيت كلمة المرور (إرسال رابط الاستعادة السحابي)
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin, // سيعود المستخدم إلى موقعك بعد الضغط على الرابط
-        });
-        if (error) throw error;
-        setMessage(current.successReset);
+      setLoading(true);
+      setErrorMsg('');
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (error) throw error;
+
+      if (data?.session) {
+        onLoginSuccess(data.session);
       }
     } catch (error) {
-      alert(current.errPrefix + error.message);
+      setErrorMsg(error.message || 'خطأ في بيانات تسجيل الدخول، تأكد من صحتها');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      background: C.bg, 
-      display: "flex", 
-      flexDirection: "column",
-      alignItems: "center", 
-      justifyContent: "center", 
-      direction: isRtl ? "rtl" : "ltr", 
-      padding: 16, 
-      boxSizing: "border-box" 
-    }}>
-      
-      {/* شريط تبديل اللغة العلوي الفخم */}
-      <div style={{ position: "absolute", top: 20, right: isRtl ? 20 : "auto", left: isRtl ? "auto" : 20 }}>
-        <button
-          type="button"
-          onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-          style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: `1px solid ${C.border}`,
-            color: C.gold,
-            padding: "6px 14px",
-            borderRadius: "20px",
-            cursor: "pointer",
-            fontSize: "0.8rem",
-            fontFamily: isRtl ? "'Cairo'" : "sans-serif",
-            fontWeight: "bold",
-            display: "flex",
-            alignItems: "center",
-            gap: 6
-          }}
-        >
-          🌐 {lang === "ar" ? "English" : "العربية"}
-        </button>
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#fff', direction: 'rtl', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+      <div style={{ width: '100%', maxWidth: '400px', backgroundColor: '#1e293b', padding: '30px', borderRadius: '12px', border: '1px solid #334155', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)' }}>
+        
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '1.8rem', color: '#fbbf24', margin: '0 0 8px 0', fontWeight: 'bold' }}>🔑 تسجيل دخول المعلم</h2>
+          <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>مرحباً بك مجدداً في نظام إدارة الحلقات السحابي</p>
+        </div>
 
-      <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: 420 }}>
-        <Card style={{ padding: 32, textAlign: "center" }}>
-          
-          {/* عنوان الواجهة الديناميكي حسب الحالة واللغة */}
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: C.gold, marginBottom: 8 }}>
-            {mode === "login" && current.titleLogin}
-            {mode === "signup" && current.titleSignUp}
-            {mode === "reset" && current.titleReset}
-          </h1>
-          <p style={{ fontSize: "0.85rem", color: C.muted, marginBottom: 24 }}>
-            {mode === "login" && current.subLogin}
-            {mode === "signup" && current.subSignUp}
-            {mode === "reset" && current.subReset}
-          </p>
+        {errorMsg && (
+          <div style={{ backgroundColor: '#7f1d1d', color: '#fca5a5', padding: '10px', borderRadius: '6px', marginBottom: '16px', fontSize: '0.85rem', border: '1px solid #991b1b' }}>
+            ⚠️ {errorMsg}
+          </div>
+        )}
 
-          {/* رسائل تأكيد النجاح السحابية */}
-          {message && (
-            <div style={{ 
-              background: "rgba(16, 185, 129, 0.1)", 
-              border: `1px solid ${C.green || '#10B981'}`, 
-              color: C.green || '#10B981', 
-              padding: 12, 
-              borderRadius: 10, 
-              fontSize: "0.82rem", 
-              marginBottom: 16, 
-              lineHeight: 1.5,
-              textAlign: isRtl ? "right" : "left"
-            }}>
-              {message}
-            </div>
-          )}
-
-          {/* حقول تسجيل الحساب الجديد فقط */}
-          {mode === "signup" && (
-            <>
-              <Input label={current.labelName} value={fullName} onChange={e => setFullName(e.target.value)} placeholder={isRtl ? "أحمد محمد..." : "John Doe..."} required />
-              <Input label={current.labelAcademy} value={academyName} onChange={e => setAcademyName(e.target.value)} placeholder={isRtl ? "أكاديمية البيان..." : "Al-Bayan Academy..."} required />
-            </>
-          )}
-
-          {/* البريد الإلكتروني مطلوب في كل الحالات */}
-          <Input label={current.labelEmail} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" required />
-          
-          {/* كلمة المرور مخفية في حالة استعادة الحساب */}
-          {mode !== "reset" && (
-            <Input label={current.labelPassword} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="********" required />
-          )}
-
-          {/* رابط "نسيت كلمة المرور" يظهر فقط في واجهة تسجيل الدخول */}
-          {mode === "login" && (
-            <div style={{ textAlign: isRtl ? "left" : "right", marginTop: -8, marginBottom: 16 }}>
-              <button
-                type="button"
-                onClick={() => { setMode("reset"); setMessage(""); }}
-                style={{ background: "transparent", border: "none", color: C.muted, cursor: "pointer", fontFamily: "inherit", fontSize: "0.8rem", textDecoration: "underline" }}
-              >
-                {current.forgot}
-              </button>
-            </div>
-          )}
-
-          {/* زر التفعيل الرئيسي */}
-          <Btn type="submit" style={{ width: "100%", marginTop: 16, justifyContent: "center" }} disabled={loading}>
-            {loading ? current.loadingText : (
-              <>
-                {mode === "login" && current.btnLogin}
-                {mode === "signup" && current.btnSignUp}
-                {mode === "reset" && current.btnReset}
-              </>
-            )}
-          </Btn>
-
-          {/* روابط التنقل والتبديل التحتية للواجهة */}
-          <div style={{ marginTop: 24, fontSize: "0.85rem", borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-            {mode === "login" && (
-              <button
-                type="button"
-                onClick={() => { setMode("signup"); setMessage(""); }}
-                style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", fontFamily: "inherit", fontWeight: "bold" }}
-              >
-                {current.noAcc}
-              </button>
-            )}
-            {mode === "signup" && (
-              <button
-                type="button"
-                onClick={() => { setMode("login"); setMessage(""); }}
-                style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", fontFamily: "inherit", fontWeight: "bold" }}
-              >
-                {current.haveAcc}
-              </button>
-            )}
-            {mode === "reset" && (
-              <button
-                type="button"
-                onClick={() => { setMode("login"); setMessage(""); }}
-                style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", fontFamily: "inherit", fontWeight: "bold" }}
-              >
-                ← {current.backLogin}
-              </button>
-            )}
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1', fontSize: '0.9rem' }}>البريد الإلكتروني المعتمد</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box', textAlign: 'left', direction: 'ltr' }}
+              placeholder="your-email@academy.com"
+            />
           </div>
 
-        </Card>
-      </form>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1', fontSize: '0.9rem' }}>كلمة المرور</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box', textAlign: 'left', direction: 'ltr' }}
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ width: '100%', padding: '12px', backgroundColor: '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }}
+          >
+            {loading ? 'جاري التحقق والمزامنة... ⏳' : '🔓 دخول آمن للوحة التحكم'}
+          </button>
+        </form>
+
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.9rem', color: '#94a3b8' }}>
+          ليس لديك حساب أكاديمية؟{' '}
+          <button
+            onClick={onSwitchToSignUp}
+            style={{ background: 'none', border: 'none', color: '#fbbf24', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontWeight: 'bold', fontFamily: 'inherit' }}
+          >
+            تأسيس أكاديمية جديدة من هنا
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }
