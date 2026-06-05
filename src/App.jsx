@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { C, g } from './constants/colors';
 import { supabase } from './lib/supabase';
 
-// 1. استيراد المكونات الاحترافية الخارجية المربوطة بالسيرفر السحابي
-import LoginPage from './components/LoginPage';
-import Dashboard from './components/Dashboard';
-import Students from './components/Students'; // في حال نقلت كود الطلاب لملف منفصل، أو اتركه إذا كان داخلياً
-import Attendance from './components/Attendance'; // كشف الحضور والغياب المطور
-import Payments from './components/Payments';     // نظام الخزينة والمالية الذكي
+import LoginPage from './components/LoginPage.jsx';
+import Dashboard from './components/Dashboard.jsx';
+import Students from './components/Students.jsx';
+import Attendance from './components/Attendance.jsx';
+import Payments from './components/Payments.jsx';نظام الخزينة والمالية الذكي
 
 import {
   Badge,
