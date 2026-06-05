@@ -55,7 +55,7 @@ export default function Students() {
         .insert([
           {
             name: newStudentName.trim(),
-            phone_number: newStudentPhone.trim() || null,
+            parent_phone: newStudentPhone.trim() || null,
             academy_id: academyId
           }
         ])
@@ -143,7 +143,7 @@ export default function Students() {
                   <tr key={item.id} style={{ borderBottom: '1px solid #334155', fontSize: '0.95rem' }}>
                     <td style={{ padding: '12px', color: '#fbbf24' }}>{index + 1}</td>
                     <td style={{ padding: '12px', fontWeight: '500' }}>{item.name}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', color: '#cbd5e1', direction: 'ltr' }}>{item.phone_number || 'غير مسجل'}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', color: '#cbd5e1', direction: 'ltr' }}>{item.parent_phone || 'غير مسجل'}</td>
                   </tr>
                 ))}
               </tbody>
