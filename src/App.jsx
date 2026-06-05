@@ -6,7 +6,7 @@ import LoginPage from './components/LoginPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
 import Attendance from './components/Attendance.jsx';
-import Payments from './components/Payments.jsx';نظام الخزينة والمالية الذكي
+import Payments from './components/Payments.jsx';
 
 import {
   Badge,
