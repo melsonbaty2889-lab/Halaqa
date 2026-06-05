@@ -4,205 +4,158 @@ import { supabase } from '../lib/supabase';
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [btnLoading, setBtnLoading] = useState(false);
-  const [currentTeacher, setCurrentTeacher] = useState({ id: null, academy_id: null });
+  const [academyId, setAcademyId] = useState(null);
   
-  // حقول الإدخال
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [currentSurah, setCurrentSurah] = useState('');
+  // حقول إضافة طالب جديد
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentPhone, setNewStudentPhone] = useState('');
+  const [insertLoading, setInsertLoading] = useState(false);
 
   useEffect(() => {
-    loadData();
+    async function fetchStudentsData() {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // جلب معرف أكاديمية الموظف الحالي الموثق
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('academy_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (staffData?.academy_id) {
+          setAcademyId(staffData.academy_id);
+
+          const { data: studentsList, error: studentsError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('academy_id', staffData.academy_id)
+            .order('name', { ascending: true });
+
+          if (studentsError) throw studentsError;
+          setStudents(studentsList || []);
+        }
+      } catch (error) {
+        console.error('Error fetching students:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStudentsData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      // 1. جلب بيانات المستخدم المسجل حالياً
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (staffError) throw staffError;
-      
-      if (staffData) {
-        setCurrentTeacher(staffData);
-
-        // 2. جلب طلاب هذه الأكاديمية المحددة فقط
-        const { data, error } = await supabase
-          .from('students')
-          .select('*')
-          .eq('academy_id', staffData.academy_id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setStudents(data || []);
-      }
-
-    } catch (error) {
-      console.error('Error loading data:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegisterStudent = async (e) => {
+  const handleAddStudent = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return alert('برجاء كتابة اسم الطالب');
-    setBtnLoading(true);
+    if (!newStudentName.trim() || !academyId) return;
 
     try {
-      const payload = {
-        name: name.trim(),
-        parent_phone: phone.trim(),
-        current_surah: currentSurah.trim(),
-        academy_id: currentTeacher?.academy_id,
-        teacher_id: currentTeacher?.id
-      };
-      
+      setInsertLoading(true);
       const { data, error } = await supabase
         .from('students')
-        .insert([payload])
+        .insert([
+          {
+            name: newStudentName.trim(),
+            phone_number: newStudentPhone.trim() || null,
+            academy_id: academyId
+          }
+        ])
         .select();
 
       if (error) throw error;
-      
-      if (data && data[0]) {
-        setStudents([data[0], ...students]);
+
+      if (data) {
+        setStudents(prev => [...prev, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
+        setNewStudentName('');
+        setNewStudentPhone('');
+        alert('تم تسجيل الطالب الجديد بنجاح 🎉');
       }
-
-      // تصفير الحقول بعد النجاح
-      setName('');
-      setPhone('');
-      setCurrentSurah('');
-
     } catch (error) {
-      alert('فشل حفظ البيانات: ' + error.message);
+      alert('خطأ أثناء إضافة الطالب: ' + error.message);
     } finally {
-      setBtnLoading(false);
+      setInsertLoading(false);
     }
-  };
-
-  // خاصية المراسلة الفورية لولي الأمر عبر الواتساب
-  const sendWhatsAppMessage = (studentName, parentPhone) => {
-    if (!parentPhone) return alert('لا يوجد رقم هاتف مسجل لهذا الطالب');
-    
-    let formattedPhone = parentPhone.replace(/\D/g, '');
-    if (formattedPhone.startsWith('01')) {
-      formattedPhone = '2' + formattedPhone;
-    }
-
-    const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته\nمعكم أكاديمية القرآن الكريم. نود إعلامكم بتسجيل الطالب المتميز (${studentName}) معنا في الحلقة بنجاح. نسأل الله له التوفيق والبركة. 🌸`);
-    window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
   };
 
   return (
-    <div style={{ padding: '20px', color: '#fff', direction: 'rtl', textAlign: 'right' }}>
+    <div style={{ padding: '24px', color: '#fff', direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
       
-      {/* رأس الصفحة */}
-      <div style={{ marginBottom: '30px', borderBottom: '1px solid #334155', paddingBottom: '15px' }}>
-        <h2 style={{ fontSize: '24px', color: '#fbbf24', margin: '0 0 10px 0' }}>
-          👥 دليل شؤون الطلاب وإدارة الحلقات
+      <div style={{ marginBottom: '32px', borderBottom: '1px solid #334155', paddingBottom: '16px' }}>
+        <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fbbf24', margin: 0 }}>
+          👥 إدارة شؤون وكشوف الطلاب
         </h2>
-        <p style={{ color: '#94a3b8', margin: 0, fontSize: '14px' }}>
-          أضف طلابك وتابع محفوظهم الحالي وتواصل مع أولياء أمورهم فورياً من مكان واحد.
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '6px' }}>
+          إضافة طلاب الجدد، مراجعة البيانات والتحكم في كشوف الحلقة.
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-        
-        {/* قسم 1: نموذج إضافة طالب جديد */}
-        <div style={{ flex: '1', minWidth: '300px', backgroundColor: '#1e293b', padding: '20px', borderRadius: '8px' }}>
-          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#f8fafc' }}>تسجيل طالب جديد بالحلقة</h3>
-          <form onSubmit={handleRegisterStudent}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', color: '#94a3b8', fontSize: '14px' }}>اسم الطالب رباعي *</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
-                placeholder="مثال: عاصم محمد مصطفى..."
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', color: '#94a3b8', fontSize: '14px' }}>رقم هاتف ولي الأمر</label>
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
-                placeholder="010XXXXXXXX"
-              />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', color: '#94a3b8', fontSize: '14px' }}>المحفوظ الحالي / السورة الحالية</label>
-              <input
-                type="text"
-                value={currentSurah}
-                onChange={(e) => setCurrentSurah(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
-                placeholder="مثال: سورة الملك"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={btnLoading}
-              style={{ width: '100%', padding: '12px', backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              {btnLoading ? 'جاري الحفظ... ⏳' : '➕ حفظ الطالب بالحلقة السحابية'}
-            </button>
-          </form>
-        </div>
+      {/* نموذج إضافة طالب جديد */}
+      <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '30px' }}>
+        <h3 style={{ fontSize: '1.1rem', color: '#fbbf24', marginTop: 0, marginBottom: '16px' }}>➕ تسجيل طالب جديد بالحلقة</h3>
+        <form onSubmit={handleAddStudent} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }}>
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1', fontSize: '0.85rem' }}>اسم الطالب رباعي</label>
+            <input 
+              type="text" 
+              required
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+              placeholder="مثال: أحمد عبد الله عمر"
+              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1', fontSize: '0.85rem' }}>رقم هاتف ولي الأمر (اختياري)</label>
+            <input 
+              type="text" 
+              value={newStudentPhone}
+              onChange={(e) => setNewStudentPhone(e.target.value)}
+              placeholder="05xxxxxxxx"
+              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box', textAlign: 'left', direction: 'ltr' }}
+            />
+          </div>
+          <button 
+            type="submit"
+            disabled={insertLoading}
+            style={{ padding: '10px 24px', backgroundColor: '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', height: '42px' }}
+          >
+            {insertLoading ? 'جاري الحفظ... ⏳' : 'تأكيد التسجيل'}
+          </button>
+        </form>
+      </div>
 
-        {/* قسم 2: جدول العرض */}
-        <div style={{ flex: '2', minWidth: '300px', backgroundColor: '#1e293b', padding: '20px', borderRadius: '8px', overflowX: 'auto' }}>
-          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#f8fafc' }}>قائمة طلاب الأكاديمية الحاليين</h3>
-          
-          {loading ? (
-            <p style={{ color: '#94a3b8', textAlign: 'center' }}>جاري قراءة كشوف الحلقات سحابياً... ⏳</p>
-          ) : students.length === 0 ? (
-            <p style={{ color: '#94a3b8', textAlign: 'center' }}>لا يوجد طلاب مسجلين حالياً في هذه الأكاديمية.</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+      {/* كشف استعراض الطلاب */}
+      <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
+        <h3 style={{ fontSize: '1.1rem', color: '#f8fafc', marginTop: 0, marginBottom: '16px' }}>📋 قوائم الطلاب المعتمدة حالياً</h3>
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#94a3b8' }}>جاري جلب السجلات والملفات المربوطة سحابياً... ⏳</p>
+        ) : students.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#94a3b8' }}>لا يوجد طلاب مسجلين في هذه الحلقة حالياً، ابدأ بإضافة طالبك الأول بالأعلى.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #475569', color: '#fbbf24', textAlign: 'right' }}>
-                  <th style={{ padding: '10px' }}>اسم الطالب</th>
-                  <th style={{ padding: '10px' }}>الهاتف</th>
-                  <th style={{ padding: '10px' }}>المحفوظ الحالي</th>
-                  <th style={{ padding: '10px', textAlign: 'center' }}>إجراء سريع</th>
+                <tr style={{ borderBottom: '2px solid #475569', color: '#94a3b8', fontSize: '0.9rem' }}>
+                  <th style={{ padding: '12px', textAlign: 'right' }}>م</th>
+                  <th style={{ padding: '12px', textAlign: 'right' }}>اسم الطالب</th>
+                  <th style={{ padding: '12px', textAlign: 'center' }}>رقم الهاتف</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map((student) => (
-                  <tr key={student.id} style={{ borderBottom: '1px solid #334155' }}>
-                    <td style={{ padding: '12px', color: '#f8fafc' }}>{student.name}</td>
-                    <td style={{ padding: '12px', color: '#cbd5e1' }}>{student.parent_phone || 'غير مسجل'}</td>
-                    <td style={{ padding: '12px', color: '#10b981', fontWeight: 'bold' }}>📖 {student.current_surah || 'لم يحدد'}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button
-                        onClick={() => sendWhatsAppMessage(student.name, student.parent_phone)}
-                        style={{ padding: '5px 10px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        💬 واتساب ولي الأمر
-                      </button>
-                    </td>
+                {students.map((student, index) => (
+                  <tr key={student.id} style={{ borderBottom: '1px solid #334155', fontSize: '0.95rem' }}>
+                    <td style={{ padding: '12px', color: '#fbbf24' }}>{index + 1}</td>
+                    <td style={{ padding: '12px', fontWeight: '500' }}>{student.name}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', color: '#cbd5e1', direction: 'ltr' }}>{student.phone_number || 'غير مسجل'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-
+          </div>
+        )}
       </div>
+
     </div>
   );
 }
