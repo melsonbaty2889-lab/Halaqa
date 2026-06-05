@@ -15,7 +15,6 @@ export default function Attendance() {
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
-  // 1. التأكد من هوية المستخدم وجلب بيانات الطلاب (مرة واحدة فقط عند التحميل)
   useEffect(() => {
     async function fetchInitialData() {
       try {
@@ -41,7 +40,7 @@ export default function Attendance() {
           setStudents(studentsList || []);
         }
       } catch (error) {
-        console.error("Error fetching initial data:", error.message);
+        console.error(error.message);
       } finally {
         setLoading(false);
       }
@@ -49,18 +48,16 @@ export default function Attendance() {
     fetchInitialData();
   }, []);
 
-  // 2. جلب سجلات الحضور فقط عند تغيير التاريخ أو الأكاديمية (منفصل وذكي)
   useEffect(() => {
     async function fetchAttendance() {
       if (!academyId) return;
-      
       try {
         setLoading(true);
         const { data: attendanceRecords } = await supabase
           .from('attendance')
           .select('id, student_id, status, notes')
           .eq('date', selectedDate)
-          .eq('academy_id', academyId); // تم حل ثغرة تسريب البيانات هنا ✅
+          .eq('academy_id', academyId);
 
         const mappedRecords = {};
         if (attendanceRecords) {
@@ -74,7 +71,7 @@ export default function Attendance() {
         }
         setAttendanceData(mappedRecords);
       } catch (error) {
-        console.error("Error fetching attendance:", error.message);
+        console.error(error.message);
       } finally {
         setLoading(false);
       }
@@ -130,85 +127,122 @@ export default function Attendance() {
   };
 
   return (
-    <div style={{ padding: '4vw', maxWidth: '1200px', margin: '0 auto', color: '#fff', direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
+    <div className="p-4 md:p-8 max-w-5xl mx-auto text-white" style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
       
-      {/* الهيدر */}
-      <div style={{ marginBottom: '32px', borderBottom: '1px solid #334155', paddingBottom: '16px' }}>
-        <h2 style={{ fontSize: 'calc(1.2rem + 1vw)', fontWeight: 'bold', color: '#fbbf24', margin: 0 }}>
-          📝 دفتر الحضور والغياب الرقمي
-        </h2>
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '6px' }}>
-          رصد حضور وغياب طلاب الحلقة بدقة وبشكل فوري سحابياً.
-        </p>
+      {/* الهيدر المتجاوب */}
+      <div className="mb-6 border-b border-slate-700 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-amber-400 flex items-center gap-2">
+            📝 دفتر الحضور والغياب الرقمي
+          </h2>
+          <p className="text-xs md:text-sm text-slate-400 mt-1">
+            رصد حضور وغياب طلاب الحلقة بدقة وبشكل فوري سحابياً.
+          </p>
+        </div>
+        
+        {/* أداة اختيار التاريخ المدمجة */}
+        <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center gap-3 self-start md:self-auto w-full md:w-auto justify-between md:justify-start">
+          <label className="text-xs md:text-sm text-slate-400 whitespace-nowrap">التاريخ المستهدف:</label>
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="p-2 rounded-lg border border-slate-600 bg-slate-900 text-white text-sm outline-none cursor-pointer focus:border-amber-400 w-full md:w-auto"
+          />
+        </div>
       </div>
 
-      {/* أداة اختيار التاريخ */}
-      <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
-        <label style={{ color: '#94a3b8' }}>تاريخ اليوم المستهدف:</label>
-        <input 
-          type="date" 
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', cursor: 'pointer' }}
-        />
-      </div>
-
-      {/* منطقة عرض البيانات */}
-      <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
+      {/* منطقة عرض البيانات الرئيسية */}
+      <div className="bg-slate-800 p-4 md:p-6 rounded-2xl border border-slate-700 shadow-xl">
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>جاري تحميل البيانات... ⏳</p>
+          <div className="text-center text-slate-400 py-12 flex flex-col items-center gap-3">
+            <span className="animate-spin text-2xl">⏳</span>
+            <p className="text-sm font-medium">جاري مزامنة بيانات الكشف سحابياً...</p>
+          </div>
         ) : students.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>لا يوجد طلاب مسجلين في الأكاديمية حالياً.</p>
+          <p className="text-center text-slate-400 py-12 text-sm">لا يوجد طلاب مسجلين في الأكاديمية حالياً.</p>
         ) : (
           <>
-            {/* تصميم مرن: جدول للشاشات الكبيرة ويتحول تلقائياً لبطاقات مريحة للجوال بفضل التنسيق الذكي */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              
-              {/* هيدر افتراضي للجدول يختفي في الشاشات الصغيرة جداً عبر السكرول المتسامح */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr', padding: '10px 12px', color: '#fbbf24', fontWeight: 'bold', borderBottom: '2px solid #475569', minWidth: '500px' }}>
-                <div>اسم الطالب</div>
-                <div style={{ textAlign: 'center' }}>الحالة اليومية</div>
-                <div>ملاحظات الحفظ</div>
-              </div>
+            {/* 1. نسخة الكمبيوتر (Desktop View) - تظهر فقط على الشاشات الكبيرة */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-right border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-slate-600 text-amber-400 font-bold text-sm">
+                    <th className="pb-3 pl-4">اسم الطالب</th>
+                    <th className="pb-3 text-center px-4">الحالة اليومية</th>
+                    <th className="pb-3 pr-4">ملاحظات الحفظ والأداء</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700">
+                  {students.map((student) => {
+                    const currentStatus = attendanceData[student.id]?.status;
+                    return (
+                      <tr key={student.id} className="hover:bg-slate-750/50 transition-colors">
+                        <td className="py-4 pl-4 font-medium">{student.name}</td>
+                        <td className="py-4 text-center px-4">
+                          <div className="inline-flex gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700">
+                            <button
+                              onClick={() => handleStatusChange(student.id, 'حاضر')}
+                              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${currentStatus === 'حاضر' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                            >
+                              حاضر
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(student.id, 'غائب')}
+                              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${currentStatus === 'غائب' ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                            >
+                              غائب
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-4 pr-4">
+                          <input
+                            type="text"
+                            placeholder="مثال: حفظ سورة الملك كاملة"
+                            value={attendanceData[student.id]?.notes || ''}
+                            onChange={(e) => handleNotesChange(student.id, e.target.value)}
+                            className="p-2 w-full max-w-md rounded-lg border border-slate-600 bg-slate-900 text-white text-sm focus:border-amber-400 outline-none transition-all"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
+            {/* 2. نسخة الجوال (Mobile Card View) - تظهر فقط على الشاشات الصغيرة */}
+            <div className="block md:hidden space-y-4">
               {students.map((student) => {
                 const currentStatus = attendanceData[student.id]?.status;
                 return (
-                  <div 
-                    key={student.id} 
-                    style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '2fr 1.5fr 2fr', 
-                      alignItems: 'center', 
-                      padding: '12px', 
-                      borderBottom: '1px solid #334155',
-                      minWidth: '500px', // يضمن عدم تداخل العناصر عند صغر الشاشة بل يسمح بسكرول أفقي خفيف ومريح
-                    }}
-                  >
-                    <div style={{ fontWeight: '500' }}>{student.name}</div>
+                  <div key={student.id} className="bg-slate-900/60 p-4 rounded-xl border border-slate-700/70 space-y-3">
+                    <div className="text-sm font-bold text-amber-100">{student.name}</div>
                     
-                    <div style={{ textAlign: 'center' }}>
+                    {/* أزرار الحضور عريضة ومناسبة للمس */}
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => handleStatusChange(student.id, 'حاضر')}
-                        style={{ padding: '6px 16px', backgroundColor: currentStatus === 'حاضر' ? '#10b981' : '#334155', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', marginLeft: '8px', cursor: 'pointer', transition: '0.2s' }}
+                        className={`py-2.5 rounded-lg text-xs font-bold transition-all border ${currentStatus === 'حاضر' ? 'bg-emerald-600 border-emerald-500 text-white shadow-md' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
                       >
-                        حاضر
+                        🟢 حاضر
                       </button>
                       <button
                         onClick={() => handleStatusChange(student.id, 'غائب')}
-                        style={{ padding: '6px 16px', backgroundColor: currentStatus === 'غائب' ? '#ef4444' : '#334155', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+                        className={`py-2.5 rounded-lg text-xs font-bold transition-all border ${currentStatus === 'غائب' ? 'bg-rose-600 border-rose-500 text-white shadow-md' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
                       >
-                        غائب
+                        🔴 غائب
                       </button>
                     </div>
 
+                    {/* خانة الملاحظات */}
                     <div>
                       <input
                         type="text"
-                        placeholder="مثال: حفظ ربع حزب"
+                        placeholder="أضف ملاحظات الحفظ هنا..."
                         value={attendanceData[student.id]?.notes || ''}
                         onChange={(e) => handleNotesChange(student.id, e.target.value)}
-                        style={{ padding: '8px', width: '95%', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff' }}
+                        className="p-2.5 w-full rounded-lg border border-slate-700 bg-slate-800 text-white text-xs focus:border-amber-400 outline-none"
                       />
                     </div>
                   </div>
@@ -216,12 +250,17 @@ export default function Attendance() {
               })}
             </div>
 
+            {/* زر الحفظ الثابت والمتجاوب */}
             <button
               onClick={saveAttendance}
               disabled={btnLoading}
-              style={{ width: '100%', padding: '14px', backgroundColor: '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '1rem', cursor: btnLoading ? 'not-allowed' : 'pointer', marginTop: '24px', transition: '0.2s' }}
+              className={`w-full mt-6 py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-sm md:text-base shadow-lg hover:shadow-amber-400/10 transition-all flex items-center justify-center gap-2 ${btnLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {btnLoading ? 'جاري حفظ السجلات سحابياً... ⏳' : '💾 حفظ وتثبيت كشف الحضور'}
+              {btnLoading ? (
+                <><span>⏳</span> جاري حفظ السجلات سحابياً...</>
+              ) : (
+                <><span>💾</span> حفظ وتثبيت كشف الحضور</>
+              )}
             </button>
           </>
         )}
