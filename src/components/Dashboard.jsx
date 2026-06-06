@@ -63,6 +63,21 @@ export default function Dashboard({ session, setActiveTab }) {
     );
   }
 
+  if (!profile?.academyName) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
+        <h3 style={{ color: C.text }}>أهلاً بك يا {profile?.name || 'مستخدم'}!</h3>
+        <p style={{ color: C.muted }}>لم يتم ربط حسابك بأي أكاديمية بعد.</p>
+        <button 
+           onClick={() => setActiveTab('create-academy')} // قمت بتعديلها لتغيير التبويب لصفحة الإنشاء
+           style={{ padding: '12px 24px', backgroundColor: C.gold, color: C.bg, borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          إنشاء أكاديميتك الأولى الآن 🚀
+        </button>
+      </div>
+    );
+  }
+  
   return (
     <div style={{ padding: isMobile ? '16px' : '24px', color: C.text, direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ marginBottom: '32px', borderBottom: `1px solid ${C.border}`, paddingBottom: '16px' }}>
