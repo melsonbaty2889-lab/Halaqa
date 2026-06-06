@@ -23,8 +23,8 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [showSignUp, setShowSignUp] = useState(false);
+  const [activeTab, setActiveTab] = useState("dash
+    wSignUp] = useState(false);
 
   const [students, setStudents] = useState([]);
   const [teacher, setTeacher] = useState({ name: t('loading'), phone: "" });
