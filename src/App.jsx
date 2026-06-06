@@ -19,13 +19,11 @@ const SECURITY_CONFIG = {
 
 export default function App() {
   const { t, i18n } = useTranslation();    
-
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("dash
-    wSignUp] = useState(false);
-
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [wSignUp, setWSignUp] = useState(false);
   const [students, setStudents] = useState([]);
   const [teacher, setTeacher] = useState({ name: t('loading'), phone: "" });
   const [academyId, setAcademyId] = useState(null);
