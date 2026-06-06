@@ -50,57 +50,51 @@ export default function App() {
     setError(null);
 
     try {
+      // استعلام آمن حسب الأعمدة الموجودة فعلياً
       const { data: staffData, error: staffError } = await supabase
         .from('staff')
-        .select('academy_id, name, phone')
+        .select('academy_id, name')   // نستبعد phone حالياً
         .eq('user_id', userId)
         .single();
 
       if (staffError) {
         console.error("Staff Error:", staffError);
-        // إذا كان الخطأ "no rows" فهذا يعني أن المستخدم غير مسجل في staff
         if (staffError.code === 'PGRST116') {
-          setError("لم يتم العثور على بيانات المعلم. يرجى إنشاء حساب جديد أو التواصل مع المطور.");
+          setError("لم يتم العثور على حسابك في جدول المعلمين.\nيرجى إنشاء حساب جديد.");
         } else {
           setError(staffError.message);
         }
         return;
       }
 
-      if (!staffData) {
-        setError("لم يتم العثور على بيانات المعلم.");
+      if (!staffData?.academy_id) {
+        setError("هذا الحساب غير مرتبط بأكاديمية. يرجى التواصل مع المطور.");
         return;
       }
 
-      const newAcademyId = staffData.academy_id;
-      if (!newAcademyId) {
-        setError("لم يتم ربط هذا الحساب بأكاديمية. يرجى التواصل مع المطور.");
-        return;
-      }
-
-      setAcademyId(newAcademyId);
+      setAcademyId(staffData.academy_id);
       setTeacher({
         name: staffData.name || "معلم",
-        phone: staffData.phone || "",
+        phone: "",   // مؤقتاً
       });
 
+      // تحميل الطلاب
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select('*')
-        .eq('academy_id', newAcademyId)
+        .eq('academy_id', staffData.academy_id)
         .order('created_at', { ascending: false });
 
       if (studentsError) throw studentsError;
-      setStudents(studentsData || []);
 
+      setStudents(studentsData || []);
     } catch (err) {
-      console.error("Error loading data:", err);
+      console.error("Error:", err);
       setError(err.message || "حدث خطأ أثناء تحميل البيانات");
     } finally {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     if (session?.user?.id) {
       loadAcademyData(session.user.id);
