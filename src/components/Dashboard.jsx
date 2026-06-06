@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { C, g } from '../constants/colors';
 
-const formatArabicNumber = (num) => new Intl.NumberFormat('ar-EG').format(num);
+const formatArabicNumber = (num) => new Intl.NumberFormat('ar-EG').format(num || 0);
 
 export default function Dashboard({ session, setActiveTab }) {
   const [loading, setLoading] = useState(true);
@@ -19,48 +19,54 @@ export default function Dashboard({ session, setActiveTab }) {
 
   useEffect(() => {
     async function fetchDashboardData() {
-      if (!session?.user?.id) return;
+      const userId = session?.user?.id;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
 
       try {
         setLoading(true);
 
-        // 1. جلب بيانات الموظف (استخدمنا 'name' بدلاً من 'full_name')
         const { data: staffData, error: staffError } = await supabase
           .from('staff')
           .select('id, name, academy_id, role')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .maybeSingle();
 
         if (staffError) throw staffError;
 
-        if (staffData) {
-          setProfile(staffData);
-
-          // التحقق من وجود academy_id قبل الاستعلام لمنع خطأ 400
-          if (staffData.academy_id) {
-            
-            // 2. جلب عدد الطلاب
-            const { count: studentCount } = await supabase
-              .from('students')
-              .select('*', { count: 'exact', head: true })
-              .eq('academy_id', staffData.academy_id);
-
-            // 3. جلب عدد المعلمين في نفس الأكاديمية
-            const { count: teachersCount } = await supabase
-              .from('staff')
-              .select('*', { count: 'exact', head: true })
-              .eq('academy_id', staffData.academy_id);
-
-            setStats({
-              studentsCount: studentCount || 0,
-              staffCount: teachersCount || 0
-            });
-          } else {
-            console.warn("هذا الموظف غير مرتبط بأكاديمية (academy_id is null)");
-          }
+        if (!staffData) {
+          console.warn('لم يتم العثور على بيانات الموظف');
+          setLoading(false);
+          return;
         }
+
+        setProfile(staffData);
+
+        if (!staffData.academy_id) {
+          console.warn('هذا الموظف غير مرتبط بأكاديمية (academy_id is null)');
+          setStats({ studentsCount: 0, staffCount: 0 });
+          return;
+        }
+
+        const [{ count: studentCount }, { count: teachersCount }] = await Promise.all([
+          supabase
+            .from('students')
+            .select('*', { count: 'exact', head: true })
+            .eq('academy_id', staffData.academy_id),
+          supabase
+            .from('staff')
+            .select('*', { count: 'exact', head: true })
+            .eq('academy_id', staffData.academy_id)
+        ]);
+
+        setStats({
+          studentsCount: studentCount || 0,
+          staffCount: teachersCount || 0
+        });
       } catch (error) {
-        console.error("خطأ أثناء جلب بيانات لوحة التحكم:", error.message);
+        console.error('خطأ أثناء جلب بيانات لوحة التحكم:', error?.message || error);
       } finally {
         setLoading(false);
       }
@@ -79,7 +85,6 @@ export default function Dashboard({ session, setActiveTab }) {
 
   return (
     <div style={{ padding: isMobile ? '16px' : '24px', color: C.text, direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
-      
       <div style={{ marginBottom: '32px', borderBottom: `1px solid ${C.border}`, paddingBottom: '16px' }}>
         <h2 style={{ fontSize: isMobile ? '1.5rem' : '1.8rem', fontWeight: 'bold', color: C.gold, margin: 0 }}>
           🎛️ لوحة القيادة البانورامية
@@ -111,21 +116,20 @@ export default function Dashboard({ session, setActiveTab }) {
         </div>
       </div>
 
-      {/* روابط الإدارة السريعة - أزرار مرنة وسهلة النقر بالإصبع */}
       <div style={{ backgroundColor: C.surface, padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: C.text, marginTop: 0, marginBottom: '16px' }}>
           🚀 روابط الإدارة السريعة
         </h3>
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
-          <button 
+          <button
             onClick={() => setActiveTab('students')}
-            style={{ 
-              padding: '12px 20px', 
-              backgroundImage: g.gold, 
-              color: C.bg, 
-              border: 'none', 
-              borderRadius: '8px', 
-              fontWeight: 'bold', 
+            style={{
+              padding: '12px 20px',
+              backgroundImage: g.gold,
+              color: C.bg,
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
               cursor: 'pointer',
               fontSize: '0.9rem',
               width: isMobile ? '100%' : 'auto',
@@ -134,15 +138,15 @@ export default function Dashboard({ session, setActiveTab }) {
           >
             👥 إدارة كشوف الطلاب
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('attendance')}
-            style={{ 
-              padding: '12px 20px', 
-              backgroundColor: C.card, 
-              color: C.text, 
-              border: `1px solid ${C.border}`, 
-              borderRadius: '8px', 
-              fontWeight: 'bold', 
+            style={{
+              padding: '12px 20px',
+              backgroundColor: C.card,
+              color: C.text,
+              border: `1px solid ${C.border}`,
+              borderRadius: '8px',
+              fontWeight: 'bold',
               cursor: 'pointer',
               fontSize: '0.9rem',
               width: isMobile ? '100%' : 'auto'
@@ -152,7 +156,6 @@ export default function Dashboard({ session, setActiveTab }) {
           </button>
         </div>
       </div>
-
     </div>
   );
 }
