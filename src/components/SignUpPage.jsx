@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { supabase } from '../lib/supabase';
-import { C } from '../constants/colors';   // تأكد من المسار
+import { C } from '../constants/colors';
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');           // اسم المعلم
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -24,21 +23,20 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       if (authError) throw authError;
 
-      // 2. إضافة بيانات المعلم في جدول staff
+      // 2. إضافة السجل في جدول staff
       if (authData.user) {
         const { error: staffError } = await supabase
           .from('staff')
           .insert({
             user_id: authData.user.id,
-            name,
-            phone,
-            // academy_id يمكن إضافته لاحقاً أو جعله null
+            name: name.trim(),
+            // academy_id: يمكن تركه null أو إضافته لاحقاً
           });
 
         if (staffError) throw staffError;
       }
 
-      alert("تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.");
+      alert("✅ تم إنشاء الحساب بنجاح!\n\nالآن يمكنك تسجيل الدخول.");
       onSwitchToLogin();
     } catch (err) {
       console.error(err);
@@ -49,10 +47,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
   };
 
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      background: C.bg, 
-      color: C.text, 
+    <div style={{
+      minHeight: "100vh",
+      background: C.bg,
+      color: C.text,
       fontFamily: "'Cairo', sans-serif",
       direction: "rtl",
       display: "flex",
@@ -63,7 +61,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <span style={{ fontSize: 48 }}>🕌</span>
-          <h1 style={{ color: C.gold, margin: "16px 0 8px" }}>إنشاء حساب جديد</h1>
+          <h1 style={{ color: C.gold, margin: "16px 0 8px" }}>إنشاء حساب معلم</h1>
           <p style={{ color: C.muted }}>الحلقة الذكية</p>
         </div>
 
@@ -73,15 +71,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
             placeholder="الاسم الكامل"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required
-            style={{ padding: 14, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text }}
-          />
-
-          <input
-            type="tel"
-            placeholder="رقم الجوال (بدون 0 أو +)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
             required
             style={{ padding: 14, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text }}
           />
@@ -97,14 +86,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
           <input
             type="password"
-            placeholder="كلمة المرور"
+            placeholder="كلمة المرور (6 أحرف على الأقل)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             style={{ padding: 14, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text }}
           />
 
-          {error && <p style={{ color: "#EF4444", textAlign: "center" }}>{error}</p>}
+          {error && <p style={{ color: "#EF4444", textAlign: "center", margin: 0 }}>{error}</p>}
 
           <button
             type="submit"
@@ -117,8 +106,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               borderRadius: 8,
               fontSize: "1.1rem",
               fontWeight: 700,
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1
+              cursor: loading ? "not-allowed" : "pointer"
             }}
           >
             {loading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
@@ -126,10 +114,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
         </form>
 
         <p style={{ textAlign: "center", marginTop: 24, color: C.muted }}>
-          لديك حساب بالفعل؟{" "}
+          لديك حساب؟{" "}
           <button 
             onClick={onSwitchToLogin}
-            style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontSize: "1rem" }}
+            style={{ color: C.gold, background: "none", border: "none", cursor: "pointer" }}
           >
             تسجيل الدخول
           </button>
