@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
@@ -27,7 +27,7 @@ export default function App() {
   const [teacher, setTeacher] = useState({ name: "جاري المزامنة...", phone: "" });
   const [academyId, setAcademyId] = useState(null);
 
-  // ==================== Auth Listener ====================
+  // Auth State
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -42,8 +42,10 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ==================== Load Academy Data ====================
-  const loadAcademyData = async (userId) => {
+  // Load Academy Data
+  const loadAcademyData = useCallback(async (userId) => {
+    if (!userId) return;
+
     setLoading(true);
     setError(null);
 
@@ -57,7 +59,8 @@ export default function App() {
       if (staffError) throw staffError;
 
       if (staffData) {
-        setAcademyId(staffData.academy_id);
+        const newAcademyId = staffData.academy_id;
+        setAcademyId(newAcademyId);
         setTeacher({
           name: staffData.name || "معلم",
           phone: staffData.phone || "",
@@ -66,31 +69,32 @@ export default function App() {
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
           .select('*')
-          .eq('academy_id', staffData.academy_id)
+          .eq('academy_id', newAcademyId)
           .order('created_at', { ascending: false });
 
         if (studentsError) throw studentsError;
         setStudents(studentsData || []);
       }
     } catch (err) {
-      console.error("Error syncing cloud data:", err);
+      console.error("Error loading data:", err);
       setError("حدث خطأ أثناء تحميل البيانات. يرجى إعادة المحاولة.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
-    loadAcademyData(session.user.id);
-  }, [session]);
+    if (session?.user?.id) {
+      loadAcademyData(session.user.id);
+    }
+  }, [session, loadAcademyData]);
 
-  // ==================== Real-time Subscription ====================
+  // Real-time Subscription (Simplified & Safe)
   useEffect(() => {
-    if (!academyId) return;
+    if (!academyId || !session?.user?.id) return;
 
     const channel = supabase
-      .channel(`students:${academyId}`)
+      .channel(`students_realtime_${academyId}`)
       .on(
         'postgres_changes',
         {
@@ -100,27 +104,20 @@ export default function App() {
           filter: `academy_id=eq.${academyId}`,
         },
         () => {
-          // Refresh data when any change happens
-          if (session?.user?.id) {
-            loadAcademyData(session.user.id);
-          }
+          loadAcademyData(session.user.id);
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [academyId, session]);
+    return () => supabase.removeChannel(channel);
+  }, [academyId, session, loadAcademyData]);
 
-  // ==================== Security Check ====================
+  // Security Check
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hostname = window.location.hostname;
-    const isAllowed = hostname === "localhost" || hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
-
-    if (!isAllowed) {
+    if (hostname !== "localhost" && !hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix)) {
       document.body.innerHTML = `
         <div style="background:#0C1520;color:#EF4444;text-align:center;padding:100px;font-family:'Cairo';direction:rtl;">
           <h2>⚠️ خطأ في ترخيص النظام</h2>
@@ -135,37 +132,52 @@ export default function App() {
     window.open(`https://wa.me/2\( {student.parent_phone}?text= \){encodeURIComponent(message)}`, "_blank");
   };
 
+  // Loading
   if (loading) {
     return (
-      <div style={{ color: C.gold, textAlign: 'center', marginTop: '20%', fontFamily: "'Cairo'", fontSize: '1.2rem' }}>
+      <div style={{ 
+        color: C.gold, 
+        textAlign: 'center', 
+        marginTop: '20%', 
+        fontFamily: "'Cairo'", 
+        fontSize: '1.2rem' 
+      }}>
         جاري تشغيل نظام الحلقة السحابي ومزامنة البيانات... ⏳
       </div>
     );
   }
 
+  // Error
   if (error) {
     return (
-      <div style={{ color: '#EF4444', textAlign: 'center', marginTop: '20%', fontFamily: "'Cairo'", padding: '20px' }}>
+      <div style={{ 
+        color: '#EF4444', 
+        textAlign: 'center', 
+        marginTop: '20%', 
+        fontFamily: "'Cairo'", 
+        padding: '40px' 
+      }}>
         <h3>⚠️ {error}</h3>
         <button 
           onClick={() => window.location.reload()}
           style={{
-            marginTop: 16,
-            padding: "12px 24px",
+            marginTop: 20,
+            padding: "12px 28px",
             background: C.gold,
             color: "#1A1208",
             border: "none",
             borderRadius: 8,
-            cursor: "pointer",
-            fontSize: "1rem"
+            fontSize: "1.05rem",
+            cursor: "pointer"
           }}
         >
-          إعادة المحاولة
+          إعادة تحميل الصفحة
         </button>
       </div>
     );
   }
 
+  // Not logged in
   if (!session) {
     return showSignUp 
       ? <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} />
@@ -205,14 +217,11 @@ export default function App() {
         justifyContent: "space-between",
         padding: 20
       }}>
-        {/* ... Sidebar content remains the same (unchanged for brevity) ... */}
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, padding: "0 8px" }}>
             <span style={{ fontSize: 28 }}>🕌</span>
             <div>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: C.gold, lineHeight: 1 }}>
-                الحلقة الذكية
-              </h2>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: C.gold }}>الحلقة الذكية</h2>
               <span style={{ fontSize: "0.7rem", color: C.muted }}>منصة SaaS السحابية</span>
             </div>
           </div>
@@ -235,7 +244,7 @@ export default function App() {
                   color: activeTab === tab.id ? "#1A1208" : C.text,
                   cursor: "pointer", fontSize: "0.9rem",
                   fontWeight: activeTab === tab.id ? 700 : 500,
-                  textAlign: "right", transition: "all 0.2s ease"
+                  transition: "all 0.2s ease"
                 }}
               >
                 <span>{tab.icon}</span> {tab.label}
@@ -251,21 +260,39 @@ export default function App() {
           <button
             onClick={() => supabase.auth.signOut()}
             style={{
-              width: '100%', padding: '11px', background: 'rgba(239,68,68,0.1)',
-              color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: 10, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
+              width: '100%', padding: '11px',
+              background: 'rgba(239,68,68,0.1)',
+              color: '#EF4444',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 10,
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 600
             }}
           >
             🚪 تسجيل الخروج
           </button>
-          <div style={{ fontSize: "0.68rem", color: C.muted, textAlign: "center", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+          <div style={{ 
+            fontSize: "0.68rem", 
+            color: C.muted, 
+            textAlign: "center", 
+            marginTop: 16, 
+            paddingTop: 12, 
+            borderTop: `1px solid ${C.border}` 
+          }}>
             {SECURITY_CONFIG.watermark}
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: 32, boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
+      <main style={{ 
+        flex: 1, 
+        padding: 32, 
+        boxSizing: "border-box", 
+        overflowY: "auto", 
+        maxHeight: "100vh" 
+      }}>
         {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
         {activeTab === "students" && (
           <Students
