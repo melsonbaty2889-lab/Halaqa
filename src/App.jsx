@@ -27,7 +27,7 @@ export default function App() {
   const [teacher, setTeacher] = useState({ name: "جاري المزامنة...", phone: "" });
   const [academyId, setAcademyId] = useState(null);
 
-  // Auth State Listener
+  // ==================== Auth Listener ====================
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -42,51 +42,51 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load Academy Data + Real-time Students Subscription
-  useEffect(() => {
-    if (!session?.user) return;
+  // ==================== Load Academy Data ====================
+  const loadAcademyData = async (userId) => {
+    setLoading(true);
+    setError(null);
 
-    const loadAcademyData = async () => {
-      setLoading(true);
-      setError(null);
+    try {
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('academy_id, name, phone')
+        .eq('user_id', userId)
+        .single();
 
-      try {
-        const { data: staffData, error: staffError } = await supabase
-          .from('staff')
-          .select('academy_id, name, phone')
-          .eq('user_id', session.user.id)
-          .single();
+      if (staffError) throw staffError;
 
-        if (staffError) throw staffError;
+      if (staffData) {
+        setAcademyId(staffData.academy_id);
+        setTeacher({
+          name: staffData.name || "معلم",
+          phone: staffData.phone || "",
+        });
 
-        if (staffData) {
-          setAcademyId(staffData.academy_id);
-          setTeacher({
-            name: staffData.name || "معلم",
-            phone: staffData.phone || "",
-          });
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('students')
+          .select('*')
+          .eq('academy_id', staffData.academy_id)
+          .order('created_at', { ascending: false });
 
-          // Initial load
-          const { data: studentsData, error: studentsError } = await supabase
-            .from('students')
-            .select('*')
-            .eq('academy_id', staffData.academy_id)
-            .order('created_at', { ascending: false });
-
-          if (studentsError) throw studentsError;
-          setStudents(studentsData || []);
-        }
-      } catch (err) {
-        console.error("Error syncing cloud data:", err);
-        setError("حدث خطأ أثناء تحميل البيانات. يرجى إعادة المحاولة.");
-      } finally {
-        setLoading(false);
+        if (studentsError) throw studentsError;
+        setStudents(studentsData || []);
       }
-    };
+    } catch (err) {
+      console.error("Error syncing cloud data:", err);
+      setError("حدث خطأ أثناء تحميل البيانات. يرجى إعادة المحاولة.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadAcademyData();
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    loadAcademyData(session.user.id);
+  }, [session]);
 
-    // Real-time subscription
+  // ==================== Real-time Subscription ====================
+  useEffect(() => {
     if (!academyId) return;
 
     const channel = supabase
@@ -100,7 +100,10 @@ export default function App() {
           filter: `academy_id=eq.${academyId}`,
         },
         () => {
-          loadAcademyData(); // Refresh on any change
+          // Refresh data when any change happens
+          if (session?.user?.id) {
+            loadAcademyData(session.user.id);
+          }
         }
       )
       .subscribe();
@@ -108,16 +111,14 @@ export default function App() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session, academyId]);
+  }, [academyId, session]);
 
-  // Security Check
+  // ==================== Security Check ====================
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hostname = window.location.hostname;
-    const isAllowed =
-      hostname === "localhost" ||
-      hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
+    const isAllowed = hostname === "localhost" || hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix);
 
     if (!isAllowed) {
       document.body.innerHTML = `
@@ -134,42 +135,29 @@ export default function App() {
     window.open(`https://wa.me/2\( {student.parent_phone}?text= \){encodeURIComponent(message)}`, "_blank");
   };
 
-  // Loading Screen
   if (loading) {
     return (
-      <div style={{
-        color: C.gold,
-        textAlign: 'center',
-        marginTop: '20%',
-        fontFamily: "'Cairo'",
-        fontSize: '1.2rem'
-      }}>
+      <div style={{ color: C.gold, textAlign: 'center', marginTop: '20%', fontFamily: "'Cairo'", fontSize: '1.2rem' }}>
         جاري تشغيل نظام الحلقة السحابي ومزامنة البيانات... ⏳
       </div>
     );
   }
 
-  // Error Screen
   if (error) {
     return (
-      <div style={{
-        color: '#EF4444',
-        textAlign: 'center',
-        marginTop: '20%',
-        fontFamily: "'Cairo'",
-        padding: '20px'
-      }}>
+      <div style={{ color: '#EF4444', textAlign: 'center', marginTop: '20%', fontFamily: "'Cairo'", padding: '20px' }}>
         <h3>⚠️ {error}</h3>
         <button 
           onClick={() => window.location.reload()}
           style={{
             marginTop: 16,
-            padding: "10px 20px",
+            padding: "12px 24px",
             background: C.gold,
             color: "#1A1208",
             border: "none",
             borderRadius: 8,
-            cursor: "pointer"
+            cursor: "pointer",
+            fontSize: "1rem"
           }}
         >
           إعادة المحاولة
@@ -178,7 +166,6 @@ export default function App() {
     );
   }
 
-  // Not Authenticated
   if (!session) {
     return showSignUp 
       ? <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} />
@@ -218,6 +205,7 @@ export default function App() {
         justifyContent: "space-between",
         padding: 20
       }}>
+        {/* ... Sidebar content remains the same (unchanged for brevity) ... */}
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, padding: "0 8px" }}>
             <span style={{ fontSize: 28 }}>🕌</span>
@@ -241,20 +229,13 @@ export default function App() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  border: "none",
+                  display: "flex", alignItems: "center", gap: 12, width: "100%",
+                  padding: "12px 16px", borderRadius: 12, border: "none",
                   background: activeTab === tab.id ? C.gold : "transparent",
                   color: activeTab === tab.id ? "#1A1208" : C.text,
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
+                  cursor: "pointer", fontSize: "0.9rem",
                   fontWeight: activeTab === tab.id ? 700 : 500,
-                  textAlign: "right",
-                  transition: "all 0.2s ease"
+                  textAlign: "right", transition: "all 0.2s ease"
                 }}
               >
                 <span>{tab.icon}</span> {tab.label}
@@ -270,40 +251,21 @@ export default function App() {
           <button
             onClick={() => supabase.auth.signOut()}
             style={{
-              width: '100%',
-              padding: '11px',
-              background: 'rgba(239,68,68,0.1)',
-              color: '#EF4444',
-              border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: 10,
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 600
+              width: '100%', padding: '11px', background: 'rgba(239,68,68,0.1)',
+              color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 10, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
             }}
           >
             🚪 تسجيل الخروج
           </button>
-          <div style={{
-            fontSize: "0.68rem",
-            color: C.muted,
-            textAlign: "center",
-            marginTop: 16,
-            paddingTop: 12,
-            borderTop: `1px solid ${C.border}`
-          }}>
+          <div style={{ fontSize: "0.68rem", color: C.muted, textAlign: "center", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
             {SECURITY_CONFIG.watermark}
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{
-        flex: 1,
-        padding: 32,
-        boxSizing: "border-box",
-        overflowY: "auto",
-        maxHeight: "100vh"
-      }}>
+      <main style={{ flex: 1, padding: 32, boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
         {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
         {activeTab === "students" && (
           <Students
