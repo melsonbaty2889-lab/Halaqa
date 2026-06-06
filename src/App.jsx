@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTranslation } from 'react-i18next';     // ← إضافة هذا
+import { useTranslation } from 'react-i18next';     
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
@@ -18,7 +18,7 @@ const SECURITY_CONFIG = {
 };
 
 export default function App() {
-  const { t, i18n } = useTranslation();     // ← إضافة هذا
+  const { t, i18n } = useTranslation();    
 
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export default function App() {
   const [teacher, setTeacher] = useState({ name: t('loading'), phone: "" });
   const [academyId, setAcademyId] = useState(null);
 
-  // تبديل اللغة
+  
   const toggleLanguage = () => {
     const newLang = i18n.language === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(newLang);
