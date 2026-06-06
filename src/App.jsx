@@ -27,7 +27,7 @@ export default function App() {
   const [teacher, setTeacher] = useState({ name: "جاري المزامنة...", phone: "" });
   const [academyId, setAcademyId] = useState(null);
 
-  // Auth State
+  
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -42,7 +42,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load Academy Data
+  
   const loadAcademyData = useCallback(async (userId) => {
     if (!userId) return;
 
@@ -56,28 +56,46 @@ export default function App() {
         .eq('user_id', userId)
         .single();
 
-      if (staffError) throw staffError;
-
-      if (staffData) {
-        const newAcademyId = staffData.academy_id;
-        setAcademyId(newAcademyId);
-        setTeacher({
-          name: staffData.name || "معلم",
-          phone: staffData.phone || "",
-        });
-
-        const { data: studentsData, error: studentsError } = await supabase
-          .from('students')
-          .select('*')
-          .eq('academy_id', newAcademyId)
-          .order('created_at', { ascending: false });
-
-        if (studentsError) throw studentsError;
-        setStudents(studentsData || []);
+      if (staffError) {
+        console.error("Staff Error:", staffError);
+        // إذا كان الخطأ "no rows" فهذا يعني أن المستخدم غير مسجل في staff
+        if (staffError.code === 'PGRST116') {
+          setError("لم يتم العثور على بيانات المعلم. يرجى إنشاء حساب جديد أو التواصل مع المطور.");
+        } else {
+          setError(staffError.message);
+        }
+        return;
       }
+
+      if (!staffData) {
+        setError("لم يتم العثور على بيانات المعلم.");
+        return;
+      }
+
+      const newAcademyId = staffData.academy_id;
+      if (!newAcademyId) {
+        setError("لم يتم ربط هذا الحساب بأكاديمية. يرجى التواصل مع المطور.");
+        return;
+      }
+
+      setAcademyId(newAcademyId);
+      setTeacher({
+        name: staffData.name || "معلم",
+        phone: staffData.phone || "",
+      });
+
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('academy_id', newAcademyId)
+        .order('created_at', { ascending: false });
+
+      if (studentsError) throw studentsError;
+      setStudents(studentsData || []);
+
     } catch (err) {
       console.error("Error loading data:", err);
-      setError("حدث خطأ أثناء تحميل البيانات. يرجى إعادة المحاولة.");
+      setError(err.message || "حدث خطأ أثناء تحميل البيانات");
     } finally {
       setLoading(false);
     }
