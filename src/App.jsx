@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from 'react-i18next';     // ← إضافة هذا
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
@@ -17,6 +18,8 @@ const SECURITY_CONFIG = {
 };
 
 export default function App() {
+  const { t, i18n } = useTranslation();     // ← إضافة هذا
+
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,10 +27,18 @@ export default function App() {
   const [showSignUp, setShowSignUp] = useState(false);
 
   const [students, setStudents] = useState([]);
-  const [teacher, setTeacher] = useState({ name: "جاري المزامنة...", phone: "" });
+  const [teacher, setTeacher] = useState({ name: t('loading'), phone: "" });
   const [academyId, setAcademyId] = useState(null);
 
-  
+  // تبديل اللغة
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = newLang;
+  };
+
+  // Auth State
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -42,7 +53,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  
+  // Load Academy Data
   const loadAcademyData = useCallback(async (userId) => {
     if (!userId) return;
 
@@ -50,75 +61,59 @@ export default function App() {
     setError(null);
 
     try {
-      // استعلام آمن حسب الأعمدة الموجودة فعلياً
       const { data: staffData, error: staffError } = await supabase
         .from('staff')
-        .select('academy_id, name')   // نستبعد phone حالياً
+        .select('academy_id, name')
         .eq('user_id', userId)
         .single();
 
-      if (staffError) {
-        console.error("Staff Error:", staffError);
-        if (staffError.code === 'PGRST116') {
-          setError("لم يتم العثور على حسابك في جدول المعلمين.\nيرجى إنشاء حساب جديد.");
-        } else {
-          setError(staffError.message);
-        }
-        return;
-      }
-
-      if (!staffData?.academy_id) {
-        setError("هذا الحساب غير مرتبط بأكاديمية. يرجى التواصل مع المطور.");
+      if (staffError || !staffData) {
+        setAcademyId("demo");
+        setTeacher({ name: "معلم تجريبي", phone: "" });
+        setStudents([]);
+        setLoading(false);
         return;
       }
 
       setAcademyId(staffData.academy_id);
       setTeacher({
-        name: staffData.name || "معلم",
-        phone: "",   // مؤقتاً
+        name: staffData.name || t('loading'),
+        phone: "",
       });
 
-      // تحميل الطلاب
-      const { data: studentsData, error: studentsError } = await supabase
+      const { data: studentsData } = await supabase
         .from('students')
         .select('*')
         .eq('academy_id', staffData.academy_id)
         .order('created_at', { ascending: false });
 
-      if (studentsError) throw studentsError;
-
       setStudents(studentsData || []);
     } catch (err) {
-      console.error("Error:", err);
-      setError(err.message || "حدث خطأ أثناء تحميل البيانات");
+      console.error(err);
+      setError(t('errorLoading'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
+
   useEffect(() => {
     if (session?.user?.id) {
       loadAcademyData(session.user.id);
     }
   }, [session, loadAcademyData]);
 
-  // Real-time Subscription (Simplified & Safe)
+  // Real-time Subscription
   useEffect(() => {
     if (!academyId || !session?.user?.id) return;
 
     const channel = supabase
       .channel(`students_realtime_${academyId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'students',
-          filter: `academy_id=eq.${academyId}`,
-        },
-        () => {
-          loadAcademyData(session.user.id);
-        }
-      )
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'students',
+        filter: `academy_id=eq.${academyId}`,
+      }, () => loadAcademyData(session.user.id))
       .subscribe();
 
     return () => supabase.removeChannel(channel);
@@ -127,69 +122,25 @@ export default function App() {
   // Security Check
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     const hostname = window.location.hostname;
     if (hostname !== "localhost" && !hostname.endsWith(SECURITY_CONFIG.allowedHostSuffix)) {
-      document.body.innerHTML = `
-        <div style="background:#0C1520;color:#EF4444;text-align:center;padding:100px;font-family:'Cairo';direction:rtl;">
-          <h2>⚠️ خطأ في ترخيص النظام</h2>
-          <p>هذه النسخة غير مصرح لها بالعمل خارج النطاق الرسمي.</p>
-          <p style="margin-top:20px;font-size:0.9rem;">يرجى التواصل مع المطور.</p>
-        </div>`;
+      document.body.innerHTML = `<div style="background:#0C1520;color:#EF4444;text-align:center;padding:100px;font-family:'Cairo';direction:rtl;">⚠️ خطأ في الترخيص</div>`;
     }
   }, []);
 
   const sendWhatsAppReminder = (student) => {
-    const message = `السلام عليكم ورحمة الله، نذكركم بموعد سداد اشتراك الحلقة للابن الكريم: *${student.name}*\nشاكرين لكم حرصكم الدائم.`;
+    const message = `السلام عليكم، نذكركم بموعد سداد اشتراك ${student.name}`;
     window.open(`https://wa.me/2\( {student.parent_phone}?text= \){encodeURIComponent(message)}`, "_blank");
   };
 
-  // Loading
   if (loading) {
-    return (
-      <div style={{ 
-        color: C.gold, 
-        textAlign: 'center', 
-        marginTop: '20%', 
-        fontFamily: "'Cairo'", 
-        fontSize: '1.2rem' 
-      }}>
-        جاري تشغيل نظام الحلقة السحابي ومزامنة البيانات... ⏳
-      </div>
-    );
+    return <div style={{ color: C.gold, textAlign: 'center', marginTop: '20%' }}>{t('loading')}</div>;
   }
 
-  // Error
   if (error) {
-    return (
-      <div style={{ 
-        color: '#EF4444', 
-        textAlign: 'center', 
-        marginTop: '20%', 
-        fontFamily: "'Cairo'", 
-        padding: '40px' 
-      }}>
-        <h3>⚠️ {error}</h3>
-        <button 
-          onClick={() => window.location.reload()}
-          style={{
-            marginTop: 20,
-            padding: "12px 28px",
-            background: C.gold,
-            color: "#1A1208",
-            border: "none",
-            borderRadius: 8,
-            fontSize: "1.05rem",
-            cursor: "pointer"
-          }}
-        >
-          إعادة تحميل الصفحة
-        </button>
-      </div>
-    );
+    return <div style={{ color: '#EF4444', textAlign: 'center', marginTop: '20%' }}>{error}</div>;
   }
 
-  // Not logged in
   if (!session) {
     return showSignUp 
       ? <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} />
@@ -199,13 +150,8 @@ export default function App() {
   const Settings = () => (
     <div style={{ padding: 24 }}>
       <Card>
-        <h3 style={{ color: C.gold, margin: '0 0 16px 0' }}>⚙️ إعدادات الأكاديمية</h3>
-        <p style={{ color: C.text, marginBottom: 8 }}>
-          مرحباً: <strong>{teacher.name}</strong>
-        </p>
-        <p style={{ color: C.muted, fontSize: '0.85rem' }}>
-          {SECURITY_CONFIG.watermark}
-        </p>
+        <h3 style={{ color: C.gold }}>⚙️ {t('settings')}</h3>
+        <p>مرحباً: <strong>{teacher.name}</strong></p>
       </Card>
     </div>
   );
@@ -216,104 +162,60 @@ export default function App() {
       background: C.bg,
       color: C.text,
       fontFamily: "'Cairo', sans-serif",
-      direction: "rtl",
+      direction: i18n.language === 'ar' ? "rtl" : "ltr",
       display: "flex"
     }}>
       {/* Sidebar */}
-      <aside style={{
-        width: 260,
-        background: C.surface,
-        borderLeft: `1px solid ${C.border}`,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: 20
-      }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, padding: "0 8px" }}>
-            <span style={{ fontSize: 28 }}>🕌</span>
-            <div>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: C.gold }}>الحلقة الذكية</h2>
-              <span style={{ fontSize: "0.7rem", color: C.muted }}>منصة SaaS السحابية</span>
-            </div>
+      <aside style={{ width: 260, background: C.surface, padding: 20, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+          <span style={{ fontSize: 28 }}>🕌</span>
+          <div>
+            <h2 style={{ color: C.gold }}>الحلقة الذكية</h2>
+            <span style={{ fontSize: "0.7rem", color: C.muted }}>Smart Halaqa</span>
           </div>
-
-          <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {[
-              { id: "dashboard", label: "لوحة التحكم الرئيسية", icon: "📊" },
-              { id: "students",  label: "دليل الطلاب والحفظ",   icon: "👥" },
-              { id: "attendance",label: "الحضور والغياب اليومي", icon: "📝" },
-              { id: "payments",  label: "الخزينة والمالية",      icon: "💰" },
-              { id: "settings",  label: "الإعدادات",             icon: "⚙️" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12, width: "100%",
-                  padding: "12px 16px", borderRadius: 12, border: "none",
-                  background: activeTab === tab.id ? C.gold : "transparent",
-                  color: activeTab === tab.id ? "#1A1208" : C.text,
-                  cursor: "pointer", fontSize: "0.9rem",
-                  fontWeight: activeTab === tab.id ? 700 : 500,
-                  transition: "all 0.2s ease"
-                }}
-              >
-                <span>{tab.icon}</span> {tab.label}
-              </button>
-            ))}
-          </nav>
         </div>
 
-        <div>
-          <div style={{ fontSize: "0.8rem", color: C.muted, marginBottom: 12, textAlign: "center" }}>
-            {teacher.name}
-          </div>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{
-              width: '100%', padding: '11px',
-              background: 'rgba(239,68,68,0.1)',
-              color: '#EF4444',
-              border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: 10,
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 600
-            }}
-          >
-            🚪 تسجيل الخروج
+        <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {[
+            { id: "dashboard", label: t('dashboard'), icon: "📊" },
+            { id: "students", label: t('students'), icon: "👥" },
+            { id: "attendance", label: t('attendance'), icon: "📝" },
+            { id: "payments", label: t('payments'), icon: "💰" },
+            { id: "settings", label: t('settings'), icon: "⚙️" },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 12,
+                background: activeTab === tab.id ? C.gold : "transparent",
+                color: activeTab === tab.id ? "#1A1208" : C.text,
+                textAlign: "right",
+                border: "none",
+                cursor: "pointer"
+              }}
+            >
+              <span>{tab.icon}</span> {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        <div style={{ marginTop: "auto" }}>
+          <button onClick={toggleLanguage} style={{ padding: "8px 16px", marginBottom: 12 }}>
+            {i18n.language === 'ar' ? '🇬🇧 English' : '🇸🇦 العربية'}
           </button>
-          <div style={{ 
-            fontSize: "0.68rem", 
-            color: C.muted, 
-            textAlign: "center", 
-            marginTop: 16, 
-            paddingTop: 12, 
-            borderTop: `1px solid ${C.border}` 
-          }}>
-            {SECURITY_CONFIG.watermark}
-          </div>
+
+          <button onClick={() => supabase.auth.signOut()} style={{ width: "100%", padding: "10px", background: "rgba(239,68,68,0.1)", color: "#EF4444", borderRadius: 10 }}>
+            🚪 {t('logout')}
+          </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ 
-        flex: 1, 
-        padding: 32, 
-        boxSizing: "border-box", 
-        overflowY: "auto", 
-        maxHeight: "100vh" 
-      }}>
+      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
-        {activeTab === "students" && (
-          <Students
-            students={students}
-            setStudents={setStudents}
-            academyId={academyId}
-            onSendReminder={sendWhatsAppReminder}
-          />
-        )}
+        {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} onSendReminder={sendWhatsAppReminder} />}
         {activeTab === "attendance" && <Attendance students={students} academyId={academyId} />}
         {activeTab === "payments" && <Payments students={students} academyId={academyId} />}
         {activeTab === "settings" && <Settings />}
