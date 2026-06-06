@@ -23,7 +23,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [wSignUp, setWSignUp] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
   const [students, setStudents] = useState([]);
   const [teacher, setTeacher] = useState({ name: t('loading'), phone: "" });
   const [academyId, setAcademyId] = useState(null);
@@ -128,7 +128,8 @@ export default function App() {
 
   const sendWhatsAppReminder = (student) => {
     const message = `السلام عليكم، نذكركم بموعد سداد اشتراك ${student.name}`;
-    window.open(`https://wa.me/2\( {student.parent_phone}?text= \){encodeURIComponent(message)}`, "_blank");
+    window.open(`https://wa.me/2${student.parent_phone}?text=${encodeURIComponent(message)}`, "_blank");
+
   };
 
   if (loading) {
