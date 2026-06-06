@@ -19,58 +19,38 @@ export default function Dashboard({ session, setActiveTab }) {
 
   useEffect(() => {
     async function fetchDashboardData() {
-      const userId = session?.user?.id;
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+  const userId = session?.user?.id;
+  if (!userId) return;
 
-      try {
-        setLoading(true);
+  setLoading(true);
+  try {
+    
+    const { data: staffData, error: staffError } = await supabase
+      .from('staff')
+      .select('name, academies(id, name)') 
+      .eq('user_id', userId)
+      .maybeSingle();
 
-        const { data: staffData, error: staffError } = await supabase
-          .from('staff')
-          .select('id, name, academy_id, role')
-          .eq('user_id', userId)
-          .maybeSingle();
+    if (staffError || !staffData) throw new Error('تعذر الوصول لبيانات الأكاديمية');
 
-        if (staffError) throw staffError;
+    const academy = staffData.academies;
+    
+    setProfile({ name: staffData.name, academyName: academy?.name });
 
-        if (!staffData) {
-          console.warn('لم يتم العثور على بيانات الموظف');
-          setLoading(false);
-          return;
-        }
+    if (academy?.id) {
+      const [{ count: studentCount }, { count: teachersCount }] = await Promise.all([
+        supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academy.id),
+        supabase.from('staff').select('*', { count: 'exact', head: true }).eq('academy_id', academy.id)
+      ]);
 
-        setProfile(staffData);
-
-        if (!staffData.academy_id) {
-          console.warn('هذا الموظف غير مرتبط بأكاديمية (academy_id is null)');
-          setStats({ studentsCount: 0, staffCount: 0 });
-          return;
-        }
-
-        const [{ count: studentCount }, { count: teachersCount }] = await Promise.all([
-          supabase
-            .from('students')
-            .select('*', { count: 'exact', head: true })
-            .eq('academy_id', staffData.academy_id),
-          supabase
-            .from('staff')
-            .select('*', { count: 'exact', head: true })
-            .eq('academy_id', staffData.academy_id)
-        ]);
-
-        setStats({
-          studentsCount: studentCount || 0,
-          staffCount: teachersCount || 0
-        });
-      } catch (error) {
-        console.error('خطأ أثناء جلب بيانات لوحة التحكم:', error?.message || error);
-      } finally {
-        setLoading(false);
-      }
+      setStats({ studentsCount: studentCount || 0, staffCount: teachersCount || 0 });
     }
+  } catch (error) {
+    console.error('خطأ:', error);
+  } finally {
+    setLoading(false);
+  }
+}
 
     fetchDashboardData();
   }, [session]);
