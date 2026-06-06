@@ -51,48 +51,40 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load Academy Data
   const loadAcademyData = useCallback(async (userId) => {
-    if (!userId) return;
+  if (!userId) return;
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  try {
+    
+    const { data: staffData, error: staffError } = await supabase
+      .from('staff')
+      .select('academy_id, name, academies(id, name)')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-    try {
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('academy_id, name')
-        .eq('user_id', userId)
-        .single();
-
-      if (staffError || !staffData) {
-        setAcademyId("demo");
-        setTeacher({ name: "معلم تجريبي", phone: "" });
-        setStudents([]);
-        setLoading(false);
-        return;
-      }
-
-      setAcademyId(staffData.academy_id);
-      setTeacher({
-        name: staffData.name || t('loading'),
-        phone: "",
-      });
-
-      const { data: studentsData } = await supabase
-        .from('students')
-        .select('*')
-        .eq('academy_id', staffData.academy_id)
-        .order('created_at', { ascending: false });
-
-      setStudents(studentsData || []);
-    } catch (err) {
-      console.error(err);
-      setError(t('errorLoading'));
-    } finally {
+    if (staffError || !staffData || !staffData.academies) {
+      setAcademyId(null); 
       setLoading(false);
+      return;
     }
-  }, [t]);
+
+    setAcademyId(staffData.academies.id);
+    setTeacher({ name: staffData.name, phone: "" });
+
+    const { data: studentsData } = await supabase
+      .from('students')
+      .select('*')
+      .eq('academy_id', staffData.academies.id)
+      .order('created_at', { ascending: false });
+
+    setStudents(studentsData || []);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     if (session?.user?.id) {
