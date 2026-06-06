@@ -21,7 +21,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setErrorMsg('');
       setSuccessMsg('');
 
-      // 1. إنشاء حساب المستخدم في نظام مصادقة سوبابيس (Auth)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
@@ -31,7 +30,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       const user = authData?.user;
       if (user) {
-        // 2. إنشاء الأكاديمية الجديدة في جدول academies
         const { data: academyData, error: academyError } = await supabase
           .from('academies')
           .insert([{ name: academyName.trim() }])
@@ -40,7 +38,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
         if (academyError) throw academyError;
 
-        // 3. ربط المستخدم الحالي كـ مشرف/معلم داخل جدول staff للأكاديمية المنشأة
         const { error: staffError } = await supabase
           .from('staff')
           .insert([
@@ -48,20 +45,18 @@ export default function SignUpPage({ onSwitchToLogin }) {
               user_id: user.id,
               name: fullName.trim(),
               role: 'admin',
-              academy_id: academyData.id
-            }
+              academy_id: academyData.id,
+            },
           ]);
 
         if (staffError) throw staffError;
 
         setSuccessMsg('تم إنشاء حسابك وأكاديميتك بنجاح! يمكنك الآن تسجيل الدخول 🎉');
-        // تصفير الحقول
         setEmail('');
         setPassword('');
         setFullName('');
         setAcademyName('');
       }
-
     } catch (error) {
       setErrorMsg(error.message || 'حدث خطأ غير متوقع أثناء التسجيل');
     } finally {
@@ -72,7 +67,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#fff', direction: 'rtl', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ width: '100%', maxWidth: '450px', backgroundColor: '#1e293b', padding: '30px', borderRadius: '12px', border: '1px solid #334155', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)' }}>
-        
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '1.8rem', color: '#fbbf24', margin: '0 0 8px 0', fontWeight: 'bold' }}>✨ إنشاء حساب مشرف جديد</h2>
           <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>ابدأ تأسيس حلقة تحفيظك الرقمية وسجل أكاديميتك سحابياً الآن</p>
@@ -157,7 +151,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
             تسجيل الدخول من هنا
           </button>
         </div>
-
       </div>
     </div>
   );
