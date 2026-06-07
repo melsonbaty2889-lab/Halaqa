@@ -4,6 +4,7 @@ import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
 import LoginPage from './components/LoginPage.jsx';
+import CreateAcademy from './components/CreateAcademy.jsx'; 
 import SignUpPage from './components/SignUpPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
@@ -205,12 +206,24 @@ export default function App() {
 
       {/* Main Content */}
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
-        {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
-        {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} onSendReminder={sendWhatsAppReminder} />}
-        {activeTab === "attendance" && <Attendance students={students} academyId={academyId} />}
-        {activeTab === "payments" && <Payments students={students} academyId={academyId} />}
-        {activeTab === "settings" && <Settings />}
-      </main>
+  {/* التبويبات الحالية */}
+  {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
+  {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} onSendReminder={sendWhatsAppReminder} />}
+  {activeTab === "attendance" && <Attendance students={students} academyId={academyId} />}
+  {activeTab === "payments" && <Payments students={students} academyId={academyId} />}
+  {activeTab === "settings" && <Settings />}
+  
+  {/* إضافة التبويب الجديد */}
+  {activeTab === "create-academy" && (
+    <CreateAcademy 
+      session={session} 
+      onAcademyCreated={() => {
+        setActiveTab("dashboard");
+        window.location.reload(); 
+      }} 
+    />
+  )}
+</main>
     </div>
   );
 }
