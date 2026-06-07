@@ -24,12 +24,13 @@ export default function Students() {
   }, []);
 
   // 2. التحقق من المستخدم وتحديد الأكاديمية
-  useEffect(() => {
+    useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      // التأكد من جلب الـ academy_id المرتبط بهذا المستخدم
+      const { data, error } = await supabase
         .from('staff')
         .select('academy_id')
         .eq('user_id', user.id)
@@ -39,11 +40,13 @@ export default function Students() {
         setAcademyId(data.academy_id);
         fetchStudents(data.academy_id);
       } else {
-        setLoading(false);
+        console.error("لم يتم العثور على أكاديمية مرتبطة بهذا الموظف:", error);
       }
+      setLoading(false); // تأكد من إغلاق التحميل في كل الأحوال
     }
     init();
   }, [fetchStudents]);
+
 
   // 3. دالة الإضافة (محدثة بالكامل)
   const handleAddStudent = async (e) => {
