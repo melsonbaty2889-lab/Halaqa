@@ -3,15 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
+// الصفحات والمكونات
 import LoginPage from './components/LoginPage.jsx';
-import CreateAcademy from './components/CreateAcademy.jsx'; 
 import SignUpPage from './components/SignUpPage.jsx';
+import CreateAcademy from './components/CreateAcademy.jsx'; 
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
 import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
+// المكونات العامة
 import { Card } from "./components/UI";
+
 
 const SECURITY_CONFIG = {
   allowedHostSuffix: "vercel.app",
