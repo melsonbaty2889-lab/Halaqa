@@ -15,6 +15,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
     setError(null);
 
     try {
+      // 1. إنشاء المستخدم في نظام المصادقة
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -22,24 +23,31 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       if (authError) throw authError;
 
+      // 2. التحقق من وجود المستخدم قبل الإدخال في جدول staff
       if (authData.user) {
+        // نستخدم الإدخال المباشر. تأكد أن سياستك تسمح بالـ INSERT لـ authenticated
         const { error: staffError } = await supabase
           .from('staff')
-          .insert({
-            user_id: authData.user.id,
-            name: name.trim(),
-            role: 'teacher',
-            academy_id: null   // يمكن تغييره لاحقاً
-          });
+          .insert([
+            {
+              user_id: authData.user.id,
+              name: name.trim(),
+              role: 'teacher',
+              academy_id: null
+            }
+          ]);
 
-        if (staffError) throw staffError;
+        if (staffError) {
+          console.error("Staff Insert Error:", staffError);
+          throw new Error("فشل في ربط بيانات المعلم بقاعدة البيانات");
+        }
       }
 
-      alert("✅ تم إنشاء الحساب بنجاح!");
+      alert("✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.");
       onSwitchToLogin();
     } catch (err) {
-      console.error(err);
-      setError(err.message || "حدث خطأ في التسجيل");
+      console.error("SignUp Error:", err);
+      setError(err.message || "حدث خطأ غير متوقع أثناء التسجيل");
     } finally {
       setLoading(false);
     }
