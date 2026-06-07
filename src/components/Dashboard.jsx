@@ -55,29 +55,24 @@ export default function Dashboard({ session, setActiveTab }) {
     fetchDashboardData();
   }, [session]);
 
-  if (loading) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center', color: C.muted, direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
-        جاري تحميل البيانات وتحديث المؤشرات... ⏳
-      </div>
-    );
-  }
+  // استبدل شرط التحقق من الأكاديمية بهذا ليكون أكثر دقة
+if (loading) return <div>جاري التحميل...</div>;
 
-    if (!profile?.academyName) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
-        <h3 style={{ color: C.text }}>أهلاً بك يا {profile?.name || 'مستخدم'}!</h3>
-        <p style={{ color: C.muted }}>لم يتم ربط حسابك بأي أكاديمية بعد.</p>
-        <button 
-           onClick={() => setActiveTab('create-academy')} 
-           style={{ padding: '12px 24px', backgroundColor: C.gold, color: C.bg, borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          إنشاء أكاديميتك الأولى الآن 🚀
-        </button>
-      </div>
-    );
-  }
-    
+if (!profile?.academyName) {
+  return (
+    <div style={{ padding: '40px', textAlign: 'center' }}>
+      <h3 style={{ color: C.text }}>مرحباً بك يا {profile?.name || 'مستخدم'}!</h3>
+      <p>لم يتم ربط حسابك بأي أكاديمية بعد.</p>
+      <button 
+         onClick={() => setActiveTab('create-academy')} 
+         style={{ padding: '12px 24px', background: C.gold, border: 'none', borderRadius: '8px' }}
+      >
+        🚀 إنشاء أكاديميتك الأولى
+      </button>
+    </div>
+  );
+}
+
   return (
     <div style={{ padding: isMobile ? '16px' : '24px', color: C.text, direction: 'rtl', textAlign: 'right', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ marginBottom: '32px', borderBottom: `1px solid ${C.border}`, paddingBottom: '16px' }}>
