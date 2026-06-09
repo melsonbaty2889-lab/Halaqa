@@ -44,8 +44,9 @@ export default function Attendance({ students, academyId }) {
     if (!academyId) return;
     setBtnLoading(true);
     
-    // تجهيز المصفوفة بشكل نظيف لضمان عدم إرسال null في حقل id
+    // نقوم بفلترة السجلات: نرسل فقط البيانات المطلوبة
     const records = students.map(s => {
+      // بناء الكائن الأساسي
       const record = {
         student_id: s.id,
         academy_id: academyId,
@@ -54,8 +55,8 @@ export default function Attendance({ students, academyId }) {
         notes: attendanceData[s.id]?.notes || ''
       };
 
-      // نضيف الـ id فقط إذا كان موجوداً (سجل سابق)، 
-      // أما إذا كان جديداً، فلا نضيفه ليقوم Supabase بتوليده تلقائياً
+      // إضافة الـ id فقط إذا كان موجوداً (لتحديث سجل قديم)
+      // إذا لم يكن موجوداً، لن نضيفه، وسيقوم Supabase بتوليده تلقائياً
       if (attendanceData[s.id]?.id) {
         record.id = attendanceData[s.id].id;
       }
@@ -63,22 +64,22 @@ export default function Attendance({ students, academyId }) {
       return record;
     });
 
-    // تنفيذ الحفظ
+    // استخدام upsert مع توضيح حقل التعارض لتسهيل العملية على القاعدة
     const { error } = await supabase
       .from('attendance')
-      .upsert(records);
+      .upsert(records, { onConflict: 'student_id, date, academy_id' });
     
     setBtnLoading(false);
     
     if (error) {
-      console.error('خطأ Supabase:', error);
+      console.error('تفاصيل خطأ Supabase:', error);
       alert('خطأ في الحفظ: ' + error.message);
     } else {
       alert('تم الحفظ بنجاح 🎉');
-      // إعادة جلب البيانات لتحديث الـ ids الجديدة للطلاب الذين تمت إضافتهم للتو
-      fetchAttendance();
+      fetchAttendance(); 
     }
   };
+
 
   return (
     <div style={{ padding: '24px', direction: 'rtl', fontFamily: "'Cairo', sans-serif", color: '#fff' }}>
