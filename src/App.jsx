@@ -21,6 +21,16 @@ const SECURITY_CONFIG = {
   watermark: "Licensed to The Win Route © 2026",
 };
 
+const useWindowSize = () => {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return width;
+};
+
 export default function App() {
   const { t, i18n } = useTranslation();    
   const [session, setSession] = useState(null);
