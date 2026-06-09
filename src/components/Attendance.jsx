@@ -40,13 +40,13 @@ export default function Attendance({ students, academyId }) {
     }));
   };
 
-  const saveAttendance = async () => {
+    const saveAttendance = async () => {
     if (!academyId) return;
     setBtnLoading(true);
     
-    // نقوم بفلترة السجلات: نرسل فقط البيانات المطلوبة
+    // تجهيز المصفوفة النظيفة
     const records = students.map(s => {
-      // بناء الكائن الأساسي
+      // نبدأ بإنشاء الكائن بدون الـ id
       const record = {
         student_id: s.id,
         academy_id: academyId,
@@ -55,16 +55,18 @@ export default function Attendance({ students, academyId }) {
         notes: attendanceData[s.id]?.notes || ''
       };
 
-      // إضافة الـ id فقط إذا كان موجوداً (لتحديث سجل قديم)
-      // إذا لم يكن موجوداً، لن نضيفه، وسيقوم Supabase بتوليده تلقائياً
+      // نضيف الـ id فقط إذا كان موجوداً فعلياً (سجل لتحديثه)
       if (attendanceData[s.id]?.id) {
         record.id = attendanceData[s.id].id;
       }
-
+      
       return record;
     });
 
-    // استخدام upsert مع توضيح حقل التعارض لتسهيل العملية على القاعدة
+    // إضافة الـ log للتأكد من البيانات
+    console.log("البيانات المرسلة:", records);
+
+    // تنفيذ الـ upsert
     const { error } = await supabase
       .from('attendance')
       .upsert(records, { onConflict: 'student_id, date, academy_id' });
@@ -72,11 +74,11 @@ export default function Attendance({ students, academyId }) {
     setBtnLoading(false);
     
     if (error) {
-      console.error('تفاصيل خطأ Supabase:', error);
+      console.error('خطأ Supabase:', error);
       alert('خطأ في الحفظ: ' + error.message);
     } else {
       alert('تم الحفظ بنجاح 🎉');
-      fetchAttendance(); 
+      fetchAttendance(); // تحديث الواجهة بعد الحفظ
     }
   };
 
