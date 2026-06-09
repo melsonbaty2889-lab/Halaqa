@@ -14,6 +14,19 @@ const resources = {
       settings: "الإعدادات",
       logout: "تسجيل الخروج",
       loading: "جاري التحميل...",
+      save: "حفظ",
+      
+      // الحضور والمدفوعات
+      present: "حاضر",
+      absent: "غائب",
+      notes: "ملاحظات...",
+      save_attendance: "حفظ الكشف",
+      total_collection: "إجمالي التحصيل",
+      mark_paid: "قبض",
+      mark_unpaid: "إلغاء",
+      send_whatsapp: "واتساب 💬",
+      paid: "مسدد",
+      unpaid: "معلّق",
 
       // SignUp & Login
       createAccount: "إنشاء حساب معلم",
@@ -31,6 +44,7 @@ const resources = {
   },
   en: {
     translation: {
+      // General
       welcome: "Welcome to Smart Halaqa",
       dashboard: "Dashboard",
       students: "Students",
@@ -39,7 +53,21 @@ const resources = {
       settings: "Settings",
       logout: "Logout",
       loading: "Loading...",
+      save: "Save",
 
+      // Attendance & Payments
+      present: "Present",
+      absent: "Absent",
+      notes: "Notes...",
+      save_attendance: "Save Attendance",
+      total_collection: "Total Collection",
+      mark_paid: "Pay",
+      mark_unpaid: "Cancel",
+      send_whatsapp: "WhatsApp 💬",
+      paid: "Paid",
+      unpaid: "Pending",
+
+      // SignUp & Login
       createAccount: "Create Teacher Account",
       fullName: "Full Name",
       email: "Email Address",
@@ -48,6 +76,7 @@ const resources = {
       signIn: "Sign In",
       alreadyHaveAccount: "Already have an account?",
 
+      // Error Messages
       errorLoading: "Error loading data",
       noStaffRecord: "No staff record found for your account",
     }
@@ -59,14 +88,14 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'ar',
+    fallbackLng: 'ar', // اللغة الافتراضية إذا لم يتم تحديد لغة
     supportedLngs: ['ar', 'en'],
     interpolation: {
-      escapeValue: false,
+      escapeValue: false, // React تحمينا من XSS تلقائياً
     },
     detection: {
       order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
+      caches: ['localStorage'], // حفظ اختيار المستخدم للمرة القادمة
     },
   });
 
