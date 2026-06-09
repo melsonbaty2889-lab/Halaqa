@@ -44,9 +44,8 @@ export default function Attendance({ students, academyId }) {
     if (!academyId) return;
     setBtnLoading(true);
     
-    // تجهيز المصفوفة النظيفة
     const records = students.map(s => {
-      // نبدأ بإنشاء الكائن بدون الـ id
+      // بناء كائن السجل
       const record = {
         student_id: s.id,
         academy_id: academyId,
@@ -55,7 +54,7 @@ export default function Attendance({ students, academyId }) {
         notes: attendanceData[s.id]?.notes || ''
       };
 
-      // نضيف الـ id فقط إذا كان موجوداً فعلياً (سجل لتحديثه)
+      // التعديل: لا نرسل الـ id إطلاقاً إذا لم يكن موجوداً
       if (attendanceData[s.id]?.id) {
         record.id = attendanceData[s.id].id;
       }
@@ -63,10 +62,7 @@ export default function Attendance({ students, academyId }) {
       return record;
     });
 
-    // إضافة الـ log للتأكد من البيانات
-    console.log("البيانات المرسلة:", records);
-
-    // تنفيذ الـ upsert
+    // استخدام upsert مع onConflict
     const { error } = await supabase
       .from('attendance')
       .upsert(records, { onConflict: 'student_id, date, academy_id' });
@@ -78,9 +74,9 @@ export default function Attendance({ students, academyId }) {
       alert('خطأ في الحفظ: ' + error.message);
     } else {
       alert('تم الحفظ بنجاح 🎉');
-      fetchAttendance(); // تحديث الواجهة بعد الحفظ
+      fetchAttendance(); 
     }
-  };
+};
 
 
   return (
