@@ -44,27 +44,52 @@ export default function Attendance({ students, academyId }) {
     if (!academyId) return;
     setBtnLoading(true);
     
-    const records = students.map(s => ({
-      ...(attendanceData[s.id]?.id ? { id: attendanceData[s.id].id } : {}),
-      student_id: s.id,
-      academy_id: academyId,
-      date: selectedDate,
-      status: attendanceData[s.id]?.status || 'غائب',
-      notes: attendanceData[s.id]?.notes || ''
-    }));
+    // تجهيز المصفوفة بشكل نظيف لضمان عدم إرسال null في حقل id
+    const records = students.map(s => {
+      const record = {
+        student_id: s.id,
+        academy_id: academyId,
+        date: selectedDate,
+        status: attendanceData[s.id]?.status || 'غائب',
+        notes: attendanceData[s.id]?.notes || ''
+      };
 
-    const { error } = await supabase.from('attendance').upsert(records);
+      // نضيف الـ id فقط إذا كان موجوداً (سجل سابق)، 
+      // أما إذا كان جديداً، فلا نضيفه ليقوم Supabase بتوليده تلقائياً
+      if (attendanceData[s.id]?.id) {
+        record.id = attendanceData[s.id].id;
+      }
+
+      return record;
+    });
+
+    // تنفيذ الحفظ
+    const { error } = await supabase
+      .from('attendance')
+      .upsert(records);
     
     setBtnLoading(false);
-    if (error) alert('خطأ في الحفظ: ' + error.message);
-    else alert('تم الحفظ بنجاح 🎉');
+    
+    if (error) {
+      console.error('خطأ Supabase:', error);
+      alert('خطأ في الحفظ: ' + error.message);
+    } else {
+      alert('تم الحفظ بنجاح 🎉');
+      // إعادة جلب البيانات لتحديث الـ ids الجديدة للطلاب الذين تمت إضافتهم للتو
+      fetchAttendance();
+    }
   };
 
   return (
     <div style={{ padding: '24px', direction: 'rtl', fontFamily: "'Cairo', sans-serif", color: '#fff' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <h2>📝 كشف الحضور</h2>
-        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ padding: '8px', borderRadius: '8px' }} />
+        <input 
+          type="date" 
+          value={selectedDate} 
+          onChange={(e) => setSelectedDate(e.target.value)} 
+          style={{ padding: '8px', borderRadius: '8px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }} 
+        />
       </div>
 
       {loading ? <p>جاري التحميل...</p> : (
@@ -86,7 +111,11 @@ export default function Attendance({ students, academyId }) {
               />
             </div>
           ))}
-          <button onClick={saveAttendance} disabled={btnLoading} style={{ marginTop: '20px', width: '100%', padding: '12px', background: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}>
+          <button 
+            onClick={saveAttendance} 
+            disabled={btnLoading} 
+            style={{ marginTop: '20px', width: '100%', padding: '12px', background: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
             {btnLoading ? 'جاري الحفظ...' : 'حفظ الكشف'}
           </button>
         </div>
