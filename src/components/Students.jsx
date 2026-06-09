@@ -1,54 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next'; // 1. إضافة الترجمة
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 
-export default function Students() {
+export default function Students({ students, setStudents, academyId }) {
   const { t } = useTranslation();
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [academyId, setAcademyId] = useState(null);
-  const [insertLoading, setInsertLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({ name: '', phone: '' });
-  const [searchTerm, setSearchTerm] = useState(''); // ميزة البحث
+  const [insertLoading, setInsertLoading] = useState(false);
 
-  // إضافة خاصية تحديد حجم الشاشة للموبايل
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const fetchStudents = useCallback(async (id) => {
-    const { data, error } = await supabase
-      .from('students')
-      .select('*')
-      .eq('academy_id', id)
-      .order('name', { ascending: true });
-    
-    if (error) console.error("Error:", error);
-    else setStudents(data || []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase.from('staff').select('academy_id').eq('user_id', user.id).maybeSingle();
-      if (data?.academy_id) {
-        setAcademyId(data.academy_id);
-        fetchStudents(data.academy_id);
-      }
-    }
-    init();
-  }, [fetchStudents]);
+  // البحث اللحظي (Optimistic & Live)
+  const filteredStudents = students.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
     setInsertLoading(true);
+    
     const { data, error } = await supabase.from('students').insert([{ 
       name: formData.name.trim(), 
       parent_phone: formData.phone.trim() || null, 
@@ -63,56 +33,48 @@ export default function Students() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("حذف الطالب؟")) return;
+    if (!window.confirm(t('confirm_delete') || "هل أنت متأكد؟")) return;
     await supabase.from('students').delete().eq('id', id);
     setStudents(prev => prev.filter(s => s.id !== id));
   };
 
-  const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ color: C.text, marginBottom: '24px' }}>{t('students')}</h2>
-      
-      {/* Search & Add Section */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '15px', marginBottom: '20px' }}>
+    <div style={{ padding: '20px', direction: 'rtl' }}>
+      <h2 style={{ color: '#fff', marginBottom: '20px' }}>{t('students')}</h2>
+
+      {/* 1. البطاقة الإحصائية الاحترافية */}
+      <div style={{ background: C.surface, padding: '20px', borderRadius: '16px', marginBottom: '20px', textAlign: 'center', border: `1px solid ${C.gold}` }}>
+        <div style={{ fontSize: '0.9rem', color: C.muted }}>{t('total_students')}</div>
+        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: C.gold }}>{students.length}</div>
+      </div>
+
+      {/* 2. البحث ومنطقة الإضافة */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }}>
         <input 
           placeholder="🔍 بحث..." 
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '12px', borderRadius: '8px', background: C.surface, color: C.text, border: '1px solid #475569' }}
+          style={{ padding: '12px', borderRadius: '12px', background: '#0f172a', border: '1px solid #334155', color: '#fff' }}
         />
-        <form onSubmit={handleAddStudent} style={{ display: 'flex', gap: '10px', flex: 1 }}>
-          <input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder={t('fullName')} style={{ flex: 1, padding: '12px', borderRadius: '8px', background: C.surface, color: C.text, border: '1px solid #475569' }} />
-          <button type="submit" style={{ background: C.gold, padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>+</button>
+        <form onSubmit={handleAddStudent} style={{ display: 'flex', gap: '10px' }}>
+          <input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder={t('fullName')} style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#0f172a', border: '1px solid #334155', color: '#fff' }} />
+          <button type="submit" disabled={insertLoading} style={{ background: C.gold, padding: '0 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>+</button>
         </form>
       </div>
 
-      {/* Responsive View */}
-      {isMobile ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {filteredStudents.map(s => (
-            <div key={s.id} style={{ background: C.surface, padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
-              <div><strong>{s.name}</strong><br/>{s.parent_phone}</div>
-              <button onClick={() => handleDelete(s.id)} style={{ color: '#ef4444', border: 'none', background: 'none' }}>حذف</button>
+      {/* 3. قائمة الطلاب العصرية */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {filteredStudents.map(s => (
+          <div key={s.id} style={{ background: '#1e293b', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{s.name}</div>
+              <div style={{ fontSize: '0.85rem', color: C.muted }}>{s.parent_phone || 'لا يوجد هاتف'}</div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
-          <thead><tr style={{ background: '#334155' }}><th>الاسم</th><th>الهاتف</th><th>الإجراءات</th></tr></thead>
-          <tbody>
-            {filteredStudents.map(s => (
-              <tr key={s.id} style={{ borderBottom: '1px solid #334155' }}>
-                <td style={{ padding: '16px' }}>{s.name}</td>
-                <td style={{ padding: '16px' }}>{s.parent_phone}</td>
-                <td style={{ padding: '16px' }}><button onClick={() => handleDelete(s.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>حذف</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}>
+              حذف
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
