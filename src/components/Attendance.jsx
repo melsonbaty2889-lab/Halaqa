@@ -40,43 +40,33 @@ export default function Attendance({ students, academyId }) {
     }));
   };
 
-    const saveAttendance = async () => {
+      const saveAttendance = async () => {
     if (!academyId) return;
     setBtnLoading(true);
-    
-    const records = students.map(s => {
-      // بناء كائن السجل
-      const record = {
-        student_id: s.id,
-        academy_id: academyId,
-        date: selectedDate,
-        status: attendanceData[s.id]?.status || 'غائب',
-        notes: attendanceData[s.id]?.notes || ''
-      };
 
-      // التعديل: لا نرسل الـ id إطلاقاً إذا لم يكن موجوداً
-      if (attendanceData[s.id]?.id) {
-        record.id = attendanceData[s.id].id;
+    // نرسل كل طالب للدالة بشكل منفصل
+    for (const s of students) {
+      const { error } = await supabase.rpc('upsert_attendance', {
+        p_student_id: s.id,
+        p_academy_id: academyId,
+        p_date: selectedDate,
+        p_status: attendanceData[s.id]?.status || 'غائب',
+        p_notes: attendanceData[s.id]?.notes || ''
+      });
+
+      if (error) {
+        console.error('خطأ في حفظ الطالب ' + s.name, error);
+        alert('خطأ في حفظ الطالب ' + s.name + ': ' + error.message);
+        setBtnLoading(false);
+        return;
       }
-      
-      return record;
-    });
-
-    // استخدام upsert مع onConflict
-    const { error } = await supabase
-      .from('attendance')
-      .upsert(records, { onConflict: 'student_id, date, academy_id' });
-    
-    setBtnLoading(false);
-    
-    if (error) {
-      console.error('خطأ Supabase:', error);
-      alert('خطأ في الحفظ: ' + error.message);
-    } else {
-      alert('تم الحفظ بنجاح 🎉');
-      fetchAttendance(); 
     }
-};
+
+    setBtnLoading(false);
+    alert('تم الحفظ بنجاح 🎉');
+    fetchAttendance();
+  };
+
 
 
   return (
