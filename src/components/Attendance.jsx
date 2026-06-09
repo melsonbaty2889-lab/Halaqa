@@ -1,15 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { C } from '../constants/colors';
+import { Card, PageHeader, Btn } from './UI';
 
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 export default function Attendance({ students, academyId }) {
+  // كشف الموبايل
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
-  // دالة لجلب بيانات الحضور
   const fetchAttendance = useCallback(async () => {
     if (!academyId) return;
     setLoading(true);
@@ -19,8 +28,6 @@ export default function Attendance({ students, academyId }) {
       .eq('date', selectedDate)
       .eq('academy_id', academyId);
 
-    if (error) console.error('خطأ جلب الحضور:', error.message);
-    
     const mapped = {};
     records?.forEach(r => {
       mapped[r.student_id] = { id: r.id, status: r.status, notes: r.notes || '' };
@@ -29,69 +36,56 @@ export default function Attendance({ students, academyId }) {
     setLoading(false);
   }, [selectedDate, academyId]);
 
-  useEffect(() => {
-    fetchAttendance();
-  }, [fetchAttendance]);
+  useEffect(() => { fetchAttendance(); }, [fetchAttendance]);
 
   const updateRecord = (studentId, updates) => {
-    setAttendanceData(prev => ({
-      ...prev,
-      [studentId]: { ...prev[studentId], ...updates }
-    }));
+    setAttendanceData(prev => ({ ...prev, [studentId]: { ...prev[studentId], ...updates } }));
   };
 
-      const saveAttendance = async () => {
+  const saveAttendance = async () => {
     if (!academyId) return;
     setBtnLoading(true);
-
-    // نرسل كل طالب للدالة بشكل منفصل
     for (const s of students) {
-      const { error } = await supabase.rpc('upsert_attendance', {
+      await supabase.rpc('upsert_attendance', {
         p_student_id: s.id,
         p_academy_id: academyId,
         p_date: selectedDate,
         p_status: attendanceData[s.id]?.status || 'غائب',
         p_notes: attendanceData[s.id]?.notes || ''
       });
-
-      if (error) {
-        console.error('خطأ في حفظ الطالب ' + s.name, error);
-        alert('خطأ في حفظ الطالب ' + s.name + ': ' + error.message);
-        setBtnLoading(false);
-        return;
-      }
     }
-
     setBtnLoading(false);
     alert('تم الحفظ بنجاح 🎉');
     fetchAttendance();
   };
 
-
-
   return (
-    <div style={{ padding: '24px', direction: 'rtl', fontFamily: "'Cairo', sans-serif", color: '#fff' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h2>📝 كشف الحضور</h2>
-        <input 
-          type="date" 
-          value={selectedDate} 
-          onChange={(e) => setSelectedDate(e.target.value)} 
-          style={{ padding: '8px', borderRadius: '8px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }} 
-        />
+    <div style={{ padding: isMobile ? '10px' : '24px' }}>
+      <PageHeader title="📝 كشف الحضور" sub="سجل حضور الطلاب اليومي" />
+      
+      <div style={{ marginBottom: '20px' }}>
+        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} 
+          style={{ padding: '10px', borderRadius: '8px', width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #475569' }} />
       </div>
 
-      {loading ? <p>جاري التحميل...</p> : (
-        <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px' }}>
-          {students.map(s => (
-            <div key={s.id} style={{ display: 'flex', gap: '15px', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #334155' }}>
-              <div style={{ flex: 1 }}>{s.name}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {students.map(s => {
+          const status = attendanceData[s.id]?.status || 'غائب';
+          return (
+            <div key={s.id} style={{ 
+              background: '#1e293b', padding: '15px', borderRadius: '12px',
+              display: 'flex', flexDirection: isMobile ? 'column' : 'row', 
+              gap: '10px', alignItems: isMobile ? 'stretch' : 'center' 
+            }}>
+              <div style={{ flex: 1, fontWeight: 'bold' }}>{s.name}</div>
+              
               <button 
-                onClick={() => updateRecord(s.id, { status: attendanceData[s.id]?.status === 'حاضر' ? 'غائب' : 'حاضر' })}
-                style={{ padding: '8px 16px', background: attendanceData[s.id]?.status === 'حاضر' ? '#10b981' : '#ef4444', border: 'none', borderRadius: '6px', color: '#fff' }}
+                onClick={() => updateRecord(s.id, { status: status === 'حاضر' ? 'غائب' : 'حاضر' })}
+                style={{ padding: '8px 16px', background: status === 'حاضر' ? '#10b981' : '#ef4444', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer' }}
               >
-                {attendanceData[s.id]?.status || 'غائب'}
+                {status}
               </button>
+              
               <input 
                 placeholder="ملاحظات..." 
                 value={attendanceData[s.id]?.notes || ''} 
@@ -99,16 +93,15 @@ export default function Attendance({ students, academyId }) {
                 style={{ padding: '8px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }}
               />
             </div>
-          ))}
-          <button 
-            onClick={saveAttendance} 
-            disabled={btnLoading} 
-            style={{ marginTop: '20px', width: '100%', padding: '12px', background: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            {btnLoading ? 'جاري الحفظ...' : 'حفظ الكشف'}
-          </button>
-        </div>
-      )}
+          );
+        })}
+      </div>
+
+      <button onClick={saveAttendance} disabled={btnLoading} 
+        style={{ marginTop: '20px', width: '100%', padding: '15px', background: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}
+      >
+        {btnLoading ? 'جاري الحفظ...' : 'حفظ الكشف'}
+      </button>
     </div>
   );
 }
