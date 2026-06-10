@@ -24,43 +24,20 @@ export default function SignUpPage({ onSwitchToLogin }) {
     setLoading(true);
 
     try {
-      // 2. Create auth user
+      // 2. Create auth user - DB trigger handles staff insert
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
+        options: { 
+          data: { name: name.trim() } // Trigger uses this for staff.name
+        }
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // 3. Sign in immediately to get a valid session for RLS
-      // If "Confirm Email" is OFF in Supabase, this will succeed
-      const { error: signInError } = await supabase.auth.signInWithPassword({ 
-        email: email.trim(), 
-        password: password.trim() 
-      });
-      
-      // Ignore "Email not confirmed" error, but throw others
-      if (signInError && !signInError.message.includes('Email not confirmed')) {
-        throw signInError;
-      }
-
-      // 4. Insert into staff table - now auth.uid() exists
-      const { error: staffError } = await supabase
-        .from('staff')
-        .insert([{
-          user_id: authData.user.id,
-          name: name.trim(),
-          role: 'teacher',
-          academy_id: null
-        }]);
-
-      if (staffError) {
-        console.error("Staff Insert Error:", staffError);
-        throw new Error("Account created, but failed to link teacher data");
-      }
-
-      alert("✅ Account created successfully! You can now log in.");
+      // 3. Success - trigger already created staff row
+      alert("✅ Account created! Check your email to confirm, then log in.");
       onSwitchToLogin();
       
     } catch (err) {
