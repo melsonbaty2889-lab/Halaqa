@@ -3,110 +3,99 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabase";
 import { C } from "../constants/colors";
 
-export default function Students({ students, setStudents }) {
+export default function Students({ students, setStudents, session }) {
   const { t } = useTranslation();
 
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({
-    name: "",
-    parent_phone: "",
-  });
-
+  const [editData, setEditData] = useState({ name: "", parent_phone: "" });
   const [loadingId, setLoadingId] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Get current academy_id from session
+  const academyId = useMemo(() => {
+    return session?.user?.user_metadata?.academy_id || null;
+  }, [session]);
 
   /* ==========================
       Debounce Search
   ========================== */
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchTerm(searchInput);
     }, 300);
-
     return () => clearTimeout(timer);
   }, [searchInput]);
 
   /* ==========================
-      Filter Students
+      Filter Students - Academy Scoped
   ========================== */
-
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
+      // Critical: Only show students from current academy
+      if (student.academy_id!== academyId) return false;
       if (student.is_archived) return false;
 
       const name = student.name?.toLowerCase() || "";
       const phone = student.parent_phone || "";
+      const term = searchTerm.toLowerCase();
 
-      return (
-        name.includes(searchTerm.toLowerCase()) ||
-        phone.includes(searchTerm)
-      );
+      return name.includes(term) || phone.includes(term);
     });
-  }, [students, searchTerm]);
+  }, [students, searchTerm, academyId]);
 
   /* ==========================
       Helpers
   ========================== */
-
   const validatePhone = (phone) => {
     if (!phone) return true;
-
     return /^(01\d{9}|20\d{10})$/.test(phone);
   };
 
   const getWhatsappNumber = (phone) => {
     if (!phone) return "";
-
     let cleaned = phone.replace(/\D/g, "");
-
     if (cleaned.startsWith("0")) {
       cleaned = "20" + cleaned.slice(1);
     }
-
     return cleaned;
   };
 
   const resetEdit = () => {
     setEditId(null);
-
-    setEditData({
-      name: "",
-      parent_phone: "",
-    });
+    setEditData({ name: "", parent_phone: "" });
+    setError(null);
   };
 
   /* ==========================
       Edit
   ========================== */
-
   const startEdit = useCallback((student) => {
     setEditId(student.id);
-
     setEditData({
       name: student.name || "",
       parent_phone: student.parent_phone || "",
     });
+    setError(null);
   }, []);
 
   /* ==========================
       Update
   ========================== */
-
   const handleUpdate = async (id) => {
     if (!editData.name.trim()) {
-      alert("اسم الطالب مطلوب");
+      setError("اسم الطالب مطلوب");
       return;
     }
 
     if (!validatePhone(editData.parent_phone)) {
-      alert("رقم الهاتف غير صحيح");
+      setError("رقم الهاتف غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم");
       return;
     }
 
     setLoadingId(id);
+    setError(null);
 
     const payload = {
       name: editData.name.trim(),
@@ -114,28 +103,28 @@ export default function Students({ students, setStudents }) {
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
-      .from("students")
-      .update(payload)
-      .eq("id", id);
+    // Save old data for rollback
+    const oldStudent = students.find(s => s.id === id);
 
-    if (error) {
-      alert("خطأ أثناء التحديث:\n" + error.message);
-    } else {
+    // Optimistic update
+    setStudents((prev) =>
+      prev.map((student) => (student.id === id? {...student,...payload } : student))
+    );
+
+    const { error: updateError } = await supabase
+     .from("students")
+     .update(payload)
+     .eq("id", id)
+     .eq("academy_id", academyId); // RLS safety: only update own academy
+
+    if (updateError) {
+      // Rollback on error
       setStudents((prev) =>
-        prev.map((student) =>
-          student.id === id
-            ? {
-                ...student,
-                ...payload,
-              }
-            : student
-        )
+        prev.map((student) => (student.id === id? oldStudent : student))
       );
-
+      setError("فشل التحديث: " + updateError.message);
+    } else {
       resetEdit();
-
-      alert("تم تحديث بيانات الطالب بنجاح");
     }
 
     setLoadingId(null);
@@ -144,53 +133,47 @@ export default function Students({ students, setStudents }) {
   /* ==========================
       Archive
   ========================== */
-
   const handleArchive = async (id) => {
     const confirmed = window.confirm(
-      "هل تريد أرشفة هذا الطالب؟\nيمكن استعادته لاحقاً."
+      "هل تريد أرشفة هذا الطالب؟\nيمكن استعادته لاحقاً من قسم الأرشيف."
     );
-
     if (!confirmed) return;
 
     setLoadingId(id);
+    setError(null);
 
-    const { error } = await supabase
-      .from("students")
-      .update({
+    const oldStudent = students.find(s => s.id === id);
+
+    // Optimistic update
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === id? {...student, is_archived: true } : student
+      )
+    );
+
+    const { error: archiveError } = await supabase
+     .from("students")
+     .update({
         is_archived: true,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+     .eq("id", id)
+     .eq("academy_id", academyId); // RLS safety
 
-    if (error) {
-      alert("خطأ أثناء الأرشفة:\n" + error.message);
-    } else {
+    if (archiveError) {
+      // Rollback
       setStudents((prev) =>
-        prev.map((student) =>
-          student.id === id
-            ? {
-                ...student,
-                is_archived: true,
-              }
-            : student
-        )
+        prev.map((student) => (student.id === id? oldStudent : student))
       );
-
-      alert("تمت أرشفة الطالب بنجاح");
+      setError("فشل الأرشفة: " + archiveError.message);
     }
 
     setLoadingId(null);
   };
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        direction: "rtl",
-      }}
-    >
+    <div style={{ padding: "20px", direction: "rtl", fontFamily: "'Cairo', sans-serif" }}>
       {/* Header */}
-
       <header
         style={{
           display: "flex",
@@ -200,24 +183,35 @@ export default function Students({ students, setStudents }) {
           gap: "10px",
         }}
       >
-        <h2 style={{ color: "#fff", margin: 0 }}>
-          {t("students")}
-        </h2>
-
+        <h2 style={{ color: "#fff", margin: 0 }}>{t("students")}</h2>
         <div
           style={{
             background: C.surface,
             padding: "8px 16px",
             borderRadius: "20px",
             color: "#fff",
+            fontSize: "0.9rem"
           }}
         >
-          {filteredStudents.length} / {students.filter(s => !s.is_archived).length}
+          {filteredStudents.length} / {students.filter(s =>!s.is_archived && s.academy_id === academyId).length}
         </div>
       </header>
 
-      {/* Search */}
+      {/* Error Banner */}
+      {error && (
+        <div style={{
+          background: "#7f1d1d",
+          color: "#fca5a5",
+          padding: "12px",
+          borderRadius: "8px",
+          marginBottom: "16px",
+          border: "1px solid #991b1b"
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
 
+      {/* Search */}
       <input
         type="text"
         value={searchInput}
@@ -231,29 +225,23 @@ export default function Students({ students, setStudents }) {
           border: "1px solid #334155",
           color: "#fff",
           marginBottom: "20px",
+          boxSizing: "border-box"
         }}
       />
 
-      {/* Students */}
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}
-      >
+      {/* Students List */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         {filteredStudents.length === 0 && (
           <div
             style={{
               background: "#1e293b",
-              padding: "20px",
+              padding: "40px 20px",
               borderRadius: "14px",
               color: "#94a3b8",
               textAlign: "center",
             }}
           >
-            لا يوجد طلاب
+            {searchTerm? "لا توجد نتائج للبحث" : "لا يوجد طلاب مسجلين"}
           </div>
         )}
 
@@ -268,30 +256,16 @@ export default function Students({ students, setStudents }) {
               justifyContent: "space-between",
               alignItems: "center",
               gap: "15px",
-              borderRight: `6px solid ${
-                student.is_paid ? "#22c55e" : "#ef4444"
-              }`,
+              borderRight: `6px solid ${student.is_paid? "#22c55e" : "#ef4444"}`,
             }}
           >
             {/* Student Info */}
-
             <div style={{ flex: 1 }}>
-              {editId === student.id ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                  }}
-                >
+              {editId === student.id? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <input
                     value={editData.name}
-                    onChange={(e) =>
-                      setEditData((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setEditData((prev) => ({...prev, name: e.target.value }))}
                     placeholder="اسم الطالب"
                     style={{
                       padding: "10px",
@@ -301,15 +275,9 @@ export default function Students({ students, setStudents }) {
                       color: "#fff",
                     }}
                   />
-
                   <input
                     value={editData.parent_phone}
-                    onChange={(e) =>
-                      setEditData((prev) => ({
-                        ...prev,
-                        parent_phone: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setEditData((prev) => ({...prev, parent_phone: e.target.value }))}
                     placeholder="رقم ولي الأمر"
                     style={{
                       padding: "10px",
@@ -317,26 +285,35 @@ export default function Students({ students, setStudents }) {
                       border: "1px solid #475569",
                       background: "#0f172a",
                       color: "#fff",
+                      direction: "ltr",
+                      textAlign: "left"
                     }}
                   />
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                    }}
-                  >
+                  <div style={{ display: "flex", gap: "10px" }}>
                     <button
                       onClick={() => handleUpdate(student.id)}
                       disabled={loadingId === student.id}
+                      style={{
+                        padding: "8px 16px",
+                        background: C.green,
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer"
+                      }}
                     >
-                      {loadingId === student.id
-                        ? "⌛"
-                        : "💾 حفظ"}
+                      {loadingId === student.id? "⌛" : "💾 حفظ"}
                     </button>
-
                     <button
                       onClick={resetEdit}
+                      style={{
+                        padding: "8px 16px",
+                        background: "#475569",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer"
+                      }}
                     >
                       إلغاء
                     </button>
@@ -344,50 +321,25 @@ export default function Students({ students, setStudents }) {
                 </div>
               ) : (
                 <>
-                  <div
-                    style={{
-                      color: "#fff",
-                      fontWeight: "bold",
-                      fontSize: "1.1rem",
-                    }}
-                  >
+                  <div style={{ color: "#fff", fontWeight: "bold", fontSize: "1.1rem" }}>
                     {student.name}
                   </div>
-
-                  <div
-                    style={{
-                      color: "#94a3b8",
-                      marginTop: "6px",
-                    }}
-                  >
-                    {student.parent_phone || "---"}
+                  <div style={{ color: "#94a3b8", marginTop: "6px", direction: "ltr", textAlign: "right" }}>
+                    {student.parent_phone || "لا يوجد رقم"}
                   </div>
                 </>
               )}
             </div>
 
             {/* Actions */}
-
-            {editId !== student.id && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "15px",
-                  alignItems: "center",
-                }}
-              >
+            {editId!== student.id && (
+              <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
                 <button
                   onClick={() => startEdit(student)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "1.2rem",
-                  }}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "1.2rem" }}
                 >
                   ✏️
                 </button>
-
                 <button
                   onClick={() => handleArchive(student.id)}
                   disabled={loadingId === student.id}
@@ -396,28 +348,17 @@ export default function Students({ students, setStudents }) {
                     border: "none",
                     cursor: "pointer",
                     fontSize: "1.2rem",
-                    opacity:
-                      loadingId === student.id
-                        ? 0.5
-                        : 1,
+                    opacity: loadingId === student.id? 0.5 : 1,
                   }}
                 >
-                  {loadingId === student.id
-                    ? "⌛"
-                    : "🗂️"}
+                  {loadingId === student.id? "⌛" : "🗂️"}
                 </button>
-
                 {student.parent_phone && (
                   <a
-                    href={`https://wa.me/${getWhatsappNumber(
-                      student.parent_phone
-                    )}`}
+                    href={`https://wa.me/${getWhatsappNumber(student.parent_phone)}`}
                     target="_blank"
                     rel="noreferrer"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                    }}
+                    style={{ textDecoration: "none", fontSize: "1.2rem" }}
                   >
                     💬
                   </a>
