@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 
-// دالة debounce يدوية لا تحتاج إلى تثبيت أي مكتبة خارجية
+// دالة debounce يدوية (مدمجة داخل الملف - لا تحتاج تثبيت مكتبات خارجية)
 const debounce = (func, delay) => {
   let timer;
   return (...args) => {
