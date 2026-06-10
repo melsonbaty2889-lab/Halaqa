@@ -13,10 +13,6 @@ const Students = lazy(() => import('./components/Students.jsx'));
 const Attendance = lazy(() => import('./components/Attendance.jsx'));
 const Payments = lazy(() => import('./components/Payments.jsx'));
 
-const SECURITY_CONFIG = {
-  allowedHostSuffix: "vercel.app",
-};
-
 export default function App() {
   const { t, i18n } = useTranslation();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -26,8 +22,9 @@ export default function App() {
   const [showSignUp, setShowSignUp] = useState(false);
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
+  
+  // منطق ظهور القائمة (تظهر تلقائياً على الكمبيوتر، مخفية على الموبايل)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
-
   const isMobile = windowWidth < 768;
 
   // حفظ واسترجاع اللغة
@@ -93,19 +90,28 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row", direction: i18n.language === 'ar' ? "rtl" : "ltr" }}>
       
+      {/* زر التحكم في الموبايل */}
+      {isMobile && (
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer', fontWeight: 'bold' }}>
+          {sidebarOpen ? '✕ إغلاق القائمة' : '☰ القائمة'}
+        </button>
+      )}
+
       {/* Sidebar */}
       {(!isMobile || sidebarOpen) && (
-        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20 }}>
+        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, height: isMobile ? "auto" : "100vh" }}>
           <h2 style={{ color: C.gold }}>الحلقة الذكية</h2>
           <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {["dashboard", "students", "attendance", "payments"].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{ background: activeTab === tab ? C.gold : "transparent", padding: 12, border: 'none', cursor: 'pointer', textAlign: 'right' }}>
+              <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === tab ? C.gold : "transparent", padding: 12, border: 'none', cursor: 'pointer', textAlign: i18n.language === 'ar' ? 'right' : 'left' }}>
                 {t(tab)}
               </button>
             ))}
           </nav>
-          <button onClick={toggleLanguage} style={{ marginTop: 'auto', padding: 10 }}>{i18n.language === 'ar' ? 'English' : 'العربية'}</button>
-          <button onClick={() => supabase.auth.signOut()} style={{ color: 'red', marginTop: 10 }}>{t('logout')}</button>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={toggleLanguage} style={{ padding: 10 }}>{i18n.language === 'ar' ? 'English' : 'العربية'}</button>
+            <button onClick={() => supabase.auth.signOut()} style={{ color: 'red', border: 'none', background: 'transparent' }}>{t('logout')}</button>
+          </div>
         </aside>
       )}
 
