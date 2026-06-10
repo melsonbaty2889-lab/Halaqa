@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import debounce from 'lodash/debounce';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 
@@ -8,13 +9,19 @@ export default function Students({ students, setStudents }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({ name: '', phone: '' });
+  const debouncedSearch = useMemo(
+    () => debounce((value) => setSearchTerm(value), 300),
+    []
+  );
 
   // تصفية الطلاب
   const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (s.parent_phone && s.parent_phone.includes(searchTerm))
+    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.parent_phone?.includes(searchTerm)
   );
-
+  
+  const [loadingId, setLoadingId] = useState(null);
+  
   // دالة تحديث البيانات
   const handleUpdate = async (id) => {
     const { error } = await supabase.from('students')
@@ -30,14 +37,18 @@ export default function Students({ students, setStudents }) {
 
   // دالة الحذف
   const handleDelete = async (id) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا الطالب؟")) return;
-    const { error } = await supabase.from('students').delete().eq('id', id);
-    if (!error) {
-      setStudents(prev => prev.filter(s => s.id !== id));
-    } else {
-      alert("خطأ في الحذف: " + error.message);
-    }
-  };
+  if (!window.confirm("هل أنت متأكد؟")) return;
+  
+  setLoadingId(id); // تفعيل حالة التحميل
+  const { error } = await supabase.from('students').delete().eq('id', id);
+  
+  if (!error) {
+    setStudents(prev => prev.filter(s => s.id !== id));
+  } else {
+    alert("خطأ: " + error.message);
+  }
+  setLoadingId(null); // إيقاف حالة التحميل
+};
 
   return (
     <div style={{ padding: '20px', direction: 'rtl' }}>
@@ -49,10 +60,10 @@ export default function Students({ students, setStudents }) {
       </header>
 
       <input 
-        placeholder={t('search_placeholder') || "🔍 بحث بالاسم أو الهاتف..."} 
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#0f172a', border: '1px solid #334155', color: '#fff', marginBottom: '20px' }}
-      />
+  placeholder={t('search_placeholder') || "🔍 بحث بالاسم أو الهاتف..."} 
+  onChange={(e) => debouncedSearch(e.target.value)} // استخدام الدالة الذكية هنا
+  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#0f172a', border: '1px solid #334155', color: '#fff', marginBottom: '20px' }}
+/>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filteredStudents.map(s => (
@@ -73,7 +84,13 @@ export default function Students({ students, setStudents }) {
             
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => { setEditId(s.id); setEditData({ name: s.name, phone: s.parent_phone }); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>✏️</button>
-              <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>🗑️</button>
+              <button 
+  onClick={() => handleDelete(s.id)} 
+  disabled={loadingId === s.id} // تعطيل الزر أثناء التحميل
+  style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: loadingId === s.id ? 0.5 : 1 }}
+>
+  {loadingId === s.id ? "⏳" : "🗑️"}
+</button>
               <a href={`https://wa.me/2${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: '#25D366', fontSize: '1.2rem' }}>💬</a>
             </div>
           </div>
