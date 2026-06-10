@@ -31,7 +31,6 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
         .single();
 
       if (academyError) {
-        // Handle duplicate name error specifically
         if (academyError.code === '23505') {
           throw new Error('اسم الأكاديمية مستخدم بالفعل. اختر اسماً آخر');
         }
@@ -45,10 +44,22 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
         .eq('user_id', session.user.id);
 
       if (staffError) {
-        // Critical: If this fails, delete the orphan academy to avoid inconsistent state
         await supabase.from('academies').delete().eq('id', academy.id);
         throw new Error('فشل ربط حسابك بالأكاديمية. تم إلغاء العملية');
       }
+
+      // 4. Update user metadata - Critical for Dashboard/Students to work
+      const { error: metaError } = await supabase.auth.updateUser({
+        data: { academy_id: academy.id }
+      });
+
+      if (metaError) {
+        console.error('Failed to update user metadata:', metaError);
+        // Non-blocking: staff table already has academy_id
+      }
+
+      // 5. Refresh session so components get updated session.user.user_metadata
+      await supabase.auth.refreshSession();
 
       // Success
       onAcademyCreated();
