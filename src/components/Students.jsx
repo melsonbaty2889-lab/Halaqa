@@ -83,17 +83,25 @@ export default function Students({ students, setStudents }) {
             borderRight: `6px solid ${s.is_paid ? '#22c55e' : '#ef4444'}` 
           }}>
             <div style={{ flex: 1 }}>
-              {editId === s.id ? (
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: 'none' }} />
-                  <button onClick={() => handleUpdate(s.id)} disabled={loadingId === s.id} style={{ cursor: 'pointer', background: 'transparent', border: 'none', fontSize: '1.2rem' }}>{loadingId === s.id ? '⌛' : '✅'}</button>
-                </div>
-              ) : (
-                <>
-                  <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '1.1rem' }}>{s.name}</div>
-                  <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{s.parent_phone || '---'}</div>
-                </>
-              )}
+              // ... (الاستيرادات والدالة المدمجة debounce كما هي)
+
+{editId === s.id ? (
+  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
+    <input 
+      value={editData.name} 
+      onChange={(e) => setEditData({...editData, name: e.target.value})} 
+      style={{ padding: '8px', borderRadius: '6px', border: '1px solid #64748b', background: '#0f172a', color: '#fff', flex: 1 }} 
+    />
+    <button onClick={() => handleUpdate(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>✅</button>
+    <button onClick={() => setEditId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>❌</button>
+  </div>
+) : (
+  <>
+    <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '1.1rem' }}>{s.name}</div>
+    <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{s.parent_phone || '---'}</div>
+  </>
+)}
+
             </div>
             
             <div style={{ display: 'flex', gap: '15px' }}>
