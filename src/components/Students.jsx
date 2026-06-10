@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 
-// دالة debounce يدوية (مدمجة داخل الملف - لا تحتاج تثبيت مكتبات خارجية)
 const debounce = (func, delay) => {
   let timer;
   return (...args) => {
@@ -19,7 +18,6 @@ export default function Students({ students, setStudents }) {
   const [editData, setEditData] = useState({ name: '', phone: '' });
   const [loadingId, setLoadingId] = useState(null);
 
-  // استخدام دالة الـ debounce المدمجة محلياً
   const debouncedSearch = useMemo(
     () => debounce((value) => setSearchTerm(value), 300),
     []
@@ -75,25 +73,33 @@ export default function Students({ students, setStudents }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filteredStudents.map(s => (
-          <div key={s.id} style={{ background: '#1e293b', padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRight: `4px solid ${s.is_paid ? '#22c55e' : '#ef4444'}` }}>
+          <div key={s.id} style={{ 
+            background: '#1e293b', 
+            padding: '16px', 
+            borderRadius: '14px', 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            borderRight: `6px solid ${s.is_paid ? '#22c55e' : '#ef4444'}` 
+          }}>
             <div style={{ flex: 1 }}>
               {editId === s.id ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <input value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} style={{ padding: '5px', borderRadius: '4px' }} />
-                  <button onClick={() => handleUpdate(s.id)} disabled={loadingId === s.id} style={{ cursor: 'pointer' }}>{loadingId === s.id ? '⌛' : '✅'}</button>
+                  <input value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: 'none' }} />
+                  <button onClick={() => handleUpdate(s.id)} disabled={loadingId === s.id} style={{ cursor: 'pointer', background: 'transparent', border: 'none', fontSize: '1.2rem' }}>{loadingId === s.id ? '⌛' : '✅'}</button>
                 </div>
               ) : (
                 <>
-                  <div style={{ fontWeight: 'bold', color: '#fff' }}>{s.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.parent_phone || '---'}</div>
+                  <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '1.1rem' }}>{s.name}</div>
+                  <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{s.parent_phone || '---'}</div>
                 </>
               )}
             </div>
             
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => { setEditId(s.id); setEditData({ name: s.name, phone: s.parent_phone }); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>✏️</button>
-              <button onClick={() => handleDelete(s.id)} disabled={loadingId === s.id} style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: loadingId === s.id ? 0.5 : 1 }}>{loadingId === s.id ? '⌛' : '🗑️'}</button>
-              <a href={`https://wa.me/2${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>💬</a>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button onClick={() => { setEditId(s.id); setEditData({ name: s.name, phone: s.parent_phone }); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✏️</button>
+              <button onClick={() => handleDelete(s.id)} disabled={loadingId === s.id} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem', opacity: loadingId === s.id ? 0.5 : 1 }}>{loadingId === s.id ? '⌛' : '🗑️'}</button>
+              <a href={`https://wa.me/2${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', fontSize: '1.2rem' }}>💬</a>
             </div>
           </div>
         ))}
