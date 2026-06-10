@@ -88,14 +88,18 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'ar', // اللغة الافتراضية إذا لم يتم تحديد لغة
+    fallbackLng: 'ar',
     supportedLngs: ['ar', 'en'],
+    // إضافة هذا الجزء للتعامل الأفضل مع النصوص التي تحتوي على HTML
+    react: {
+      useSuspense: false, 
+    },
     interpolation: {
-      escapeValue: false, // React تحمينا من XSS تلقائياً
+      escapeValue: false, 
     },
     detection: {
       order: ['localStorage', 'navigator'],
-      caches: ['localStorage'], // حفظ اختيار المستخدم للمرة القادمة
+      caches: ['localStorage'],
     },
   });
 
