@@ -83,7 +83,7 @@ export default function Students({ students, setStudents }) {
             borderRight: `6px solid ${s.is_paid ? '#22c55e' : '#ef4444'}` 
           }}>
             <div style={{ flex: 1 }}>
-              // ... (الاستيرادات والدالة المدمجة debounce كما هي)
+              
 
 {editId === s.id ? (
   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
