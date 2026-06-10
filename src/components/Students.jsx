@@ -1,8 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import debounce from 'lodash/debounce';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
+
+// دالة debounce يدوية لا تحتاج إلى تثبيت أي مكتبة خارجية
+const debounce = (func, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => func(...args), delay);
+  };
+};
 
 export default function Students({ students, setStudents }) {
   const { t } = useTranslation();
@@ -11,13 +19,12 @@ export default function Students({ students, setStudents }) {
   const [editData, setEditData] = useState({ name: '', phone: '' });
   const [loadingId, setLoadingId] = useState(null);
 
-  // البحث الذكي باستخدام Debounce
+  // استخدام دالة الـ debounce المدمجة محلياً
   const debouncedSearch = useMemo(
     () => debounce((value) => setSearchTerm(value), 300),
     []
   );
 
-  // الفلترة الديناميكية
   const filteredStudents = students.filter(s => 
     s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.parent_phone?.includes(searchTerm)
