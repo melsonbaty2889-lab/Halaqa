@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from 'react-i18next';     
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
