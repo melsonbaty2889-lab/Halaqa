@@ -16,6 +16,15 @@ const resources = {
       loading: "جاري التحميل...",
       save: "حفظ",
       
+      // إضافات لوحة التحكم الذكية
+      total_students: "إجمالي الطلاب",
+      attendance_rate: "معدل الحضور",
+      pending_payments: "مدفوعات معلقة",
+      smart_alerts: "تنبيهات ذكية",
+      pending_payments_alert: "يوجد طلاب لديهم دفعات متأخرة",
+      review_now: "راجع السجل الآن",
+      no_alerts: "لا توجد تنبيهات حالية، كل شيء يسير بشكل جيد!",
+
       // الحضور والمدفوعات
       present: "حاضر",
       absent: "غائب",
@@ -55,6 +64,15 @@ const resources = {
       loading: "Loading...",
       save: "Save",
 
+      // Smart Dashboard Additions
+      total_students: "Total Students",
+      attendance_rate: "Attendance Rate",
+      pending_payments: "Pending Payments",
+      smart_alerts: "Smart Alerts",
+      pending_payments_alert: "There are students with pending payments",
+      review_now: "Review now",
+      no_alerts: "No current alerts, everything is running smoothly!",
+
       // Attendance & Payments
       present: "Present",
       absent: "Absent",
@@ -90,13 +108,8 @@ i18n
     resources,
     fallbackLng: 'ar',
     supportedLngs: ['ar', 'en'],
-    // إضافة هذا الجزء للتعامل الأفضل مع النصوص التي تحتوي على HTML
-    react: {
-      useSuspense: false, 
-    },
-    interpolation: {
-      escapeValue: false, 
-    },
+    react: { useSuspense: false },
+    interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
