@@ -9,61 +9,62 @@ export default function Students({ students, setStudents }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({ name: '', phone: '' });
+  const [loadingId, setLoadingId] = useState(null);
+
+  // البحث الذكي باستخدام Debounce
   const debouncedSearch = useMemo(
     () => debounce((value) => setSearchTerm(value), 300),
     []
   );
 
-  // تصفية الطلاب
+  // الفلترة الديناميكية
   const filteredStudents = students.filter(s => 
     s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.parent_phone?.includes(searchTerm)
   );
-  
-  const [loadingId, setLoadingId] = useState(null);
-  
-  // دالة تحديث البيانات
+
   const handleUpdate = async (id) => {
+    setLoadingId(id);
     const { error } = await supabase.from('students')
       .update({ name: editData.name, parent_phone: editData.phone })
       .eq('id', id);
+    
     if (!error) {
       setStudents(prev => prev.map(s => s.id === id ? { ...s, ...editData } : s));
       setEditId(null);
     } else {
       alert("خطأ في التحديث: " + error.message);
     }
+    setLoadingId(null);
   };
 
-  // دالة الحذف
   const handleDelete = async (id) => {
-  if (!window.confirm("هل أنت متأكد؟")) return;
-  
-  setLoadingId(id); // تفعيل حالة التحميل
-  const { error } = await supabase.from('students').delete().eq('id', id);
-  
-  if (!error) {
-    setStudents(prev => prev.filter(s => s.id !== id));
-  } else {
-    alert("خطأ: " + error.message);
-  }
-  setLoadingId(null); // إيقاف حالة التحميل
-};
+    if (!window.confirm("هل أنت متأكد من حذف هذا الطالب؟")) return;
+    setLoadingId(id);
+    const { error } = await supabase.from('students').delete().eq('id', id);
+    
+    if (!error) {
+      setStudents(prev => prev.filter(s => s.id !== id));
+    } else {
+      alert("خطأ في الحذف: " + error.message);
+    }
+    setLoadingId(null);
+  };
 
   return (
     <div style={{ padding: '20px', direction: 'rtl' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <h2 style={{ color: '#fff' }}>{t('students')}</h2>
-        <div style={{ background: C.surface, padding: '8px 16px', borderRadius: '20px', fontSize: '0.8rem', color: '#fff' }}>
-          {students.length} {t('total_students')}
+        <div style={{ background: C.surface, padding: '8px 16px', borderRadius: '20px', color: '#fff' }}>
+          {filteredStudents.length} / {students.length}
         </div>
       </header>
 
       <input 
-  placeholder={t('search_placeholder') || "🔍 بحث بالاسم أو الهاتف..."} 
-  onChange={(e) => debouncedSearch(e.target.value)} // استخدام الدالة الذكية هنا
-  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#0f172a', border: '1px solid #334155', color: '#fff', marginBottom: '20px' }}
-/>
+        placeholder="🔍 بحث بالاسم أو الهاتف..." 
+        onChange={(e) => debouncedSearch(e.target.value)}
+        style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#0f172a', border: '1px solid #334155', color: '#fff', marginBottom: '20px' }}
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filteredStudents.map(s => (
@@ -72,7 +73,7 @@ export default function Students({ students, setStudents }) {
               {editId === s.id ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <input value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} style={{ padding: '5px', borderRadius: '4px' }} />
-                  <button onClick={() => handleUpdate(s.id)} style={{ background: C.gold, border: 'none', cursor: 'pointer', padding: '5px 10px' }}>✅</button>
+                  <button onClick={() => handleUpdate(s.id)} disabled={loadingId === s.id} style={{ cursor: 'pointer' }}>{loadingId === s.id ? '⌛' : '✅'}</button>
                 </div>
               ) : (
                 <>
@@ -84,14 +85,8 @@ export default function Students({ students, setStudents }) {
             
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => { setEditId(s.id); setEditData({ name: s.name, phone: s.parent_phone }); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>✏️</button>
-              <button 
-  onClick={() => handleDelete(s.id)} 
-  disabled={loadingId === s.id} // تعطيل الزر أثناء التحميل
-  style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: loadingId === s.id ? 0.5 : 1 }}
->
-  {loadingId === s.id ? "⏳" : "🗑️"}
-</button>
-              <a href={`https://wa.me/2${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: '#25D366', fontSize: '1.2rem' }}>💬</a>
+              <button onClick={() => handleDelete(s.id)} disabled={loadingId === s.id} style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: loadingId === s.id ? 0.5 : 1 }}>{loadingId === s.id ? '⌛' : '🗑️'}</button>
+              <a href={`https://wa.me/2${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>💬</a>
             </div>
           </div>
         ))}
