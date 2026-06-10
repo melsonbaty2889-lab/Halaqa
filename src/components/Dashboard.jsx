@@ -1,106 +1,84 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase';
+import { C } from '../constants/colors';
 
-const resources = {
-  ar: {
-    translation: {
-      // عام
-      welcome: "مرحباً بك في الحلقة الذكية",
-      dashboard: "لوحة التحكم",
-      students: "الطلاب",
-      attendance: "الحضور والغياب",
-      payments: "المدفوعات",
-      settings: "الإعدادات",
-      logout: "تسجيل الخروج",
-      loading: "جاري التحميل...",
-      save: "حفظ",
-      
-      // الحضور والمدفوعات
-      present: "حاضر",
-      absent: "غائب",
-      notes: "ملاحظات...",
-      save_attendance: "حفظ الكشف",
-      total_collection: "إجمالي التحصيل",
-      mark_paid: "قبض",
-      mark_unpaid: "إلغاء",
-      send_whatsapp: "واتساب 💬",
-      paid: "مسدد",
-      unpaid: "معلّق",
+export default function Dashboard({ session, setActiveTab }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({ name: '', academyName: '', stats: { students: 0, pending: 0 } });
 
-      // SignUp & Login
-      createAccount: "إنشاء حساب معلم",
-      fullName: "الاسم الكامل",
-      email: "البريد الإلكتروني",
-      password: "كلمة المرور",
-      signUp: "إنشاء حساب",
-      signIn: "تسجيل الدخول",
-      alreadyHaveAccount: "لديك حساب بالفعل؟",
+  useEffect(() => {
+    async function fetchData() {
+      if (!session?.user?.id) return;
+      try {
+        setLoading(true);
+        // جلب بيانات المعلم والأكاديمية
+        const { data: staff } = await supabase
+          .from('staff')
+          .select('name, academies(id, name)')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
 
-      // Error Messages
-      errorLoading: "حدث خطأ أثناء تحميل البيانات",
-      noStaffRecord: "لم يتم العثور على حسابك في جدول المعلمين",
+        if (staff?.academies) {
+          // جلب الإحصائيات
+          const { count: studentCount } = await supabase
+            .from('students')
+            .select('*', { count: 'exact', head: true })
+            .eq('academy_id', staff.academies.id);
+
+          const { count: pendingCount } = await supabase
+            .from('payments')
+            .select('*', { count: 'exact', head: true })
+            .eq('academy_id', staff.academies.id)
+            .eq('status', 'pending');
+
+          setData({
+            name: staff.name,
+            academyName: staff.academies.name,
+            stats: { students: studentCount || 0, pending: pendingCount || 0 }
+          });
+        }
+      } catch (err) {
+        console.error("Dashboard Error:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  },
-  en: {
-    translation: {
-      // General
-      welcome: "Welcome to Smart Halaqa",
-      dashboard: "Dashboard",
-      students: "Students",
-      attendance: "Attendance",
-      payments: "Payments",
-      settings: "Settings",
-      logout: "Logout",
-      loading: "Loading...",
-      save: "Save",
+    fetchData();
+  }, [session]);
 
-      // Attendance & Payments
-      present: "Present",
-      absent: "Absent",
-      notes: "Notes...",
-      save_attendance: "Save Attendance",
-      total_collection: "Total Collection",
-      mark_paid: "Pay",
-      mark_unpaid: "Cancel",
-      send_whatsapp: "WhatsApp 💬",
-      paid: "Paid",
-      unpaid: "Pending",
-
-      // SignUp & Login
-      createAccount: "Create Teacher Account",
-      fullName: "Full Name",
-      email: "Email Address",
-      password: "Password",
-      signUp: "Sign Up",
-      signIn: "Sign In",
-      alreadyHaveAccount: "Already have an account?",
-
-      // Error Messages
-      errorLoading: "Error loading data",
-      noStaffRecord: "No staff record found for your account",
-    }
+  if (loading) {
+    return <div style={{ padding: 40, textAlign: 'center', color: C.text }}>{t('loading')}</div>;
   }
-};
 
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources,
-    fallbackLng: 'ar',
-    supportedLngs: ['ar', 'en'],
-    // إضافة هذا الجزء للتعامل الأفضل مع النصوص التي تحتوي على HTML
-    react: {
-      useSuspense: false, 
-    },
-    interpolation: {
-      escapeValue: false, 
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-    },
-  });
+  return (
+    <div style={{ padding: 24, fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ marginBottom: 30 }}>
+        <h1 style={{ color: C.gold, margin: 0 }}>{t('dashboard')}</h1>
+        <p style={{ color: C.text }}>{t('welcome')}, {data.name} - {data.academyName}</p>
+      </div>
 
-export default i18n;
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+        {/* بطاقة الطلاب */}
+        <div style={{ background: C.surface, padding: 20, borderRadius: 12, border: `1px solid ${C.border}` }}>
+          <h3>{t('students')}</h3>
+          <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{data.stats.students}</p>
+        </div>
+
+        {/* بطاقة المدفوعات المعلقة */}
+        <div style={{ background: C.surface, padding: 20, borderRadius: 12, border: `1px solid ${C.border}` }}>
+          <h3>{t('unpaid')}</h3>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: data.stats.pending > 0 ? 'red' : C.text }}>
+            {data.stats.pending}
+          </p>
+          {data.stats.pending > 0 && (
+            <button onClick={() => setActiveTab('payments')} style={{ background: C.gold, border: 'none', padding: '5px 10px', borderRadius: 5, cursor: 'pointer' }}>
+              {t('review_now')}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
