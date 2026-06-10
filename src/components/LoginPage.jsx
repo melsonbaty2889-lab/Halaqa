@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function LoginPage({ onLoginSuccess, onSwitchToSignUp }) {
+export default function LoginPage({ onSwitchToSignUp }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,16 +17,16 @@ export default function LoginPage({ onLoginSuccess, onSwitchToSignUp }) {
       setLoading(true);
       setErrorMsg('');
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
 
       if (error) throw error;
 
-      if (data?.session) {
-        onLoginSuccess(data.session);
-      }
+      // No need to call onLoginSuccess here.
+      // App.jsx already listens to onAuthStateChange and will get the session automatically.
+      
     } catch (error) {
       setErrorMsg(error.message || 'خطأ في بيانات تسجيل الدخول، تأكد من صحتها');
     } finally {
