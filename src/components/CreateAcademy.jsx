@@ -11,7 +11,7 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
     setLoading(true);
 
     try {
-      // 1. إنشاء سجل الأكاديمية الجديد
+      // 1. إنشاء الأكاديمية وربطها بصاحب الحساب
       const { data: academy, error: academyError } = await supabase
         .from('academies')
         .insert([{ name, owner_id: session.user.id }])
@@ -20,8 +20,7 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
 
       if (academyError) throw academyError;
 
-      // 2. ربط الموظف بهذه الأكاديمية الجديدة
-      // نفترض أن جدول staff يحتوي على السجل الخاص بالمستخدم بالفعل
+      // 2. تحديث سجل الموظف ليرتبط بالأكاديمية الجديدة
       const { error: staffError } = await supabase
         .from('staff')
         .update({ academy_id: academy.id })
@@ -29,25 +28,42 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
 
       if (staffError) throw staffError;
 
-      // نجاح العملية
-      onAcademyCreated(); 
-      
+      // النجاح
+      onAcademyCreated();
     } catch (err) {
-      console.error('Error creating academy:', err);
-      alert('خطأ في إنشاء الأكاديمية: ' + err.message);
+      console.error('Error:', err);
+      alert('حدث خطأ أثناء الإنشاء، يرجى المحاولة لاحقاً.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ padding: '40px 20px', textAlign: 'center', direction: 'rtl', color: '#fff' }}>
+    <div style={{ 
+      padding: '40px 20px', 
+      textAlign: 'center', 
+      direction: 'rtl', 
+      minHeight: '100vh',
+      background: '#0f172a',
+      color: '#fff' 
+    }}>
       <h2 style={{ color: C.gold, marginBottom: '20px' }}>🚀 أنشئ أكاديميتك الأولى</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '30px' }}>ابدأ رحلتك الإدارية اليوم</p>
+      <p style={{ color: '#94a3b8', marginBottom: '30px' }}>ابدأ رحلتك الإدارية المنظمة</p>
       
-      <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '0 auto', background: '#1e293b', padding: '30px', borderRadius: '16px' }}>
+      <form 
+        onSubmit={handleSubmit} 
+        style={{ 
+          maxWidth: '400px', 
+          margin: '0 auto', 
+          background: '#1e293b', 
+          padding: '30px', 
+          borderRadius: '16px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}
+      >
         <input 
-          placeholder="اسم الأكاديمية"
+          type="text"
+          placeholder="اسم الأكاديمية (مثلاً: دار القرآن)"
           value={name}
           onChange={(e) => setName(e.target.value)}
           style={{ 
@@ -63,11 +79,12 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
           required
         />
         <button 
+          type="submit"
           disabled={loading} 
           style={{ 
             width: '100%',
             padding: '14px', 
-            background: loading ? '#64748b' : C.gold, 
+            background: loading ? '#475569' : C.gold, 
             color: '#000',
             fontWeight: 'bold',
             borderRadius: '10px', 
@@ -76,7 +93,7 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
             transition: 'background 0.3s'
           }}
         >
-          {loading ? 'جاري الإعداد...' : 'حفظ وإنشاء الأكاديمية'}
+          {loading ? 'جاري الإنشاء...' : 'حفظ وإنشاء الأكاديمية'}
         </button>
       </form>
     </div>
