@@ -4,7 +4,6 @@ import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 import { Card } from "./components/UI";
 
-// التحميل الذكي (Lazy Loading) لضمان سرعة فائقة
 const LoginPage = lazy(() => import('./components/LoginPage.jsx'));
 const SignUpPage = lazy(() => import('./components/SignUpPage.jsx'));
 const CreateAcademy = lazy(() => import('./components/CreateAcademy.jsx'));
@@ -12,6 +11,8 @@ const Dashboard = lazy(() => import('./components/Dashboard.jsx'));
 const Students = lazy(() => import('./components/Students.jsx'));
 const Attendance = lazy(() => import('./components/Attendance.jsx'));
 const Payments = lazy(() => import('./components/Payments.jsx'));
+
+const SECURITY_CONFIG = { allowedHostSuffix: "vercel.app" };
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -22,17 +23,14 @@ export default function App() {
   const [showSignUp, setShowSignUp] = useState(false);
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
-  
-  // منطق ظهور القائمة (تظهر تلقائياً على الكمبيوتر، مخفية على الموبايل)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+
   const isMobile = windowWidth < 768;
 
-  // حفظ واسترجاع اللغة
   useEffect(() => {
     const savedLang = localStorage.getItem('i18nextLng') || 'ar';
     i18n.changeLanguage(savedLang);
     document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = savedLang;
   }, [i18n]);
 
   const toggleLanguage = () => {
@@ -40,7 +38,6 @@ export default function App() {
     i18n.changeLanguage(newLang);
     localStorage.setItem('i18nextLng', newLang);
     document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = newLang;
   };
 
   useEffect(() => {
@@ -79,10 +76,10 @@ export default function App() {
 
   useEffect(() => { if (session?.user?.id) loadAcademyData(session.user.id); }, [session, loadAcademyData]);
 
-  if (loading) return <div style={{ textAlign: 'center', marginTop: '20%' }}>{t('loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', marginTop: '20%', color: C.gold }}>{t('loading')}</div>;
 
   if (!session) return (
-    <Suspense fallback={<div>...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       {showSignUp ? <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} /> : <LoginPage onSwitchToSignUp={() => setShowSignUp(true)} />}
     </Suspense>
   );
@@ -90,33 +87,35 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row", direction: i18n.language === 'ar' ? "rtl" : "ltr" }}>
       
-      {/* زر التحكم في الموبايل */}
       {isMobile && (
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer', fontWeight: 'bold' }}>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer', textAlign: 'center' }}>
           {sidebarOpen ? '✕ إغلاق القائمة' : '☰ القائمة'}
         </button>
       )}
 
-      {/* Sidebar */}
       {(!isMobile || sidebarOpen) && (
-        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, height: isMobile ? "auto" : "100vh" }}>
-          <h2 style={{ color: C.gold }}>الحلقة الذكية</h2>
-          <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20 }}>
+          <h2 style={{ color: C.gold, marginBottom: 20 }}>الحلقة الذكية</h2>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {["dashboard", "students", "attendance", "payments"].map(tab => (
-              <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === tab ? C.gold : "transparent", padding: 12, border: 'none', cursor: 'pointer', textAlign: i18n.language === 'ar' ? 'right' : 'left' }}>
+              <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
+                style={{ 
+                  background: activeTab === tab ? C.gold : "transparent", 
+                  color: activeTab === tab ? "#000" : C.text,
+                  padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: i18n.language === 'ar' ? 'right' : 'left' 
+                }}>
                 {t(tab)}
               </button>
             ))}
           </nav>
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button onClick={toggleLanguage} style={{ padding: 10 }}>{i18n.language === 'ar' ? 'English' : 'العربية'}</button>
-            <button onClick={() => supabase.auth.signOut()} style={{ color: 'red', border: 'none', background: 'transparent' }}>{t('logout')}</button>
+          <div style={{ marginTop: 'auto', paddingTop: 20 }}>
+            <button onClick={toggleLanguage} style={{ width: '100%', padding: 10, marginBottom: 10 }}>{i18n.language === 'ar' ? 'English' : 'العربية'}</button>
+            <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', color: 'red', border: 'none', background: 'transparent' }}>{t('logout')}</button>
           </div>
         </aside>
       )}
 
-      {/* Main Content */}
-      <main style={{ flex: 1, padding: 24 }}>
+      <main style={{ flex: 1, padding: 24, overflowY: "auto" }}>
         <Suspense fallback={<div style={{ textAlign: 'center' }}>جاري التحميل...</div>}>
           {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
           {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} />}
