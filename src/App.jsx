@@ -106,11 +106,20 @@ export default function App() {
       )}
 
       <main style={{ flex: 1, padding: 24, width: '100%' }}>
-        {activeTab === "dashboard" && <Dashboard session={session} />}
-        {activeTab === "students" && <Students />}
-        {activeTab === "attendance" && <Attendance />}
-        {activeTab === "payments" && <Payments />}
-      </main>
+  {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
+  
+  {/* تأكد من تمرير البيانات هنا، وإلا ستكون القوائم فارغة! */}
+  {activeTab === "students" && (
+    <Students students={students} setStudents={setStudents} academyId={academyId} />
+  )}
+  {activeTab === "attendance" && (
+    <Attendance students={students} academyId={academyId} />
+  )}
+  {activeTab === "payments" && (
+    <Payments students={students} academyId={academyId} />
+  )}
+</main>
+
     </div>
   );
 }
