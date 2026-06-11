@@ -116,4 +116,10 @@ i18n
     },
   });
 
+// 2. "السحر" الاحترافي: تغيير الاتجاه تلقائياً عند تغيير اللغة
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.setAttribute('dir', lng === 'ar' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('lang', lng);
+});
+
 export default i18n;
