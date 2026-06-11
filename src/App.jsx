@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
-// استيراد المكونات
+// استيراد المكونات مباشرة لضمان الاستقرار
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -14,14 +14,12 @@ import Payments from './components/Payments.jsx';
 export default function App() {
   const { t, i18n } = useTranslation();
   
-  // حالات النظام
+  // States
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showSignUp, setShowSignUp] = useState(false);
-  
-  // بيانات الأكاديمية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
@@ -39,7 +37,7 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // إدارة الجلسة
+  // إدارة الجلسة (Auth)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -49,7 +47,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // تحميل بيانات الأكاديمية
+  // تحميل البيانات
   const loadAcademyData = useCallback(async (userId) => {
     try {
       const { data: staffData } = await supabase
@@ -72,17 +70,14 @@ export default function App() {
 
   useEffect(() => { if (session?.user?.id) loadAcademyData(session.user.id); }, [session, loadAcademyData]);
 
-  // شاشة التحميل
   if (loading) return <div style={{ textAlign: 'center', marginTop: '20%', color: C.gold }}>{t('loading')}</div>;
 
-  // شاشة الدخول
   if (!session) {
     return showSignUp ? 
       <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} /> : 
       <LoginPage onSwitchToSignUp={() => setShowSignUp(true)} />;
   }
 
-  // الواجهة الرئيسية
   return (
     <div style={{ 
       minHeight: "100vh", 
@@ -99,15 +94,15 @@ export default function App() {
         </button>
       )}
 
-      {/* Sidebar - القائمة الجانبية */}
+      {/* القائمة الجانبية */}
       {(!isMobile || sidebarOpen) && (
         <aside style={{ 
           width: isMobile ? "100%" : 260, 
           background: C.surface, 
           padding: 20, 
           flexShrink: 0,
-          borderLeft: i18n.language === 'ar' ? `1px solid ${C.border || '#333'}` : 'none',
-          borderRight: i18n.language === 'en' ? `1px solid ${C.border || '#333'}` : 'none'
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('welcome')}</h2>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -122,9 +117,22 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', paddingTop: 20, color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-            {t('logout')}
-          </button>
+
+          {/* تذييل القائمة */}
+          <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: `1px solid ${C.border || '#444'}` }}>
+            <button 
+              onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} 
+              style={{ 
+                width: '100%', padding: 10, marginBottom: 10, 
+                background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' 
+              }}>
+              {i18n.language === 'ar' ? 'English' : 'العربية'}
+            </button>
+            <button onClick={() => supabase.auth.signOut()} 
+              style={{ width: '100%', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              {t('logout')}
+            </button>
+          </div>
         </aside>
       )}
 
