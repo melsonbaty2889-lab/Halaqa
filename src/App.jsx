@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
-// استيراد المكونات مباشرة لضمان الاستقرار
+// استيراد المكونات
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -26,6 +26,11 @@ export default function App() {
 
   const isMobile = windowWidth < 768;
 
+  // تأثير لضبط اتجاه الصفحة بناءً على اللغة
+  useEffect(() => {
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
+
   // مراقبة حجم الشاشة
   useEffect(() => {
     const handleResize = () => {
@@ -37,7 +42,7 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // إدارة الجلسة (Auth)
+  // إدارة الجلسة
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
