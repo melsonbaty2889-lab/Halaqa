@@ -32,7 +32,7 @@ export default function App() {
 
   const isMobile = windowWidth < 768;
 
-  // دالة لجلب البيانات
+  // دالة جلب البيانات الاحترافية
   const loadAcademyData = useCallback(async (userId) => {
     try {
       const { data: staffData } = await supabase
@@ -49,18 +49,22 @@ export default function App() {
           .eq('academy_id', staffData.academies.id);
         setStudents(studentsData || []);
       }
-    } catch (err) { console.error("Data Load Error:", err); }
+    } catch (err) { 
+      console.error("Data Load Error:", err); 
+    }
   }, []);
 
+  // تأثير اتجاه الموقع (RTL/LTR)
   useEffect(() => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
+  // إدارة الأحداث والجلسة
   useEffect(() => {
     const handleResize = () => {
-      const width = window.innerWidth;
-      setWindowWidth(width);
-      setSidebarOpen(width > 768);
+      setWindowWidth(window.innerWidth);
+      setSidebarOpen(window.innerWidth > 768);
     };
     const handleHash = () => setIsRecovering(window.location.hash.includes('type=recovery'));
 
@@ -69,12 +73,14 @@ export default function App() {
     
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setTimeout(() => setLoading(false), 2000);
+      if (session?.user?.id) loadAcademyData(session.user.id);
+      setTimeout(() => setLoading(false), 1000);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
       setSession(s);
       if (s?.user?.id) loadAcademyData(s.user.id);
+      else setStudents([]);
     });
 
     return () => {
@@ -83,10 +89,6 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, [loadAcademyData]);
-
-  useEffect(() => {
-    if (session?.user?.id) loadAcademyData(session.user.id);
-  }, [session, loadAcademyData]);
 
   if (loading) return <SplashScreen />;
 
@@ -133,7 +135,7 @@ export default function App() {
         </aside>
       )}
 
-      <main style={{ flex: 1, padding: 24, width: '100%' }}>
+      <main style={{ flex: 1, padding: 24, width: '100%', overflowY: 'auto' }}>
         {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
         {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} />}
         {activeTab === "attendance" && <Attendance students={students} academyId={academyId} />}
