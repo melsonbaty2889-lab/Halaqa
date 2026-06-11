@@ -4,7 +4,7 @@ import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
 // استيراد المكونات
-import SplashScreen from './components/SplashScreen.jsx'; // استيراد شاشة الترحيب الجديدة
+import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -27,7 +27,7 @@ export default function App() {
 
   const isMobile = windowWidth < 768;
 
-  // تأثير لضبط اتجاه الصفحة بناءً على اللغة
+  // ضبط اتجاه الصفحة
   useEffect(() => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   }, [i18n.language]);
@@ -43,12 +43,21 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // إدارة الجلسة
+  // إدارة الجلسة مع "مدة عرض أدنى" للـ Splash Screen (1.5 ثانية)
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const minLoadingTime = new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const initializeApp = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      await minLoadingTime; // ضمان ظهور شاشة الترحيب لمدة 1.5 ثانية
       setSession(session);
       setLoading(false);
+    };
+
+    initializeApp();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setSession(session);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -70,21 +79,22 @@ export default function App() {
           .eq('academy_id', staffData.academies.id);
         setStudents(studentsData || []);
       }
-    } catch (err) { console.error("Data Load Error:", err); } 
-    finally { setLoading(false); }
+    } catch (err) { console.error("Data Load Error:", err); }
   }, []);
 
   useEffect(() => { if (session?.user?.id) loadAcademyData(session.user.id); }, [session, loadAcademyData]);
 
-  // استخدام شاشة الترحيب الاحترافية بدلاً من نص التحميل
+  // عرض شاشة الترحيب
   if (loading) return <SplashScreen />;
 
+  // عرض صفحات الدخول
   if (!session) {
     return showSignUp ? 
       <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} /> : 
       <LoginPage onSwitchToSignUp={() => setShowSignUp(true)} />;
   }
 
+  // الواجهة الرئيسية
   return (
     <div style={{ 
       minHeight: "100vh", 
@@ -94,56 +104,35 @@ export default function App() {
       flexDirection: isMobile ? "column" : "row", 
       direction: i18n.language === 'ar' ? "rtl" : "ltr" 
     }}>
-      {/* زر القائمة للموبايل */}
       {isMobile && (
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer', textAlign: 'center' }}>
-          {sidebarOpen ? '✕ إغلاق القائمة' : '☰ القائمة'}
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer' }}>
+          {sidebarOpen ? '✕' : '☰'}
         </button>
       )}
 
-      {/* القائمة الجانبية */}
       {(!isMobile || sidebarOpen) && (
-        <aside style={{ 
-          width: isMobile ? "100%" : 260, 
-          background: C.surface, 
-          padding: 20, 
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
+        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column' }}>
           <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('welcome')}</h2>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {["dashboard", "students", "attendance", "payments"].map(tab => (
               <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
-                style={{ 
-                  background: activeTab === tab ? C.gold : "transparent", 
-                  color: activeTab === tab ? "#000" : C.text,
-                  padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' 
-                }}>
+                style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
                 {t(tab)}
               </button>
             ))}
           </nav>
-
-          {/* تذييل القائمة */}
+          
           <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: `1px solid ${C.border || '#444'}` }}>
-            <button 
-              onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} 
-              style={{ 
-                width: '100%', padding: 10, marginBottom: 10, 
-                background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' 
-              }}>
+            <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ width: '100%', padding: 10, marginBottom: 10, background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' }}>
               {i18n.language === 'ar' ? 'English' : 'العربية'}
             </button>
-            <button onClick={() => supabase.auth.signOut()} 
-              style={{ width: '100%', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
               {t('logout')}
             </button>
           </div>
         </aside>
       )}
 
-      {/* المحتوى الرئيسي */}
       <main style={{ flex: 1, padding: 24, overflowY: "auto", width: '100%' }}>
         {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
         {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} />}
