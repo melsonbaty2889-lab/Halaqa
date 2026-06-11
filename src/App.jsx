@@ -4,6 +4,7 @@ import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
 // استيراد المكونات
+import SplashScreen from './components/SplashScreen.jsx'; // استيراد شاشة الترحيب الجديدة
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -75,7 +76,8 @@ export default function App() {
 
   useEffect(() => { if (session?.user?.id) loadAcademyData(session.user.id); }, [session, loadAcademyData]);
 
-  if (loading) return <div style={{ textAlign: 'center', marginTop: '20%', color: C.gold }}>{t('loading')}</div>;
+  // استخدام شاشة الترحيب الاحترافية بدلاً من نص التحميل
+  if (loading) return <SplashScreen />;
 
   if (!session) {
     return showSignUp ? 
