@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 
-export default function LoginPage({ onSwitchToSignUp }) {
+export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // دالة تسجيل الدخول التقليدي
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -31,7 +30,6 @@ export default function LoginPage({ onSwitchToSignUp }) {
     }
   };
 
-  // دالة تسجيل الدخول عبر جوجل
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
@@ -63,24 +61,28 @@ export default function LoginPage({ onSwitchToSignUp }) {
           </div>
         )}
 
-        {/* نموذج الدخول التقليدي */}
         <form onSubmit={handleLogin}>
           <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email')} style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', color: '#fff', boxSizing: 'border-box', marginBottom: '16px' }} />
-          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password')} style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', color: '#fff', boxSizing: 'border-box', marginBottom: '24px' }} />
+          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password')} style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', color: '#fff', boxSizing: 'border-box', marginBottom: '8px' }} />
           
+          {/* رابط نسيان كلمة المرور */}
+          <div style={{ textAlign: 'right', marginBottom: '24px' }}>
+            <button type="button" onClick={onSwitchToForgotPassword} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline' }}>
+              {t('forgotPassword?')}
+            </button>
+          </div>
+
           <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', backgroundColor: '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }}>
             {loading ? t('loading') : t('signIn')}
           </button>
         </form>
 
-        {/* فاصل بين الخيارين */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94a3b8', margin: '24px 0' }}>
           <hr style={{ flex: 1, border: '0', borderTop: '1px solid #475569' }} />
           {t('or')}
           <hr style={{ flex: 1, border: '0', borderTop: '1px solid #475569' }} />
         </div>
 
-        {/* زر جوجل */}
         <button type="button" onClick={handleGoogleLogin} style={{ width: '100%', padding: '14px', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
           <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" width="20" />
           {t('signInWithGoogle')}
