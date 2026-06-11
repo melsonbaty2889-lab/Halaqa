@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
@@ -17,6 +17,7 @@ import Payments from './components/Payments.jsx';
 export default function App() {
   const { t, i18n } = useTranslation();
   
+  // States للتحكم في العرض
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -25,10 +26,33 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [isRecovering, setIsRecovering] = useState(window.location.hash.includes('type=recovery'));
 
+  // States للبيانات
+  const [students, setStudents] = useState([]);
+  const [academyId, setAcademyId] = useState(null);
+
   const isMobile = windowWidth < 768;
 
+  // دالة لجلب البيانات
+  const loadAcademyData = useCallback(async (userId) => {
+    try {
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('academy_id, academies(id, name)')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (staffData?.academies) {
+        setAcademyId(staffData.academies.id);
+        const { data: studentsData } = await supabase
+          .from('students')
+          .select('*')
+          .eq('academy_id', staffData.academies.id);
+        setStudents(studentsData || []);
+      }
+    } catch (err) { console.error("Data Load Error:", err); }
+  }, []);
+
   useEffect(() => {
-    // تحديث اتجاه الموقع عند تغيير اللغة
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   }, [i18n.language]);
 
@@ -45,17 +69,24 @@ export default function App() {
     
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setTimeout(() => setLoading(false), 2000); // 2s للـ Splash
+      setTimeout(() => setLoading(false), 2000);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
+      setSession(s);
+      if (s?.user?.id) loadAcademyData(s.user.id);
+    });
 
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('hashchange', handleHash);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadAcademyData]);
+
+  useEffect(() => {
+    if (session?.user?.id) loadAcademyData(session.user.id);
+  }, [session, loadAcademyData]);
 
   if (loading) return <SplashScreen />;
 
@@ -89,10 +120,7 @@ export default function App() {
 
           <div style={{ marginTop: 'auto', marginBottom: '20px' }}>
             <button 
-              onClick={() => {
-                const newLang = i18n.language === 'ar' ? 'en' : 'ar';
-                i18n.changeLanguage(newLang);
-              }}
+              onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
               style={{ width: '100%', padding: 10, background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' }}
             >
               {i18n.language === 'ar' ? 'English' : 'العربية'}
@@ -106,20 +134,11 @@ export default function App() {
       )}
 
       <main style={{ flex: 1, padding: 24, width: '100%' }}>
-  {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
-  
-  {/* تأكد من تمرير البيانات هنا، وإلا ستكون القوائم فارغة! */}
-  {activeTab === "students" && (
-    <Students students={students} setStudents={setStudents} academyId={academyId} />
-  )}
-  {activeTab === "attendance" && (
-    <Attendance students={students} academyId={academyId} />
-  )}
-  {activeTab === "payments" && (
-    <Payments students={students} academyId={academyId} />
-  )}
-</main>
-
+        {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
+        {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} />}
+        {activeTab === "attendance" && <Attendance students={students} academyId={academyId} />}
+        {activeTab === "payments" && <Payments students={students} academyId={academyId} />}
+      </main>
     </div>
   );
 }
