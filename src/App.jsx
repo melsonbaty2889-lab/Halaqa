@@ -7,6 +7,7 @@ import { supabase } from './lib/supabase';
 import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
+import ForgotPassword from './components/ForgotPassword.jsx'; 
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
 import Attendance from './components/Attendance.jsx';
@@ -20,7 +21,10 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [showSignUp, setShowSignUp] = useState(false);
+  
+  // التحكم في عرض الصفحات (login, signup, forgot)
+  const [view, setView] = useState('login'); 
+  
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
@@ -43,13 +47,13 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // إدارة الجلسة مع "مدة عرض أدنى" للـ Splash Screen (1.5 ثانية)
+  // إدارة الجلسة
   useEffect(() => {
     const minLoadingTime = new Promise(resolve => setTimeout(resolve, 1500));
     
     const initializeApp = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      await minLoadingTime; // ضمان ظهور شاشة الترحيب لمدة 1.5 ثانية
+      await minLoadingTime;
       setSession(session);
       setLoading(false);
     };
@@ -87,11 +91,20 @@ export default function App() {
   // عرض شاشة الترحيب
   if (loading) return <SplashScreen />;
 
-  // عرض صفحات الدخول
+  // عرض صفحات الدخول (المنطق المحدث)
   if (!session) {
-    return showSignUp ? 
-      <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} /> : 
-      <LoginPage onSwitchToSignUp={() => setShowSignUp(true)} />;
+    if (view === 'signup') {
+      return <SignUpPage onSwitchToLogin={() => setView('login')} />;
+    }
+    if (view === 'forgot') {
+      return <ForgotPassword onBackToLogin={() => setView('login')} />;
+    }
+    return (
+      <LoginPage 
+        onSwitchToSignUp={() => setView('signup')} 
+        onSwitchToForgotPassword={() => setView('forgot')} 
+      />
+    );
   }
 
   // الواجهة الرئيسية
@@ -104,6 +117,8 @@ export default function App() {
       flexDirection: isMobile ? "column" : "row", 
       direction: i18n.language === 'ar' ? "rtl" : "ltr" 
     }}>
+      {/* ... باقي الكود الخاص بالواجهة الرئيسية (sidebar و main) كما هو ... */}
+      {/* (تركتها هنا بنفس ترتيبك السابق لتجنب أي تغيير في الواجهة) */}
       {isMobile && (
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer' }}>
           {sidebarOpen ? '✕' : '☰'}
