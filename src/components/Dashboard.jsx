@@ -49,31 +49,41 @@ export default function Dashboard({ session, setActiveTab }) {
   }, [session]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: C.text }}>{t('loading')}</div>;
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: C.text }}>
+        {t('loading')}...
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 30 }}>
+        {/* تم تحويل النصوص هنا لدالة t() */}
         <h1 style={{ color: C.gold, margin: 0 }}>{t('dashboard')}</h1>
-        <p style={{ color: C.text }}>{t('welcome')}, {data.name} - {data.academyName}</p>
+        <p style={{ color: C.text }}>
+          {t('welcome')}, {data.name} - {data.academyName}
+        </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
         {/* بطاقة الطلاب */}
-        <div style={{ background: C.surface, padding: 20, borderRadius: 12, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, padding: 20, borderRadius: 12, border: `1px solid ${C.border || '#444'}` }}>
           <h3>{t('students')}</h3>
           <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{data.stats.students}</p>
         </div>
 
         {/* بطاقة المدفوعات المعلقة */}
-        <div style={{ background: C.surface, padding: 20, borderRadius: 12, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, padding: 20, borderRadius: 12, border: `1px solid ${C.border || '#444'}` }}>
           <h3>{t('unpaid')}</h3>
           <p style={{ fontSize: '24px', fontWeight: 'bold', color: data.stats.pending > 0 ? 'red' : C.text }}>
             {data.stats.pending}
           </p>
           {data.stats.pending > 0 && (
-            <button onClick={() => setActiveTab('payments')} style={{ background: C.gold, border: 'none', padding: '5px 10px', borderRadius: 5, cursor: 'pointer' }}>
+            <button 
+              onClick={() => setActiveTab('payments')} 
+              style={{ background: C.gold, border: 'none', padding: '8px 15px', borderRadius: 5, cursor: 'pointer', fontWeight: 'bold' }}
+            >
               {t('review_now')}
             </button>
           )}
