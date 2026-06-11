@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
@@ -17,7 +17,6 @@ import Payments from './components/Payments.jsx';
 export default function App() {
   const { t, i18n } = useTranslation();
   
-  // States
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -28,7 +27,11 @@ export default function App() {
 
   const isMobile = windowWidth < 768;
 
-  // تأثيرات الحجم وتغير الرابط
+  useEffect(() => {
+    // تحديث اتجاه الموقع عند تغيير اللغة
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
+
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
@@ -36,29 +39,26 @@ export default function App() {
       setSidebarOpen(width > 768);
     };
     const handleHash = () => setIsRecovering(window.location.hash.includes('type=recovery'));
-    
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('hashchange', handleHash);
     
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setTimeout(() => setLoading(false), 2000); // 2s للـ Splash
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('hashchange', handleHash);
+      subscription.unsubscribe();
     };
-  }, []);
-
-  // إدارة الجلسة
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setTimeout(() => setLoading(false), 2000);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
-    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) return <SplashScreen />;
 
-  // منطق صفحات الدخول
   if (!session) {
     if (isRecovering) return <UpdatePassword />;
     if (view === 'signup') return <SignUpPage onSwitchToLogin={() => setView('login')} />;
@@ -66,50 +66,45 @@ export default function App() {
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
   }
 
-  // الواجهة الرئيسية مع القائمة الجانبية
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      background: C.bg, 
-      color: C.text, 
-      display: "flex", 
-      flexDirection: isMobile ? "column" : "row" 
-    }}>
-      {/* زر القائمة للموبايل */}
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row" }}>
       {isMobile && (
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, fontSize: '20px' }}>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, fontSize: '20px', cursor: 'pointer' }}>
           {sidebarOpen ? '✕' : '☰'}
         </button>
       )}
 
-      {/* القائمة الجانبية */}
       {(!isMobile || sidebarOpen) && (
-        <aside style={{ 
-          width: isMobile ? "100%" : 260, 
-          background: C.surface, 
-          padding: 20, 
-          display: 'flex', 
-          flexDirection: 'column',
-          position: isMobile ? 'absolute' : 'relative',
-          height: '100vh',
-          zIndex: 1000
-        }}>
-          <h2 style={{ color: C.gold }}>{t('menu')}</h2>
-          <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}>
+        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', position: isMobile ? 'absolute' : 'relative', height: '100vh', zIndex: 1000, boxShadow: isMobile ? '0 0 10px rgba(0,0,0,0.5)' : 'none' }}>
+          <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
+          
+          <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {["dashboard", "students", "attendance", "payments"].map(tab => (
               <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
-                style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', textAlign: 'start' }}>
+                style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
                 {t(tab)}
               </button>
             ))}
           </nav>
-          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', color: 'red', background: 'transparent', border: 'none' }}>
+
+          <div style={{ marginTop: 'auto', marginBottom: '20px' }}>
+            <button 
+              onClick={() => {
+                const newLang = i18n.language === 'ar' ? 'en' : 'ar';
+                i18n.changeLanguage(newLang);
+              }}
+              style={{ width: '100%', padding: 10, background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' }}
+            >
+              {i18n.language === 'ar' ? 'English' : 'العربية'}
+            </button>
+          </div>
+
+          <button onClick={() => supabase.auth.signOut()} style={{ color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
             {t('logout')}
           </button>
         </aside>
       )}
 
-      {/* المحتوى الرئيسي */}
       <main style={{ flex: 1, padding: 24, width: '100%' }}>
         {activeTab === "dashboard" && <Dashboard session={session} />}
         {activeTab === "students" && <Students />}
