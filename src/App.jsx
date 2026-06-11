@@ -27,7 +27,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
 
   const isMobile = windowWidth < 768;
-  // التحقق من وجود رابط استعادة كلمة المرور في عنوان المتصفح
+  
+  // فحص رابط الاستعادة عند تحميل التطبيق
   const isRecovery = window.location.hash.includes('type=recovery');
 
   useEffect(() => {
@@ -45,14 +46,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const minLoadingTime = new Promise(resolve => setTimeout(resolve, 1500));
     const initializeApp = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      await minLoadingTime;
       setSession(session);
       setLoading(false);
     };
     initializeApp();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setSession(session);
     });
@@ -61,10 +61,18 @@ export default function App() {
 
   const loadAcademyData = useCallback(async (userId) => {
     try {
-      const { data: staffData } = await supabase.from('staff').select('academy_id, academies(id, name)').eq('user_id', userId).maybeSingle();
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('academy_id, academies(id, name)')
+        .eq('user_id', userId)
+        .maybeSingle();
+
       if (staffData?.academies) {
         setAcademyId(staffData.academies.id);
-        const { data: studentsData } = await supabase.from('students').select('*').eq('academy_id', staffData.academies.id);
+        const { data: studentsData } = await supabase
+          .from('students')
+          .select('*')
+          .eq('academy_id', staffData.academies.id);
         setStudents(studentsData || []);
       }
     } catch (err) { console.error("Data Load Error:", err); }
@@ -74,7 +82,7 @@ export default function App() {
 
   if (loading) return <SplashScreen />;
 
-  // منطق عرض الصفحات المحدث
+  // منطق عرض الصفحات (Login, SignUp, Forgot, Update)
   if (!session) {
     if (isRecovery) return <UpdatePassword />;
     if (view === 'signup') return <SignUpPage onSwitchToLogin={() => setView('login')} />;
@@ -88,22 +96,34 @@ export default function App() {
     );
   }
 
-  // الواجهة الرئيسية (Sidebar + Main) - نفس كودك السابق
+  // الواجهة الرئيسية
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row", direction: i18n.language === 'ar' ? "rtl" : "ltr" }}>
-      {isMobile && <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer' }}>{sidebarOpen ? '✕' : '☰'}</button>}
-      
+      {isMobile && (
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer' }}>
+          {sidebarOpen ? '✕' : '☰'}
+        </button>
+      )}
+
       {(!isMobile || sidebarOpen) && (
         <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column' }}>
           <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('welcome')}</h2>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {["dashboard", "students", "attendance", "payments"].map(tab => (
-              <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>{t(tab)}</button>
+              <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
+                style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
+                {t(tab)}
+              </button>
             ))}
           </nav>
+          
           <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: `1px solid ${C.border || '#444'}` }}>
-            <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ width: '100%', padding: 10, marginBottom: 10, background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' }}>{i18n.language === 'ar' ? 'English' : 'العربية'}</button>
-            <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>{t('logout')}</button>
+            <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ width: '100%', padding: 10, marginBottom: 10, background: 'transparent', color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 8, cursor: 'pointer' }}>
+              {i18n.language === 'ar' ? 'English' : 'العربية'}
+            </button>
+            <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              {t('logout')}
+            </button>
           </div>
         </aside>
       )}
