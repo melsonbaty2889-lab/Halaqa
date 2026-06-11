@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginPage({ onSwitchToSignUp }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -10,7 +12,7 @@ export default function LoginPage({ onSwitchToSignUp }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      return setErrorMsg('برجاء إدخال البريد الإلكتروني وكلمة المرور');
+      return setErrorMsg(t('errorLoading')); // يمكنك تعديل النص ليكون أكثر تخصيصاً
     }
 
     try {
@@ -23,76 +25,114 @@ export default function LoginPage({ onSwitchToSignUp }) {
       });
 
       if (error) throw error;
-
-      // No need to call onLoginSuccess here.
-      // App.jsx already listens to onAuthStateChange and will get the session automatically.
       
     } catch (error) {
-      setErrorMsg(error.message || 'خطأ في بيانات تسجيل الدخول، تأكد من صحتها');
+      setErrorMsg(error.message || t('errorLoading'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#fff', direction: 'rtl', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
-      <div style={{ width: '100%', maxWidth: '400px', backgroundColor: '#1e293b', padding: '30px', borderRadius: '12px', border: '1px solid #334155', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+      padding: '20px', 
+      fontFamily: "'Cairo', sans-serif" 
+    }}>
+      <div style={{ 
+        width: '100%', 
+        maxWidth: '420px', 
+        backgroundColor: 'rgba(30, 41, 59, 0.7)', 
+        backdropFilter: 'blur(12px)',
+        padding: '40px', 
+        borderRadius: '24px', 
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' 
+      }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.8rem', color: '#fbbf24', margin: '0 0 8px 0', fontWeight: 'bold' }}>🔑 تسجيل دخول المعلم</h2>
-          <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>مرحباً بك مجدداً في نظام إدارة الحلقات السحابي</p>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '1.75rem', color: '#fbbf24', margin: '0 0 10px 0', fontWeight: '800' }}>{t('signIn')}</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>{t('welcome')}</p>
         </div>
 
         {errorMsg && (
-          <div style={{ backgroundColor: '#7f1d1d', color: '#fca5a5', padding: '10px', borderRadius: '6px', marginBottom: '16px', fontSize: '0.85rem', border: '1px solid #991b1b' }}>
+          <div style={{ 
+            backgroundColor: 'rgba(220, 38, 38, 0.2)', 
+            color: '#fca5a5', 
+            padding: '12px', 
+            borderRadius: '12px', 
+            marginBottom: '20px', 
+            fontSize: '0.85rem', 
+            textAlign: 'center',
+            border: '1px solid rgba(220, 38, 38, 0.3)'
+          }}>
             ⚠️ {errorMsg}
           </div>
         )}
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1', fontSize: '0.9rem' }}>البريد الإلكتروني المعتمد</label>
             <input
-              type="email"
-              required
-              value={email}
+              type="email" 
+              required 
+              value={email} 
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box', textAlign: 'left', direction: 'ltr' }}
-              placeholder="your-email@academy.com"
+              autoComplete="email"
+              style={{ 
+                width: '100%', padding: '14px', borderRadius: '14px', 
+                border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', 
+                color: '#fff', boxSizing: 'border-box' 
+              }}
+              placeholder={t('email')}
             />
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1', fontSize: '0.9rem' }}>كلمة المرور</label>
             <input
-              type="password"
-              required
-              value={password}
+              type="password" 
+              required 
+              value={password} 
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box', textAlign: 'left', direction: 'ltr' }}
-              placeholder="••••••••"
+              autoComplete="current-password"
+              style={{ 
+                width: '100%', padding: '14px', borderRadius: '14px', 
+                border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', 
+                color: '#fff', boxSizing: 'border-box' 
+              }}
+              placeholder={t('password')}
             />
           </div>
 
           <button
-            type="submit"
+            type="submit" 
             disabled={loading}
-            style={{ width: '100%', padding: '12px', backgroundColor: '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }}
+            style={{ 
+              width: '100%', padding: '14px', backgroundColor: '#fbbf24', color: '#0f172a', 
+              border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
+              transition: 'transform 0.1s, background 0.3s'
+            }}
+            onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
+            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
           >
-            {loading ? 'جاري التحقق والمزامنة... ⏳' : '🔓 دخول آمن للوحة التحكم'}
+            {loading ? t('loading') : t('signIn')}
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.9rem', color: '#94a3b8' }}>
-          ليس لديك حساب أكاديمية؟{' '}
+        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.9rem' }}>
           <button
             onClick={onSwitchToSignUp}
-            style={{ background: 'none', border: 'none', color: '#fbbf24', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontWeight: 'bold', fontFamily: 'inherit' }}
+            style={{ 
+              background: 'none', border: 'none', color: '#fbbf24', 
+              cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' 
+            }}
           >
-            تأسيس أكاديمية جديدة من هنا
+            {t('createAccount')}
           </button>
         </div>
-
       </div>
     </div>
   );
