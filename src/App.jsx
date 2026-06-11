@@ -17,38 +17,48 @@ import Payments from './components/Payments.jsx';
 export default function App() {
   const { t, i18n } = useTranslation();
   
-  const [loading, setLoading] = useState(true); // يتحكم في الـ Splash
+  // States
+  const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [view, setView] = useState('login'); 
-  
-  // حالة الـ Recovery المستقرة
+  const [view, setView] = useState('login');
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [isRecovering, setIsRecovering] = useState(window.location.hash.includes('type=recovery'));
 
-  // مراقبة الرابط في حال تغيره
+  const isMobile = windowWidth < 768;
+
+  // تأثيرات الحجم وتغير الرابط
   useEffect(() => {
-    const handleHashChange = () => setIsRecovering(window.location.hash.includes('type=recovery'));
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setWindowWidth(width);
+      setSidebarOpen(width > 768);
+    };
+    const handleHash = () => setIsRecovering(window.location.hash.includes('type=recovery'));
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('hashchange', handleHash);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('hashchange', handleHash);
+    };
   }, []);
 
-  // إدارة الجلسة والتحميل
+  // إدارة الجلسة
   useEffect(() => {
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      // تأخير بسيط لضمان عرض اللوجو
-      setTimeout(() => setLoading(false), 1500);
-    };
-    init();
-
+      setTimeout(() => setLoading(false), 2000);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
 
-  // شرط العرض الأساسي
   if (loading) return <SplashScreen />;
 
+  // منطق صفحات الدخول
   if (!session) {
     if (isRecovering) return <UpdatePassword />;
     if (view === 'signup') return <SignUpPage onSwitchToLogin={() => setView('login')} />;
@@ -56,13 +66,55 @@ export default function App() {
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
   }
 
-  // الواجهة الرئيسية (نفس كودك السابق)
+  // الواجهة الرئيسية مع القائمة الجانبية
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex" }}>
-      {/* ... (باقي الكود الخاص بالواجهة) ... */}
-      <main style={{ flex: 1, padding: 24 }}>
+    <div style={{ 
+      minHeight: "100vh", 
+      background: C.bg, 
+      color: C.text, 
+      display: "flex", 
+      flexDirection: isMobile ? "column" : "row" 
+    }}>
+      {/* زر القائمة للموبايل */}
+      {isMobile && (
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, fontSize: '20px' }}>
+          {sidebarOpen ? '✕' : '☰'}
+        </button>
+      )}
+
+      {/* القائمة الجانبية */}
+      {(!isMobile || sidebarOpen) && (
+        <aside style={{ 
+          width: isMobile ? "100%" : 260, 
+          background: C.surface, 
+          padding: 20, 
+          display: 'flex', 
+          flexDirection: 'column',
+          position: isMobile ? 'absolute' : 'relative',
+          height: '100vh',
+          zIndex: 1000
+        }}>
+          <h2 style={{ color: C.gold }}>{t('menu')}</h2>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}>
+            {["dashboard", "students", "attendance", "payments"].map(tab => (
+              <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
+                style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', textAlign: 'start' }}>
+                {t(tab)}
+              </button>
+            ))}
+          </nav>
+          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', color: 'red', background: 'transparent', border: 'none' }}>
+            {t('logout')}
+          </button>
+        </aside>
+      )}
+
+      {/* المحتوى الرئيسي */}
+      <main style={{ flex: 1, padding: 24, width: '100%' }}>
         {activeTab === "dashboard" && <Dashboard session={session} />}
-        {/* ... */}
+        {activeTab === "students" && <Students />}
+        {activeTab === "attendance" && <Attendance />}
+        {activeTab === "payments" && <Payments />}
       </main>
     </div>
   );
