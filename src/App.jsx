@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 
-// استيراد مباشر للمكونات (أكثر استقراراً)
+// استيراد المكونات
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -13,23 +13,33 @@ import Payments from './components/Payments.jsx';
 
 export default function App() {
   const { t, i18n } = useTranslation();
+  
+  // حالات النظام
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showSignUp, setShowSignUp] = useState(false);
+  
+  // بيانات الأكاديمية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
 
   const isMobile = windowWidth < 768;
 
+  // مراقبة حجم الشاشة
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setWindowWidth(width);
+      setSidebarOpen(width > 768);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // إدارة الجلسة
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -39,11 +49,12 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // تحميل بيانات الأكاديمية
   const loadAcademyData = useCallback(async (userId) => {
     try {
       const { data: staffData } = await supabase
         .from('staff')
-        .select('academy_id, name, academies(id, name)')
+        .select('academy_id, academies(id, name)')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -55,41 +66,70 @@ export default function App() {
           .eq('academy_id', staffData.academies.id);
         setStudents(studentsData || []);
       }
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+    } catch (err) { console.error("Data Load Error:", err); } 
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { if (session?.user?.id) loadAcademyData(session.user.id); }, [session, loadAcademyData]);
 
+  // شاشة التحميل
   if (loading) return <div style={{ textAlign: 'center', marginTop: '20%', color: C.gold }}>{t('loading')}</div>;
 
+  // شاشة الدخول
   if (!session) {
-    return showSignUp ? <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} /> : <LoginPage onSwitchToSignUp={() => setShowSignUp(true)} />;
+    return showSignUp ? 
+      <SignUpPage onSwitchToLogin={() => setShowSignUp(false)} /> : 
+      <LoginPage onSwitchToSignUp={() => setShowSignUp(true)} />;
   }
 
+  // الواجهة الرئيسية
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row", direction: i18n.language === 'ar' ? "rtl" : "ltr" }}>
+    <div style={{ 
+      minHeight: "100vh", 
+      background: C.bg, 
+      color: C.text, 
+      display: "flex", 
+      flexDirection: isMobile ? "column" : "row", 
+      direction: i18n.language === 'ar' ? "rtl" : "ltr" 
+    }}>
+      {/* زر القائمة للموبايل */}
       {isMobile && (
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer' }}>
-          {sidebarOpen ? '✕' : '☰'}
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, cursor: 'pointer', textAlign: 'center' }}>
+          {sidebarOpen ? '✕ إغلاق القائمة' : '☰ القائمة'}
         </button>
       )}
 
+      {/* Sidebar - القائمة الجانبية */}
       {(!isMobile || sidebarOpen) && (
-        <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20 }}>
-          <h2 style={{ color: C.gold }}>الحلقة الذكية</h2>
+        <aside style={{ 
+          width: isMobile ? "100%" : 260, 
+          background: C.surface, 
+          padding: 20, 
+          flexShrink: 0,
+          borderLeft: i18n.language === 'ar' ? `1px solid ${C.border || '#333'}` : 'none',
+          borderRight: i18n.language === 'en' ? `1px solid ${C.border || '#333'}` : 'none'
+        }}>
+          <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('welcome')}</h2>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {["dashboard", "students", "attendance", "payments"].map(tab => (
               <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
-                style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+                style={{ 
+                  background: activeTab === tab ? C.gold : "transparent", 
+                  color: activeTab === tab ? "#000" : C.text,
+                  padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' 
+                }}>
                 {t(tab)}
               </button>
             ))}
           </nav>
-          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 20, color: 'red', background: 'transparent', border: 'none' }}>{t('logout')}</button>
+          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', paddingTop: 20, color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            {t('logout')}
+          </button>
         </aside>
       )}
 
-      <main style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+      {/* المحتوى الرئيسي */}
+      <main style={{ flex: 1, padding: 24, overflowY: "auto", width: '100%' }}>
         {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
         {activeTab === "students" && <Students students={students} setStudents={setStudents} academyId={academyId} />}
         {activeTab === "attendance" && <Attendance students={students} academyId={academyId} />}
