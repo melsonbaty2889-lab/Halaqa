@@ -8,22 +8,19 @@ export default function Students({ students, setStudents }) {
   const { t } = useTranslation();
   const { academyId } = useAcademy();
   
-  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newStudent, setNewStudent] = useState({ name: "", parent_phone: "", countryCode: "+20" });
+  const [newStudent, setNewStudent] = useState({ 
+    name: "", phone: "", countryCode: "+20", payment_plan: "شهري" 
+  });
   const [loading, setLoading] = useState(false);
 
-  const filteredStudents = useMemo(() => {
-    if (!students || !academyId) return [];
-    return students.filter((s) => s.academy_id === academyId);
-  }, [students, academyId]);
+  const countries = ["+20", "+966", "+971", "+965", "+973", "+968", "+964"];
 
   const handleAdd = async () => {
-    if (!newStudent.name || !newStudent.parent_phone) return;
+    if (!newStudent.name || !newStudent.phone) return alert(t("يرجى ملء البيانات"));
     setLoading(true);
 
-    // المعالجة الذكية: إزالة الصفر من بداية الرقم لضمان التوافق العالمي
-    const cleanedPhone = newStudent.parent_phone.replace(/^0+/, ''); 
+    const cleanedPhone = newStudent.phone.replace(/^0+/, '');
 
     const { data, error } = await supabase
       .from("students")
@@ -31,68 +28,70 @@ export default function Students({ students, setStudents }) {
         name: newStudent.name, 
         parent_phone: cleanedPhone, 
         country_code: newStudent.countryCode, 
-        academy_id: academyId 
+        academy_id: academyId,
+        payment_plan: newStudent.payment_plan,
+        level_score: 0 // القيمة الافتراضية للمستوى
       }])
       .select();
     
-    if (!error) {
+    if (error) {
+      console.error(error);
+      alert("خطأ في الحفظ، تأكد من الاتصال");
+    } else {
       setStudents([...students, ...data]);
       setIsModalOpen(false);
-      setNewStudent({ name: "", parent_phone: "", countryCode: "+20" });
+      setNewStudent({ name: "", phone: "", countryCode: "+20", payment_plan: "شهري" });
     }
     setLoading(false);
   };
 
-  const sendWhatsApp = (student) => {
-    const code = student.country_code || "+20";
-    const phone = student.parent_phone.replace(/^0+/, '');
-    const url = `https://wa.me/${code}${phone}?text=${encodeURIComponent(t("hello_message"))}`;
-    window.open(url, '_blank');
-  };
-
   return (
-    <div style={{ padding: "20px", color: "#fff", direction: "rtl" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-        <h2>{t("students")}</h2>
-        <button onClick={() => setIsModalOpen(true)} style={{ background: C.gold, padding: "10px 20px", borderRadius: "10px", border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+    <div style={{ padding: "20px", color: "#fff", direction: "rtl", maxWidth: "800px", margin: "auto" }}>
+      {/* Header */}
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
+        <h2 style={{ color: C.gold }}>{t("students")}</h2>
+        <button onClick={() => setIsModalOpen(true)} style={{ background: C.gold, padding: "12px 24px", borderRadius: "12px", border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
           + {t("add_student")}
         </button>
       </header>
 
-      <div style={{ display: "grid", gap: "16px" }}>
-        {filteredStudents.map((student) => (
-          <div key={student.id} style={{ background: "#1e293b", padding: "16px", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* Student List */}
+      <div style={{ display: "grid", gap: "15px" }}>
+        {students.filter(s => s.academy_id === academyId).map((s) => (
+          <div key={s.id} style={{ background: "#1e293b", padding: "20px", borderRadius: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #334155" }}>
             <div>
-              <h3 style={{ margin: "0" }}>{student.name}</h3>
-              <p style={{ color: "#94a3b8", fontSize: "0.9em" }}>{student.country_code} {student.parent_phone}</p>
+              <h3 style={{ margin: "0 0 8px 0" }}>{s.name}</h3>
+              <div style={{ fontSize: "0.9em", color: "#94a3b8" }}>
+                📞 {s.country_code} {s.parent_phone} <br />
+                📋 {t("plan")}: {s.payment_plan} | ⭐ {t("level")}: {s.level_score}
+              </div>
             </div>
-            <button onClick={() => sendWhatsApp(student)} style={{ background: "#25D366", border: "none", padding: "10px", borderRadius: "8px", cursor: "pointer" }}>💬</button>
+            <button onClick={() => window.open(`https://wa.me/${s.country_code}${s.parent_phone}`, '_blank')} style={{ background: "#25D366", border: "none", padding: "12px", borderRadius: "10px", cursor: "pointer", fontSize: "1.2em" }}>💬</button>
           </div>
         ))}
       </div>
 
+      {/* Modal - Final Refined Version */}
       {isModalOpen && (
-        <div onClick={() => setIsModalOpen(false)} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#0f172a", padding: "20px", borderRadius: "15px", width: "90%", maxWidth: "300px" }}>
-            <h3 style={{ textAlign: "center", color: "#fff" }}>{t("add_student")}</h3>
+        <div onClick={() => setIsModalOpen(false)} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#0f172a", padding: "30px", borderRadius: "20px", width: "90%", maxWidth: "350px", display: "flex", flexDirection: "column", gap: "15px", border: "1px solid #1e293b" }}>
+            <h3 style={{ textAlign: "center", margin: "0 0 10px 0" }}>{t("إضافة طالب جديد")}</h3>
             
-            <div style={{ display: "flex", gap: "5px", marginBottom: "10px" }}>
-              <select onChange={(e) => setNewStudent({...newStudent, countryCode: e.target.value})} style={{ width: "80px", padding: "10px", borderRadius: "5px" }}>
-                <option value="+20">🇪🇬 +20</option>
-                <option value="+966">🇸🇦 +966</option>
-                <option value="+971">🇦🇪 +971</option>
+            <input placeholder={t("الاسم")} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})} style={{ padding: "12px", borderRadius: "10px", border: "none", background: "#1e293b", color: "#fff" }} />
+            
+            <div style={{ display: "flex", gap: "8px" }}>
+              <select onChange={(e) => setNewStudent({...newStudent, countryCode: e.target.value})} style={{ padding: "10px", borderRadius: "10px", background: "#1e293b", color: "#fff", border: "none" }}>
+                {countries.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <input placeholder={t("phone")} onChange={(e) => setNewStudent({...newStudent, parent_phone: e.target.value})} style={{ flex: 1, padding: "10px", borderRadius: "5px", border: "none" }} />
+              <input type="tel" placeholder={t("رقم الهاتف")} onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "#1e293b", color: "#fff" }} />
             </div>
-
-            <input placeholder={t("name")} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})} style={{ width: "100%", padding: "10px", marginBottom: "15px", borderRadius: "5px", border: "none", boxSizing: "border-box" }} />
             
-            <button onClick={handleAdd} disabled={loading} style={{ width: "100%", padding: "12px", background: C.gold, border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
-              {loading ? "..." : t("save")}
+            <input placeholder={t("الخطة (مثلاً: شهري)")} onChange={(e) => setNewStudent({...newStudent, payment_plan: e.target.value})} style={{ padding: "12px", borderRadius: "10px", border: "none", background: "#1e293b", color: "#fff" }} />
+            
+            <button onClick={handleAdd} disabled={loading} style={{ padding: "14px", background: C.gold, border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>
+              {loading ? "..." : t("حفظ")}
             </button>
-            <button onClick={() => setIsModalOpen(false)} style={{ width: "100%", padding: "10px", marginTop: "10px", background: "transparent", border: '1px solid #444', color: '#fff', borderRadius: '5px', cursor: 'pointer' }}>
-              {t("cancel")}
-            </button>
+            <button onClick={() => setIsModalOpen(false)} style={{ padding: "12px", background: "transparent", border: "1px solid #444", color: "#fff", borderRadius: "10px" }}>{t("إلغاء")}</button>
           </div>
         </div>
       )}
