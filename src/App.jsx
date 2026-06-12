@@ -2,11 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
-
-// استيراد الـ Context للربط العالمي
 import { AcademyProvider } from './context/AcademyContext';
 
-// استيراد المكونات
 import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
@@ -19,7 +16,6 @@ import Payments from './components/Payments.jsx';
 
 export default function App() {
   const { t, i18n } = useTranslation();
-  
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -27,9 +23,8 @@ export default function App() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [isRecovering, setIsRecovering] = useState(window.location.hash.includes('type=recovery'));
-
   const [students, setStudents] = useState([]);
-  const [academyId, setAcademyId] = useState(null); // هذا هو المفتاح العالمي
+  const [academyId, setAcademyId] = useState(null);
 
   const isMobile = windowWidth < 768;
 
@@ -49,23 +44,10 @@ export default function App() {
           .eq('academy_id', staffData.academies.id);
         setStudents(studentsData || []);
       }
-    } catch (err) { 
-      console.error("Data Load Error:", err); 
-    }
+    } catch (err) { console.error("Data Load Error:", err); }
   }, []);
 
-  // بقية الـ useEffect الخاصة بالأحداث والجلسة (لا تغيير فيها)
   useEffect(() => {
-    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
-  useEffect(() => {
-    const handleResize = () => { setWindowWidth(window.innerWidth); setSidebarOpen(window.innerWidth > 768); };
-    const handleHash = () => setIsRecovering(window.location.hash.includes('type=recovery'));
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('hashchange', handleHash);
-    
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user?.id) loadAcademyData(session.user.id);
@@ -77,12 +59,7 @@ export default function App() {
       if (s?.user?.id) loadAcademyData(s.user.id);
       else { setStudents([]); setAcademyId(null); }
     });
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('hashchange', handleHash);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [loadAcademyData]);
 
   if (loading) return <SplashScreen />;
@@ -94,15 +71,35 @@ export default function App() {
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
   }
 
-  // التعديل الجوهري: تمرير الـ academyId و setAcademyId للـ Context
   return (
     <AcademyProvider value={{ academyId, setAcademyId }}>
       <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row" }}>
-        {/* ... (Sidebar Code) ... */}
         
-        <main style={{ flex: 1, padding: 24, width: '100%', overflowY: 'auto' }}>
+        {/* زر التحكم في الموبايل */}
+        {isMobile && (
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, fontSize: '24px', cursor: 'pointer' }}>
+            {sidebarOpen ? '✕' : '☰'}
+          </button>
+        )}
+
+        {/* القائمة الجانبية (Sidebar) - تم تصحيح ظهورها هنا */}
+        {(!isMobile || sidebarOpen) && (
+          <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100vh', zIndex: 1000 }}>
+            <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
+            <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {["dashboard", "students", "attendance", "payments"].map(tab => (
+                <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
+                  style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
+                  {t(tab)}
+                </button>
+              ))}
+            </nav>
+            <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>{t('logout')}</button>
+          </aside>
+        )}
+        
+        <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
           {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
-          {/* تم إزالة academyId هنا لأن المكونات تجلبها من الـ Context مباشرة */}
           {activeTab === "students" && <Students students={students} setStudents={setStudents} />}
           {activeTab === "attendance" && <Attendance students={students} />}
           {activeTab === "payments" && <Payments students={students} />}
