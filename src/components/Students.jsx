@@ -22,7 +22,7 @@ export default function Students({ students, setStudents, academyId }) {
     if (!students) return [];
     return students.filter((student) => {
       if (student.academy_id !== academyId) return false;
-      if (student.is_archived) return false;
+    
       const name = student.name?.toLowerCase() || "";
       const phone = student.parent_phone || "";
       const term = searchTerm.toLowerCase();
