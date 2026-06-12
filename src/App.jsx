@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 import { AcademyProvider } from './context/AcademyContext';
@@ -11,18 +12,18 @@ import ForgotPassword from './components/ForgotPassword.jsx';
 import UpdatePassword from './components/UpdatePassword.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
+import StudentProfile from './components/StudentProfile.jsx'; // استيراد صفحة الطالب
 import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
 export default function App() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [view, setView] = useState('login');
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
-  const [isRecovering, setIsRecovering] = useState(window.location.hash.includes('type=recovery'));
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
 
@@ -65,7 +66,7 @@ export default function App() {
   if (loading) return <SplashScreen />;
 
   if (!session) {
-    if (isRecovering) return <UpdatePassword />;
+    if (window.location.hash.includes('type=recovery')) return <UpdatePassword />;
     if (view === 'signup') return <SignUpPage onSwitchToLogin={() => setView('login')} />;
     if (view === 'forgot') return <ForgotPassword onBackToLogin={() => setView('login')} />;
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
@@ -73,38 +74,43 @@ export default function App() {
 
   return (
     <AcademyProvider value={{ academyId, setAcademyId }}>
-      <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row" }}>
-        
-        {/* زر التحكم في الموبايل */}
-        {isMobile && (
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 15, background: C.surface, border: 'none', color: C.gold, fontSize: '24px', cursor: 'pointer' }}>
-            {sidebarOpen ? '✕' : '☰'}
-          </button>
-        )}
-
-        {/* القائمة الجانبية (Sidebar) - تم تصحيح ظهورها هنا */}
-        {(!isMobile || sidebarOpen) && (
-          <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100vh', zIndex: 1000 }}>
-            <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
-            <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {["dashboard", "students", "attendance", "payments"].map(tab => (
-                <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
-                  style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
-                  {t(tab)}
-                </button>
-              ))}
-            </nav>
-            <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>{t('logout')}</button>
-          </aside>
-        )}
-        
-        <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-          {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
-          {activeTab === "students" && <Students students={students} setStudents={setStudents} />}
-          {activeTab === "attendance" && <Attendance students={students} />}
-          {activeTab === "payments" && <Payments students={students} />}
-        </main>
-      </div>
+      <BrowserRouter>
+        <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row" }}>
+          
+          {/* القائمة الجانبية */}
+          {(!isMobile || sidebarOpen) && (
+            <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', zIndex: 1000 }}>
+              <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
+              <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {["dashboard", "students", "attendance", "payments"].map(tab => (
+                  <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
+                    style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
+                    {t(tab)}
+                  </button>
+                ))}
+              </nav>
+              <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>{t('logout')}</button>
+            </aside>
+          )}
+          
+          <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+            <Routes>
+              {/* تبويبات التطبيق الأساسية */}
+              <Route path="/" element={
+                <>
+                  {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
+                  {activeTab === "students" && <Students students={students} setStudents={setStudents} />}
+                  {activeTab === "attendance" && <Attendance students={students} />}
+                  {activeTab === "payments" && <Payments students={students} />}
+                </>
+              } />
+              
+              {/* صفحة الملف الشخصي للطالب */}
+              <Route path="/student/:id" element={<StudentProfile />} />
+            </Routes>
+          </main>
+        </div>
+      </BrowserRouter>
     </AcademyProvider>
   );
 }
