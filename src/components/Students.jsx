@@ -9,7 +9,7 @@ export default function Students({ students, setStudents }) {
   const { academyId } = useAcademy();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("active"); // الحالة الافتراضية: نشط
+  const [statusFilter, setStatusFilter] = useState("active");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newStudent, setNewStudent] = useState({ 
@@ -18,7 +18,6 @@ export default function Students({ students, setStudents }) {
 
   const countries = ["+20", "+966", "+971", "+965", "+973", "+968", "+964"];
 
-  // منطق الفلترة المدمج (البحث + الحالة)
   const filteredStudents = students.filter(s => 
     s.academy_id === academyId && 
     (statusFilter === "all" || s.status === statusFilter) &&
@@ -26,7 +25,12 @@ export default function Students({ students, setStudents }) {
   );
 
   const handleAdd = async () => {
-    if (!academyId) return alert(t("خطأ: لم يتم التعرف على الأكاديمية."));
+    // حل مشكلة الأكاديمية
+    if (!academyId) {
+      console.error("academyId is null!");
+      return alert(t("خطأ: لم يتم التعرف على الأكاديمية. أعد تسجيل الدخول."));
+    }
+
     if (!newStudent.name || !newStudent.phone) return alert(t("يرجى ملء البيانات"));
     
     setLoading(true);
@@ -43,10 +47,12 @@ export default function Students({ students, setStudents }) {
       .select();
     
     if (error) {
+      console.error(error);
       alert("خطأ: " + error.message);
     } else {
       setStudents(prev => [...prev, ...data]);
       setIsModalOpen(false);
+      setNewStudent({ name: "", phone: "", countryCode: "+20", payment_plan: "شهري", status: "active" });
     }
     setLoading(false);
   };
@@ -60,41 +66,37 @@ export default function Students({ students, setStudents }) {
         </button>
       </header>
 
-      {/* منطقة الفلترة والبحث */}
+      {/* شريط البحث والفلترة */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-        <input 
-          placeholder={t("بحث...")} 
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1px solid #334155", background: "#1e293b", color: "#fff" }}
-        />
-        <select onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: "10px", borderRadius: "12px", background: "#1e293b", color: "#fff", border: "1px solid #334155" }}>
+        <input placeholder={t("بحث...")} onChange={(e) => setSearchTerm(e.target.value)} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: "#1e293b", color: "#fff" }} />
+        <select onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: "10px", borderRadius: "12px", background: "#1e293b", color: "#fff", border: "none" }}>
           <option value="active">{t("النشطون")}</option>
           <option value="inactive">{t("غير النشطين")}</option>
           <option value="all">{t("الكل")}</option>
         </select>
       </div>
 
+      {/* قائمة الطلاب */}
       <div style={{ display: "grid", gap: "15px" }}>
         {filteredStudents.map((s) => (
           <div key={s.id} style={{ background: "#1e293b", padding: "20px", borderRadius: "16px", border: s.status === 'inactive' ? "1px solid #ef4444" : "1px solid #334155" }}>
-            <h3 style={{ margin: "0 0 5px 0" }}>{s.name} {s.status === 'inactive' && <span style={{color: '#ef4444', fontSize: '0.7em'}}>({t("غير نشط")})</span>}</h3>
-            <div style={{ fontSize: "0.9em", color: "#94a3b8" }}>
-              📞 {s.country_code} {s.parent_phone} | 📋 {s.payment_plan}
-            </div>
+            <h3 style={{ margin: "0 0 8px 0" }}>{s.name}</h3>
+            <div style={{ fontSize: "0.9em", color: "#94a3b8" }}>📞 {s.country_code} {s.parent_phone} | 📋 {s.payment_plan}</div>
           </div>
         ))}
       </div>
 
-      {/* Modal - تحديث الإضافة ليشمل الحالة */}
+      {/* المودال المصحح */}
       {isModalOpen && (
-        <div onClick={() => setIsModalOpen(false)} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
+        <div onClick={() => setIsModalOpen(false)} style={{ position: "fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.8)", display:"flex", justifyContent:"center", alignItems:"center", zIndex: 9999 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#0f172a", padding: "30px", borderRadius: "20px", width: "90%", maxWidth: "350px", display: "flex", flexDirection: "column", gap: "15px" }}>
-             {/* ... نفس حقول الإدخال السابقة، أضف حقل الحالة هنا أيضاً ... */}
-             <select onChange={(e) => setNewStudent({...newStudent, status: e.target.value})}>
-                <option value="active">{t("نشط")}</option>
-                <option value="inactive">{t("غير نشط")}</option>
-             </select>
-             <button onClick={handleAdd} style={{ padding: "14px", background: C.gold, border: 'none', borderRadius: '10px' }}>{t("حفظ")}</button>
+            <input placeholder={t("الاسم")} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})} style={{ padding: "12px", borderRadius: "10px", background: "#1e293b", border: "none", color: "#fff" }} />
+            <input placeholder={t("الهاتف")} onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})} style={{ padding: "12px", borderRadius: "10px", background: "#1e293b", border: "none", color: "#fff" }} />
+            <select onChange={(e) => setNewStudent({...newStudent, status: e.target.value})} style={{ padding: "12px", borderRadius: "10px", background: "#1e293b", color: "#fff" }}>
+              <option value="active">{t("نشط")}</option>
+              <option value="inactive">{t("غير نشط")}</option>
+            </select>
+            <button onClick={handleAdd} disabled={loading} style={{ padding: "12px", background: C.gold, borderRadius: "10px", border: "none", fontWeight: "bold" }}>{t("حفظ")}</button>
           </div>
         </div>
       )}
