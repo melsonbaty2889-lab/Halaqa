@@ -17,20 +17,20 @@ import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars, FaSignO
 
 export default function App() {
   const { i18n } = useTranslation();
-  const [loading, setLoading] = useState(true); // حالة التحميل الأساسية
+  const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [view, setView] = useState('login'); 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    // 1. التحقق من الجلسة فوراً عند تحميل التطبيق
+    // 1. جلب الجلسة الابتدائية
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false); // ننهي التحميل بمجرد معرفة حالة الجلسة
+      setLoading(false);
     });
 
-    // 2. الاستماع لتغييرات المصادقة
+    // 2. الاستماع لتغييرات المصادقة لمنع الومضات أو الشاشات السوداء
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
@@ -39,7 +39,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // منع ظهور الشاشة السوداء بضمان وجود المكونات دائماً
+  // ترتيب منطقي صارم: التحميل أولاً، ثم المصادقة، ثم التطبيق
   if (loading) return <SplashScreen />;
 
   if (!session) {
@@ -48,9 +48,22 @@ export default function App() {
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
   }
 
+  // دالة عرض المحتوى الآمنة
+  const renderTabContent = () => {
+    const commonProps = { session };
+    switch(activeTab) {
+      case 'dashboard': return <Dashboard {...commonProps} setActiveTab={setActiveTab} />;
+      case 'students': return <Students />;
+      case 'attendance': return <Attendance />;
+      case 'payments': return <Payments />;
+      default: return <Dashboard {...commonProps} setActiveTab={setActiveTab} />;
+    }
+  };
+
   return (
     <AcademyProvider value={{ academyId: null }}>
       <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, color: C.text }}>
+        {/* Sidebar */}
         <aside style={{ width: 260, background: C.surface, padding: '20px', borderRight: `1px solid ${C.border}`, display: window.innerWidth < 768 ? (sidebarOpen ? 'block' : 'none') : 'block', position: window.innerWidth < 768 ? 'fixed' : 'relative', height: '100vh', zIndex: 1000 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
             <h2 style={{ color: C.gold, margin: 0 }}>Smart Halaqa</h2>
@@ -71,19 +84,19 @@ export default function App() {
             ))}
           </nav>
 
-          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', background: 'transparent', border: '1px solid #EF4444', color: '#EF4444', padding: '10px', borderRadius: '8px', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', background: 'transparent', border: '1px solid #EF4444', color: '#EF4444', padding: '10px', borderRadius: '8px', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, position: 'absolute', bottom: 20, left: 20, right: 20 }}>
             <FaSignOutAlt /> Sign Out
           </button>
         </aside>
 
-        <main style={{ flex: 1, padding: 40, overflowY: 'auto' }}>
+        {/* Main Content */}
+        <main style={{ flex: 1, padding: 40, overflowY: 'auto', background: C.bg }}>
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display: window.innerWidth < 768 ? 'block' : 'none', background: 'none', border: 'none', color: '#fff', fontSize: 24, marginBottom: 20 }}><FaBars /></button>
           
-          {/* العرض المباشر للمكونات بدون تعقيد */}
-          {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} />}
-          {activeTab === 'students' && <Students />}
-          {activeTab === 'attendance' && <Attendance />}
-          {activeTab === 'payments' && <Payments />}
+          {/* حاوية للمحتوى تضمن عدم ظهور شاشة سوداء */}
+          <div style={{ minHeight: '200px' }}>
+            {renderTabContent()}
+          </div>
         </main>
       </div>
     </AcademyProvider>
