@@ -6,7 +6,6 @@ import { Card, PageHeader, TH, TD, Badge, Btn } from './UI';
 const DEFAULT_SUBSCRIPTION_AMOUNT = 150;
 
 export default function Payments({ students, academyId }) {
-  // كشف حجم الشاشة للتجاوب
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -86,7 +85,8 @@ export default function Payments({ students, academyId }) {
       <Card style={{ padding: 0, background: 'transparent', boxShadow: 'none' }}>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {students.map(s => {
+            {/* 🛡️ إضافة علامة الاستفهام لحماية كود الموبايل */}
+            {students?.map(s => {
               const rec = paymentsData[s.id];
               const isPaid = rec?.status === 'مدفوع';
               return (
@@ -109,7 +109,8 @@ export default function Payments({ students, academyId }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px' }}>
             <thead><tr><TH>اسم الطالب</TH><TH>الحالة</TH><TH>الإجراءات</TH></tr></thead>
             <tbody>
-              {students.map(s => {
+              {/* 🛡️ إضافة علامة الاستفهام لحماية كود الشاشات الكبيرة */}
+              {students?.map(s => {
                 const rec = paymentsData[s.id];
                 const isPaid = rec?.status === 'مدفوع';
                 return (
