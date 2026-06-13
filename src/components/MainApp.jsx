@@ -30,7 +30,7 @@ class LocalErrorBoundary extends React.Component {
             السبب: {this.state.error?.message || "خطأ غير معروف"}
           </p>
           <p style={{ fontSize: '13px', marginTop: '10px', color: '#E4DAC8', opacity: 0.8 }}>
-            تنبيه: لوحة التحكم شقالة بنجاح، لكن هذا الخطأ يقع في ملف القسم نفسه الذي حاولت فتحه.
+            تنبيه: لوحة التحكم شغالة بنجاح، لكن هذا الخطأ يقع في ملف القسم نفسه الذي حاولت فتحه.
           </p>
           <button onClick={() => this.setState({ hasError: false, error: null })} style={{ marginTop: '15px', padding: '8px 16px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
             إعادة المحاولة
@@ -94,12 +94,12 @@ export default function MainApp({ session }) {
 
     return (
       <div style={pageStyle}>
-        {/* نغلف محتوى التنقل داخل درع الحماية لحماية التطبيق من السواد */}
+        {/* نغلف محتوى التنقل داخل درع الحماية وتمرير البيانات للأقسام الثلاثة */}
         <LocalErrorBoundary key={activeTab}>
           {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} />}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
-          {activeTab === 'attendance' && <Attendance />}
-          {activeTab === 'payments' && <Payments />}
+          {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} />}
+          {activeTab === 'payments' && <Payments students={students} academyId={academyId} />}
         </LocalErrorBoundary>
       </div>
     );
