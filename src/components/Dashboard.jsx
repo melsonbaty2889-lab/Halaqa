@@ -9,6 +9,7 @@ export default function Dashboard({ session, setActiveTab }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ name: '', academyName: '', stats: { students: 0, pending: 0 } });
 
+  // استعادة المنطق الأصلي لجلب البيانات
   useEffect(() => {
     async function fetchData() {
       if (!session?.user?.id) return;
@@ -47,52 +48,46 @@ export default function Dashboard({ session, setActiveTab }) {
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: C.text }}>{t('loading')}...</div>;
 
   return (
-    <div style={{ padding: '24px', direction: 'rtl', maxWidth: '800px', margin: '0 auto' }}>
-      
-      {/* 1. الترحيب بلمسة شخصية */}
-      <div style={{ marginBottom: '40px' }}>
-        <p style={{ color: C.gold, fontSize: '0.9rem', marginBottom: '8px', opacity: 0.8 }}>{t('welcome_back')}</p>
-        <h1 style={{ color: '#fff', fontSize: '2rem', margin: 0 }}>{data.name}</h1>
-        <p style={{ color: '#94a3b8' }}>{data.academyName}</p>
+    <div style={{ padding: '24px', direction: 'ltr', maxWidth: '600px' }}>
+      {/* 1. الترحيب */}
+      <header style={{ marginBottom: '40px' }}>
+        <h1 style={{ color: '#fff', fontSize: '2rem', margin: 0 }}>Welcome Back, Director</h1>
+        <p style={{ color: C.gold, fontSize: '1.2rem' }}>{data.academyName}</p>
+      </header>
+
+      {/* 2. الإجراءات السريعة - بتنسيق Grid كما في الصورة */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '40px' }}>
+        <ActionButton label="Scan Attendance" color="#3b82f6" icon={<FaUserCheck />} onClick={() => setActiveTab('attendance')} />
+        <ActionButton label="Register Student" color="#10b981" icon={<FaUserGraduate />} onClick={() => setActiveTab('students')} />
       </div>
 
-      {/* 2. مركز العمليات السريع (Action Center) */}
-      <div style={{ marginBottom: '40px' }}>
-        <h3 style={{ color: '#fff', marginBottom: '15px', fontSize: '1rem' }}>{t("إجراءات سريعة")}</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          <ActionButton icon={<FaUserCheck />} label={t('attendance')} onClick={() => setActiveTab('attendance')} gradient="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" />
-          <ActionButton icon={<FaMoneyBillWave />} label={t('payments')} onClick={() => setActiveTab('payments')} gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)" />
-        </div>
-      </div>
-
-      {/* 3. بطاقات الإحصائيات (Metrics) */}
+      {/* 3. بطاقات الإحصائيات - بحدود جانبية ملونة */}
       <div style={{ display: 'grid', gap: '15px' }}>
-        <MetricCard icon={<FaUserGraduate />} label={t('students')} value={data.stats.students} color={C.gold} />
-        <MetricCard icon={<FaUserClock />} label={t('unpaid')} value={data.stats.pending} color="#ef4444" isAlert={data.stats.pending > 0} />
+        <MetricCard label="Total Students" value={data.stats.students} icon={<FaUserGraduate />} border={C.gold} />
+        <MetricCard label="Pending Payments" value={data.stats.pending} icon={<FaUserClock />} border={C.red} sub="Overdue payments" />
       </div>
     </div>
   );
 }
 
-// مكوّن مساعد للأزرار
-function ActionButton({ icon, label, onClick, gradient }) {
+// مكونات مساعدة بتصميم احترافي
+function ActionButton({ label, color, icon, onClick }) {
   return (
-    <button onClick={onClick} style={{ background: gradient, color: '#fff', padding: '15px', borderRadius: '16px', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
-      <div style={{ fontSize: '20px', marginBottom: '8px' }}>{icon}</div>
-      <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{label}</div>
+    <button onClick={onClick} style={{ background: color, border: 'none', borderRadius: 15, padding: '20px', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+      {icon} <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{label}</span>
     </button>
   );
 }
 
-// مكوّن مساعد للبطاقات
-function MetricCard({ icon, label, value, color, isAlert }) {
+function MetricCard({ label, value, border, icon, sub }) {
   return (
-    <div style={{ background: isAlert ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '20px', border: `1px solid ${isAlert ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.1)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ color: color }}>{icon}</div>
-        <span style={{ color: isAlert ? '#ef4444' : '#94a3b8' }}>{label}</span>
+    <div style={{ background: C.surface, padding: 25, borderRadius: 20, borderLeft: `6px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <p style={{ margin: 0, color: '#94a3b8' }}>{label}</p>
+        <h2 style={{ margin: '5px 0', fontSize: '1.8rem', color: '#fff' }}>{value}</h2>
+        {sub && <p style={{ color: C.red, fontSize: '0.8rem', margin: 0 }}>{sub}</p>}
       </div>
-      <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: isAlert ? '#ef4444' : '#fff' }}>{value}</span>
+      <div style={{ fontSize: 30, color: border }}>{icon}</div>
     </div>
   );
 }
