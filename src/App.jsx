@@ -6,15 +6,11 @@ import { supabase } from './lib/supabase';
 import { AcademyProvider } from './context/AcademyContext';
 import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars } from "react-icons/fa";
 
-// استيراد المكونات
+// استيراد المكونات التي كانت مفقودة
 import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
-import SignUpPage from './components/SignUpPage.jsx';
-import ForgotPassword from './components/ForgotPassword.jsx';
-import UpdatePassword from './components/UpdatePassword.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
-import StudentProfile from './components/StudentProfile.jsx';
 import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
@@ -28,24 +24,28 @@ export default function App() {
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
+    // منطق الـ Splash Screen
+    const timer = setTimeout(() => setLoading(false), 1500);
     
+    // التحقق من الجلسة
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
     });
 
-    return () => window.removeEventListener('resize', handleResize);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => { clearTimeout(timer); window.removeEventListener('resize', handleResize); };
   }, []);
 
+  // 1. شاشة التحميل (Splash)
   if (loading) return <SplashScreen />;
 
+  // 2. صفحة تسجيل الدخول (Login) في حال عدم وجود جلسة
   if (!session) {
-    if (window.location.hash.includes('type=recovery')) return <UpdatePassword />;
-    return <LoginPage />;
+    return <LoginPage onAuthSuccess={() => window.location.reload()} />;
   }
 
+  // 3. الواجهة الرئيسية
   return (
     <AcademyProvider value={{ academyId: null }}>
       <BrowserRouter>
