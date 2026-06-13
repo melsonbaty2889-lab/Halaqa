@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { supabase } from '../lib/supabase';
 import { FaSignOutAlt } from "react-icons/fa";
+// أضفنا Dashboard فقط
+import Dashboard from './Dashboard.jsx'; 
 
 export default function MainApp({ session }) {
-  // هذا الكود بسيط جداً لنختبر هل المشكلة في المكونات أم في التصميم
   return (
-    <div style={{ padding: '50px', color: 'white', background: '#0f172a', minHeight: '100vh' }}>
-      <h1>يعمل التطبيق!</h1>
-      <p>أنت مسجل دخولك بنجاح.</p>
-      <button onClick={() => supabase.auth.signOut()} style={{ padding: '10px', background: 'red', color: 'white' }}>
+    <div style={{ padding: '20px', color: 'white' }}>
+      <h1>Dashboard Test</h1>
+      <Dashboard session={session} />
+      <button onClick={() => supabase.auth.signOut()} style={{ marginTop: '20px', padding: '10px', background: 'red' }}>
         <FaSignOutAlt /> تسجيل الخروج
       </button>
     </div>
