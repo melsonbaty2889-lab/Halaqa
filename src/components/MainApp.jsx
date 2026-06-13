@@ -3,13 +3,15 @@ import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars, FaSignOutAlt } from "react-icons/fa";
+// 👈 أضفنا استيراد BrowserRouter هنا لتوفير البيئة المناسبة لعناصر الـ Link
+import { BrowserRouter } from 'react-router-dom'; 
 
 import Dashboard from './Dashboard.jsx';
 import Students from './Students.jsx';
 import Attendance from './Attendance.jsx';
 import Payments from './Payments.jsx';
 
-// 🛡️ درع الحماية الذكي: يمنع الشاشة السوداء نهائياً ويقبض على الأخطاء داخل الصفحات
+// 🛡️ درع الحماية الذكي
 class LocalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -94,7 +96,6 @@ export default function MainApp({ session }) {
 
     return (
       <div style={pageStyle}>
-        {/* نغلف محتوى التنقل داخل درع الحماية وتمرير البيانات للأقسام الثلاثة */}
         <LocalErrorBoundary key={activeTab}>
           {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} />}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
@@ -106,47 +107,50 @@ export default function MainApp({ session }) {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg }}>
-      {/* القائمة الجانبية */}
-      <aside style={{ 
-        width: 260, 
-        background: C.surface, 
-        height: '100vh', 
-        padding: '20px', 
-        display: sidebarOpen || window.innerWidth > 768 ? 'block' : 'none',
-        position: window.innerWidth <= 768 ? 'fixed' : 'relative',
-        zIndex: 2000,
-        boxShadow: C.shadow
-      }}>
-        <h2 style={{ color: C.gold, marginBottom: '20px' }}>Smart Halaqa</h2>
-        <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}>
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: <FaChartLine /> },
-            { id: 'students', label: 'Students', icon: <FaUsers /> },
-            { id: 'attendance', label: 'Attendance', icon: <FaCalendarCheck /> },
-            { id: 'payments', label: 'Payments', icon: <FaMoneyBillWave /> }
-          ].map(item => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-              style={{ background: activeTab === item.id ? C.gold : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', fontSize: '15px' }}>
-              {item.icon} {item.label}
-            </button>
-          ))}
-        </nav>
+    // 🛠️ قمنا بتغليف الهيكل كاملاً بـ BrowserRouter هنا لتغذية الروابط وعناصر الـ Link
+    <BrowserRouter>
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg }}>
+        {/* القائمة الجانبية */}
+        <aside style={{ 
+          width: 260, 
+          background: C.surface, 
+          height: '100vh', 
+          padding: '20px', 
+          display: sidebarOpen || window.innerWidth > 768 ? 'block' : 'none',
+          position: window.innerWidth <= 768 ? 'fixed' : 'relative',
+          zIndex: 2000,
+          boxShadow: C.shadow
+        }}>
+          <h2 style={{ color: C.gold, marginBottom: '20px' }}>Smart Halaqa</h2>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}>
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: <FaChartLine /> },
+              { id: 'students', label: 'Students', icon: <FaUsers /> },
+              { id: 'attendance', label: 'Attendance', icon: <FaCalendarCheck /> },
+              { id: 'payments', label: 'Payments', icon: <FaMoneyBillWave /> }
+            ].map(item => (
+              <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                style={{ background: activeTab === item.id ? C.gold : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', fontSize: '15px' }}>
+                {item.icon} {item.label}
+              </button>
+            ))}
+          </nav>
 
-        <button onClick={() => supabase.auth.signOut()} style={{ marginTop: '40px', background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
-          <FaSignOutAlt /> Sign Out
-        </button>
-      </aside>
-
-      {/* المحتوى الرئيسي */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '10px' }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
-            <FaBars size={20} />
+          <button onClick={() => supabase.auth.signOut()} style={{ marginTop: '40px', background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
+            <FaSignOutAlt /> Sign Out
           </button>
-        </div>
-        {renderContent()}
-      </main>
-    </div>
+        </aside>
+
+        {/* المحتوى الرئيسي */}
+        <main style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '10px' }}>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
+              <FaBars size={20} />
+            </button>
+          </div>
+          {renderContent()}
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
