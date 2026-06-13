@@ -6,7 +6,6 @@ import { supabase } from './lib/supabase';
 import { AcademyProvider } from './context/AcademyContext';
 import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars } from "react-icons/fa";
 
-// استيراد المكونات التي كانت مفقودة
 import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -15,7 +14,6 @@ import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
 export default function App() {
-  const { i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -24,33 +22,34 @@ export default function App() {
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
-    // منطق الـ Splash Screen
-    const timer = setTimeout(() => setLoading(false), 1500);
-    
-    // التحقق من الجلسة
+    // جلب الجلسة الابتدائية
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // الاستماع لأي تغيير في حالة الدخول
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
-    return () => { clearTimeout(timer); window.removeEventListener('resize', handleResize); };
+    
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
-  // 1. شاشة التحميل (Splash)
   if (loading) return <SplashScreen />;
 
-  // 2. صفحة تسجيل الدخول (Login) في حال عدم وجود جلسة
-  if (!session) {
-    return <LoginPage onAuthSuccess={() => window.location.reload()} />;
-  }
+  if (!session) return <LoginPage />;
 
-  // 3. الواجهة الرئيسية
   return (
     <AcademyProvider value={{ academyId: null }}>
       <BrowserRouter>
         <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, color: C.text }}>
-          {/* Sidebar */}
           <aside style={{ 
             width: 260, background: C.surface, padding: '30px 20px', borderRight: `1px solid ${C.border}`,
             display: isMobile ? (sidebarOpen ? 'block' : 'none') : 'block',
@@ -72,7 +71,6 @@ export default function App() {
             </nav>
           </aside>
 
-          {/* Main Content */}
           <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto' }}>
             {isMobile && <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', marginBottom: 20 }}><FaBars /></button>}
             <Routes>
