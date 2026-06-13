@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars, FaSignOutAlt } from "react-icons/fa";
-// 👈 أضفنا استيراد BrowserRouter هنا لتوفير البيئة المناسبة لعناصر الـ Link
 import { BrowserRouter } from 'react-router-dom'; 
 
 import Dashboard from './Dashboard.jsx';
@@ -45,7 +44,7 @@ class LocalErrorBoundary extends React.Component {
 }
 
 export default function MainApp({ session }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(); // دالة الترجمة المستدعاة
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -107,7 +106,6 @@ export default function MainApp({ session }) {
   };
 
   return (
-    // 🛠️ قمنا بتغليف الهيكل كاملاً بـ BrowserRouter هنا لتغذية الروابط وعناصر الـ Link
     <BrowserRouter>
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg }}>
         {/* القائمة الجانبية */}
@@ -124,20 +122,21 @@ export default function MainApp({ session }) {
           <h2 style={{ color: C.gold, marginBottom: '20px' }}>Smart Halaqa</h2>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}>
             {[
-              { id: 'dashboard', label: 'Dashboard', icon: <FaChartLine /> },
-              { id: 'students', label: 'Students', icon: <FaUsers /> },
-              { id: 'attendance', label: 'Attendance', icon: <FaCalendarCheck /> },
-              { id: 'payments', label: 'Payments', icon: <FaMoneyBillWave /> }
+              { id: 'dashboard', icon: <FaChartLine /> },
+              { id: 'students', icon: <FaUsers /> },
+              { id: 'attendance', icon: <FaCalendarCheck /> },
+              { id: 'payments', icon: <FaMoneyBillWave /> }
             ].map(item => (
               <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
                 style={{ background: activeTab === item.id ? C.gold : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', fontSize: '15px' }}>
-                {item.icon} {item.label}
+                {/* 👈 التعديل هنا: نمرر الـ id مباشرة داخل دالة الترجمة t */}
+                {item.icon} {t(item.id)}
               </button>
             ))}
           </nav>
 
           <button onClick={() => supabase.auth.signOut()} style={{ marginTop: '40px', background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
-            <FaSignOutAlt /> Sign Out
+            <FaSignOutAlt /> {t('sign_out')}
           </button>
         </aside>
 
