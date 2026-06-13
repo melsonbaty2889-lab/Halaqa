@@ -38,60 +38,61 @@ export default function Dashboard({ session, setActiveTab }) {
             stats: { students: studentCount || 0, pending: pendingCount || 0 }
           });
         }
-      } catch (err) {
-        console.error("Dashboard Error:", err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error("Dashboard Error:", err); }
+      finally { setLoading(false); }
     }
     fetchData();
   }, [session]);
 
-  if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: C.text }}>{t('loading')}...</div>;
-  }
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: C.text }}>{t('loading')}...</div>;
 
   return (
-    <div style={{ padding: 24, direction: 'rtl' }}>
-      {/* قسم الترحيب */}
-      <div style={{ marginBottom: 30 }}>
-        <h1 style={{ color: C.gold, margin: 0 }}>{t('dashboard')}</h1>
-        <p style={{ color: C.text }}>{t('welcome')}, {data.name} - {data.academyName}</p>
+    <div style={{ padding: '24px', direction: 'rtl', maxWidth: '800px', margin: '0 auto' }}>
+      
+      {/* 1. الترحيب بلمسة شخصية */}
+      <div style={{ marginBottom: '40px' }}>
+        <p style={{ color: C.gold, fontSize: '0.9rem', marginBottom: '8px', opacity: 0.8 }}>{t('welcome_back')}</p>
+        <h1 style={{ color: '#fff', fontSize: '2rem', margin: 0 }}>{data.name}</h1>
+        <p style={{ color: '#94a3b8' }}>{data.academyName}</p>
       </div>
 
-      {/* شريط الإجراءات السريعة */}
-      <div style={{ marginBottom: 30 }}>
-        <h3 style={{ color: C.text, marginBottom: 15, fontSize: '1.1rem' }}>{t("إجراءات سريعة")}</h3>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={() => setActiveTab('attendance')} style={{ background: '#3b82f6', color: '#fff', padding: '12px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-            <FaUserCheck /> {t('attendance')}
-          </button>
-          <button onClick={() => setActiveTab('payments')} style={{ background: '#10b981', color: '#fff', padding: '12px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-            <FaMoneyBillWave /> {t('payments')}
-          </button>
+      {/* 2. مركز العمليات السريع (Action Center) */}
+      <div style={{ marginBottom: '40px' }}>
+        <h3 style={{ color: '#fff', marginBottom: '15px', fontSize: '1rem' }}>{t("إجراءات سريعة")}</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <ActionButton icon={<FaUserCheck />} label={t('attendance')} onClick={() => setActiveTab('attendance')} gradient="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" />
+          <ActionButton icon={<FaMoneyBillWave />} label={t('payments')} onClick={() => setActiveTab('payments')} gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)" />
         </div>
       </div>
 
-      {/* بطاقات الإحصائيات */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20 }}>
-        {/* بطاقة الطلاب */}
-        <div style={{ background: C.surface, padding: 20, borderRadius: 16, borderRight: `5px solid ${C.gold}`, display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ fontSize: '30px', color: C.gold }}><FaUserGraduate /></div>
-          <div>
-            <h3 style={{ margin: 0 }}>{t('students')}</h3>
-            <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '5px 0 0 0' }}>{data.stats.students}</p>
-          </div>
-        </div>
-
-        {/* بطاقة المدفوعات المعلقة */}
-        <div style={{ background: C.surface, padding: 20, borderRadius: 16, borderRight: `5px solid ${data.stats.pending > 0 ? '#ef4444' : '#64748b'}`, display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ fontSize: '30px', color: data.stats.pending > 0 ? '#ef4444' : '#64748b' }}><FaUserClock /></div>
-          <div>
-            <h3 style={{ margin: 0 }}>{t('unpaid')}</h3>
-            <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '5px 0 0 0' }}>{data.stats.pending}</p>
-          </div>
-        </div>
+      {/* 3. بطاقات الإحصائيات (Metrics) */}
+      <div style={{ display: 'grid', gap: '15px' }}>
+        <MetricCard icon={<FaUserGraduate />} label={t('students')} value={data.stats.students} color={C.gold} />
+        <MetricCard icon={<FaUserClock />} label={t('unpaid')} value={data.stats.pending} color="#ef4444" isAlert={data.stats.pending > 0} />
       </div>
+    </div>
+  );
+}
+
+// مكوّن مساعد للأزرار
+function ActionButton({ icon, label, onClick, gradient }) {
+  return (
+    <button onClick={onClick} style={{ background: gradient, color: '#fff', padding: '15px', borderRadius: '16px', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+      <div style={{ fontSize: '20px', marginBottom: '8px' }}>{icon}</div>
+      <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{label}</div>
+    </button>
+  );
+}
+
+// مكوّن مساعد للبطاقات
+function MetricCard({ icon, label, value, color, isAlert }) {
+  return (
+    <div style={{ background: isAlert ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '20px', border: `1px solid ${isAlert ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.1)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ color: color }}>{icon}</div>
+        <span style={{ color: isAlert ? '#ef4444' : '#94a3b8' }}>{label}</span>
+      </div>
+      <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: isAlert ? '#ef4444' : '#fff' }}>{value}</span>
     </div>
   );
 }
