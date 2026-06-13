@@ -17,7 +17,7 @@ import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
 export default function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(); // تم إضافة i18n هنا
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -87,12 +87,20 @@ export default function App() {
       <BrowserRouter>
         <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row" }}>
           
-          {/* القائمة الجانبية */}
           {(!isMobile || sidebarOpen) && (
             <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', zIndex: 1000, height: isMobile ? 'auto' : '100vh' }}>
               {isMobile && (
                 <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '24px', alignSelf: 'flex-start', marginBottom: '10px' }}>✕</button>
               )}
+              
+              {/* زر تغيير اللغة الاحترافي */}
+              <button 
+                onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
+                style={{ background: 'rgba(255,255,255,0.1)', color: C.gold, border: `1px solid ${C.gold}`, padding: '8px', borderRadius: '8px', marginBottom: '20px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                {i18n.language === 'ar' ? 'English' : 'العربية'}
+              </button>
+
               <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
               <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {["dashboard", "students", "attendance", "payments"].map(tab => (
@@ -107,7 +115,6 @@ export default function App() {
           )}
           
           <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-            {/* زر الهمبرغر للموبايل */}
             {isMobile && !sidebarOpen && (
               <button onClick={() => setSidebarOpen(true)} style={{ background: C.gold, padding: "10px 15px", borderRadius: "8px", border: 'none', marginBottom: "20px", fontWeight: 'bold', cursor: 'pointer' }}>
                 ≡ {t('menu')}
