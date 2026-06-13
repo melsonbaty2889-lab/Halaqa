@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 import { AcademyProvider } from './context/AcademyContext';
@@ -12,7 +12,7 @@ import ForgotPassword from './components/ForgotPassword.jsx';
 import UpdatePassword from './components/UpdatePassword.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
-import StudentProfile from './components/StudentProfile.jsx'; // استيراد صفحة الطالب
+import StudentProfile from './components/StudentProfile.jsx';
 import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
@@ -28,6 +28,16 @@ export default function App() {
   const [academyId, setAcademyId] = useState(null);
 
   const isMobile = windowWidth < 768;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      if (window.innerWidth > 768) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadAcademyData = useCallback(async (userId) => {
     try {
@@ -79,7 +89,10 @@ export default function App() {
           
           {/* القائمة الجانبية */}
           {(!isMobile || sidebarOpen) && (
-            <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', zIndex: 1000 }}>
+            <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', zIndex: 1000, height: isMobile ? 'auto' : '100vh' }}>
+              {isMobile && (
+                <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '24px', alignSelf: 'flex-start', marginBottom: '10px' }}>✕</button>
+              )}
               <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
               <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {["dashboard", "students", "attendance", "payments"].map(tab => (
@@ -94,8 +107,14 @@ export default function App() {
           )}
           
           <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+            {/* زر الهمبرغر للموبايل */}
+            {isMobile && !sidebarOpen && (
+              <button onClick={() => setSidebarOpen(true)} style={{ background: C.gold, padding: "10px 15px", borderRadius: "8px", border: 'none', marginBottom: "20px", fontWeight: 'bold', cursor: 'pointer' }}>
+                ≡ {t('menu')}
+              </button>
+            )}
+
             <Routes>
-              {/* تبويبات التطبيق الأساسية */}
               <Route path="/" element={
                 <>
                   {activeTab === "dashboard" && <Dashboard session={session} setActiveTab={setActiveTab} />}
@@ -104,8 +123,6 @@ export default function App() {
                   {activeTab === "payments" && <Payments students={students} />}
                 </>
               } />
-              
-              {/* صفحة الملف الشخصي للطالب */}
               <Route path="/student/:id" element={<StudentProfile />} />
             </Routes>
           </main>
