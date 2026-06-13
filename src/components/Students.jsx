@@ -2,13 +2,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { useAcademy } from "../context/AcademyContext";
 import { C } from "../constants/colors";
 import { FaUserPlus, FaSearch, FaUserGraduate, FaPhoneAlt, FaTimes } from "react-icons/fa";
 
-export default function Students({ students, setStudents }) {
+// 🛠️ تم التحديث هنا لاستقبال الـ academyId مباشرة لمنع الشاشة السوداء
+export default function Students({ students, setStudents, academyId }) {
   const { t } = useTranslation();
-  const { academyId } = useAcademy();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
@@ -16,7 +15,8 @@ export default function Students({ students, setStudents }) {
   const [loading, setLoading] = useState(false);
   const [newStudent, setNewStudent] = useState({ name: "", phone: "" });
 
-  const filteredStudents = students.filter(s => 
+  // حماية الفلترة في حال كانت المصفوفة فارغة في البداية
+  const filteredStudents = (students || []).filter(s => 
     s.academy_id === academyId && 
     (statusFilter === "all" || s.status === statusFilter) &&
     (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.parent_phone.includes(searchTerm))
@@ -41,7 +41,6 @@ export default function Students({ students, setStudents }) {
   };
 
   return (
-    // التغيير هنا: الخلفية تأخذ C.bg والنص يأخذ C.text
     <div style={{ padding: "20px", color: C.text, direction: "rtl", maxWidth: "800px", margin: "auto", background: C.bg, minHeight: "100vh" }}>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
         <h2 style={{ color: C.gold, display: "flex", alignItems: "center", gap: "10px" }}>
@@ -67,7 +66,6 @@ export default function Students({ students, setStudents }) {
       <div style={{ display: "grid", gap: "15px" }}>
         {filteredStudents.map((s) => (
           <Link to={`/student/${s.id}`} key={s.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-            {/* الخلفية هنا أصبحت C.surface بدلاً من اللون الثابت */}
             <div style={{ background: C.surface, padding: "20px", borderRadius: "16px", borderRight: s.status === 'inactive' ? "5px solid #ef4444" : "5px solid " + C.gold, display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid " + C.border }}>
               <div>
                 <h3 style={{ margin: "0 0 8px 0" }}>{s.name}</h3>
