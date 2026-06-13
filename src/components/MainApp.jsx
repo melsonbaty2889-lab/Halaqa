@@ -15,23 +15,26 @@ export default function MainApp({ session }) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // دالة عرض آمنة: تضع كل مكون داخل حاوية بيضاء/رمادية لتجنب الشاشة السوداء
   const renderContent = () => {
+    const commonStyle = { padding: '20px', minHeight: '80vh', background: 'transparent' };
+    
     switch(activeTab) {
-      case 'dashboard': return <Dashboard session={session} setActiveTab={setActiveTab} />;
-      case 'students': return <Students />;
-      case 'attendance': return <Attendance />;
-      case 'payments': return <Payments />;
-      default: return <Dashboard session={session} setActiveTab={setActiveTab} />;
+      case 'dashboard': return <div style={commonStyle}><Dashboard session={session} setActiveTab={setActiveTab} /></div>;
+      case 'students': return <div style={commonStyle}><Students /></div>;
+      case 'attendance': return <div style={commonStyle}><Attendance /></div>;
+      case 'payments': return <div style={commonStyle}><Payments /></div>;
+      default: return <div style={commonStyle}><Dashboard session={session} setActiveTab={setActiveTab} /></div>;
     }
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, color: C.text }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: C.bg || '#0f172a', color: C.text || '#ffffff' }}>
       {/* Sidebar */}
-      <aside style={{ width: 260, background: C.surface, padding: '20px', borderRight: `1px solid ${C.border}`, display: window.innerWidth < 768 ? (sidebarOpen ? 'block' : 'none') : 'block', position: window.innerWidth < 768 ? 'fixed' : 'relative', height: '100vh', zIndex: 1000 }}>
+      <aside style={{ width: 260, background: C.surface || '#1e293b', padding: '20px', borderRight: `1px solid ${C.border || '#334155'}`, display: window.innerWidth < 768 ? (sidebarOpen ? 'block' : 'none') : 'block', position: window.innerWidth < 768 ? 'fixed' : 'relative', height: '100vh', zIndex: 1000 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
-          <h2 style={{ color: C.gold, margin: 0 }}>Smart Halaqa</h2>
-          <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ background: 'none', border: 'none', color: C.gold, cursor: 'pointer' }}><FaLanguage size={24} /></button>
+          <h2 style={{ color: C.gold || '#fbbf24', margin: 0 }}>Smart Halaqa</h2>
+          <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ background: 'none', border: 'none', color: C.gold || '#fbbf24', cursor: 'pointer' }}><FaLanguage size={24} /></button>
         </div>
         
         <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -42,7 +45,7 @@ export default function MainApp({ session }) {
             { id: 'payments', label: 'Payments', icon: <FaMoneyBillWave /> }
           ].map(item => (
             <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-              style={{ background: activeTab === item.id ? C.gold : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: 15, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 15, fontWeight: 'bold' }}>
+              style={{ background: activeTab === item.id ? (C.gold || '#fbbf24') : 'transparent', color: activeTab === item.id ? '#000' : (C.text || '#ffffff'), padding: 15, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 15, fontWeight: 'bold' }}>
               {item.icon} {item.label}
             </button>
           ))}
