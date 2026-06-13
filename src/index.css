@@ -1,15 +1,41 @@
 /* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
 
+/* تحسين رندرة الخطوط لتبدو أكثر حدة ونعومة */
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
   background-color: #0C1520;
   color: #E4DAC8;
   direction: rtl;
+  -webkit-font-smoothing: antialiased; /* تحسين مظهر الخطوط في المتصفحات */
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; /* لمنع ظهور شريط تمرير أفقي غير مقصود */
+}
+
+/* ضبط سلوك الصناديق لتجنب مشاكل الـ padding في الحسابات */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* إضافة تنسيق ناعم لشريط التمرير (ScrollBar) ليتناسب مع النمط المظلم */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0C1520;
+}
+::-webkit-scrollbar-thumb {
+  background: #162030;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C9A84C; /* لمسة ذهبية عند التمرير */
 }
