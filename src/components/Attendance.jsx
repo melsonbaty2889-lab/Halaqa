@@ -6,7 +6,6 @@ import { Card, PageHeader, Btn } from './UI';
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 export default function Attendance({ students, academyId }) {
-  // كشف الموبايل
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -43,7 +42,7 @@ export default function Attendance({ students, academyId }) {
   };
 
   const saveAttendance = async () => {
-    if (!academyId) return;
+    if (!academyId || !students) return;
     setBtnLoading(true);
     for (const s of students) {
       await supabase.rpc('upsert_attendance', {
@@ -69,7 +68,8 @@ export default function Attendance({ students, academyId }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {students.map(s => {
+        {/* 🛡️ إضافة علامة الاستفهام لحماية الخريطة التكرارية من الانهيار */}
+        {students?.map(s => {
           const status = attendanceData[s.id]?.status || 'غائب';
           return (
             <div key={s.id} style={{ 
