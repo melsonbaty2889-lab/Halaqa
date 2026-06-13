@@ -5,6 +5,10 @@ import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
 import { AcademyProvider } from './context/AcademyContext';
 
+// استيراد الأيقونات للتصميم الاحترافي
+import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave } from "react-icons/fa";
+
+// استيراد المكونات
 import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import SignUpPage from './components/SignUpPage.jsx';
@@ -17,28 +21,15 @@ import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
 
 export default function App() {
-  const { t, i18n } = useTranslation(); // تم إضافة i18n هنا
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [view, setView] = useState('login');
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
 
-  const isMobile = windowWidth < 768;
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-      if (window.innerWidth > 768) setSidebarOpen(true);
-      else setSidebarOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  // منطق تحميل بيانات الأكاديمية
   const loadAcademyData = useCallback(async (userId) => {
     try {
       const { data: staffData } = await supabase
@@ -58,6 +49,7 @@ export default function App() {
     } catch (err) { console.error("Data Load Error:", err); }
   }, []);
 
+  // التحقق من حالة الجلسة
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -75,6 +67,7 @@ export default function App() {
 
   if (loading) return <SplashScreen />;
 
+  // منطق صفحات المصادقة
   if (!session) {
     if (window.location.hash.includes('type=recovery')) return <UpdatePassword />;
     if (view === 'signup') return <SignUpPage onSwitchToLogin={() => setView('login')} />;
@@ -82,45 +75,37 @@ export default function App() {
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
   }
 
+  // الواجهة الرئيسية بعد تسجيل الدخول
   return (
     <AcademyProvider value={{ academyId, setAcademyId }}>
       <BrowserRouter>
-        <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", flexDirection: isMobile ? "column" : "row" }}>
+        <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, color: C.text, direction: 'ltr' }}>
           
-          {(!isMobile || sidebarOpen) && (
-            <aside style={{ width: isMobile ? "100%" : 260, background: C.surface, padding: 20, display: 'flex', flexDirection: 'column', zIndex: 1000, height: isMobile ? 'auto' : '100vh' }}>
-              {isMobile && (
-                <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '24px', alignSelf: 'flex-start', marginBottom: '10px' }}>✕</button>
-              )}
-              
-              {/* زر تغيير اللغة الاحترافي */}
-              <button 
-                onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
-                style={{ background: 'rgba(255,255,255,0.1)', color: C.gold, border: `1px solid ${C.gold}`, padding: '8px', borderRadius: '8px', marginBottom: '20px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                {i18n.language === 'ar' ? 'English' : 'العربية'}
-              </button>
+          {/* القائمة الجانبية الثابتة (Sidebar) */}
+          <aside style={{ width: 280, background: C.surface, padding: '30px 20px', borderRight: `1px solid ${C.border}` }}>
+            <h2 style={{ color: C.gold, marginBottom: 40 }}>Smart Halaqa</h2>
+            
+            <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { id: 'dashboard', label: 'Dashboard', icon: <FaChartLine /> },
+                { id: 'students', label: 'Students', icon: <FaUsers /> },
+                { id: 'attendance', label: 'Attendance', icon: <FaCalendarCheck /> },
+                { id: 'payments', label: 'Payments', icon: <FaMoneyBillWave /> }
+              ].map(item => (
+                <button key={item.id} onClick={() => setActiveTab(item.id)}
+                  style={{ background: activeTab === item.id ? C.gold : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: 15, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 15, fontWeight: 'bold' }}>
+                  {item.icon} {item.label}
+                </button>
+              ))}
+            </nav>
 
-              <h2 style={{ color: C.gold, marginBottom: 30 }}>{t('menu')}</h2>
-              <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {["dashboard", "students", "attendance", "payments"].map(tab => (
-                  <button key={tab} onClick={() => { setActiveTab(tab); if(isMobile) setSidebarOpen(false); }} 
-                    style={{ background: activeTab === tab ? C.gold : "transparent", color: activeTab === tab ? "#000" : C.text, padding: 12, borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'start' }}>
-                    {t(tab)}
-                  </button>
-                ))}
-              </nav>
-              <button onClick={() => supabase.auth.signOut()} style={{ marginTop: 'auto', color: 'red', background: 'transparent', border: 'none', cursor: 'pointer' }}>{t('logout')}</button>
-            </aside>
-          )}
-          
-          <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-            {isMobile && !sidebarOpen && (
-              <button onClick={() => setSidebarOpen(true)} style={{ background: C.gold, padding: "10px 15px", borderRadius: "8px", border: 'none', marginBottom: "20px", fontWeight: 'bold', cursor: 'pointer' }}>
-                ≡ {t('menu')}
-              </button>
-            )}
+            <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ marginTop: 'auto', background: 'transparent', border: `1px solid ${C.gold}`, color: C.gold, padding: 10, borderRadius: 8, cursor: 'pointer' }}>
+              {i18n.language === 'ar' ? 'English' : 'العربية'}
+            </button>
+          </aside>
 
+          {/* المحتوى الرئيسي */}
+          <main style={{ flex: 1, padding: 40, overflowY: 'auto' }}>
             <Routes>
               <Route path="/" element={
                 <>
