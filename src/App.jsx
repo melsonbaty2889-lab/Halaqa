@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from './lib/supabase';
 import { C } from './constants/colors';
 import { AcademyProvider } from './context/AcademyContext';
+import { useTranslation } from 'react-i18next'; // إضافة دعم الترجمة
 
 // استيراد المكونات
 import SplashScreen from './components/SplashScreen.jsx';
@@ -12,9 +13,10 @@ import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
 import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
-import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars } from "react-icons/fa";
+import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars, FaSignOutAlt, FaLanguage } from "react-icons/fa";
 
 export default function App() {
+  const { i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [view, setView] = useState('login'); 
@@ -23,14 +25,14 @@ export default function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setSession(session);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSession(session));
     return () => { clearTimeout(timer); subscription.unsubscribe(); };
   }, []);
+
+  const handleLogout = async () => await supabase.auth.signOut();
+
+  const toggleLanguage = () => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
 
   if (loading) return <SplashScreen />;
 
@@ -40,7 +42,6 @@ export default function App() {
     return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
   }
 
-  // دالة اختيار المكون (بدل استخدام Routes المسببة للشاشة السوداء)
   const renderContent = () => {
     switch(activeTab) {
       case 'dashboard': return <Dashboard session={session} setActiveTab={setActiveTab} />;
@@ -54,12 +55,12 @@ export default function App() {
   return (
     <AcademyProvider value={{ academyId: null }}>
       <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, color: C.text }}>
-        <aside style={{ 
-          width: 260, background: C.surface, borderRight: `1px solid ${C.border}`,
-          display: window.innerWidth < 768 ? (sidebarOpen ? 'block' : 'none') : 'block',
-          position: window.innerWidth < 768 ? 'fixed' : 'relative', height: '100vh', zIndex: 1000, padding: '20px'
-        }}>
-          <h2 style={{ color: C.gold, marginBottom: 40 }}>Smart Halaqa</h2>
+        <aside style={{ width: 260, background: C.surface, padding: '20px', borderRight: `1px solid ${C.border}`, display: window.innerWidth < 768 ? (sidebarOpen ? 'block' : 'none') : 'block', position: window.innerWidth < 768 ? 'fixed' : 'relative', height: '100vh', zIndex: 1000 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
+            <h2 style={{ color: C.gold, margin: 0 }}>Smart Halaqa</h2>
+            <button onClick={toggleLanguage} style={{ background: 'none', border: 'none', color: C.gold, cursor: 'pointer' }}><FaLanguage size={24} /></button>
+          </div>
+          
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
               { id: 'dashboard', label: 'Dashboard', icon: <FaChartLine /> },
@@ -73,6 +74,10 @@ export default function App() {
               </button>
             ))}
           </nav>
+
+          <button onClick={handleLogout} style={{ marginTop: 'auto', background: 'transparent', border: '1px solid #EF4444', color: '#EF4444', padding: '10px', borderRadius: '8px', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <FaSignOutAlt /> Sign Out
+          </button>
         </aside>
 
         <main style={{ flex: 1, padding: 40, overflowY: 'auto' }}>
