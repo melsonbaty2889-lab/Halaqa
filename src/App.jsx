@@ -1,59 +1,61 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { C } from './constants/colors';
 import { supabase } from './lib/supabase';
+import { C } from './constants/colors';
 import { AcademyProvider } from './context/AcademyContext';
-import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars } from "react-icons/fa";
 
+// استيراد المكونات
 import SplashScreen from './components/SplashScreen.jsx';
 import LoginPage from './components/LoginPage.jsx';
+import SignUpPage from './components/SignUpPage.jsx';
+import ForgotPassword from './components/ForgotPassword.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Students from './components/Students.jsx';
 import Attendance from './components/Attendance.jsx';
 import Payments from './components/Payments.jsx';
+import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars } from "react-icons/fa";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
+  const [view, setView] = useState('login'); // للتحكم في صفحات Auth
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [students, setStudents] = useState([]);
 
   useEffect(() => {
-    // جلب الجلسة الابتدائية
+    // 1. منطق الـ Splash Screen: نضمن بقاءها لمدة 2 ثانية على الأقل
+    const timer = setTimeout(() => setLoading(false), 2000);
+
+    // 2. التحقق من الجلسة
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
     });
 
-    // الاستماع لأي تغيير في حالة الدخول
+    // 3. الاستماع لأي تغيير في حالة الدخول
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      subscription.unsubscribe();
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => { clearTimeout(timer); subscription.unsubscribe(); };
   }, []);
 
+  // ترتيب العرض (هذا هو المفتاح)
   if (loading) return <SplashScreen />;
 
-  if (!session) return <LoginPage />;
+  if (!session) {
+    if (view === 'signup') return <SignUpPage onSwitchToLogin={() => setView('login')} />;
+    if (view === 'forgot') return <ForgotPassword onSwitchToLogin={() => setView('login')} />;
+    return <LoginPage onSwitchToSignUp={() => setView('signup')} onSwitchToForgotPassword={() => setView('forgot')} />;
+  }
 
   return (
     <AcademyProvider value={{ academyId: null }}>
       <BrowserRouter>
         <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, color: C.text }}>
           <aside style={{ 
-            width: 260, background: C.surface, padding: '30px 20px', borderRight: `1px solid ${C.border}`,
-            display: isMobile ? (sidebarOpen ? 'block' : 'none') : 'block',
-            position: isMobile ? 'fixed' : 'relative', height: '100vh', zIndex: 1000
+            width: 260, background: C.surface, borderRight: `1px solid ${C.border}`,
+            display: window.innerWidth < 768 ? (sidebarOpen ? 'block' : 'none') : 'block',
+            position: window.innerWidth < 768 ? 'fixed' : 'relative', height: '100vh', zIndex: 1000, padding: '20px'
           }}>
             <h2 style={{ color: C.gold, marginBottom: 40 }}>Smart Halaqa</h2>
             <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -71,13 +73,13 @@ export default function App() {
             </nav>
           </aside>
 
-          <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto' }}>
-            {isMobile && <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', marginBottom: 20 }}><FaBars /></button>}
+          <main style={{ flex: 1, padding: 40, overflowY: 'auto' }}>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display: window.innerWidth < 768 ? 'block' : 'none', background: 'none', border: 'none', color: '#fff', fontSize: 24, marginBottom: 20 }}><FaBars /></button>
             <Routes>
               <Route path="/" element={
                  activeTab === "dashboard" ? <Dashboard session={session} setActiveTab={setActiveTab} /> :
-                 activeTab === "students" ? <Students students={students} setStudents={setStudents} /> :
-                 activeTab === "attendance" ? <Attendance students={students} /> : <Payments students={students} />
+                 activeTab === "students" ? <Students /> :
+                 activeTab === "attendance" ? <Attendance /> : <Payments />
               } />
             </Routes>
           </main>
