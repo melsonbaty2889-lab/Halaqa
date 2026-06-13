@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { FaGoogle, FaEnvelope, FaLock } from 'react-icons/fa';
 
 export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }) {
   const { t } = useTranslation();
@@ -11,22 +12,19 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      return setErrorMsg(t('errorLoading')); 
-    }
+    setLoading(true);
+    setErrorMsg('');
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password.trim(),
+    });
 
-    try {
-      setLoading(true);
-      setErrorMsg('');
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
-      });
-      if (error) throw error;
-    } catch (error) {
+    if (error) {
       setErrorMsg(error.message);
-    } finally {
       setLoading(false);
+    } else {
+      window.location.reload(); // إعادة تحميل لمزامنة الحالة
     }
   };
 
@@ -35,9 +33,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: 'https://smart-halaqa.vercel.app/dashboard', 
-        },
+        options: { redirectTo: window.location.origin },
       });
       if (error) throw error;
     } catch (error) {
@@ -47,49 +43,52 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
-      <div style={{ width: '100%', maxWidth: '420px', backgroundColor: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(12px)', padding: '40px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+      <div style={{ width: '100%', maxWidth: '400px', background: '#111C2A', padding: '40px', borderRadius: '24px', border: '1px solid rgba(201,168,76,0.15)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.75rem', color: '#fbbf24', margin: '0 0 10px 0', fontWeight: '800' }}>{t('signIn')}</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>{t('welcome')}</p>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h2 style={{ color: '#C9A84C', fontSize: '1.8rem', margin: '0 0 10px 0' }}>{t('signIn')}</h2>
+          <p style={{ color: '#94a3b8' }}>{t('welcome')}</p>
         </div>
 
         {errorMsg && (
-          <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', padding: '12px', borderRadius: '12px', marginBottom: '20px', fontSize: '0.85rem', textAlign: 'center', border: '1px solid rgba(220, 38, 38, 0.3)' }}>
-            ⚠️ {errorMsg}
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '10px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.85rem', textAlign: 'center' }}>
+            {errorMsg}
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email')} style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', color: '#fff', boxSizing: 'border-box', marginBottom: '16px' }} />
-          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password')} style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #475569', backgroundColor: 'rgba(15, 23, 42, 0.5)', color: '#fff', boxSizing: 'border-box', marginBottom: '8px' }} />
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <div style={{ position: 'relative' }}>
+            <FaEnvelope style={{ position: 'absolute', right: '15px', top: '15px', color: '#64748b' }} />
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email')} style={{ width: '100%', padding: '14px 40px 14px 14px', borderRadius: '12px', border: '1px solid #334155', background: '#162030', color: '#fff', boxSizing: 'border-box' }} />
+          </div>
           
-          {/* رابط نسيان كلمة المرور */}
-          <div style={{ textAlign: 'right', marginBottom: '24px' }}>
-            <button type="button" onClick={onSwitchToForgotPassword} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline' }}>
-              {t('forgotPassword?')}
-            </button>
+          <div style={{ position: 'relative' }}>
+            <FaLock style={{ position: 'absolute', right: '15px', top: '15px', color: '#64748b' }} />
+            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password')} style={{ width: '100%', padding: '14px 40px 14px 14px', borderRadius: '12px', border: '1px solid #334155', background: '#162030', color: '#fff', boxSizing: 'border-box' }} />
           </div>
 
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', backgroundColor: '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }}>
+          <button type="button" onClick={onSwitchToForgotPassword} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', alignSelf: 'flex-start' }}>
+            {t('forgotPassword?')}
+          </button>
+
+          <button type="submit" disabled={loading} style={{ padding: '14px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
             {loading ? t('loading') : t('signIn')}
           </button>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94a3b8', margin: '24px 0' }}>
-          <hr style={{ flex: 1, border: '0', borderTop: '1px solid #475569' }} />
+        <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0', gap: '10px', color: '#64748b', fontSize: '0.9rem' }}>
+          <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
           {t('or')}
-          <hr style={{ flex: 1, border: '0', borderTop: '1px solid #475569' }} />
+          <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
         </div>
 
-        <button type="button" onClick={handleGoogleLogin} style={{ width: '100%', padding: '14px', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" width="20" />
-          {t('signInWithGoogle')}
+        <button onClick={handleGoogleLogin} style={{ width: '100%', padding: '14px', background: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
+          <FaGoogle color="#DB4437" /> {t('signInWithGoogle')}
         </button>
 
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <button onClick={onSwitchToSignUp} style={{ background: 'none', border: 'none', color: '#fbbf24', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}>
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <button onClick={onSwitchToSignUp} style={{ background: 'none', border: 'none', color: '#C9A84C', cursor: 'pointer', fontWeight: '600' }}>
             {t('createAccount')}
           </button>
         </div>
