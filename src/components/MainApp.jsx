@@ -19,7 +19,7 @@ export default function MainApp({ session }) {
   const renderContent = () => {
     // نستخدم خلفية محددة لكل صفحة لمنع الشاشة السوداء
     const pageStyle = {
-      background: C.bg, // لون الهوية الأساسي
+      backgroundColor: '#111C2A', // لون الهوية الأساسي
       minHeight: '100vh',
       padding: '20px',
       color: C.text,
