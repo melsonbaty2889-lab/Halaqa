@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-import { FaUserPlus, FaSearch, FaUserGrad, FaPhone, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+// تـم اسـتبدال FaUserGrad بـ FaGraduationCap لضمان قبول البناء في Vercel
+import { FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-// نقوم بوضع قيم افتراضية لضمان عدم حدوث أي خطأ destructure أو خطأ map
 export default function Students({ students = [], setStudents, academyId }) {
   const { t } = useTranslation();
   
@@ -78,7 +78,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       {/* القسم العلوي: العنوان وزر الإضافة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
         <h2 style={{ color: C.gold, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <FaUserGrad /> {t('students') || 'إدارة الطلاب'}
+          <FaGraduationCap /> {t('students') || 'إدارة الطلاب'}
         </h2>
         
         <button 
