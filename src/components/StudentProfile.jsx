@@ -16,7 +16,7 @@ export default function StudentProfile() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // 1. جلب بيانات الطالب عند تحميل الصفحة
+  // 1. جلب بيانات الطالب عند تحميل الصفحة لأول مرة
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -35,10 +35,10 @@ export default function StudentProfile() {
     fetchStudent();
   }, [id]);
 
-  // 2. دالة الحفظ مع استخدام try...catch...finally لكسر حالة "جاري الحفظ" دائماً
+  // 2. دالة الحفظ الاحترافية والآمنة
   const handleUpdate = async () => {
     setSaving(true);
-    setMessage({ text: '', type: '' });
+    setMessage({ text: '', type: '' }); // تفريغ أي رسالة سابقة
 
     try {
       const { error } = await supabase
@@ -54,18 +54,18 @@ export default function StudentProfile() {
       
       if (error) throw error;
 
-      // نجاح عملية الحفظ
-      setMessage({ text: "تم تحديث بيانات الطالب بنجاح! 📝", type: 'success' });
+      // في حالة النجاح: إعداد الرسالة المدمجة وإغلاق التعديل
+      setMessage({ text: "تم تحديث بيانات الطالب بنجاح! ✏️", type: 'success' });
       setIsEditing(false);
       
-      // إخفاء رسالة النجاح تلقائياً بعد 4 ثوانٍ
+      // إخفاء الرسالة تلقائياً بعد 4 ثوانٍ
       setTimeout(() => setMessage({ text: '', type: '' }), 4000);
 
     } catch (error) {
       console.error("Error updating student:", error);
       setMessage({ text: "خطأ أثناء الحفظ: " + error.message, type: 'error' });
     } finally {
-      // السطر السحري: يضمن إغلاق جملة "جاري الحفظ..." وعودة الزر لطبيعته فوراً
+      // إيقاف حالة "جاري الحفظ..." في كل الأحوال ليعود الزر لطبيعته
       setSaving(false);
     }
   };
@@ -74,11 +74,13 @@ export default function StudentProfile() {
 
   return (
     <div style={{ padding: "20px", color: C.text, maxWidth: "600px", margin: "auto" }}>
-      <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", marginBottom: "15px" }}>
+      {/* زر العودة للخلف */}
+      <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", marginBottom: "15px", fontSize: "16px" }}>
         ← {t("عودة")}
       </button>
       
       <div style={{ background: C.surface, padding: "30px", borderRadius: "20px", border: `1px solid ${C.border}` }}>
+        {/* اسم الطالب (يتغير لحقل إدخال عند التعديل) */}
         <h2 style={{ color: C.gold, marginBottom: "20px" }}>
           {isEditing ? (
             <input 
@@ -90,17 +92,20 @@ export default function StudentProfile() {
         </h2>
         
         <div style={{ display: "grid", gap: "20px" }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>{t("تاريخ الميلاد")}: 
-            <input type="date" value={student.birth_date || ""} onChange={(e) => setStudent({...student, birth_date: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff' }} />
+          {/* حقل تاريخ الميلاد */}
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'right' }}>{t("تاريخ الميلاد")}: 
+            <input type="date" value={student.birth_date || ""} onChange={(e) => setStudent({...student, birth_date: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', textAlign: 'right' }} />
           </label>
           
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>{t("النوع")}: 
-            <select value={student.gender || ""} onChange={(e) => setStudent({...student, gender: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff' }}>
+          {/* حقل الجنس */}
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'right' }}>{t("النوع")}: 
+            <select value={student.gender || ""} onChange={(e) => setStudent({...student, gender: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', direction: 'rtl' }}>
               <option value="male">{t("ذكر")}</option>
               <option value="female">{t("أنثى")}</option>
             </select>
           </label>
 
+          {/* مكون الحفظ الحالي (الورد) */}
           <div style={{ marginTop: '10px' }}>
             <QuranProgressSelector 
               initialIndex={student.current_quarter_index || 0} 
@@ -111,12 +116,13 @@ export default function StudentProfile() {
             />
           </div>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>{t("ملاحظات")}: 
-            <textarea value={student.notes || ""} onChange={(e) => setStudent({...student, notes: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', height: '100px' }} />
+          {/* حقل الملاحظات */}
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'right' }}>{t("ملاحظات")}: 
+            <textarea value={student.notes || ""} onChange={(e) => setStudent({...student, notes: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', height: '100px', resize: 'none', textAlign: 'right' }} />
           </label>
         </div>
 
-        {/* زر الحفظ والتعديل التفاعلي */}
+        {/* زر التفاعل الأساسي (حفظ التغييرات / تعديل البيانات) */}
         <button 
           onClick={() => isEditing ? handleUpdate() : setIsEditing(true)} 
           disabled={saving}
@@ -129,13 +135,14 @@ export default function StudentProfile() {
             borderRadius: "10px", 
             fontWeight: 'bold', 
             cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1
+            opacity: saving ? 0.7 : 1,
+            color: '#000'
           }}
         >
           {saving ? t("جاري الحفظ...") : (isEditing ? t("حفظ التغييرات") : t("تعديل البيانات"))}
         </button>
 
-        {/* مكان ظهور الرسالة المدمجة أسفل زر التعديل مباشرة */}
+        {/* ✏️ الرسالة المدمجة تظهر هنا أسفل الزر مباشرة */}
         {message.text && (
           <div style={{ 
             marginTop: '15px', 
