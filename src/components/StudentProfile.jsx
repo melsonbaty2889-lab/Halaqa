@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { C } from "../constants/colors";
-import QuranProgressSelector from './QuranProgressSelector'; // تأكد من استيراد المكون
+import QuranProgressSelector from './QuranProgressSelector';
 
 export default function StudentProfile() {
   const { id } = useParams();
@@ -14,8 +14,9 @@ export default function StudentProfile() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-  // جلب بيانات الطالب
+  // 1. جلب بيانات الطالب
   useEffect(() => {
     const fetchStudent = async () => {
       const { data, error } = await supabase
@@ -29,10 +30,11 @@ export default function StudentProfile() {
     fetchStudent();
   }, [id]);
 
-  // دالة الحفظ مع معالجة البيانات المتقدمة
+  // 2. دالة الحفظ الاحترافية
   const handleUpdate = async () => {
     setSaving(true);
-    // يمكنك إضافة منطق "getQuarterText" هنا إذا أردت تحديث النص التلقائي عند الحفظ
+    setMessage({ text: '', type: '' });
+
     const { error } = await supabase
       .from("students")
       .update({
@@ -40,12 +42,18 @@ export default function StudentProfile() {
         birth_date: student.birth_date,
         gender: student.gender,
         notes: student.notes,
-        current_quarter_index: student.current_quarter_index // تحديث الربع المختار
+        current_quarter_index: student.current_quarter_index
       })
       .eq("id", id);
     
-    if (error) alert(error.message);
-    else setIsEditing(false);
+    if (error) {
+      setMessage({ text: "خطأ: " + error.message, type: 'error' });
+    } else {
+      setMessage({ text: "تم حفظ البيانات بنجاح!", type: 'success' });
+      setIsEditing(false);
+      // إخفاء الرسالة تلقائياً بعد 3 ثوانٍ
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    }
     setSaving(false);
   };
 
@@ -59,7 +67,7 @@ export default function StudentProfile() {
       
       <div style={{ background: C.surface, padding: "30px", borderRadius: "20px", border: `1px solid ${C.border}` }}>
         <h2 style={{ color: C.gold, marginBottom: "20px" }}>
-          {isEditing ? <input value={student.name} onChange={(e) => setStudent({...student, name: e.target.value})} style={{ background: '#0C1520', color: '#fff', padding: '5px', borderRadius: '5px' }} /> : student.name}
+          {isEditing ? <input value={student.name} onChange={(e) => setStudent({...student, name: e.target.value})} style={{ background: '#0C1520', color: '#fff', padding: '5px', borderRadius: '5px', border: `1px solid ${C.border}` }} /> : student.name}
         </h2>
         
         <div style={{ display: "grid", gap: "20px" }}>
@@ -74,7 +82,6 @@ export default function StudentProfile() {
             </select>
           </label>
 
-          {/* إضافة مكون اختيار الربع الذكي */}
           <div style={{ marginTop: '10px' }}>
             <label style={{ marginBottom: '10px', display: 'block' }}>{t("مستوى الحفظ الحالي")}:</label>
             <QuranProgressSelector 
@@ -89,9 +96,29 @@ export default function StudentProfile() {
           </label>
         </div>
 
-        <button onClick={() => isEditing ? handleUpdate() : setIsEditing(true)} style={{ marginTop: "30px", width: '100%', background: C.gold, padding: "12px", border: "none", borderRadius: "10px", fontWeight: 'bold', cursor: 'pointer' }}>
-          {saving ? t("جاري الحفظ...") : (isEditing ? t("حفظ التغييرات") : t("تعديل البيانات"))}
+        {/* زر التفاعل */}
+        <button 
+          onClick={() => isEditing ? handleUpdate() : setIsEditing(true)} 
+          disabled={saving}
+          style={{ marginTop: "30px", width: '100%', background: C.gold, padding: "12px", border: "none", borderRadius: "10px", fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          {saving ? "جاري الحفظ..." : (isEditing ? "حفظ التغييرات" : "تعديل البيانات")}
         </button>
+
+        {/* رسالة التأكيد تظهر هنا أسفل الزر مباشرة */}
+        {message.text && (
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '10px', 
+            borderRadius: '8px', 
+            textAlign: 'center',
+            background: message.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            color: message.type === 'success' ? '#10B981' : '#EF4444',
+            border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}`
+          }}>
+            {message.text}
+          </div>
+        )}
       </div>
     </div>
   );
