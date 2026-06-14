@@ -1,81 +1,189 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-import { C } from "../constants/colors";
-import { FaUserPlus, FaSearch, FaUserGraduate, FaPhoneAlt, FaTimes } from "react-icons/fa";
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { C } from '../constants/colors';
+import { useTranslation } from 'react-i18next';
+import { FaUserPlus, FaSearch, FaUserGrad, FaPhone, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-// 🛠️ تم التحديث هنا لاستقبال الـ academyId مباشرة لمنع الشاشة السوداء
-export default function Students({ students, setStudents, academyId }) {
+// نقوم بوضع قيم افتراضية لضمان عدم حدوث أي خطأ destructure أو خطأ map
+export default function Students({ students = [], setStudents, academyId }) {
   const { t } = useTranslation();
   
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("active");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [newStudent, setNewStudent] = useState({ name: "", phone: "" });
+  // الحالات المحلية (State) لإدارة الإدخال والبحث
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentPhone, setNewStudentPhone] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-  // حماية الفلترة في حال كانت المصفوفة فارغة في البداية
-  const filteredStudents = (students || []).filter(s => 
-    s.academy_id === academyId && 
-    (statusFilter === "all" || s.status === statusFilter) &&
-    (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.parent_phone.includes(searchTerm))
-  );
-
-  const handleAdd = async () => {
-    if (!academyId) return alert(t("خطأ: لم يتم التعرف على الأكاديمية."));
-    if (!newStudent.name || !newStudent.phone) return alert(t("يرجى ملء البيانات"));
+  // 📝 دالة إضافة طالب جديد إلى قاعدة البيانات
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
     
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("students")
-      .insert([{ name: newStudent.name, parent_phone: newStudent.phone, academy_id: academyId, status: 'active', level_score: 0, payment_plan: "شهري" }])
-      .select();
-    
-    if (error) { alert("خطأ: " + error.message); } else {
-      setStudents(prev => [...prev, ...data]);
-      setIsModalOpen(false);
-      setNewStudent({ name: "", phone: "" });
+    if (!academyId) {
+      setMessage({ text: "خطأ: لم يتم تحديد معرف الأكاديمية بعد، يرجى تحديث الصفحة.", type: 'error' });
+      return;
     }
-    setLoading(false);
+    if (!newStudentName.trim()) {
+      setMessage({ text: "يرجى إدخال اسم الطالب أولاً", type: 'error' });
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage({ text: '', type: '' });
+
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .insert([
+          { 
+            name: newStudentName.trim(), 
+            phone: newStudentPhone.trim() || null, 
+            academy_id: academyId,
+            status: 'active' // الحالة الافتراضية للطالب الجديد
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      // تحديث القائمة المحلية فوراً بدون الحاجة لإعادة تحميل الصفحة بالكامل
+      if (data && setStudents) {
+        setStudents(prev => [...prev, data[0]]);
+      }
+
+      setMessage({ text: "تم تسجيل الطالب بنجاح واحترافية! 🎉", type: 'success' });
+      setNewStudentName('');
+      setNewStudentPhone('');
+      setShowAddForm(false);
+    } catch (error) {
+      console.error("🚨 خطأ أثناء إضافة الطالب:", error);
+      setMessage({ text: `فشل التسجيل: ${error.message}`, type: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  // 🔍 تصفية الطلاب بناءً على نص البحث (بشكل آمن)
+  const filteredStudents = Array.isArray(students) 
+    ? students.filter(student => 
+        student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student?.phone?.includes(searchTerm)
+      )
+    : [];
+
   return (
-    <div style={{ padding: "20px", color: C.text, direction: "rtl", maxWidth: "800px", margin: "auto", background: C.bg, minHeight: "100vh" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-        <h2 style={{ color: C.gold, display: "flex", alignItems: "center", gap: "10px" }}>
-          <FaUserGraduate /> {t("students")}
+    <div style={{ direction: 'inherit' }}>
+      
+      {/* القسم العلوي: العنوان وزر الإضافة */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
+        <h2 style={{ color: C.gold, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <FaUserGrad /> {t('students') || 'إدارة الطلاب'}
         </h2>
-        <button onClick={() => setIsModalOpen(true)} style={{ background: C.gold, padding: "12px 24px", borderRadius: "12px", border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#fff' }}>
-          <FaUserPlus /> {t("add_student")}
+        
+        <button 
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{ background: showAddForm ? C.danger : C.gold, color: showAddForm ? '#fff' : '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s' }}
+        >
+          <FaUserPlus /> {showAddForm ? "إلغاء" : "إضافة طالب جديد"}
         </button>
-      </header>
+      </div>
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-        <div style={{ position: "relative", flex: 1 }}>
-          <FaSearch style={{ position: "absolute", right: "15px", top: "14px", color: C.textMuted }} />
-          <input placeholder={t("بحث...")} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: "100%", padding: "12px 40px", borderRadius: "12px", border: "1px solid " + C.border, background: C.surface, color: C.text }} />
+      {/* رسائل التنبيه والنجاح */}
+      {message.text && (
+        <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '20px', backgroundColor: message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: message.type === 'success' ? '#10B981' : '#EF4444', border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}` }}>
+          {message.text}
         </div>
-        <select onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: "10px", borderRadius: "12px", background: C.surface, color: C.text, border: "1px solid " + C.border }}>
-          <option value="active">{t("النشطون")}</option>
-          <option value="inactive">{t("غير النشطين")}</option>
-          <option value="all">{t("الكل")}</option>
-        </select>
+      )}
+
+      {/* ➕ نموذج إضافة طالب جديد التفاعلي */}
+      {showAddForm && (
+        <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '20px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <h3 style={{ color: '#fff', margin: '0 0 10px 0' }}>تسجيل طالب جديد في الحلقة</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <label style={{ color: C.text, fontSize: '14px' }}>اسم الطالب الثنائي أو الثلاثي *</label>
+            <input 
+              type="text"
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+              placeholder="أدخل اسم الطالب الكامل"
+              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <label style={{ color: C.text, fontSize: '14px' }}>رقم هاتف ولي الأمر (اختياري)</label>
+            <input 
+              type="tel"
+              value={newStudentPhone}
+              onChange={(e) => setNewStudentPhone(e.target.value)}
+              placeholder="مثال: 05xxxxxxxx"
+              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'left' }}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={isSaving}
+            style={{ background: C.gold, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1, transition: '0.2s', marginTop: '10px' }}
+          >
+            {isSaving ? "جاري الحفظ والتسجيل..." : "تأكيد إضافة الطالب"}
+          </button>
+        </form>
+      )}
+
+      {/* 🔍 شريط البحث الذكي */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '10px 15px', borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
+        <FaSearch style={{ color: C.text, opacity: 0.5 }} />
+        <input 
+          type="text"
+          placeholder="ابحث عن طالب بالاسم أو رقم الهاتف..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '15px' }}
+        />
       </div>
 
-      <div style={{ display: "grid", gap: "15px" }}>
-        {filteredStudents.map((s) => (
-          <Link to={`/student/${s.id}`} key={s.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ background: C.surface, padding: "20px", borderRadius: "16px", borderRight: s.status === 'inactive' ? "5px solid #ef4444" : "5px solid " + C.gold, display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid " + C.border }}>
-              <div>
-                <h3 style={{ margin: "0 0 8px 0" }}>{s.name}</h3>
-                <div style={{ fontSize: "0.9em", color: C.textMuted, display: "flex", alignItems: "center", gap: "6px" }}><FaPhoneAlt /> {s.parent_phone}</div>
+      {/* 📋 عرض قائمة الطلاب بطاقات تفاعلية مميزة وعصرية */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {filteredStudents.length === 0 ? (
+          <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '20px' }}>
+            {searchTerm ? "لم يتم العثور على نتائج تطابق بحثك." : "لا يوجد طلاب مسجلين حالياً."}
+          </p>
+        ) : (
+          filteredStudents.map(student => (
+            <div key={student.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.surface, padding: '15px 20px', borderRadius: '10px', border: `1px solid ${C.border}`, flexWrap: 'wrap', gap: '15px' }}>
+              
+              {/* تفاصيل الطالب الإسم والهاتف */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#fff' }}>{student.name}</span>
+                {student.phone && (
+                  <span style={{ fontSize: '13px', color: C.text, opacity: 0.7, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <FaPhone size={11} /> {student.phone}
+                  </span>
+                )}
               </div>
-              <div style={{ fontSize: "0.8em", padding: "5px 12px", borderRadius: "20px", background: s.status === 'active' ? "#065f46" : "#450a0a", color: '#fff' }}>{t(s.status)}</div>
+
+              {/* شارة حالة الطالب (نشط / غير نشط) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {student.status === 'active' ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '5px 10px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
+                    <FaCheckCircle size={12} /> نشط
+                  </span>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '5px 10px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
+                    <FaTimesCircle size={12} /> منتظم جزئياً
+                  </span>
+                )}
+              </div>
+
             </div>
-          </Link>
-        ))}
+          ))
+        )}
       </div>
+
     </div>
   );
 }
