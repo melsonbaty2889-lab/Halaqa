@@ -2,17 +2,26 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-// 1️⃣ استيراد قائمة الدول الاحترافية من ملفها المنفصل
+// استيراد قائمة الدول وقائمة أجزاء/أرباع القرآن (لأتمتة النصوص)
 import { COUNTRIES_LIST } from '../constants/countries'; 
-// 🚀 استيراد مكون شريط التقدم ومكون اختيار الأرباع الجديد 
 import QuranProgressBar from './QuranProgressBar'; 
-import QuranProgressSelector from './QuranProgressSelector'; // 🌟 تم إضافة الاستيراد هنا بنجاح
+import QuranProgressSelector from './QuranProgressSelector'; 
 import { 
   FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, 
   FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, 
   FaTimes, FaSave, FaArchive, FaEye, FaEyeSlash,
   FaCalendarAlt, FaMoneyBillWave, FaStar
 } from 'react-icons/fa';
+
+// 💡 مصفوفة مرجعية سريعة لأسماء الأجزاء أو السور الكبرى لبناء النص التلقائي
+// يمكنك تعديلها أو الاعتماد على المسميات داخل مكون QuranProgressSelector لديك
+const getQuarterText = (index) => {
+  if (index === 0) return 'لم يبدأ بعد';
+  // حسب تقسيمة الأرباع الـ 240 في القرآن (8 أرباع لكل جزء)
+  const juzu = Math.floor((index - 1) / 8) + 1;
+  const quarterInJuzu = ((index - 1) % 8) + 1;
+  return `الجزء ${juzu} - الربع ${quarterInJuzu}`;
+};
 
 export default function Students({ students = [], setStudents, academyId }) {
   const { t } = useTranslation();
@@ -26,14 +35,13 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [name, setName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [parentName, setParentName] = useState('');
-  const [currentSurah, setCurrentSurah] = useState('');
-  const [currentQuarterIndex, setCurrentQuarterIndex] = useState(0); // 🌟 حالة جديدة لتخزين ربع البداية للطالب الجديد
+  const [currentQuarterIndex, setCurrentQuarterIndex] = useState(0); 
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState('male');
   const [birthDate, setBirthDate] = useState(''); 
   const [paymentPlan, setPaymentPlan] = useState('شهري'); 
-  const [countryCode, setCountryCode] = useState('EG'); // القيمة الافتراضية مصر أو اتركها فارغة
-  const [isCustomCountry, setIsCustomCountry] = useState(false); // حالة التحكم في الإدخال اليدوي للدول النادرة
+  const [countryCode, setCountryCode] = useState('EG'); 
+  const [isCustomCountry, setIsCustomCountry] = useState(false); 
 
   // حالة التعديل المؤقت للطالب
   const [editingStudent, setEditingStudent] = useState(null);
@@ -43,7 +51,7 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [updatingId, setUpdatingId] = useState(null); 
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // 📝 دالة حساب العمر تلقائياً بناءً على حقل birth_date المتاح في الجدول
+  // دالة حساب العمر تلقائياً
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -56,7 +64,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     return age;
   };
 
-  // 📝 دالة تحسين تصفية الحروف العربية لضمان دقة البحث
+  // تصفية الحروف العربية لضمان دقة البحث
   const normalizeArabic = (str) => {
     if (!str) return '';
     return str
@@ -67,7 +75,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       .toLowerCase();
   };
 
-  // ➕ دالة إرسال البيانات وحفظ طالب جديد في Supabase
+  // ➕ دالة إرسال البيانات وحفظ طالب جديد
   const handleAddStudent = async (e) => {
     e.preventDefault();
     
@@ -76,12 +84,15 @@ export default function Students({ students = [], setStudents, academyId }) {
       return;
     }
     if (!name.trim()) {
-      setMessage({ text: t('error_enter_student_name', 'يرجى إدخل اسم الطالب أولاً'), type: 'error' });
+      setMessage({ text: t('error_enter_student_name', 'يرجى إدخال اسم الطالب أولاً'), type: 'error' });
       return;
     }
 
     setIsAdding(true);
     setMessage({ text: '', type: '' });
+
+    // ✨ بناء النص تلقائياً بناءً على الربع المختار لتوفير أفضل UX
+    const autoSurahText = getQuarterText(currentQuarterIndex);
 
     try {
       const { data, error } = await supabase
@@ -91,7 +102,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             name: name.trim(), 
             parent_phone: parentPhone.trim() || null,
             parent_name: parentName.trim() || null,       
-            current_surah: currentSurah.trim() || null,   
+            current_surah: autoSurahText, // 🌟 يتم حفظ النص المؤتمت هنا تلقائياً
             notes: notes.trim() || null,                 
             gender: gender,                              
             academy_id: academyId,
@@ -99,8 +110,8 @@ export default function Students({ students = [], setStudents, academyId }) {
             is_archived: false,
             birth_date: birthDate || null, 
             payment_plan: paymentPlan,     
-            country_code: countryCode.trim() || null, // حفظ الكود المختار أو المكتوب يدويًا
-            current_quarter_index: currentQuarterIndex // 🌟 حفظ مؤشر الربع المختار ديناميكياً عند الإضافة
+            country_code: countryCode.trim() || null, 
+            current_quarter_index: currentQuarterIndex 
           }
         ])
         .select();
@@ -113,12 +124,11 @@ export default function Students({ students = [], setStudents, academyId }) {
 
       setMessage({ text: t('student_added_success', 'تم تسجيل الطالب بنجاح واحترافية! 🎉'), type: 'success' });
       
-      // تفريغ الحقول لإتاحة تسجيل طالب آخر
+      // تفريغ الحقول
       setName('');
       setParentPhone('');
       setParentName('');
-      setCurrentSurah('');
-      setCurrentQuarterIndex(0); // إعادة تعيين المؤشر الرقمي
+      setCurrentQuarterIndex(0); 
       setNotes('');
       setGender('male');
       setBirthDate('');
@@ -145,29 +155,33 @@ export default function Students({ students = [], setStudents, academyId }) {
     setUpdatingId(editingStudent.id);
     setMessage({ text: '', type: '' });
     
+    // ✨ تحديث النص تلقائياً للطالب المعدل أيضاً
+    const autoSurahText = getQuarterText(editingStudent.current_quarter_index || 0);
+    const updatedStudentData = { ...editingStudent, current_surah: autoSurahText };
+
     try {
       const { error } = await supabase
         .from('students')
         .update({
-          name: editingStudent.name.trim(),
-          parent_phone: editingStudent.parent_phone?.trim() || null,
-          parent_name: editingStudent.parent_name?.trim() || null,
-          current_surah: editingStudent.current_surah?.trim() || null,
-          notes: editingStudent.notes?.trim() || null,
-          gender: editingStudent.gender,
-          status: editingStudent.status,
-          birth_date: editingStudent.birth_date || null,
-          payment_plan: editingStudent.payment_plan,
-          country_code: editingStudent.country_code || null, 
-          last_test_score: editingStudent.last_test_score ? parseInt(editingStudent.last_test_score) : 0,
-          level_score: editingStudent.level_score ? parseInt(editingStudent.level_score) : 0,
-          current_quarter_index: editingStudent.current_quarter_index || 0 // 🌟 تم إضافة هذا السطر الحرج لضمان حفظ تعديل الأرباع في Supabase
+          name: updatedStudentData.name.trim(),
+          parent_phone: updatedStudentData.parent_phone?.trim() || null,
+          parent_name: updatedStudentData.parent_name?.trim() || null,
+          current_surah: updatedStudentData.current_surah, // 🌟 مزامنة النص المؤتمت الجديد
+          notes: updatedStudentData.notes?.trim() || null,
+          gender: updatedStudentData.gender,
+          status: updatedStudentData.status,
+          birth_date: updatedStudentData.birth_date || null,
+          payment_plan: updatedStudentData.payment_plan,
+          country_code: updatedStudentData.country_code || null, 
+          last_test_score: updatedStudentData.last_test_score ? parseInt(updatedStudentData.last_test_score) : 0,
+          level_score: updatedStudentData.level_score ? parseInt(updatedStudentData.level_score) : 0,
+          current_quarter_index: updatedStudentData.current_quarter_index || 0 
         })
-        .eq('id', editingStudent.id);
+        .eq('id', updatedStudentData.id);
 
       if (error) throw error;
 
-      setStudents(prev => prev.map(st => st.id === editingStudent.id ? editingStudent : st));
+      setStudents(prev => prev.map(st => st.id === updatedStudentData.id ? updatedStudentData : st));
       setEditingStudent(null); 
       setMessage({ text: t('student_updated_success', 'تم تحديث بيانات الطالب بنجاح! ✏️'), type: 'success' });
     } catch (error) {
@@ -205,7 +219,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
   };
 
-  // 🔍 تصفية الطلاب المبحوث عنهم
+  // تصفية الطلاب المبحوث عنهم
   const filteredStudents = Array.isArray(students) 
     ? students.filter(student => {
         if (showArchived && !student.is_archived) return false;
@@ -266,9 +280,9 @@ export default function Students({ students = [], setStudents, academyId }) {
       {/* ➕ نموذج إضافة طالب */}
       {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px', borderBottom: `1px solid ${C.border}`, paddingBottom: '10px' }}>بيانات التسجيل (مُرتبة حسب الأولوية السلوكية)</h3>
+          <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px', borderBottom: `1px solid ${C.border}`, paddingBottom: '10px' }}>بيانات التسجيل التعليمية</h3>
           
-          {/* ✨ المجموعة الأولى: البيانات الشخصية والأساسية للطالب */}
+          {/* المجموعة الأولى: البيانات الشخصية */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <label style={{ color: C.text, fontSize: '14px' }}>اسم الطالب الكامل *</label>
             <input 
@@ -316,16 +330,14 @@ export default function Students({ students = [], setStudents, academyId }) {
                     {c.flag} {c.name} ({c.dialCode})
                   </option>
                 ))}
-                <option value="OTHER" style={{ color: C.gold, background: '#0C1520' }}>🌐 دولة أخرى (إدخال يدوي لطيف)</option>
+                <option value="OTHER" style={{ color: C.gold, background: '#0C1520' }}>🌐 دولة أخرى</option>
               </select>
 
               {isCustomCountry && (
                 <input 
-                  type="text" 
-                  maxLength="3" 
-                  value={countryCode} 
+                  type="text" maxLength="3" value={countryCode} 
                   onChange={(e) => setCountryCode(e.target.value.toUpperCase())} 
-                  placeholder="أدخل رمز الدولة الدولي (مثال: TR)" 
+                  placeholder="رمز الدولة الدولي (مثال: TR)" 
                   style={{ background: '#0C1520', border: `1px solid ${C.gold}`, color: '#fff', padding: '11px', borderRadius: '8px', marginTop: '5px', outline: 'none' }} 
                   required 
                 />
@@ -333,7 +345,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             </div>
           </div>
 
-          {/* ✨ المجموعة الثانية: بيانات العائلة والتواصل */}
+          {/* المجموعة الثانية: العائلة والتواصل */}
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}><FaUserShield size={12} /> اسم ولي الأمر</label>
@@ -354,17 +366,20 @@ export default function Students({ students = [], setStudents, academyId }) {
             </div>
           </div>
 
-          {/* ✨ ٍالمجموعة الثالثة: الشؤون التعليمية والمالية والملاحظات */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px', alignItems: 'flex-end' }}>
-            {/* 🌟 تم استبدال حقل إدخال النص القديم بمكون مصفوفة الأرباع الذكي هنا عند الإضافة */}
-            <div style={{ flex: 1, minWidth: '200px' }}>
+          {/* المجموعة الثالثة: اختيار الحفظ الذكي (UX ممتاز) */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px', alignItems: 'center' }}>
+            {/* تم إخفاء الحقل النصي المشتت هنا، وسيقوم المكون بالأسفل بتحديث البيانات تلقائياً */}
+            <div style={{ flex: 2, minWidth: '280px' }}>
+              <label style={{ color: C.gold, fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                <FaBookOpen size={12} /> حدد الحفظ الحالي للطالب بدقة (سيتم كتابة النص وتحديث المؤشر فوراً):
+              </label>
               <QuranProgressSelector 
                 initialIndex={currentQuarterIndex} 
                 onIndexChange={(newIndex) => setCurrentQuarterIndex(newIndex)} 
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '180px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}><FaMoneyBillWave size={12} /> نظام الاشتراك الدفع</label>
               <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}>
                 <option value="شهري">شهري</option>
@@ -376,16 +391,16 @@ export default function Students({ students = [], setStudents, academyId }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaStickyNote size={12} /> ملاحظات المعلم التوجيهية الأولى</label>
+            <label style={{ color: C.text, fontSize: '14px' }}><FaStickyNote size={12} /> ملاحظات المعلم التوجيهية</label>
             <textarea 
               value={notes} onChange={(e) => setNotes(e.target.value)}
-              placeholder="أي ملاحظات إضافية بخصوص مستوى الحفظ والتلاوة أو السلوك البداية..."
-              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', height: '80px', resize: 'none' }}
+              placeholder="أي ملاحظات إضافية بخصوص مستوى الحفظ والتلاوة..."
+              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', height: '70px', resize: 'none' }}
             />
           </div>
 
           <button type="submit" disabled={isAdding} style={{ background: C.gold, color: '#000', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', marginTop: '5px' }}>
-            {isAdding ? 'جاري الحفظ والإنشاء...' : 'تأكيد إضافة الطالب ومزامنة الجدول'}
+            {isAdding ? 'جاري الحفظ والإنشاء...' : 'تأكيد إضافة الطالب ومزامنة شريط التقدم'}
           </button>
         </form>
       )}
@@ -394,7 +409,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '12px 15px', borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
         <FaSearch style={{ color: C.text, opacity: 0.5 }} />
         <input 
-          type="text" placeholder={showArchived ? "ابحث في الأرشيف باسم الطالب أو الهاتف..." : "ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية..."}
+          type="text" placeholder={showArchived ? "ابحث في الأرشيف باسم الطالب أو الهاتف..." : "ابحث عن طالب بالاسم، الهاتف، أو الحفظ الحالي..."}
           value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
           style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '15px' }}
         />
@@ -411,8 +426,6 @@ export default function Students({ students = [], setStudents, academyId }) {
             const isCurrentEditing = editingStudent?.id === student.id;
             const isLocalSaving = updatingId === student.id;
             const currentAge = calculateAge(student.birth_date);
-            
-            // 💡 استخراج كود الدولة تلقائيًا لمطابقته مع علم الدولة المناسب وعرضه على الكارد
             const matchedCountry = COUNTRIES_LIST.find(c => c.code === student.country_code);
 
             return (
@@ -422,8 +435,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                 {isCurrentEditing ? (
                   <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     
-                    {/* 1. قسم البيانات الشخصية والأساسية */}
-                    <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', fontWeight: '500' }}>البيانات الشخصية والأساسية:</label>
+                    <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', fontWeight: '500' }}>البيانات الأساسية:</label>
                     <input 
                       type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
                       placeholder="اسم الطالب" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }} required
@@ -446,7 +458,6 @@ export default function Students({ students = [], setStudents, academyId }) {
                       </select>
                     </div>
 
-                    {/* 2. قسم بيانات التواصل والعائلة */}
                     <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', marginTop: '5px', fontWeight: '500' }}>بيانات التواصل والوالدين:</label>
                     <input 
                       type="text" value={editingStudent.parent_name || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_name: e.target.value})}
@@ -457,14 +468,15 @@ export default function Students({ students = [], setStudents, academyId }) {
                       placeholder="رقم هاتف التواصل" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', textAlign: 'left' }}
                     />
 
-                    {/* 3. الشؤون التعليمية والدرجات والاشتراك المالي */}
                     <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', marginTop: '5px', fontWeight: '500' }}>المستوى التعليمي والدرجات والاشتراك:</label>
                     
-                    {/* 🌟 تم حذف حقل النص القديم هنا بنجاح واستبداله بمكون اختيار الأرباع المطور */}
-                    <QuranProgressSelector 
-                      initialIndex={editingStudent.current_quarter_index || 0} 
-                      onIndexChange={(newIndex) => setEditingStudent({ ...editingStudent, current_quarter_index: newIndex })} 
-                    />
+                    {/* تحديث الربع بالتعديل (سيقوم الكود بأتمتة النص البرمجي) */}
+                    <div style={{ background: '#0C1520', padding: '10px', borderRadius: '6px', border: `1px solid ${C.border}` }}>
+                      <QuranProgressSelector 
+                        initialIndex={editingStudent.current_quarter_index || 0} 
+                        onIndexChange={(newIndex) => setEditingStudent({ ...editingStudent, current_quarter_index: newIndex })} 
+                      />
+                    </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -506,18 +518,17 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض الطبيعي للبطاقة
+                  // 👁️ وضع العرض الطبيعي للبطاقة (ملخص كامل ونظيف)
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '20px' }} title={matchedCountry ? matchedCountry.name : 'دولة مخصصة/غير محددة'}>
+                          <span style={{ fontSize: '20px' }}>
                             {matchedCountry ? matchedCountry.flag : (student.country_code ? '🌐' : '')}
                           </span>
                           <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>
                             {student.name}
-                            {!matchedCountry && student.country_code && <span style={{fontSize: '11px', color: C.gold, marginRight: '4px'}}>({student.country_code})</span>}
                           </span>
                           {currentAge !== null && (
                             <span style={{ fontSize: '13px', color: C.gold, background: 'rgba(212, 163, 89, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
@@ -580,7 +591,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                         )}
                       </div>
 
-                      {/* 🚀 يعرض لكل طالب خط سيره تلقائياً بناء على الرقم المخزن والمعدل */}
+                      {/* يعرض خط سير الحفظ التفاعلي والجميل بمرونة فائقة */}
                       <QuranProgressBar currentQuarterIndex={student.current_quarter_index} />
 
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
