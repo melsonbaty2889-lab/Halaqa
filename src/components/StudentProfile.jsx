@@ -10,12 +10,14 @@ export default function StudentProfile() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   
+  // حقول الحالات (States) لإدارة بيانات الطالب، التحميل، التعديل، والحفظ
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
+  // 1. جلب بيانات الطالب من قاعدة البيانات Supabase عند تحميل المكون
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -28,15 +30,16 @@ export default function StudentProfile() {
       } catch (err) {
         console.error("Error fetching student:", err);
       } finally {
-        setLoading(false);
+        setLoading(false); // إيقاف مؤشر التحميل في كل الأحوال
       }
     };
     fetchStudent();
   }, [id]);
 
+  // 2. دالة تحديث بيانات الطالب وإرسالها إلى قاعدة البيانات
   const handleUpdate = async () => {
     setSaving(true);
-    setMessage({ text: '', type: '' });
+    setMessage({ text: '', type: '' }); // تصفير الرسائل السابقة قبل البدء
 
     try {
       const { error } = await supabase
@@ -52,27 +55,32 @@ export default function StudentProfile() {
       
       if (error) throw error;
 
+      // تحديث حالة الواجهة عند نجاح العملية
       setMessage({ text: "تم تحديث بيانات الطالب بنجاح! ✏️", type: 'success' });
-      setIsEditing(false);
+      setIsEditing(false); // إغلاق وضع التعديل والعودة لوضع العرض
       
+      // مؤقت زمني لإخفاء الرسالة تلقائياً بعد 4 ثوانٍ مريح للمستخدم
       setTimeout(() => setMessage({ text: '', type: '' }), 4000);
 
     } catch (error) {
       console.error("Error updating student:", error);
       setMessage({ text: "خطأ أثناء الحفظ: " + error.message, type: 'error' });
     } finally {
-      setSaving(false);
+      setSaving(false); // إعادة الزر لحالته القابلة للضغط
     }
   };
 
+  // واجهة التحميل الأولية قبل ظهور البيانات
   if (loading) return <div style={{ color: C.text, textAlign: 'center', padding: '50px' }}>{t("جاري التحميل...")}</div>;
 
   return (
     <div style={{ padding: "20px", color: C.text, maxWidth: "600px", margin: "auto" }}>
+      {/* زر العودة الذكي للخلف */}
       <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", marginBottom: "15px", fontSize: "16px" }}>
         ← {t("عودة")}
       </button>
       
+      {/* بطاقة عرض وتعديل بيانات الطالب المعزولة */}
       <div style={{ background: C.surface, padding: "30px", borderRadius: "20px", border: `1px solid ${C.border}` }}>
         <h2 style={{ color: C.gold, marginBottom: "20px" }}>
           {isEditing ? (
@@ -85,10 +93,12 @@ export default function StudentProfile() {
         </h2>
         
         <div style={{ display: "grid", gap: "20px" }}>
+          {/* حقل تاريخ الميلاد */}
           <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'right' }}>{t("تاريخ الميلاد")}: 
             <input type="date" value={student.birth_date || ""} onChange={(e) => setStudent({...student, birth_date: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', textAlign: 'right' }} />
           </label>
           
+          {/* حقل اختيار الجنس */}
           <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'right' }}>{t("النوع")}: 
             <select value={student.gender || ""} onChange={(e) => setStudent({...student, gender: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', direction: 'rtl' }}>
               <option value="male">{t("ذكر")}</option>
@@ -96,6 +106,7 @@ export default function StudentProfile() {
             </select>
           </label>
 
+          {/* مكون اختيار الربع والحزب الحالي من القرآن الكريم */}
           <div style={{ marginTop: '10px' }}>
             <QuranProgressSelector 
               initialIndex={student.current_quarter_index || 0} 
@@ -106,11 +117,13 @@ export default function StudentProfile() {
             />
           </div>
 
+          {/* حقل كتابة الملاحظات */}
           <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'right' }}>{t("ملاحظات")}: 
             <textarea value={student.notes || ""} onChange={(e) => setStudent({...student, notes: e.target.value})} disabled={!isEditing} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: '#0C1520', color: '#fff', height: '100px', resize: 'none', textAlign: 'right' }} />
           </label>
         </div>
 
+        {/* زر الحفظ التفاعلي والذكي */}
         <button 
           onClick={() => isEditing ? handleUpdate() : setIsEditing(true)} 
           disabled={saving}
@@ -122,6 +135,7 @@ export default function StudentProfile() {
           {saving ? t("جاري الحفظ...") : (isEditing ? t("حفظ التغييرات") : t("تعديل البيانات"))}
         </button>
 
+        {/* مكان ظهور رسالة النجاح أو الخطأ المعزول أسفل الزر مباشرة */}
         {message.text && (
           <div style={{ 
             marginTop: '15px', padding: '12px', borderRadius: '8px', textAlign: 'center', fontWeight: '500',
