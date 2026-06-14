@@ -16,6 +16,7 @@ const resources = {
       loading: "جاري تحميل البيانات...",
       save: "حفظ التغييرات",
       actions: "الإجراءات",
+      cancel: "إلغاء",
       
       // 2. إحصائيات وتنبيهات لوحة التحكم (Dashboard)
       total_students: "إجمالي الطلاب المسجلين",
@@ -66,6 +67,40 @@ const resources = {
       fieldRequired: "هذا الحقل مطلوب ولا يمكن تركه فارغاً",
       invalidEmail: "يرجى إدخال بريد إلكتروني صحيح",
       passwordTooShort: "كلمة المرور يجب ألا تقل عن 6 رموز",
+
+      // 8. مفاتيح إدارة الطلاب ونموذج التسجيل المطور (تمت إضافتها للتوافق)
+      students_management_title: "إدارة الطلاب والشؤون التعليمية",
+      add_new_student: "إضافة طالب جديد",
+      registration_data_title: "بيانات التسجيل الأساسية والقرآنية",
+      student_name_label: "اسم الطالب الثنائي أو الثلاثي *",
+      student_name_placeholder: "أدخل اسم الطالب الكامل",
+      gender_label: "الجنس",
+      male: "ذكر",
+      female: "أنثى",
+      current_surah_label: "السورة أو الجزء الحالي (الورد)",
+      current_surah_placeholder: "مثال: سورة البقرة / جزء عمّ",
+      parent_name_label: "اسم ولي الأمر (اختياري)",
+      parent_name_placeholder: "أدخل اسم الوالد أو ولي الأمر",
+      contact_phone_label: "رقم هاتف التواصل",
+      phone_placeholder: "مثال: 05xxxxxxxx",
+      teacher_notes_label: "ملاحظات المعلم التوجيهية",
+      notes_placeholder: "اكتب أي ملاحظات تخص خطة حفظ الطالب أو حالته الحالية هنا...",
+      saving_progress: "جاري الحفظ والتسجيل...",
+      confirm_add_student: "تأكيد إضافة الطالب في الحلقة",
+      search_placeholder: "ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...",
+      no_search_results: "لم يتم العثور على نتائج تطابق بحثك.",
+      no_students_registered: "لا يوجد طلاب مسجلين حالياً.",
+      parent_prefix: "ولي الأمر:",
+      memorization_prefix: "الحفظ:",
+      not_specified_yet: "لم يحدد بعد",
+      click_to_update_surah: "اضغط للتحديث السريع للسورة",
+      status_active: "نشط",
+      status_inactive: "متوقف",
+      error_no_academy_id: "خطأ: لم يتم تحديد معرف الأكاديمية.",
+      error_enter_student_name: "يرجى إدخال اسم الطالب أولاً",
+      student_added_success: "تم تسجيل الطالب بنجاح واحترافية! 🎉",
+      student_added_failed: "فشل التسجيل:",
+      error_updating_surah: "تعذر تحديث السورة الحالية"
     }
   },
   en: {
@@ -81,6 +116,7 @@ const resources = {
       loading: "Loading data...",
       save: "Save Changes",
       actions: "Actions",
+      cancel: "Cancel",
 
       // 2. Dashboard Analytics & Alerts
       total_students: "Total Registered Students",
@@ -131,6 +167,40 @@ const resources = {
       fieldRequired: "This field is required",
       invalidEmail: "Please enter a valid email address",
       passwordTooShort: "Password must be at least 6 characters long",
+
+      // 8. Student Management Forms & Details (Added for Compatibility)
+      students_management_title: "Students Management & Academic Affairs",
+      add_new_student: "Add New Student",
+      registration_data_title: "Basic & Quranic Registration Data",
+      student_name_label: "Student Full Name *",
+      student_name_placeholder: "Enter student's full name",
+      gender_label: "Gender",
+      male: "Male",
+      female: "Female",
+      current_surah_label: "Current Surah / Juz' (Progress)",
+      current_surah_placeholder: "e.g., Surah Al-Baqarah / Juz' Amma",
+      parent_name_label: "Parent's Name (Optional)",
+      parent_name_placeholder: "Enter father or guardian's name",
+      contact_phone_label: "Contact Phone Number",
+      phone_placeholder: "e.g., 05xxxxxxxx",
+      teacher_notes_label: "Teacher's Guidance Notes",
+      notes_placeholder: "Write any notes regarding the student's memorization plan here...",
+      saving_progress: "Saving and registering...",
+      confirm_add_student: "Confirm Adding Student to Halaqa",
+      search_placeholder: "Search student by name, phone, or current surah...",
+      no_search_results: "No results match your search.",
+      no_students_registered: "No students currently registered.",
+      parent_prefix: "Parent:",
+      memorization_prefix: "Hifz:",
+      not_specified_yet: "Not specified yet",
+      click_to_update_surah: "Click for quick update on Surah",
+      status_active: "Active",
+      status_inactive: "Inactive",
+      error_no_academy_id: "Error: Academy ID is not defined.",
+      error_enter_student_name: "Please enter the student name first",
+      student_added_success: "Student registered successfully and professionally! 🎉",
+      student_added_failed: "Registration failed:",
+      error_updating_surah: "Unable to update the current Surah"
     }
   }
 };
