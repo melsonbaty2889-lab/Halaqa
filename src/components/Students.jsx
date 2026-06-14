@@ -11,13 +11,13 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   
-  // حالات نموذج الإضافة المطور المتوافق مع قاعدة بياناتك
+  // حالات نموذج الإضافة المطور المتوافق مع قاعدة بياناتك (تم تعديل القيمة الافتراضية إلى male)
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState('');
   const [parentName, setParentName] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
   const [notes, setNotes] = useState('');
-  const [gender, setGender] = useState('ذكر');
+  const [gender, setGender] = useState('male');
 
   // حالات تعديل السورة الحالية مباشرة من البطاقة
   const [editingStudentId, setEditingStudentId] = useState(null);
@@ -31,11 +31,11 @@ export default function Students({ students = [], setStudents, academyId }) {
     e.preventDefault();
     
     if (!academyId) {
-      setMessage({ text: t('error_no_academy_id', 'خطأ: لم يتم تحديد معرف الأكاديمية.'), type: 'error' });
+      setMessage({ text: t('error_no_academy_id'), type: 'error' });
       return;
     }
     if (!newStudentName.trim()) {
-      setMessage({ text: t('error_enter_student_name', 'يرجى إدخال اسم الطالب أولاً'), type: 'error' });
+      setMessage({ text: t('error_enter_student_name'), type: 'error' });
       return;
     }
 
@@ -52,7 +52,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             parent_name: parentName.trim() || null,       
             current_surah: currentSurah.trim() || null,   
             notes: notes.trim() || null,                 
-            gender: gender,                               
+            gender: gender, // هنا سيرسل قيم سريعة متوافقة مع قاعدة البيانات (male أو female)                              
             academy_id: academyId,
             status: 'active' 
           }
@@ -65,7 +65,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         setStudents(prev => [...prev, data[0]]);
       }
 
-      setMessage({ text: t('student_added_success', 'تم تسجيل الطالب بنجاح واحترافية! 🎉'), type: 'success' });
+      setMessage({ text: t('student_added_success'), type: 'success' });
       
       // تفريغ الحقول بعد النجاح
       setNewStudentName('');
@@ -73,10 +73,11 @@ export default function Students({ students = [], setStudents, academyId }) {
       setParentName('');
       setCurrentSurah('');
       setNotes('');
+      setGender('male');
       setShowAddForm(false);
     } catch (error) {
       console.error("🚨 خطأ أثناء إضافة الطالب:", error);
-      setMessage({ text: `${t('student_added_failed', 'فشل التسجيل:')} ${error.message}`, type: 'error' });
+      setMessage({ text: `${t('student_added_failed')} ${error.message}`, type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +97,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       setEditingStudentId(null);
     } catch (error) {
       console.error("خطأ في تحديث السورة:", error);
-      alert(t('error_updating_surah', 'تعذر تحديث السورة الحالية'));
+      alert(t('error_updating_surah'));
     }
   };
 
@@ -112,17 +113,17 @@ export default function Students({ students = [], setStudents, academyId }) {
   return (
     <div style={{ direction: 'inherit' }}>
       
-      {/* القسم العلوي: العنوان وزر الإضافة المترجمين */}
+      {/* القسم العلوي: العنوان وزر الإضافة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
         <h2 style={{ color: C.gold, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <FaGraduationCap /> {t('students_management_title', 'إدارة الطلاب والشؤون التعليمية')}
+          <FaGraduationCap /> {t('students_management_title')}
         </h2>
         
         <button 
           onClick={() => setShowAddForm(!showAddForm)}
           style={{ background: showAddForm ? C.danger : C.gold, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s' }}
         >
-          <FaUserPlus /> {showAddForm ? t('cancel', 'إلغاء') : t('add_new_student', 'إضافة طالب جديد')}
+          <FaUserPlus /> {showAddForm ? t('cancel') : t('add_new_student')}
         </button>
       </div>
 
@@ -132,29 +133,30 @@ export default function Students({ students = [], setStudents, academyId }) {
         </div>
       )}
 
-      {/* ➕ نموذج إضافة طالب جديد المتكامل والمترجم بالكامل */}
+      {/* ➕ نموذج إضافة طالب جديد المتكامل */}
       {showAddForm && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px' }}>
-            {t('registration_data_title', 'بيانات التسجيل الأساسية والقرآنية')}
+            {t('registration_data_title')}
           </h3>
           
           {/* حقل الاسم والجنس */}
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 2, minWidth: '200px' }}>
-              <label style={{ color: C.text, fontSize: '14px' }}>{t('student_name_label', 'اسم الطالب الثنائي أو الثلاثي *')}</label>
+              <label style={{ color: C.text, fontSize: '14px' }}>{t('student_name_label')}</label>
               <input 
                 type="text" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)}
-                placeholder={t('student_name_placeholder', 'أدخل اسم الطالب الكامل')}
+                placeholder={t('student_name_placeholder')}
                 style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
                 required
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '100px' }}>
-              <label style={{ color: C.text, fontSize: '14px' }}>{t('gender_label', 'الجنس')}</label>
+              <label style={{ color: C.text, fontSize: '14px' }}>{t('gender_label')}</label>
+              {/* قمنا بتعديل الـ value هنا لتتوافق مع قاعدة البيانات مع الحفاظ على النص المترجم للواجهة */}
               <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}>
-                <option value="ذكر">{t('male', 'ذكر')}</option>
-                <option value="أنثى">{t('female', 'أنثى')}</option>
+                <option value="male">{t('male')}</option>
+                <option value="female">{t('female')}</option>
               </select>
             </div>
           </div>
@@ -162,18 +164,18 @@ export default function Students({ students = [], setStudents, academyId }) {
           {/* حقل السورة الحالية وولي الأمر */}
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
-              <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> {t('current_surah_label', 'السورة أو الجزء الحالي (الورد)')}</label>
+              <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> {t('current_surah_label')}</label>
               <input 
                 type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
-                placeholder={t('current_surah_placeholder', 'مثال: سورة البقرة / جزء عمّ')}
+                placeholder={t('current_surah_placeholder')}
                 style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
-              <label style={{ color: C.text, fontSize: '14px' }}><FaUserShield size={12} /> {t('parent_name_label', 'اسم ولي الأمر (اختياري)')}</label>
+              <label style={{ color: C.text, fontSize: '14px' }}><FaUserShield size={12} /> {t('parent_name_label')}</label>
               <input 
                 type="text" value={parentName} onChange={(e) => setParentName(e.target.value)}
-                placeholder={t('parent_name_placeholder', 'أدخل اسم الوالد أو ولي الأمر')}
+                placeholder={t('parent_name_placeholder')}
                 style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
               />
             </div>
@@ -181,20 +183,20 @@ export default function Students({ students = [], setStudents, academyId }) {
 
           {/* رقم الهاتف */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaPhone size={12} /> {t('contact_phone_label', 'رقم هاتف التواصل')}</label>
+            <label style={{ color: C.text, fontSize: '14px' }}><FaPhone size={12} /> {t('contact_phone_label')}</label>
             <input 
               type="tel" value={newStudentPhone} onChange={(e) => setNewStudentPhone(e.target.value)}
-              placeholder={t('phone_placeholder', 'مثال: 05xxxxxxxx')}
+              placeholder={t('phone_placeholder')}
               style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'left' }}
             />
           </div>
 
           {/* ملاحظات المعلم */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaStickyNote size={12} /> {t('teacher_notes_label', 'ملاحظات المعلم التوجيهية')}</label>
+            <label style={{ color: C.text, fontSize: '14px' }}><FaStickyNote size={12} /> {t('teacher_notes_label')}</label>
             <textarea 
               value={notes} onChange={(e) => setNotes(e.target.value)}
-              placeholder={t('notes_placeholder', 'اكتب أي ملاحظات تخص خطة حفظ الطالب أو حالته الحالية هنا...')}
+              placeholder={t('notes_placeholder')}
               style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', height: '70px', resize: 'none' }}
             />
           </div>
@@ -203,28 +205,28 @@ export default function Students({ students = [], setStudents, academyId }) {
             type="submit" disabled={isSaving}
             style={{ background: C.gold, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1, transition: '0.2s', marginTop: '10px' }}
           >
-            {isSaving ? t('saving_progress', 'جاري الحفظ والتسجيل...') : t('confirm_add_student', 'تأكيد إضافة الطالب في الحلقة')}
+            {isSaving ? t('saving_progress') : t('confirm_add_student')}
           </button>
         </form>
       )}
 
-      {/* 🔍 شريط البحث الذكي */}
+      {/* 🔍 شريط البحث */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '10px 15px', borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
         <FaSearch style={{ color: C.text, opacity: 0.5 }} />
         <input 
           type="text"
-          placeholder={t('search_placeholder', 'ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...')}
+          placeholder={t('search_placeholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '15px' }}
         />
       </div>
 
-      {/* 📋 عرض قائمة الطلاب ببطاقات تفاعلية */}
+      {/* 📋 قائمة الطلاب بالبطاقات التفاعلية */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filteredStudents.length === 0 ? (
           <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '20px' }}>
-            {searchTerm ? t('no_search_results', 'لم يتم العثور على نتائج تطابق بحثك.') : t('no_students_registered', 'لا يوجد طلاب مسجلين حالياً.')}
+            {searchTerm ? t('no_search_results') : t('no_students_registered')}
           </p>
         ) : (
           filteredStudents.map(student => (
@@ -234,8 +236,9 @@ export default function Students({ students = [], setStudents, academyId }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '220px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontWeight: 'bold', fontSize: '17px', color: '#fff' }}>{student.name}</span>
-                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: student.gender === 'أنثى' ? '#EC4899' : '#3B82F6', color: '#fff' }}>
-                    {student.gender === 'أنثى' ? t('female', 'أنثى') : t('male', 'ذكر')}
+                  {/* تم تعديل التحقق ليدعم قيم الإنجليزية المخزنة أو القديمة بالعربية لضمان الأمان اللوني والشارات */}
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: (student.gender === 'female' || student.gender === 'أنثى') ? '#EC4899' : '#3B82F6', color: '#fff' }}>
+                    {(student.gender === 'female' || student.gender === 'أنثى') ? t('female') : t('male')}
                   </span>
                 </div>
 
@@ -247,7 +250,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                   )}
                   {student.parent_name && (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <FaUserShield size={12} style={{ color: C.gold }} /> {t('parent_prefix', 'ولي الأمر:')} {student.parent_name}
+                      <FaUserShield size={12} style={{ color: C.gold }} /> {t('parent_prefix')} {student.parent_name}
                     </span>
                   )}
                 </div>
@@ -275,10 +278,10 @@ export default function Students({ students = [], setStudents, academyId }) {
                   <div 
                     onClick={() => { setEditingStudentId(student.id); setUpdatingSurahText(student.current_surah || ''); }}
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(212, 163, 89, 0.1)', color: C.gold, padding: '6px 12px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', border: '1px dashed rgba(212, 163, 89, 0.3)' }}
-                    title={t('click_to_update_surah', 'اضغط للتحديث السريع للسورة')}
+                    title={t('click_to_update_surah')}
                   >
                     <FaBookOpen size={13} />
-                    <span>{t('memorization_prefix', 'الحفظ:')} {student.current_surah || t('not_specified_yet', 'لم يحدد بعد')}</span>
+                    <span>{t('memorization_prefix')} {student.current_surah || t('not_specified_yet')}</span>
                     <FaEdit size={11} style={{ opacity: 0.6 }} />
                   </div>
                 )}
@@ -287,11 +290,11 @@ export default function Students({ students = [], setStudents, academyId }) {
                 <div>
                   {student.status === 'active' ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
-                      <FaCheckCircle size={12} /> {t('status_active', 'نشط')}
+                      <FaCheckCircle size={12} /> {t('status_active')}
                     </span>
                   ) : (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
-                      <FaTimesCircle size={12} /> {t('status_inactive', 'متوقف')}
+                      <FaTimesCircle size={12} /> {t('status_inactive')}
                     </span>
                   )}
                 </div>
