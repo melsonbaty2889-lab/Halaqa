@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, 
   FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, 
-  FaTimes, FaSave, FaArchive, FaEye, FaEyeSlash 
+  FaTimes, FaSave, FaArchive, FaEye, FaEyeSlash, FaInbox
 } from 'react-icons/fa';
 
 export default function Students({ students = [], setStudents, academyId }) {
@@ -27,7 +27,7 @@ export default function Students({ students = [], setStudents, academyId }) {
   // حالة التعديل الشامل للطالب
   const [editingStudent, setEditingStudent] = useState(null);
 
-  // حالات التحميل المنفصلة لضمان تجربة مستخدم احترافية
+  // حالات التحميل والرسائل
   const [isAdding, setIsAdding] = useState(false);
   const [updatingId, setUpdatingId] = useState(null); 
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -85,6 +85,7 @@ export default function Students({ students = [], setStudents, academyId }) {
 
       setMessage({ text: t('student_added_success', 'تم تسجيل الطالب بنجاح واحترافية! 🎉'), type: 'success' });
       
+      // إعادة تعيين الحقول
       setNewStudentName('');
       setNewStudentPhone('');
       setParentName('');
@@ -136,7 +137,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
   };
 
-  // 🗄️ دالة أرشفة أو إلغاء أرشفة الطالب
+  // 🗄️ دالة أرشفة أو استعادة الطالب
   const handleToggleArchive = async (studentId, currentArchiveStatus) => {
     const confirmationMsg = currentArchiveStatus 
       ? t('confirm_unarchive', 'هل تريد إلغاء أرشفة هذا الطالب وإعادته للقائمة النشطة؟')
@@ -181,7 +182,7 @@ export default function Students({ students = [], setStudents, academyId }) {
   return (
     <div style={{ direction: 'inherit' }}>
       
-      {/* القسم العلوي: العنوان والتحكم */}
+      {/* القسم العلوي: العنوان والتحكم الذكي */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
         <h2 style={{ color: C.gold, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
           <FaGraduationCap /> {showArchived ? t('archived_students_title', 'أرشيف الطلاب والموقوفين') : t('students_management_title', 'إدارة الطلاب والشؤون التعليمية')}
@@ -193,7 +194,8 @@ export default function Students({ students = [], setStudents, academyId }) {
             onClick={() => { 
               setShowArchived(!showArchived); 
               setEditingStudent(null); 
-              setShowAddForm(false); // 💡 تحسين ذكي: إغلاق نموذج الإضافة تلقائياً عند استعراض الأرشيف
+              setShowAddForm(false); 
+              setSearchTerm(''); // تنظيف نص البحث عند الانتقال
             }}
             style={{ background: 'rgba(255,255,255,0.05)', color: showArchived ? C.gold : C.text, border: `1px solid ${C.border}`, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}
           >
@@ -201,12 +203,15 @@ export default function Students({ students = [], setStudents, academyId }) {
             {showArchived ? t('show_active_students', 'عرض الطلاب النشطين') : t('show_archive', 'عرض الأرشيف')}
           </button>
 
-          <button 
-            onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
-            style={{ background: showAddForm ? C.danger : C.gold, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <FaUserPlus /> {showAddForm ? t('cancel', 'إلغاء') : t('add_new_student', 'إضافة طالب جديد')}
-          </button>
+          {/* 💡 تحسين ذكي: يظهر زر الإضافة فقط عندما لا نكون في صفحة الأرشيف */}
+          {!showArchived && (
+            <button 
+              onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
+              style={{ background: showAddForm ? C.danger : C.gold, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <FaUserPlus /> {showAddForm ? t('cancel', 'إلغاء') : t('add_new_student', 'إضافة طالب جديد')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -217,7 +222,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       )}
 
       {/* ➕ نموذج إضافة طالب جديد */}
-      {showAddForm && (
+      {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px' }}>{t('registration_data_title', 'بيانات التسجيل الأساسية والقرآنية')}</h3>
           
@@ -277,7 +282,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             />
           </div>
 
-          <button type="submit" disabled={isAdding} style={{ background: C.gold, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+          <button type="submit" disabled={isAdding} style={{ background: C.gold, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
             {isAdding ? t('saving_progress', 'جاري الحفظ...') : t('confirm_add_student', 'تأكيد إضافة الطالب')}
           </button>
         </form>
@@ -287,7 +292,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '10px 15px', borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
         <FaSearch style={{ color: C.text, opacity: 0.5 }} />
         <input 
-          type="text" placeholder={t('search_placeholder', 'ابحث بذكاء عن طالب (بالاسم، الهاتف، أو السورة)...')}
+          type="text" placeholder={showArchived ? t('search_archive_placeholder', 'ابحث في الأرشيف باسم الطالب أو الهاتف...') : t('search_placeholder', 'ابحث بذكاء عن طالب (بالاسم، الهاتف، أو السورة)...')}
           value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
           style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '15px' }}
         />
@@ -296,7 +301,9 @@ export default function Students({ students = [], setStudents, academyId }) {
       {/* 📋 عرض قائمة الطلاب ببطاقات تفاعلية مطورة */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filteredStudents.length === 0 ? (
-          <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '20px' }}>{t('no_students_registered', 'لا توجد نتائج تطابق البحث.')}</p>
+          <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '30px', background: C.surface, borderRadius: '10px', border: `1px dashed ${C.border}` }}>
+            {showArchived ? t('no_archived_students', 'لا يوجد طلاب في الأرشيف حالياً.') : t('no_students_registered', 'لا يوجد طلاب مسجلين حالياً.')}
+          </p>
         ) : (
           filteredStudents.map(student => {
             const isCurrentEditing = editingStudent?.id === student.id;
@@ -360,7 +367,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض العادي للبطاقة 
+                  // 👁️ وضع العرض العادي للبطاقة المتوافق مع شاشات الهواتف بنسبة 100%
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '220px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -398,7 +405,14 @@ export default function Students({ students = [], setStudents, academyId }) {
                         <span>{t('memorization_prefix', 'الحفظ:')} {student.current_surah || t('not_specified_yet', 'لم يحدد بعد')}</span>
                       </div>
 
-                      <div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {/* 💡 تحسين ذكي: إضافة شارة توضح فوريّاً أن الطالب متواجد في الأرشيف */}
+                        {student.is_archived && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(148, 163, 184, 0.15)', color: '#94A3B8', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
+                            <FaInbox size={11} /> {t('archived_badge', 'مؤرشف')}
+                          </span>
+                        )}
+
                         {student.status === 'active' || student.status === 'نشط' ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
                             <FaCheckCircle size={12} /> {t('status_active', 'نشط')}
@@ -415,13 +429,11 @@ export default function Students({ students = [], setStudents, academyId }) {
                         onClick={() => { setEditingStudent({ ...student }); setShowAddForm(false); }}
                         style={{ background: 'rgba(255,255,255,0.05)', color: C.gold, border: `1px solid ${C.border}`, padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', transition: '0.2s' }}
                         title={t('edit_student_data', 'تعديل البيانات')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212, 163, 89, 0.15)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                       >
                         <FaEdit size={13} /> {t('edit', 'تعديل')}
                       </button>
 
-                      {/* 🗄️ تحسين زر الأرشفة / الاستعادة بصرياً ليتطابق مع زر التعديل */}
+                      {/* 🗄️ زر الأرشفة / الاستعادة الاحترافي المتناسق بصرياً مع لقطات الشاشة */}
                       <button
                         onClick={() => handleToggleArchive(student.id, student.is_archived)}
                         style={{ 
@@ -437,9 +449,6 @@ export default function Students({ students = [], setStudents, academyId }) {
                           fontSize: '13px',
                           transition: '0.2s'
                         }}
-                        title={student.is_archived ? t('unarchive', 'إلغاء الأرشفة وإعادته نشطاً') : t('archive', 'نقل للأرشيف')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = student.is_archived ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                       >
                         {student.is_archived ? <FaEye size={13} /> : <FaArchive size={13} />}
                         <span>{student.is_archived ? t('restore', 'استعادة') : t('archive', 'أرشفة')}</span>
