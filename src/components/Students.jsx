@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-// تـم اسـتبدال FaUserGrad بـ FaGraduationCap لضمان قبول البناء في Vercel
 import { FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 export default function Students({ students = [], setStudents, academyId }) {
@@ -38,16 +37,16 @@ export default function Students({ students = [], setStudents, academyId }) {
         .insert([
           { 
             name: newStudentName.trim(), 
-            phone: newStudentPhone.trim() || null, 
+            parent_phone: newStudentPhone.trim() || null, // تـم الـتعديل هـنا ليطابق اسم العمود في قاعدة بياناتك
             academy_id: academyId,
-            status: 'active' // الحالة الافتراضية للطالب الجديد
+            status: 'active' 
           }
         ])
         .select();
 
       if (error) throw error;
 
-      // تحديث القائمة المحلية فوراً بدون الحاجة لإعادة تحميل الصفحة بالكامل
+      // تحديث القائمة المحلية فوراً
       if (data && setStudents) {
         setStudents(prev => [...prev, data[0]]);
       }
@@ -64,11 +63,11 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
   };
 
-  // 🔍 تصفية الطلاب بناءً على نص البحث (بشكل آمن)
+  // 🔍 تصفية الطلاب بناءً على نص البحث (بشكل آمن متوافق مع parent_phone)
   const filteredStudents = Array.isArray(students) 
     ? students.filter(student => 
         student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student?.phone?.includes(searchTerm)
+        student?.parent_phone?.includes(searchTerm) // تـم الـتعديل هـنا
       )
     : [];
 
@@ -159,9 +158,9 @@ export default function Students({ students = [], setStudents, academyId }) {
               {/* تفاصيل الطالب الإسم والهاتف */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#fff' }}>{student.name}</span>
-                {student.phone && (
+                {student.parent_phone && ( // تـم الـتعديل هـنا
                   <span style={{ fontSize: '13px', color: C.text, opacity: 0.7, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <FaPhone size={11} /> {student.phone}
+                    <FaPhone size={11} /> {student.parent_phone} {/* تـم الـتعديل هـنا */}
                   </span>
                 )}
               </div>
