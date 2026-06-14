@@ -29,7 +29,7 @@ export default function Students({ students = [], setStudents, academyId }) {
 
   // حالات التحميل المنفصلة لضمان تجربة مستخدم احترافية
   const [isAdding, setIsAdding] = useState(false);
-  const [updatingId, setUpdatingId] = useState(null); // تخزن id الطالب الذي يتم حفظه حالياً
+  const [updatingId, setUpdatingId] = useState(null); 
   const [message, setMessage] = useState({ text: '', type: '' });
 
   // 📝 دالة توحيد الحروف العربية لجعل البحث فائق الذكاء والمرونة
@@ -136,7 +136,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
   };
 
-  // 🗄️ دالة أرشفة أو إلغاء أرشفة الطالب (تعتمد على عمود is_archived في قاعدة بياناتك)
+  // 🗄️ دالة أرشفة أو إلغاء أرشفة الطالب
   const handleToggleArchive = async (studentId, currentArchiveStatus) => {
     const confirmationMsg = currentArchiveStatus 
       ? t('confirm_unarchive', 'هل تريد إلغاء أرشفة هذا الطالب وإعادته للقائمة النشطة؟')
@@ -166,11 +166,9 @@ export default function Students({ students = [], setStudents, academyId }) {
   // 🔍 تصفية وفلترة الطلاب بناءً على نص البحث وحالة الأرشفة
   const filteredStudents = Array.isArray(students) 
     ? students.filter(student => {
-        // فلترة بناءً على زر تبديل الأرشيف
         if (showArchived && !student.is_archived) return false;
         if (!showArchived && student.is_archived) return false;
 
-        // فلترة بناءً على نص البحث الذكي
         const search = normalizeArabic(searchTerm);
         return (
           normalizeArabic(student?.name).includes(search) ||
@@ -192,7 +190,11 @@ export default function Students({ students = [], setStudents, academyId }) {
         <div style={{ display: 'flex', gap: '10px' }}>
           {/* زر تبديل عرض الأرشيف */}
           <button
-            onClick={() => { setShowArchived(!showArchived); setEditingStudent(null); }}
+            onClick={() => { 
+              setShowArchived(!showArchived); 
+              setEditingStudent(null); 
+              setShowAddForm(false); // 💡 تحسين ذكي: إغلاق نموذج الإضافة تلقائياً عند استعراض الأرشيف
+            }}
             style={{ background: 'rgba(255,255,255,0.05)', color: showArchived ? C.gold : C.text, border: `1px solid ${C.border}`, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}
           >
             {showArchived ? <FaEyeSlash /> : <FaArchive />}
@@ -358,7 +360,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض العادي للبطاقة (مطور ومحمي بالكامل)
+                  // 👁️ وضع العرض العادي للبطاقة 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '220px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -411,19 +413,36 @@ export default function Students({ students = [], setStudents, academyId }) {
                       {/* ⚙️ زر التعديل الشامل */}
                       <button 
                         onClick={() => { setEditingStudent({ ...student }); setShowAddForm(false); }}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: C.gold, border: `1px solid ${C.border}`, padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: C.gold, border: `1px solid ${C.border}`, padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', transition: '0.2s' }}
                         title={t('edit_student_data', 'تعديل البيانات')}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212, 163, 89, 0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                       >
                         <FaEdit size={13} /> {t('edit', 'تعديل')}
                       </button>
 
-                      {/* 🗄️ زر الأرشفة / إلغاء الأرشفة الذكي */}
+                      {/* 🗄️ تحسين زر الأرشفة / الاستعادة بصرياً ليتطابق مع زر التعديل */}
                       <button
                         onClick={() => handleToggleArchive(student.id, student.is_archived)}
-                        style={{ background: 'transparent', color: student.is_archived ? '#10B981' : C.danger, border: 'none', cursor: 'pointer', padding: '6px', fontSize: '14px' }}
-                        title={student.is_archived ? t('unarchive', 'إلغاء الأرشفة') : t('archive', 'نقل للأرشيف')}
+                        style={{ 
+                          background: 'rgba(255,255,255,0.05)', 
+                          color: student.is_archived ? '#10B981' : C.danger, 
+                          border: `1px solid ${student.is_archived ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`, 
+                          padding: '6px 10px', 
+                          borderRadius: '8px', 
+                          cursor: 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '5px', 
+                          fontSize: '13px',
+                          transition: '0.2s'
+                        }}
+                        title={student.is_archived ? t('unarchive', 'إلغاء الأرشفة وإعادته نشطاً') : t('archive', 'نقل للأرشيف')}
+                        onMouseEnter={(e) => e.currentTarget.style.background = student.is_archived ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                       >
-                        {student.is_archived ? <FaEye /> : <FaArchive />}
+                        {student.is_archived ? <FaEye size={13} /> : <FaArchive size={13} />}
+                        <span>{student.is_archived ? t('restore', 'استعادة') : t('archive', 'أرشفة')}</span>
                       </button>
 
                     </div>
