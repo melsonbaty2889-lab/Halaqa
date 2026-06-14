@@ -1,107 +1,171 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
-import { Card, PageHeader, Btn } from './UI';
-
-const getTodayDate = () => new Date().toISOString().split('T')[0];
+import { useTranslation } from 'react-i18next';
+import { FaCalendarAlt, FaCheck, FaTimes, FaClock, FaUserClock, FaSave } from 'react-icons/fa';
 
 export default function Attendance({ students, academyId }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  const { t } = useTranslation();
+  
+  // 1. تحديد تاريخ اليوم كقيمة افتراضية (بصيغة YYYY-MM-DD)
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // 2. حالة تخزين بيانات الحضور لكل طالب (المفتاح هو id الطالب)
   const [attendanceData, setAttendanceData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [btnLoading, setBtnLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-  const fetchAttendance = useCallback(async () => {
-    if (!academyId) return;
-    setLoading(true);
-    const { data: records, error } = await supabase
-      .from('attendance')
-      .select('id, student_id, status, notes')
-      .eq('date', selectedDate)
-      .eq('academy_id', academyId);
-
-    const mapped = {};
-    records?.forEach(r => {
-      mapped[r.student_id] = { id: r.id, status: r.status, notes: r.notes || '' };
-    });
-    setAttendanceData(mapped);
-    setLoading(false);
-  }, [selectedDate, academyId]);
-
-  useEffect(() => { fetchAttendance(); }, [fetchAttendance]);
-
-  const updateRecord = (studentId, updates) => {
-    setAttendanceData(prev => ({ ...prev, [studentId]: { ...prev[studentId], ...updates } }));
+  // دالة لتحديث حالة الطالب (حاضر، غائب، متأخر، بعذر) في الـ State المحلية
+  const handleStatusChange = (studentId, status) => {
+    setAttendanceData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        status: status
+      }
+    }));
   };
 
-  const saveAttendance = async () => {
-    if (!academyId || !students) return;
-    setBtnLoading(true);
-    for (const s of students) {
-      await supabase.rpc('upsert_attendance', {
-        p_student_id: s.id,
-        p_academy_id: academyId,
-        p_date: selectedDate,
-        p_status: attendanceData[s.id]?.status || 'غائب',
-        p_notes: attendanceData[s.id]?.notes || ''
-      });
+  // دالة لتحديث الملاحظات الخاصة بالطالب في الـ State المحلية
+  const handleNotesChange = (studentId, notesText) => {
+    setAttendanceData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        notes: notesText
+      }
+    }));
+  };
+
+  // 🔥 الدالة الاحترافية المحدثة: حفظ الحضور دفعة واحدة بطلب واحد (Batch Upsert)
+  const handleSaveAttendance = async () => {
+    if (!academyId) {
+      setMessage({ text: t('errorLoading'), type: 'error' });
+      return;
     }
-    setBtnLoading(false);
-    alert('تم الحفظ بنجاح 🎉');
-    fetchAttendance();
+
+    setIsSaving(true);
+    setMessage({ text: '', type: '' });
+
+    try {
+      // أ) بناء المصفوفة المجمعة لجميع الطلاب
+      const attendanceRecords = students.map(student => {
+        // إذا لم يقم المعلم بتحديد حالة، نعتبر الطالب "حاضر" كخيار افتراصي ذكي
+        const currentRecord = attendanceData[student.id] || { status: 'present', notes: '' };
+        
+        return {
+          student_id: student.id,
+          academy_id: academyId,
+          date: selectedDate,
+          status: currentRecord.status || 'present',
+          notes: currentRecord.notes || ''
+        };
+      });
+
+      // ب) إرسال المصفوفة بالكامل دفعة واحدة إلى جدول الـ attendance في Supabase
+      // ملاحظة: تأكد أن جدول قاعدة البيانات يحتوي على Unique Constraint يجمع بين (student_id و date)
+      const { error } = await supabase
+        .from('attendance')
+        .upsert(attendanceRecords, { onConflict: 'student_id, date' });
+
+      if (error) throw error;
+
+      setMessage({ text: "تم اعتماد وحفظ كشف الحضور بنجاح! 🎉", type: 'success' });
+    } catch (error) {
+      console.error("🚨 خطأ أثناء حفظ الحضور مجمعاً:", error);
+      setMessage({ text: `فشل الحفظ: ${error.message}`, type: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div style={{ padding: isMobile ? '10px' : '24px' }}>
-      <PageHeader title="📝 كشف الحضور" sub="سجل حضور الطلاب اليومي" />
-      
-      <div style={{ marginBottom: '20px' }}>
-        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} 
-          style={{ padding: '10px', borderRadius: '8px', width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #475569' }} />
+    <div style={{ direction: 'inherit' }}>
+      {/* العنوان العلوي والتحكم بالتاريخ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+        <h2 style={{ color: C.gold, margin: 0 }}>{t('attendance')}</h2>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}` }}>
+          <FaCalendarAlt style={{ color: C.gold }} />
+          <input 
+            type="date" 
+            value={selectedDate} 
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', cursor: 'pointer', fontSize: '15px' }}
+          />
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {/* 🛡️ إضافة علامة الاستفهام لحماية الخريطة التكرارية من الانهيار */}
-        {students?.map(s => {
-          const status = attendanceData[s.id]?.status || 'غائب';
-          return (
-            <div key={s.id} style={{ 
-              background: '#1e293b', padding: '15px', borderRadius: '12px',
-              display: 'flex', flexDirection: isMobile ? 'column' : 'row', 
-              gap: '10px', alignItems: isMobile ? 'stretch' : 'center' 
-            }}>
-              <div style={{ flex: 1, fontWeight: 'bold' }}>{s.name}</div>
-              
-              <button 
-                onClick={() => updateRecord(s.id, { status: status === 'حاضر' ? 'غائب' : 'حاضر' })}
-                style={{ padding: '8px 16px', background: status === 'حاضر' ? '#10b981' : '#ef4444', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer' }}
-              >
-                {status}
-              </button>
-              
-              <input 
-                placeholder="ملاحظات..." 
-                value={attendanceData[s.id]?.notes || ''} 
-                onChange={(e) => updateRecord(s.id, { notes: e.target.value })}
-                style={{ padding: '8px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }}
-              />
-            </div>
-          );
-        })}
+      {/* رسائل التنبيه والنجاح */}
+      {message.text && (
+        <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '20px', backgroundColor: message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: message.type === 'success' ? '#10B981' : '#EF4444', border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}` }}>
+          {message.text}
+        </div>
+      )}
+
+      {/* قائمة الطلاب ورصد الحالات */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '30px' }}>
+        {students.length === 0 ? (
+          <p style={{ color: C.text, opacity: 0.6 }}>لا يوجد طلاب مسجلين حالياً لعرضهم.</p>
+        ) : (
+          students.map(student => {
+            const currentStatus = attendanceData[student.id]?.status || 'present';
+            
+            return (
+              <div key={student.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.surface, padding: '15px', borderRadius: '10px', border: `1px solid ${C.border}`, flexWrap: 'wrap', gap: '15px' }}>
+                
+                {/* اسم الطالب */}
+                <span style={{ fontWeight: 'bold', fontSize: '16px', color: C.text }}>{student.name}</span>
+                
+                {/* خيارات رصد الحضور (أزرار تفاعلية) */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  
+                  {/* زر حاضر */}
+                  <button onClick={() => handleStatusChange(student.id, 'present')} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: currentStatus === 'present' ? '#10B981' : 'rgba(16, 185, 129, 0.1)', color: currentStatus === 'present' ? '#fff' : '#10B981', transition: '0.2s' }}>
+                    <FaCheck /> {t('present')}
+                  </button>
+
+                  {/* زر غائب */}
+                  <button onClick={() => handleStatusChange(student.id, 'absent')} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: currentStatus === 'absent' ? '#EF4444' : 'rgba(239, 68, 68, 0.1)', color: currentStatus === 'absent' ? '#fff' : '#EF4444', transition: '0.2s' }}>
+                    <FaTimes /> {t('absent')}
+                  </button>
+
+                  {/* زر متأخر */}
+                  <button onClick={() => handleStatusChange(student.id, 'late')} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: currentStatus === 'late' ? '#F59E0B' : 'rgba(245, 158, 11, 0.1)', color: currentStatus === 'late' ? '#fff' : '#F59E0B', transition: '0.2s' }}>
+                    <FaClock /> {t('late')}
+                  </button>
+
+                  {/* زر غائب بعذر */}
+                  <button onClick={() => handleStatusChange(student.id, 'excused')} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: currentStatus === 'excused' ? '#3B82F6' : 'rgba(59, 130, 246, 0.1)', color: currentStatus === 'excused' ? '#fff' : '#3B82F6', transition: '0.2s' }}>
+                    <FaUserClock /> {t('excused')}
+                  </button>
+
+                  {/* حقل إدخال الملاحظات لكل طالب */}
+                  <input 
+                    type="text" 
+                    placeholder={t('notes')}
+                    value={attendanceData[student.id]?.notes || ''}
+                    onChange={(e) => handleNotesChange(student.id, e.target.value)}
+                    style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '6px 10px', borderRadius: '6px', outline: 'none', width: '160px', fontSize: '14px' }}
+                  />
+                </div>
+
+              </div>
+            );
+          })
+        )}
       </div>
 
-      <button onClick={saveAttendance} disabled={btnLoading} 
-        style={{ marginTop: '20px', width: '100%', padding: '15px', background: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}
-      >
-        {btnLoading ? 'جاري الحفظ...' : 'حفظ الكشف'}
-      </button>
+      {/* زر حفظ الكشف النهائي الثابت في الأسفل أو نهاية الصفحة */}
+      {students.length > 0 && (
+        <button 
+          onClick={handleSaveAttendance}
+          disabled={isSaving}
+          style={{ width: '100%', padding: '14px', background: C.gold, color: '#000', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: isSaving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, transition: '0.2s' }}
+        >
+          <FaSave /> {isSaving ? "جاري الحفظ والاعتماد..." : t('save_attendance')}
+        </button>
+      )}
     </div>
   );
 }
