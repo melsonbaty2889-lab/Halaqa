@@ -16,45 +16,58 @@ export default function StudentProfile() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // 1. جلب بيانات الطالب
+  // 1. جلب بيانات الطالب عند تحميل الصفحة
   useEffect(() => {
     const fetchStudent = async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (data) setStudent(data);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("students")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (data) setStudent(data);
+      } catch (err) {
+        console.error("Error fetching student:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchStudent();
   }, [id]);
 
-  // 2. دالة الحفظ الاحترافية
+  // 2. دالة الحفظ مع استخدام try...catch...finally لكسر حالة "جاري الحفظ" دائماً
   const handleUpdate = async () => {
     setSaving(true);
     setMessage({ text: '', type: '' });
 
-    const { error } = await supabase
-      .from("students")
-      .update({
-        name: student.name,
-        birth_date: student.birth_date,
-        gender: student.gender,
-        notes: student.notes,
-        current_quarter_index: student.current_quarter_index
-      })
-      .eq("id", id);
-    
-    if (error) {
-      setMessage({ text: "خطأ: " + error.message, type: 'error' });
-    } else {
-      setMessage({ text: "تم حفظ البيانات بنجاح!", type: 'success' });
+    try {
+      const { error } = await supabase
+        .from("students")
+        .update({
+          name: student.name,
+          birth_date: student.birth_date,
+          gender: student.gender,
+          notes: student.notes,
+          current_quarter_index: student.current_quarter_index
+        })
+        .eq("id", id);
+      
+      if (error) throw error;
+
+      // نجاح عملية الحفظ
+      setMessage({ text: "تم تحديث بيانات الطالب بنجاح! 📝", type: 'success' });
       setIsEditing(false);
-      // إخفاء الرسالة تلقائياً بعد 3 ثوانٍ
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      
+      // إخفاء رسالة النجاح تلقائياً بعد 4 ثوانٍ
+      setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+
+    } catch (error) {
+      console.error("Error updating student:", error);
+      setMessage({ text: "خطأ أثناء الحفظ: " + error.message, type: 'error' });
+    } finally {
+      // السطر السحري: يضمن إغلاق جملة "جاري الحفظ..." وعودة الزر لطبيعته فوراً
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) return <div style={{ color: C.text, textAlign: 'center', padding: '50px' }}>{t("جاري التحميل...")}</div>;
@@ -67,7 +80,13 @@ export default function StudentProfile() {
       
       <div style={{ background: C.surface, padding: "30px", borderRadius: "20px", border: `1px solid ${C.border}` }}>
         <h2 style={{ color: C.gold, marginBottom: "20px" }}>
-          {isEditing ? <input value={student.name} onChange={(e) => setStudent({...student, name: e.target.value})} style={{ background: '#0C1520', color: '#fff', padding: '5px', borderRadius: '5px', border: `1px solid ${C.border}` }} /> : student.name}
+          {isEditing ? (
+            <input 
+              value={student.name || ""} 
+              onChange={(e) => setStudent({...student, name: e.target.value})} 
+              style={{ background: '#0C1520', color: '#fff', padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, width: '100%', boxSizing: 'border-box' }} 
+            />
+          ) : student.name}
         </h2>
         
         <div style={{ display: "grid", gap: "20px" }}>
@@ -83,10 +102,11 @@ export default function StudentProfile() {
           </label>
 
           <div style={{ marginTop: '10px' }}>
-            <label style={{ marginBottom: '10px', display: 'block' }}>{t("مستوى الحفظ الحالي")}:</label>
             <QuranProgressSelector 
-              initialIndex={student.current_quarter_index} 
-              onIndexChange={(idx) => setStudent({...student, current_quarter_index: idx})}
+              initialIndex={student.current_quarter_index || 0} 
+              onIndexChange={(idx) => {
+                setStudent(prev => ({ ...prev, current_quarter_index: idx }));
+              }}
               disabled={!isEditing}
             />
           </div>
@@ -96,22 +116,33 @@ export default function StudentProfile() {
           </label>
         </div>
 
-        {/* زر التفاعل */}
+        {/* زر الحفظ والتعديل التفاعلي */}
         <button 
           onClick={() => isEditing ? handleUpdate() : setIsEditing(true)} 
           disabled={saving}
-          style={{ marginTop: "30px", width: '100%', background: C.gold, padding: "12px", border: "none", borderRadius: "10px", fontWeight: 'bold', cursor: 'pointer' }}
+          style={{ 
+            marginTop: "30px", 
+            width: '100%', 
+            background: C.gold, 
+            padding: "12px", 
+            border: "none", 
+            borderRadius: "10px", 
+            fontWeight: 'bold', 
+            cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.7 : 1
+          }}
         >
-          {saving ? "جاري الحفظ..." : (isEditing ? "حفظ التغييرات" : "تعديل البيانات")}
+          {saving ? t("جاري الحفظ...") : (isEditing ? t("حفظ التغييرات") : t("تعديل البيانات"))}
         </button>
 
-        {/* رسالة التأكيد تظهر هنا أسفل الزر مباشرة */}
+        {/* مكان ظهور الرسالة المدمجة أسفل زر التعديل مباشرة */}
         {message.text && (
           <div style={{ 
             marginTop: '15px', 
-            padding: '10px', 
+            padding: '12px', 
             borderRadius: '8px', 
             textAlign: 'center',
+            fontWeight: '500',
             background: message.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
             color: message.type === 'success' ? '#10B981' : '#EF4444',
             border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}`
