@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
+// 1️⃣ استيراد قائمة الدول الاحترافية من ملفها المنفصل
+import { COUNTRIES_LIST } from '../constants/countries'; 
 import { 
   FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, 
   FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, 
-  FaTimes, FaSave, FaArchive, FaEye, FaEyeSlash, FaInbox,
+  FaTimes, FaSave, FaArchive, FaEye, FaEyeSlash,
   FaCalendarAlt, FaMoneyBillWave, FaStar
 } from 'react-icons/fa';
 
@@ -17,16 +19,17 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   
-  // 🌟 حقول نموذج إضافة طالب جديد (مطابقة تماماً لأسماء أعمدة لقطة الشاشة Screenshot_20260614-144333.png)
+  // حقول نموذج إضافة طالب جديد
   const [name, setName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [parentName, setParentName] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState('male');
-  const [birthDate, setBirthDate] = useState(''); // حقل birth_date من الجدول
-  const [paymentPlan, setPaymentPlan] = useState('شهري'); // حقل payment_plan الافتراضي 'شهري'
-  const [countryCode, setCountryCode] = useState(''); // حقل country_code
+  const [birthDate, setBirthDate] = useState(''); 
+  const [paymentPlan, setPaymentPlan] = useState('شهري'); 
+  const [countryCode, setCountryCode] = useState('EG'); // القيمة الافتراضية مصر أو اتركها فارغة
+  const [isCustomCountry, setIsCustomCountry] = useState(false); // حالة التحكم في الإدخال اليدوي للدول النادرة
 
   // حالة التعديل المؤقت للطالب
   const [editingStudent, setEditingStudent] = useState(null);
@@ -77,7 +80,6 @@ export default function Students({ students = [], setStudents, academyId }) {
     setMessage({ text: '', type: '' });
 
     try {
-      // إرسال البيانات بأسماء الأعمدة الصحيحة كما في لقطة الشاشة
       const { data, error } = await supabase
         .from('students')
         .insert([
@@ -91,9 +93,9 @@ export default function Students({ students = [], setStudents, academyId }) {
             academy_id: academyId,
             status: 'active',
             is_archived: false,
-            birth_date: birthDate || null, // الحقل الفعلي من قاعدة البيانات
-            payment_plan: paymentPlan,     // الحقل الفعلي من قاعدة البيانات
-            country_code: countryCode.trim() || null
+            birth_date: birthDate || null, 
+            payment_plan: paymentPlan,     
+            country_code: countryCode.trim() || null // حفظ الكود المختار أو المكتوب يدويًا
           }
         ])
         .select();
@@ -115,7 +117,8 @@ export default function Students({ students = [], setStudents, academyId }) {
       setGender('male');
       setBirthDate('');
       setPaymentPlan('شهري');
-      setCountryCode('');
+      setCountryCode('EG');
+      setIsCustomCountry(false);
       setShowAddForm(false);
     } catch (error) {
       console.error("🚨 خطأ أثناء إضافة الطالب:", error);
@@ -149,6 +152,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           status: editingStudent.status,
           birth_date: editingStudent.birth_date || null,
           payment_plan: editingStudent.payment_plan,
+          country_code: editingStudent.country_code || null, // 💡 تم إضافتها لضمان حفظ التعديل بالدولة في قاعدة البيانات
           last_test_score: editingStudent.last_test_score ? parseInt(editingStudent.last_test_score) : 0,
           level_score: editingStudent.level_score ? parseInt(editingStudent.level_score) : 0
         })
@@ -220,6 +224,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         
         <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between' }}>
           <button
+            type="button"
             onClick={() => { 
               setShowArchived(!showArchived); 
               setEditingStudent(null); 
@@ -235,6 +240,7 @@ export default function Students({ students = [], setStudents, academyId }) {
 
           {!showArchived && (
             <button 
+              type="button"
               onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
               style={{ background: showAddForm ? C.danger : C.gold, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', flex: 1, justifyContent: 'center' }}
             >
@@ -250,7 +256,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         </div>
       )}
 
-      {/* ➕ نموذج إضافة طالب المتوافق مع حقول قاعدة البيانات */}
+      {/* ➕ نموذج إضافة طالب المتوافق مع حقول قاعدة البيانات وقائمة الدول المنفصلة */}
       {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px', borderBottom: `1px solid ${C.border}`, paddingBottom: '10px' }}>بيانات التسجيل (طبقاً لجدول قاعدة البيانات)</h3>
@@ -283,8 +289,8 @@ export default function Students({ students = [], setStudents, academyId }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '150px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}><FaMoneyBillWave size={12} /> نظام الدفع</label>
               <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}>
                 <option value="شهري">شهري</option>
@@ -294,18 +300,47 @@ export default function Students({ students = [], setStudents, academyId }) {
               </select>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-              <label style={{ color: C.text, fontSize: '14px' }}>رمز الدولة</label>
-              <input 
-                type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)}
-                placeholder="EG"
-                style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
-              />
+            {/* 💡 تحويل "رمز الدولة" النصي التقليدي إلى قائمة الدول الاحترافية الجاهزة */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '150px' }}>
+              <label style={{ color: C.text, fontSize: '14px' }}>الدولة وإقليم الطالب</label>
+              <select 
+                value={isCustomCountry ? 'OTHER' : countryCode} 
+                onChange={(e) => {
+                  if (e.target.value === 'OTHER') {
+                    setIsCustomCountry(true);
+                    setCountryCode(''); // تصفية القيمة ليقوم بكتابتها يدوياً
+                  } else {
+                    setIsCustomCountry(false);
+                    setCountryCode(e.target.value);
+                  }
+                }} 
+                style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
+              >
+                {COUNTRIES_LIST.map((c) => (
+                  <option key={c.code} value={c.code} style={{ background: '#0C1520' }}>
+                    {c.flag} {c.name} ({c.dialCode})
+                  </option>
+                ))}
+                <option value="OTHER" style={{ color: C.gold, background: '#0C1520' }}>🌐 دولة أخرى (إدخال يدوي لطيف)</option>
+              </select>
+
+              {/* إذا اختار "دولة أخرى"، يظهر هذا الحقل الذكي تلقائياً */}
+              {isCustomCountry && (
+                <input 
+                  type="text" 
+                  maxLength="3" 
+                  value={countryCode} 
+                  onChange={(e) => setCountryCode(e.target.value.toUpperCase())} 
+                  placeholder="أدخل رمز الدولة الدولي (مثال: TR)" 
+                  style={{ background: '#0C1520', border: `1px solid ${C.gold}`, color: '#fff', padding: '11px', borderRadius: '8px', marginTop: '5px', outline: 'none' }} 
+                  required 
+                />
+              )}
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> السورة أو الجزء الحالي (الورد)</label>
+            <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> {t('current_surah', 'السورة أو الجزء الحالي (الورد)')}</label>
             <input 
               type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
               placeholder="مثال: سورة البقرة"
@@ -356,7 +391,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         />
       </div>
 
-      {/* 📋 عرض بطاقات الطلاب ومطابقتها */}
+      {/* 📋 عرض بطاقات الطلاب ومطابقتها وعرض الأعلام عليها */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {filteredStudents.length === 0 ? (
           <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '40px 20px', background: C.surface, borderRadius: '10px', border: `1px dashed ${C.border}` }}>
@@ -367,11 +402,14 @@ export default function Students({ students = [], setStudents, academyId }) {
             const isCurrentEditing = editingStudent?.id === student.id;
             const isLocalSaving = updatingId === student.id;
             const currentAge = calculateAge(student.birth_date);
+            
+            // 💡 استخراج كود الدولة تلقائيًا لمطابقته مع علم الدولة المناسب وعرضه على الكارد
+            const matchedCountry = COUNTRIES_LIST.find(c => c.code === student.country_code);
 
             return (
               <div key={student.id} style={{ background: C.surface, padding: '20px', borderRadius: '12px', border: isCurrentEditing ? `1px solid ${C.gold}` : `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
-                {/* 📝 نموذج التعديل المدمج */}
+                {/* 📝 نموذج التعديل المدمج الاحترافي شاملاً تعديل الدولة */}
                 {isCurrentEditing ? (
                   <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <input 
@@ -401,12 +439,22 @@ export default function Students({ students = [], setStudents, academyId }) {
                       />
                     </div>
 
-                    <select value={editingStudent.payment_plan} onChange={(e) => setEditingStudent({...editingStudent, payment_plan: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px' }}>
-                      <option value="شهري">شهري</option>
-                      <option value="ربع سنوي">ربع سنوي</option>
-                      <option value="سنوي">سنوي</option>
-                      <option value="منحة/إعفاء">منحة/إعفاء</option>
-                    </select>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <select value={editingStudent.payment_plan} onChange={(e) => setEditingStudent({...editingStudent, payment_plan: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}>
+                        <option value="شهري">شهري</option>
+                        <option value="ربع سنوي">ربع سنوي</option>
+                        <option value="سنوي">سنوي</option>
+                        <option value="منحة/إعفاء">منحة/إعفاء</option>
+                      </select>
+
+                      {/* قائمة اختيار تعديل الدولة المضافة حديثاً للـ Form */}
+                      <select value={editingStudent.country_code || ''} onChange={(e) => setEditingStudent({...editingStudent, country_code: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}>
+                        <option value="">-- بدون علم دولة --</option>
+                        {COUNTRIES_LIST.map((c) => (
+                          <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                        ))}
+                      </select>
+                    </div>
 
                     <input 
                       type="text" value={editingStudent.current_surah || ''} onChange={(e) => setEditingStudent({...editingStudent, current_surah: e.target.value})}
@@ -439,13 +487,21 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض الطبيعي الذكي للبطاقة
+                  // 👁️ وضع العرض الطبيعي الذكي للبطاقة مدمج معه علم الدولة
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>{student.name}</span>
+                          {/* 💡 عرض علم الدولة الاحترافي بجانب الاسم تلقائيًا أو رمز الكرة الأرضية في حال لم يحدد */}
+                          <span style={{ fontSize: '20px' }} title={matchedCountry ? matchedCountry.name : 'دولة مخصصة/غير محددة'}>
+                            {matchedCountry ? matchedCountry.flag : (student.country_code ? '🌐' : '')}
+                          </span>
+                          <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>
+                            {student.name}
+                            {/* لو أدخل كود دولة يدوي نادر يظهر بجانبه كرمز */}
+                            {!matchedCountry && student.country_code && <span style={{fontSize: '11px', color: C.gold, marginRight: '4px'}}>({student.country_code})</span>}
+                          </span>
                           {currentAge !== null && (
                             <span style={{ fontSize: '13px', color: C.gold, background: 'rgba(212, 163, 89, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
                               ({currentAge} سنة)
@@ -460,7 +516,11 @@ export default function Students({ students = [], setStudents, academyId }) {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px', color: C.text, opacity: 0.85 }}>
                         {student.parent_phone && (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <FaPhone size={12} style={{ opacity: 0.6 }} /> <span style={{ direction: 'ltr' }}>{student.parent_phone}</span>
+                            <FaPhone size={12} style={{ opacity: 0.6 }} /> 
+                            <span style={{ direction: 'ltr' }}>
+                              {/* طباعة كود الاتصال تلقائياً إذا تطابق كود الطالب مع دولته */}
+                              {matchedCountry ? `(${matchedCountry.dialCode}) ` : ''}{student.parent_phone}
+                            </span>
                           </span>
                         )}
                         {student.parent_name && (
@@ -468,11 +528,9 @@ export default function Students({ students = [], setStudents, academyId }) {
                             <FaUserShield size={13} style={{ color: C.gold }} /> ولي الأمر: {student.parent_name}
                           </span>
                         )}
-                        {/* عرض خطة الدفع الإضافية المتاحة بجدولك */}
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#A3E635' }}>
-                          <FaMoneyBillWave size={12} /> الاشتراك: {student.payment_plan || 'شهري'}
+                          <FaMoneyBillWave size={12} /> الاشتراك: {student.payment_plan || 'شهري'} {matchedCountry && <span style={{color: '#94A3B8', fontSize: '12px'}}>| الإقليم: {matchedCountry.name}</span>}
                         </span>
-                        {/* عرض نقاط التقويم والاختبارات إن وُجدت */}
                         {(student.last_test_score > 0 || student.level_score > 0) && (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#FBBF24', marginTop: '2px' }}>
                             <FaStar size={12} /> درجة الاختبار: {student.last_test_score || 0} | المستوى: {student.level_score || 0}
@@ -497,17 +555,18 @@ export default function Students({ students = [], setStudents, academyId }) {
 
                         {student.status === 'active' ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
-                            <FaCheckCircle size={12} /> نشط
+                            <FaCheckCircle size={12} /> {t('active', 'نشط')}
                           </span>
                         ) : (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
-                            <FaTimesCircle size={12} /> متوقف
+                            <FaTimesCircle size={12} /> {t('inactive', 'متوقف')}
                           </span>
                         )}
                       </div>
 
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                         <button 
+                          type="button"
                           onClick={() => { setEditingStudent({ ...student }); setShowAddForm(false); }}
                           style={{ background: 'transparent', color: C.gold, border: `1px solid ${C.gold}40`, padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '13px', flex: 1 }}
                         >
@@ -515,6 +574,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                         </button>
 
                         <button
+                          type="button"
                           onClick={() => handleToggleArchive(student.id, student.is_archived)}
                           style={{ 
                             background: 'transparent', 
