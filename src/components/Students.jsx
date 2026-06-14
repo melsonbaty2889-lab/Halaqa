@@ -48,6 +48,9 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [isAdding, setIsAdding] = useState(false);
   const [updatingId, setUpdatingId] = useState(null); 
   const [message, setMessage] = useState({ text: '', type: '' });
+  
+  // حالة خاصة لعرض رسالة النجاح الموضعية داخل بطاقة الطالب نفسه بعد التعديل
+  const [inlineMessage, setInlineMessage] = useState({ studentId: null, text: '', type: '' });
 
   // دالة حساب العمر تلقائياً
   const calculateAge = (dateOfBirth) => {
@@ -140,7 +143,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
   };
 
-  // 💾 دالة تحديث بيانات الطالب وحفظها
+  // 💾 دالة تحديث بيانات الطالب وحفظها (مع إظهار الرسالة بالأسفل موديولياً)
   const handleUpdateStudentSubmit = async (e) => {
     e.preventDefault();
     if (!editingStudent.name.trim()) {
@@ -149,7 +152,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
 
     setUpdatingId(editingStudent.id);
-    setMessage({ text: '', type: '' });
+    setInlineMessage({ studentId: null, text: '', type: '' });
     
     const autoSurahText = getQuarterText(editingStudent.current_quarter_index || 0);
     const updatedStudentData = { ...editingStudent, current_surah: autoSurahText };
@@ -177,11 +180,27 @@ export default function Students({ students = [], setStudents, academyId }) {
       if (error) throw error;
 
       setStudents(prev => prev.map(st => st.id === updatedStudentData.id ? updatedStudentData : st));
-      setEditingStudent(null); 
-      setMessage({ text: t('student_updated_success', 'تم تحديث بيانات الطالب بنجاح! ✏️'), type: 'success' });
+      
+      // إظهار رسالة النجاح في الأسفل داخل نفس البطاقة قبل إغلاق النموذج
+      setInlineMessage({
+        studentId: updatedStudentData.id,
+        text: t('student_updated_success', 'تم تحديث بيانات الطالب بنجاح! ✏️'),
+        type: 'success'
+      });
+
+      // إغلاق نموذج التعديل تلقائياً بعد ثانيتين ليرى المستخدم رسالة النجاح بالأسفل
+      setTimeout(() => {
+        setEditingStudent(null);
+        setInlineMessage({ studentId: null, text: '', type: '' });
+      }, 1500);
+
     } catch (error) {
       console.error("🚨 خطأ في تحديث بيانات الطالب:", error);
-      alert(`${t('error_updating_student', 'تعذر تحديث البيانات:')} ${error.message}`);
+      setInlineMessage({
+        studentId: editingStudent.id,
+        text: `${t('error_updating_student', 'تعذر تحديث البيانات:')} ${error.message}`,
+        type: 'error'
+      });
     } finally {
       setUpdatingId(null);
     }
@@ -266,6 +285,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         </div>
       </div>
 
+      {/* رسالة الحفظ العلوي مخصصة فقط لإضافة طالب جديد وليس للتعديل */}
       {message.text && (
         <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '20px', backgroundColor: message.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: message.type === 'success' ? '#10B981' : '#EF4444', border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}`, fontWeight: '500', textAlign: 'center' }}>
           {message.text}
@@ -497,21 +517,28 @@ export default function Students({ students = [], setStudents, academyId }) {
                       placeholder="الملاحظات التوجيهية وتوصيات المعلم..." style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', height: '65px', resize: 'none' }}
                     />
 
-                    {/* 🔄 أزرار التحكم داخل نموذج التعديل: مطابقة للفيديو والصور تماماً بجانب بعضها */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => setEditingStudent(null)} 
-                        style={{ background: '#475569', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: '500', fontSize: '15px' }}
-                      >
-                        <FaTimes /> إلغاء
-                      </button>
+                    {/* 🌟 هـنـا يـظـهـر صـندوق الرسالة الموضعية (inlineMessage) بالأسفل فوق أزرار الحفظ والإلغاء مباشرة للطالب نفسه */}
+                    {inlineMessage.studentId === student.id && inlineMessage.text && (
+                      <div style={{ padding: '10px', borderRadius: '6px', marginTop: '5px', backgroundColor: inlineMessage.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: inlineMessage.type === 'success' ? '#10B981' : '#EF4444', border: `1px solid ${inlineMessage.type === 'success' ? '#10B981' : '#EF4444'}`, fontWeight: '500', textAlign: 'center', fontSize: '13px' }}>
+                        {inlineMessage.text}
+                      </div>
+                    )}
+
+                    {/* 🔄 أزرار التحكم الخضراء والرمادية الممتلئة داخل نموذج التعديل */}
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', width: '100%', marginTop: '5px' }}>
                       <button 
                         type="submit" 
                         disabled={isLocalSaving} 
-                        style={{ background: '#10B981', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold', fontSize: '15px' }}
+                        style={{ background: '#10B981', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold', fontSize: '15px', flex: 1 }}
                       >
                         <FaSave /> {isLocalSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setEditingStudent(null)} 
+                        style={{ background: '#475569', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '500', fontSize: '15px', flex: 1 }}
+                      >
+                        <FaTimes /> إلغاء
                       </button>
                     </div>
                   </form>
@@ -579,22 +606,22 @@ export default function Students({ students = [], setStudents, academyId }) {
                       )}
                     </div>
 
-                    {/* 🔄 الأزرار السفلية للبطاقة: قمت بإرجاعها للشكل الأصلي المدمج المتناسق بجانب بعضها */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', borderTop: `1px solid ${C.border}`, paddingTop: '12px', marginTop: '5px' }}>
+                    {/* 🔄 الأزرار السفلية النصية الشفافة والذكية لليمين واليسار */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${C.border}`, paddingTop: '12px', marginTop: '5px' }}>
                       <button
                         type="button"
                         onClick={() => handleToggleArchive(student.id, student.is_archived)}
-                        style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', color: student.is_archived ? '#10B981' : '#f87171', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '14px', fontWeight: '500' }}
+                        style={{ background: 'none', border: 'none', color: student.is_archived ? '#10B981' : C.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: '500', padding: '4px 0' }}
                       >
-                        <FaArchive size={13} /> {student.is_archived ? 'إلغاء الأرشفة' : 'نقل للأرشيف'}
+                        <FaArchive size={12} /> {student.is_archived ? 'إلغاء الأرشفة' : 'نقل للأرشيف'}
                       </button>
                       
                       <button
                         type="button"
                         onClick={() => setEditingStudent({ ...student })}
-                        style={{ background: 'rgba(212, 163, 89, 0.08)', border: '1px solid rgba(212, 163, 89, 0.2)', color: C.gold, padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '14px', fontWeight: '500' }}
+                        style={{ background: 'none', border: 'none', color: C.gold, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: '500', padding: '4px 0' }}
                       >
-                        <FaEdit size={13} /> تعديل البيانات
+                        <FaEdit size={12} /> تعديل البيانات بسرعة
                       </button>
                     </div>
                   </div>
