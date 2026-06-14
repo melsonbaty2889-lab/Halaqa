@@ -4,8 +4,9 @@ import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 // 1️⃣ استيراد قائمة الدول الاحترافية من ملفها المنفصل
 import { COUNTRIES_LIST } from '../constants/countries'; 
-// 🚀 استيراد مكون شريط التقدم الجديد 
+// 🚀 استيراد مكون شريط التقدم ومكون اختيار الأرباع الجديد 
 import QuranProgressBar from './QuranProgressBar'; 
+import QuranProgressSelector from './QuranProgressSelector'; // 🌟 تم إضافة الاستيراد هنا بنجاح
 import { 
   FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, 
   FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, 
@@ -26,6 +27,7 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [parentPhone, setParentPhone] = useState('');
   const [parentName, setParentName] = useState('');
   const [currentSurah, setCurrentSurah] = useState('');
+  const [currentQuarterIndex, setCurrentQuarterIndex] = useState(0); // 🌟 حالة جديدة لتخزين ربع البداية للطالب الجديد
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState('male');
   const [birthDate, setBirthDate] = useState(''); 
@@ -98,7 +100,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             birth_date: birthDate || null, 
             payment_plan: paymentPlan,     
             country_code: countryCode.trim() || null, // حفظ الكود المختار أو المكتوب يدويًا
-            current_quarter_index: 0 // القيمة الافتراضية عند إضافة طالب جديد
+            current_quarter_index: currentQuarterIndex // 🌟 حفظ مؤشر الربع المختار ديناميكياً عند الإضافة
           }
         ])
         .select();
@@ -116,6 +118,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       setParentPhone('');
       setParentName('');
       setCurrentSurah('');
+      setCurrentQuarterIndex(0); // إعادة تعيين المؤشر الرقمي
       setNotes('');
       setGender('male');
       setBirthDate('');
@@ -155,9 +158,10 @@ export default function Students({ students = [], setStudents, academyId }) {
           status: editingStudent.status,
           birth_date: editingStudent.birth_date || null,
           payment_plan: editingStudent.payment_plan,
-          country_code: editingStudent.country_code || null, // تم إضافتها لضمان حفظ التعديل بالدولة في قاعدة البيانات
+          country_code: editingStudent.country_code || null, 
           last_test_score: editingStudent.last_test_score ? parseInt(editingStudent.last_test_score) : 0,
-          level_score: editingStudent.level_score ? parseInt(editingStudent.level_score) : 0
+          level_score: editingStudent.level_score ? parseInt(editingStudent.level_score) : 0,
+          current_quarter_index: editingStudent.current_quarter_index || 0 // 🌟 تم إضافة هذا السطر الحرج لضمان حفظ تعديل الأرباع في Supabase
         })
         .eq('id', editingStudent.id);
 
@@ -351,13 +355,12 @@ export default function Students({ students = [], setStudents, academyId }) {
           </div>
 
           {/* ✨ ٍالمجموعة الثالثة: الشؤون التعليمية والمالية والملاحظات */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
-              <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> {t('current_surah', 'السورة أو الجزء الحالي (الورد)')}</label>
-              <input 
-                type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
-                placeholder="مثال: سورة البقرة"
-                style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px', alignItems: 'flex-end' }}>
+            {/* 🌟 تم استبدال حقل إدخال النص القديم بمكون مصفوفة الأرباع الذكي هنا عند الإضافة */}
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <QuranProgressSelector 
+                initialIndex={currentQuarterIndex} 
+                onIndexChange={(newIndex) => setCurrentQuarterIndex(newIndex)} 
               />
             </div>
 
@@ -456,12 +459,14 @@ export default function Students({ students = [], setStudents, academyId }) {
 
                     {/* 3. الشؤون التعليمية والدرجات والاشتراك المالي */}
                     <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', marginTop: '5px', fontWeight: '500' }}>المستوى التعليمي والدرجات والاشتراك:</label>
-                    <input 
-                      type="text" value={editingStudent.current_surah || ''} onChange={(e) => setEditingStudent({...editingStudent, current_surah: e.target.value})}
-                      placeholder="السورة أو الجزء الحالي (الورد)" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }}
+                    
+                    {/* 🌟 تم حذف حقل النص القديم هنا بنجاح واستبداله بمكون اختيار الأرباع المطور */}
+                    <QuranProgressSelector 
+                      initialIndex={editingStudent.current_quarter_index || 0} 
+                      onIndexChange={(newIndex) => setEditingStudent({ ...editingStudent, current_quarter_index: newIndex })} 
                     />
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         <span style={{ fontSize: '11px', color: C.text, opacity: 0.7 }}>درجة آخر اختبار</span>
                         <input 
@@ -575,7 +580,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                         )}
                       </div>
 
-                      {/* 🚀 هنا السحر! تم وضع شريط تقدم القرآن هنا ليعرض لكل طالب خط سيره تلقائياً */}
+                      {/* 🚀 يعرض لكل طالب خط سيره تلقائياً بناء على الرقم المخزن والمعدل */}
                       <QuranProgressBar currentQuarterIndex={student.current_quarter_index} />
 
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
