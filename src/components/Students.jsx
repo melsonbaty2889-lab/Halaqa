@@ -4,6 +4,8 @@ import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 // 1️⃣ استيراد قائمة الدول الاحترافية من ملفها المنفصل
 import { COUNTRIES_LIST } from '../constants/countries'; 
+// 🚀 استيراد مكون شريط التقدم الجديد 
+import QuranProgressBar from './QuranProgressBar'; 
 import { 
   FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, 
   FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, 
@@ -72,7 +74,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       return;
     }
     if (!name.trim()) {
-      setMessage({ text: t('error_enter_student_name', 'يرجى إدخال اسم الطالب أولاً'), type: 'error' });
+      setMessage({ text: t('error_enter_student_name', 'يرجى إدخل اسم الطالب أولاً'), type: 'error' });
       return;
     }
 
@@ -95,7 +97,8 @@ export default function Students({ students = [], setStudents, academyId }) {
             is_archived: false,
             birth_date: birthDate || null, 
             payment_plan: paymentPlan,     
-            country_code: countryCode.trim() || null // حفظ الكود المختار أو المكتوب يدويًا
+            country_code: countryCode.trim() || null, // حفظ الكود المختار أو المكتوب يدويًا
+            current_quarter_index: 0 // القيمة الافتراضية عند إضافة طالب جديد
           }
         ])
         .select();
@@ -256,7 +259,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         </div>
       )}
 
-      {/* ➕ نموذج إضافة طالب - مُرتب ومؤهل بالكامل طبقاً لـ UX المجموعات المتجانسة */}
+      {/* ➕ نموذج إضافة طالب */}
       {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px', borderBottom: `1px solid ${C.border}`, paddingBottom: '10px' }}>بيانات التسجيل (مُرتبة حسب الأولوية السلوكية)</h3>
@@ -326,7 +329,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             </div>
           </div>
 
-          {/* ✨ المجموعة الثانية: بيانات العائلة والتواصل (فصل جمالي بخط متقطع) */}
+          {/* ✨ المجموعة الثانية: بيانات العائلة والتواصل */}
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}><FaUserShield size={12} /> اسم ولي الأمر</label>
@@ -394,7 +397,7 @@ export default function Students({ students = [], setStudents, academyId }) {
         />
       </div>
 
-      {/* 📋 عرض بطاقات الطلاب ومطابقتها وعرض الأعلام عليها */}
+      {/* 📋 عرض بطاقات الطلاب */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {filteredStudents.length === 0 ? (
           <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '40px 20px', background: C.surface, borderRadius: '10px', border: `1px dashed ${C.border}` }}>
@@ -412,7 +415,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             return (
               <div key={student.id} style={{ background: C.surface, padding: '20px', borderRadius: '12px', border: isCurrentEditing ? `1px solid ${C.gold}` : `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
-                {/* 📝 نموذج التعديل المدمج الاحترافي - تم إعادة هيكلته وتأهيله بالكامل طبقاً لقواعد UX الموحدة */}
+                {/* 📝 نموذج التعديل المدمج الاحترافي */}
                 {isCurrentEditing ? (
                   <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     
@@ -498,19 +501,17 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض الطبيعي الذكي للبطاقة مدمج معه علم الدولة
+                  // 👁️ وضع العرض الطبيعي للبطاقة
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {/* 💡 عرض علم الدولة الاحترافي بجانب الاسم تلقائيًا أو رمز الكرة الأرضية في حال لم يحدد */}
                           <span style={{ fontSize: '20px' }} title={matchedCountry ? matchedCountry.name : 'دولة مخصصة/غير محددة'}>
                             {matchedCountry ? matchedCountry.flag : (student.country_code ? '🌐' : '')}
                           </span>
                           <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>
                             {student.name}
-                            {/* لو أدخل كود دولة يدوي نادر يظهر بجانبه كرمز */}
                             {!matchedCountry && student.country_code && <span style={{fontSize: '11px', color: C.gold, marginRight: '4px'}}>({student.country_code})</span>}
                           </span>
                           {currentAge !== null && (
@@ -529,7 +530,6 @@ export default function Students({ students = [], setStudents, academyId }) {
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <FaPhone size={12} style={{ opacity: 0.6 }} /> 
                             <span style={{ direction: 'ltr' }}>
-                              {/* طباعة كود الاتصال تلقائياً إذا تطابق كود الطالب مع دولته */}
                               {matchedCountry ? `(${matchedCountry.dialCode}) ` : ''}{student.parent_phone}
                             </span>
                           </span>
@@ -574,6 +574,9 @@ export default function Students({ students = [], setStudents, academyId }) {
                           </span>
                         )}
                       </div>
+
+                      {/* 🚀 هنا السحر! تم وضع شريط تقدم القرآن هنا ليعرض لكل طالب خط سيره تلقائياً */}
+                      <QuranProgressBar currentQuarterIndex={student.current_quarter_index} />
 
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                         <button 
