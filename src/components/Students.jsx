@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-import { FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, FaCheck, FaTimes, FaSave } from 'react-icons/fa';
+import { 
+  FaUserPlus, FaSearch, FaGraduationCap, FaPhone, FaCheckCircle, 
+  FaTimesCircle, FaBookOpen, FaUserShield, FaStickyNote, FaEdit, 
+  FaTimes, FaSave, FaArchive, FaEye, FaEyeSlash 
+} from 'react-icons/fa';
 
 export default function Students({ students = [], setStudents, academyId }) {
   const { t } = useTranslation();
@@ -10,6 +14,7 @@ export default function Students({ students = [], setStudents, academyId }) {
   // الحالات المحلية لإدارة الواجهة والبحث
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showArchived, setShowArchived] = useState(false); // تبديل عرض المؤرشفين
   
   // حالات نموذج الإضافة
   const [newStudentName, setNewStudentName] = useState('');
@@ -19,11 +24,24 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState('male');
 
-  // 📝 حالة التعديل الشامل للطالب (تخزن كائن الطالب الجاري تعديله بالكامل)
+  // حالة التعديل الشامل للطالب
   const [editingStudent, setEditingStudent] = useState(null);
 
-  const [isSaving, setIsSaving] = useState(false);
+  // حالات التحميل المنفصلة لضمان تجربة مستخدم احترافية
+  const [isAdding, setIsAdding] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null); // تخزن id الطالب الذي يتم حفظه حالياً
   const [message, setMessage] = useState({ text: '', type: '' });
+
+  // 📝 دالة توحيد الحروف العربية لجعل البحث فائق الذكاء والمرونة
+  const normalizeArabic = (str) => {
+    if (!str) return '';
+    return str
+      .trim()
+      .replace(/[أإآا]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .toLowerCase();
+  };
 
   // ➕ دالة إضافة طالب جديد 
   const handleAddStudent = async (e) => {
@@ -38,7 +56,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       return;
     }
 
-    setIsSaving(true);
+    setIsAdding(true);
     setMessage({ text: '', type: '' });
 
     try {
@@ -53,7 +71,8 @@ export default function Students({ students = [], setStudents, academyId }) {
             notes: notes.trim() || null,                 
             gender: gender,                              
             academy_id: academyId,
-            status: 'active' 
+            status: 'active',
+            is_archived: false
           }
         ])
         .select();
@@ -77,7 +96,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       console.error("🚨 خطأ أثناء إضافة الطالب:", error);
       setMessage({ text: `${t('student_added_failed', 'فشل التسجيل:')} ${error.message}`, type: 'error' });
     } finally {
-      setIsSaving(false);
+      setIsAdding(false);
     }
   };
 
@@ -89,7 +108,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       return;
     }
 
-    setIsSaving(true);
+    setUpdatingId(editingStudent.id);
     try {
       const { error } = await supabase
         .from('students')
@@ -106,46 +125,91 @@ export default function Students({ students = [], setStudents, academyId }) {
 
       if (error) throw error;
 
-      // تحديث القائمة محلياً فوراً
       setStudents(prev => prev.map(st => st.id === editingStudent.id ? editingStudent : st));
-      setEditingStudent(null); // إغلاق وضع التعديل
+      setEditingStudent(null); 
       setMessage({ text: t('student_updated_success', 'تم تحديث بيانات الطالب بنجاح! ✏️'), type: 'success' });
     } catch (error) {
       console.error("🚨 خطأ في تحديث بيانات الطالب:", error);
       alert(`${t('error_updating_student', 'تعذر تحديث البيانات:')} ${error.message}`);
     } finally {
-      setIsSaving(false);
+      setUpdatingId(null);
     }
   };
 
-  // 🔍 تصفية الطلاب بناءً على نص البحث
+  // 🗄️ دالة أرشفة أو إلغاء أرشفة الطالب (تعتمد على عمود is_archived في قاعدة بياناتك)
+  const handleToggleArchive = async (studentId, currentArchiveStatus) => {
+    const confirmationMsg = currentArchiveStatus 
+      ? t('confirm_unarchive', 'هل تريد إلغاء أرشفة هذا الطالب وإعادته للقائمة النشطة؟')
+      : t('confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟ سيتم إخفاؤه من القائمة الرئيسية.');
+
+    if (!window.confirm(confirmationMsg)) return;
+
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ is_archived: !currentArchiveStatus })
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      setStudents(prev => prev.map(st => st.id === studentId ? { ...st, is_archived: !currentArchiveStatus } : st));
+      setMessage({ 
+        text: currentArchiveStatus ? t('student_unarchived', 'تمت إعادة الطالب للقائمة بنجاح') : t('student_archived', 'تم نقل الطالب للأرشيف بنجاح'), 
+        type: 'success' 
+      });
+    } catch (error) {
+      console.error("🚨 خطأ في الأرشفة:", error);
+      alert('حدث خطأ أثناء تغيير حالة الأرشفة');
+    }
+  };
+
+  // 🔍 تصفية وفلترة الطلاب بناءً على نص البحث وحالة الأرشفة
   const filteredStudents = Array.isArray(students) 
-    ? students.filter(student => 
-        student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student?.parent_phone?.includes(searchTerm) ||
-        student?.current_surah?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ? students.filter(student => {
+        // فلترة بناءً على زر تبديل الأرشيف
+        if (showArchived && !student.is_archived) return false;
+        if (!showArchived && student.is_archived) return false;
+
+        // فلترة بناءً على نص البحث الذكي
+        const search = normalizeArabic(searchTerm);
+        return (
+          normalizeArabic(student?.name).includes(search) ||
+          student?.parent_phone?.includes(searchTerm) ||
+          normalizeArabic(student?.current_surah).includes(search)
+        );
+      })
     : [];
 
   return (
     <div style={{ direction: 'inherit' }}>
       
-      {/* القسم العلوي: العنوان وزر الإضافة */}
+      {/* القسم العلوي: العنوان والتحكم */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
         <h2 style={{ color: C.gold, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <FaGraduationCap /> {t('students_management_title', 'إدارة الطلاب والشؤون التعليمية')}
+          <FaGraduationCap /> {showArchived ? t('archived_students_title', 'أرشيف الطلاب والموقوفين') : t('students_management_title', 'إدارة الطلاب والشؤون التعليمية')}
         </h2>
         
-        <button 
-          onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
-          style={{ background: showAddForm ? C.danger : C.gold, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s' }}
-        >
-          <FaUserPlus /> {showAddForm ? t('cancel', 'إلغاء') : t('add_new_student', 'إضافة طالب جديد')}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* زر تبديل عرض الأرشيف */}
+          <button
+            onClick={() => { setShowArchived(!showArchived); setEditingStudent(null); }}
+            style={{ background: 'rgba(255,255,255,0.05)', color: showArchived ? C.gold : C.text, border: `1px solid ${C.border}`, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}
+          >
+            {showArchived ? <FaEyeSlash /> : <FaArchive />}
+            {showArchived ? t('show_active_students', 'عرض الطلاب النشطين') : t('show_archive', 'عرض الأرشيف')}
+          </button>
+
+          <button 
+            onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
+            style={{ background: showAddForm ? C.danger : C.gold, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <FaUserPlus /> {showAddForm ? t('cancel', 'إلغاء') : t('add_new_student', 'إضافة طالب جديد')}
+          </button>
+        </div>
       </div>
 
       {message.text && (
-        <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '20px', backgroundColor: message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: message.type === 'success' ? '#10B981' : '#EF4444', border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}` }}>
+        <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '20px', backgroundColor: message.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: message.type === 'success' ? '#10B981' : '#EF4444', border: `1px solid ${message.type === 'success' ? '#10B981' : '#EF4444'}` }}>
           {message.text}
         </div>
       )}
@@ -153,9 +217,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       {/* ➕ نموذج إضافة طالب جديد */}
       {showAddForm && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px' }}>
-            {t('registration_data_title', 'بيانات التسجيل الأساسية والقرآنية')}
-          </h3>
+          <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px' }}>{t('registration_data_title', 'بيانات التسجيل الأساسية والقرآنية')}</h3>
           
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 2, minWidth: '200px' }}>
@@ -213,29 +275,30 @@ export default function Students({ students = [], setStudents, academyId }) {
             />
           </div>
 
-          <button type="submit" disabled={isSaving} style={{ background: C.gold, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
-            {isSaving ? t('saving_progress', 'جاري الحفظ...') : t('confirm_add_student', 'تأكيد إضافة الطالب')}
+          <button type="submit" disabled={isAdding} style={{ background: C.gold, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+            {isAdding ? t('saving_progress', 'جاري الحفظ...') : t('confirm_add_student', 'تأكيد إضافة الطالب')}
           </button>
         </form>
       )}
 
-      {/* 🔍 شريط البحث */}
+      {/* 🔍 شريط البحث الذكي */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '10px 15px', borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
         <FaSearch style={{ color: C.text, opacity: 0.5 }} />
         <input 
-          type="text" placeholder={t('search_placeholder', 'ابحث عن طالب بالاسم، الهاتف، أو السورة...')}
+          type="text" placeholder={t('search_placeholder', 'ابحث بذكاء عن طالب (بالاسم، الهاتف، أو السورة)...')}
           value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
           style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '15px' }}
         />
       </div>
 
-      {/* 📋 عرض قائمة الطلاب ببطاقات تفاعلية مطورة تشمل التعديل الكامل */}
+      {/* 📋 عرض قائمة الطلاب ببطاقات تفاعلية مطورة */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filteredStudents.length === 0 ? (
-          <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '20px' }}>{t('no_students_registered', 'لا يوجد نتائج.')}</p>
+          <p style={{ color: C.text, opacity: 0.6, textAlign: 'center', padding: '20px' }}>{t('no_students_registered', 'لا توجد نتائج تطابق البحث.')}</p>
         ) : (
           filteredStudents.map(student => {
             const isCurrentEditing = editingStudent?.id === student.id;
+            const isLocalSaving = updatingId === student.id;
 
             return (
               <div key={student.id} style={{ background: C.surface, padding: '20px', borderRadius: '10px', border: isCurrentEditing ? `1px solid ${C.gold}` : `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -284,19 +347,18 @@ export default function Students({ students = [], setStudents, academyId }) {
                       style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '8px 12px', borderRadius: '6px' }}
                     />
 
-                    {/* أزرار التحكم بالتعديل */}
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '5px' }}>
                       <button type="button" onClick={() => setEditingStudent(null)} style={{ background: '#475569', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <FaTimes /> {t('cancel', 'إلغاء')}
                       </button>
-                      <button type="submit" disabled={isSaving} style={{ background: '#10B981', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <FaSave /> {isSaving ? t('saving', 'جاري الحفظ...') : t('save', 'حفظ التعديلات')}
+                      <button type="submit" disabled={isLocalSaving} style={{ background: '#10B981', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <FaSave /> {isLocalSaving ? t('saving', 'جاري الحفظ...') : t('save', 'حفظ التغييرات')}
                       </button>
                     </div>
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض العادي للبطاقة (مع إضافة زر التعديل الشامل)
+                  // 👁️ وضع العرض العادي للبطاقة (مطور ومحمي بالكامل)
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '220px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -326,16 +388,14 @@ export default function Students({ students = [], setStudents, academyId }) {
                       )}
                     </div>
 
-                    {/* القسم الجانبي: الحفظ، الحالة، وزر التعديل الشامل */}
+                    {/* القسم الجانبي الأيسر: التحكم بالحالة والتعديل والأرشفة */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       
-                      {/* عرض الحفظ */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(212, 163, 89, 0.1)', color: C.gold, padding: '6px 12px', borderRadius: '8px', fontSize: '13px' }}>
                         <FaBookOpen size={13} />
                         <span>{t('memorization_prefix', 'الحفظ:')} {student.current_surah || t('not_specified_yet', 'لم يحدد بعد')}</span>
                       </div>
 
-                      {/* شارة حالة الطالب */}
                       <div>
                         {student.status === 'active' || student.status === 'نشط' ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
@@ -348,28 +408,32 @@ export default function Students({ students = [], setStudents, academyId }) {
                         )}
                       </div>
 
-                      {/* ⚙️ زر تعديل البيانات الشامل المميز */}
+                      {/* ⚙️ زر التعديل الشامل */}
                       <button 
                         onClick={() => { setEditingStudent({ ...student }); setShowAddForm(false); }}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: C.gold, border: `1px solid ${C.border}`, padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', transition: '0.2s' }}
-                        title={t('edit_student_data', 'تعديل البيانات بالكامل')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212, 163, 89, 0.2)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: C.gold, border: `1px solid ${C.border}`, padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}
+                        title={t('edit_student_data', 'تعديل البيانات')}
                       >
                         <FaEdit size={13} /> {t('edit', 'تعديل')}
                       </button>
 
+                      {/* 🗄️ زر الأرشفة / إلغاء الأرشفة الذكي */}
+                      <button
+                        onClick={() => handleToggleArchive(student.id, student.is_archived)}
+                        style={{ background: 'transparent', color: student.is_archived ? '#10B981' : C.danger, border: 'none', cursor: 'pointer', padding: '6px', fontSize: '14px' }}
+                        title={student.is_archived ? t('unarchive', 'إلغاء الأرشفة') : t('archive', 'نقل للأرشيف')}
+                      >
+                        {student.is_archived ? <FaEye /> : <FaArchive />}
+                      </button>
+
                     </div>
                   </div>
-
                 )}
-
               </div>
             );
           })
         )}
       </div>
-
     </div>
   );
 }
