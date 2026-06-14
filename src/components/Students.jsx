@@ -189,13 +189,14 @@ export default function Students({ students = [], setStudents, academyId }) {
         </h2>
         
         <div style={{ display: 'flex', gap: '10px' }}>
-          {/* زر تبديل عرض الأرشيف */}
+          {/* زر تبديل عرض الأرشيف المحسن */}
           <button
             onClick={() => { 
               setShowArchived(!showArchived); 
               setEditingStudent(null); 
               setShowAddForm(false); 
-              setSearchTerm(''); // تنظيف نص البحث عند الانتقال
+              setSearchTerm(''); 
+              setMessage({ text: '', type: '' }); // 🌟 تحديث: تنظيف التنبيهات فوراً عند الانتقال لمنع بقائها معلقة
             }}
             style={{ background: 'rgba(255,255,255,0.05)', color: showArchived ? C.gold : C.text, border: `1px solid ${C.border}`, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}
           >
@@ -203,7 +204,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             {showArchived ? t('show_active_students', 'عرض الطلاب النشطين') : t('show_archive', 'عرض الأرشيف')}
           </button>
 
-          {/* 💡 تحسين ذكي: يظهر زر الإضافة فقط عندما لا نكون في صفحة الأرشيف */}
+          {/* يظهر زر الإضافة فقط عندما لا نكون في صفحة الأرشيف */}
           {!showArchived && (
             <button 
               onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
@@ -312,7 +313,7 @@ export default function Students({ students = [], setStudents, academyId }) {
             return (
               <div key={student.id} style={{ background: C.surface, padding: '20px', borderRadius: '10px', border: isCurrentEditing ? `1px solid ${C.gold}` : `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
-                {/* 📝 نموذج التعديل النشط لبطاقة الطالب المحلّية */}
+                {/* 📝 نموذج التعديل النشط لبطاقة الطالب */}
                 {isCurrentEditing ? (
                   <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -367,7 +368,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </form>
                 ) : (
                   
-                  // 👁️ وضع العرض العادي للبطاقة المتوافق مع شاشات الهواتف بنسبة 100%
+                  // 👁️ وضع العرض العادي المتوافق مع الهواتف بنسبة 100%
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '220px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -406,7 +407,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                       </div>
 
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        {/* 💡 تحسين ذكي: إضافة شارة توضح فوريّاً أن الطالب متواجد في الأرشيف */}
+                        {/* شارة توضح فوريّاً أن الطالب متواجد في الأرشيف */}
                         {student.is_archived && (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(148, 163, 184, 0.15)', color: '#94A3B8', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold' }}>
                             <FaInbox size={11} /> {t('archived_badge', 'مؤرشف')}
@@ -424,7 +425,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                         )}
                       </div>
 
-                      {/* ⚙️ زر التعديل الشامل */}
+                      {/* زر التعديل الشامل */}
                       <button 
                         onClick={() => { setEditingStudent({ ...student }); setShowAddForm(false); }}
                         style={{ background: 'rgba(255,255,255,0.05)', color: C.gold, border: `1px solid ${C.border}`, padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', transition: '0.2s' }}
@@ -433,7 +434,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                         <FaEdit size={13} /> {t('edit', 'تعديل')}
                       </button>
 
-                      {/* 🗄️ زر الأرشفة / الاستعادة الاحترافي المتناسق بصرياً مع لقطات الشاشة */}
+                      {/* زر الأرشفة / الاستعادة الاحترافي المتناسق بصرياً */}
                       <button
                         onClick={() => handleToggleArchive(student.id, student.is_archived)}
                         style={{ 
