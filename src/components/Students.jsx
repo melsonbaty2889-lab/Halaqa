@@ -152,7 +152,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           status: editingStudent.status,
           birth_date: editingStudent.birth_date || null,
           payment_plan: editingStudent.payment_plan,
-          country_code: editingStudent.country_code || null, // 💡 تم إضافتها لضمان حفظ التعديل بالدولة في قاعدة البيانات
+          country_code: editingStudent.country_code || null, // تم إضافتها لضمان حفظ التعديل بالدولة في قاعدة البيانات
           last_test_score: editingStudent.last_test_score ? parseInt(editingStudent.last_test_score) : 0,
           level_score: editingStudent.level_score ? parseInt(editingStudent.level_score) : 0
         })
@@ -256,11 +256,12 @@ export default function Students({ students = [], setStudents, academyId }) {
         </div>
       )}
 
-      {/* ➕ نموذج إضافة طالب المتوافق مع حقول قاعدة البيانات وقائمة الدول المنفصلة */}
+      {/* ➕ نموذج إضافة طالب - مُرتب ومؤهل بالكامل طبقاً لـ UX المجموعات المتجانسة */}
       {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px', borderBottom: `1px solid ${C.border}`, paddingBottom: '10px' }}>بيانات التسجيل (طبقاً لجدول قاعدة البيانات)</h3>
+          <h3 style={{ color: C.gold, margin: '0 0 10px 0', fontSize: '18px', borderBottom: `1px solid ${C.border}`, paddingBottom: '10px' }}>بيانات التسجيل (مُرتبة حسب الأولوية السلوكية)</h3>
           
+          {/* ✨ المجموعة الأولى: البيانات الشخصية والأساسية للطالب */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <label style={{ color: C.text, fontSize: '14px' }}>اسم الطالب الكامل *</label>
             <input 
@@ -271,8 +272,8 @@ export default function Students({ students = [], setStudents, academyId }) {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '140px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}>الجنس</label>
               <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}>
                 <option value="male">ذكر</option>
@@ -280,27 +281,14 @@ export default function Students({ students = [], setStudents, academyId }) {
               </select>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '140px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}><FaCalendarAlt size={12} /> تاريخ الميلاد</label>
               <input 
                 type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
                 style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
               />
             </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '150px' }}>
-              <label style={{ color: C.text, fontSize: '14px' }}><FaMoneyBillWave size={12} /> نظام الدفع</label>
-              <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}>
-                <option value="شهري">شهري</option>
-                <option value="ربع سنوي">ربع سنوي</option>
-                <option value="سنوي">سنوي</option>
-                <option value="منحة/إعفاء">منحة/إعفاء</option>
-              </select>
-            </div>
-
-            {/* 💡 تحويل "رمز الدولة" النصي التقليدي إلى قائمة الدول الاحترافية الجاهزة */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '150px' }}>
               <label style={{ color: C.text, fontSize: '14px' }}>الدولة وإقليم الطالب</label>
               <select 
@@ -308,7 +296,7 @@ export default function Students({ students = [], setStudents, academyId }) {
                 onChange={(e) => {
                   if (e.target.value === 'OTHER') {
                     setIsCustomCountry(true);
-                    setCountryCode(''); // تصفية القيمة ليقوم بكتابتها يدوياً
+                    setCountryCode('');
                   } else {
                     setIsCustomCountry(false);
                     setCountryCode(e.target.value);
@@ -324,7 +312,6 @@ export default function Students({ students = [], setStudents, academyId }) {
                 <option value="OTHER" style={{ color: C.gold, background: '#0C1520' }}>🌐 دولة أخرى (إدخال يدوي لطيف)</option>
               </select>
 
-              {/* إذا اختار "دولة أخرى"، يظهر هذا الحقل الذكي تلقائياً */}
               {isCustomCountry && (
                 <input 
                   type="text" 
@@ -339,43 +326,59 @@ export default function Students({ students = [], setStudents, academyId }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> {t('current_surah', 'السورة أو الجزء الحالي (الورد)')}</label>
-            <input 
-              type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
-              placeholder="مثال: سورة البقرة"
-              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
-            />
+          {/* ✨ المجموعة الثانية: بيانات العائلة والتواصل (فصل جمالي بخط متقطع) */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
+              <label style={{ color: C.text, fontSize: '14px' }}><FaUserShield size={12} /> اسم ولي الأمر</label>
+              <input 
+                type="text" value={parentName} onChange={(e) => setParentName(e.target.value)}
+                placeholder="اسم والد الطالب أو المسؤول عنه"
+                style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
+              <label style={{ color: C.text, fontSize: '14px' }}><FaPhone size={12} /> رقم هاتف التواصل</label>
+              <input 
+                type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)}
+                placeholder="01552518406"
+                style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'left' }}
+              />
+            </div>
+          </div>
+
+          {/* ✨ ٍالمجموعة الثالثة: الشؤون التعليمية والمالية والملاحظات */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', borderTop: `1px dashed ${C.border}`, paddingTop: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
+              <label style={{ color: C.text, fontSize: '14px' }}><FaBookOpen size={12} style={{color: C.gold}} /> {t('current_surah', 'السورة أو الجزء الحالي (الورد)')}</label>
+              <input 
+                type="text" value={currentSurah} onChange={(e) => setCurrentSurah(e.target.value)}
+                placeholder="مثال: سورة البقرة"
+                style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '200px' }}>
+              <label style={{ color: C.text, fontSize: '14px' }}><FaMoneyBillWave size={12} /> نظام الاشتراك الدفع</label>
+              <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}>
+                <option value="شهري">شهري</option>
+                <option value="ربع سنوي">ربع سنوي</option>
+                <option value="سنوي">سنوي</option>
+                <option value="منحة/إعفاء">منحة/إعفاء</option>
+              </select>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaUserShield size={12} /> اسم ولي الأمر</label>
-            <input 
-              type="text" value={parentName} onChange={(e) => setParentName(e.target.value)}
-              placeholder="اسم والد الطالب"
-              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaPhone size={12} /> رقم هاتف التواصل</label>
-            <input 
-              type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)}
-              placeholder="01552518406"
-              style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'left' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: C.text, fontSize: '14px' }}><FaStickyNote size={12} /> ملاحظات المعلم التوجيهية</label>
+            <label style={{ color: C.text, fontSize: '14px' }}><FaStickyNote size={12} /> ملاحظات المعلم التوجيهية الأولى</label>
             <textarea 
               value={notes} onChange={(e) => setNotes(e.target.value)}
-              placeholder="أي ملاحظات إضافية بخصوص مستوى الحفظ والتلاوة..."
+              placeholder="أي ملاحظات إضافية بخصوص مستوى الحفظ والتلاوة أو السلوك البداية..."
               style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: C.text, padding: '12px', borderRadius: '8px', outline: 'none', height: '80px', resize: 'none' }}
             />
           </div>
 
-          <button type="submit" disabled={isAdding} style={{ background: C.gold, color: '#000', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
+          <button type="submit" disabled={isAdding} style={{ background: C.gold, color: '#000', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', marginTop: '5px' }}>
             {isAdding ? 'جاري الحفظ والإنشاء...' : 'تأكيد إضافة الطالب ومزامنة الجدول'}
           </button>
         </form>
@@ -409,46 +412,27 @@ export default function Students({ students = [], setStudents, academyId }) {
             return (
               <div key={student.id} style={{ background: C.surface, padding: '20px', borderRadius: '12px', border: isCurrentEditing ? `1px solid ${C.gold}` : `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
-                {/* 📝 نموذج التعديل المدمج الاحترافي شاملاً تعديل الدولة */}
+                {/* 📝 نموذج التعديل المدمج الاحترافي - تم إعادة هيكلته وتأهيله بالكامل طبقاً لقواعد UX الموحدة */}
                 {isCurrentEditing ? (
                   <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    
+                    {/* 1. قسم البيانات الشخصية والأساسية */}
+                    <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', fontWeight: '500' }}>البيانات الشخصية والأساسية:</label>
                     <input 
                       type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
-                      style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }} required
+                      placeholder="اسم الطالب" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }} required
                     />
                     
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <select value={editingStudent.gender} onChange={(e) => setEditingStudent({...editingStudent, gender: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <select value={editingStudent.gender} onChange={(e) => setEditingStudent({...editingStudent, gender: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1, minWidth: '100px' }}>
                         <option value="male">ذكر</option>
                         <option value="female">أنثى</option>
                       </select>
                       <input 
                         type="date" value={editingStudent.birth_date || ''} onChange={(e) => setEditingStudent({...editingStudent, birth_date: e.target.value})}
-                        style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}
+                        style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1, minWidth: '120px' }}
                       />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <input 
-                        type="number" placeholder="درجة آخر اختبار" value={editingStudent.last_test_score || ''} onChange={(e) => setEditingStudent({...editingStudent, last_test_score: e.target.value})}
-                        style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}
-                      />
-                      <input 
-                        type="number" placeholder="درجة المستوى" value={editingStudent.level_score || ''} onChange={(e) => setEditingStudent({...editingStudent, level_score: e.target.value})}
-                        style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <select value={editingStudent.payment_plan} onChange={(e) => setEditingStudent({...editingStudent, payment_plan: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}>
-                        <option value="شهري">شهري</option>
-                        <option value="ربع سنوي">ربع سنوي</option>
-                        <option value="سنوي">سنوي</option>
-                        <option value="منحة/إعفاء">منحة/إعفاء</option>
-                      </select>
-
-                      {/* قائمة اختيار تعديل الدولة المضافة حديثاً للـ Form */}
-                      <select value={editingStudent.country_code || ''} onChange={(e) => setEditingStudent({...editingStudent, country_code: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }}>
+                      <select value={editingStudent.country_code || ''} onChange={(e) => setEditingStudent({...editingStudent, country_code: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1, minWidth: '130px' }}>
                         <option value="">-- بدون علم دولة --</option>
                         {COUNTRIES_LIST.map((c) => (
                           <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
@@ -456,24 +440,51 @@ export default function Students({ students = [], setStudents, academyId }) {
                       </select>
                     </div>
 
-                    <input 
-                      type="text" value={editingStudent.current_surah || ''} onChange={(e) => setEditingStudent({...editingStudent, current_surah: e.target.value})}
-                      placeholder="السورة الحالية" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }}
-                    />
-
+                    {/* 2. قسم بيانات التواصل والعائلة */}
+                    <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', marginTop: '5px', fontWeight: '500' }}>بيانات التواصل والوالدين:</label>
                     <input 
                       type="text" value={editingStudent.parent_name || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_name: e.target.value})}
                       placeholder="اسم ولي الأمر" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }}
                     />
-
                     <input 
                       type="tel" value={editingStudent.parent_phone || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_phone: e.target.value})}
-                      placeholder="رقم الهاتف" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', textAlign: 'left' }}
+                      placeholder="رقم هاتف التواصل" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', textAlign: 'left' }}
                     />
+
+                    {/* 3. الشؤون التعليمية والدرجات والاشتراك المالي */}
+                    <label style={{ color: C.gold, fontSize: '13px', marginBottom: '-5px', marginTop: '5px', fontWeight: '500' }}>المستوى التعليمي والدرجات والاشتراك:</label>
+                    <input 
+                      type="text" value={editingStudent.current_surah || ''} onChange={(e) => setEditingStudent({...editingStudent, current_surah: e.target.value})}
+                      placeholder="السورة أو الجزء الحالي (الورد)" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }}
+                    />
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span style={{ fontSize: '11px', color: C.text, opacity: 0.7 }}>درجة آخر اختبار</span>
+                        <input 
+                          type="number" placeholder="0" value={editingStudent.last_test_score || ''} onChange={(e) => setEditingStudent({...editingStudent, last_test_score: e.target.value})}
+                          style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span style={{ fontSize: '11px', color: C.text, opacity: 0.7 }}>درجة المستوى العام</span>
+                        <input 
+                          type="number" placeholder="0" value={editingStudent.level_score || ''} onChange={(e) => setEditingStudent({...editingStudent, level_score: e.target.value})}
+                          style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    <select value={editingStudent.payment_plan} onChange={(e) => setEditingStudent({...editingStudent, payment_plan: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px', borderRadius: '6px', marginTop: '5px' }}>
+                      <option value="شهري">شهري</option>
+                      <option value="ربع سنوي">ربع سنوي</option>
+                      <option value="سنوي">سنوي</option>
+                      <option value="منحة/إعفاء">منحة/إعفاء</option>
+                    </select>
 
                     <textarea 
                       value={editingStudent.notes || ''} onChange={(e) => setEditingStudent({...editingStudent, notes: e.target.value})}
-                      placeholder="الملاحظات التوجيهية" style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', height: '60px', resize: 'none' }}
+                      placeholder="الملاحظات التوجيهية وتوصيات المعلم..." style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', height: '65px', resize: 'none' }}
                     />
 
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '5px' }}>
