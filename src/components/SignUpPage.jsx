@@ -10,6 +10,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // 🌟 إضافة متغير حالة لتخزين رسالة النجاح بشكل مدمج
+  const [successMsg, setSuccessMsg] = useState('');
 
   const isRtl = i18n.language === 'ar';
   const goldColor = '#C9A84C';
@@ -17,6 +20,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(''); // إعادة تعيين رسالة النجاح عند كل محاولة جديدة
 
     if (!name.trim() || !email.trim() || !password.trim()) {
       return setError(isRtl ? 'برجاء ملء جميع الحقول المطلوبة' : 'Please fill in all required fields');
@@ -31,15 +35,26 @@ export default function SignUpPage({ onSwitchToLogin }) {
         email: email.trim(),
         password: password.trim(),
         options: { 
-          data: { name: name.trim() } 
+          data: { name: name.trim() },
+          emailRedirectTo: `${window.location.origin}` // توجيه المستخدم بعد تفعيل الرابط
         }
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      alert(isRtl ? "✅ تم إنشاء الحساب بنجاح! راجع بريدك الإلكتروني لتأكيده ثم سجل دخولك." : "✅ Account created! Check your email to confirm, then log in.");
-      onSwitchToLogin();
+      // 🌟 استبدال الـ alert بـ Banner مدمج وجميل يظهر داخل التطبيق
+      setSuccessMsg(
+        isRtl 
+          ? "✅ تم إنشاء الحساب بنجاح! راجع بريدك الإلكتروني لتأكيده ثم سجل دخولك." 
+          : "✅ Account created! Check your email to confirm, then log in."
+      );
+
+      // تفريغ الحقول بعد نجاح العملية لتجهيز الواجهة للخطوة التالية
+      setName('');
+      setEmail('');
+      setPassword('');
+
     } catch (err) {
       console.error("SignUp Error:", err);
       setError(err.message);
@@ -48,13 +63,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
-  // دالة موحدة لجلب نص الحقل الفارغ بناءً على اتجاه الملف الحالي
   const getRequiredMsg = () => {
     return isRtl ? 'هذا الحقل مطلوب ولا يمكن تركه فارغاً' : 'This field is required';
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
         <h2 style={{ color: '#fff', margin: '0 0 8px 0', fontSize: '26px', fontWeight: '800', textAlign: 'center' }}>
@@ -64,9 +78,42 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'انضم إلينا لإدارة حلقتك القرآنيّة بذكاء' : 'Join us to manage your Quranic circle smartly'}
         </p>
 
+        {/* 🌟 حاوية عرض رسالة النجاح الاحترافية بديلة الـ alert */}
+        {successMsg && (
+          <div style={{ 
+            background: 'rgba(16, 185, 129, 0.1)', 
+            color: '#10B981', 
+            padding: '12px', 
+            borderRadius: '12px', 
+            marginBottom: '20px', 
+            fontSize: '13px', 
+            textAlign: isRtl ? 'right' : 'left',
+            lineHeight: '1.5',
+            border: '1px solid rgba(16, 185, 129, 0.2)'
+          }}>
+            {successMsg}
+          </div>
+        )}
+
+        {/* حاوية عرض رسالة الخطأ */}
+        {error && (
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            color: '#EF4444', 
+            padding: '12px', 
+            borderRadius: '12px', 
+            marginBottom: '20px', 
+            fontSize: '13px', 
+            textAlign: 'center',
+            border: '1px solid rgba(239, 68, 68, 0.2)'
+          }}>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
-          {/* حقل الاسم المطور */}
+          {/* حقل الاسم الكامل */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaUser />
@@ -77,16 +124,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
               value={name} 
               onChange={e => setName(e.target.value)} 
               required
-              
-              // 🌟 التحكم بالترجمة
               onInvalid={(e) => e.target.setCustomValidity(getRequiredMsg())}
               onInput={(e) => e.target.setCustomValidity('')}
-              
               style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
             />
           </div>
 
-          {/* حقل البريد المطور */}
+          {/* حقل البريد الإلكتروني */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaEnvelope />
@@ -97,16 +141,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
               value={email} 
               onChange={e => setEmail(e.target.value)} 
               required
-              
-              // 🌟 التحكم بالترجمة
               onInvalid={(e) => e.target.setCustomValidity(getRequiredMsg())}
               onInput={(e) => e.target.setCustomValidity('')}
-              
               style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
             />
           </div>
 
-          {/* حقل كلمة السر المطور ذو التحقق المزدوج للـ Required والـ minLength */}
+          {/* حقل كلمة السر */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaLock />
@@ -117,9 +158,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               value={password} 
               onChange={e => setPassword(e.target.value)} 
               required
-              minLength={6} // التحقق المدمج الأصلي لـ HTML5
-              
-              // 🌟 التحكم الذكي بالترجمة بحسب نوع الخطأ (فارغ أم قصير)
+              minLength={6}
               onInvalid={(e) => {
                 if (e.target.value === '') {
                   e.target.setCustomValidity(getRequiredMsg());
@@ -128,12 +167,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
                 }
               }}
               onInput={(e) => e.target.setCustomValidity('')}
-              
               style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
             />
           </div>
-
-          {error && <p style={{ color: "#EF4444", textAlign: "center", fontSize: '13px', margin: 0, padding: '5px', background: 'rgba(239,68,68,0.05)', borderRadius: '6px' }}>{error}</p>}
 
           <button 
             type="submit" 
