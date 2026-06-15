@@ -10,8 +10,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  // 🌟 إضافة متغير حالة لتخزين رسالة النجاح بشكل مدمج
   const [successMsg, setSuccessMsg] = useState('');
 
   const isRtl = i18n.language === 'ar';
@@ -20,7 +18,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError(null);
-    setSuccessMsg(''); // إعادة تعيين رسالة النجاح عند كل محاولة جديدة
+    setSuccessMsg('');
 
     if (!name.trim() || !email.trim() || !password.trim()) {
       return setError(isRtl ? 'برجاء ملء جميع الحقول المطلوبة' : 'Please fill in all required fields');
@@ -31,26 +29,30 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     setLoading(true);
     try {
+      // 🌟 إرسال البيانات مع تمرير متغير اللغة الحالية للسيرفر لتحديد لغة الإيميل تلقائياً
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: { 
-          data: { name: name.trim() },
-          emailRedirectTo: `${window.location.origin}` // توجيه المستخدم بعد تفعيل الرابط
+          data: { 
+            name: name.trim(),
+            lang: isRtl ? 'ar' : 'en' // هنا يتم تمرير اللغة ديناميكياً
+          },
+          emailRedirectTo: `${window.location.origin}`
         }
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // 🌟 استبدال الـ alert بـ Banner مدمج وجميل يظهر داخل التطبيق
+      // راية النجاح المدمجة
       setSuccessMsg(
         isRtl 
           ? "✅ تم إنشاء الحساب بنجاح! راجع بريدك الإلكتروني لتأكيده ثم سجل دخولك." 
           : "✅ Account created! Check your email to confirm, then log in."
       );
 
-      // تفريغ الحقول بعد نجاح العملية لتجهيز الواجهة للخطوة التالية
+      // تفريغ الحقول بعد النجاح
       setName('');
       setEmail('');
       setPassword('');
@@ -78,7 +80,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'انضم إلينا لإدارة حلقتك القرآنيّة بذكاء' : 'Join us to manage your Quranic circle smartly'}
         </p>
 
-        {/* 🌟 حاوية عرض رسالة النجاح الاحترافية بديلة الـ alert */}
+        {/* تنبيه النجاح المدمج */}
         {successMsg && (
           <div style={{ 
             background: 'rgba(16, 185, 129, 0.1)', 
@@ -95,7 +97,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </div>
         )}
 
-        {/* حاوية عرض رسالة الخطأ */}
+        {/* تنبيه الخطأ المدمج */}
         {error && (
           <div style={{ 
             background: 'rgba(239, 68, 68, 0.1)', 
