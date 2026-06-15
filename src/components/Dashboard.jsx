@@ -27,7 +27,7 @@ export default function Dashboard({ session, setActiveTab }) {
     i18n.changeLanguage(nextLang);
   };
 
-  // 🔒 البنية الأساسية لجلب البيانات من Supabase (مستقرة تماماً كما هي)
+  // 🔒 البنية الأساسية لجلب البيانات من Supabase
   useEffect(() => {
     async function fetchData() {
       if (!session?.user?.id) return;
@@ -77,11 +77,11 @@ export default function Dashboard({ session, setActiveTab }) {
           </p>
         </div>
 
-        {/* 🌐 زر تغيير اللغة الاحترافي العائم */}
+        {/* 🌐 زر تغيير اللغة الاحترافي العائم بعد إصلاح متغير الألوان */}
         <button 
           onClick={toggleLanguage}
           style={{
-            background: colors.surface || '#111C2A',
+            background: C.surface || '#111C2A', // ✨ تم التصحيح هنا من colors إلى C
             border: '1px solid #334155',
             color: C.gold,
             padding: '8px 14px',
