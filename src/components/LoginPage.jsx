@@ -1,20 +1,39 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { FaGoogle, FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaGoogle, FaEnvelope, FaLock, FaGlobe } from 'react-icons/fa';
 
 export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }) {
-  const { t } = useTranslation();
+  // 🌐 استخراج تابع الترجمة والتحكم باللغات
+  const { t, i18n } = useTranslation();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // 📐 إدارة اتجاه الواجهة بناءً على اللغة المحددة
+  const currentLang = i18n.language || 'ar';
+  const isRtl = currentLang === 'ar';
+
+  // 🧠 دالة الترجمة الذكية: تقرأ من ملف i18n، وإذا لم تجد الكلمة تترجمها فورياً
+  const translateText = (key, arText, enText) => {
+    if (i18n.exists(key)) return t(key);
+    return isRtl ? arText : enText;
+  };
+
+  // 🔄 دالة التبديل الفوري للغة
+  const toggleLanguage = () => {
+    const nextLang = currentLang === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(nextLang);
+  };
+
+  // دالة تسجيل الدخول الأساسية (بدون المساس بالبنية الأصلية)
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: password.trim(),
@@ -28,6 +47,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
     }
   };
 
+  // دالة تسجيل الدخول بواسطة جوجل (بدون المساس بالبنية الأصلية)
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
@@ -43,12 +63,55 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      background: '#0C1520', 
+      padding: '20px', 
+      fontFamily: "'Cairo', sans-serif",
+      direction: isRtl ? 'rtl' : 'ltr', // قلب الصفحة كاملاً بناءً على اللغة
+      position: 'relative'
+    }}>
+      
+      {/* 🌐 زر تغيير اللغة الاحترافي العائم في أعلى الشاشة */}
+      <button 
+        onClick={toggleLanguage}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          // يظهر الزر في عكس اتجاه القراءة ليكون في الزاوية المناسبة
+          right: isRtl ? 'auto' : '20px',
+          left: isRtl ? '20px' : 'auto',
+          background: '#111C2A',
+          border: '1px solid #334155',
+          color: '#C9A84C',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '13px',
+          fontWeight: 'bold',
+          transition: 'all 0.2s ease',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}
+      >
+        <FaGlobe />
+        <span>{currentLang === 'ar' ? 'English' : 'العربية'}</span>
+      </button>
+
       <div style={{ width: '100%', maxWidth: '400px', background: '#111C2A', padding: '40px', borderRadius: '24px', border: '1px solid rgba(201,168,76,0.15)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h2 style={{ color: '#C9A84C', fontSize: '1.8rem', margin: '0 0 10px 0' }}>{t('signIn')}</h2>
-          <p style={{ color: '#94a3b8' }}>{t('welcome')}</p>
+          <h2 style={{ color: '#C9A84C', fontSize: '1.8rem', margin: '0 0 10px 0' }}>
+            {translateText('signIn', 'تسجيل الدخول', 'Sign In')}
+          </h2>
+          <p style={{ color: '#94a3b8' }}>
+            {translateText('welcome', 'مرحباً بك في الحلقة الذكية', 'Welcome to Smart Halaqa')}
+          </p>
         </div>
 
         {errorMsg && (
@@ -58,38 +121,90 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         )}
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          
+          {/* حقل البريد الإلكتروني مع أيقونة ديناميكية الاتجاه */}
           <div style={{ position: 'relative' }}>
-            <FaEnvelope style={{ position: 'absolute', right: '15px', top: '15px', color: '#64748b' }} />
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email')} style={{ width: '100%', padding: '14px 40px 14px 14px', borderRadius: '12px', border: '1px solid #334155', background: '#162030', color: '#fff', boxSizing: 'border-box' }} />
+            <FaEnvelope style={{ 
+              position: 'absolute', 
+              right: isRtl ? '15px' : 'auto', 
+              left: !isRtl ? '15px' : 'auto', 
+              top: '15px', 
+              color: '#64748b' 
+            }} />
+            <input 
+              type="email" 
+              required 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder={translateText('email', 'البريد الإلكتروني', 'Email Address')} 
+              style={{ 
+                width: '100%', 
+                padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', // ديناميكية الحشو الداخلي
+                borderRadius: '12px', 
+                border: '1px solid #334155', 
+                background: '#162030', 
+                color: '#fff', 
+                boxSizing: 'border-box',
+                outline: 'none'
+              }} 
+            />
           </div>
           
+          {/* حقل كلمة المرور مع أيقونة ديناميكية الاتجاه */}
           <div style={{ position: 'relative' }}>
-            <FaLock style={{ position: 'absolute', right: '15px', top: '15px', color: '#64748b' }} />
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password')} style={{ width: '100%', padding: '14px 40px 14px 14px', borderRadius: '12px', border: '1px solid #334155', background: '#162030', color: '#fff', boxSizing: 'border-box' }} />
+            <FaLock style={{ 
+              position: 'absolute', 
+              right: isRtl ? '15px' : 'auto', 
+              left: !isRtl ? '15px' : 'auto', 
+              top: '15px', 
+              color: '#64748b' 
+            }} />
+            <input 
+              type="password" 
+              required 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder={translateText('password', 'كلمة المرور', 'Password')} 
+              style={{ 
+                width: '100%', 
+                padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', 
+                borderRadius: '12px', 
+                border: '1px solid #334155', 
+                background: '#162030', 
+                color: '#fff', 
+                boxSizing: 'border-box',
+                outline: 'none'
+              }} 
+            />
           </div>
 
-          <button type="button" onClick={onSwitchToForgotPassword} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', alignSelf: 'flex-start' }}>
-            {t('forgotPassword?')}
+          <button type="button" onClick={onSwitchToForgotPassword} style={{ 
+            background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', 
+            alignSelf: 'flex-start' // هذه الخاصية ذكية جداً: ستتوجه لليمين في العربي ولليسار في الإنجليزي تلقائياً!
+          }}>
+            {translateText('forgotPassword', 'نسيت كلمة المرور؟', 'Forgot Password?')}
           </button>
 
           <button type="submit" disabled={loading} style={{ padding: '14px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
-            {loading ? t('loading') : t('signIn')}
+            {loading ? translateText('loading', 'جاري التحقق...', 'Signing in...') : translateText('signIn', 'تسجيل الدخول', 'Sign In')}
           </button>
         </form>
 
+        {/* خط الفصل (OR) المترجم */}
         <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0', gap: '10px', color: '#64748b', fontSize: '0.9rem' }}>
           <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
-          {t('or')}
+          {translateText('or', 'أو', 'OR')}
           <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
         </div>
 
-        <button onClick={handleGoogleLogin} style={{ width: '100%', padding: '14px', background: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
-          <FaGoogle color="#DB4437" /> {t('signInWithGoogle')}
+        {/* زر جوجل الاحترافي والمترجم */}
+        <button onClick={handleGoogleLogin} style={{ width: '100%', padding: '14px', background: '#fff', color: '#1E293B', border: 'none', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
+          <FaGoogle color="#DB4437" /> {translateText('signInWithGoogle', 'الدخول بواسطة جوجل', 'Sign in with Google')}
         </button>
 
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <button onClick={onSwitchToSignUp} style={{ background: 'none', border: 'none', color: '#C9A84C', cursor: 'pointer', fontWeight: '600' }}>
-            {t('createAccount')}
+            {translateText('createAccount', 'إنشاء حساب معلم/مشرف', 'Create Teacher/Admin Account')}
           </button>
         </div>
       </div>
