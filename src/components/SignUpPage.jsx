@@ -48,6 +48,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
+  // دالة موحدة لجلب نص الحقل الفارغ بناءً على اتجاه الملف الحالي
+  const getRequiredMsg = () => {
+    return isRtl ? 'هذا الحقل مطلوب ولا يمكن تركه فارغاً' : 'This field is required';
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px' }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
@@ -61,7 +66,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
-          {/* حقل الاسم */}
+          {/* حقل الاسم المطور */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaUser />
@@ -72,11 +77,16 @@ export default function SignUpPage({ onSwitchToLogin }) {
               value={name} 
               onChange={e => setName(e.target.value)} 
               required
+              
+              // 🌟 التحكم بالترجمة
+              onInvalid={(e) => e.target.setCustomValidity(getRequiredMsg())}
+              onInput={(e) => e.target.setCustomValidity('')}
+              
               style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
             />
           </div>
 
-          {/* حقل البريد */}
+          {/* حقل البريد المطور */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaEnvelope />
@@ -87,11 +97,16 @@ export default function SignUpPage({ onSwitchToLogin }) {
               value={email} 
               onChange={e => setEmail(e.target.value)} 
               required
+              
+              // 🌟 التحكم بالترجمة
+              onInvalid={(e) => e.target.setCustomValidity(getRequiredMsg())}
+              onInput={(e) => e.target.setCustomValidity('')}
+              
               style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
             />
           </div>
 
-          {/* حقل كلمة السر */}
+          {/* حقل كلمة السر المطور ذو التحقق المزدوج للـ Required والـ minLength */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaLock />
@@ -102,6 +117,18 @@ export default function SignUpPage({ onSwitchToLogin }) {
               value={password} 
               onChange={e => setPassword(e.target.value)} 
               required
+              minLength={6} // التحقق المدمج الأصلي لـ HTML5
+              
+              // 🌟 التحكم الذكي بالترجمة بحسب نوع الخطأ (فارغ أم قصير)
+              onInvalid={(e) => {
+                if (e.target.value === '') {
+                  e.target.setCustomValidity(getRequiredMsg());
+                } else {
+                  e.target.setCustomValidity(isRtl ? 'يجب ألا تقل كلمة المرور عن 6 أحرف' : 'Password must be at least 6 characters');
+                }
+              }}
+              onInput={(e) => e.target.setCustomValidity('')}
+              
               style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
             />
           </div>
