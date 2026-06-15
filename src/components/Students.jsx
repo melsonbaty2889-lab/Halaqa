@@ -4,32 +4,21 @@ import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { COUNTRIES_LIST } from '../constants/countries'; 
 import QuranProgressBar from './QuranProgressBar'; 
-import QuranProgressSelector from './QuranProgressSelector'; 
+import QuranProgressSelector from './QuranProgressSelector';
+import { getQuranProgress } from '../utils/quranUtils'; // 🌟 استيراد الدالة الموحدة للنصوص
 import { 
   FaUserPlus, FaGraduationCap, FaPhone, 
   FaUserShield, FaEdit, FaTimes, FaSave, FaArchive, 
   FaEyeSlash
 } from 'react-icons/fa';
 
-/**
- * دالة مساعدة لتحويل الفهرس الرقمي إلى نص مفهوم (الورد الحالي)
- */
-const getQuarterText = (index) => {
-  if (index === 0) return 'لم يبدأ بعد';
-  const juzu = Math.floor((index - 1) / 8) + 1;
-  const quarterInJuzu = ((index - 1) % 8) + 1;
-  return `الجزء ${juzu} - الربع ${quarterInJuzu}`;
-};
-
 export default function Students({ students = [], setStudents, academyId }) {
   const { t } = useTranslation();
   
-  // حالات التحكم في مظهر الواجهة (البحث، النماذج، الأرشيف)
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   
-  // حالات حقول الإدخال لنموذج إضافة طالب جديد
   const [name, setName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [parentName, setParentName] = useState('');
@@ -38,17 +27,14 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [gender, setGender] = useState('male');
   const [birthDate, setBirthDate] = useState(''); 
   const [paymentPlan, setPaymentPlan] = useState('شهري'); 
-  const [countryCode, setCountryCode] = useState('EG'); 
+  const [countryCode, setCountryCode] = useState('EG');
 
-  // حالات إدارة التعديل والرسائل
   const [editingStudent, setEditingStudent] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [updatingId, setUpdatingId] = useState(null); 
   
-  // تم إلغاء الرسالة العلوية العامة واستخدام الرسالة الموضعية فقط أسفل البطاقة
   const [inlineMessage, setInlineMessage] = useState({ studentId: null, text: '', type: '' });
 
-  // دالة حساب عمر الطالب بناءً على تاريخ ميلاده
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -61,7 +47,6 @@ export default function Students({ students = [], setStudents, academyId }) {
     return age;
   };
 
-  // دالة تنظيف الكلمات العربية لتسهيل عملية البحث
   const normalizeArabic = (str) => {
     if (!str) return '';
     return str
@@ -72,14 +57,14 @@ export default function Students({ students = [], setStudents, academyId }) {
       .toLowerCase();
   };
 
-  // ➕ دالة إضافة طالب جديد
   const handleAddStudent = async (e) => {
     e.preventDefault();
     if (!academyId) return;
     setIsAdding(true);
     setInlineMessage({ studentId: null, text: '', type: '' });
     
-    const autoSurahText = getQuarterText(currentQuarterIndex);
+    // 🌟 استخدام الدالة الموحدة لضمان التطابق التام في قاعدة البيانات
+    const autoSurahText = getQuranProgress(currentQuarterIndex).text;
 
     try {
       const { data, error } = await supabase
@@ -88,7 +73,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           name: name.trim(), 
           parent_phone: parentPhone.trim() || null,
           parent_name: parentName.trim() || null,       
-          current_surah: autoSurahText,                
+          current_surah: autoSurahText,             
           notes: notes.trim() || null,                 
           gender: gender,                              
           academy_id: academyId,
@@ -111,14 +96,14 @@ export default function Students({ students = [], setStudents, academyId }) {
     }
   };
 
-  // 💾 دالة تحديث وحفظ بيانات الطالب
   const handleUpdateStudentSubmit = async (e) => {
     e.preventDefault();
     setUpdatingId(editingStudent.id);
     setInlineMessage({ studentId: null, text: '', type: '' });
     
     const selectedIndex = parseInt(editingStudent.current_quarter_index) || 0;
-    const autoSurahText = getQuarterText(selectedIndex);
+    // 🌟 استخدام الدالة الموحدة
+    const autoSurahText = getQuranProgress(selectedIndex).text;
 
     const updatedStudentData = { 
       ...editingStudent, 
@@ -149,17 +134,14 @@ export default function Students({ students = [], setStudents, academyId }) {
 
       setStudents(prev => prev.map(st => st.id === updatedStudentData.id ? updatedStudentData : st));
       
-      // تعيين رسالة النجاح الموضعية للطالب الحالي ليتم عرضها بالأسفل
       setInlineMessage({
         studentId: updatedStudentData.id,
         text: 'تم تحديث بيانات الطالب بنجاح! 📝',
         type: 'success'
       });
 
-      // إغلاق الفورم والعودة لوضع العرض العادي
       setEditingStudent(null);
 
-      // تختفي الرسالة تلقائياً بعد 4 ثوانٍ من أسفل بطاقة الطالب
       setTimeout(() => {
         setInlineMessage({ studentId: null, text: '', type: '' });
       }, 4000);
@@ -203,7 +185,6 @@ export default function Students({ students = [], setStudents, academyId }) {
   return (
     <div style={{ direction: 'inherit' }}>
       
-      {/* القسم العلوي: العناوين والأزرار */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
         <h2 style={{ color: C.gold, margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px' }}>
           <FaGraduationCap /> {showArchived ? 'أرشيف الطلاب والموقوفين' : 'إدارة الطلاب والشؤون التعليمية'}
@@ -231,7 +212,6 @@ export default function Students({ students = [], setStudents, academyId }) {
         </div>
       </div>
 
-      {/* نموذج إضافة طالب جديد */}
       {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -251,12 +231,10 @@ export default function Students({ students = [], setStudents, academyId }) {
         </form>
       )}
 
-      {/* حقل البحث */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: C.surface, padding: '12px 15px', borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
         <input type="text" placeholder="ابحث عن طالب بالاسم، الهاتف، أو الحفظ..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '15px' }} />
       </div>
 
-      {/* بطاقات عرض الطلاب */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {filteredStudents.map(student => {
           const isCurrentEditing = editingStudent?.id === student.id;
@@ -269,7 +247,6 @@ export default function Students({ students = [], setStudents, academyId }) {
             <div key={student.id} style={{ background: C.surface, padding: '20px', borderRadius: '12px', border: isCurrentEditing ? `1px solid ${C.gold}` : `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
               
               {isCurrentEditing ? (
-                /* وضع التعديل النشط */
                 <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border}`, color: '#fff', padding: '10px 12px', borderRadius: '6px' }} required />
                   
@@ -314,7 +291,6 @@ export default function Students({ students = [], setStudents, academyId }) {
                   </div>
                 </form>
               ) : (
-                /* وضع العرض العادي للبطاقة (تم نقل الرسالة لتظهر هنا بالأسفل مباشرة) */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -331,12 +307,8 @@ export default function Students({ students = [], setStudents, academyId }) {
                       {student.parent_name && <span><FaUserShield size={13} /> ولي الأمر: {student.parent_name}</span>}
                     </div>
 
-                    <div style={{ marginTop: '5px', background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '13px' }}>
-                        <span style={{ color: C.gold }}>الورد الحالي: {student.current_surah || 'لم يحدد'}</span>
-                      </div>
-                      <QuranProgressBar currentIndex={student.current_quarter_index || 0} />
-                    </div>
+                    {/* 🌟 تمرير الخاصية الصحيحة للـ ProgressBar لمنع ظهور الصفر */}
+                    <QuranProgressBar currentQuarterIndex={student.current_quarter_index || 0} />
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${C.border}`, paddingTop: '12px' }}>
@@ -348,7 +320,6 @@ export default function Students({ students = [], setStudents, academyId }) {
                     </button>
                   </div>
 
-                  {/* هنا يكمن التعديل: تظهر رسالة النجاح الخضراء هنا بالأسفل تماماً تابعة للبطاقة الحالية بعد حفظ التعديل بنجاح */}
                   {inlineMessage.studentId === student.id && inlineMessage.text && (
                     <div style={{ 
                       padding: '12px', 
