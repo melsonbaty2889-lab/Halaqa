@@ -2,14 +2,32 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
-import { FaUserGraduate, FaUserClock, FaUserCheck, FaArrowLeft } from "react-icons/fa";
+import { FaUserGraduate, FaUserClock, FaUserCheck, FaGlobe } from "react-icons/fa";
 
 export default function Dashboard({ session, setActiveTab }) {
-  const { t } = useTranslation();
+  // 🌐 استخراج تابع الترجمة (t) وكائن التحكم باللغة (i18n)
+  const { t, i18n } = useTranslation();
+  
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
 
-  // 🔒 البنية الأساسية لجلب البيانات من Supabase (لم يتم تغييرها مطلقاً لضمان استقرار النظام)
+  // معرفة اللغة الحالية ودعم الاتجاه الهندسي المناسب للواجهة تلقائياً
+  const currentLang = i18n.language || 'ar';
+  const isRtl = currentLang === 'ar';
+
+  // دالة ذكية لفحص الجمل وترجمتها فوراً حتى لو كانت ملفات JSON الخارجية فارغة
+  const translateText = (key, arText, enText) => {
+    if (i18n.exists(key)) return t(key);
+    return isRtl ? arText : enText;
+  };
+
+  // دالة تبديل اللغة الفورية
+  const toggleLanguage = () => {
+    const nextLang = currentLang === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(nextLang);
+  };
+
+  // 🔒 البنية الأساسية لجلب البيانات من Supabase (مستقرة تماماً كما هي)
   useEffect(() => {
     async function fetchData() {
       if (!session?.user?.id) return;
@@ -24,7 +42,13 @@ export default function Dashboard({ session, setActiveTab }) {
     fetchData();
   }, [session]);
 
-  if (loading) return <div style={{ padding: 40, color: C.text, textAlign: 'center', fontFamily: 'sans-serif' }}>{t('loading')}...</div>;
+  if (loading) {
+    return (
+      <div style={{ padding: 40, color: C.text, textAlign: 'center', fontFamily: 'sans-serif' }}>
+        {translateText('loading', 'جاري التحميل...', 'Loading...')}
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -32,20 +56,54 @@ export default function Dashboard({ session, setActiveTab }) {
       margin: '0 auto', 
       padding: '10px 5px',
       fontFamily: 'sans-serif',
-      direction: 'rtl' // تضمن المحاذاة الصحيحة للغة العربية
+      direction: isRtl ? 'rtl' : 'ltr' // قلب اتجاه الصفحة كاملاً بسلاسة عند تغيير اللغة
     }}>
       
-      {/* 🌟 الهيدر العلوي المحسن بصرياً */}
-      <header style={{ marginBottom: '30px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
-        <h1 style={{ color: '#fff', fontSize: '1.75rem', fontWeight: 'bold', margin: 0 }}>
-          {t('welcome_back', { defaultValue: 'مرحباً بك مجدداً' })}
-        </h1>
-        <p style={{ color: C.gold, fontSize: '1.1rem', margin: '5px 0 0 0', fontWeight: '500' }}>
-          {data.academyName}
-        </p>
+      {/* 🌟 الهيدر العلوي ويحتوي على النص وزر تبديل اللغة العالمي الجديد */}
+      <header style={{ 
+        marginBottom: '30px', 
+        borderBottom: '1px solid #1e293b', 
+        paddingBottom: '15px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div>
+          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 'bold', margin: 0 }}>
+            {translateText('welcome_back', 'مرحباً بك مجدداً 👋', 'Welcome Back 👋')}
+          </h1>
+          <p style={{ color: C.gold, fontSize: '1.05rem', margin: '5px 0 0 0', fontWeight: '500' }}>
+            {data.academyName}
+          </p>
+        </div>
+
+        {/* 🌐 زر تغيير اللغة الاحترافي العائم */}
+        <button 
+          onClick={toggleLanguage}
+          style={{
+            background: colors.surface || '#111C2A',
+            border: '1px solid #334155',
+            color: C.gold,
+            padding: '8px 14px',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '13px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = C.gold}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = '#334155'}
+        >
+          <FaGlobe />
+          <span>{currentLang === 'ar' ? 'English' : 'العربية'}</span>
+        </button>
       </header>
 
-      {/* ⚡ أزرار الإجراءات السريعة بتصميم شبكي متجاوب وتأثيرات بصرية احترافية */}
+      {/* ⚡ أزرار الإجراءات السريعة المترجمة بالكامل والمتجاوبة هندسياً */}
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
@@ -73,7 +131,7 @@ export default function Dashboard({ session, setActiveTab }) {
           }}
         >
           <FaUserCheck size={20} />
-          {t('scan_attendance', { defaultValue: 'فحص الحضور والغياب' })}
+          {translateText('scan_attendance', 'فحص الحضور والغياب', 'Scan Attendance')}
         </button>
         
         <button 
@@ -97,11 +155,11 @@ export default function Dashboard({ session, setActiveTab }) {
           }}
         >
           <FaUserGraduate size={20} />
-          {t('register_student', { defaultValue: 'تسجيل طالب جديد' })}
+          {translateText('register_student', 'تسجيل طالب جديد', 'Register Student')}
         </button>
       </div>
 
-      {/* 📊 كروت الإحصائيات والأرقام الرئيسية محاذية بدقة متناهية */}
+      {/* 📊 كروت الإحصائيات مع قلب اتجاه الـ Border تلقائياً بحسب اللغة */}
       <div style={{ display: 'grid', gap: '15px' }}>
         
         {/* كرت إجمالي الطلاب */}
@@ -109,15 +167,16 @@ export default function Dashboard({ session, setActiveTab }) {
           background: C.surface, 
           padding: '20px 25px', 
           borderRadius: '16px', 
-          borderRight: `5px solid ${C.gold}`, 
+          borderRight: isRtl ? `5px solid ${C.gold}` : 'none', 
+          borderLeft: !isRtl ? `5px solid ${C.gold}` : 'none', 
           display: 'flex', 
           justifyContent: 'space-between',
           alignItems: 'center',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           <div>
-            <p style={{ color: '#94a3b8', margin: '0 0 5px 0', fontSize: '14px', fontWeight: '500' }}>
-              {t('total_students', { defaultValue: 'إجمالي الطلاب بالعملية التعليمية' })}
+            <p style={{ color: '#94a3b8', margin: '0 0 5px 0', fontSize: '13px', fontWeight: '500' }}>
+              {translateText('total_students', 'إجمالي الطلاب بالحلقة', 'Total Ring Students')}
             </p>
             <h2 style={{ color: '#fff', margin: 0, fontSize: '1.8rem', fontWeight: 'bold' }}>{data.stats.students}</h2>
           </div>
@@ -129,15 +188,16 @@ export default function Dashboard({ session, setActiveTab }) {
           background: C.surface, 
           padding: '20px 25px', 
           borderRadius: '16px', 
-          borderRight: `5px solid #ef4444`, 
+          borderRight: isRtl ? `5px solid #ef4444` : 'none', 
+          borderLeft: !isRtl ? `5px solid #ef4444` : 'none', 
           display: 'flex', 
           justifyContent: 'space-between',
           alignItems: 'center',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           <div>
-            <p style={{ color: '#94a3b8', margin: '0 0 5px 0', fontSize: '14px', fontWeight: '500' }}>
-              {t('pending_payments', { defaultValue: 'الاشتراكات المالية المعلقة' })}
+            <p style={{ color: '#94a3b8', margin: '0 0 5px 0', fontSize: '13px', fontWeight: '500' }}>
+              {translateText('pending_payments', 'المستحقات المالية المعلقة', 'Pending Financial Payments')}
             </p>
             <h2 style={{ color: '#fff', margin: 0, fontSize: '1.8rem', fontWeight: 'bold' }}>{data.stats.pending}</h2>
           </div>
@@ -146,7 +206,6 @@ export default function Dashboard({ session, setActiveTab }) {
 
       </div>
 
-      {/* إضافة كود CSS خفيف محلي لتحسين تجربة التفاعل والـ Hover على الأزرار */}
       <style>{`
         .dashboard-btn:hover {
           transform: translateY(-2px);
