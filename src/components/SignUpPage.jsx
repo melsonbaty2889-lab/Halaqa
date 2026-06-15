@@ -56,7 +56,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'إنشاء حساب جديد' : 'Create New Account'}
         </h2>
         <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 32px 0', textAlign: 'center' }}>
-          {isRtl ? 'انضم إلينا لإدارة حركتك القرآنيّة بذكاء' : 'Join us to manage your Quranic circle smartly'}
+          {isRtl ? 'انضم إلينا لإدارة حلقتك القرآنيّة بذكاء' : 'Join us to manage your Quranic circle smartly'}
         </p>
 
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
