@@ -1,5 +1,5 @@
 import React from 'react';
-import { getQuranProgress } from '../utils/quranUtils'; // تأكد من تعديل المسار حسب مكان ملف quranUtils
+import { getQuranProgress } from '../utils/quranUtils';
 
 const QuranProgressBar = ({ currentQuarterIndex }) => {
   // تحويل الرقم القادم من قاعدة البيانات إلى تفاصيل ونسبة مئوية
@@ -7,16 +7,17 @@ const QuranProgressBar = ({ currentQuarterIndex }) => {
 
   return (
     <div style={{
-      background: '#1E293B', // خلفية داكنة احترافية مريحة للعين
+      background: '#1E293B',
       padding: '20px',
       borderRadius: '16px',
-      direction: 'rtl', // لدعم العرض من اليمين لليسان
+      direction: 'rtl', 
       fontFamily: 'sans-serif',
       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
       border: '1px solid #334155',
       maxWidth: '500px',
       margin: '15px auto'
     }}>
+     
       {/* قسم النصوص العلوية */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
         <div>
@@ -25,6 +26,7 @@ const QuranProgressBar = ({ currentQuarterIndex }) => {
             📍 {progress.text}
           </span>
         </div>
+ 
         <div style={{ textAlign: 'left' }}>
           <span style={{ color: '#94A3B8', fontSize: '11px', display: 'block', marginBottom: '4px' }}>نسبة التقدم</span>
           <span style={{ color: '#10B981', fontWeight: 'bold', fontSize: '18px' }}>
@@ -46,9 +48,9 @@ const QuranProgressBar = ({ currentQuarterIndex }) => {
         <div style={{
           width: `${progress.percentage}%`,
           height: '100%',
-          background: 'linear-gradient(90deg, #10B981, #34D399)', // تدرج لوني أخضر جذاب
+          background: 'linear-gradient(90deg, #10B981, #34D399)',
           borderRadius: '6px',
-          transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' // حركة ناعمة جداً عند تحديث الرقم
+          transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' 
         }} />
       </div>
 
