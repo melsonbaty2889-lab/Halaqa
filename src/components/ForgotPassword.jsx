@@ -10,12 +10,12 @@ export default function ForgotPassword({ onBackToLogin }) {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  // 🛡️ الفحص المرن والديناميكي لتجنب مشاكل اللواحق الإقليمية مثل (ar-EG / ar-SA)
+  // 🛡️ الفحص الديناميكي لاتجاه اللغة (RTL) لدعم اللغات بشكل مرن
   const currentLang = i18n.resolvedLanguage || i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
   const goldColor = '#C9A84C';
 
-  // دالة ذكية لترجمة رسائل خطأ Supabase الشائعة بناءً على لغة الواجهة الحالية
+  // دالة ذكية لترجمة رسائل خطأ Supabase الشائعة
   const getErrorMessage = (err) => {
     if (!isRtl) return err.message;
     if (err.message.includes('User not found') || err.message.includes('identity not found')) {
@@ -42,8 +42,13 @@ export default function ForgotPassword({ onBackToLogin }) {
       setMessage(getErrorMessage(error));
       setIsError(true);
     } else {
-      // جلب رسالة النجاح بشكل احترافي وموحد من ملف i18n
-      setMessage(t('checkYourEmail'));
+      // جلب رسالة النجاح مع حماية التراجع التلقائي
+      const successTranslation = t('checkYourEmail');
+      setMessage(
+        successTranslation && successTranslation !== 'checkYourEmail'
+          ? successTranslation
+          : (isRtl ? 'برجاء مراجعة بريدك الإلكتروني لتفعيل الرابط' : 'Please check your email for the reset link')
+      );
       setIsError(false);
     }
     setLoading(false);
@@ -53,17 +58,16 @@ export default function ForgotPassword({ onBackToLogin }) {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px' }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', textAlign: 'center' }}>
         
-        {/* العنوان والفقرة النصية باستدعاء مباشر ونظيف من ملف الترجمة */}
+        {/* العنوان والوصف */}
         <h2 style={{ color: '#fff', margin: '0 0 10px 0', fontSize: '24px', fontWeight: '700' }}>
-          {t('forgotPassword')}
+          {t('forgotPassword') && t('forgotPassword') !== 'forgotPassword' ? t('forgotPassword') : (isRtl ? 'استعادة كلمة المرور' : 'Forgot Password')}
         </h2>
         <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 30px 0', lineHeight: '1.6' }}>
-          {t('enterEmailParagraph')}
+          {t('enterEmailParagraph') && t('enterEmailParagraph') !== 'enterEmailParagraph' ? t('enterEmailParagraph') : (isRtl ? 'أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة تعيين كلمة السر.' : 'Enter your registered email to receive a secure password reset link.')}
         </p>
 
         <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ position: 'relative' }}>
-            {/* 📐 ضبط تموضع أيقونة البريد الإلكتروني هندسياً حسب اتجاه اللغة الفعلي */}
             <span style={{ 
               position: 'absolute', 
               top: '50%', 
@@ -74,12 +78,27 @@ export default function ForgotPassword({ onBackToLogin }) {
             }}>
               <FaEnvelope />
             </span>
+            
+            {/* 🌟 حقل الإدخال المطور والمحمي لرسائل التنبيه الافتراضية 🌟 */}
             <input 
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              placeholder={t('email')}
+              placeholder={t('email') && t('email') !== 'email' ? t('email') : (isRtl ? 'البريد الإلكتروني' : 'Email Address')}
               required
+              
+              // تغيير رسالة التحذير ديناميكياً لتتبع لغة الموقع مع نص احتياطي فوري
+              onInvalid={(e) => {
+                const customMsg = t('fieldRequired');
+                e.target.setCustomValidity(
+                  customMsg && customMsg !== 'fieldRequired' 
+                    ? customMsg 
+                    : (isRtl ? 'هذا الحقل مطلوب ولا يمكن تركه فارغاً' : 'This field is required')
+                );
+              }}
+              // تصفير الخطأ عند بدء الكتابة ليختفي التحذير بسلاسة
+              onInput={(e) => e.target.setCustomValidity('')}
+              
               style={{ 
                 width: '100%', 
                 padding: '14px 15px',
@@ -102,20 +121,24 @@ export default function ForgotPassword({ onBackToLogin }) {
             </div>
           )}
 
-          {/* نص زر الإرسال بناءً على حالة التحميل بشكل ديناميكي كامل */}
+          {/* زر الإرسال */}
           <button 
             type="submit" 
             disabled={loading} 
             style={{ width: '100%', padding: '14px', backgroundColor: loading ? '#1E2D3D' : goldColor, color: '#000', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
           >
-            {loading ? t('sendingStatus') : t('sendResetLink')}
+            {loading ? (
+              t('sendingStatus') && t('sendingStatus') !== 'sendingStatus' ? t('sendingStatus') : (isRtl ? 'جاري الإرسال...' : 'Sending...')
+            ) : (
+              t('sendResetLink') && t('sendResetLink') !== 'sendResetLink' ? t('sendResetLink') : (isRtl ? 'إرسال رابط الحماية' : 'Send Reset Link')
+            )}
           </button>
         </form>
         
-        {/* زر العودة للرئيسية متكامل مع الترجمة واتجاه السهم */}
+        {/* زر العودة لتسجيل الدخول */}
         <button onClick={onBackToLogin} style={{ marginTop: '25px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500' }}>
           {isRtl ? <FaArrowRight /> : <FaArrowLeft />}
-          {t('backToLogin')}
+          {t('backToLogin') && t('backToLogin') !== 'backToLogin' ? t('backToLogin') : (isRtl ? 'العودة لتسجيل الدخول' : 'Back to Login')}
         </button>
 
       </div>
