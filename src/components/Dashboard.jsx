@@ -11,23 +11,23 @@ export default function Dashboard({ session, setActiveTab }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
 
-  // معرفة اللغة الحالية ودعم الاتجاه الهندسي المناسب للواجهة تلقائياً
+  // 📐 معرفة اللغة الحالية ودعم الاتجاه الهندسي المناسب للواجهة تلقائياً (RTL / LTR)
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
-  // دالة ذكية لفحص الجمل وترجمتها فوراً حتى لو كانت ملفات JSON الخارجية فارغة
+  // 🧠 دالة ذكية لفحص الجمل وترجمتها فوراً لتأمين الواجهة من ملفات الـ JSON الفارغة
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
     return isRtl ? arText : enText;
   };
 
-  // دالة تبديل اللغة الفورية
+  // 🔄 دالة تبديل اللغة الفورية
   const toggleLanguage = () => {
     const nextLang = currentLang === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLang);
   };
 
-  // 🔒 البنية الأساسية لجلب البيانات من Supabase
+  // 🔒 البنية الأساسية وجلب البيانات من Supabase (مستقرة وثابتة تماماً بدون أي تغيير)
   useEffect(() => {
     async function fetchData() {
       if (!session?.user?.id) return;
@@ -56,17 +56,20 @@ export default function Dashboard({ session, setActiveTab }) {
       margin: '0 auto', 
       padding: '10px 5px',
       fontFamily: 'sans-serif',
-      direction: isRtl ? 'rtl' : 'ltr' // قلب اتجاه الصفحة كاملاً بسلاسة عند تغيير اللغة
+      direction: isRtl ? 'rtl' : 'ltr' // قلب اتجاه الصفحة كاملاً بسلاسة هندسية عند تغيير اللغة
     }}>
       
-      {/* 🌟 الهيدر العلوي ويحتوي على النص وزر تبديل اللغة العالمي الجديد */}
+      {/* 🌟 الهيدر العلوي المحسن بمسافة أمان علوية تمنع التداخل مع زر القائمة ☰ */}
       <header style={{ 
-        marginBottom: '30px', 
+        marginBottom: '35px', 
         borderBottom: '1px solid #1e293b', 
-        paddingBottom: '15px',
+        paddingBottom: '20px',
+        paddingTop: '45px', // مسافة حشو علوية لحماية النص من زر الهامبرغر العائم على الجوال
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'flex-start',
+        flexWrap: 'wrap',
+        gap: '15px'
       }}>
         <div>
           <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 'bold', margin: 0 }}>
@@ -77,11 +80,11 @@ export default function Dashboard({ session, setActiveTab }) {
           </p>
         </div>
 
-        {/* 🌐 زر تغيير اللغة الاحترافي العائم بعد إصلاح متغير الألوان */}
+        {/* 🌐 زر تغيير اللغة الاحترافي العائم والمؤمن بمتغير الألوان الصحيح C.surface */}
         <button 
           onClick={toggleLanguage}
           style={{
-            background: C.surface || '#111C2A', // ✨ تم التصحيح هنا من colors إلى C
+            background: C.surface || '#111C2A', 
             border: '1px solid #334155',
             color: C.gold,
             padding: '8px 14px',
@@ -93,7 +96,8 @@ export default function Dashboard({ session, setActiveTab }) {
             fontSize: '13px',
             fontWeight: '600',
             transition: 'all 0.2s ease',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            marginTop: '5px'
           }}
           onMouseEnter={(e) => e.currentTarget.style.borderColor = C.gold}
           onMouseLeave={(e) => e.currentTarget.style.borderColor = '#334155'}
@@ -103,10 +107,10 @@ export default function Dashboard({ session, setActiveTab }) {
         </button>
       </header>
 
-      {/* ⚡ أزرار الإجراءات السريعة المترجمة بالكامل والمتجاوبة هندسياً */}
+      {/* ⚡ أزرار الإجراءات السريعة المتجاوبة مع الشاشات الصغيرة */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
         gap: '15px', 
         marginBottom: '35px' 
       }}>
@@ -159,10 +163,10 @@ export default function Dashboard({ session, setActiveTab }) {
         </button>
       </div>
 
-      {/* 📊 كروت الإحصائيات مع قلب اتجاه الـ Border تلقائياً بحسب اللغة */}
+      {/* 📊 كروت الإحصائيات مع قلب اتجاه الـ Border التمييزي تلقائياً بحسب اتجاه القراءة */}
       <div style={{ display: 'grid', gap: '15px' }}>
         
-        {/* كرت إجمالي الطلاب */}
+        {/* كرت إجمالي الطلاب بالنصوص المصقولة والمحسنة عالمياً */}
         <div style={{ 
           background: C.surface, 
           padding: '20px 25px', 
@@ -176,14 +180,14 @@ export default function Dashboard({ session, setActiveTab }) {
         }}>
           <div>
             <p style={{ color: '#94a3b8', margin: '0 0 5px 0', fontSize: '13px', fontWeight: '500' }}>
-              {translateText('total_students', 'إجمالي الطلاب بالحلقة', 'Total Ring Students')}
+              {translateText('total_students', 'إجمالي الطلاب بالحلقة', 'Total Students')}
             </p>
             <h2 style={{ color: '#fff', margin: 0, fontSize: '1.8rem', fontWeight: 'bold' }}>{data.stats.students}</h2>
           </div>
           <div style={{ fontSize: '26px', color: C.gold, opacity: 0.9 }}><FaUserGraduate /></div>
         </div>
 
-        {/* كرت الاشتراكات المعلقة */}
+        {/* كرت الاشتراكات المعلقة بالنصوص المصقولة والمحسنة عالمياً */}
         <div style={{ 
           background: C.surface, 
           padding: '20px 25px', 
@@ -197,7 +201,7 @@ export default function Dashboard({ session, setActiveTab }) {
         }}>
           <div>
             <p style={{ color: '#94a3b8', margin: '0 0 5px 0', fontSize: '13px', fontWeight: '500' }}>
-              {translateText('pending_payments', 'المستحقات المالية المعلقة', 'Pending Financial Payments')}
+              {translateText('pending_payments', 'المستحقات المالية المعلقة', 'Pending Payments')}
             </p>
             <h2 style={{ color: '#fff', margin: 0, fontSize: '1.8rem', fontWeight: 'bold' }}>{data.stats.pending}</h2>
           </div>
@@ -206,6 +210,7 @@ export default function Dashboard({ session, setActiveTab }) {
 
       </div>
 
+      {/* تأثيرات التفاعل البصري الفخم */}
       <style>{`
         .dashboard-btn:hover {
           transform: translateY(-2px);
