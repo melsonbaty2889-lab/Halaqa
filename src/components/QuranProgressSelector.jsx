@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 export default function QuranProgressSelector({ initialIndex, onIndexChange, disabled }) {
   const [juz, setJuz] = useState(1);
   const [quarterInJuz, setQuarterInJuz] = useState(1);
-  
-  // 🛡️ مفتاح الأمان الذكي لمنع التحديث التلقائي عند فتح الصفحة
+
+  // مفتاح الأمان الذكي لمنع التحديث التلقائي عند فتح الصفحة
   const isInitialized = useRef(false);
 
   // عند فتح النافذة: نقوم بتحويل الرقم إلى (جزء وربع) للعرض فقط
@@ -19,7 +19,7 @@ export default function QuranProgressSelector({ initialIndex, onIndexChange, dis
       setJuz(1);
       setQuarterInJuz(1);
     }
-    
+ 
     // نرفع علم الأمان ليصبح المكون جاهزاً لتعديلات المعلم يدوياً
     setTimeout(() => {
       isInitialized.current = true;
@@ -34,7 +34,7 @@ export default function QuranProgressSelector({ initialIndex, onIndexChange, dis
     if (newIndex !== initialIndex) {
       onIndexChange(newIndex);
     }
-  }, [juz, quarterInJuz]);
+  }, [juz, quarterInJuz, initialIndex, onIndexChange]);
 
   const getQuarterLabel = (qNum) => {
     return qNum <= 4 ? `الربع ${qNum} (الحزب الأول)` : `الربع ${qNum - 4} (الحزب الثاني)`;
