@@ -81,7 +81,6 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         style={{
           position: 'absolute',
           top: '20px',
-          // يظهر الزر في عكس اتجاه القراءة ليكون في الزاوية المناسبة
           right: isRtl ? 'auto' : '20px',
           left: isRtl ? '20px' : 'auto',
           background: '#111C2A',
@@ -122,7 +121,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           
-          {/* حقل البريد الإلكتروني مع أيقونة ديناميكية الاتجاه */}
+          {/* حقل البريد الإلكتروني المطور */}
           <div style={{ position: 'relative' }}>
             <FaEnvelope style={{ 
               position: 'absolute', 
@@ -137,9 +136,14 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               placeholder={translateText('email', 'البريد الإلكتروني', 'Email Address')} 
+              
+              // 🌟 إضافة الترجمة الديناميكية للتنبيه
+              onInvalid={(e) => e.target.setCustomValidity(translateText('fieldRequired', 'هذا الحقل مطلوب ولا يمكن تركه فارغاً', 'This field is required'))}
+              onInput={(e) => e.target.setCustomValidity('')}
+              
               style={{ 
                 width: '100%', 
-                padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', // ديناميكية الحشو الداخلي
+                padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', 
                 borderRadius: '12px', 
                 border: '1px solid #334155', 
                 background: '#162030', 
@@ -150,7 +154,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
             />
           </div>
           
-          {/* حقل كلمة المرور مع أيقونة ديناميكية الاتجاه */}
+          {/* حقل كلمة المرور المطور */}
           <div style={{ position: 'relative' }}>
             <FaLock style={{ 
               position: 'absolute', 
@@ -165,6 +169,11 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               placeholder={translateText('password', 'كلمة المرور', 'Password')} 
+              
+              // 🌟 إضافة الترجمة الديناميكية للتنبيه
+              onInvalid={(e) => e.target.setCustomValidity(translateText('fieldRequired', 'هذا الحقل مطلوب ولا يمكن تركه فارغاً', 'This field is required'))}
+              onInput={(e) => e.target.setCustomValidity('')}
+              
               style={{ 
                 width: '100%', 
                 padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', 
@@ -180,7 +189,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
 
           <button type="button" onClick={onSwitchToForgotPassword} style={{ 
             background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', 
-            alignSelf: 'flex-start' // هذه الخاصية ذكية جداً: ستتوجه لليمين في العربي ولليسار في الإنجليزي تلقائياً!
+            alignSelf: 'flex-start' 
           }}>
             {translateText('forgotPassword', 'نسيت كلمة المرور؟', 'Forgot Password?')}
           </button>
@@ -190,14 +199,12 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
           </button>
         </form>
 
-        {/* خط الفصل (OR) المترجم */}
         <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0', gap: '10px', color: '#64748b', fontSize: '0.9rem' }}>
           <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
           {translateText('or', 'أو', 'OR')}
           <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
         </div>
 
-        {/* زر جوجل الاحترافي والمترجم */}
         <button onClick={handleGoogleLogin} style={{ width: '100%', padding: '14px', background: '#fff', color: '#1E293B', border: 'none', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
           <FaGoogle color="#DB4437" /> {translateText('signInWithGoogle', 'الدخول بواسطة جوجل', 'Sign in with Google')}
         </button>
