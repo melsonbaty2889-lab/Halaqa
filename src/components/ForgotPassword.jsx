@@ -10,8 +10,22 @@ export default function ForgotPassword({ onBackToLogin }) {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  const isRtl = i18n.language === 'ar';
+  // 🛡️ الحل الذكي: الفحص المرن لتجنب مشاكل اللواحق الإقليمية مثل (ar-EG / ar-SA)
+  const currentLang = i18n.resolvedLanguage || i18n.language || 'ar';
+  const isRtl = currentLang.startsWith('ar');
   const goldColor = '#C9A84C';
+
+  // دالة مساعدة لترجمة رسائل Supabase الشائعة للعربية في حال واجه المستخدم خطأ
+  const getErrorMessage = (err) => {
+    if (!isRtl) return err.message;
+    if (err.message.includes('User not found') || err.message.includes('identity not found')) {
+      return 'عذراً، هذا البريد الإلكتروني غير مسجل لدينا.';
+    }
+    if (err.message.includes('Rate limit')) {
+      return 'تم إرسال طلبات كثيرة جداً، يرجى المحاولة مرة أخرى بعد دقيقة.';
+    }
+    return 'حدث خطأ أثناء الاتصال بالسيرفر، يرجى المحاولة لاحقاً.';
+  };
 
   const handleReset = async (e) => {
     e.preventDefault();
@@ -25,7 +39,8 @@ export default function ForgotPassword({ onBackToLogin }) {
     });
 
     if (error) {
-      setMessage(error.message);
+      // 🌟 هنا تم تأمين ترجمة الخطأ لعدم تشويه لغة الواجهة
+      setMessage(getErrorMessage(error));
       setIsError(true);
     } else {
       setMessage(t('checkYourEmail') || (isRtl ? 'برجاء مراجعة بريدك الإلكتروني لتفعيل الرابط' : 'Please check your email for the reset link'));
@@ -47,7 +62,15 @@ export default function ForgotPassword({ onBackToLogin }) {
 
         <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
+            {/* 📐 ضبط تموضع أيقونة الإيميل هندسياً حسب اتجاه الصفحة الفعلي */}
+            <span style={{ 
+              position: 'absolute', 
+              top: '50%', 
+              transform: 'translateY(-50%)', 
+              right: isRtl ? '15px' : 'auto',
+              left: !isRtl ? '15px' : 'auto', 
+              color: '#64748b' 
+            }}>
               <FaEnvelope />
             </span>
             <input 
@@ -56,7 +79,19 @@ export default function ForgotPassword({ onBackToLogin }) {
               onChange={(e) => setEmail(e.target.value)} 
               placeholder={t('email') || (isRtl ? 'البريد الإلكتروني' : 'Email Address')}
               required
-              style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
+              style={{ 
+                width: '100%', 
+                padding: '14px 15px',
+                paddingLeft: isRtl ? '15px' : '45px', 
+                paddingRight: isRtl ? '45px' : '15px', 
+                borderRadius: '12px', 
+                border: '1px solid #223147', 
+                background: '#090F16', 
+                color: '#fff', 
+                fontSize: '14px', 
+                outline: 'none', 
+                textAlign: isRtl ? 'right' : 'left' 
+              }}
             />
           </div>
 
@@ -76,6 +111,7 @@ export default function ForgotPassword({ onBackToLogin }) {
         </form>
         
         <button onClick={onBackToLogin} style={{ marginTop: '25px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500' }}>
+          {/* 🔄 انعكاس اتجاه السهم تبعا لـ RTL */}
           {isRtl ? <FaArrowRight /> : <FaArrowLeft />}
           {isRtl ? 'العودة لتسجيل الدخول' : 'Back to Login'}
         </button>
