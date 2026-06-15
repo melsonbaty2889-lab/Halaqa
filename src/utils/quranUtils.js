@@ -10,13 +10,13 @@ export const getQuranProgress = (index) => {
 
   // 1. حساب النسبة المئوية من القرآن كاملاً
   const percentage = Math.round((index / 240) * 100);
-
+  
   // 2. حساب رقم الجزء (كل جزء يحتوي على 8 أرباع)
   const juz = Math.ceil(index / 8);
-
+  
   // 3. حساب رقم الحزب (كل حزب يحتوي على 4 أرباع)
   const hizb = Math.ceil(index / 4);
-
+  
   // 4. حساب ترتيب الربع داخل الحزب الحالي (من 1 إلى 4)
   const quarterInHizb = index % 4 === 0 ? 4 : index % 4;
 
