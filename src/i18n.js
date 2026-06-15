@@ -52,7 +52,7 @@ const resources = {
       good: "جيد",
       needs_improvement: "يحتاج إلى تركيز",
 
-      // 6. شاشات تسجيل الدخول والاشتراك (Authentication)
+      // 6. شاشات تسجيل الدخول والاشتراك (Authentication) - تم تحديثها هنا 🌟
       createAccount: "إنشاء حساب معلم/مشرف",
       fullName: "الاسم الكامل",
       email: "البريد الإلكتروني",
@@ -60,6 +60,12 @@ const resources = {
       signUp: "تسجيل حساب جديد",
       signIn: "تسجيل الدخول",
       alreadyHaveAccount: "لديك حساب بالفعل؟",
+      forgotPassword: "استعادة كلمة المرور",
+      sendResetLink: "إرسال رابط الحماية",
+      checkYourEmail: "برجاء مراجعة بريدك الإلكتروني لتفعيل الرابط",
+      backToLogin: "العودة لتسجيل الدخول",
+      enterEmailParagraph: "أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة تعيين كلمة السر.",
+      sendingStatus: "جاري الإرسال...",
 
       // 7. رسائل الخطأ والتحقق الاحترافية (Validation & Errors)
       errorLoading: "عذراً، فشل تحميل البيانات من الخادم",
@@ -68,7 +74,7 @@ const resources = {
       invalidEmail: "يرجى إدخال بريد إلكتروني صحيح",
       passwordTooShort: "كلمة المرور يجب ألا تقل عن 6 رموز",
 
-      // 8. مفاتيح إدارة الطلاب ونموذج التسجيل المطور (تمت إضافتها للتوافق)
+      // 8. مفاتيح إدارة الطلاب ونموذج التسجيل المطور
       students_management_title: "إدارة الطلاب والشؤون التعليمية",
       add_new_student: "إضافة طالب جديد",
       registration_data_title: "بيانات التسجيل الأساسية والقرآنية",
@@ -152,7 +158,7 @@ const resources = {
       good: "Good",
       needs_improvement: "Needs Improvement",
 
-      // 6. Authentication
+      // 6. Authentication - Updated here too 🌟
       createAccount: "Create Teacher/Admin Account",
       fullName: "Full Name",
       email: "Email Address",
@@ -160,6 +166,12 @@ const resources = {
       signUp: "Register New Account",
       signIn: "Sign In",
       alreadyHaveAccount: "Already have an account?",
+      forgotPassword: "Forgot Password",
+      sendResetLink: "Send Reset Link",
+      checkYourEmail: "Please check your email for the reset link",
+      backToLogin: "Back to Login",
+      enterEmailParagraph: "Enter your registered email to receive a secure password reset link.",
+      sendingStatus: "Sending...",
 
       // 7. Validation & Errors
       errorLoading: "Sorry, failed to load data from the server",
@@ -168,7 +180,7 @@ const resources = {
       invalidEmail: "Please enter a valid email address",
       passwordTooShort: "Password must be at least 6 characters long",
 
-      // 8. Student Management Forms & Details (Added for Compatibility)
+      // 8. Student Management Forms & Details
       students_management_title: "Students Management & Academic Affairs",
       add_new_student: "Add New Student",
       registration_data_title: "Basic & Quranic Registration Data",
@@ -220,7 +232,6 @@ i18n
     },
   });
 
-// تغيير اتجاه واجهة المستخدم تلقائياً تبعاً للغة المحددة
 i18n.on('languageChanged', (lng) => {
   document.documentElement.setAttribute('dir', lng === 'ar' ? 'rtl' : 'ltr');
   document.documentElement.setAttribute('lang', lng);
