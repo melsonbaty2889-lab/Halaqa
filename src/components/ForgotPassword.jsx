@@ -10,12 +10,12 @@ export default function ForgotPassword({ onBackToLogin }) {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  // 🛡️ الحل الذكي: الفحص المرن لتجنب مشاكل اللواحق الإقليمية مثل (ar-EG / ar-SA)
+  // 🛡️ الفحص المرن والديناميكي لتجنب مشاكل اللواحق الإقليمية مثل (ar-EG / ar-SA)
   const currentLang = i18n.resolvedLanguage || i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
   const goldColor = '#C9A84C';
 
-  // دالة مساعدة لترجمة رسائل Supabase الشائعة للعربية في حال واجه المستخدم خطأ
+  // دالة ذكية لترجمة رسائل خطأ Supabase الشائعة بناءً على لغة الواجهة الحالية
   const getErrorMessage = (err) => {
     if (!isRtl) return err.message;
     if (err.message.includes('User not found') || err.message.includes('identity not found')) {
@@ -39,11 +39,11 @@ export default function ForgotPassword({ onBackToLogin }) {
     });
 
     if (error) {
-      // 🌟 هنا تم تأمين ترجمة الخطأ لعدم تشويه لغة الواجهة
       setMessage(getErrorMessage(error));
       setIsError(true);
     } else {
-      setMessage(t('checkYourEmail') || (isRtl ? 'برجاء مراجعة بريدك الإلكتروني لتفعيل الرابط' : 'Please check your email for the reset link'));
+      // جلب رسالة النجاح بشكل احترافي وموحد من ملف i18n
+      setMessage(t('checkYourEmail'));
       setIsError(false);
     }
     setLoading(false);
@@ -53,16 +53,17 @@ export default function ForgotPassword({ onBackToLogin }) {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px' }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', textAlign: 'center' }}>
         
+        {/* العنوان والفقرة النصية باستدعاء مباشر ونظيف من ملف الترجمة */}
         <h2 style={{ color: '#fff', margin: '0 0 10px 0', fontSize: '24px', fontWeight: '700' }}>
-          {t('forgotPassword') || (isRtl ? 'استعادة كلمة المرور' : 'Forgot Password')}
+          {t('forgotPassword')}
         </h2>
         <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 30px 0', lineHeight: '1.6' }}>
-          {isRtl ? 'أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة تعيين كلمة السر.' : 'Enter your registered email to receive a secure password reset link.'}
+          {t('enterEmailParagraph')}
         </p>
 
         <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ position: 'relative' }}>
-            {/* 📐 ضبط تموضع أيقونة الإيميل هندسياً حسب اتجاه الصفحة الفعلي */}
+            {/* 📐 ضبط تموضع أيقونة البريد الإلكتروني هندسياً حسب اتجاه اللغة الفعلي */}
             <span style={{ 
               position: 'absolute', 
               top: '50%', 
@@ -77,7 +78,7 @@ export default function ForgotPassword({ onBackToLogin }) {
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              placeholder={t('email') || (isRtl ? 'البريد الإلكتروني' : 'Email Address')}
+              placeholder={t('email')}
               required
               style={{ 
                 width: '100%', 
@@ -101,19 +102,20 @@ export default function ForgotPassword({ onBackToLogin }) {
             </div>
           )}
 
+          {/* نص زر الإرسال بناءً على حالة التحميل بشكل ديناميكي كامل */}
           <button 
             type="submit" 
             disabled={loading} 
             style={{ width: '100%', padding: '14px', backgroundColor: loading ? '#1E2D3D' : goldColor, color: '#000', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
           >
-            {loading ? (isRtl ? 'جاري الإرسال...' : 'Sending...') : (t('sendResetLink') || (isRtl ? 'إرسال رابط الحماية' : 'Send Reset Link'))}
+            {loading ? t('sendingStatus') : t('sendResetLink')}
           </button>
         </form>
         
+        {/* زر العودة للرئيسية متكامل مع الترجمة واتجاه السهم */}
         <button onClick={onBackToLogin} style={{ marginTop: '25px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500' }}>
-          {/* 🔄 انعكاس اتجاه السهم تبعا لـ RTL */}
           {isRtl ? <FaArrowRight /> : <FaArrowLeft />}
-          {isRtl ? 'العودة لتسجيل الدخول' : 'Back to Login'}
+          {t('backToLogin')}
         </button>
 
       </div>
