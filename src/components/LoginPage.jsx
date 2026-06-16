@@ -28,7 +28,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
     i18n.changeLanguage(nextLang);
   };
 
-  // دالة تسجيل الدخول الأساسية (بدون المساس بالبنية الأصلية)
+  // دالة تسجيل الدخول الأساسية (تم تحديثها لترجمة رسائل الأخطاء القادمة من السيرفر)
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -40,7 +40,23 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
     });
 
     if (error) {
-      setErrorMsg(error.message);
+      // 💡 الميكانيكية الذكية لفحص رسالة الخطأ وترجمتها فورياً بناءً على لغة الواجهة الحالية
+      if (error.message === "Email not confirmed") {
+        setErrorMsg(
+          isRtl 
+            ? "يرجى تأكيد بريدك الإلكتروني أولاً! تحقق من صندوق الوارد أو مجلد الـ Spam لتفعيل حسابك." 
+            : "Email not confirmed. Please check your inbox or spam folder to verify your account."
+        );
+      } else if (error.message === "Invalid login credentials") {
+        setErrorMsg(
+          isRtl 
+            ? "البريد الإلكتروني أو كلمة المرور غير صحيحة، يرجى إعادة التحقق." 
+            : "Invalid email or password. Please check your credentials."
+        );
+      } else {
+        // تمرير أي رسائل أخطاء أخرى قادمة من النظام بطبيعتها الإفتراضية
+        setErrorMsg(error.message);
+      }
       setLoading(false);
     } else {
       window.location.reload(); // إعادة تحميل لمزامنة الحالة
@@ -102,7 +118,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         <span>{currentLang === 'ar' ? 'English' : 'العربية'}</span>
       </button>
 
-      <div style={{ width: '100%', maxWidth: '400px', background: '#111C2A', padding: '40px', borderRadius: '24px', border: '1px solid rgba(201,168,76,0.15)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
+          <div style={{ width: '100%', maxWidth: '400px', background: '#111C2A', padding: '40px', borderRadius: '24px', border: '1px solid rgba(201,168,76,0.15)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h2 style={{ color: '#C9A84C', fontSize: '1.8rem', margin: '0 0 10px 0' }}>
