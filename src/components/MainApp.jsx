@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // 🌟 تم إضافة useRef هنا
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
@@ -42,19 +42,32 @@ class LocalErrorBoundary extends React.Component {
 }
 
 export default function MainApp({ session }) {
-  const { t } = useTranslation(); // استدعاء دالة الترجمة الرائعة
-  const [activeTab, setActiveTab] = useState("dashboard"); // التبويب النشط حالياً
-  const [sidebarOpen, setSidebarOpen] = useState(false); // حالة القائمة الجانبية في الشاشات الصغيرة
+  const { t } = useTranslation(); 
+  const [activeTab, setActiveTab] = useState("dashboard"); 
+  const [sidebarOpen, setSidebarOpen] = useState(false); 
   
   // حالات تخزين بيانات الطلاب والمعلومات الأساسية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
 
+  // 🌟 صمام الأمان الاحترافي: يضمن عدم تكرار طلب البيانات من السيرفر نهائياً
+  const isFetchLocked = useRef(false);
+
   // تأثير جلب البيانات الأولية عند تشغيل التطبيق أو تغيير المستخدم
   useEffect(() => {
+    // إذا تم القفل مسبقاً، اخرج فوراً لمنع وميض التحميل المتكرر
+    if (isFetchLocked.current) return;
+
     async function loadInitialData() {
-      if (!session?.user?.id) return;
+      if (!session?.user?.id) {
+        setLoadingData(false);
+        return;
+      }
+      
+      // 🔒 تفعيل القفل فوراً عند بداية أول تشغيل
+      isFetchLocked.current = true;
+
       try {
         // 1. جلب معرف الأكاديمية الخاص بالمعلم الحالي
         const { data: staff } = await supabase
@@ -78,17 +91,44 @@ export default function MainApp({ session }) {
       } catch (error) {
         console.error("خطأ جلب البيانات:", error);
       } finally {
-        setLoadingData(false); // إنهاء حالة التحميل
+        setLoadingData(false); // إنهاء حالة التحميل مرة واحدة وللأبد
       }
     }
+    
     loadInitialData();
   }, [session]);
 
-  // شاشة الانتظار المترجمة أثناء جلب البيانات من Supabase
+  // 🌟 شاشة انتظار فخمة وموحدة تظهر بنعومة لمرة واحدة وبها Spinner ذهبي متحرك
   if (loadingData) {
     return (
-      <div style={{ padding: 40, color: C.text, backgroundColor: '#0C1520', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-        {t('loading')}
+      <div style={{ 
+        color: C.gold || '#C9A84C', 
+        backgroundColor: '#0C1520', 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        fontSize: '1.2rem',
+        fontFamily: "'Cairo', sans-serif",
+        gap: '18px'
+      }}>
+        {/* حلقة تحميل دائرية انسيابية مدمجة بالـ CSS */}
+        <div style={{
+          width: '42px',
+          height: '42px',
+          border: '3px solid rgba(201, 168, 76, 0.1)',
+          borderTop: `3px solid ${C.gold || '#C9A84C'}`,
+          borderRadius: '50%',
+          animation: 'spinLive 0.8s linear infinite'
+        }}></div>
+        <style>{`
+          @keyframes spinLive {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+        <span>{t('loading') || 'جاري تحميل البيانات...'}</span>
       </div>
     );
   }
@@ -143,13 +183,12 @@ export default function MainApp({ session }) {
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%', fontSize: '15px' 
                 }}
               >
-                {/* 🔄 هنا يتم ترجمة أسماء الأقسام ديناميكياً بناءً على المفاتيح في ملفك */}
                 {item.icon} {t(item.id)}
               </button>
             ))}
           </nav>
 
-          {/* 🚪 زر تسجيل الخروج متوافق تماماً مع مفتاح الترجمة الخاص بك (logout) */}
+          {/* 🚪 زر تسجيل الخروج */}
           <button 
             onClick={() => supabase.auth.signOut()} 
             style={{ 
