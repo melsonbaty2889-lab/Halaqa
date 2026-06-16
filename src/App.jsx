@@ -49,6 +49,7 @@ function MainAppContainer() {
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
+  const [isInitialDataFetched, setIsInitialDataFetched] = useState(false);
 
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
