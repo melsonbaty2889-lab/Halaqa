@@ -36,9 +36,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
         options: { 
           data: { 
             name: name.trim(),
-            lang: isRtl ? 'ar' : 'en' // هنا يتم تمرير اللغة ديناميكياً
+            lang: isRtl ? 'ar' : 'en' // هنا يتم تمرير اللغة ديناميكياً لتحديد قالب الرسالة
           },
-          emailRedirectTo: `${window.location.origin}`
+          // 💡 تعديل المستقبل: إضافة معيار ?lang لضمان عودة المستخدم بنفس لغته الحالية عند ضغط زر التأكيد
+          emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
         }
       });
 
