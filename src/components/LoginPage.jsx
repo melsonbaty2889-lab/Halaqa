@@ -12,6 +12,10 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // 🛠️ متغيرات حالة جديدة للتحكم في زر إعادة إرسال التفعيل
+  const [showResend, setShowResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
   // 📐 إدارة اتجاه الواجهة بناءً على اللغة المحددة
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
@@ -33,6 +37,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
+    setShowResend(false); // إعادة تعيين حالة زر الإعادة عند كل محاولة جديدة
 
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
@@ -47,6 +52,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
             ? "يرجى تأكيد بريدك الإلكتروني أولاً! تحقق من صندوق الوارد أو مجلد الـ Spam لتفعيل حسابك." 
             : "Email not confirmed. Please check your inbox or spam folder to verify your account."
         );
+        setShowResend(true); // 🌟 تفعيل ظهور زر إعادة الإرسال فوراً
       } else if (error.message === "Invalid login credentials") {
         setErrorMsg(
           isRtl 
@@ -60,6 +66,38 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
       setLoading(false);
     } else {
       window.location.reload(); // إعادة تحميل لمزامنة الحالة
+    }
+  };
+
+  // 🚀 دالة إعادة إرسال رابط تفعيل الحساب عبر بريد Supabase الإلكتروني
+  const handleResendEmail = async () => {
+    if (!email.trim()) return;
+    setResendLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: {
+          // تمرير لغة المستخدم الحالية ليعود إلى النظام بنفس لغته المحددة مسبقاً
+          emailRedirectTo: `${window.location.origin}?lang=${currentLang}`
+        }
+      });
+
+      if (error) throw error;
+
+      // تحديث الرسالة للمستخدم عند النجاح
+      setErrorMsg(
+        isRtl 
+          ? "✅ تم إعادة إرسال رابط التفعيل بنجاح! تفقد صندوق الوارد أو الـ Spam." 
+          : "✅ Verification link resent successfully! Check your inbox or spam folder."
+      );
+      setShowResend(false); // إخفاء الزر بعد الإرسال الناجح لتفادي الضغط المتكرر
+
+    } catch (error) {
+      setErrorMsg(error.message);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -118,7 +156,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         <span>{currentLang === 'ar' ? 'English' : 'العربية'}</span>
       </button>
 
-          <div style={{ width: '100%', maxWidth: '400px', background: '#111C2A', padding: '40px', borderRadius: '24px', border: '1px solid rgba(201,168,76,0.15)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
+      <div style={{ width: '100%', maxWidth: '400px', background: '#111C2A', padding: '40px', borderRadius: '24px', border: '1px solid rgba(201,168,76,0.15)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h2 style={{ color: '#C9A84C', fontSize: '1.8rem', margin: '0 0 10px 0' }}>
@@ -129,9 +167,49 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
           </p>
         </div>
 
+        {/* 🌟 صندوق تنبيه الأخطاء المطور والذكي */}
         {errorMsg && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '10px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.85rem', textAlign: 'center' }}>
-            {errorMsg}
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            color: '#EF4444', 
+            padding: '15px', 
+            borderRadius: '12px', 
+            marginBottom: '20px', 
+            fontSize: '0.85rem', 
+            textAlign: 'center',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <span>{errorMsg}</span>
+            
+            {/* عرض زر إعادة الإرسال الذهبي فقط في حال تعليق الحساب بسبب التفعيل */}
+            {showResend && (
+              <button
+                type="button"
+                onClick={handleResendEmail}
+                disabled={resendLoading}
+                style={{
+                  background: '#C9A84C',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  cursor: resendLoading ? 'not-allowed' : 'pointer',
+                  opacity: resendLoading ? 0.6 : 1,
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                }}
+              >
+                {resendLoading 
+                  ? translateText('sending', 'جاري الإرسال...', 'Sending...') 
+                  : translateText('resendBtn', 'إعادة إرسال رابط التفعيل؟', 'Resend Activation Link?')}
+              </button>
+            )}
           </div>
         )}
 
