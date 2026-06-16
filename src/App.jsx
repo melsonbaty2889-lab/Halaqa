@@ -2,15 +2,16 @@ import { useState, useEffect, Component } from 'react';
 import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
-// استيراد المكونات الأساسية
+// ✨ تأكيد المسارات الصحيحة 100% لـ Vite و Vercel ومنع خطأ "./."
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
-import UpdatePassword from './.';
+import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
+import { Skeleton } from './components/Skeleton'; // مسار صريح وصحيح للـ Skeleton
 
-// 🛡️ حزام الأمان العالمي لمنع أي انهيار مفاجئ في الواجهة (Error Boundary)
+// 🛡️ حزام الأمان لمنع انهيار الواجهة (Error Boundary)
 class ErrorBoundary extends Component {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
@@ -32,7 +33,7 @@ class ErrorBoundary extends Component {
 function MainAppContainer() {
   const { i18n } = useTranslation();
 
-  // فحص آمن للذاكرة لمنع الانهيار الصامت في متصفحات الوضع الخفي (Incognito)
+  // فحص آمن للذاكرة لمنع الانهيار الصامت في متصفحات الوضع الخفي
   const getBootStatusSafe = () => {
     try {
       return typeof window !== 'undefined' && !!sessionStorage.getItem('is_app_booted');
@@ -43,9 +44,8 @@ function MainAppContainer() {
 
   const isAlreadyBooted = getBootStatusSafe();
   
-  // الحالات البرمجية المستقرة
   const [appLoading, setAppLoading] = useState(!isAlreadyBooted); 
-  const [dataLoading, setDataLoading] = useState(false); // يتم تمريرها الآن كـ Prop للداشبورد لتفعيل الـ Skeletons
+  const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
@@ -53,7 +53,7 @@ function MainAppContainer() {
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
 
-  // دالة جلب البيانات المركزية فائقة السرعة
+  // دالة جلب البيانات المركزية
   const fetchDashboardDataCentral = async (uid) => {
     try {
       const { data: staff, error: staffError } = await supabase
@@ -65,7 +65,6 @@ function MainAppContainer() {
       if (!staffError && staff?.academies) {
         const academyId = staff.academies.id;
         
-        // جلب الإحصائيات بالتوازي لتسريع الاستجابة
         const [studentsResult, paymentsResult] = await Promise.all([
           supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
           supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
@@ -82,7 +81,7 @@ function MainAppContainer() {
     return { academyName: '', stats: { students: 0, pending: 0 } };
   };
 
-  // التأثير الأول: إدارة الجلسة ومؤقت الشاشة الافتتاحية المستقل
+  // تأثير إدارة الجلسة ومؤقت الشاشة الافتتاحية
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
@@ -109,7 +108,7 @@ function MainAppContainer() {
     };
   }, [i18n]);
 
-  // التأثير الثاني: مراقبة المستخدم وجلب بيانات الداشبورد في الخلفية
+  // تأثير مراقبة البيانات والتحميل
   useEffect(() => {
     let isCurrentRequest = true;
     if (!userId) {
@@ -122,19 +121,15 @@ function MainAppContainer() {
     fetchDashboardDataCentral(userId).then(fetchedData => {
       if (isCurrentRequest) {
         setDashboardData(fetchedData);
-        setDataLoading(false); // البيانات جاهزة، سيتم إخفاء الـ Skeletons داخل الداشبورد بنعومة
+        setDataLoading(false);
       }
     });
     return () => { isCurrentRequest = false; };
   }, [userId]);
 
-  // ==========================================
-  // العرض الشرطي الانسيابي (Fluid Render Flow)
-  // ==========================================
   if (appLoading) return <SplashScreen />;
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // التوجيه المباشر والآمن إلى لوحة التحكم مع تمرير حالة التحميل الحالية لعمل الـ Skeletons
   if (session) {
     return (
       <MainApp 
