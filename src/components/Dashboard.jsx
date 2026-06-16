@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // 🌟 تم إضافة useRef هنا للصمام
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
@@ -15,6 +15,9 @@ export default function Dashboard({ session, setActiveTab }) {
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
+  // 🔒 صمام الأمان الذكي لمنع وميض تكرار جلب البيانات داخل الداشبورد
+  const isDashboardFetched = useRef(false);
+
   // 🧠 دالة ذكية لفحص الجمل وترجمتها فوراً لتأمين الواجهة من ملفات الـ JSON الفارغة
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
@@ -27,25 +30,87 @@ export default function Dashboard({ session, setActiveTab }) {
     i18n.changeLanguage(nextLang);
   };
 
-  // 🔒 البنية الأساسية وجلب البيانات من Supabase (مستقرة وثابتة تماماً بدون أي تغيير)
+  // 🔒 البنية الأساسية المحسنة والمؤمنة بالكامل لجلب البيانات من Supabase
   useEffect(() => {
+    // إذا تم القفل مسبقاً، نخرج فوراً لمنع التكرار والوميض
+    if (isDashboardFetched.current) return;
+
     async function fetchData() {
-      if (!session?.user?.id) return;
-      const { data: staff } = await supabase.from('staff').select('academies(id, name)').eq('user_id', session.user.id).maybeSingle();
-      if (staff?.academies) {
-        const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', staff.academies.id);
-        const { count: pendingCount } = await supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', staff.academies.id).eq('status', 'pending');
-        setData({ academyName: staff.academies.name, stats: { students: studentCount || 0, pending: pendingCount || 0 } });
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      // تفعيل القفل فوراً عند بداية التشغيل الأول للداشبورد
+      isDashboardFetched.current = true;
+
+      try {
+        // 1️⃣ جلب بيانات الأكاديمية المرتبطة بالمعلم
+        const { data: staff, error: staffError } = await supabase
+          .from('staff')
+          .select('academies(id, name)')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (staffError) throw staffError;
+
+        if (staff?.academies) {
+          const academyId = staff.academies.id;
+
+          // 🚀 [تطوير احترافي]: جلب إحصائيات الطلاب والمستحقات "بالتوازي والتزامن" لتسريع الاستجابة للنصف!
+          const [studentsResult, paymentsResult] = await Promise.all([
+            supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
+            supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
+          ]);
+
+          setData({ 
+            academyName: staff.academies.name, 
+            stats: { 
+              students: studentsResult.count || 0, 
+              pending: paymentsResult.count || 0 
+            } 
+          });
+        }
+      } catch (error) {
+        console.error("🚨 خطأ في جلب بيانات الداشبورد:", error);
+      } finally {
+        // 🛡️ [تطوير حرج]: ضمان إغلاق شاشة التحميل حتى لو فشل الاتصال بالسيرفر لمنع تجمّد التطبيق
+        setLoading(false); 
+      }
     }
+
     fetchData();
   }, [session]);
 
+  // 🌟 [تحديث الهوية البصرية]: واجهة تحميل ذهبية مطابقة تماماً لشاشة MainApp وبها Spinner انسيابي متحرك
   if (loading) {
     return (
-      <div style={{ padding: 40, color: C.text, textAlign: 'center', fontFamily: 'sans-serif' }}>
-        {translateText('loading', 'جاري التحميل...', 'Loading...')}
+      <div style={{ 
+        minHeight: '60vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        color: C.gold || '#C9A84C', 
+        fontFamily: 'sans-serif',
+        gap: '15px'
+      }}>
+        {/* حلقة حركة دائرية ناعمة ذهبية متناسقة */}
+        <div style={{
+          width: '36px',
+          height: '36px',
+          border: '3px solid rgba(201, 168, 76, 0.1)',
+          borderTop: `3px solid ${C.gold || '#C9A84C'}`,
+          borderRadius: '50%',
+          animation: 'spinDash 0.8s linear infinite'
+        }}></div>
+        <style>{`
+          @keyframes spinDash {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+        <span>{translateText('loading_stats', 'جاري تحميل الإحصائيات...', 'Loading statistics...')}</span>
       </div>
     );
   }
