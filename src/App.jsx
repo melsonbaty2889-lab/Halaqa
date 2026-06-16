@@ -22,6 +22,19 @@ export default function App() {
   const isRtl = i18n.language === 'ar';
 
   useEffect(() => {
+    // 🌟 تعديل وقائي للمستقبل: التقاط لغة العودة من رسالة التأكيد وحفظها فوراً لمنع تحولها للإنجليزية
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlLang = urlParams.get('lang');
+
+    if (urlLang) {
+      i18n.changeLanguage(urlLang);
+      localStorage.setItem('i18nextLng', urlLang); // قفل خيار اللغة في ذاكرة المتصفح الداخلي لجوجل
+      
+      // ميكانيكية تنظيف الرابط بشكل احترافي لإخفاء معيار (?lang=ar) من شريط العنوان بعد استهلاكه
+      const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.hash;
+      window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+    }
+
     // 2️⃣ جلب حالة التحقق الأولية من الجلسة الحالية عند إقلاع التطبيق
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -52,7 +65,7 @@ export default function App() {
       subscription.unsubscribe();
       clearTimeout(timer);
     };
-  }, []);
+  }, [i18n]);
 
   // ==========================================
   // 🛡️ منطق العرض الشرطي الحاسم (Conditional Rendering)
