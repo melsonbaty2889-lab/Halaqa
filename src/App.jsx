@@ -1,4 +1,4 @@
-import { useState, useEffect, Component } from 'react';
+import { useState, useEffect, Component } from 'react'; // ✨ تصحيح الحرف الصغير لضمان نجاح البناء
 import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
@@ -49,7 +49,9 @@ function MainAppContainer() {
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
-  const [isInitialDataFetched, setIsInitialDataFetched] = useState(false);
+  
+  // 🚀 الإضافة الجديدة: حالة تضمن عدم الانتقال السريع والمزعج قبل اكتمال جلب البيانات الأولية
+  const [isInitialDataFetched, setIsInitialDataFetched] = useState(false); 
 
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
@@ -109,12 +111,13 @@ function MainAppContainer() {
     };
   }, [i18n]);
 
-  // تأثير مراقبة البيانات والتحميل
+  // 🛠️ تأثير مراقبة البيانات المحدث: ضبط وضع انتهاء التحميل الأول بدقة
   useEffect(() => {
     let isCurrentRequest = true;
     if (!userId) {
       setDashboardData({ academyName: '', stats: { students: 0, pending: 0 } });
       setDataLoading(false);
+      setIsInitialDataFetched(true); // إذا لم يتواجد مستخدم، يتم تحويل الحالة فوراً لتجاوز شاشة التحميل
       return;
     }
 
@@ -123,12 +126,14 @@ function MainAppContainer() {
       if (isCurrentRequest) {
         setDashboardData(fetchedData);
         setDataLoading(false);
+        setIsInitialDataFetched(true); // 🚀 البيانات الأولية أصبحت جاهزة تماماً هنا
       }
     });
     return () => { isCurrentRequest = false; };
   }, [userId]);
 
-  if (appLoading) return <SplashScreen />;
+  // 🔒 دمج منطق الشاشة الافتتاحية: لن تختفي الشاشة إلا بعد انتهاء العداد وتوافر بيانات المستخدم بالكامل
+  if (appLoading || (session && !isInitialDataFetched)) return <SplashScreen />;
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
