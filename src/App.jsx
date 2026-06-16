@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
-// استيراد المكونات الأساسية للنظام الخاص بك
+// استيراد المكونات الأساسية الخاصة بنظامك
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
@@ -12,20 +12,26 @@ import MainApp from './components/MainApp';
 
 export default function App() {
   const { i18n } = useTranslation();
+
+  // ✨ [حصن الأمان]: فحص ذكي لمعرفة هل أقلع التطبيق مسبقاً في علامة التبويب الحالية؟
+  const isAlreadyBooted = typeof window !== 'undefined' && sessionStorage.getItem('is_app_booted');
   
-  // حالات التحكم المنفصلة لضمان استقرار الواجهة
-  const [appLoading, setAppLoading] = useState(true); // الشاشة الافتتاحية (تعمل بمؤقت مستقل تماماً)
-  const [dataLoading, setDataLoading] = useState(false); // شاشة حجب الومضات أثناء جلب البيانات
+  // إذا أقلع مسبقاً، يتم إلغاء شاشة الإقلاع فوراً (false) لحظر التكرار الخبيث
+  const [appLoading, setAppLoading] = useState(!isAlreadyBooted); 
+  const [dataLoading, setDataLoading] = useState(false); // شاشة الحماية الفاخرة لمنع ومضات الأرقام والبيانات
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login'); 
   
-  // البيانات المركزية للوحة التحكم
-  const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
+  // الحالة المركزية لبيانات لوحة التحكم
+  const [dashboardData, setDashboardData] = useState({ 
+    academyName: '', 
+    stats: { students: 0, pending: 0 } 
+  });
 
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
 
-  // دالة مركزية آمنة لجلب البيانات
+  // دالة مركزية آمنة ومستقلة لجلب بيانات الأكاديمية والداشبورد بالتوازي
   const fetchDashboardDataCentral = async (uid) => {
     try {
       const { data: staff, error: staffError } = await supabase
@@ -37,6 +43,7 @@ export default function App() {
       if (!staffError && staff?.academies) {
         const academyId = staff.academies.id;
 
+        // جلب الإحصائيات بالتوازي لسرعة خارقة في الأداء
         const [studentsResult, paymentsResult] = await Promise.all([
           supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
           supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
@@ -56,9 +63,9 @@ export default function App() {
     return { academyName: '', stats: { students: 0, pending: 0 } };
   };
 
-  // 1️⃣ [التأثير الأول]: مراقبة حالة الحساب وإدارة شاشة الإقلاع (خفيف وسريع جداً)
+  // 1️⃣ [التأثير الأول]: مراقبة حالة الحساب وإدارة شاشة الإقلاع (خفيف، سريع ومستقل)
   useEffect(() => {
-    // معالجة اللغة من الرابط الخارجي
+    // إدارة معلمات اللغة المنقولة عبر الروابط الخارجية
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
     if (urlLang) {
@@ -68,7 +75,7 @@ export default function App() {
       window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     }
 
-    // الاستماع المتزامن لتغيرات الجلسة بدون أي عمليات تعليق
+    // الاستماع المتزامن لحالة الجلسات من Supabase بدون تعليق للواجهة
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       if (event === 'PASSWORD_RECOVERY') {
@@ -80,9 +87,11 @@ export default function App() {
       setAuthView('update_password');
     }
 
-    // ضمان حتمي لإغلاق الشاشة الافتتاحية بعد 2 ثانية مستحيل يتأثر بالشبكة أو يعلق
+    // مؤقت زمني آمن ومستقل تماماً لإغلاق الـ Splash وحفظ حالتها لمنع تكرارها
     const bootTimer = setTimeout(() => {
       setAppLoading(false);
+      // تأكيد فتح التطبيق بنجاح في ذاكرة التبويب الحالية
+      sessionStorage.setItem('is_app_booted', 'true');
     }, 2000);
 
     return () => {
@@ -91,7 +100,7 @@ export default function App() {
     };
   }, [i18n]);
 
-  // 2️⃣ [التأثير الثاني]: يراقب معرف المستخدم فقط ويجلب البيانات بكفاءة لمنع الومضات
+  // 2️⃣ [التأثير الثاني]: يراقب معرف المستخدم ويتحكم في جلب البيانات ومنع الومضات البصرية
   useEffect(() => {
     let isCurrentRequest = true;
 
@@ -101,13 +110,13 @@ export default function App() {
       return;
     }
 
-    // تفعيل شاشة الحماية الفاخرة لمنع ومضات الأرقام الفارغة
+    // تشغيل غطاء الحماية الناعم لحجب ومضات الأرقام الفارغة فوراً
     setDataLoading(true);
 
     fetchDashboardDataCentral(userId).then(fetchedData => {
       if (isCurrentRequest) {
         setDashboardData(fetchedData);
-        setDataLoading(false); // إلغاء الحجب فور جاهزية البيانات بنسبة 100%
+        setDataLoading(false); // إغلاق غطاء الحماية فور اكتمال البيانات وجاهزيتها 100%
       }
     });
 
@@ -118,15 +127,15 @@ export default function App() {
 
 
   // ==========================================
-  // العرض الشرطي المستقر برمجياً وبصرياً
+  // العرض الشرطي المستقر (Render Flow)
   // ==========================================
 
-  // أولاً: عرض شاشة الإقلاع المبدئية
+  // أولاً: شاشة الإقلاع المبدئية (تظهر فقط عند أول فتحة للموقع في التاب)
   if (appLoading) {
     return <SplashScreen />;
   }
 
-  // ثانياً: شاشة الانتقال السائل لمنع الومضات البصرية وتداخل الواجهات
+  // ثانياً: شاشة الانتقال وحجب الومضات (تظهر لأجزاء من الثانية أثناء تبديل البيانات)
   if (dataLoading) {
     return (
       <div style={{
@@ -135,14 +144,14 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        background: '#090F17', 
+        background: '#090F17', // الخلفية الداكنة المعتمدة لتطبيقك
         gap: '15px'
       }}>
         <div style={{
           width: '36px',
           height: '36px',
           border: '3px solid rgba(255,255,255,0.03)',
-          borderTop: '3px solid #C9A84C', 
+          borderTop: '3px solid #C9A84C', // الحلقة الذهبية الفاخرة
           borderRadius: '50%',
           animation: 'spinAppTransition 1s linear infinite'
         }} />
@@ -160,7 +169,7 @@ export default function App() {
     );
   }
 
-  // رابعاً: الدخول الآمن للموقع الرئيسي بكامل بياناته الجاهزة
+  // رابعاً: التوجيه المستقر والآمن إلى التطبيق الرئيسي ممتلئاً بالبيانات مسبقاً
   if (session) {
     return (
       <MainApp 
@@ -171,7 +180,7 @@ export default function App() {
     );
   }
 
-  // خامساً: واجهات الدخول في حال عدم وجود جلسة نشطة
+  // خامساً: واجهات الحماية والدخول في حال عدم وجود جلسة نشطة
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       {authView === 'login' && (
