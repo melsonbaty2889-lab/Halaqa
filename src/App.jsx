@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase'; // مسار ملف سوبابيس المعتمد في مشروعك
+import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
 // استيراد المكونات الأساسية للنظام الخاص بك
@@ -13,70 +13,117 @@ import MainApp from './components/MainApp';
 export default function App() {
   const { i18n } = useTranslation();
   
-  // 1️⃣ حالات التحكم في الواجهات (States)
-  const [showSplash, setShowSplash] = useState(true);
+  // حالات التحكم في الواجهات والجلسات
+  const [appLoading, setAppLoading] = useState(true); // الراية الحاكمة لكل عمليات التحميل في النظام
   const [session, setSession] = useState(null);
-  const [authView, setAuthView] = useState('login'); // الكنترول التنقلي: login | signup | forgot | update_password
+  const [authView, setAuthView] = useState('login'); 
+  
+  // تخزين بيانات الداشبورد مركزياً لمنع تكرار التحميل والوميض المتتابع
+  const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
 
-  // معرفة اتجاه النص بناءً على لغة النظام
   const isRtl = i18n.language === 'ar';
 
+  // دالة مركزية ذكية لجلب بيانات الداشبورد بشكل مسبق وموازٍ قبل رفع الشاشة الافتتاحية
+  const fetchDashboardDataCentral = async (userId) => {
+    try {
+      const { data: staff, error: staffError } = await supabase
+        .from('staff')
+        .select('academies(id, name)')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!staffError && staff?.academies) {
+        const academyId = staff.academies.id;
+
+        // جلب الإحصائيات والمستحقات بالتوازي لسرعة خارقة
+        const [studentsResult, paymentsResult] = await Promise.all([
+          supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
+          supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
+        ]);
+
+        return { 
+          academyName: staff.academies.name, 
+          stats: { 
+            students: studentsResult.count || 0, 
+            pending: paymentsResult.count || 0 
+          } 
+        };
+      }
+    } catch (err) {
+      console.error("Error fetching central dashboard data:", err);
+    }
+    return { academyName: '', stats: { students: 0, pending: 0 } };
+  };
+
   useEffect(() => {
-    // 🌟 تعديل وقائي للمستقبل: التقاط لغة العودة من رسالة التأكيد وحفظها فوراً لمنع تحولها للإنجليزية
+    // التقاط لغة العودة من رسائل التأكيد وقفل الخيار في ذاكرة المتصفح
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
 
     if (urlLang) {
       i18n.changeLanguage(urlLang);
-      localStorage.setItem('i18nextLng', urlLang); // قفل خيار اللغة في ذاكرة المتصفح الداخلي لجوجل
-      
-      // ميكانيكية تنظيف الرابط بشكل احترافي لإخفاء معيار (?lang=ar) من شريط العنوان بعد استهلاكه
+      localStorage.setItem('i18nextLng', urlLang);
       const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.hash;
       window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     }
 
-    // 2️⃣ جلب حالة التحقق الأولية من الجلسة الحالية عند إقلاع التطبيق
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    // دالة التهيئة الشاملة لتنظيم التدفق البرمجي الموحد
+    async function initializeApp() {
+      try {
+        // 1. جلب حالة التحقق الأولية من الجلسة الحالية عند إقلاع التطبيق
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
 
-    // 3️⃣ الاستماع الحي والدائم لتغيرات حالة المستخدم (تسجيل دخول، خروج، أو استعادة كلمة مرور)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
+        if (initialSession?.user?.id) {
+          // إذا كان المستخدم مسجلاً لدخوله، نجلب بياناته وإحصائياته فوراً وهو لا يزال يرى الـ Splash
+          const fetchedData = await fetchDashboardDataCentral(initialSession.user.id);
+          setDashboardData(fetchedData);
+        }
+      } catch (error) {
+        console.error("Initialization error:", error);
+      } finally {
+        // ✨ اللحظة الحاسمة: لا نغلق شاشة الـ Splash إلا والتطبيق محمل وجاهز بالكامل بنسبة 100%
+        setAppLoading(false);
+      }
+    }
+
+    initializeApp();
+
+    // الاستماع لمتغيرات حالة المستخدم وحفظ استقرارية العرض
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      setSession(currentSession);
       
-      // إذا قام المستخدم بالضغط على رابط إعادة تعيين كلمة المرور المرسل لبريده
+      if (event === 'SIGNED_IN' && currentSession?.user?.id) {
+        setAppLoading(true);
+        const fetchedData = await fetchDashboardDataCentral(currentSession.user.id);
+        setDashboardData(fetchedData);
+        setAppLoading(false);
+      }
+
       if (event === 'PASSWORD_RECOVERY') {
         setAuthView('update_password');
       }
     });
 
-    // 4️⃣ صمام أمان إضافي: فحص الرابط (URL) فوراً عند التشغيل لالتقاط توكن الاستعادة
     if (window.location.hash.includes('type=recovery') || window.location.href.includes('type=recovery')) {
       setAuthView('update_password');
     }
 
-    // 5️⃣ مؤقت الشاشة الافتتاحية (إجبار العرض لمدة 2 ثانية لمنع وميض الشاشة السريع والغير مريح للعين)
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000);
-
-    // تنظيف المؤقت والاشتراكات عند مغادرة المكون لمنع تسريب الذاكرة (Memory Leak)
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timer);
     };
   }, [i18n]);
 
   // ==========================================
-  // 🛡️ منطق العرض الشرطي الحاسم (Conditional Rendering)
+  // 🛡️ منطق العرض الشرطي الموحد الصارم والمنظم بصرياً
   // ==========================================
 
-  // المرحلة الأولى: طالما المؤقت الزمني يعمل، تظهر شاشة الـ Splash الفخمة
-  if (showSplash) {
+  // إذا كان التطبيق في مرحلة التحميل الكلية، تظهر شاشة الـ Splash الفخمة فقط
+  if (appLoading) {
     return <SplashScreen />;
   }
 
-  // المرحلة الثانية: إذا التقط النظام حدث استعادة كلمة المرور، يتم إظهار شاشة التحديث فوراً كأولوية قصوى
+  // إذا التقط النظام حدث استعادة كلمة المرور
   if (authView === 'update_password') {
     return (
       <div style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -85,15 +132,15 @@ export default function App() {
     );
   }
 
-  // المرحلة الثالثة: إذا انتهى الـ Splash وكان المستخدم مسجلاً لدخوله، نفتح لوحة التحكم مباشرة
+  // إذا انتهى التحميل بالكامل والمستخدم مسجل، تفتح لوحة التحكم محملة بالبيانات مسبقاً!
   if (session) {
-    return <MainApp session={session} />;
+    // نقوم بتمرير الـ dashboardData الجاهزة كـ Prop إلى تطبيقك الرئيسي ليتم استخدامها مباشرة
+    return <MainApp session={session} preloadedDashboardData={dashboardData} setPreloadedDashboardData={setDashboardData} />;
   }
 
-  // المرحلة الرابعة: إذا انتهى الـ Splash والمستخدم غير مسجل، تظهر شاشات الحماية والـ Auth المتجاوبة
+  // إذا انتهى التحميل والمستخدم غير مسجل، تظهر شاشات الـ Auth بدون شاشات تحميل بينهما
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
-      
       {authView === 'login' && (
         <LoginPage 
           onSwitchToSignUp={() => setAuthView('signup')}
@@ -108,7 +155,6 @@ export default function App() {
       {authView === 'forgot' && (
         <ForgotPassword onBackToLogin={() => setAuthView('login')} />
       )}
-      
     </div>
   );
 }
