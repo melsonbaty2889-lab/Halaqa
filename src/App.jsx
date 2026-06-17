@@ -47,10 +47,7 @@ function MainAppContainer() {
   const [appLoading, setAppLoading] = useState(!isAlreadyBooted); 
   const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
-  
-  // 🔐 عودة للحالة الافتراضية لحماية لوحة التحكم
   const [userRole, setUserRole] = useState(null); 
-  
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
   const [isInitialDataFetched, setIsInitialDataFetched] = useState(false); 
@@ -76,7 +73,7 @@ function MainAppContainer() {
 
         return { 
           academyName: staff.academies.name, 
-          stats: { students: studentsResult.count || 0, pending: paymentsResult.count || 0 } 
+          stats: { studentsResult: studentsResult.count || 0, pending: paymentsResult.count || 0 } 
         };
       }
     } catch (err) {
@@ -121,7 +118,7 @@ function MainAppContainer() {
       return;
     }
 
-    // 👑 حزام الأمان الذكي: إذا كنت أنت صاحب الحساب، سيتم إدخالك كـ admin فوراً وتخطي مشاكل السيرفر
+    // 👑 حزام الأمان للحساب الخاص بك (السوبر أدمن)
     if (userId === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
       setDataLoading(false);
@@ -139,13 +136,16 @@ function MainAppContainer() {
           .eq('id', userId)
           .maybeSingle();
 
-        const role = profile?.role || 'student';
+        if (profileError) throw profileError;
+        
+        // تحويل النص إلى حروف صغيرة دائماً لضمان دقة الفحص المنطقي
+        const role = profile?.role?.toLowerCase() || 'student';
 
         if (isCurrentRequest) {
           setUserRole(role);
         }
 
-        if (role !== 'admin') {
+        if (role !== 'admin' && role !== 'pending_manager') {
           const fetchedData = await fetchDashboardDataCentral(userId);
           if (isCurrentRequest) {
             setDashboardData(fetchedData);
@@ -170,10 +170,33 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
+    // 1️⃣ التوجيه الخاص بالسوبر أدمن
     if (userRole === 'admin') {
       return <AdminDashboard />;
     }
 
+    // 2️⃣ حظر وتوجيه الحسابات الجديدة التي تنتظر التفعيل
+    if (userRole === 'pending_manager') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#090F17', color: '#fff', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', direction: 'rtl' }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px' }}>⏳</div>
+          <h2 style={{ color: '#C9A84C', marginBottom: '15px', fontWeight: 'bold' }}>طلب تسجيل الأكاديمية قيد المراجعة</h2>
+          <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '420px', lineHeight: '1.7' }}>
+            مرحباً بك في المنصة! تم استلام طلبك بنجاح وهو الآن تحت التدقيق من قبل الإدارة العليا. سيتم تفعيل لوحة التحكم الخاصة بك فور الموافقة.
+          </p>
+          <button 
+            onClick={() => supabase.auth.signOut()} 
+            style={{ marginTop: '30px', background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', padding: '10px 24px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s' }}
+            onMouseOver={(e) => { e.target.style.background = '#EF4444'; e.target.style.color = '#fff'; }}
+            onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#EF4444'; }}
+          >
+            تسجيل الخروج
+          </button>
+        </div>
+      );
+    }
+
+    // 3️⃣ الحسابات المفعلة تدخل طبيعي
     return (
       <MainApp 
         session={session} 
