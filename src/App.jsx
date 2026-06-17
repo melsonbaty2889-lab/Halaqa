@@ -2,7 +2,7 @@ import { useState, useEffect, Component } from 'react';
 import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
-// ✨ تأكيد المسارات الصحيحة 100% لـ Vite و Vercel ومنع خطأ "./."
+// ✨ مسارات مستقرة ومعتمدة لـ Vite & Vercel
 import AdminDashboard from './components/AdminDashboard';
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
@@ -12,7 +12,7 @@ import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 import { Skeleton } from './components/Skeleton'; 
 
-// 🛡️ حزام الأمان لمنع انهيار الواجهة (Error Boundary)
+// 🛡️ حزام الأمان لمنع انهيار الواجهة
 class ErrorBoundary extends Component {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
@@ -48,8 +48,8 @@ function MainAppContainer() {
   const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
   
-  // 👑 تعديل القوة القصوى: إجبار الدور الافتراضي على admin لقطع الشك باليقين
-  const [userRole, setUserRole] = useState('admin'); 
+  // 🔐 العودة للربط الديناميكي الآمن مع قاعدة البيانات
+  const [userRole, setUserRole] = useState(null); 
   
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
@@ -115,7 +115,7 @@ function MainAppContainer() {
     let isCurrentRequest = true;
     if (!userId) {
       setDashboardData({ academyName: '', stats: { students: 0, pending: 0 } });
-      setUserRole('admin'); // حزام أمان إضافي للتأكيد
+      setUserRole(null); 
       setDataLoading(false);
       setIsInitialDataFetched(true); 
       return;
@@ -125,17 +125,18 @@ function MainAppContainer() {
 
     const loadUserDataAndRole = async () => {
       try {
+        // جلب الدور الحقيقي للمستخدم الحالي من قاعدة البيانات مباشرة
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', userId)
           .maybeSingle();
 
-        // تجنب إسقاط الحالة في حال حدوث خطأ من قاعدة البيانات أثناء الفحص الافتراضي
-        const role = profile?.role || 'admin';
+        if (profileError) throw profileError;
+        const role = profile?.role || 'student';
 
         if (isCurrentRequest) {
-          setUserRole('admin'); // فرض الأدمن بشكل مستمر للتشخيص الحالي
+          setUserRole(role);
         }
 
         if (role !== 'admin') {
@@ -163,7 +164,7 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
-    // 👑 فحص التوجيه الفوري
+    // التوجيه الذكي بناءً على صلاحية الحساب المسجل
     if (userRole === 'admin') {
       return <AdminDashboard />;
     }
