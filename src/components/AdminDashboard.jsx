@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase'; // تأكيد المسار الصحيح المربوط بـ lib
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState([]);
@@ -26,7 +26,7 @@ export default function AdminDashboard() {
     fetchPendingRequests();
   }, []);
 
-  // 2. دالة اتخاذ القرار (قبول، تجربة، رفض) واستدعاء الـ RPC
+  // 2. دالة اتخاذ القرار (قبول، تجربة، رفض)
   const handleAction = async (userId, action) => {
     const { error } = await supabase.rpc('review_user_request', {
       target_user_id: userId,
@@ -37,9 +37,14 @@ export default function AdminDashboard() {
       alert('حدث خطأ أثناء معالجة الطلب: ' + error.message);
     } else {
       alert('تم تحديث حالة المستخدم بنجاح!');
-      // تحديث القائمة في الواجهة لحذف الطلب الذي تم البت فيه
       setRequests(requests.filter(req => req.id !== userId));
     }
+  };
+
+  // 🚪 3. دالة تسجيل الخروج الآمن والعودة لشاشة الدخول تلقائياً
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error('خطأ أثناء تسجيل الخروج:', error.message);
   };
 
   if (loading) {
@@ -51,16 +56,27 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1d] text-white p-6 font-sans dir-rtl" dir="rtl">
-      {/* رأس الصفحة */}
-      <div className="max-w-6xl mx-auto mb-8 border-b border-gray-800 pb-4 flex justify-between items-center">
+    <div className="min-h-screen bg-[#0a0f1d] text-white p-6 font-sans" dir="rtl">
+      {/* رأس الصفحة المطور */}
+      <div className="max-w-6xl mx-auto mb-8 border-b border-gray-800 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-amber-500">لوحة تحكم السوبر أدمن 👑</h1>
           <p className="text-gray-400 mt-1">إدارة طلبات تسجيل الأكاديميات والمراكز القرآنية</p>
         </div>
-        <div className="bg-gray-900 px-4 py-2 rounded-lg border border-gray-800">
-          <span className="text-sm text-gray-400">الطلبات المعلقة: </span>
-          <span className="text-lg font-bold text-amber-500">{requests.length}</span>
+        
+        {/* أزرار الحالة وتسجيل الخروج */}
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 text-sm">
+            <span className="text-gray-400">الطلبات المعلقة: </span>
+            <span className="font-bold text-amber-500">{requests.length}</span>
+          </div>
+          
+          <button
+            onClick={handleLogout}
+            className="bg-gray-800 hover:bg-rose-950/40 text-rose-400 border border-gray-700 hover:border-rose-900 px-4 py-2 rounded-lg transition-all text-sm font-semibold flex items-center gap-2"
+          >
+            🚪 تسجيل الخروج
+          </button>
         </div>
       </div>
 
@@ -77,7 +93,6 @@ export default function AdminDashboard() {
                 key={req.id} 
                 className="bg-gray-900 border border-gray-800 hover:border-amber-500/30 transition-all rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
               >
-                {/* بيانات صاحب الطلب */}
                 <div>
                   <h3 className="text-xl font-semibold text-white">{req.full_name}</h3>
                   <p className="text-xs text-gray-500 mt-1">
@@ -85,9 +100,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
-                {/* أزرار التحكم والخيارات الثلاثة */}
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                  {/* خيار 1: قبول كمدير */}
                   <button
                     onClick={() => handleAction(req.id, 'approve_manager')}
                     className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
@@ -95,7 +108,6 @@ export default function AdminDashboard() {
                     🟢 قبول كمدير
                   </button>
 
-                  {/* خيار 2: قبول كحساب تجريبي */}
                   <button
                     onClick={() => handleAction(req.id, 'approve_tester')}
                     className="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-4 py-2 rounded-lg transition-colors text-sm"
@@ -103,7 +115,6 @@ export default function AdminDashboard() {
                     🟡 سماح بالتجربة
                   </button>
 
-                  {/* خيار 3: رفض وحظر الطلب */}
                   <button
                     onClick={() => handleAction(req.id, 'reject')}
                     className="flex-1 md:flex-none bg-rose-600 hover:bg-rose-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
