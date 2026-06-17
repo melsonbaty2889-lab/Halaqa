@@ -19,6 +19,7 @@ import {
 import Dashboard from './Dashboard.jsx';
 import Students from './Students.jsx';
 import Attendance from './Attendance.jsx';
+import Exams from './Exams.jsx'; 
 import Payments from './Payments.jsx';
 import Settings from './Settings.jsx'; 
 import Reports from './Reports.jsx';
@@ -62,7 +63,8 @@ export default function MainApp({ session }) {
   // حالات تخزين بيانات الطلاب والمعلومات الأساسية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
-  const [academyName, setAcademyName] = useState(""); // ✨ مضاف حديثاً لتخزين اسم الأكاديمية ديناميكياً
+  const [academyName, setAcademyName] = useState(""); 
+  const [completedExamsCount, setCompletedExamsCount] = useState(0); // ✨ مضاف حديثاً لتخزين العدد الحقيقي للاختبارات
   const [loadingData, setLoadingData] = useState(true);
 
   // معرفة اتجاه اللغة الحالية
@@ -86,7 +88,7 @@ export default function MainApp({ session }) {
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
 
-  // تأثير جلب البيانات الأولية المطوّر
+  // تأثير جلب البيانات الأولية المطوّر والمربوط بقاعدة البيانات حياً
   useEffect(() => {
     if (isFetchLocked.current) return;
 
@@ -111,14 +113,25 @@ export default function MainApp({ session }) {
 
         if (currentAcademyId) {
           setAcademyId(currentAcademyId);
-          if (currentAcademyName) setAcademyName(currentAcademyName); // حفظ الاسم ديناميكياً
+          if (currentAcademyName) setAcademyName(currentAcademyName); 
 
+          // أ) جلب مصفوفة الطلاب الحية
           const { data: studentsData } = await supabase
             .from('students')
             .select('*')
             .eq('academy_id', currentAcademyId);
           
           if (studentsData) setStudents(studentsData);
+
+          // ب) 🌟 استعلام حي لحساب إجمالي عدد الاختبارات الفعلية للأكاديمية من الـ Supabase
+          const { count: examsCount, error: examsError } = await supabase
+            .from('exams')
+            .select('*', { count: 'exact', head: true })
+            .eq('academy_id', currentAcademyId);
+
+          if (!examsError && examsCount !== null) {
+            setCompletedExamsCount(examsCount);
+          }
         }
       } catch (error) {
         console.error("خطأ جلب البيانات:", error);
@@ -130,14 +143,14 @@ export default function MainApp({ session }) {
     loadInitialData();
   }, [session]);
 
-  // تجهيز مصفوفة البيانات الممررة للـ Dashboard لمنع التجميد ولحساب الإحصائيات الحية
+  // تجهيز مصفوفة البيانات الممررة للـ Dashboard لمنع التجميد ولحساب الإحصائيات الحية الدقيقة
   const preloadedDashboardData = {
     academyName: academyName,
     stats: {
       students: students.length,
       pending: students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length || 0,
-      activeHalagas: students.length > 0 ? Math.ceil(students.length / 8) : 0, // حساب تقريبي ذكي للحلقات النشطة
-      completedExams: Math.floor(students.length * 1.5) || 0 // رقم إحصائي تفاعلي مبدئي
+      activeHalagas: students.length > 0 ? Math.ceil(students.length / 8) : 0, 
+      completedExams: completedExamsCount // ✨ أصبحت الآن تقرأ من قاعدة البيانات مباشرة وليس رقم عشوائي
     }
   };
 
@@ -175,7 +188,7 @@ export default function MainApp({ session }) {
     );
   }
 
-  // دالة عرض محتوى القسم المختار (تمت ترقيتها لاستقبال التبويبات الجديدة)
+  // دالة عرض محتوى القسم المختار
   const renderContent = () => {
     const pageStyle = { backgroundColor: '#111C2A', minHeight: '80vh', padding: '20px', color: C.text, borderRadius: '12px' };
 
@@ -185,29 +198,26 @@ export default function MainApp({ session }) {
           {activeTab === 'dashboard' && (
             <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} />
           )}
-          {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
+          
+          {/* إدارة الطلاب مع تمرير الـ State للتعديل الفوري والديناميكي */}
+          {activeTab === 'students' && (
+            <Students students={students} setStudents={setStudents} academyId={academyId} />
+          )}
+          
           {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} />}
+          
+          {/* تشغيل منظومة تقييم واختبارات الأجزاء الذكية الحية والعالمية */}
+          {activeTab === 'exams' && (
+            <Exams students={students} academyId={academyId} />
+          )}
+          
           {activeTab === 'payments' && <Payments students={students} academyId={academyId} />}
           {activeTab === 'settings' && <Settings academyId={academyId} session={session} />}
           
-          {/* 🌟 واجهة مؤقتة فخمة لقسم اختبارات الأجزاء لحين تعديل ملفه المستقل */}
-          {activeTab === 'exams' && (
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <FaAward size={50} color={C.gold} style={{ marginBottom: '15px' }} />
-              <h2>{isRtl ? 'نظام اختبارات الأجزاء والسور الرقمي' : 'Surah & Juz Exams Portal'}</h2>
-              <p style={{ color: '#94a3b8', maxWidth: '500px', margin: '10px auto' }}>
-                {isRtl ? 'جاري تجهيز منصة رصد الدرجات ومنح الإجازات الرقمية التنافسية للطلاب.' : 'Preparing the global grading and certificate system for your students.'}
-              </p>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: C.gold, fontSize: '14px', marginTop: '15px', backgroundColor: 'rgba(201,168,76,0.05)', padding: '8px 16px', borderRadius: '20px' }}>
-                <FaClock /> {isRtl ? 'الملف جاهز للبناء في الخطوة التالية' : 'Ready for compilation in the next step'}
-              </div>
-            </div>
+          {/* تشغيل منظومة تقارير الواتساب الذكية الفعلية */}
+          {activeTab === 'reports' && (
+            <Reports students={students} academyId={academyId} />
           )}
-
-          {/* 🌟 تشغيل منظومة تقارير الواتساب الذكية الفعلية */}
-{activeTab === 'reports' && (
-  <Reports students={students} academyId={academyId} />
-)}
         </LocalErrorBoundary>
       </div>
     );
@@ -218,8 +228,8 @@ export default function MainApp({ session }) {
     { id: 'dashboard', icon: <FaChartLine />, ar: 'لوحة التحكم', en: 'Dashboard' },
     { id: 'students', icon: <FaUsers />, ar: 'إدارة الطلاب', en: 'Student Management' },
     { id: 'attendance', icon: <FaCalendarCheck />, ar: 'رصد الحضور والتسميع', en: 'Recitation & Attendance' },
-    { id: 'exams', icon: <FaAward />, ar: 'اختبارات الأجزاء', en: 'Surah & Juz Exams' }, // ✨ مضاف حديثاً للـ Sidebar
-    { id: 'reports', icon: <FaWhatsapp />, ar: 'تقارير الأولياء', en: 'WhatsApp Reports' }, // ✨ مضاف حديثاً للـ Sidebar
+    { id: 'exams', icon: <FaAward />, ar: 'اختبارات الأجزاء', en: 'Surah & Juz Exams' }, 
+    { id: 'reports', icon: <FaWhatsapp />, ar: 'تقارير الأولياء', en: 'WhatsApp Reports' }, 
     { id: 'payments', icon: <FaMoneyBillWave />, ar: 'المالية والاشتراكات', en: 'Subscriptions & Finance' },
     { id: 'settings', icon: <FaCog />, ar: 'إعدادات الحلقة', en: 'Halaqa Settings' },
   ];
