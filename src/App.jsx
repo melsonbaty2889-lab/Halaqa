@@ -73,7 +73,7 @@ function MainAppContainer() {
 
         return { 
           academyName: staff.academies.name, 
-          stats: { studentsResult: studentsResult.count || 0, pending: paymentsResult.count || 0 } 
+          stats: { students: studentsResult.count || 0, pending: paymentsResult.count || 0 } 
         };
       }
     } catch (err) {
@@ -118,7 +118,7 @@ function MainAppContainer() {
       return;
     }
 
-    // 👑 حزام الأمان للحساب الخاص بك (السوبر أدمن)
+    // 👑 حزام الأمان الخاص بحسابك الأدمن الرئيسي
     if (userId === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
       setDataLoading(false);
@@ -138,8 +138,8 @@ function MainAppContainer() {
 
         if (profileError) throw profileError;
         
-        // تحويل النص إلى حروف صغيرة دائماً لضمان دقة الفحص المنطقي
-        const role = profile?.role?.toLowerCase() || 'student';
+        // 🛠️ معالجة ذكية: تحويل الأحرف لصغيرة واستبدال أي مسافة بشرطة سفلية لضمان مطابقة دقيقة
+        const role = profile?.role ? profile.role.trim().toLowerCase().replace(/\s+/g, '_') : 'student';
 
         if (isCurrentRequest) {
           setUserRole(role);
@@ -170,19 +170,23 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
-    // 1️⃣ التوجيه الخاص بالسوبر أدمن
+    // 1️⃣ لوحة السوبر أدمن الخاصة بك
     if (userRole === 'admin') {
       return <AdminDashboard />;
     }
 
-    // 2️⃣ حظر وتوجيه الحسابات الجديدة التي تنتظر التفعيل
+    // 2️⃣ شاشة الانتظار والمراجعة للحسابات الجديدة (تدعم اللغتين بناءً على اختيار المستخدم)
     if (userRole === 'pending_manager') {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#090F17', color: '#fff', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', direction: 'rtl' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#090F17', color: '#fff', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', direction: isRtl ? 'rtl' : 'ltr' }}>
           <div style={{ fontSize: '64px', marginBottom: '20px' }}>⏳</div>
-          <h2 style={{ color: '#C9A84C', marginBottom: '15px', fontWeight: 'bold' }}>طلب تسجيل الأكاديمية قيد المراجعة</h2>
-          <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '420px', lineHeight: '1.7' }}>
-            مرحباً بك في المنصة! تم استلام طلبك بنجاح وهو الآن تحت التدقيق من قبل الإدارة العليا. سيتم تفعيل لوحة التحكم الخاصة بك فور الموافقة.
+          <h2 style={{ color: '#C9A84C', marginBottom: '15px', fontWeight: 'bold' }}>
+            {isRtl ? 'طلب تسجيل الأكاديمية قيد المراجعة' : 'Academy Registration Pending Approval'}
+          </h2>
+          <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '450px', lineHeight: '1.7' }}>
+            {isRtl 
+              ? 'مرحباً بك! تم استلام طلبك بنجاح وهو الآن تحت التدقيق من قبل الإدارة العليا. سيتم تفعيل لوحة التحكم الخاصة بك فور الموافقة.'
+              : 'Welcome! Your registration request has been successfully received and is currently under review by the super admin. Your dashboard will be activated upon approval.'}
           </p>
           <button 
             onClick={() => supabase.auth.signOut()} 
@@ -190,13 +194,13 @@ function MainAppContainer() {
             onMouseOver={(e) => { e.target.style.background = '#EF4444'; e.target.style.color = '#fff'; }}
             onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#EF4444'; }}
           >
-            تسجيل الخروج
+            {isRtl ? 'تسجيل الخروج' : 'Sign Out'}
           </button>
         </div>
       );
     }
 
-    // 3️⃣ الحسابات المفعلة تدخل طبيعي
+    // 3️⃣ دخول المستخدمين المعتمدين بانتظام
     return (
       <MainApp 
         session={session} 
