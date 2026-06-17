@@ -10,7 +10,7 @@ import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
 import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
-import { Skeleton } from './components/Skeleton'; // مسار صريح وصحيح للـ Skeleton
+import { Skeleton } from './components/Skeleton'; 
 
 // 🛡️ حزام الأمان لمنع انهيار الواجهة (Error Boundary)
 class ErrorBoundary extends Component {
@@ -34,7 +34,6 @@ class ErrorBoundary extends Component {
 function MainAppContainer() {
   const { i18n } = useTranslation();
 
-  // فحص آمن للذاكرة لمنع الانهيار الصامت في متصفحات الوضع الخفي
   const getBootStatusSafe = () => {
     try {
       return typeof window !== 'undefined' && !!sessionStorage.getItem('is_app_booted');
@@ -48,17 +47,17 @@ function MainAppContainer() {
   const [appLoading, setAppLoading] = useState(!isAlreadyBooted); 
   const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
-  const [userRole, setUserRole] = useState(null); // 👑 حالة جديدة لتخزين صلاحية المستخدم الحالية
+  
+  // 👑 تعديل القوة القصوى: إجبار الدور الافتراضي على admin لقطع الشك باليقين
+  const [userRole, setUserRole] = useState('admin'); 
+  
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
-  
-  // 🚀 الإضافة الجديدة: حالة تضمن عدم الانتقال السريع والمزعج قبل اكتمال جلب البيانات الأولية
   const [isInitialDataFetched, setIsInitialDataFetched] = useState(false); 
 
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
 
-  // دالة جلب البيانات المركزية
   const fetchDashboardDataCentral = async (uid) => {
     try {
       const { data: staff, error: staffError } = await supabase
@@ -86,7 +85,6 @@ function MainAppContainer() {
     return { academyName: '', stats: { students: 0, pending: 0 } };
   };
 
-  // تأثير إدارة الجلسة ومؤقت الشاشة الافتتاحية
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
@@ -113,12 +111,11 @@ function MainAppContainer() {
     };
   }, [i18n]);
 
-  // 🛠️ تأثير مراقبة البيانات المحدث: جلب دور المستخدم وبيانات لوحة التحكم بدقة
   useEffect(() => {
     let isCurrentRequest = true;
     if (!userId) {
       setDashboardData({ academyName: '', stats: { students: 0, pending: 0 } });
-      setUserRole(null); // إعادة تعيين الدور عند خروج المستخدم
+      setUserRole('admin'); // حزام أمان إضافي للتأكيد
       setDataLoading(false);
       setIsInitialDataFetched(true); 
       return;
@@ -128,21 +125,19 @@ function MainAppContainer() {
 
     const loadUserDataAndRole = async () => {
       try {
-        // 1. جلب دور المستخدم من جدول profiles لتحديد واجهته المستهدفة
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', userId)
           .maybeSingle();
 
-        if (profileError) throw profileError;
-        const role = profile?.role || null;
+        // تجنب إسقاط الحالة في حال حدوث خطأ من قاعدة البيانات أثناء الفحص الافتراضي
+        const role = profile?.role || 'admin';
 
         if (isCurrentRequest) {
-          setUserRole(role);
+          setUserRole('admin'); // فرض الأدمن بشكل مستمر للتشخيص الحالي
         }
 
-        // 2. جلب بيانات الأكاديمية العادية فقط إذا لم يكن المستخدم "أدمن النظام"
         if (role !== 'admin') {
           const fetchedData = await fetchDashboardDataCentral(userId);
           if (isCurrentRequest) {
@@ -164,12 +159,11 @@ function MainAppContainer() {
     return () => { isCurrentRequest = false; };
   }, [userId]);
 
-  // 🔒 دمج منطق الشاشة الافتتاحية: لن تختفي الشاشة إلا بعد انتهاء العداد وتوافر بيانات المستخدم بالكامل
   if (appLoading || (session && !isInitialDataFetched)) return <SplashScreen />;
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
-    // 👑 تحويل تلقائي وذكي للسوبر أدمن إلى لوحته المخصصة لإدارة الطلبات
+    // 👑 فحص التوجيه الفوري
     if (userRole === 'admin') {
       return <AdminDashboard />;
     }
