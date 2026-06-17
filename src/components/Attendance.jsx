@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-import { FaCalendarAlt, FaCheck, FaTimes, FaClock, FaUserClock, FaSave } from 'react-icons/fa';
+import { 
+  FaCalendarAlt, 
+  FaCheck, 
+  FaTimes, 
+  FaClock, 
+  FaUserClock, 
+  FaSave, 
+  FaBookOpen, 
+  FaBook, 
+  FaHistory, 
+  FaGraduationCap 
+} from 'react-icons/fa';
 
 export default function Attendance({ students, academyId }) {
   const { t, i18n } = useTranslation();
@@ -12,7 +23,7 @@ export default function Attendance({ students, academyId }) {
   // تحديد تاريخ اليوم كقيمة افتراضية (بصيغة YYYY-MM-DD)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // حالة تخزين بيانات الحضور لكل طالب
+  // حالة تخزين بيانات الحضور والأداء الأكاديمي لكل طالب
   const [attendanceData, setAttendanceData] = useState({});
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,7 +42,7 @@ export default function Attendance({ students, academyId }) {
     return isRtl ? arText : enText;
   };
 
-  // 🔄 [تطوير حرج]: جلب الحضور المسجل مسبقاً فور فتح الصفحة أو تغيير التاريخ
+  // 🔄 جلب الحضور والأداء الأكاديمي المسجل مسبقاً فور فتح الصفحة أو تغيير التاريخ
   useEffect(() => {
     async function fetchExistingAttendance() {
       if (!academyId || !selectedDate || students.length === 0) return;
@@ -41,25 +52,29 @@ export default function Attendance({ students, academyId }) {
       try {
         const { data, error } = await supabase
           .from('attendance')
-          .select('student_id, status, notes')
+          .select('student_id, status, notes, memorization, revision, distant_revision, daily_grade')
           .eq('academy_id', academyId)
           .eq('date', selectedDate);
 
         if (error) throw error;
 
-        // تحويل المصفوفة المسترجعة إلى كائن (Map) يسهل قراءته بالـ student_id
+        // تحويل المصفوفة المسترجعة إلى كائن مخرّز بالـ student_id
         const mappedData = {};
         if (data) {
           data.forEach(record => {
             mappedData[record.student_id] = {
               status: record.status,
-              notes: record.notes || ''
+              notes: record.notes || '',
+              memorization: record.memorization || '',
+              revision: record.revision || '',
+              distant_revision: record.distant_revision || '',
+              daily_grade: record.daily_grade || ''
             };
           });
         }
         setAttendanceData(mappedData);
       } catch (error) {
-        console.error("🚨 خطأ أثناء جلب الحضور السابق:", error);
+        console.error("🚨 خطأ أثناء جلب البيانات:", error);
       } finally {
         setLoadingFetch(false);
       }
@@ -68,29 +83,18 @@ export default function Attendance({ students, academyId }) {
     fetchExistingAttendance();
   }, [selectedDate, academyId, students]);
 
-  // دالة لتحديث حالة الطالب في الـ State المحلية
-  const handleStatusChange = (studentId, status) => {
+  // دالة موحدة لتحديث أي حقل في الـ State المحلية لكل طالب
+  const updateStudentField = (studentId, field, value) => {
     setAttendanceData(prev => ({
       ...prev,
       [studentId]: {
-        ...(prev[studentId] || { notes: '' }),
-        status: status
+        ...(prev[studentId] || { status: 'present', notes: '', memorization: '', revision: '', distant_revision: '', daily_grade: '' }),
+        [field]: value
       }
     }));
   };
 
-  // دالة لتحديث الملاحظات الخاصة بالطالب في الـ State المحلية
-  const handleNotesChange = (studentId, notesText) => {
-    setAttendanceData(prev => ({
-      ...prev,
-      [studentId]: {
-        ...(prev[studentId] || { status: 'present' }),
-        notes: notesText
-      }
-    }));
-  };
-
-  // 🔥 حفظ الحضور النهائي دفعة واحدة بطلب واحد (Batch Upsert)
+  // 🔥 حفظ الحضور والتسميع النهائي دفعة واحدة بطلب واحد (Batch Upsert)
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'حدث خطأ في تحميل البيانات', 'Error loading data'), type: 'error' });
@@ -103,12 +107,19 @@ export default function Attendance({ students, academyId }) {
     try {
       const attendanceRecords = students.map(student => {
         const currentRecord = attendanceData[student.id];
+        const isPresent = !currentRecord?.status || currentRecord.status === 'present' || currentRecord.status === 'late';
+        
         return {
           student_id: student.id,
           academy_id: academyId,
           date: selectedDate,
-          status: currentRecord?.status || 'present', // 'present' كخيار ذكي افتراضي
-          notes: currentRecord?.notes || ''
+          status: currentRecord?.status || 'present',
+          notes: currentRecord?.notes || '',
+          // حفظ بيانات التسميع فقط إذا كان الطالب حاضراً لتجنب تلوث البيانات
+          memorization: isPresent ? (currentRecord?.memorization || '') : '',
+          revision: isPresent ? (currentRecord?.revision || '') : '',
+          distant_revision: isPresent ? (currentRecord?.distant_revision || '') : '',
+          daily_grade: isPresent ? (currentRecord?.daily_grade || '') : ''
         };
       });
 
@@ -119,11 +130,11 @@ export default function Attendance({ students, academyId }) {
       if (error) throw error;
 
       setMessage({ 
-        text: translateText('attendanceSavedSuccess', 'تم اعتماد وحفظ كشف الحضور بنجاح! 🎉', 'Attendance sheet saved successfully! 🎉'), 
+        text: translateText('attendanceSavedSuccess', 'تم اعتماد وحفظ كشف الحضور والإنتاجية القرآنية بنجاح! 🎉', 'Attendance and recitation progress saved successfully! 🎉'), 
         type: 'success' 
       });
     } catch (error) {
-      console.error("🚨 خطأ أثناء حفظ الحضور مجمعاً:", error);
+      console.error("🚨 خطأ أثناء الحفظ المجمع:", error);
       setMessage({ text: `${translateText('saveFailed', 'فشل الحفظ:', 'Save failed:')} ${error.message}`, type: 'error' });
     } finally {
       setIsSaving(false);
@@ -143,9 +154,11 @@ export default function Attendance({ students, academyId }) {
         gap: '15px' 
       }}>
         <div style={{ textAlign: isRtl ? 'right' : 'left', width: isMobile ? '100%' : 'auto' }}>
-          <h2 style={{ color: C.gold || '#C9A84C', margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>{t('attendance')}</h2>
+          <h2 style={{ color: C.gold || '#C9A84C', margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+            {translateText('recitation_attendance', 'رصد الحضور والتحضير الأكاديمي', 'Recitation & Attendance')}
+          </h2>
           <p style={{ color: '#94a3b8', margin: '4px 0 0 0', fontSize: '13px' }}>
-            {translateText('attendanceSub', 'رصد حضور وغياب الطلاب اليومي', 'Track student daily attendance')}
+            {translateText('attendanceSub', 'متابعة الثالوث القرآني اليومي وتقييم الطلاب', 'Track the quranic triad and grade students daily')}
           </p>
         </div>
         
@@ -187,104 +200,209 @@ export default function Attendance({ students, academyId }) {
         </div>
       )}
 
-      {/* مؤشر تحميل ناعم أثناء جلب بيانات اليوم المختار */}
+      {/* مؤشر تحميل ناعم */}
       {loadingFetch ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '40px 0' }}>
           <div style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.05)', borderTop: `3px solid ${C.gold || '#C9A84C'}`, borderRadius: '50%', animation: 'spinAttendance 0.8s linear infinite' }}></div>
-          <span style={{ color: '#94a3b8', fontSize: '13px' }}>{translateText('loadingAttendanceData', 'جاري جلب سجل الحضور...', 'Fetching attendance record...')}</span>
+          <span style={{ color: '#94a3b8', fontSize: '13px' }}>{translateText('loadingAttendanceData', 'جاري جلب السجل الشامل للحلقة...', 'Fetching comprehensive halaqa record...')}</span>
           <style>{`@keyframes spinAttendance { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
-        /* قائمة الطلاب المحسنة للتجاوب الفاخر */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '30px' }}>
+        /* قائمة الطلاب المطورة كلياً */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '30px' }}>
           {students.length === 0 ? (
             <p style={{ color: '#94a3b8', opacity: 0.6, textAlign: 'center', padding: '20px' }}>
-              {translateText('noStudentsRegistered', 'لا يوجد طلاب مسجلين حالياً لعرضهم.', 'No students currently registered to display.')}
+              {t('no_students_registered')}
             </p>
           ) : (
             students.map(student => {
-              const currentStatus = attendanceData[student.id]?.status || 'present';
+              const record = attendanceData[student.id] || {};
+              const currentStatus = record.status || 'present';
+              const isPresent = currentStatus === 'present' || currentStatus === 'late';
               
               return (
                 <div key={student.id} style={{ 
                   display: 'flex', 
-                  flexDirection: isMobile ? 'column' : (isRtl ? 'row' : 'row-reverse'), 
-                  justifyContent: 'space-between', 
-                  alignItems: isMobile ? 'stretch' : 'center', 
+                  flexDirection: 'column',
                   background: C.surface || '#111C2A', 
-                  padding: '16px', 
-                  borderRadius: '14px', 
+                  padding: '20px', 
+                  borderRadius: '16px', 
                   border: '1px solid rgba(255,255,255,0.04)', 
-                  gap: '14px',
-                  boxSizing: 'border-box'
+                  gap: '16px',
+                  boxSizing: 'border-box',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                 }}>
                   
-                  {/* اسم الطالب والمحاذاة المتقاطعة للغتين */}
-                  <div style={{ textAlign: isRtl ? 'right' : 'left', flex: 1 }}>
-                    <span style={{ fontWeight: '700', fontSize: '15px', color: '#fff' }}>{student.name}</span>
-                  </div>
-                  
-                  {/* خيارات رصد الحضور (أزرار تفاعلية) وحقل الملاحظات */}
+                  {/* السطر الأول: اسم الطالب + أزرار حالة الحضور */}
                   <div style={{ 
                     display: 'flex', 
-                    gap: '8px', 
-                    flexWrap: 'wrap', 
-                    alignItems: 'center',
-                    justifyContent: isMobile ? 'center' : 'flex-end'
+                    flexDirection: isMobile ? 'column' : 'row', 
+                    justifyContent: 'space-between', 
+                    alignItems: isMobile ? 'stretch' : 'center',
+                    gap: '12px'
                   }}>
+                    <div style={{ textAlign: isRtl ? 'right' : 'left' }}>
+                      <span style={{ fontWeight: '700', fontSize: '16px', color: '#fff' }}>{student.name}</span>
+                      <span style={{ display: 'block', fontSize: '12px', color: C.gold, marginTop: '2px' }}>
+                        {t('memorization_prefix')} {student.current_surah || t('not_specified_yet')}
+                      </span>
+                    </div>
                     
-                    {/* زر حاضر */}
-                    <button 
-                      onClick={() => handleStatusChange(student.id, 'present')} 
-                      style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'present' ? '#10B981' : 'rgba(16, 185, 129, 0.06)', color: currentStatus === 'present' ? '#fff' : '#10B981', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s' }}
-                    >
-                      <FaCheck size={12} /> {t('present')}
-                    </button>
+                    {/* أزرار الحضور التفاعلية */}
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-end' }}>
+                      <button 
+                        onClick={() => updateStudentField(student.id, 'status', 'present')} 
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'present' ? '#10B981' : 'rgba(16, 185, 129, 0.05)', color: currentStatus === 'present' ? '#fff' : '#10B981', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+                      >
+                        <FaCheck size={11} /> {t('present')}
+                      </button>
 
-                    {/* زر غائب */}
-                    <button 
-                      onClick={() => handleStatusChange(student.id, 'absent')} 
-                      style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'absent' ? '#EF4444' : 'rgba(239, 68, 68, 0.06)', color: currentStatus === 'absent' ? '#fff' : '#EF4444', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s' }}
-                    >
-                      <FaTimes size={12} /> {t('absent')}
-                    </button>
+                      <button 
+                        onClick={() => updateStudentField(student.id, 'status', 'absent')} 
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'absent' ? '#EF4444' : 'rgba(239, 68, 68, 0.05)', color: currentStatus === 'absent' ? '#fff' : '#EF4444', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+                      >
+                        <FaTimes size={11} /> {t('absent')}
+                      </button>
 
-                    {/* زر متأخر */}
-                    <button 
-                      onClick={() => handleStatusChange(student.id, 'late')} 
-                      style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'late' ? '#F59E0B' : 'rgba(245, 158, 11, 0.06)', color: currentStatus === 'late' ? '#fff' : '#F59E0B', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s' }}
-                    >
-                      <FaClock size={12} /> {t('late')}
-                    </button>
+                      <button 
+                        onClick={() => updateStudentField(student.id, 'status', 'late')} 
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'late' ? '#F59E0B' : 'rgba(245, 158, 11, 0.05)', color: currentStatus === 'late' ? '#fff' : '#F59E0B', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+                      >
+                        <FaClock size={11} /> {t('late')}
+                      </button>
 
-                    {/* زر غائب بعذر */}
-                    <button 
-                      onClick={() => handleStatusChange(student.id, 'excused')} 
-                      style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'excused' ? '#3B82F6' : 'rgba(59, 130, 246, 0.06)', color: currentStatus === 'excused' ? '#fff' : '#3B82F6', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s' }}
-                    >
-                      <FaUserClock size={12} /> {t('excused')}
-                    </button>
-
-                    {/* حقل إدخال الملاحظات لكل طالب */}
-                    <input 
-                      type="text" 
-                      placeholder={t('notes') || 'ملاحظات...'}
-                      value={attendanceData[student.id]?.notes || ''}
-                      onChange={(e) => handleNotesChange(student.id, e.target.value)}
-                      style={{ 
-                        background: '#0F172A', 
-                        border: '1px solid #334155', 
-                        color: '#fff', 
-                        padding: '8px 12px', 
-                        borderRadius: '8px', 
-                        outline: 'none', 
-                        width: isMobile ? '100%' : '140px', 
-                        fontSize: '13px',
-                        boxSizing: 'border-box',
-                        textAlign: isRtl ? 'right' : 'left'
-                      }}
-                    />
+                      <button 
+                        onClick={() => updateStudentField(student.id, 'status', 'excused')} 
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'excused' ? '#3B82F6' : 'rgba(59, 130, 246, 0.05)', color: currentStatus === 'excused' ? '#fff' : '#3B82F6', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+                      >
+                        <FaUserClock size={11} /> {t('excused')}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* 🌟 السطر الثاني: لوحة التسميع والمتابعة القرآنية (تظهر فقط للحاضرين والمحرّضين المتأخرين) */}
+                  {isPresent && (
+                    <div style={{ 
+                      backgroundColor: 'rgba(0,0,0,0.15)', 
+                      padding: '14px', 
+                      borderRadius: '12px', 
+                      border: '1px solid rgba(255,255,255,0.02)',
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '12px',
+                      animation: 'fadeInSlide 0.2s ease-out'
+                    }}>
+                      
+                      {/* حقول إدخال المدخلات الثلاثية */}
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', 
+                        gap: '10px' 
+                      }}>
+                        {/* الحفظ الجديد */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FaBookOpen size={12} color={C.gold} /> {t('memorization')}
+                          </label>
+                          <input 
+                            type="text" 
+                            placeholder={isRtl ? "مثال: البقرة ١-١٥" : "e.g., Al-Baqarah 1-15"}
+                            value={record.memorization || ''}
+                            onChange={(e) => updateStudentField(student.id, 'memorization', e.target.value)}
+                            style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '8px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', textAlign: isRtl ? 'right' : 'left' }}
+                          />
+                        </div>
+
+                        {/* المراجعة القريبة */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FaBook size={12} color="#10B981" /> {t('revision')}
+                          </label>
+                          <input 
+                            type="text" 
+                            placeholder={isRtl ? "مثال: آخر ٥ صفحات" : "e.g., Last 5 pages"}
+                            value={record.revision || ''}
+                            onChange={(e) => updateStudentField(student.id, 'revision', e.target.value)}
+                            style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '8px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', textAlign: isRtl ? 'right' : 'left' }}
+                          />
+                        </div>
+
+                        {/* المراجعة البعيدة (الماضي التراكمي) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FaHistory size={12} color="#3B82F6" /> {isRtl ? "المراجعة البعيدة (الماضي)" : "Distant Revision"}
+                          </label>
+                          <input 
+                            type="text" 
+                            placeholder={isRtl ? "مثال: جزء عمّ كاملاً" : "e.g., Juz Amma"}
+                            value={record.distant_revision || ''}
+                            onChange={(e) => updateStudentField(student.id, 'distant_revision', e.target.value)}
+                            style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '8px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', textAlign: isRtl ? 'right' : 'left' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* نظام التقييم السريع (الدرجات اليومية) والملاحظات */}
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: isMobile ? 'column' : 'row', 
+                        alignItems: isMobile ? 'stretch' : 'center', 
+                        gap: '12px',
+                        marginTop: '4px' 
+                      }}>
+                        {/* أزرار التقييم التنافسي */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                          <span style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FaGraduationCap size={13} color={C.gold} /> {t('daily_grade')}
+                          </span>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {['excellent', 'good', 'needs_improvement'].map(grade => {
+                              const gradeColors = {
+                                excellent: { bg: '#10B981', text: t('excellent') },
+                                good: { bg: '#F59E0B', text: t('good') },
+                                needs_improvement: { bg: '#EF4444', text: t('needs_improvement') }
+                              };
+                              const isSelected = record.daily_grade === grade;
+                              return (
+                                <button
+                                  key={grade}
+                                  type="button"
+                                  onClick={() => updateStudentField(student.id, 'daily_grade', grade)}
+                                  style={{
+                                    flex: 1,
+                                    padding: '7px 10px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    background: isSelected ? gradeColors[grade].bg : 'rgba(255,255,255,0.03)',
+                                    color: isSelected ? '#000' : '#94a3b8'
+                                  }}
+                                >
+                                  {gradeColors[grade].text}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* صندوق الملاحظات التوجيهية */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{isRtl ? "ملاحظة خاصة باليوم" : "Today's specific note"}</span>
+                          <input 
+                            type="text" 
+                            placeholder={t('notes') || 'ملاحظات...'}
+                            value={record.notes || ''}
+                            onChange={(e) => updateStudentField(student.id, 'notes', e.target.value)}
+                            style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '7px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', boxSizing: 'border-box', textAlign: isRtl ? 'right' : 'left' }}
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
 
                 </div>
               );
@@ -293,7 +411,7 @@ export default function Attendance({ students, academyId }) {
         </div>
       )}
 
-      {/* زر حفظ الكشف النهائي الثابت الفخم */}
+      {/* زر حفظ الكشف النهائي المجمع */}
       {!loadingFetch && students.length > 0 && (
         <button 
           onClick={handleSaveAttendance}
@@ -319,9 +437,17 @@ export default function Attendance({ students, academyId }) {
           onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
           onMouseLeave={(e) => e.currentTarget.style.opacity = isSaving ? 0.7 : 1}
         >
-          <FaSave /> {isSaving ? translateText('saving', 'جاري الحفظ والاعتماد...', 'Saving and adopting...') : translateText('saveBtn', 'اعتماد وحفظ كشف الحضور 🚀', 'Adopt & Save Attendance Sheet 🚀')}
+          <FaSave /> {isSaving ? translateText('saving', 'جاري الحفظ والاعتماد التراكمي...', 'Saving and adopting...') : translateText('saveBtn', 'اعتماد وحفظ كشف الحضور والتسميع اليومي 🚀', 'Adopt & Save Recitation Sheet 🚀')}
         </button>
       )}
+
+      {/* حزمة أنيميشن ناعمة للظهور التدريجي */}
+      <style>{`
+        @keyframes fadeInSlide {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
