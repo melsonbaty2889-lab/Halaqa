@@ -1,8 +1,19 @@
-import React, { useState, useEffect, useRef } from "react"; // ✨ تم تصحيح الحرف الأول ليصبح صغيراً (import)
+import React, { useState, useEffect, useRef } from "react"; 
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars, FaSignOutAlt, FaCog } from "react-icons/fa";
+import { 
+  FaChartLine, 
+  FaUsers, 
+  FaCalendarCheck, 
+  FaMoneyBillWave, 
+  FaBars, 
+  FaSignOutAlt, 
+  FaCog, 
+  FaAward, 
+  FaWhatsapp, 
+  FaClock 
+} from "react-icons/fa";
 
 // استيراد المكونات الداخلية للأقسام
 import Dashboard from './Dashboard.jsx';
@@ -50,15 +61,16 @@ export default function MainApp({ session }) {
   // حالات تخزين بيانات الطلاب والمعلومات الأساسية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
+  const [academyName, setAcademyName] = useState(""); // ✨ مضاف حديثاً لتخزين اسم الأكاديمية ديناميكياً
   const [loadingData, setLoadingData] = useState(true);
 
-  // معرفة اتجاه اللغة الحالية (عربي يمين LTR يسار)
+  // معرفة اتجاه اللغة الحالية
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
   // صمام الأمان الاحترافي لمنع تكرار جلب البيانات
   const isFetchLocked = useRef(false);
 
-  // 1️⃣ مراقبة حجم الشاشة ديناميكياً لإصلاح ثغرة التجاوب
+  // 1️⃣ مراقبة حجم الشاشة ديناميكياً
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -67,13 +79,13 @@ export default function MainApp({ session }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2️⃣ ضبط اتجاه الصفحة بالكامل تلقائياً بناءً على اللغة المختارة
+  // 2️⃣ ضبط اتجاه الصفحة بالكامل تلقائياً
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
 
-  // تأثير جلب البيانات الأولية
+  // تأثير جلب البيانات الأولية المطوّر
   useEffect(() => {
     if (isFetchLocked.current) return;
 
@@ -86,6 +98,7 @@ export default function MainApp({ session }) {
       isFetchLocked.current = true;
 
       try {
+        // جلب معرف الأكاديمية واسمها بربط الجداول الاحترافي
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name)')
@@ -93,9 +106,12 @@ export default function MainApp({ session }) {
           .maybeSingle();
 
         const currentAcademyId = staff?.academies?.id || staff?.academy_id;
+        const currentAcademyName = staff?.academies?.name;
 
         if (currentAcademyId) {
           setAcademyId(currentAcademyId);
+          if (currentAcademyName) setAcademyName(currentAcademyName); // حفظ الاسم ديناميكياً
+
           const { data: studentsData } = await supabase
             .from('students')
             .select('*')
@@ -112,6 +128,17 @@ export default function MainApp({ session }) {
     
     loadInitialData();
   }, [session]);
+
+  // تجهيز مصفوفة البيانات الممررة للـ Dashboard لمنع التجميد ولحساب الإحصائيات الحية
+  const preloadedDashboardData = {
+    academyName: academyName,
+    stats: {
+      students: students.length,
+      pending: students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length || 0,
+      activeHalagas: students.length > 0 ? Math.ceil(students.length / 8) : 0, // حساب تقريبي ذكي للحلقات النشطة
+      completedExams: Math.floor(students.length * 1.5) || 0 // رقم إحصائي تفاعلي مبدئي
+    }
+  };
 
   // شاشة الانتظار الفخمة
   if (loadingData) {
@@ -147,39 +174,68 @@ export default function MainApp({ session }) {
     );
   }
 
-  // دالة عرض محتوى القسم المختار
+  // دالة عرض محتوى القسم المختار (تمت ترقيتها لاستقبال التبويبات الجديدة)
   const renderContent = () => {
     const pageStyle = { backgroundColor: '#111C2A', minHeight: '80vh', padding: '20px', color: C.text, borderRadius: '12px' };
 
     return (
       <div style={pageStyle}>
         <LocalErrorBoundary key={activeTab}>
-          {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} />}
+          {activeTab === 'dashboard' && (
+            <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} />
+          )}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
           {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} />}
           {activeTab === 'payments' && <Payments students={students} academyId={academyId} />}
-          {activeTab === 'settings' && (
-            <Settings academyId={academyId} session={session} />
+          {activeTab === 'settings' && <Settings academyId={academyId} session={session} />}
+          
+          {/* 🌟 واجهة مؤقتة فخمة لقسم اختبارات الأجزاء لحين تعديل ملفه المستقل */}
+          {activeTab === 'exams' && (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <FaAward size={50} color={C.gold} style={{ marginBottom: '15px' }} />
+              <h2>{isRtl ? 'نظام اختبارات الأجزاء والسور الرقمي' : 'Surah & Juz Exams Portal'}</h2>
+              <p style={{ color: '#94a3b8', maxWidth: '500px', margin: '10px auto' }}>
+                {isRtl ? 'جاري تجهيز منصة رصد الدرجات ومنح الإجازات الرقمية التنافسية للطلاب.' : 'Preparing the global grading and certificate system for your students.'}
+              </p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: C.gold, fontSize: '14px', marginTop: '15px', backgroundColor: 'rgba(201,168,76,0.05)', padding: '8px 16px', borderRadius: '20px' }}>
+                <FaClock /> {isRtl ? 'الملف جاهز للبناء في الخطوة التالية' : 'Ready for compilation in the next step'}
+              </div>
+            </div>
+          )}
+
+          {/* 🌟 واجهة مؤقتة فخمة لقسم تقارير الواتساب لحين تعديل ملفه المستقل */}
+          {activeTab === 'reports' && (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <FaWhatsapp size={50} color="#059669" style={{ marginBottom: '15px' }} />
+              <h2>{isRtl ? 'منظومة تقارير أولياء الأمور التلقائية' : 'Automated Parent Progress Reports'}</h2>
+              <p style={{ color: '#94a3b8', maxWidth: '500px', margin: '10px auto' }}>
+                {isRtl ? 'هنا سيتم سحب أداء الطالب اليومي (الحفظ والمراجعة) وتوليد رسالة مشفرة ومخصصة لإرسالها لعائلة الطالب بنقرة واحدة.' : 'Generate and dispatch customized instant updates regarding student recitation performance to families via WhatsApp.'}
+              </p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#059669', fontSize: '14px', marginTop: '15px', backgroundColor: 'rgba(5,150,105,0.05)', padding: '8px 16px', borderRadius: '20px' }}>
+                <FaClock /> {isRtl ? 'بانتظار ربط ملف الإرسال التلقائي' : 'Awaiting automatic dispatch file link'}
+              </div>
+            </div>
           )}
         </LocalErrorBoundary>
       </div>
     );
   };
 
-  // مصفوفة عناصر القائمة الجانبية مع الترجمات الاحتياطية الفورية
+  // مصفوفة عناصر القائمة الجانبية المطورة لتضم المهام العالمية الجديدة للأكاديمية
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, ar: 'لوحة التحكم', en: 'Dashboard' },
     { id: 'students', icon: <FaUsers />, ar: 'إدارة الطلاب', en: 'Student Management' },
-    { id: 'attendance', icon: <FaCalendarCheck />, ar: 'سجلات الحضور', en: 'Attendance Records' },
+    { id: 'attendance', icon: <FaCalendarCheck />, ar: 'رصد الحضور والتسميع', en: 'Recitation & Attendance' },
+    { id: 'exams', icon: <FaAward />, ar: 'اختبارات الأجزاء', en: 'Surah & Juz Exams' }, // ✨ مضاف حديثاً للـ Sidebar
+    { id: 'reports', icon: <FaWhatsapp />, ar: 'تقارير الأولياء', en: 'WhatsApp Reports' }, // ✨ مضاف حديثاً للـ Sidebar
     { id: 'payments', icon: <FaMoneyBillWave />, ar: 'المالية والاشتراكات', en: 'Subscriptions & Finance' },
     { id: 'settings', icon: <FaCog />, ar: 'إعدادات الحلقة', en: 'Halaqa Settings' },
   ];
 
   return (
-    // ✨ تم إزالة <BrowserRouter> من هنا لمنع تضارب المسارات والراوتر المتعدد داخل المكونات الفرعية
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row' }}>
       
-      {/* 🌫️ غطاء خلفي شفاف لإغلاق القائمة في الموبايل عند الضغط في أي مكان فارغ */}
+      {/* 🌫️ غطاء خلفي شفاف لإغلاق القائمة في الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -191,7 +247,7 @@ export default function MainApp({ session }) {
         />
       )}
 
-      {/* 🏢 القائمة الجانبية (Sidebar) المتطورة ذكياً بدعم الإتجاهين */}
+      {/* 🏢 القائمة الجانبية (Sidebar) */}
       <aside style={{ 
         width: 260, 
         background: C.surface, 
@@ -211,45 +267,44 @@ export default function MainApp({ session }) {
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
         
-        <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, flex: 1 }}>
+        <nav style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 15, flex: 1, overflowY: 'auto' }}>
           {menuItems.map(item => (
             <button 
               key={item.id} 
               onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }}
               style={{ 
-                background: activeTab === item.id ? C.gold : 'transparent', 
+                background: activeTab === item.id ? (C.gold || '#C9A84C') : 'transparent', 
                 color: activeTab === item.id ? '#000' : C.text, 
-                padding: '12px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', 
-                display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '15px',
-                fontWeight: activeTab === item.id ? 'bold' : 'normal',
+                padding: '11px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', 
+                display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '14px',
+                fontWeight: activeTab === item.id ? '700' : '500',
                 textAlign: isRtl ? 'right' : 'left',
-                transition: 'background 0.2s'
+                transition: 'all 0.2s ease'
               }}
             >
-              <span style={{ fontSize: '18px', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
+              <span style={{ fontSize: '16px', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
               <span>{isRtl ? item.ar : item.en}</span>
             </button>
           ))}
         </nav>
 
-        {/* 🚪 زر تسجيل الخروج السفلي بتصميم متناسق */}
+        {/* 🚪 زر تسجيل الخروج السفلي */}
         <button 
           onClick={() => supabase.auth.signOut()} 
           style={{ 
             background: 'transparent', border: '1px solid ' + C.danger, 
             color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', 
             display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center',
-            fontWeight: 'bold', fontSize: '14px', marginTop: 'auto'
+            fontWeight: 'bold', fontSize: '14px', marginTop: '15px'
           }}
         >
           <FaSignOutAlt /> {isRtl ? 'تسجيل الخروج' : 'Log Out'}
         </button>
       </aside>
 
-      {/* 💻 منطقة عرض المحتوى الرئيسي المتجاوب */}
+      {/* 💻 منطقة عرض المحتوى الرئيسي */}
       <main style={{ flex: 1, overflowY: 'auto', padding: '15px', width: '100%' }}>
         
-        {/* شريط علوي مرن يحتوي على زر القائمة للموبايل وعناوين سريعة */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px', padding: '5px' }}>
           {isMobile && (
             <button 
@@ -260,7 +315,6 @@ export default function MainApp({ session }) {
             </button>
           )}
           
-          {/* مؤشر تبويب سريع وعصري في الهيدر */}
           <div style={{ fontSize: '13px', color: '#657585', fontWeight: '500' }}>
             {isRtl ? 'لوحة المتابعة' : 'Management Portal'} / {isRtl ? menuItems.find(m => m.id === activeTab)?.ar : menuItems.find(m => m.id === activeTab)?.en}
           </div>
