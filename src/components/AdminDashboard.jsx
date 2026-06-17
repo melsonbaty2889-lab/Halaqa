@@ -1,132 +1,150 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase'; // تأكيد المسار الصحيح المربوط بـ lib
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'; // تأكد من صحة مسار ملف السوبابيز لديك
 
 export default function AdminDashboard() {
-  const [requests, setRequests] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
 
-  // 1. جلب الطلبات المعلقة من قاعدة البيانات
-  const fetchPendingRequests = async () => {
+  // 1️⃣ جلب الطلبات المعلقة بشكل ذكي (يدعم الطريقتين في قاعدة البيانات)
+  const fetchRequests = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, created_at')
-      .eq('role', 'pending_manager')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('role', ['pending_manager', 'Pending manager', 'Pending Manager']) // حزام الأمان للمطابقة
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('خطأ في جلب البيانات:', error.message);
-    } else {
-      setRequests(data);
+      if (error) throw error;
+      setPendingRequests(data || []);
+    } catch (err) {
+      console.error('Error fetching pending requests:', err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchPendingRequests();
+    fetchRequests();
   }, []);
 
-  // 2. دالة اتخاذ القرار (قبول، تجربة، رفض)
-  const handleAction = async (userId, action) => {
-    const { error } = await supabase.rpc('review_user_request', {
-      target_user_id: userId,
-      review_action: action
-    });
+  // 2️⃣ إجراء الموافقة وتفعيل الحساب (ترقية الرتبة إلى manager)
+  const handleApprove = async (profileId) => {
+    setActionLoading(profileId);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .select('role') // خطوة تأكيدية للأمان
+        .eq('id', profileId);
 
-    if (error) {
-      alert('حدث خطأ أثناء معالجة الطلب: ' + error.message);
-    } else {
-      alert('تم تحديث حالة المستخدم بنجاح!');
-      setRequests(requests.filter(req => req.id !== userId));
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ role: 'manager' }) // تحويله إلى مدير معتمد
+        .eq('id', profileId);
+
+      if (updateError) throw updateError;
+      
+      // تحديث القائمة في الواجهة فوراً بعد النجاح
+      setPendingRequests(prev => prev.filter(req => req.id !== profileId));
+      alert('🎉 تم الموافقة على طلب الأكاديمية وتفعيل الحساب بنجاح!');
+    } catch (err) {
+      alert('❌ حدث خطأ أثناء معالجة الطلب: ' + err.message);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  // 🚪 3. دالة تسجيل الخروج الآمن والعودة لشاشة الدخول تلقائياً
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('خطأ أثناء تسجيل الخروج:', error.message);
+  // 3️⃣ إجراء الرفض
+  const handleReject = async (profileId) => {
+    if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) return;
+    setActionLoading(profileId);
+    try {
+      // يمكنك تعديل هذا الإجراء ليصبح حذفاً أو تحويلاً لرتبة أخرى مثل rejected
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'rejected' })
+        .eq('id', profileId);
+
+      if (error) throw error;
+      setPendingRequests(prev => prev.filter(req => req.id !== profileId));
+    } catch (err) {
+      alert('❌ حدث خطأ أثناء رفض الطلب: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0f172a] text-white flex items-center justify-center font-sans">
-        <p className="text-xl animate-pulse">جاري تحميل طلبات الانضمام...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#0a0f1d] text-white p-6 font-sans" dir="rtl">
-      {/* رأس الصفحة المطور */}
-      <div className="max-w-6xl mx-auto mb-8 border-b border-gray-800 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div style={{ minHeight: '100vh', background: '#090F17', color: '#fff', padding: '30px', fontFamily: 'sans-serif', direction: 'rtl' }}>
+      
+      {/* الرأس السفلي للوحة الصلاحيات */}
+      <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center', borderBottom: '1px solid #1E293B', paddingBottom: '20px', marginBottom: '30px' }}>
         <div>
-          <h1 className="text-3xl font-bold text-amber-500">لوحة تحكم السوبر أدمن 👑</h1>
-          <p className="text-gray-400 mt-1">إدارة طلبات تسجيل الأكاديميات والمراكز القرآنية</p>
+          <h1 style={{ fontSize: '28px', color: '#fff', fontWeight: 'bold', margin: 0 }}>
+            لوحة تحكم السوبر أدمن 👑
+          </h1>
+          <p style={{ color: '#9CA3AF', marginTop: '5px', fontSize: '14px' }}>
+            إدارة طلبات تسجيل الأكاديميات والمراكز القرآنية
+          </p>
         </div>
-        
-        {/* أزرار الحالة وتسجيل الخروج */}
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-          <div className="bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 text-sm">
-            <span className="text-gray-400">الطلبات المعلقة: </span>
-            <span className="font-bold text-amber-500">{requests.length}</span>
-          </div>
-          
-          <button
-            onClick={handleLogout}
-            className="bg-gray-800 hover:bg-rose-950/40 text-rose-400 border border-gray-700 hover:border-rose-900 px-4 py-2 rounded-lg transition-all text-sm font-semibold flex items-center gap-2"
-          >
-            🚪 تسجيل الخروج
-          </button>
+        <button 
+          onClick={() => supabase.auth.signOut()} 
+          style={{ background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', padding: '8px 18px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          تسجيل الخروج 🚪
+        </button>
+      </div>
+
+      {/* كارت العداد الإحصائي الكلي */}
+      <div style={{ background: '#111827', border: '1px solid #1E293B', padding: '20px', borderRadius: '12px', maxWidth: '350px', marginBottom: '30px' }}>
+        <span style={{ color: '#9CA3AF', fontSize: '14px' }}>الطلبات المعلقة حالياً</span>
+        <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#C9A84C', marginTop: '5px' }}>
+          {loading ? '...' : pendingRequests.length}
         </div>
       </div>
 
-      {/* عرض الطلبات */}
-      <div className="max-w-6xl mx-auto">
-        {requests.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
-            <p className="text-gray-400 text-lg">لا توجد طلبات انضمام معلقة حالياً. جاري انتظار طلبات جديدة! ✨</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-1">
-            {requests.map((req) => (
-              <div 
-                key={req.id} 
-                className="bg-gray-900 border border-gray-800 hover:border-amber-500/30 transition-all rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-              >
-                <div>
-                  <h3 className="text-xl font-semibold text-white">{req.full_name}</h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    تاريخ الطلب: {new Date(req.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </p>
-                </div>
+      {/* عرض قائمة الطلبات */}
+      <h2 style={{ fontSize: '18px', color: '#C9A84C', marginBottom: '15px' }}>الطلبات الواردة:</h2>
 
-                <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                  <button
-                    onClick={() => handleAction(req.id, 'approve_manager')}
-                    className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
-                  >
-                    🟢 قبول كمدير
-                  </button>
-
-                  <button
-                    onClick={() => handleAction(req.id, 'approve_tester')}
-                    className="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-4 py-2 rounded-lg transition-colors text-sm"
-                  >
-                    🟡 سماح بالتجربة
-                  </button>
-
-                  <button
-                    onClick={() => handleAction(req.id, 'reject')}
-                    className="flex-1 md:flex-none bg-rose-600 hover:bg-rose-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
-                  >
-                    🔴 رفض الطلب
-                  </button>
-                </div>
+      {loading ? (
+        <p style={{ color: '#9CA3AF' }}>جاري تحميل الطلبات بنبضات آمنة...</p>
+      ) : pendingRequests.length === 0 ? (
+        <div style={{ padding: '40px', background: '#111827', borderRadius: '12px', textAlign: 'center', border: '1px dashed #374151' }}>
+          <span style={{ fontSize: '24px' }}>✨</span>
+          <p style={{ color: '#9CA3AF', marginTop: '10px' }}>لا توجد طلبات انضمام معلقة حالياً. جاري انتظار طلبات جديدة!</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '15px' }}>
+          {pendingRequests.map((req) => (
+            <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111827', border: '1px solid #1E293B', padding: '20px', borderRadius: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 5px 0' }}>{req.full_name || 'مسؤول غير مسمى'}</h3>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', margin: 0 }}>🆔 المعرّف الفريد: <code style={{ color: '#C9A84C' }}>{req.id}</code></p>
+                <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '5px' }}>تاريخ الطلب: {new Date(req.created_at).toLocaleDateString('ar-EG')}</p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  disabled={actionLoading !== null}
+                  onClick={() => handleApprove(req.id)}
+                  style={{ background: '#10B981', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', opacity: actionLoading ? 0.6 : 1 }}
+                >
+                  {actionLoading === req.id ? 'جاري التفعيل...' : '✔ قبول وتفعيل'}
+                </button>
+                <button
+                  disabled={actionLoading !== null}
+                  onClick={() => handleReject(req.id)}
+                  style={{ background: '#EF4444', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', opacity: actionLoading ? 0.6 : 1 }}
+                >
+                  رفض
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }
