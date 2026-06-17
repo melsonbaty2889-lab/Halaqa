@@ -52,7 +52,7 @@ const resources = {
       good: "جيد",
       needs_improvement: "يحتاج إلى تركيز",
 
-      // 6. شاشات تسجيل الدخول والاشتراك (Authentication) - تم تحديثها هنا 🌟
+      // 6. شاشات تسجيل الدخول والاشتراك (Authentication)
       createAccount: "إنشاء حساب معلم/مشرف",
       fullName: "الاسم الكامل",
       email: "البريد الإلكتروني",
@@ -106,7 +106,17 @@ const resources = {
       error_enter_student_name: "يرجى إدخال اسم الطالب أولاً",
       student_added_success: "تم تسجيل الطالب بنجاح واحترافية! 🎉",
       student_added_failed: "فشل التسجيل:",
-      error_updating_surah: "تعذر تحديث السورة الحالية"
+      error_updating_surah: "تعذر تحديث السورة الحالية",
+
+      // 🌟 9. التحديثات العالمية المضافة حديثاً لأقسام الأكاديمية (SaaS Features)
+      quick_actions: "الإجراءات السريعة للحلقة",
+      academy_overview: "التقرير العام للأكاديمية",
+      action_attendance: "رصد الحضور والتسميع",
+      action_exams: "اختبارات الأجزاء والسور",
+      action_reports: "تقارير أولياء الأمور",
+      action_payments: "تحصيل الرسوم والاشتراكات",
+      active_halagas: "الحلقات النشطة اليوم",
+      completed_exams: "اختبارات الأجزاء الناجحة"
     }
   },
   en: {
@@ -158,7 +168,7 @@ const resources = {
       good: "Good",
       needs_improvement: "Needs Improvement",
 
-      // 6. Authentication - Updated here too 🌟
+      // 6. Authentication
       createAccount: "Create Teacher/Admin Account",
       fullName: "Full Name",
       email: "Email Address",
@@ -212,7 +222,17 @@ const resources = {
       error_enter_student_name: "Please enter the student name first",
       student_added_success: "Student registered successfully and professionally! 🎉",
       student_added_failed: "Registration failed:",
-      error_updating_surah: "Unable to update the current Surah"
+      error_updating_surah: "Unable to update the current Surah",
+
+      // 🌟 9. New SaaS / Enterprise Additions
+      quick_actions: "Quick Operations",
+      academy_overview: "Academy Performance",
+      action_attendance: "Recitation & Attendance",
+      action_exams: "Surah & Juz Exams",
+      action_reports: "WhatsApp Reports",
+      action_payments: "Collect Fees",
+      active_halagas: "Active Halagas Today",
+      completed_exams: "Exams Passed (Month)"
     }
   }
 };
