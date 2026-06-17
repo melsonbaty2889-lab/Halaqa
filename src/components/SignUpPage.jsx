@@ -5,9 +5,9 @@ import { FaEnvelope, FaLock, FaUser, FaArrowRight, FaArrowLeft } from 'react-ico
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { t, i18n } = useTranslation();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
@@ -29,16 +29,17 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     setLoading(true);
     try {
-      // 🌟 إرسال البيانات مع تمرير متغير اللغة الحالية للسيرفر لتحديد لغة الإيميل تلقائياً
+      // 🌟 إرسال البيانات مدمجاً معها طلب الصلاحية والاسم المتوافق مع الـ Trigger
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: { 
           data: { 
-            name: name.trim(),
-            lang: isRtl ? 'ar' : 'en' // هنا يتم تمرير اللغة ديناميكياً لتحديد قالب الرسالة
+            full_name: name.trim(),        // تغيير المفتاح إلى full_name ليقرأه التريجر مباشرة
+            requested_role: 'teacher',     // إرسال الدور المطلوب ليتحول تلقائياً إلى pending_teacher
+            lang: isRtl ? 'ar' : 'en' 
           },
-          // 💡 تعديل المستقبل: إضافة معيار ?lang لضمان عودة المستخدم بنفس لغته الحالية عند ضغط زر التأكيد
+          // لضمان عودة المستخدم بنفس لغته الحالية عند ضغط زر التأكيد في الإيميل
           emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
         }
       });
@@ -46,11 +47,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // راية النجاح المدمجة
+      // 🌟 تحديث الرسالة لتناسب آلية "الطلب المعلق" بانتظار تفعيل الإدارة
       setSuccessMsg(
         isRtl 
-          ? "✅ تم إنشاء الحساب بنجاح! راجع بريدك الإلكتروني لتأكيده ثم سجل دخولك." 
-          : "✅ Account created! Check your email to confirm, then log in."
+          ? "✅ تم إرسال طلب الانضمام بنجاح! يرجى تأكيد بريدك الإلكتروني أولاً، ثم انتظار موافقة الإدارة لتفعيل لوحة التحكم الخاصة بك." 
+          : "✅ Request submitted successfully! Please verify your email, then wait for admin approval to activate your dashboard."
       );
 
       // تفريغ الحقول بعد النجاح
@@ -71,7 +72,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyY: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
         <h2 style={{ color: '#fff', margin: '0 0 8px 0', fontSize: '26px', fontWeight: '800', textAlign: 'center' }}>
@@ -179,7 +180,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             disabled={loading} 
             style={{ padding: "14px", background: goldColor, color: "#000", border: "none", borderRadius: '12px', fontSize: "15px", fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, marginTop: '10px', transition: 'all 0.2s' }}
           >
-            {loading ? (isRtl ? 'جاري إنشاء الحساب...' : 'Creating...') : (isRtl ? 'إنشاء حساب معلم' : 'Create Account')}
+            {loading ? (isRtl ? 'جاري إرسال الطلب...' : 'Submitting...') : (isRtl ? 'إنشاء حساب معلم' : 'Create Account')}
           </button>
         </form>
 
