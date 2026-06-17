@@ -1,4 +1,4 @@
-import { useState, useEffect, Component } from 'react'; // ✨ تصحيح الحرف الصغير لضمان نجاح البناء
+import { useState, useEffect, Component } from 'react'; 
 import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
@@ -48,6 +48,7 @@ function MainAppContainer() {
   const [appLoading, setAppLoading] = useState(!isAlreadyBooted); 
   const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
+  const [userRole, setUserRole] = useState(null); // 👑 حالة جديدة لتخزين صلاحية المستخدم الحالية
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
   
@@ -112,24 +113,54 @@ function MainAppContainer() {
     };
   }, [i18n]);
 
-  // 🛠️ تأثير مراقبة البيانات المحدث: ضبط وضع انتهاء التحميل الأول بدقة
+  // 🛠️ تأثير مراقبة البيانات المحدث: جلب دور المستخدم وبيانات لوحة التحكم بدقة
   useEffect(() => {
     let isCurrentRequest = true;
     if (!userId) {
       setDashboardData({ academyName: '', stats: { students: 0, pending: 0 } });
+      setUserRole(null); // إعادة تعيين الدور عند خروج المستخدم
       setDataLoading(false);
-      setIsInitialDataFetched(true); // إذا لم يتواجد مستخدم، يتم تحويل الحالة فوراً لتجاوز شاشة التحميل
+      setIsInitialDataFetched(true); 
       return;
     }
 
     setDataLoading(true);
-    fetchDashboardDataCentral(userId).then(fetchedData => {
-      if (isCurrentRequest) {
-        setDashboardData(fetchedData);
-        setDataLoading(false);
-        setIsInitialDataFetched(true); // 🚀 البيانات الأولية أصبحت جاهزة تماماً هنا
+
+    const loadUserDataAndRole = async () => {
+      try {
+        // 1. جلب دور المستخدم من جدول profiles لتحديد واجهته المستهدفة
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+        const role = profile?.role || null;
+
+        if (isCurrentRequest) {
+          setUserRole(role);
+        }
+
+        // 2. جلب بيانات الأكاديمية العادية فقط إذا لم يكن المستخدم "أدمن النظام"
+        if (role !== 'admin') {
+          const fetchedData = await fetchDashboardDataCentral(userId);
+          if (isCurrentRequest) {
+            setDashboardData(fetchedData);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading user profile or stats:", err);
+      } finally {
+        if (isCurrentRequest) {
+          setDataLoading(false);
+          setIsInitialDataFetched(true); 
+        }
       }
-    });
+    };
+
+    loadUserDataAndRole();
+
     return () => { isCurrentRequest = false; };
   }, [userId]);
 
@@ -138,6 +169,11 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
+    // 👑 تحويل تلقائي وذكي للسوبر أدمن إلى لوحته المخصصة لإدارة الطلبات
+    if (userRole === 'admin') {
+      return <AdminDashboard />;
+    }
+
     return (
       <MainApp 
         session={session} 
