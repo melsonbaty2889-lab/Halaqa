@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase';
 import { useTranslation } from 'react-i18next';
 
 // ✨ تأكيد المسارات الصحيحة 100% لـ Vite و Vercel ومنع خطأ "./."
+import AdminDashboard from './components/AdminDashboard';
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
