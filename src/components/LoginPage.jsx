@@ -32,20 +32,21 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
     i18n.changeLanguage(nextLang);
   };
 
-  // دالة تسجيل الدخول الأساسية (تم تحديثها لترجمة رسائل الأخطاء القادمة من السيرفر)
+  // 🔄 دالة تسجيل الدخول المحدثة بالتوجيه التلقائي الذكي حسب الـ Role
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
     setShowResend(false); // إعادة تعيين حالة زر الإعادة عند كل محاولة جديدة
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // 1. محاولة تسجيل الدخول في Supabase Auth
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: password.trim(),
     });
 
     if (error) {
-      // 💡 الميكانيكية الذكية لفحص رسالة الخطأ وترجمتها فورياً بناءً على لغة الواجهة الحالية
+      // 💡 فحص رسالة الخطأ وترجمتها فورياً بناءً على لغة الواجهة الحالية
       if (error.message === "Email not confirmed") {
         setErrorMsg(
           isRtl 
@@ -60,12 +61,48 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
             : "Invalid email or password. Please check your credentials."
         );
       } else {
-        // تمرير أي رسائل أخطاء أخرى قادمة من النظام بطبيعتها الإفتراضية
         setErrorMsg(error.message);
       }
       setLoading(false);
-    } else {
-      window.location.reload(); // إعادة تحميل لمزامنة الحالة
+      return; // إيقاف التنفيذ عند حدوث خطأ في الـ Auth
+    }
+
+    // 2. إذا نجح الدخول، نقوم بجلب دور المستخدم (Role) من جدول profiles
+    if (authData?.user) {
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        // 3. التوجيه الذكي التلقائي إلى لوحة التحكم المناسبة للدور
+        switch (profile.role) {
+          case 'admin':
+            window.location.href = '/admin-dashboard';
+            break;
+          case 'teacher':
+            window.location.href = '/teacher-dashboard';
+            break;
+          case 'student':
+            window.location.href = '/student-dashboard';
+            break;
+          case 'parent':
+            window.location.href = '/parent-dashboard';
+            break;
+          default:
+            window.location.href = '/dashboard'; // مسار افتراضي عام
+        }
+      } catch (err) {
+        setErrorMsg(
+          isRtl 
+            ? "خطأ في تحميل صلاحيات الحساب. يرجى مراجعة الإدارة." 
+            : "Error loading account permissions. Please contact administration."
+        );
+        setLoading(false);
+      }
     }
   };
 
