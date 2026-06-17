@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useRef } from "react"; 
+import React, { useState, useEffect, useRef } from "react"; // ✨ تم تصحيح الحرف الأول ليصبح صغيراً (import)
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { FaChartLine, FaUsers, FaCalendarCheck, FaMoneyBillWave, FaBars, FaSignOutAlt, FaCog } from "react-icons/fa";
-import { BrowserRouter } from 'react-router-dom'; 
 
 // استيراد المكونات الداخلية للأقسام
 import Dashboard from './Dashboard.jsx';
 import Students from './Students.jsx';
 import Attendance from './Attendance.jsx';
 import Payments from './Payments.jsx';
-// يمكنك إنشاء ملف الإعدادات لاحقاً، حالياً سنضع له واجهة بسيطة احتياطية
 import Settings from './Settings.jsx'; 
 
-// 🛡️ درع الحماية الذكي للمكونات الداخية
+// 🛡️ درع الحماية الذكي للمكونات الداخلية
 class LocalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -69,7 +67,7 @@ export default function MainApp({ session }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2️⃣ ضبط اتجاه الصفحة بالكامل تلقائياً بناءً على اللغة المختار
+  // 2️⃣ ضبط اتجاه الصفحة بالكامل تلقائياً بناءً على اللغة المختارة
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language || 'ar';
@@ -178,102 +176,99 @@ export default function MainApp({ session }) {
   ];
 
   return (
-    <BrowserRouter>
-      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row' }}>
+    // ✨ تم إزالة <BrowserRouter> من هنا لمنع تضارب المسارات والراوتر المتعدد داخل المكونات الفرعية
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row' }}>
+      
+      {/* 🌫️ غطاء خلفي شفاف لإغلاق القائمة في الموبايل عند الضغط في أي مكان فارغ */}
+      {isMobile && sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed', top: 0, bottom: 0, left: 0, right: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1999,
+            transition: 'opacity 0.3s ease'
+          }}
+        />
+      )}
+
+      {/* 🏢 القائمة الجانبية (Sidebar) المتطورة ذكياً بدعم الإتجاهين */}
+      <aside style={{ 
+        width: 260, 
+        background: C.surface, 
+        height: '100vh', 
+        padding: '20px', 
+        display: !isMobile || sidebarOpen ? 'flex' : 'none',
+        flexDirection: 'column',
+        position: isMobile ? 'fixed' : 'relative',
+        right: isMobile && isRtl ? 0 : 'auto',
+        left: isMobile && !isRtl ? 0 : 'auto',
+        top: 0,
+        zIndex: 2000,
+        boxShadow: C.shadow,
+        transition: 'all 0.3s ease'
+      }}>
+        <h2 style={{ color: C.gold, marginBottom: '20px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>
+          {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
+        </h2>
         
-        {/* 🌫️ غطاء خلفي شفاف لإغلاق القائمة في الموبايل عند الضغط في أي مكان فارغ */}
-        {isMobile && sidebarOpen && (
-          <div 
-            onClick={() => setSidebarOpen(false)}
-            style={{
-              position: 'fixed', top: 0, bottom: 0, left: 0, right: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1999,
-              transition: 'opacity 0.3s ease'
-            }}
-          />
-        )}
+        <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, flex: 1 }}>
+          {menuItems.map(item => (
+            <button 
+              key={item.id} 
+              onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }}
+              style={{ 
+                background: activeTab === item.id ? C.gold : 'transparent', 
+                color: activeTab === item.id ? '#000' : C.text, 
+                padding: '12px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', 
+                display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '15px',
+                fontWeight: activeTab === item.id ? 'bold' : 'normal',
+                textAlign: isRtl ? 'right' : 'left',
+                transition: 'background 0.2s'
+              }}
+            >
+              <span style={{ fontSize: '18px', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
+              <span>{isRtl ? item.ar : item.en}</span>
+            </button>
+          ))}
+        </nav>
 
-        {/* 🏢 القائمة الجانبية (Sidebar) المتطورة ذكياً بدعم الإتجاهين */}
-        <aside style={{ 
-          width: 260, 
-          background: C.surface, 
-          height: '100vh', 
-          padding: '20px', 
-          display: !isMobile || sidebarOpen ? 'flex' : 'none',
-          flexDirection: 'column',
-          position: isMobile ? 'fixed' : 'relative',
-          // التحكم بمكان خروج القائمة ديناميكياً بحسب الاتجاه
-          right: isMobile && isRtl ? 0 : 'auto',
-          left: isMobile && !isRtl ? 0 : 'auto',
-          top: 0,
-          zIndex: 2000,
-          boxShadow: C.shadow,
-          transition: 'all 0.3s ease'
-        }}>
-          <h2 style={{ color: C.gold, marginBottom: '20px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>
-            {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
-          </h2>
+        {/* 🚪 زر تسجيل الخروج السفلي بتصميم متناسق */}
+        <button 
+          onClick={() => supabase.auth.signOut()} 
+          style={{ 
+            background: 'transparent', border: '1px solid ' + C.danger, 
+            color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', 
+            display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center',
+            fontWeight: 'bold', fontSize: '14px', marginTop: 'auto'
+          }}
+        >
+          <FaSignOutAlt /> {isRtl ? 'تسجيل الخروج' : 'Log Out'}
+        </button>
+      </aside>
+
+      {/* 💻 منطقة عرض المحتوى الرئيسي المتجاوب */}
+      <main style={{ flex: 1, overflowY: 'auto', padding: '15px', width: '100%' }}>
+        
+        {/* شريط علوي مرن يحتوي على زر القائمة للموبايل وعناوين سريعة */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px', padding: '5px' }}>
+          {isMobile && (
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              style={{ padding: '10px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <FaBars size={18} />
+            </button>
+          )}
           
-          <nav style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, flex: 1 }}>
-            {menuItems.map(item => (
-              <button 
-                key={item.id} 
-                onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }}
-                style={{ 
-                  background: activeTab === item.id ? C.gold : 'transparent', 
-                  color: activeTab === item.id ? '#000' : C.text, 
-                  padding: '12px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', 
-                  display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '15px',
-                  fontWeight: activeTab === item.id ? 'bold' : 'normal',
-                  textAlign: isRtl ? 'right' : 'left',
-                  flexDirection: isRtl ? 'row' : 'row',
-                  transition: 'background 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '18px', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
-                <span>{isRtl ? item.ar : item.en}</span>
-              </button>
-            ))}
-          </nav>
-
-          {/* 🚪 زر تسجيل الخروج السفلي بتصميم متناسق */}
-          <button 
-            onClick={() => supabase.auth.signOut()} 
-            style={{ 
-              background: 'transparent', border: '1px solid ' + C.danger, 
-              color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', 
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center',
-              fontWeight: 'bold', fontSize: '14px', marginTop: 'auto'
-            }}
-          >
-            <FaSignOutAlt /> {isRtl ? 'تسجيل الخروج' : 'Log Out'}
-          </button>
-        </aside>
-
-        {/* 💻 منطقة عرض المحتوى الرئيسي المتجاوب */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '15px', width: '100%' }}>
-          
-          {/* شريط علوي مرن يحتوي على زر القائمة للموبايل وعناوين سريعة */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px', padding: '5px' }}>
-            {isMobile && (
-              <button 
-                onClick={() => setSidebarOpen(!sidebarOpen)} 
-                style={{ padding: '10px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <FaBars size={18} />
-              </button>
-            )}
-            
-            {/* مؤشر تبويب سريع وعصري في الهيدر */}
-            <div style={{ fontSize: '13px', color: '#657585', fontWeight: '500' }}>
-              {isRtl ? 'لوحة المتابعة' : 'Management Portal'} / {isRtl ? menuItems.find(m => m.id === activeTab)?.ar : menuItems.find(m => m.id === activeTab)?.en}
-            </div>
+          {/* مؤشر تبويب سريع وعصري في الهيدر */}
+          <div style={{ fontSize: '13px', color: '#657585', fontWeight: '500' }}>
+            {isRtl ? 'لوحة المتابعة' : 'Management Portal'} / {isRtl ? menuItems.find(m => m.id === activeTab)?.ar : menuItems.find(m => m.id === activeTab)?.en}
           </div>
+        </div>
 
-          {renderContent()}
-        </main>
+        {renderContent()}
+      </main>
 
-      </div>
-    </BrowserRouter>
+    </div>
   );
 }
