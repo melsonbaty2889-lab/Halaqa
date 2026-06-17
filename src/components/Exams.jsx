@@ -173,7 +173,7 @@ export default function Exams({ students, academyId }) {
       {/* 📝 استمارة إجراء التقييم الحي */}
       <div style={{ backgroundColor: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
         <h3 style={{ color: '#FFF', fontSize: '1.2rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FaUserGraduation style={{ color: C.gold }} /> {isRtl ? 'إجراء اختبار حي للطالب / الطالبة' : 'Conduct Live Student Exam'}
+          <FaGraduationCap style={{ color: C.gold }} /> {isRtl ? 'إجراء اختبار حي للطالب / الطالبة' : 'Conduct Live Student Exam'}
         </h3>
 
         {feedbackMsg.text && (
