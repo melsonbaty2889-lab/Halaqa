@@ -29,17 +29,16 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     setLoading(true);
     try {
-      // 🌟 إرسال البيانات مدمجاً معها طلب الصلاحية والاسم المتوافق مع الـ Trigger
+      // 🌟 إرسال طلب تسجيل كـ مدير/صاحب مركز (Manager) لينتقل إلى قائمة الانتظار تلقائياً
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: { 
           data: { 
-            full_name: name.trim(),        // تغيير المفتاح إلى full_name ليقرأه التريجر مباشرة
-            requested_role: 'manager',     // إرسال الدور المطلوب ليتحول تلقائياً إلى pending_manager
+            full_name: name.trim(),
+            requested_role: 'manager',     // تعديل الدور هنا ليكون مدير أكاديمية/مركز قيد الانتظار
             lang: isRtl ? 'ar' : 'en' 
           },
-          // لضمان عودة المستخدم بنفس لغته الحالية عند ضغط زر التأكيد في الإيميل
           emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
         }
       });
@@ -47,11 +46,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // 🌟 تحديث الرسالة لتناسب آلية "الطلب المعلق" بانتظار تفعيل الإدارة
+      // رسالة نجاح مخصصة لطلب تسجيل المركز/الأكاديمية
       setSuccessMsg(
         isRtl 
-          ? "✅ تم إرسال طلب الانضمام بنجاح! يرجى تأكيد بريدك الإلكتروني أولاً، ثم انتظار موافقة الإدارة لتفعيل لوحة التحكم الخاصة بك." 
-          : "✅ Request submitted successfully! Please verify your email, then wait for admin approval to activate your dashboard."
+          ? "✅ تم إرسال طلب تسجيل مركزك بنجاح! يرجى تأكيد بريدك الإلكتروني أولاً، ثم انتظار موافقة الإدارة العليا لتفعيل لوحة تحكم الأكاديمية الخاصة بك." 
+          : "✅ Academy registration request submitted! Please verify your email, then wait for admin approval to activate your dashboard."
       );
 
       // تفريغ الحقول بعد النجاح
@@ -72,14 +71,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyY: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
         
         <h2 style={{ color: '#fff', margin: '0 0 8px 0', fontSize: '26px', fontWeight: '800', textAlign: 'center' }}>
-          {isRtl ? 'إنشاء حساب جديد' : 'Create New Account'}
+          {isRtl ? 'تسجيل أكاديمية / مركز جديد' : 'Register New Academy'}
         </h2>
         <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 32px 0', textAlign: 'center' }}>
-          {isRtl ? 'انضم إلينا لإدارة حلقتك القرآنيّة بذكاء' : 'Join us to manage your Quranic circle smartly'}
+          {isRtl ? 'أنشئ حساب الإدارة لإدارة حلقاتك ومعلميك بذكاء' : 'Create an admin account to manage your circles and teachers smartly'}
         </p>
 
         {/* تنبيه النجاح المدمج */}
@@ -117,14 +116,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
-          {/* حقل الاسم الكامل */}
+          {/* حقل اسم المسؤول */}
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
               <FaUser />
             </span>
             <input 
               type="text" 
-              placeholder={isRtl ? 'الاسم الكامل' : 'Full Name'}
+              placeholder={isRtl ? 'اسم المسؤول الكامل' : 'Manager Full Name'}
               value={name} 
               onChange={e => setName(e.target.value)} 
               required
@@ -141,7 +140,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             </span>
             <input 
               type="email" 
-              placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
+              placeholder={isRtl ? 'البريد الإلكتروني للإدارة' : 'Admin Email Address'}
               value={email} 
               onChange={e => setEmail(e.target.value)} 
               required
@@ -180,7 +179,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             disabled={loading} 
             style={{ padding: "14px", background: goldColor, color: "#000", border: "none", borderRadius: '12px', fontSize: "15px", fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, marginTop: '10px', transition: 'all 0.2s' }}
           >
-            {loading ? (isRtl ? 'جاري إرسال الطلب...' : 'Submitting...') : (isRtl ? 'إنشاء حساب معلم' : 'Create Account')}
+            {loading ? (isRtl ? 'جاري إرسال الطلب...' : 'Submitting...') : (isRtl ? 'طلب تسجيل أكاديمية' : 'Register Academy')}
           </button>
         </form>
 
