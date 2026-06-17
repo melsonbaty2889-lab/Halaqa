@@ -36,7 +36,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
         options: { 
           data: { 
             full_name: name.trim(),        // تغيير المفتاح إلى full_name ليقرأه التريجر مباشرة
-            requested_role: 'teacher',     // إرسال الدور المطلوب ليتحول تلقائياً إلى pending_teacher
+            requested_role: 'manager',     // إرسال الدور المطلوب ليتحول تلقائياً إلى pending_manager
             lang: isRtl ? 'ar' : 'en' 
           },
           // لضمان عودة المستخدم بنفس لغته الحالية عند ضغط زر التأكيد في الإيميل
