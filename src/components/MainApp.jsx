@@ -204,19 +204,10 @@ export default function MainApp({ session }) {
             </div>
           )}
 
-          {/* 🌟 واجهة مؤقتة فخمة لقسم تقارير الواتساب لحين تعديل ملفه المستقل */}
-          {activeTab === 'reports' && (
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <FaWhatsapp size={50} color="#059669" style={{ marginBottom: '15px' }} />
-              <h2>{isRtl ? 'منظومة تقارير أولياء الأمور التلقائية' : 'Automated Parent Progress Reports'}</h2>
-              <p style={{ color: '#94a3b8', maxWidth: '500px', margin: '10px auto' }}>
-                {isRtl ? 'هنا سيتم سحب أداء الطالب اليومي (الحفظ والمراجعة) وتوليد رسالة مشفرة ومخصصة لإرسالها لعائلة الطالب بنقرة واحدة.' : 'Generate and dispatch customized instant updates regarding student recitation performance to families via WhatsApp.'}
-              </p>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#059669', fontSize: '14px', marginTop: '15px', backgroundColor: 'rgba(5,150,105,0.05)', padding: '8px 16px', borderRadius: '20px' }}>
-                <FaClock /> {isRtl ? 'بانتظار ربط ملف الإرسال التلقائي' : 'Awaiting automatic dispatch file link'}
-              </div>
-            </div>
-          )}
+          {/* 🌟 تشغيل منظومة تقارير الواتساب الذكية الفعلية */}
+{activeTab === 'reports' && (
+  <Reports students={students} academyId={academyId} />
+)}
         </LocalErrorBoundary>
       </div>
     );
