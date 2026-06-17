@@ -21,6 +21,7 @@ import Students from './Students.jsx';
 import Attendance from './Attendance.jsx';
 import Payments from './Payments.jsx';
 import Settings from './Settings.jsx'; 
+import Reports from './Reports.jsx';
 
 // 🛡️ درع الحماية الذكي للمكونات الداخلية
 class LocalErrorBoundary extends React.Component {
