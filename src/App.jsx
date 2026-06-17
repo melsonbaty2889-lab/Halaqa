@@ -48,8 +48,8 @@ function MainAppContainer() {
   const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
   
-  // 👑 تعديل القوة القصوى: إجبار الدور الافتراضي على admin لقطع الشك باليقين
-  const [userRole, setUserRole] = useState('admin'); 
+  // 🔐 عودة للحالة الافتراضية لحماية لوحة التحكم
+  const [userRole, setUserRole] = useState(null); 
   
   const [authView, setAuthView] = useState('login'); 
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
@@ -115,9 +115,17 @@ function MainAppContainer() {
     let isCurrentRequest = true;
     if (!userId) {
       setDashboardData({ academyName: '', stats: { students: 0, pending: 0 } });
-      setUserRole('admin'); // حزام أمان إضافي للتأكيد
+      setUserRole(null); 
       setDataLoading(false);
       setIsInitialDataFetched(true); 
+      return;
+    }
+
+    // 👑 حزام الأمان الذكي: إذا كنت أنت صاحب الحساب، سيتم إدخالك كـ admin فوراً وتخطي مشاكل السيرفر
+    if (userId === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
+      setUserRole('admin');
+      setDataLoading(false);
+      setIsInitialDataFetched(true);
       return;
     }
 
@@ -131,11 +139,10 @@ function MainAppContainer() {
           .eq('id', userId)
           .maybeSingle();
 
-        // تجنب إسقاط الحالة في حال حدوث خطأ من قاعدة البيانات أثناء الفحص الافتراضي
-        const role = profile?.role || 'admin';
+        const role = profile?.role || 'student';
 
         if (isCurrentRequest) {
-          setUserRole('admin'); // فرض الأدمن بشكل مستمر للتشخيص الحالي
+          setUserRole(role);
         }
 
         if (role !== 'admin') {
@@ -163,7 +170,6 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
-    // 👑 فحص التوجيه الفوري
     if (userRole === 'admin') {
       return <AdminDashboard />;
     }
