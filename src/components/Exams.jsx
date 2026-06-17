@@ -90,7 +90,7 @@ export default function Exams({ students, academyId }) {
   }, [academyId]);
 
   // 3️⃣ 💾 دالة اعتماد وحفظ نتيجة الاختبار الحي في السيرفر
-  const handleSaveExam = async () => {
+    const handleSaveExam = async () => {
     if (!selectedStudent || !examContent.trim()) {
       setFeedbackMsg({ 
         type: 'error', 
@@ -106,23 +106,23 @@ export default function Exams({ students, academyId }) {
       const { error } = await supabase
         .from('exams')
         .insert([{
-          student_id: selectedStudent,
-          academy_id: academyId,
-          exam_type: examType,
-          exam_content: examContent.trim(),
-          full_errors: fullErrors,
-          warnings: warnings,
-          tajweed_rating: tajweedRating,
-          score: calculatedScore,
-          notes: notes.trim(),
-          created_at: new Date().toISOString()
+          student_id: selectedStudent, // مطابق للجدول
+          academy_id: academyId,       // مطابق للجدول
+          exam_type: examType,         // مطابق للجدول
+          exam_target: examContent.trim(), // تم تغيير الاسم من exam_content إلى exam_target ليطابق الجدول
+          mistakes: fullErrors,        // تم تغيير الاسم من full_errors إلى mistakes ليطابق الجدول
+          prompts: warnings,           // تم تغيير الاسم من warnings إلى prompts ليطابق الجدول
+          tajweed_grade: tajweedRating,// تم تغيير الاسم من tajweed_rating إلى tajweed_grade ليطابق الجدول
+          final_score: calculatedScore,// تم تغيير الاسم من score إلى final_score ليطابق الجدول
+          notes: notes.trim(),         // مطابق للجدول
+          date: new Date().toISOString().split('T')[0] // تم إضافة التاريخ ليطابق العمود date
         }]);
 
       if (error) throw error;
 
       setFeedbackMsg({ 
         type: 'success', 
-        text: isRtl ? 'تم اعتماد وتوثيق نتيجة اختبار الطالب بنجاح! 🎉' : 'Student exam result certified and documented successfully! 🎉' 
+        text: isRtl ? 'تم الحفظ بنجاح! 🎉' : 'Saved successfully! 🎉' 
       });
       
       setSelectedStudent('');
@@ -130,13 +130,12 @@ export default function Exams({ students, academyId }) {
       setFullErrors(0);
       setWarnings(0);
       setNotes('');
-      
       fetchExamLogs();
     } catch (err) {
       console.error(err);
       setFeedbackMsg({ 
         type: 'error', 
-        text: isRtl ? `فشل الحفظ: ${err.message || 'يرجى مراجعة صلاحيات الـ RLS'}` : `Save failed: ${err.message}` 
+        text: `Error: ${err.message}` 
       });
     } finally {
       setIsSubmitting(false);
