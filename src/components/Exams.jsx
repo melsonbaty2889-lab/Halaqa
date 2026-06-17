@@ -8,7 +8,7 @@ import {
   FaPlus, 
   FaCheckCircle, 
   FaSearch, 
-  FaUserGraduation, 
+  FaGraduationCap, 
   FaSpinner, 
   FaCalendarAlt 
 } from 'react-icons/fa';
