@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // جعلت حرف i سمول هنا
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +18,6 @@ export default function Exams({ students, academyId }) {
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
   // 🌍 أوزان الخصم الديناميكية (Dynamic SaaS Settings)
-  // القيمة الافتراضية هي (5 و 2) وتتحدث تلقائياً حسب إعدادات الأكاديمية من السيرفر
   const [mistakeWeight, setMistakeWeight] = useState(5);
   const [promptWeight, setPromptWeight] = useState(2);
 
@@ -126,14 +125,12 @@ export default function Exams({ students, academyId }) {
         text: isRtl ? 'تم اعتماد وتوثيق نتيجة اختبار الطالب بنجاح! 🎉' : 'Student exam result certified and documented successfully! 🎉' 
       });
       
-      // تصفير استمارة الإدخال
       setSelectedStudent('');
       setExamContent('');
       setFullErrors(0);
       setWarnings(0);
       setNotes('');
       
-      // تحديث الجدول السفلي فوراً حياً بدون ريفريش كامل للصفحة
       fetchExamLogs();
     } catch (err) {
       console.error(err);
@@ -146,7 +143,6 @@ export default function Exams({ students, academyId }) {
     }
   };
 
-  // 🔍 تصفية السجل بناءً على مربع البحث السفلي (اسم الطالب أو السورة)
   const filteredLogs = examLogs.filter(log => {
     const studentName = log.students?.name?.toLowerCase() || '';
     const content = log.exam_content?.toLowerCase() || '';
@@ -157,7 +153,6 @@ export default function Exams({ students, academyId }) {
   return (
     <div style={{ fontFamily: "'Cairo', sans-serif", direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* 👑 رأس القسم المطور والمعمم دولياً */}
       <div style={{ backgroundColor: C.surface, padding: '20px', borderRadius: '12px', marginBottom: '20px', border: `1px solid ${C.border}` }}>
         <h2 style={{ color: C.gold, fontSize: '1.6rem', display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
           <FaAward /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية 🏆' : 'Quranic Exams & Promotions Panel 🏆'}
@@ -170,7 +165,6 @@ export default function Exams({ students, academyId }) {
         </p>
       </div>
 
-      {/* 📝 استمارة إجراء التقييم الحي */}
       <div style={{ backgroundColor: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
         <h3 style={{ color: '#FFF', fontSize: '1.2rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <FaGraduationCap style={{ color: C.gold }} /> {isRtl ? 'إجراء اختبار حي للطالب / الطالبة' : 'Conduct Live Student Exam'}
@@ -187,7 +181,6 @@ export default function Exams({ students, academyId }) {
           </div>
         )}
 
-        {/* اختيارات الطالب ونوع التقييم */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '20px' }}>
           <div>
             <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'اختر الطالب / الطالبة' : 'Select Student'}</label>
@@ -217,7 +210,6 @@ export default function Exams({ students, academyId }) {
           </div>
         </div>
 
-        {/* محتوى الاختبار */}
         <div style={{ marginBottom: '25px' }}>
           <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'المحتوى المراد امتحانه' : 'Exam Content'}</label>
           <input 
@@ -229,9 +221,7 @@ export default function Exams({ students, academyId }) {
           />
         </div>
 
-        {/* عدادات رصد الأخطاء الحية بالتزامن مع الأوزان الديناميكية */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '25px' }}>
-          
           <div style={{ backgroundColor: '#132235', padding: '15px', borderRadius: '10px', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
             <span style={{ display: 'block', color: '#F87171', fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>{isRtl ? 'الخطأ الكامل (نسيان/تبديل)' : 'Full Error (Forgotten/Swapped)'}</span>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
@@ -251,10 +241,8 @@ export default function Exams({ students, academyId }) {
             </div>
             <span style={{ display: 'block', color: '#6B7280', fontSize: '11px', marginTop: '8px' }}>(-{promptWeight} {isRtl ? 'درجات للواحد' : 'points each'})</span>
           </div>
-
         </div>
 
-        {/* أداء التجويد ومخارج الحروف */}
         <div style={{ marginBottom: '25px' }}>
           <label style={{ display: 'block', color: '#BACCDD', marginBottom: '10px', fontSize: '14px' }}>{isRtl ? 'مخارج الحروف والتجويد الفطري' : 'Tajweed & Articulation Quality'}</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
@@ -279,7 +267,6 @@ export default function Exams({ students, academyId }) {
           </div>
         </div>
 
-        {/* الملاحظات والرسائل التشجيعية */}
         <div style={{ marginBottom: '25px' }}>
           <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'عبارة ثناء ورسالة تشجيعية للطالب' : 'Praise & Motivational Message to Student'}</label>
           <textarea 
@@ -291,7 +278,6 @@ export default function Exams({ students, academyId }) {
           />
         </div>
 
-        {/* شاشة احتساب الدرجة الحية */}
         <div style={{
           backgroundColor: '#0A111A', padding: '20px', borderRadius: '10px', textAlign: 'center', marginBottom: '25px',
           border: `1px dashed ${calculatedScore >= 90 ? '#10B981' : calculatedScore >= 75 ? '#F59E0B' : '#EF4444'}`
@@ -302,7 +288,6 @@ export default function Exams({ students, academyId }) {
           </div>
         </div>
 
-        {/* زر اعتماد وحفظ النتيجة الفوري */}
         <button
           onClick={handleSaveExam}
           disabled={isSubmitting}
@@ -317,7 +302,6 @@ export default function Exams({ students, academyId }) {
 
       </div>
 
-      {/* 🔍 شريط البحث وجدول عرض سجل الشهادات والاختبارات السابقة */}
       <div style={{ backgroundColor: C.surface, padding: '20px', borderRadius: '12px', marginTop: '25px', border: `1px solid ${C.border}` }}>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
           <FaSearch style={{ position: 'absolute', right: isRtl ? '15px' : 'auto', left: !isRtl ? '15px' : 'auto', color: '#657585' }} />
