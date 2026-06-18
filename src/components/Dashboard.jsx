@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase'; 
 import { C } from '../constants/colors';
 import { 
   FaUserGraduate, 
@@ -14,12 +15,21 @@ import {
 
 export default function Dashboard({ session, setActiveTab, preloadedDashboardData }) {
   const { t, i18n } = useTranslation();
-  
-  // استيعاب البيانات المركزية مع توفير قيم افتراضية ذكية للميزات الجديدة
-  const data = preloadedDashboardData || { 
+
+  // أولاً: حالات التحكم الخاصة بلوحة السوبر أدمن (مأخوذة تماماً من AdminDashboard)
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loadingAdmin, setLoadingAdmin] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+
+  // ثانياً: استيعاب البيانات المركزية للأكاديمية مع توفير قيم افتراضية ذكية
+  const academyData = preloadedDashboardData || { 
     academyName: '', 
+    role: 'teacher', // الرتبة الافتراضية في حال عدم التحديد
     stats: { students: 0, pending: 0, activeHalagas: 4, completedExams: 12 } 
   };
+
+  // فحص نوع اللوحة المطلوب عرضها بناءً على رتبة الحساب المسجل
+  const isSuperAdmin = academyData.role === 'super_admin';
 
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
@@ -29,7 +39,52 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     return isRtl ? arText : enText;
   };
 
-  // مصفوفة الأزرار الذكية للإجراءات السريعة (تغطي كافة الاحتياجات اليومية للمحفظ والمدير)
+  // تأثير جلب طلبات السوبر أدمن (يشتغل فقط لو كان الحساب سوبر أدمن)
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+
+    const fetchRequests = async () => {
+      setLoadingAdmin(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('role', ['pending_manager', 'Pending manager', 'Pending Manager']) 
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setPendingRequests(data || []);
+      } catch (err) {
+        console.error('Error fetching requests:', err.message);
+      } finally {
+        setLoadingAdmin(false);
+      }
+    };
+
+    fetchRequests();
+  }, [isSuperAdmin]);
+
+  // دالة قبول وتفعيل الحساب التابعة للسوبر أدمن
+  const handleApprove = async (profileId) => {
+    setActionLoading(profileId);
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ role: 'manager' }) 
+        .eq('id', profileId);
+
+      if (updateError) throw updateError;
+      
+      setPendingRequests(prev => prev.filter(req => req.id !== profileId));
+      alert('🎉 تم تفعيل حساب الأكاديمية بنجاح!');
+    } catch (err) {
+      alert('❌ حدث خطأ أثناء التفعيل: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // مصفوفة الأزرار الذكية للإجراءات السريعة للأكاديمية
   const quickActions = [
     { 
       id: 'attendance', 
@@ -61,6 +116,79 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     },
   ];
 
+  /* ------------------------------------------------------------- */
+  /* 👑 أولاً: عرض لوحة تحكم السوبر أدمن (لو كانت الرتبة super_admin) */
+  /* ------------------------------------------------------------- */
+  if (isSuperAdmin) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#090F17', color: '#fff', padding: '30px', fontFamily: 'sans-serif', direction: 'rtl' }}>
+        
+        {/* الشريط العلوي للوحة التحكم */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1E293B', paddingBottom: '20px', marginBottom: '30px' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', color: '#fff', fontWeight: 'bold', margin: 0 }}>لوحة تحكم السوبر أدمن 👑</h1>
+          </div>
+          <button 
+            onClick={() => supabase.auth.signOut()} 
+            style={{ background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}
+            onMouseOver={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.1)'}
+            onMouseOut={(e) => e.target.style.background = 'transparent'}
+          >
+            تسجيل الخروج 🚪
+          </button>
+        </div>
+
+        {/* بطاقة إحصائيات الطلبات المعلقة */}
+        <div style={{ background: '#111827', border: '1px solid #1E293B', padding: '20px', borderRadius: '12px', maxWidth: '350px', marginBottom: '30px' }}>
+          <span style={{ color: '#9CA3AF', fontSize: '14px' }}>الطلبات المعلقة حالياً</span>
+          <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#C9A84C', marginTop: '5px' }}>
+            {loadingAdmin ? '...' : pendingRequests.length}
+          </div>
+        </div>
+
+        <h2 style={{ fontSize: '18px', color: '#C9A84C', marginBottom: '15px' }}>الطلبات الواردة:</h2>
+
+        {loadingAdmin ? (
+          <p style={{ color: '#9CA3AF' }}>جاري تحميل البيانات...</p>
+        ) : pendingRequests.length === 0 ? (
+          <div style={{ padding: '40px', background: '#111827', borderRadius: '12px', textAlign: 'center', border: '1px dashed #374151' }}>
+            <p style={{ color: '#9CA3AF', margin: 0 }}>لا توجد طلبات انضمام معلقة حالياً. جاري انتظار طلبات جديدة! ✨</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '15px' }}>
+            {pendingRequests.map((req) => (
+              <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111827', border: '1px solid #1E293B', padding: '20px', borderRadius: '12px' }}>
+                <div>
+                  <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 5px 0' }}>{req.full_name || 'مسؤول جديد'}</h3>
+                  <p style={{ color: '#9CA3AF', fontSize: '13px', margin: 0 }}>البريد الإلكتروني للطلب: <span style={{ color: '#fff' }}>{req.email || 'غير متوفر'}</span></p>
+                </div>
+                <button 
+                  disabled={actionLoading !== null} 
+                  onClick={() => handleApprove(req.id)} 
+                  style={{ 
+                    background: actionLoading === req.id ? '#065F46' : '#10B981', 
+                    color: '#fff', 
+                    border: 'none', 
+                    padding: '10px 22px', 
+                    borderRadius: '6px', 
+                    fontWeight: 'bold', 
+                    cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
+                    transition: '0.2s'
+                  }}
+                >
+                  {actionLoading === req.id ? 'جاري التفعيل...' : '✔ قبول وتفعيل'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ------------------------------------------------------------- */
+  /* 🏫 ثانياً: عرض اللوحة التقليدية (للمعلم والمدير والأكاديميات) */
+  /* ------------------------------------------------------------- */
   return (
     <div style={{ 
       maxWidth: '1200px', 
@@ -70,7 +198,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
       direction: isRtl ? 'rtl' : 'ltr' 
     }}>
       
-      {/* 1️⃣ شريط الترحيب الذكي والفاخر (تم نقل زر اللغة لتوفير مساحة بصرية احترافية) */}
+      {/* 1️⃣ شريط الترحيب الذكي والفاخر */}
       <header style={{ 
         marginBottom: '30px', 
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
@@ -90,18 +218,17 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
             {translateText('welcome_back', 'مرحباً بك مجدداً 👋', 'Welcome Back 👋')}
           </h1>
           
-          {data.academyName ? (
+          {academyData.academyName ? (
             <p style={{ color: C.gold || '#C9A84C', fontSize: '1.1rem', margin: '6px 0 0 0', fontWeight: '500' }}>
-              {data.academyName}
+              {academyData.academyName}
             </p>
           ) : (
-            /* السقالة الوميضية (Skeleton Loader) البديلة للنص الأصفر التقليدي لتعطي طابعاً عالمياً */
             <div className="skeleton-line" style={{ width: '160px', height: '16px', borderRadius: '4px', marginTop: '10px' }}></div>
           )}
         </div>
       </header>
 
-      {/* 2️⃣ شبكة الإجراءات السريعة المطورة (Quick Actions Grid) بنظام الـ 4 أزرار الموزعة هندسياً */}
+      {/* 2️⃣ شبكة الإجراءات السريعة المطورة */}
       <h3 style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.5px' }}>
         {translateText('quick_actions', 'الإجراءات السريعة للحلقة', 'Quick Operations')}
       </h3>
@@ -138,7 +265,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
         ))}
       </div>
 
-      {/* 3️⃣ شبكة الإحصائيات الفاخرة (Premium Stats Grid) المكونة من 4 بطاقات بتصميم زجاجي انسيابي تخلصنا فيه من الحواف القاسية */}
+      {/* 3️⃣ شبكة الإحصائيات الفاخرة */}
       <h3 style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.5px' }}>
         {translateText('academy_overview', 'التقرير العام للأكاديمية', 'Academy Performance')}
       </h3>
@@ -152,7 +279,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
         <div className="premium-stat-box" style={{ borderTop: `4px solid ${C.gold || '#C9A84C'}` }}>
           <div>
             <p className="stat-label">{translateText('total_students', 'إجمالي الطلاب المسجلين', 'Total Enrolled Students')}</p>
-            <h2 className="stat-number">{data.stats.students}</h2>
+            <h2 className="stat-number">{academyData.stats.students}</h2>
           </div>
           <div className="stat-icon" style={{ color: C.gold || '#C9A84C' }}><FaUserGraduate /></div>
         </div>
@@ -161,7 +288,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
         <div className="premium-stat-box" style={{ borderTop: '4px solid #ef4444' }}>
           <div>
             <p className="stat-label">{translateText('pending_payments', 'المستحقات المالية المعلقة', 'Pending Due Fees')}</p>
-            <h2 className="stat-number" style={{ color: data.stats.pending > 0 ? '#f87171' : '#fff' }}>{data.stats.pending}</h2>
+            <h2 className="stat-number" style={{ color: academyData.stats.pending > 0 ? '#f87171' : '#fff' }}>{academyData.stats.pending}</h2>
           </div>
           <div className="stat-icon" style={{ color: '#ef4444' }}><FaUserClock /></div>
         </div>
@@ -170,7 +297,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
         <div className="premium-stat-box" style={{ borderTop: '4px solid #38bdf8' }}>
           <div>
             <p className="stat-label">{translateText('active_halagas', 'الحلقات النشطة اليوم', 'Active Halagas Today')}</p>
-            <h2 className="stat-number">{data.stats.activeHalagas || 0}</h2>
+            <h2 className="stat-number">{academyData.stats.activeHalagas || 0}</h2>
           </div>
           <div className="stat-icon" style={{ color: '#38bdf8' }}><FaMosque /></div>
         </div>
@@ -179,14 +306,13 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
         <div className="premium-stat-box" style={{ borderTop: '4px solid #34d399' }}>
           <div>
             <p className="stat-label">{translateText('completed_exams', 'اختبارات الأجزاء الناجحة', 'Exams Passed (Month)')}</p>
-            <h2 className="stat-number">{data.stats.completedExams || 0}</h2>
+            <h2 className="stat-number">{academyData.stats.completedExams || 0}</h2>
           </div>
           <div className="stat-icon" style={{ color: '#34d399' }}><FaCheckCircle /></div>
         </div>
 
       </div>
 
-      {/* 🚀 الأنماط المرئية المحقونة بدقة لضمان سرعة الرندرة والجمالية التنافسية */}
       <style>{`
         .premium-action-card:hover {
           transform: translateY(-4px);
@@ -221,7 +347,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
           margin: 0;
           font-size: 2rem;
           font-weight: 800;
-          font-family: sans-serif; /* لضمان مظهر أرقام فخم ومتناسق عالمياً */
+          font-family: sans-serif;
         }
         .stat-icon {
           font-size: 28px;
