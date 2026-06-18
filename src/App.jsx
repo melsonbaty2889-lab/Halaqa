@@ -125,6 +125,8 @@ function MainAppContainer() {
       return;
     }
 
+    // 🔥 [تعديل جوهري] تصفير الحالة فوراً لمنع الوميض المزدوج واحتواء التحميل داخل الـ Splash Screen
+    setIsInitialDataFetched(false);
     setDataLoading(true);
 
     const loadUserDataAndRole = async () => {
@@ -137,7 +139,6 @@ function MainAppContainer() {
 
         if (profileError) throw profileError;
         
-        // 🛠️ معالجة ذكية: تحويل الأحرف لصغيرة واستبدال أي مسافة بشرطة سفلية لضمان مطابقة دقيقة
         const role = profile?.role ? profile.role.trim().toLowerCase().replace(/\s+/g, '_') : 'student';
 
         if (isCurrentRequest) {
@@ -155,7 +156,7 @@ function MainAppContainer() {
       } finally {
         if (isCurrentRequest) {
           setDataLoading(false);
-          setIsInitialDataFetched(true); 
+          setIsInitialDataFetched(true); // تنتهي شاشة الـ Splash هنا بعد اكتمال كل شيء بنجاح
         }
       }
     };
@@ -169,7 +170,6 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
-    // 1️⃣ شاشة الانتظار والمراجعة للحسابات الجديدة (تدعم اللغتين بناءً على اختيار المستخدم)
     if (userRole === 'pending_manager') {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#090F17', color: '#fff', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -194,14 +194,13 @@ function MainAppContainer() {
       );
     }
 
-    // 2️⃣ دخول جميع الحسابات المعتمدة (بما فيهم حساب الأدمن بعد دمج اللوحات بنجاح)
     return (
       <MainApp 
         session={session} 
         isDataLoading={dataLoading} 
         dashboardData={dashboardData} 
         setDashboardData={setDashboardData} 
-        userRole={userRole} // نمرر الـ role للوحة المدمجة لتهيئة الميزات الإدارية
+        userRole={userRole} 
       />
     );
   }
