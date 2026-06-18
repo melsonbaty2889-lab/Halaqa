@@ -252,6 +252,12 @@ i18n
     },
   });
 
+// ⚡ تثبيت الاتجاه الأولي فوراً عند التشغيل البارد لمنع وميض الواجهة (Layout Shift)
+const initialLng = i18n.language || 'ar';
+document.documentElement.setAttribute('dir', initialLng === 'ar' ? 'rtl' : 'ltr');
+document.documentElement.setAttribute('lang', initialLng);
+
+// مراقبة وضبط الاتجاه ديناميكياً عند قيام المستخدم بتبديل اللغة لاحقاً من زر الإعدادات
 i18n.on('languageChanged', (lng) => {
   document.documentElement.setAttribute('dir', lng === 'ar' ? 'rtl' : 'ltr');
   document.documentElement.setAttribute('lang', lng);
