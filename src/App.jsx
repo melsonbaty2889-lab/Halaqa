@@ -3,7 +3,6 @@ import { supabase } from './lib/supabase';
 import { useTranslation } from 'react-i18next';
 
 // ✨ تأكيد المسارات الصحيحة 100% لـ Vite و Vercel ومنع خطأ "./."
-import AdminDashboard from './components/AdminDashboard';
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
@@ -170,12 +169,7 @@ function MainAppContainer() {
   if (authView === 'update_password') return <UpdatePassword />;
 
   if (session) {
-    // 1️⃣ لوحة السوبر أدمن الخاصة بك
-    if (userRole === 'admin') {
-      return <AdminDashboard />;
-    }
-
-    // 2️⃣ شاشة الانتظار والمراجعة للحسابات الجديدة (تدعم اللغتين بناءً على اختيار المستخدم)
+    // 1️⃣ شاشة الانتظار والمراجعة للحسابات الجديدة (تدعم اللغتين بناءً على اختيار المستخدم)
     if (userRole === 'pending_manager') {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#090F17', color: '#fff', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -200,13 +194,14 @@ function MainAppContainer() {
       );
     }
 
-    // 3️⃣ دخول المستخدمين المعتمدين بانتظام
+    // 2️⃣ دخول جميع الحسابات المعتمدة (بما فيهم حساب الأدمن بعد دمج اللوحات بنجاح)
     return (
       <MainApp 
         session={session} 
         isDataLoading={dataLoading} 
         dashboardData={dashboardData} 
         setDashboardData={setDashboardData} 
+        userRole={userRole} // نمرر الـ role للوحة المدمجة لتهيئة الميزات الإدارية
       />
     );
   }
