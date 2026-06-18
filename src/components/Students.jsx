@@ -1,490 +1,650 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { C } from '../constants/colors';
-import { useTranslation } from 'react-i18next';
-import { COUNTRIES_LIST } from '../constants/countries'; 
-import QuranProgressBar from './QuranProgressBar'; 
-import QuranProgressSelector from './QuranProgressSelector';
-import { getQuranProgress } from '../utils/quranUtils'; 
+import React, { useState } from 'react';
 import { 
-  FaUserPlus, FaGraduationCap, FaPhone, 
-  FaUserShield, FaEdit, FaTimes, FaSave, FaArchive, 
-  FaCalendarAlt, FaGlobe, FaMoneyBillWave, FaFileAlt, FaUser,
-  FaCheckCircle, FaExclamationCircle, FaUsers, FaMars, FaVenus,
-  FaSortAmountDown, FaChevronDown
-} from 'react-icons/fa';
+  UserPlus, Search, SlidersHorizontal, ArrowUpDown, 
+  User, Phone, Calendar, BookOpen, DollarSign, 
+  Award, ShieldAlert, CheckCircle2, XCircle, 
+  Clock, Tags, Heart, ShieldCheck, HelpCircle,
+  MessageSquare, UserCheck, RefreshCw, ChevronDown
+} from 'lucide-react';
 
-export default function Students({ students = [], setStudents, academyId }) {
-  const { t, i18n } = useTranslation();
-  const isArabic = i18n.language === 'ar';
-  
-  // حالات التحكم الأساسية بالواجهة
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
-  
-  // ميزات الفرز والتحكم في الأداء المستقبلي (SaaS Future-Proof)
-  const [sortBy, setSortBy] = useState('newest'); // options: newest, alphabetical, progress
-  const [visibleCount, setVisibleCount] = useState(10); // الحد الأولي لعرض الطلاب وتسريع التصفح
-  
-  // حالات استمارة إضافة طالب جديد
-  const [name, setName] = useState('');
-  const [parentPhone, setParentPhone] = useState('');
-  const [parentName, setParentName] = useState('');
-  const [currentQuarterIndex, setCurrentQuarterIndex] = useState(0); 
-  const [notes, setNotes] = useState('');
-  const [gender, setGender] = useState('male');
-  const [birthDate, setBirthDate] = useState(''); 
-  const [paymentPlan, setPaymentPlan] = useState('شهري'); 
-  const [countryCode, setCountryCode] = useState('EG');
+// === البيانات الثابتة والخيارات المتقدمة لبيئة الحلقات ===
+const NARRATIONS = [
+  { id: 'hafs', name: 'حفص عن عاصم' },
+  { id: 'warsh', name: 'ورش عن نافع' },
+  { id: 'qaloon', name: 'قالون عن نافع' },
+  { id: 'doori', name: 'الدوري عن أبي عمرو' }
+];
 
-  // حالات التحكم بالتعديل والتحميل
-  const [editingStudent, setEditingStudent] = useState(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [updatingId, setUpdatingId] = useState(null); 
-  
-  // نظام التنبيهات الذكي المنبثق
-  const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
+const FUNDING_TYPES = [
+  { id: 'self', name: 'تمويل ذاتي (أولياء الأمور)', icon: DollarSign, color: 'text-emerald-500' },
+  { id: 'waqf', name: 'مكفول بالكامل (أوقاف / جهة خيرية)', icon: Heart, color: 'text-amber-500' },
+  { id: 'scholarship', name: 'منحة تميز (لحفاظ الأجزاء المتقدمة)', icon: Award, color: 'text-indigo-500' }
+];
 
-  const triggerToast = (text, type = 'success') => {
-    setInlineMessage({ text, type });
-    setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
+const BEHAVIOR_STATUS = [
+  { id: 'excellent', name: 'متميز خلقياً وأدبياً', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+  { id: 'needs_encouragement', name: 'يحتاج إلى تشجيع ومتابعة', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+  { id: 'distracted', name: 'متشتت أو قليل الانتباه اليوم', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' }
+];
+
+// بيانات وهمية أولية مطورة تعكس البيئة الحلقية الجديدة
+const INITIAL_STUDENTS = [
+  {
+    id: 1,
+    name: "عبد الرحمن محمد المصطفى",
+    gender: "male",
+    phone: "+966501234567",
+    parentPhone: "+966507654321",
+    joinDateM: "2026-01-10",
+    joinDateH: "1447-07-21",
+    narration: "hafs",
+    ringName: "حلقة الإمام البخاري",
+    daysScheduled: ["الأحد", "الثلاثاء", "الخميس"],
+    fundingType: "self",
+    behavior: "excellent",
+    status: "active",
+    currentPlan: "حفظ سورة البقرة",
+    tags: ["موهوب", "صوت حسن"],
+    monthlyPayment: "paid"
+  },
+  {
+    id: 2,
+    name: "فاطمة عائشة عمر",
+    gender: "female",
+    phone: "+201012345678",
+    parentPhone: "+201098765432",
+    joinDateM: "2026-02-15",
+    joinDateH: "1447-08-27",
+    narration: "warsh",
+    ringName: "حلقة أمهات المؤمنين",
+    daysScheduled: ["الإثنين", "الأربعاء"],
+    fundingType: "waqf",
+    behavior: "needs_encouragement",
+    status: "active",
+    currentPlan: "حفظ جزء عم",
+    tags: ["مسابقة الدولة"],
+    monthlyPayment: "pending"
+  },
+  {
+    id: 3,
+    name: "معاذ بلال إدريس",
+    gender: "male",
+    phone: "+244912345678",
+    parentPhone: "+244987654321",
+    joinDateM: "2025-11-01",
+    joinDateH: "1447-05-10",
+    narration: "hafs",
+    ringName: "حلقة مصعب بن عمير",
+    daysScheduled: ["يومياً"],
+    fundingType: "scholarship",
+    behavior: "excellent",
+    status: "frozen",
+    currentPlan: "مراجعة القرآن كاملاً",
+    tags: ["خاتم"],
+    monthlyPayment: "exempt"
+  }
+];
+
+export default function Students() {
+  // === States الإدارة والفرز ===
+  const [students, setStudents] = useState(INITIAL_STUDENTS);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [genderFilter, setGenderFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+  
+  // === State النموذج المطور للطالب الجديد ===
+  const [newStudent, setNewStudent] = useState({
+    name: "",
+    gender: "male", 
+    phone: "",
+    parentPhone: "",
+    joinDateM: new Date().toISOString().split('T')[0],
+    joinDateH: "1447-12-30", // قيمة تقريبية للتقويم الهجري الحي
+    narration: "hafs",
+    ringName: "",
+    daysScheduled: [],
+    fundingType: "self",
+    behavior: "excellent",
+    status: "active",
+    currentPlan: "",
+    tags: "",
+    monthlyPayment: "paid"
+  });
+
+  // التحكم بـ Selector الورد القرآني المنعزل بصرياً
+  const [activeQuranSelector, setActiveQuranSelector] = useState(null);
+
+  // إرسال تقرير فوري لولي الأمر عبر الواتساب دون حفظ الرقم
+  const sendWhatsAppReport = (student) => {
+    const message = `السلام عليكم ورحمة الله وبركاته، تحية طيبة من مركز التحفيظ. نود إحاطتكم علماً بأن الطالب(ة) ${student.name} في ${student.ringName} يسير بخطى مباركة في خطته الحالية (${student.currentPlan}). نسأل الله له التوفيق والسداد.`;
+    const encodedMessage = encodeURIComponent(message);
+    const cleanPhone = student.parentPhone.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
   };
 
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return null;
-    const today = new Date();
-    const birth = new Date(dateOfBirth);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const normalizeArabic = (str) => {
-    if (!str) return '';
-    return str
-      .trim()
-      .replace(/[أإآا]/g, 'ا')
-      .replace(/ة/g, 'ه')
-      .replace(/ى/g, 'ي')
-      .toLowerCase();
-  };
-
-  // حساب الإحصائيات السريعة للوحة التحكم المصغرة
-  const activeCount = students.filter(s => !s.is_archived).length;
-  const archivedCount = students.filter(s => s.is_archived).length;
-  const maleCount = students.filter(s => !s.is_archived && s.gender === 'male').length;
-  const femaleCount = students.filter(s => !s.is_archived && s.gender === 'female').length;
-
-  const handleAddStudent = async (e) => {
+  // معالجة إضافة الطالب
+  const handleAddStudent = (e) => {
     e.preventDefault();
-    if (!academyId) return;
-    setIsAdding(true);
-    
-    const autoSurahText = getQuranProgress(currentQuarterIndex).text;
+    if (!newStudent.name) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('students')
-        .insert([{ 
-          name: name.trim(), 
-          parent_phone: parentPhone.trim() || null,
-          parent_name: parentName.trim() || null,       
-          current_surah: autoSurahText,             
-          notes: notes.trim() || null,                 
-          gender: gender,                              
-          academy_id: academyId,
-          status: 'active',
-          is_archived: false,
-          birth_date: birthDate || null, 
-          payment_plan: paymentPlan,     
-          country_code: countryCode.trim() || null, 
-          current_quarter_index: currentQuarterIndex   
-        }]).select();
-
-      if (error) throw error;
-      if (data && setStudents) setStudents(prev => [data[0], ...prev]);
-
-      setName(''); setParentPhone(''); setParentName(''); setCurrentQuarterIndex(0); 
-      setNotes(''); setBirthDate(''); setPaymentPlan('شهري'); setCountryCode('EG');
-      setShowAddForm(false);
-      triggerToast(isArabic ? 'تم تسجيل الطالب بنجاح واحترافية! 🎉' : 'Student registered successfully!', 'success');
-    } catch (error) {
-      console.error(error);
-      triggerToast(isArabic ? 'حدث خطأ أثناء إضافة الطالب' : 'Error adding student', 'error');
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const handleUpdateStudentSubmit = async (e) => {
-    e.preventDefault();
-    setUpdatingId(editingStudent.id);
-    
-    const selectedIndex = parseInt(editingStudent.current_quarter_index) || 0;
-    const autoSurahText = getQuranProgress(selectedIndex).text;
-
-    const updatedStudentData = { 
-      ...editingStudent, 
-      current_surah: autoSurahText,
-      current_quarter_index: selectedIndex
+    const studentToAdd = {
+      ...newStudent,
+      id: Date.now(),
+      tags: newStudent.tags ? newStudent.tags.split(',').map(t => t.trim()) : []
     };
 
-    try {
-      const { error } = await supabase
-        .from('students')
-        .update({
-          name: updatedStudentData.name.trim(),
-          parent_phone: updatedStudentData.parent_phone?.trim() || null,
-          parent_name: updatedStudentData.parent_name?.trim() || null,
-          current_surah: autoSurahText,                     
-          current_quarter_index: selectedIndex,             
-          notes: updatedStudentData.notes?.trim() || null,
-          gender: updatedStudentData.gender,
-          birth_date: updatedStudentData.birth_date || null,
-          payment_plan: updatedStudentData.payment_plan,
-          country_code: updatedStudentData.country_code || null, 
-          last_test_score: updatedStudentData.last_test_score ? parseInt(updatedStudentData.last_test_score) : 0,
-          level_score: updatedStudentData.level_score ? parseInt(updatedStudentData.level_score) : 0
-        })
-        .eq('id', updatedStudentData.id);
-
-      if (error) throw error;
-      setStudents(prev => prev.map(st => st.id === updatedStudentData.id ? updatedStudentData : st));
-      setEditingStudent(null);
-      triggerToast(isArabic ? 'تم تحديث بيانات الطالب بنجاح' : 'Student updated successfully!', 'success');
-    } catch (error) {
-      console.error(error);
-      triggerToast(isArabic ? 'تعذر حفظ التعديلات' : 'Failed to update student', 'error');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleToggleArchive = async (studentId, currentArchiveStatus) => {
-    const confirmMsg = isArabic ? 'هل أنت متأكد من تغيير حالة أرشفة الطالب؟' : 'Are you sure you want to change archive status?';
-    if (!window.confirm(confirmMsg)) return;
-    try {
-      const { error } = await supabase.from('students').update({ is_archived: !currentArchiveStatus }).eq('id', studentId);
-      if (error) throw error;
-      setStudents(prev => prev.map(st => st.id === studentId ? { ...st, is_archived: !currentArchiveStatus } : st));
-      triggerToast(isArabic ? 'تم نقل الطالب بنجاح' : 'Status updated successfully', 'success');
-    } catch (error) {
-      triggerToast('Error updating archive status', 'error');
-    }
-  };
-
-  // محرك الفلترة والترتيب المتقدم والذكي
-  const filteredAndSortedStudents = (() => {
-    if (!Array.isArray(students)) return [];
-    
-    // 1. الفلترة حسب التبويب والبحث
-    let result = students.filter(student => {
-      if (showArchived && !student.is_archived) return false;
-      if (!showArchived && student.is_archived) return false;
-      
-      const search = normalizeArabic(searchTerm);
-      return (
-        normalizeArabic(student?.name).includes(search) ||
-        student?.parent_phone?.includes(searchTerm) ||
-        normalizeArabic(student?.current_surah).includes(search)
-      );
+    setStudents([studentToAdd, ...students]);
+    setShowAddModal(false);
+    // إعادة تهيئة النموذج
+    setNewStudent({
+      name: "", gender: "male", phone: "", parentPhone: "",
+      joinDateM: new Date().toISOString().split('T')[0], joinDateH: "1447-12-30",
+      narration: "hafs", ringName: "", daysScheduled: [],
+      fundingType: "self", behavior: "excellent", status: "active",
+      currentPlan: "", tags: "", monthlyPayment: "paid"
     });
+  };
 
-    // 2. تطبيق الترتيب والفرز (Sorting Logic)
-    if (sortBy === 'alphabetical') {
-      result.sort((a, b) => (a.name || '').localeCompare(b.name || '', isArabic ? 'ar' : 'en'));
-    } else if (sortBy === 'progress') {
-      result.sort((a, b) => (b.current_quarter_index || 0) - (a.current_quarter_index || 0));
-    } else {
-      // الترتيب الافتراضي: الأحدث هبوطياً حسب الـ ID
-      result.sort((a, b) => b.id - a.id);
-    }
-
-    return result;
-  })();
-
-  // الطلاب المتاح عرضهم حالياً بناءً على العرض التدريجي لحماية الأداء
-  const displayedStudents = filteredAndSortedStudents.slice(0, visibleCount);
+  // تصفية الطلاب بناءً على الاختيارات
+  const filteredStudents = students.filter(student => {
+    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          student.phone.includes(searchTerm) || 
+                          (student.ringName && student.ringName.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesGender = genderFilter === "all" || student.gender === genderFilter;
+    const matchesStatus = statusFilter === "all" || student.status === statusFilter;
+    return matchesSearch && matchesGender && matchesStatus;
+  });
 
   return (
-    <div dir={isArabic ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '480px', margin: '0 auto', padding: '12px', textAlign: isArabic ? 'right' : 'left', boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="p-6 bg-[#0B0F19] min-h-screen text-slate-100 font-sans" dir="rtl">
       
-      {/* نظام التنبيهات الاحترافي العائم الذكي */}
-      {inlineMessage.text && (
-        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '12px 20px', borderRadius: '30px', zIndex: 1000, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', fontSize: '14px', fontWeight: 'bold', minWidth: '280px', justifyContent: 'center' }}>
-          {inlineMessage.type === 'success' ? <FaCheckCircle /> : <FaExclamationCircle />}
-          <span>{inlineMessage.text}</span>
+      {/* العناوين الرئيسية لواجهة الـ SaaS */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4 border-b border-slate-800 pb-6">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-l from-amber-400 via-yellow-200 to-slate-100 bg-clip-text text-transparent">
+            إدارة شؤون الحفاظ والطلاب
+          </h1>
+          <p className="text-slate-400 mt-2 text-sm">
+            متابعة تسجيل الطلاب، الحلقات المقررة، الخطط السنوية والأوضاع التربوية والمالية للأوقاف والكفالات.
+          </p>
         </div>
-      )}
-
-      {/* هيدر الصفحة */}
-      <div style={{ textAlign: 'center', marginBottom: '16px', marginTop: '5px' }}>
-        <h2 style={{ color: C.gold || '#C9A84C', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '20px', fontWeight: '800' }}>
-          <span>🎓</span> {showArchived ? (isArabic ? 'أرشيف وحالات الطلاب المتوقفة' : 'Archived Students Database') : t('students_management_title')}
-        </h2>
-      </div>
-
-      {/* لوحة التحكم والإحصاءات التعليمية السريعة */}
-      <div style={{ background: '#1e293b', padding: '10px 14px', borderRadius: '12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-around', alignItems: 'center', fontSize: '12px', color: '#9CA3AF', border: `1px solid ${C.border || '#1E293B'}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><FaUsers style={{ color: C.gold }} /> <span>{isArabic ? 'النشطين:' : 'Active:'} <strong style={{ color: '#fff' }}>{activeCount}</strong></span></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><FaMars style={{ color: '#3B82F6' }} /> <span>{isArabic ? 'ذكور:' : 'Males:'} <strong style={{ color: '#fff' }}>{maleCount}</strong></span></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><FaVenus style={{ color: '#EC4899' }} /> <span>{isArabic ? 'إناث:' : 'Females:'} <strong style={{ color: '#fff' }}>{femaleCount}</strong></span></div>
-        {archivedCount > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><FaArchive style={{ color: '#6B7280' }} /> <span>{isArabic ? 'أرشيف:' : 'Archived:'} <strong style={{ color: '#fff' }}>{archivedCount}</strong></span></div>}
-      </div>
-
-      {/* نظام التبويبات الفاخر المطور */}
-      <div style={{ display: 'flex', background: '#0F172A', padding: '4px', borderRadius: '12px', border: `1px solid ${C.border || '#1E293B'}`, marginBottom: '16px' }}>
-        <button
-          type="button"
-          onClick={() => { setShowArchived(false); setEditingStudent(null); setShowAddForm(false); setVisibleCount(10); }}
-          style={{ flex: 1, background: !showArchived ? '#1E293B' : 'transparent', color: !showArchived ? (C.gold || '#C9A84C') : '#9CA3AF', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+        
+        <button 
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-amber-500/10 hover:scale-[1.02]"
         >
-          <FaUsers size={14} /> {isArabic ? 'الطلاب النشطين' : 'Active Students'}
-        </button>
-        <button
-          type="button"
-          onClick={() => { setShowArchived(true); setEditingStudent(null); setShowAddForm(false); setSearchTerm(''); setVisibleCount(10); }}
-          style={{ flex: 1, background: showArchived ? '#1E293B' : 'transparent', color: showArchived ? (C.gold || '#C9A84C') : '#9CA3AF', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-        >
-          <FaArchive size={13} /> {isArabic ? 'سجل الأرشيف' : 'Archived Records'}
+          <UserPlus size={20} />
+          <span>تسجيل طالب / برعم جديد</span>
         </button>
       </div>
 
-      {/* زر إضافة طالب عائم وذكي */}
-      {!showArchived && (
-        <div style={{ marginBottom: '16px' }}>
-          <button 
-            type="button"
-            onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
-            style={{ width: '100%', background: showAddForm ? '#EF4444' : `linear-gradient(135deg, ${C.gold || '#C9A84C'} 0%, #B3923B 100%)`, color: showAddForm ? '#fff' : '#000', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-          >
-            {showAddForm ? <><FaTimes /> {t('cancel')}</> : <><FaUserPlus /> {t('add_new_student')}</>}
-          </button>
-        </div>
-      )}
-
-      {/* استمارة إضافة طالب جديد */}
-      {showAddForm && !showArchived && (
-        <form onSubmit={handleAddStudent} style={{ background: C.surface || '#111827', padding: '16px', borderRadius: '14px', border: `1px solid ${C.border || '#1E293B'}`, marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* المجموعة الأولى: البيانات الشخصية */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#0C1520', padding: '12px', borderRadius: '10px', border: '1px solid #1e293b' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px' }}><FaUser size={11} style={{color: C.gold}} /> {t('student_name_label')}</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('student_name_placeholder')} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', outline: 'none', fontSize: '13px' }} required />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500' }}>{t('gender_label')}</label>
-                <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', height: '40px' }}>
-                  <option value="male">{t('male')}</option>
-                  <option value="female">{t('female')}</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}><FaCalendarAlt size={11} /> {isArabic ? 'تاريخ الميلاد' : 'Birth Date'}</label>
-                <input type="date" value={birthDate} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', height: '40px', boxSizing: 'border-box' }} onChange={(e) => setBirthDate(e.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          {/* المجموعة الثانية: بيانات الاتصال وأولياء الأمور */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#0C1520', padding: '12px', borderRadius: '10px', border: '1px solid #1e293b' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px' }}><FaUserShield size={11} /> {t('parent_name_label')}</label>
-              <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder={t('parent_name_placeholder')} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', fontSize: '13px' }} />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '10px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px' }}><FaPhone size={10} /> {isArabic ? 'رقم هاتف التواصل' : 'Phone Number'}</label>
-                <input type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} placeholder={t('phone_placeholder')} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px 12px', borderRadius: '6px', fontSize: '13px', textAlign: 'left', direction: 'ltr' }} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}><FaGlobe size={11} /> {isArabic ? 'الدولة' : 'Country'}</label>
-                <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', height: '40px' }}>
-                  {COUNTRIES_LIST.map((c) => (
-                    <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* المجموعة الثالثة: الاشتراك المالي والحفظ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#0C1520', padding: '12px', borderRadius: '10px', border: '1px solid #1e293b' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px' }}><FaMoneyBillWave size={11} style={{color: '#10B981'}} /> {isArabic ? 'نظام السداد والاشتراك المالي' : 'Financial Plan'}</label>
-              <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} style={{ background: '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', height: '40px' }}>
-                <option value="شهري">{isArabic ? 'اشتراك شهري دوري' : 'Monthly Subscription'}</option>
-                <option value="فصلي">{isArabic ? 'اشتراك فصلي (كل 3 شهور)' : 'Quarterly (3 Months)'}</option>
-                <option value="سنوي">{isArabic ? 'اشتراك سنوي كامل' : 'Yearly Plan'}</option>
-                <option value="منحة">{isArabic ? 'منحة دراسية / إعفاء' : 'Scholarship / Free'}</option>
-              </select>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500' }}>{isArabic ? 'مستوى الحفظ الحالي (الورد الابتدائي)' : 'Current Quran Level'}</label>
-              <div style={{ background: '#111827', padding: '4px 8px', borderRadius: '6px', border: `1px solid ${C.border || '#1E293B'}` }}>
-                <QuranProgressSelector initialIndex={currentQuarterIndex} onIndexChange={(newIndex) => setCurrentQuarterIndex(newIndex)} />
-              </div>
-            </div>
-          </div>
-
-          {/* ملاحظات المعلم */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '500' }}>{t('teacher_notes_label')}</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('notes_placeholder')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '8px', outline: 'none', height: '55px', resize: 'none', fontSize: '13px' }} />
-          </div>
-
-          <button type="submit" disabled={isAdding} style={{ background: C.gold || '#C9A84C', color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', marginTop: '5px' }}>
-            {isAdding ? t('saving_progress') : t('confirm_add_student')}
-          </button>
-        </form>
-      )}
-
-      {/* قسم البحث والترتيب المدمج (Search & Sort Row) */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
+      {/* شريط الفرز والبحث الاحترافي المطور */}
+      <div className="bg-[#121826] p-4 rounded-2xl border border-slate-800 mb-6 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-xl">
+        <div className="relative w-full lg:w-96">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <input 
             type="text" 
-            placeholder={t('search_placeholder')} 
-            value={searchTerm} 
-            onChange={(e) => { setSearchTerm(e.target.value); setVisibleCount(10); }} 
-            style={{ width: '100%', background: C.surface || '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px 12px', borderRadius: '10px', outline: 'none', fontSize: '13px', boxSizing: 'border-box' }} 
+            placeholder="البحث باسم الطالب، رقم الهاتف، أو اسم الحلقة..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-4 pr-10 py-2.5 bg-[#1A2234] border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors text-sm"
           />
-          {searchTerm && (
-            <span onClick={() => setSearchTerm('')} style={{ position: 'absolute', left: isArabic ? '12px' : 'auto', right: isArabic ? 'auto' : '12px', top: '50%', transform: 'translateY(-50%)', color: '#6B7280', cursor: 'pointer', fontSize: '12px' }}><FaTimes /></span>
-          )}
         </div>
 
-        {/* أداة خيارات الترتيب الذكية السريعة */}
-        <div style={{ position: 'relative', background: C.surface || '#111827', border: `1px solid ${C.border || '#1E293B'}`, borderRadius: '10px', padding: '0 8px', display: 'flex', alignItems: 'center', height: '38px' }}>
-          <FaSortAmountDown size={12} style={{ color: C.gold || '#C9A84C', marginLeft: isArabic ? '4px' : '0', marginRight: isArabic ? '0' : '4px' }} />
-          <select 
-            value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value)} 
-            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '12px', outline: 'none', cursor: 'pointer', paddingRight: isArabic ? '0' : '14px', paddingLeft: isArabic ? '14px' : '0', appearance: 'none', fontWeight: '600' }}
-          >
-            <option value="newest" style={{ background: '#111827' }}>{isArabic ? 'الأحدث' : 'Newest'}</option>
-            <option value="alphabetical" style={{ background: '#111827' }}>{isArabic ? 'أبجدي' : 'A-Z'}</option>
-            <option value="progress" style={{ background: '#111827' }}>{isArabic ? 'التحضير' : 'Progress'}</option>
-          </select>
-          <FaChevronDown size={8} style={{ position: 'absolute', left: isArabic ? '8px' : 'auto', right: isArabic ? 'auto' : '8px', color: '#6B7280', pointerEvents: 'none' }} />
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+          {/* فلتر تصنيف الجنسين التربوي */}
+          <div className="relative min-w-[140px]">
+            <select 
+              value={genderFilter} 
+              onChange={(e) => setGenderFilter(e.target.value)}
+              className="w-full appearance-none bg-[#1A2234] border border-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-500 cursor-pointer"
+            >
+              <option value="all">كل الفئات التربوية</option>
+              <option value="male">قسم البنين (براعم / طلاب)</option>
+              <option value="female">قسم البنات (براعم / طالبات)</option>
+            </select>
+            <ChevronDown size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          </div>
+
+          {/* فلتر حالة السجل داخل المركز */}
+          <div className="relative min-w-[140px]">
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full appearance-none bg-[#1A2234] border border-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-500 cursor-pointer"
+            >
+              <option value="all">كل حالات السجلات</option>
+              <option value="active">نشط ومستمر</option>
+              <option value="frozen">مجمّد مؤقتاً لعذر</option>
+              <option value="inactive">منقطع</option>
+            </select>
+            <ChevronDown size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          </div>
         </div>
       </div>
 
-      {/* قائمة كروت الطلاب الفاخرة المطورة */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {displayedStudents.length === 0 ? (
-          <div style={{ background: C.surface || '#111827', padding: '30px 15px', borderRadius: '12px', border: `1px solid ${C.border || '#1E293B'}`, textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>
-            <FaUsers size={24} style={{ color: '#4b5563', marginBottom: '8px' }} />
-            <div>{t('no_search_results')}</div>
-          </div>
-        ) : (
-          displayedStudents.map(student => {
-            const isCurrentEditing = editingStudent?.id === student.id;
-            const isLocalSaving = updatingId === student.id;
-            const currentAge = calculateAge(student.birth_date);
-            const matchedCountry = COUNTRIES_LIST.find(c => c.code === student.country_code);
-            const currentStudentQuarterIndex = editingStudent ? (editingStudent.current_quarter_index ?? 0) : 0;
+      {/* شبكة عرض بطاقات الطلاب (Grid List) المتجاوبة بالكامل مع اتجاه الـ RTL */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredStudents.map((student) => {
+          // الفصل البصري التلقائي ذو الهوية الذكية بناءً على الجنس
+          const isFemale = student.gender === 'female';
+          const genderTheme = isFemale 
+            ? { border: 'border-purple-500/30', bg: 'bg-purple-500/5', text: 'text-purple-400', badge: 'bg-purple-500/10 text-purple-300 border-purple-500/20' }
+            : { border: 'border-amber-500/20', bg: 'bg-amber-500/0', text: 'text-amber-400', badge: 'bg-amber-500/10 text-amber-300 border-amber-500/20' };
 
-            return (
-              <div key={student.id} style={{ background: C.surface || '#111827', padding: '14px', borderRadius: '12px', border: isCurrentEditing ? `1px solid ${C.gold || '#C9A84C'}` : `1px solid ${C.border || '#1E293B'}`, display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-                
-                {isCurrentEditing ? (
-                  /* نموذج التعديل السريع المتجاوب المنظف والمطور بالكامل */
-                  <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ color: C.gold, fontSize: '11px', fontWeight: 'bold' }}>{isArabic ? 'تعديل اسم الطالب:' : 'Edit Name:'}</label>
-                      <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', outline: 'none', fontSize: '13px' }} required />
-                    </div>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <select value={editingStudent.gender} onChange={(e) => setEditingStudent({...editingStudent, gender: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', height: '38px' }}>
-                        <option value="male">{t('male')}</option>
-                        <option value="female">{t('female')}</option>
-                      </select>
-                      <input type="date" value={editingStudent.birth_date || ''} onChange={(e) => setEditingStudent({...editingStudent, birth_date: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', height: '38px', boxSizing: 'border-box' }} />
-                    </div>
+          return (
+            <div 
+              key={student.id} 
+              className={`bg-[#121826] rounded-2xl border ${genderTheme.border} ${genderTheme.bg} p-5 flex flex-col justify-between transition-all hover:shadow-2xl hover:shadow-black/40 group relative overflow-hidden`}
+            >
+              {/* شريط تمييز الحالة العلوية */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-l from-transparent via-slate-700 to-transparent group-hover:via-amber-500 transition-all" />
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <input type="text" value={editingStudent.parent_name || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_name: e.target.value})} placeholder={t('parent_name_placeholder')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px' }} />
-                      <input type="tel" value={editingStudent.parent_phone || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_phone: e.target.value})} placeholder={t('phone_placeholder')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'left', direction: 'ltr', fontSize: '13px' }} />
-                    </div>
-
-                    <div style={{ background: '#0C1520', padding: '6px 8px', borderRadius: '6px', border: `1px solid ${C.border || '#1E293B'}` }}>
-                      <label style={{ color: '#9CA3AF', fontSize: '11px', display: 'block', marginBottom: '4px' }}>{isArabic ? 'تحديث مستوى الحفظ الحالي:' : 'Update Progress:'}</label>
-                      <QuranProgressSelector initialIndex={currentStudentQuarterIndex} onIndexChange={(newIndex) => setEditingStudent({ ...editingStudent, current_quarter_index: parseInt(newIndex) || 0 })} />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                      <button type="submit" disabled={isLocalSaving} style={{ background: '#10B981', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1, fontSize: '13px' }}>{isLocalSaving ? t('saving_progress') : (isArabic ? 'اعتماد وحفظ' : 'Save')}</button>
-                      <button type="button" onClick={() => setEditingStudent(null)} style={{ background: '#475569', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', flex: 1, fontSize: '13px' }}>{t('cancel')}</button>
-                    </div>
-                  </form>
-                ) : (
-                  /* كارت عرض فائق الأناقة */
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '15px' }}>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
-                        <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{student.name}</span>
-                        {currentAge !== null && <span style={{ fontSize: '11px', color: C.gold || '#C9A84C', background: '#1e293b', padding: '1px 6px', borderRadius: '6px', fontWeight: '600' }}>{currentAge} {isArabic ? 'سنة' : 'yrs'}</span>}
-                      </div>
-                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '10px', background: student.gender === 'female' ? '#EC4899' : '#3B82F6', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        {student.gender === 'female' ? <FaVenus size={9} /> : <FaMars size={9} />}
-                        {student.gender === 'female' ? t('female') : t('male')}
+              <div>
+                {/* رأس البطاقة: الاسم والتصنيف التربوي وحالة الانتظام */}
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-100 group-hover:text-amber-400 transition-colors flex items-center gap-2">
+                      {student.name}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${genderTheme.badge}`}>
+                        {isFemale ? "برعمة / طالبة" : "برعم / طالب"}
+                      </span>
+                      <span className="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700">
+                        {NARRATIONS.find(n => n.id === student.narration)?.name || "حفص عن عاصم"}
                       </span>
                     </div>
+                  </div>
 
-                    {/* تفاصيل سجل الكشف المدعومة بالأيقونات الفاخرة */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '12px', color: '#9CA3AF', opacity: 0.9, background: '#0C1520', padding: '8px', borderRadius: '8px', marginTop: '2px' }}>
-                      {student.parent_phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaPhone size={10} style={{color: C.gold}} /> <span style={{ direction: 'ltr', color: '#fff' }}>{student.parent_phone}</span></span>}
-                      {student.parent_name && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaUserShield size={11} /> {t('parent_prefix')} <span style={{color: '#fff'}}>{student.parent_name}</span></span>}
-                      {student.payment_plan && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaMoneyBillWave size={11} style={{ color: '#10B981' }} /> {isArabic ? 'نظام الاشتراك:' : 'Plan:'} <span style={{color: '#fff'}}>{student.payment_plan}</span></span>}
-                      {student.notes && <span style={{ color: '#6B7280', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', borderTop: '1px solid #1e293b', paddingTop: '4px' }}><FaFileAlt size={10} /> {student.notes}</span>}
-                    </div>
+                  {/* شارات الحالة المتقدمة والتجميد الذكي */}
+                  <div>
+                    {student.status === 'active' && (
+                      <span className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full font-medium">
+                        <CheckCircle2 size={12} /> مستمر
+                      </span>
+                    )}
+                    {student.status === 'frozen' && (
+                      <span className="flex items-center gap-1 text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full font-medium">
+                        <Clock size={12} /> مجمّد لعذر
+                      </span>
+                    )}
+                    {student.status === 'inactive' && (
+                      <span className="flex items-center gap-1 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full font-medium">
+                        <XCircle size={12} /> منقطع
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-                    {/* شريط التقدم التفاعلي للقرآن الكريم */}
-                    <div style={{ marginTop: '4px', background: '#0F172A', padding: '6px', borderRadius: '8px' }}>
-                      <QuranProgressBar currentQuarterIndex={student.current_quarter_index || 0} />
-                    </div>
+                {/* تفاصيل الهيكل الحلقي والبيانات الإدارية والخطط */}
+                <div className="space-y-2.5 my-4 border-y border-slate-800/60 py-3 text-xs text-slate-300">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5"><BookOpen size={14} /> الحلقة المقررة:</span>
+                    <span className="font-medium text-slate-200">{student.ringName || "لم يحدد بعد"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5"><Calendar size={14} /> أيام الحضور والورود:</span>
+                    <span className="font-medium text-amber-500/90">{student.daysScheduled.join('، ')}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5"><Award size={14} /> الخطة والمستهدف:</span>
+                    <span className="font-medium text-slate-200">{student.currentPlan || "لم يحدد مستهدف"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5"><Calendar size={14} /> تاريخ التسجيل (هـ/م):</span>
+                    <span className="font-medium text-slate-400">{student.joinDateH} هـ | {student.joinDateM} م</span>
+                  </div>
+                </div>
 
-                    {/* خيارات التحكم السفلية السلسة والسريعة */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${C.border || '#1E293B'}`, paddingTop: '6px', marginTop: '4px' }}>
-                      <button type="button" onClick={() => handleToggleArchive(student.id, student.is_archived)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px' }}>
-                        <FaArchive size={10} /> {student.is_archived ? (isArabic ? 'تنشيط الطالب وعرضه' : 'Unarchive') : (isArabic ? 'أرشفة ونقل الطالب' : 'Archive')}
-                      </button>
-                      <button type="button" onClick={() => setEditingStudent({ ...student })} style={{ background: 'none', border: 'none', color: C.gold || '#C9A84C', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px' }}>
-                        <FaEdit size={11} /> {isArabic ? 'تعديل سريع' : 'Quick Edit'}
-                      </button>
-                    </div>
+                {/* الوسوم والسمات المميزة للفرز والترشيح (Tags) */}
+                {student.tags && student.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <Tags size={12} className="text-slate-600 self-center" />
+                    {student.tags.map((tag, index) => (
+                      <span key={index} className="text-[10px] bg-slate-800/80 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-md">
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                 )}
+
+                {/* الوضع التربوي والسلوكي في الحلقة اليوم */}
+                <div className="mb-4">
+                  <div className="text-[11px] text-slate-500 mb-1">توجيهات المحفظ والمشرف التربوي اليومية:</div>
+                  <div className={`text-xs border px-3 py-1.5 rounded-xl font-medium text-center ${BEHAVIOR_STATUS.find(b => b.id === student.behavior)?.color}`}>
+                    {BEHAVIOR_STATUS.find(b => b.id === student.behavior)?.name}
+                  </div>
+                </div>
               </div>
-            );
-          })
-        )}
+
+              {/* ذيل البطاقة: الحالة المالية للأوقاف، والكفالات وأزرار الاتصال السريع */}
+              <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  {student.fundingType === 'self' && (
+                    <span className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1">
+                      <DollarSign size={12} /> اشتراك مالي مدفوع
+                    </span>
+                  )}
+                  {student.fundingType === 'waqf' && (
+                    <span className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1">
+                      <Heart size={12} /> مكفول (وقف خيري)
+                    </span>
+                  )}
+                  {student.fundingType === 'scholarship' && (
+                    <span className="text-[11px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1">
+                      <Award size={12} /> منحة تميز وإعفاء
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => sendWhatsAppReport(student)}
+                    title="إرسال تقرير فوري لولي الأمر عبر واتساب"
+                    className="p-2 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-slate-950 rounded-xl border border-emerald-600/20 hover:border-transparent transition-all shadow-md"
+                  >
+                    <MessageSquare size={14} />
+                  </button>
+                  <button 
+                    onClick={() => setActiveQuranSelector(activeQuranSelector === student.id ? null : student.id)}
+                    className="text-xs bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 px-3 py-2 rounded-xl border border-slate-700 hover:border-transparent transition-all font-bold"
+                  >
+                    تحديث الورد اليومي
+                  </button>
+                </div>
+              </div>
+
+              {/* المكوّن المطور والمنعزل تماماً لمنشئ ومحدد الورد القرآني - علاج مشكلة صور المعاينة */}
+              {activeQuranSelector === student.id && (
+                <div className="absolute inset-0 bg-[#0B0F19]/98 z-30 p-5 flex flex-col justify-between border border-amber-500/40 rounded-2xl animate-fadeIn shadow-2xl backdrop-blur-sm">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <h4 className="text-sm font-bold text-amber-400 flex items-center gap-1.5">
+                        <BookOpen size={16} /> منشئ التقدم والورد اليومي للقرآن
+                      </h4>
+                      <span className="text-[11px] text-slate-400">{student.name}</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] text-slate-500 mb-1">نوع ومستوى الورد المنجز:</label>
+                        <select className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-amber-500">
+                          <option>تسميع حفظ جديد</option>
+                          <option>مراجعة قريب (الماضي القريب)</option>
+                          <option>مراجعة بعيد (المنهج القديم)</option>
+                          <option>اختبار جزء كامل</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] text-slate-500 mb-1">من سورة / جزء:</label>
+                          <input type="text" placeholder="مثال: البقرة آية 1" className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-amber-500 text-center" />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-slate-500 mb-1">إلى سورة / جزء:</label>
+                          <input type="text" placeholder="مثال: آية 24" className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-amber-500 text-center" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-500 mb-1">تقدير الحفظ والتجويد للحلقة:</label>
+                        <div className="grid grid-cols-4 gap-1.5 text-center">
+                          <button className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 p-1.5 border border-emerald-500/20 rounded-md text-[11px] transition-colors font-medium">ممتاز</button>
+                          <button className="bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-slate-950 p-1.5 border border-blue-500/20 rounded-md text-[11px] transition-colors font-medium">جيد جداً</button>
+                          <button className="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 p-1.5 border border-amber-500/20 rounded-md text-[11px] transition-colors font-medium">جيد</button>
+                          <button className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 p-1.5 border border-rose-500/20 rounded-md text-[11px] transition-colors font-medium">مقبول</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-800">
+                    <button 
+                      onClick={() => setActiveQuranSelector(null)}
+                      className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold p-2 rounded-xl text-xs hover:from-amber-600 hover:to-yellow-700 transition-colors"
+                    >
+                      اعتماد ورصد الدرجات بالملف
+                    </button>
+                    <button 
+                      onClick={() => setActiveQuranSelector(null)}
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 px-3 py-2 rounded-xl text-xs transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          );
+        })}
       </div>
 
-      {/* زر العرض التدريجي عند تزايد البيانات (Load More Button) */}
-      {filteredAndSortedStudents.length > visibleCount && (
-        <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '8px' }}>
-          <button 
-            type="button" 
-            onClick={() => setVisibleCount(prev => prev + 10)} 
-            style={{ background: '#1E293B', color: C.gold || '#C9A84C', border: `1px solid ${C.border || '#1E293B'}`, padding: '8px 24px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
-          >
-            {isArabic ? 'عرض المزيد من الطلاب 🔽' : 'Load More Students 🔽'}
-          </button>
+      {/* نافذة التسجيل المتقدمة الفاخرة لطالب / برعم جديد */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn" dir="rtl">
+          <div className="bg-[#121826] w-full max-w-2xl rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            
+            {/* رأس النافذة */}
+            <div className="bg-[#161F30] p-4 border-b border-slate-700 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserPlus className="text-amber-400" size={22} />
+                <h2 className="text-lg font-bold text-slate-100">تسجيل طالب / برعم جديد بالمنظومة التعليمية</h2>
+              </div>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-slate-100 bg-slate-800/60 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* محتوى نموذج الإدخال */}
+            <form onSubmit={handleAddStudent} className="p-6 overflow-y-auto space-y-5 text-sm">
+              
+              {/* قسم الاسم والجنس التربوي المطور مع الـ Dynamic Theming */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">اسم الطالب ثلاثي أو رباعي بالكامل *</label>
+                  <div className="relative">
+                    <User className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="مثال: محمد مصطفى السنباطي"
+                      value={newStudent.name}
+                      onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+                      className="w-full pl-4 pr-10 py-2.5 bg-[#161F30] border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">التصنيف والقسم التربوي (الجنس)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewStudent({...newStudent, gender: 'male'})}
+                      className={`py-2.5 rounded-xl border text-xs font-bold transition-all ${newStudent.gender === 'male' ? 'bg-amber-500/20 text-amber-400 border-amber-500' : 'bg-[#161F30] text-slate-400 border-slate-700 hover:bg-slate-800'}`}
+                    >
+                      🚹 برعم / طالب (بنين)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewStudent({...newStudent, gender: 'female'})}
+                      className={`py-2.5 rounded-xl border text-xs font-bold transition-all ${newStudent.gender === 'female' ? 'bg-purple-500/20 text-purple-400 border-purple-500' : 'bg-[#161F30] text-slate-400 border-slate-700 hover:bg-slate-800'}`}
+                    >
+                      🚺 برعمة / طالبة (بنات)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* قسم الهواتف والربط السريع بأولياء الأمور */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">رقم هاتف الطالب (إن وجد)</label>
+                  <div className="relative">
+                    <Phone className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                      type="tel" 
+                      placeholder="+966500000000"
+                      value={newStudent.phone}
+                      onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
+                      className="w-full pl-4 pr-10 py-2.5 bg-[#161F30] border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:border-amber-500 text-left text-xs" dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">رقم هاتف ولي الأمر (للتواصل والواتساب الرئيسي) *</label>
+                  <div className="relative">
+                    <MessageSquare className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                      type="tel" 
+                      required
+                      placeholder="+966500000000"
+                      value={newStudent.parentPhone}
+                      onChange={(e) => setNewStudent({...newStudent, parentPhone: e.target.value})}
+                      className="w-full pl-4 pr-10 py-2.5 bg-[#161F30] border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:border-amber-500 text-left text-xs" dir="ltr"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* قسم الرواية وتفاصيل الحلقة والمستهدف */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">الرواية المقررة للطالب</label>
+                  <select 
+                    value={newStudent.narration}
+                    onChange={(e) => setNewStudent({...newStudent, narration: e.target.value})}
+                    className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    {NARRATIONS.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">اسم الحلقة / اسم المحفظ</label>
+                  <input 
+                    type="text" 
+                    placeholder="مثال: حلقة الإمام البخاري"
+                    value={newStudent.ringName}
+                    onChange={(e) => setNewStudent({...newStudent, ringName: e.target.value})}
+                    className="w-full pl-4 pr-4 py-2.5 bg-[#161F30] border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:border-amber-500 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">الخطة والمستهدف السنوي</label>
+                  <input 
+                    type="text" 
+                    placeholder="مثال: حفظ سورة البقرة"
+                    value={newStudent.currentPlan}
+                    onChange={(e) => setNewStudent({...newStudent, currentPlan: e.target.value})}
+                    className="w-full pl-4 pr-4 py-2.5 bg-[#161F30] border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:border-amber-500 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* مواعيد الحضور وتواريخ التسجيل (الهجري والميلادي) المدمج لأسواق الخليج */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">تاريخ التسجيل (ميلادي)</label>
+                  <input 
+                    type="date" 
+                    value={newStudent.joinDateM}
+                    onChange={(e) => setNewStudent({...newStudent, joinDateM: e.target.value})}
+                    className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">تاريخ التسجيل التقريبي (هجري)</label>
+                  <input 
+                    type="text" 
+                    placeholder="مثال: 1447-07-21 هـ"
+                    value={newStudent.joinDateH}
+                    onChange={(e) => setNewStudent({...newStudent, joinDateH: e.target.value})}
+                    className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:border-amber-500 text-center"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">أيام الحضور المقررة بالحلقة</label>
+                  <input 
+                    type="text" 
+                    placeholder="مثال: الأحد، الثلاثاء، الخميس"
+                    onChange={(e) => setNewStudent({...newStudent, daysScheduled: e.target.value.split('،').map(d => d.trim())})}
+                    className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* الحالة المالية والمساهمات (الأوقاف، الكفالات، التمويل الذاتي) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">نوع التمويل ومساهمة التحفيظ المالي</label>
+                  <select 
+                    value={newStudent.fundingType}
+                    onChange={(e) => setNewStudent({...newStudent, fundingType: e.target.value})}
+                    className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    {FUNDING_TYPES.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">حالة السجل المبدئية عند الإدخال</label>
+                  <select 
+                    value={newStudent.status}
+                    onChange={(e) => setNewStudent({...newStudent, status: e.target.value})}
+                    className="w-full bg-[#161F30] border border-slate-700 text-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    <option value="active">نشط ومستمر في التسميع</option>
+                    <option value="frozen">مجمّد مؤقتاً لعذر أو إجازة</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* نظام الوسوم والسمات المميزة الذكي (Tags) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">الوسوم والسمات المتميزة (مفصولة بفاصلة)</label>
+                <input 
+                  type="text" 
+                  placeholder="مثال: صوت حسن، موهوب، مسابقة الدولة"
+                  value={newStudent.tags}
+                  onChange={(e) => setNewStudent({...newStudent, tags: e.target.value})}
+                  className="w-full pl-4 pr-4 py-2.5 bg-[#161F30] border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:border-amber-500 text-xs"
+                />
+              </div>
+
+              {/* أزرار الحفظ والإغلاق السفلي للنافذة */}
+              <div className="flex items-center gap-3 pt-4 border-t border-slate-700 mt-6 justify-end">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors font-medium text-xs"
+                >
+                  إلغاء وتراجع
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-bold rounded-xl transition-all shadow-lg text-xs"
+                >
+                  حفظ وتسجيل الطالب بالمنظومة
+                </button>
+              </div>
+
+            </form>
+          </div>
         </div>
       )}
+
     </div>
   );
 }
