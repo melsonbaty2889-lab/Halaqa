@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'; // جعلت حرف i سمول هنا
+import React, { useState, useEffect } from 'react'; 
 import { supabase } from '../lib/supabase';
+import { sessionService } from '../lib/sessionService'; // 🔗 تم الربط المباشر بملف الخدمات الموحد
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -74,7 +75,7 @@ export default function Exams({ students, academyId }) {
           students (name)
         `)
         .eq('academy_id', academyId)
-        .order('created_at', { ascending: false });
+        .order('date', { ascending: false }); // الترتيب بناءً على تاريخ الاختبار
 
       if (error) throw error;
       if (data) setExamLogs(data);
@@ -89,8 +90,8 @@ export default function Exams({ students, academyId }) {
     fetchExamLogs();
   }, [academyId]);
 
-  // 3️⃣ 💾 دالة اعتماد وحفظ نتيجة الاختبار الحي في السيرفر
-    const handleSaveExam = async () => {
+  // 3️⃣ 💾 دالة اعتماد وحفظ نتيجة الاختبار الحي عبر الخدمة الموحدة
+  const handleSaveExam = async () => {
     if (!selectedStudent || !examContent.trim()) {
       setFeedbackMsg({ 
         type: 'error', 
@@ -103,33 +104,34 @@ export default function Exams({ students, academyId }) {
     setFeedbackMsg({ type: '', text: '' });
 
     try {
-      const { error } = await supabase
-        .from('exams')
-        .insert([{
-          student_id: selectedStudent, // مطابق للجدول
-          academy_id: academyId,       // مطابق للجدول
-          exam_type: examType,         // مطابق للجدول
-          exam_target: examContent.trim(), // تم تغيير الاسم من exam_content إلى exam_target ليطابق الجدول
-          mistakes: fullErrors,        // تم تغيير الاسم من full_errors إلى mistakes ليطابق الجدول
-          prompts: warnings,           // تم تغيير الاسم من warnings إلى prompts ليطابق الجدول
-          tajweed_grade: tajweedRating,// تم تغيير الاسم من tajweed_rating إلى tajweed_grade ليطابق الجدول
-          final_score: calculatedScore,// تم تغيير الاسم من score إلى final_score ليطابق الجدول
-          notes: notes.trim(),         // مطابق للجدول
-          date: new Date().toISOString().split('T')[0] // تم إضافة التاريخ ليطابق العمود date
-        }]);
+      // 🚀 استدعاء الدالة المركزية الموحدة من الـ sessionService لضمان التربيط
+      const result = await sessionService.saveStudentExam({
+        studentId: selectedStudent,
+        academyId: academyId,
+        examType: examType,
+        examTarget: examContent.trim(),
+        mistakes: fullErrors,
+        prompts: warnings,
+        tajweedGrade: tajweedRating,
+        finalScore: calculatedScore,
+        notes: notes.trim()
+      });
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
 
       setFeedbackMsg({ 
         type: 'success', 
-        text: isRtl ? 'تم الحفظ بنجاح! 🎉' : 'Saved successfully! 🎉' 
+        text: isRtl ? 'تم الحفظ بنجاح وإدراج النتيجة في السجل! 🎉' : 'Saved successfully and logged! 🎉' 
       });
       
+      // تصفير النموذج للحصص القادمة
       setSelectedStudent('');
       setExamContent('');
       setFullErrors(0);
       setWarnings(0);
       setNotes('');
+      
+      // تحديث السجل التلقائي بالأسفل
       fetchExamLogs();
     } catch (err) {
       console.error(err);
@@ -142,9 +144,10 @@ export default function Exams({ students, academyId }) {
     }
   };
 
+  // 🔍 تحديث الفلترة لتقرأ من الحقل الصحيح والموحد (exam_target)
   const filteredLogs = examLogs.filter(log => {
     const studentName = log.students?.name?.toLowerCase() || '';
-    const content = log.exam_content?.toLowerCase() || '';
+    const content = log.exam_target?.toLowerCase() || ''; 
     const query = searchQuery.toLowerCase();
     return studentName.includes(query) || content.includes(query);
   });
@@ -301,6 +304,7 @@ export default function Exams({ students, academyId }) {
 
       </div>
 
+      {/* 📊 الجدول السفلي بعد معالجة وتصحيح حقول الأعمدة المحدثة */}
       <div style={{ backgroundColor: C.surface, padding: '20px', borderRadius: '12px', marginTop: '25px', border: `1px solid ${C.border}` }}>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
           <FaSearch style={{ position: 'absolute', right: isRtl ? '15px' : 'auto', left: !isRtl ? '15px' : 'auto', color: '#657585' }} />
@@ -336,21 +340,21 @@ export default function Exams({ students, academyId }) {
               <tbody>
                 {filteredLogs.map(log => (
                   <tr key={log.id} style={{ borderBottom: `1px solid ${C.border}`, color: '#FFF' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{log.students?.name || isRtl ? 'طالب محذوف' : 'Deleted Student'}</td>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{log.students?.name || (isRtl ? 'طالب محذوف' : 'Deleted Student')}</td>
                     <td style={{ padding: '12px' }}>
-                      <span style={{ backgroundColor: '#1E293B', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', marginLeft: '6px' }}>
+                      <span style={{ backgroundColor: '#1E293B', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', marginLeft: '6px', marginRight: '6px' }}>
                         {log.exam_type === 'surah' ? (isRtl ? 'سورة' : 'Surah') : log.exam_type === 'juz' ? (isRtl ? 'جزء' : 'Juz') : (isRtl ? 'آيات' : 'Verses')}
                       </span>
-                      {log.exam_content}
+                      {log.exam_target} {/* ✅ تصحيح: تم الاستبدال من exam_content إلى exam_target ليعمل العرض */}
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: log.score >= 90 ? '#10B981' : log.score >= 75 ? '#F59E0B' : '#EF4444' }}>
-                      {log.score} / 100
+                    <td style={{ padding: '12px', fontWeight: 'bold', color: log.final_score >= 90 ? '#10B981' : log.final_score >= 75 ? '#F59E0B' : '#EF4444' }}>
+                      {log.final_score} / 100 {/* ✅ تصحيح: تم الاستبدال من score إلى final_score ليعمل العرض */}
                     </td>
                     <td style={{ padding: '12px', fontSize: '13px' }}>
-                      {log.tajweed_rating === 'excellent' ? ' ممتاز ✨' : log.tajweed_rating === 'good' ? 'حسن 👍' : 'ضبط مخارج 🎯'}
+                      {log.tajweed_grade === 'excellent' ? ' ممتاز ✨' : log.tajweed_grade === 'good' ? 'حسن 👍' : 'ضبط مخارج 🎯'} {/* ✅ تصحيح: تم الاستبدال من tajweed_rating إلى tajweed_grade ليعمل العرض */}
                     </td>
                     <td style={{ padding: '12px', color: '#657585', fontSize: '12px' }}>
-                      {new Date(log.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
+                      {log.date ? new Date(log.date).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : (isRtl ? 'بلا تاريخ' : 'No Date')}
                     </td>
                   </tr>
                 ))}
