@@ -1,7 +1,41 @@
 import { supabase } from './supabase';
 
 /**
- * تسجيل الحصة اليومية للطالب (حضور + تسميع وحفظ جديد)
+ * 1️⃣ جلب الحضور والتسميع اليومي للأكاديمية بناءً على التاريخ
+ */
+export const fetchAttendance = async (academyId, date) => {
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('*') // نستخدم * لضمان جلب كافة الحقول (سواء الحضور أو التسميع المدمج) دون أخطاء
+    .eq('academy_id', academyId)
+    .eq('date', date);
+  
+  if (error) {
+    console.error("Error fetching attendance:", error.message);
+    throw error;
+  }
+  return data;
+};
+
+/**
+ * 2️⃣ الحفظ المجمع والتحديث التلقائي (Upsert) للحضور والتسميع
+ */
+export const upsertAttendance = async (records) => {
+  if (!records || records.length === 0) return true;
+
+  const { error } = await supabase
+    .from('attendance')
+    .upsert(records, { onConflict: 'student_id,date' }); // يمنع التكرار لنفس الطالب في نفس اليوم
+
+  if (error) {
+    console.error("Error upserting attendance:", error.message);
+    throw error;
+  }
+  return true;
+};
+
+/**
+ * 3️⃣ تسجيل الحصة اليومية للطالب (حضور + تسميع وحفظ جديد)
  * مصممة لتنفيذ العمليات بسرعة فائقة لتناسب شبكات الهواتف المحمولة
  */
 export const saveDailySession = async ({
@@ -15,7 +49,7 @@ export const saveDailySession = async ({
   try {
     const today = new Date().toISOString().split('T')[0];
 
-    // 1️⃣ أولاً: حفظ أو تحديث حالة الحضور والغياب لليوم
+    // حفظ أو تحديث حالة الحضور والغياب لليوم
     const { error: attendanceError } = await supabase
       .from('attendance')
       .upsert(
@@ -26,12 +60,12 @@ export const saveDailySession = async ({
           status: attendanceStatus,
           notes: attendanceNotes || null,
         },
-        { onConflict: 'student_id,date' } // يمنع تكرار التحضير لنفس الطالب في نفس اليوم
+        { onConflict: 'student_id,date' }
       );
 
     if (attendanceError) throw attendanceError;
 
-    // 2️⃣ ثانياً: إذا كان الطالب حاضراً أو متأخراً، نسجل له ورد التسميع اليومي
+    // إذا كان الطالب حاضراً أو متأخراً، نسجل له ورد التسميع اليومي
     if (attendanceStatus === 'present' || attendanceStatus === 'late') {
       if (hifzData) {
         const { error: progressError } = await supabase
@@ -54,7 +88,7 @@ export const saveDailySession = async ({
 
         if (progressError) throw progressError;
 
-        // 3️⃣ ثالثاً: تحديث الورد الحالي في جدول الطلاب الأساسي ليبقى مرجعاً سريعاً
+        // تحديث الورد الحالي في جدول الطلاب الأساسي ليبقى مرجعاً سريعاً
         await supabase
           .from('students')
           .update({
@@ -73,7 +107,7 @@ export const saveDailySession = async ({
 };
 
 /**
- * تسجيل اختبار رسمي ومرحلي منفصل للطالب
+ * 4️⃣ تسجيل اختبار رسمي ومرحلي منفصل للطالب
  */
 export const saveStudentExam = async ({
   studentId,
@@ -93,11 +127,11 @@ export const saveStudentExam = async ({
         {
           student_id: studentId,
           academy_id: academyId,
-          exam_type: examType,   // مثل: 'شهري'، 'جزء كامل'
-          exam_target: examTarget, // مثل: 'جزء عم'، 'سورة البقرة'
+          exam_type: examType,
+          exam_target: examTarget,
           mistakes: mistakes || 0,
-          prompts: prompts || 0,   // عدد التنبيهات والفتحات من الشيخ
-          tajweed_grade: tajweedGrade, // 'ممتاز'، 'جيد'..
+          prompts: prompts || 0,
+          tajweed_grade: tajweedGrade,
           final_score: finalScore,
           notes: notes || null,
           date: new Date().toISOString().split('T')[0],
@@ -107,7 +141,6 @@ export const saveStudentExam = async ({
 
     if (error) throw error;
 
-    // تحديث درجات الطالب التراكمية في جدول الطلاب للمقارنة السريعة
     await supabase
       .from('students')
       .update({
@@ -120,4 +153,12 @@ export const saveStudentExam = async ({
     console.error('Error saving exam:', error.message);
     return { success: false, error: error.message };
   }
+};
+
+// 👑 التصدير الموحد والذكي لمنع كسر أي استيراد قديم وحل مشكلة بناء التطبيق فوراً
+export const sessionService = {
+  fetchAttendance,
+  upsertAttendance,
+  saveDailySession,
+  saveStudentExam,
 };
