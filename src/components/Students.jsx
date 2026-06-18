@@ -13,13 +13,14 @@ import {
 } from 'react-icons/fa';
 
 export default function Students({ students = [], setStudents, academyId }) {
-  const { t } = useTranslation();
+  // 🌟 استخراج i18n لمعرفة اللغة الحالية للموقع تلقائياً
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   
-  // حالات نموذج إضافة طالب جديد (تأكد من مطابقتها للداتابيز)
   const [name, setName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [parentName, setParentName] = useState('');
@@ -87,13 +88,12 @@ export default function Students({ students = [], setStudents, academyId }) {
       if (error) throw error;
       if (data && setStudents) setStudents(prev => [data[0], ...prev]);
 
-      // إعادة تهيئة النموذج بعد النجاح
       setName(''); setParentPhone(''); setParentName(''); setCurrentQuarterIndex(0); 
       setNotes(''); setBirthDate(''); setPaymentPlan('شهري'); setCountryCode('EG');
       setShowAddForm(false);
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء إضافة الطالب: ' + error.message);
+      alert(isArabic ? 'حدث خطأ أثناء إضافة الطالب' : 'Error adding student');
     } finally {
       setIsAdding(false);
     }
@@ -132,7 +132,6 @@ export default function Students({ students = [], setStudents, academyId }) {
         .eq('id', updatedStudentData.id);
 
       if (error) throw error;
-
       setStudents(prev => prev.map(st => st.id === updatedStudentData.id ? updatedStudentData : st));
       setEditingStudent(null);
     } catch (error) {
@@ -143,13 +142,14 @@ export default function Students({ students = [], setStudents, academyId }) {
   };
 
   const handleToggleArchive = async (studentId, currentArchiveStatus) => {
-    if (!window.confirm(currentArchiveStatus ? 'إلغاء الأرشفة؟' : 'تأكيد الأرشفة؟')) return;
+    const confirmMsg = isArabic ? 'هل أنت متأكد؟' : 'Are you sure?';
+    if (!window.confirm(confirmMsg)) return;
     try {
       const { error } = await supabase.from('students').update({ is_archived: !currentArchiveStatus }).eq('id', studentId);
       if (error) throw error;
       setStudents(prev => prev.map(st => st.id === studentId ? { ...st, is_archived: !currentArchiveStatus } : st));
     } catch (error) {
-      alert('حدث خطأ أثناء تعديل الأرشفة');
+      alert('Error updating archive status');
     }
   };
 
@@ -167,12 +167,13 @@ export default function Students({ students = [], setStudents, academyId }) {
     : [];
 
   return (
-    <div dir="rtl" style={{ width: '100%', maxWidth: '480px', margin: '0 auto', padding: '10px' }}>
+    // 🌟 تحديد الاتجاه ومحاذاة النصوص ديناميكياً بناءً على لغة الموقع الحالية
+    <div dir={isArabic ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '480px', margin: '0 auto', padding: '10px', textAlign: isArabic ? 'right' : 'left' }}>
       
-      {/* هيدر الصفحة المتناسق تماماً */}
+      {/* هيدر الصفحة المستند للترجمة الذكية */}
       <div style={{ textAlign: 'center', marginBottom: '25px', marginTop: '15px' }}>
         <h2 style={{ color: C.gold || '#C9A84C', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '24px', fontWeight: 'bold' }}>
-          <span style={{ fontSize: '24px' }}>🎓</span> إدارة الطلاب والشؤون التعليمية
+          <span>🎓</span> {showArchived ? t('students.archive_title', 'أرشيف الطلاب') : t('students.title', 'إدارة الطلاب والشؤون التعليمية')}
         </h2>
       </div>
 
@@ -183,7 +184,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           onClick={() => { setShowArchived(!showArchived); setEditingStudent(null); setShowAddForm(false); setSearchTerm(''); }}
           style={{ background: '#1e293b', color: showArchived ? (C.gold || '#C9A84C') : '#fff', border: `1px solid ${C.border || '#1E293B'}`, padding: '12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold', fontSize: '15px' }}
         >
-          <FaArchive /> عرض الأرشيف
+          <FaArchive /> {showArchived ? t('students.view_active', 'عرض النشطين') : t('students.view_archive', 'عرض الأرشيف')}
         </button>
 
         <button 
@@ -191,43 +192,43 @@ export default function Students({ students = [], setStudents, academyId }) {
           onClick={() => { setShowAddForm(!showAddForm); setEditingStudent(null); }}
           style={{ background: showAddForm ? (C.danger || '#EF4444') : (C.gold || '#C9A84C'), color: showAddForm ? '#fff' : '#000', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '15px' }}
         >
-          {showAddForm ? <><FaTimes /> إلغاء 👤+</> : <><FaUserPlus /> إضافة طالب جديد</>}
+          {showAddForm ? <><FaTimes /> {t('students.cancel', 'إلغاء')}</> : <><FaUserPlus /> {t('students.add_new', 'إضافة طالب جديد')}</>}
         </button>
       </div>
 
-      {/* استمارة إضافة طالب جديد - تحتوي الآن على كل الخانات المخفية بنفس القالب الصارم */}
+      {/* استمارة إضافة طالب جديد - تدعم اللغتين بالكامل مع الحفاظ على التصميم العامودي الصارم */}
       {showAddForm && !showArchived && (
         <form onSubmit={handleAddStudent} style={{ background: C.surface || '#111827', padding: '20px', borderRadius: '12px', border: `1px solid ${C.border || '#1E293B'}`, marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           {/* اسم الطالب */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ color: C.text || '#fff', fontSize: '14px', fontWeight: '500' }}>* اسم الطالب الكامل</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="أدخل اسم الطالب ثلاثياً" style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'right' }} required />
+            <label style={{ color: C.text || '#fff', fontSize: '14px', fontWeight: '500' }}>{t('students.name_label', '* اسم الطالب الكامل')}</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('students.name_placeholder', 'أدخل اسم الطالب ثلاثياً')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', textAlign: isArabic ? 'right' : 'left' }} required />
           </div>
 
           {/* الجنس وتاريخ الميلاد */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none' }}>
-                <option value="male">ذكر</option>
-                <option value="female">أنثى</option>
+                <option value="male">{t('students.male', 'ذكر')}</option>
+                <option value="female">{t('students.female', 'أنثى')}</option>
               </select>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none' }} />
+              <input type="date" value={birthDate} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none' }} onChange={(e) => setBirthDate(e.target.value)} />
             </div>
           </div>
 
           {/* اسم ولي الأمر */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>اسم ولي الأمر الثنائي</label>
-            <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="أدخل اسم الأب أو المسؤول عن الطالب" style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'right' }} />
+            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>{t('students.parent_name_label', 'اسم ولي الأمر الثنائي')}</label>
+            <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder={t('students.parent_placeholder', 'أدخل اسم المسؤول عن الطالب')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', textAlign: isArabic ? 'right' : 'left' }} />
           </div>
 
-          {/* هاتف التواصل والدولة التابع لها */}
+          {/* هاتف التواصل والدولة */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <input type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} placeholder="رقم الهاتف (واتساب)" style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'left', direction: 'ltr' }} />
+              <input type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} placeholder={t('students.phone_placeholder', 'رقم الهاتف')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', textAlign: 'left', direction: 'ltr' }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none' }}>
@@ -238,54 +239,53 @@ export default function Students({ students = [], setStudents, academyId }) {
             </div>
           </div>
 
-          {/* خطة السداد والرسوم */}
+          {/* خطة السداد */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>نظام السداد والاشتراك المالي</label>
+            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>{t('students.payment_plan_label', 'نظام السداد والاشتراك المالي')}</label>
             <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none' }}>
-              <option value="شهري">اشتراك شهري دوري</option>
-              <option value="فصلي">اشتراك فصلي (كل 3 شهور)</option>
-              <option value="سنوي">اشتراك سنوي كامل</option>
-              <option value="منحة">منحة دراسية / إعفاء</option>
+              <option value="شهري">{t('students.monthly', 'اشتراك شهري دوري')}</option>
+              <option value="فصلي">{t('students.quarterly', 'اشتراك فصلي (كل 3 شهور)')}</option>
+              <option value="سنوي">{t('students.yearly', 'اشتراك سنوي كامل')}</option>
+              <option value="منحة">{t('students.scholarship', 'منحة دراسية / إعفاء')}</option>
             </select>
           </div>
 
-          {/* مستوى الحفظ الحالي (الورد) */}
+          {/* مستوى الحفظ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>:المستوى الحالي في الحفظ (الورد)</label>
+            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>{t('students.current_level_label', 'المستوى الحالي في الحفظ (الورد)')}</label>
             <div style={{ background: '#0C1520', padding: '12px', borderRadius: '8px', border: `1px solid ${C.border || '#1E293B'}` }}>
               <QuranProgressSelector initialIndex={currentQuarterIndex} onIndexChange={(newIndex) => setCurrentQuarterIndex(newIndex)} />
             </div>
           </div>
 
-          {/* ملاحظات الشؤون التعليمية */}
+          {/* ملاحظات المعلم */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>ملاحظات المعلم أو الإدارة</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات خاصة بالتوقيت أو الحفظ..." style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', height: '65px', resize: 'none', textAlign: 'right' }} />
+            <label style={{ color: C.text || '#fff', fontSize: '14px' }}>{t('students.notes_label', 'ملاحظات المعلم أو الإدارة')}</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('students.notes_placeholder', 'أي ملاحظات خاصة...')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '12px', borderRadius: '8px', outline: 'none', height: '65px', resize: 'none', textAlign: isArabic ? 'right' : 'left' }} />
           </div>
 
-          {/* زر التأكيد */}
           <button type="submit" disabled={isAdding} style={{ background: C.gold || '#C9A84C', color: '#000', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
-            {isAdding ? 'جاري حفظ البيانات...' : 'تأكيد إضافة الطالب'}
+            {isAdding ? t('students.saving', 'جاري الحفظ...') : t('students.confirm_add', 'تأكيد إضافة الطالب')}
           </button>
         </form>
       )}
 
-      {/* حقل البحث الذكي والمنسق سفلياً */}
+      {/* حقل البحث الذكي المتغير */}
       <div style={{ position: 'relative', marginBottom: '20px' }}>
         <input 
           type="text" 
-          placeholder="...ابحث عن طالب بالاسم، الهاتف، أو الحفظ" 
+          placeholder={t('students.search_placeholder', 'ابحث عن طالب بالاسم، الهاتف، أو الحفظ...')} 
           value={searchTerm} 
           onChange={(e) => setSearchTerm(e.target.value)} 
-          style={{ width: '100%', background: C.surface || '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '14px 16px', borderRadius: '10px', outline: 'none', fontSize: '14px', textAlign: 'right', boxSizing: 'border-box' }} 
+          style={{ width: '100%', background: C.surface || '#111827', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '14px 16px', borderRadius: '10px', outline: 'none', fontSize: '14px', textAlign: isArabic ? 'right' : 'left', boxSizing: 'border-box' }} 
         />
       </div>
 
-      {/* منطقة عرض كروت بطاقات الطلاب */}
+      {/* كروت كشف الطلاب المعربة والمترجمة ديناميكياً */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {filteredStudents.length === 0 ? (
           <div style={{ background: C.surface || '#111827', padding: '25px', borderRadius: '12px', border: `1px solid ${C.border || '#1E293B'}`, textAlign: 'center', color: '#9CA3AF', fontSize: '14px' }}>
-            لا يوجد طلاب مسجلين يطابقون خيارات البحث الحالية.
+            {t('students.no_data', 'لا يوجد طلاب يطابقون خيارات البحث الحالية.')}
           </div>
         ) : (
           filteredStudents.map(student => {
@@ -299,48 +299,50 @@ export default function Students({ students = [], setStudents, academyId }) {
               <div key={student.id} style={{ background: C.surface || '#111827', padding: '18px', borderRadius: '12px', border: isCurrentEditing ? `1px solid ${C.gold || '#C9A84C'}` : `1px solid ${C.border || '#1E293B'}`, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 
                 {isCurrentEditing ? (
-                  /* واجهة التعديل السريع المنسقة */
+                  /* نموذج التعديل السريع المتجاوب */
                   <form onSubmit={handleUpdateStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <input type="text" value={editingStudent.name} onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', outline: 'none' }} required />
                     
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <select value={editingStudent.gender} onChange={(e) => setEditingStudent({...editingStudent, gender: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px' }}><option value="male">ذكر</option><option value="female">أنثى</option></select>
+                      <select value={editingStudent.gender} onChange={(e) => setEditingStudent({...editingStudent, gender: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px' }}>
+                        <option value="male">{t('students.male', 'ذكر')}</option>
+                        <option value="female">{t('students.female', 'أنثى')}</option>
+                      </select>
                       <input type="date" value={editingStudent.birth_date || ''} onChange={(e) => setEditingStudent({...editingStudent, birth_date: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px' }} />
                     </div>
 
-                    <input type="text" value={editingStudent.parent_name || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_name: e.target.value})} placeholder="اسم ولي الأمر" style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px' }} />
-                    <input type="tel" value={editingStudent.parent_phone || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_phone: e.target.value})} placeholder="هاتف التواصل" style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'left', direction: 'ltr' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <input type="text" value={editingStudent.parent_name || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_name: e.target.value})} placeholder={t('students.parent_name_label', 'اسم ولي الأمر')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px' }} />
+                      <input type="tel" value={editingStudent.parent_phone || ''} onChange={(e) => setEditingStudent({...editingStudent, parent_phone: e.target.value})} placeholder={t('students.phone_placeholder', 'رقم الهاتف')} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'left', direction: 'ltr' }} />
+                    </div>
 
                     <div style={{ background: '#0C1520', padding: '10px', borderRadius: '6px', border: `1px solid ${C.border || '#1E293B'}` }}>
                       <QuranProgressSelector initialIndex={currentStudentQuarterIndex} onIndexChange={(newIndex) => setEditingStudent({ ...editingStudent, current_quarter_index: parseInt(newIndex) || 0 })} />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <input type="number" placeholder="آخر اختبار" value={editingStudent.last_test_score || ''} onChange={(e) => setEditingStudent({...editingStudent, last_test_score: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }} />
-                      <input type="number" placeholder="المستوى العام" value={editingStudent.level_score || ''} onChange={(e) => setEditingStudent({...editingStudent, level_score: e.target.value})} style={{ background: '#0C1520', border: `1px solid ${C.border || '#1E293B'}`, color: '#fff', padding: '10px', borderRadius: '6px', flex: 1 }} />
-                    </div>
-
                     <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-                      <button type="submit" disabled={isLocalSaving} style={{ background: '#10B981', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}><FaSave /> حفظ</button>
-                      <button type="button" onClick={() => setEditingStudent(null)} style={{ background: '#475569', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}><FaTimes /> إلغاء</button>
+                      <button type="submit" disabled={isLocalSaving} style={{ background: '#10B981', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>{t('students.save', 'حفظ')}</button>
+                      <button type="button" onClick={() => setEditingStudent(null)} style={{ background: '#475569', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}>{t('students.cancel', 'إلغاء')}</button>
                     </div>
                   </form>
                 ) : (
-                  /* كارت عرض معلومات الطالب الاحترافي والمحمي برمجياً */
+                  /* كارت العرض الذكي المرن المترجم */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
                         <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#fff' }}>{student.name}</span>
-                        {currentAge !== null && <span style={{ fontSize: '12px', color: C.gold || '#C9A84C' }}>({currentAge} سنة)</span>}
+                        {currentAge !== null && <span style={{ fontSize: '12px', color: C.gold || '#C9A84C' }}>({currentAge} {t('students.years', 'سنة')})</span>}
                       </div>
-                      <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', background: student.gender === 'female' ? '#EC4899' : '#3B82F6', color: '#fff' }}>{student.gender === 'female' ? 'أنثى' : 'ذكر'}</span>
+                      <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', background: student.gender === 'female' ? '#EC4899' : '#3B82F6', color: '#fff' }}>
+                        {student.gender === 'female' ? t('students.female', 'أنثى') : t('students.male', 'ذكر')}
+                      </span>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: C.text || '#9CA3AF', opacity: 0.9 }}>
                       {student.parent_phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaPhone size={11} /> <span style={{ direction: 'ltr' }}>{student.parent_phone}</span></span>}
-                      {student.parent_name && <span><FaUserShield size={12} /> المسؤول: {student.parent_name}</span>}
-                      {student.payment_plan && <span><FaMoneyBillWave size={12} style={{ color: '#10B981' }} /> الاشتراك: {student.payment_plan}</span>}
+                      {student.parent_name && <span><FaUserShield size={12} /> {t('students.parent', 'المسؤول')}: {student.parent_name}</span>}
+                      {student.payment_plan && <span><FaMoneyBillWave size={12} style={{ color: '#10B981' }} /> {t('students.plan', 'الاشتراك')}: {student.payment_plan}</span>}
                       {student.notes && <span style={{ color: '#6B7280', fontSize: '12px' }}><FaFileAlt size={11} /> {student.notes}</span>}
                     </div>
 
@@ -350,10 +352,10 @@ export default function Students({ students = [], setStudents, academyId }) {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${C.border || '#1E293B'}`, paddingTop: '10px', marginTop: '5px' }}>
                       <button type="button" onClick={() => handleToggleArchive(student.id, student.is_archived)} style={{ background: 'none', border: 'none', color: C.danger || '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                        <FaArchive size={11} /> أرشفة الطالب
+                        <FaArchive size={11} /> {student.is_archived ? t('students.unarchive', 'إلغاء الأرشفة') : t('students.archive', 'أرشفة الطالب')}
                       </button>
                       <button type="button" onClick={() => setEditingStudent({ ...student })} style={{ background: 'none', border: 'none', color: C.gold || '#C9A84C', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                        <FaEdit size={11} /> تعديل سريع
+                        <FaEdit size={11} /> {t('students.edit', 'تعديل سريع')}
                       </button>
                     </div>
                   </div>
