@@ -13,14 +13,27 @@ window.onerror = function (message, source, lineno, colno, error) {
   return false;
 };
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import './i18n' 
 
+// شاشة تحميل مبدئية فائقة السرعة لحماية التطبيق أثناء تحضير ملفات اللغات والـ i18n
+const InitialLoader = () => (
+  <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif' }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ width: '24px', height: '24px', border: '2px solid rgba(251,191,36,0.1)', borderTop: '2px solid #FBBF24', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 10px auto' }}></div>
+      <span style={{ fontSize: '13px' }}>جاري تحضير بيئة العمل...</span>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  </div>
+);
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <Suspense fallback={<InitialLoader />}>
+      <App />
+    </Suspense>
   </React.StrictMode>,
 )
