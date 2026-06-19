@@ -15,7 +15,6 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx' // تأخير استدعاء التطبيق لضمان جاهزية البيئة للمكونات
 
 // شاشة تحميل مبدئية فائقة السرعة لحماية التطبيق أثناء تحضير ملفات اللغات والـ i18n
 const InitialLoader = () => (
