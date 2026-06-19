@@ -54,17 +54,17 @@ class LocalErrorBoundary extends React.Component {
   }
 }
 
-export default function MainApp({ session }) {
+export default function MainApp({ session, userRole, trialDaysLeft }) {
   const { t, i18n } = useTranslation(); 
   const [activeTab, setActiveTab] = useState("dashboard"); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   
   // حالات تخزين بيانات الطلاب والمعلومات الأساسية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [academyName, setAcademyName] = useState(""); 
-  const [completedExamsCount, setCompletedExamsCount] = useState(0); // ✨ مضاف حديثاً لتخزين العدد الحقيقي للاختبارات
+  const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
 
   // معرفة اتجاه اللغة الحالية
@@ -88,7 +88,7 @@ export default function MainApp({ session }) {
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
 
-  // تأثير جلب البيانات الأولية المطوّر والمربوط بقاعدة البيانات حياً
+  // 3️⃣ جلب البيانات الأولية المطوّر والمربوط بقاعدة البيانات حياً
   useEffect(() => {
     if (isFetchLocked.current) return;
 
@@ -101,7 +101,6 @@ export default function MainApp({ session }) {
       isFetchLocked.current = true;
 
       try {
-        // جلب معرف الأكاديمية واسمها بربط الجداول الاحترافي
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name)')
@@ -115,7 +114,7 @@ export default function MainApp({ session }) {
           setAcademyId(currentAcademyId);
           if (currentAcademyName) setAcademyName(currentAcademyName); 
 
-          // أ) جلب مصفوفة الطلاب الحية
+          // جلب مصفوفة الطلاب الحية
           const { data: studentsData } = await supabase
             .from('students')
             .select('*')
@@ -123,7 +122,7 @@ export default function MainApp({ session }) {
           
           if (studentsData) setStudents(studentsData);
 
-          // ب) 🌟 استعلام حي لحساب إجمالي عدد الاختبارات الفعلية للأكاديمية من الـ Supabase
+          // استعلام حي لحساب إجمالي عدد الاختبارات الفعلية
           const { count: examsCount, error: examsError } = await supabase
             .from('exams')
             .select('*', { count: 'exact', head: true })
@@ -134,7 +133,7 @@ export default function MainApp({ session }) {
           }
         }
       } catch (error) {
-        console.error("خطأ جلب البيانات:", error);
+        console.error("خطأ جلب البيانات داخل MainApp:", error);
       } finally {
         setLoadingData(false);
       }
@@ -143,18 +142,18 @@ export default function MainApp({ session }) {
     loadInitialData();
   }, [session]);
 
-  // تجهيز مصفوفة البيانات الممررة للـ Dashboard لمنع التجميد ولحساب الإحصائيات الحية الدقيقة
+  // تجهيز مصفوفة البيانات الممررة للـ Dashboard
   const preloadedDashboardData = {
     academyName: academyName,
     stats: {
       students: students.length,
       pending: students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length || 0,
       activeHalagas: students.length > 0 ? Math.ceil(students.length / 8) : 0, 
-      completedExams: completedExamsCount // ✨ أصبحت الآن تقرأ من قاعدة البيانات مباشرة وليس رقم عشوائي
+      completedExams: completedExamsCount 
     }
   };
 
-  // شاشة الانتظار الفخمة
+  // شاشة الانتظار الداخلية الفخمة
   if (loadingData) {
     return (
       <div style={{ 
@@ -198,32 +197,19 @@ export default function MainApp({ session }) {
           {activeTab === 'dashboard' && (
             <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} />
           )}
-          
-          {/* إدارة الطلاب مع تمرير الـ State للتعديل الفوري والديناميكي */}
           {activeTab === 'students' && (
             <Students students={students} setStudents={setStudents} academyId={academyId} />
           )}
-          
           {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} />}
-          
-          {/* تشغيل منظومة تقييم واختبارات الأجزاء الذكية الحية والعالمية */}
-          {activeTab === 'exams' && (
-            <Exams students={students} academyId={academyId} />
-          )}
-          
+          {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
           {activeTab === 'payments' && <Payments students={students} academyId={academyId} />}
           {activeTab === 'settings' && <Settings academyId={academyId} session={session} />}
-          
-          {/* تشغيل منظومة تقارير الواتساب الذكية الفعلية */}
-          {activeTab === 'reports' && (
-            <Reports students={students} academyId={academyId} />
-          )}
+          {activeTab === 'reports' && <Reports students={students} academyId={academyId} />}
         </LocalErrorBoundary>
       </div>
     );
   };
 
-  // مصفوفة عناصر القائمة الجانبية المطورة لتضم المهام العالمية الجديدة للأكاديمية
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, ar: 'لوحة التحكم', en: 'Dashboard' },
     { id: 'students', icon: <FaUsers />, ar: 'إدارة الطلاب', en: 'Student Management' },
@@ -235,9 +221,8 @@ export default function MainApp({ session }) {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row', width: '100%' }}>
       
-      {/* 🌫️ غطاء خلفي شفاف لإغلاق القائمة في الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -265,9 +250,31 @@ export default function MainApp({ session }) {
         boxShadow: C.shadow,
         transition: 'all 0.3s ease'
       }}>
-        <h2 style={{ color: C.gold, marginBottom: '20px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>
+        <h2 style={{ color: C.gold, marginBottom: '5px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
+
+        {/* ⏳ عداد الأيام التجريبية الذكي المحفّز للدفع - يظهر فقط للمشرفين غير الأدمن الرئيسي */}
+        {userRole !== 'admin' && trialDaysLeft > 0 && (
+          <div style={{ 
+            backgroundColor: 'rgba(201, 168, 76, 0.08)', 
+            color: C.gold || '#C9A84C', 
+            padding: '8px 12px', 
+            borderRadius: '8px', 
+            fontSize: '12px', 
+            textAlign: 'center', 
+            marginBottom: '15px', 
+            marginTop: '10px',
+            border: '1px solid rgba(201, 168, 76, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}>
+            <FaClock />
+            <span>{isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`}</span>
+          </div>
+        )}
         
         <nav style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 15, flex: 1, overflowY: 'auto' }}>
           {menuItems.map(item => (
@@ -290,7 +297,6 @@ export default function MainApp({ session }) {
           ))}
         </nav>
 
-        {/* 🚪 زر تسجيل الخروج السفلي */}
         <button 
           onClick={() => supabase.auth.signOut()} 
           style={{ 
