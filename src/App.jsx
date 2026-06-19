@@ -1,30 +1,29 @@
-import { useState, useEffect, Component } from 'react'; 
-import { supabase } from './lib/supabase'; 
+import React, { useState, useEffect, Component, Suspense } from 'react'; 
 import { useTranslation } from 'react-i18next';
 
-// 📦 استيراد المكونات الأساسية للمنصة
-import LoginPage from './components/LoginPage';
-import SignUpPage from './components/SignUpPage';
-import ForgotPassword from './components/ForgotPassword';
-import UpdatePassword from './components/UpdatePassword';
-import MainApp from './components/MainApp';
+// 🛡️ 1️⃣ تحويل كافة المكونات إلى استيراد ديناميكي مؤجل (Lazy) لمنع انهيار بداية التشغيل
+const LoginPage = React.lazy(() => import('./components/LoginPage'));
+const SignUpPage = React.lazy(() => import('./components/SignUpPage'));
+const ForgotPassword = React.lazy(() => import('./components/ForgotPassword'));
+const UpdatePassword = React.lazy(() => import('./components/UpdatePassword'));
+const MainApp = React.lazy(() => import('./components/MainApp'));
 
-// 🛡️ 1️⃣ رادار الأعطال الذكي (React Error Boundary) لالتقاط انهيار المكونات السفلية
+// 🛑 رادار الأعطال الذكي لالتقاط انهيارات الواجهة وعرض التقرير فوراً
 class AppErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("Caught internal crash:", error, errorInfo);
+    console.error("Critical Render Crash:", error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
       return (
         <div style={{ padding: '30px', background: '#111827', color: '#EF4444', minHeight: '100vh', fontFamily: 'monospace', direction: 'ltr', textAlign: 'left' }}>
-          <h2 style={{ color: '#C9A84C', marginBottom: '10px' }}>🚨 الانهيار الصامت تم رصده بنجاح! (Component Crash)</h2>
-          <p style={{ color: '#9CA3AF' }}>المتصفح انهار بسبب الخطأ التالي في كود الصفحات الفرعية الحالية:</p>
-          <pre style={{ background: '#090F17', padding: '20px', borderRadius: '8px', overflow: 'auto', color: '#F3F4F6', border: '1px solid #374151', marginTop: '15px', fontSize: '14px', lineHeight: '1.5' }}>
+          <h2 style={{ color: '#C9A84C', marginBottom: '10px' }}>🚨 الحارس البرمجي: تم رصد سبب الانهيار بنجاح!</h2>
+          <p style={{ color: '#9CA3AF' }}>التطبيق تعطل بسبب هذا الخطأ الصريح في أحد الملفات الداخلية:</p>
+          <pre style={{ background: '#090F17', padding: '20px', borderRadius: '8px', overflow: 'auto', color: '#F3F4F6', border: '1px solid #374151', marginTop: '15px', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
             {this.state.error?.stack || this.state.error?.toString()}
           </pre>
           <button onClick={() => window.location.reload()} style={{ background: '#C9A84C', color: '#090F17', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px' }}>
@@ -37,9 +36,13 @@ class AppErrorBoundary extends Component {
   }
 }
 
-// 🧠 2️⃣ محتوى واجهة التطبيق الرئيسي بكافة شروطه وبنيتك الأصلية دون تعديل
+// 🧠 2️⃣ محتوى واجهة التطبيق الرئيسي المعزول
 function AppContent() {
   const { i18n } = useTranslation();
+
+  // حالات إدارة سوبابيس بشكل ديناميكي آمن
+  const [supabase, setSupabase] = useState(null);
+  const [supabaseError, setSupabaseError] = useState(null);
 
   const getBootStatusSafe = () => {
     try {
@@ -51,7 +54,7 @@ function AppContent() {
 
   const isAlreadyBooted = getBootStatusSafe();
   
-  // 📊 الحالات الأساسية لإدارة التطبيق
+  // الحالات الأساسية لإدارة التطبيق
   const [appLoading, setAppLoading] = useState(!isAlreadyBooted); 
   const [dataLoading, setDataLoading] = useState(false); 
   const [session, setSession] = useState(null);
@@ -60,17 +63,32 @@ function AppContent() {
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
   const [isInitialDataFetched, setIsInitialDataFetched] = useState(false); 
 
-  // 💰 محرك الـ SaaS لإدارة الاشتراكات والجدار المالي
+  // محرك الـ SaaS لإدارة الاشتراكات والجدار المالي
   const [subscriptionStatus, setSubscriptionStatus] = useState('trialing'); 
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
 
   const isRtl = i18n?.language === 'ar' || (typeof i18n?.dir === 'function' && i18n.dir() === 'rtl');
   const userId = session?.user?.id;
 
-  // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها
-  const fetchDashboardDataCentral = async (uid) => {
+  // 🔌 جلب ملف السوبابيس ديناميكياً وعزله تماماً لحمايته من الانهيار البدئي
+  useEffect(() => {
+    import('./lib/supabase')
+      .then((mod) => {
+        if (mod && mod.supabase) {
+          setSupabase(mod.supabase);
+        } else {
+          setSupabaseError("ملف Supabase لم يقم بتصدير كائن الاتصال بشكل صحيح.");
+        }
+      })
+      .catch((err) => {
+        setSupabaseError(err?.stack || err?.toString() || "فشل تحميل إعدادات اتصال Supabase السحابية.");
+      });
+  }, []);
+
+  // الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها
+  const fetchDashboardDataCentral = async (sb, uid) => {
     try {
-      const { data: staffData, error: staffError } = await supabase
+      const { data: staffData, error: staffError } = await sb
         .from('staff')
         .select('academy_id')
         .eq('user_id', uid)
@@ -82,7 +100,7 @@ function AppContent() {
 
       const academyId = staffData.academy_id;
 
-      const { data: academy, error: academyError } = await supabase
+      const { data: academy, error: academyError } = await sb
         .from('academies')
         .select('name, is_active, subscription_status, trial_ends_at')
         .eq('id', academyId)
@@ -104,8 +122,8 @@ function AppContent() {
         }
 
         const [studentsResult, paymentsResult] = await Promise.all([
-          supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
-          supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
+          sb.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
+          sb.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
         ]);
 
         return { 
@@ -121,8 +139,10 @@ function AppContent() {
     return { academyName: '', status: 'expired', trialDaysLeft: 0, stats: { students: 0, pending: 0 } };
   };
 
-  // مراقبة الجلسة والتشغيل الأولي وحذف الدائرة الخضراء برمجياً
+  // مراقبة الجلسة والتشغيل الأولي وحذف الدائرة الخضراء برمجياً بعد التأكد من البيئة
   useEffect(() => {
+    if (!supabase) return;
+
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
     if (urlLang && i18n) {
@@ -146,7 +166,7 @@ function AppContent() {
         staticLoader.style.opacity = '0'; 
         setTimeout(() => staticLoader.remove(), 300); 
       }
-    }, 1800);
+    }, 1500);
 
     return () => {
       clearTimeout(bootTimer);
@@ -156,7 +176,7 @@ function AppContent() {
         data();
       }
     };
-  }, [i18n]);
+  }, [supabase, i18n]);
 
   // صمام الأمان الزمني لمنع تجميد الواجهة بعد تسجيل الدخول
   useEffect(() => {
@@ -170,6 +190,8 @@ function AppContent() {
 
   // تتبع هوية المستخدم وتطبيق جدار الحماية المالي
   useEffect(() => {
+    if (!supabase) return;
+
     let isCurrentRequest = true;
     if (!userId) {
       setDashboardData({ academyName: '', stats: { students: 0, pending: 0 } });
@@ -207,7 +229,7 @@ function AppContent() {
         }
 
         if (role !== 'admin') {
-          const fetchedData = await fetchDashboardDataCentral(userId);
+          const fetchedData = await fetchDashboardDataCentral(supabase, userId);
           if (isCurrentRequest) {
             setDashboardData(fetchedData);
             setSubscriptionStatus(fetchedData.status);
@@ -227,15 +249,28 @@ function AppContent() {
     loadUserDataAndRole();
 
     return () => { isCurrentRequest = false; };
-  }, [userId]);
+  }, [supabase, userId]);
 
-  // التحكم في الشاشات العلوية الحرجة
-  if (appLoading) {
+  // 🚨 عرض خطأ السوبابيس إذا كان هو السبب الرئيسي للانهيار الصامت (مثل نقص الـ Env Variables)
+  if (supabaseError) {
+    return (
+      <div style={{ padding: '30px', background: '#111827', color: '#EF4444', minHeight: '100vh', fontFamily: 'monospace', direction: 'rtl', textAlign: 'right' }}>
+        <h2 style={{ color: '#C9A84C' }}>🚨 تم كشف الانهيار في اتصال السيرفر (Supabase Connection Failure)</h2>
+        <p style={{ color: '#9CA3AF' }}>التطبيق توقف تماماً بسبب فشل قراءة ملف الاتصال بقاعدة البيانات. تأكد من إعداد متغيرات البيئة على فيرسل:</p>
+        <pre style={{ background: '#090F17', padding: '20px', borderRadius: '8px', color: '#F3F4F6', border: '1px solid #374151', direction: 'ltr', textAlign: 'left', overflow: 'auto' }}>
+          {supabaseError}
+        </pre>
+      </div>
+    );
+  }
+
+  // التحكم في الشاشات العلوية الحرجة للمنصة
+  if (!supabase || appLoading) {
     return (
       <div style={{ backgroundColor: "#090F17", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", color: "#C9A84C", fontFamily: "sans-serif", direction: "rtl" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ width: "24px", height: "24px", border: "2px solid rgba(201,168,76,0.1)", borderTop: "2px solid #C9A84C", borderRadius: "50%", animation: "spinCore 1s linear infinite", margin: "0 auto 10px auto" }}></div>
-          <span style={{ fontSize: "13px", color: "#4b5966" }}>جاري مزامنة المكونات السحابية...</span>
+          <span style={{ fontSize: "13px", color: "#4b5966" }}>جاري موازنة جدار الحماية والملفات السحابية...</span>
           <style>{`@keyframes spinCore { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
@@ -312,7 +347,7 @@ function AppContent() {
     );
   }
 
-  // 🔐 شاشات المصادقة قبل تسجيل الدخول
+  // شاشات المصادقة قبل تسجيل الدخول
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', background: '#090F17', minHeight: '100vh' }}>
       {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
@@ -322,34 +357,18 @@ function AppContent() {
   );
 }
 
-// 📦 3️⃣ التصدير النهائي المغلف بالكامل داخل جدار الحماية البرمجي
+// 📦 3️⃣ التصدير النهائي المغلف بـ Suspense و ErrorBoundary لحصار الأخطاء تماماً
 export default function App() {
-  const [globalError, setGlobalError] = useState(null);
-
-  // تصيد أي انهيار يحدث أثناء معالجة الملفات العلوية قبل الرندر
-  useEffect(() => {
-    const handleGlobalError = (event) => {
-      setGlobalError(event.error?.stack || event.message);
-    };
-    window.addEventListener('error', handleGlobalError);
-    return () => window.removeEventListener('error', handleGlobalError);
-  }, []);
-
-  if (globalError) {
-    return (
-      <div style={{ padding: '30px', background: '#111827', color: '#EF4444', minHeight: '100vh', fontFamily: 'monospace', direction: 'ltr', textAlign: 'left' }}>
-        <h2 style={{ color: '#C9A84C', marginBottom: '10px' }}>🚨 خطأ حرج في معالجة الملف (Global Runtime Error)</h2>
-        <p style={{ color: '#9CA3AF' }}>انقطع تيار التنفيذ تماماً بسبب:</p>
-        <pre style={{ background: '#090F17', padding: '20px', borderRadius: '8px', color: '#F3F4F6', border: '1px solid #374151', marginTop: '15px', fontSize: '14px' }}>
-          {globalError}
-        </pre>
-      </div>
-    );
-  }
-
   return (
     <AppErrorBoundary>
-      <AppContent />
+      <Suspense fallback={
+        <div style={{ backgroundColor: "#090F17", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", color: "#C9A84C" }}>
+          <div style={{ width: "24px", height: "24px", border: "2px solid rgba(201,168,76,0.1)", borderTop: "2px solid #C9A84C", borderRadius: "50%", animation: "spinLazy 1s linear infinite" }}></div>
+          <style>{`@keyframes spinLazy { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        </div>
+      }>
+        <AppContent />
+      </Suspense>
     </AppErrorBoundary>
   );
 }
