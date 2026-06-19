@@ -1,10 +1,4 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
-import './i18n' // 🌐 السطر الذهبي: ربط محرك الترجمة لمنع الانهيار الصامت للشاشة
-
-// 🚨 رادار الأعطال الشامل: يلتقط أي خطأ برمي على السيرفر ويعرضه فوراً بدلاً من السواد
+// 🚨 رادار الأعطال الشامل في القمة تماماً لضمان لقط أي خطأ أثناء حقن الموديلات (Module Evaluation)
 window.onerror = function (message, source, lineno, colno, error) {
   const rootEl = document.getElementById('root');
   if (rootEl) {
@@ -18,6 +12,12 @@ window.onerror = function (message, source, lineno, colno, error) {
   }
   return false;
 };
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import './i18n' 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
