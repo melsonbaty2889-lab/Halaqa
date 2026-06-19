@@ -10,7 +10,8 @@ import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 
 export default function App() {
-  const { t, i18n } = useTranslation();
+  // تأمين استدعاء الترجمة بشكل احترافي لمنع أي انهيار صامت
+  const { i18n } = useTranslation() || {};
 
   const getBootStatusSafe = () => {
     try {
@@ -35,7 +36,8 @@ export default function App() {
   const [subscriptionStatus, setSubscriptionStatus] = useState('trialing'); 
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
 
-  const isRtl = i18n.language === 'ar' || i18n.dir() === 'rtl';
+  // تأمين فحص اللغة والاتجاه بشكل مضاد للأخطاء
+  const isRtl = i18n?.language === 'ar' || (typeof i18n?.dir === 'function' && i18n.dir() === 'rtl') || true;
   const userId = session?.user?.id;
 
   // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها
@@ -92,44 +94,51 @@ export default function App() {
     return { academyName: '', status: 'expired', trialDaysLeft: 0, stats: { students: 0, pending: 0 } };
   };
 
-  // 1️⃣ 🛠️ مراقبة الجلسة والتشغيل الأولي وحذف الدائرة الخضراء نهائياً
+  // 1️⃣ 🛠️ مراقبة الجلسة والتشغيل الأولي بأعلى معايير الأمان
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get('lang');
-    if (urlLang) {
-      i18n.changeLanguage(urlLang);
-      localStorage.setItem('i18nextLng', urlLang);
+    let bootTimer;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlLang = urlParams.get('lang');
+      if (urlLang && i18n) {
+        i18n.changeLanguage(urlLang);
+        localStorage.setItem('i18nextLng', urlLang);
+      }
+
+      // مراقبة الجلسة من سوبابيس بشكل آمن
+      const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
+        setSession(currentSession);
+        if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
+      });
+
+      bootTimer = setTimeout(() => {
+        setAppLoading(false);
+        try {
+          sessionStorage.setItem('is_app_booted', 'true');
+        } catch (e) {}
+
+        const staticLoader = document.querySelector('.app-loading-screen');
+        if (staticLoader) {
+          staticLoader.style.opacity = '0'; 
+          setTimeout(() => staticLoader.remove(), 300); 
+        }
+      }, 1500);
+
+      return () => {
+        if (bootTimer) clearTimeout(bootTimer);
+        if (data?.subscription) {
+          data.subscription.unsubscribe();
+        } else if (typeof data === 'function') {
+          data();
+        }
+      };
+    } catch (e) {
+      console.error("🚨 خطأ حرج في الـ useEffect الأول:", e);
+      setAppLoading(false); // كسر التعليق فوراً في حال حدوث خطأ
     }
-
-    const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      setSession(currentSession);
-      if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
-    });
-
-    const bootTimer = setTimeout(() => {
-      setAppLoading(false);
-      try {
-        sessionStorage.setItem('is_app_booted', 'true');
-      } catch (e) {}
-
-      const staticLoader = document.querySelector('.app-loading-screen');
-      if (staticLoader) {
-        staticLoader.style.opacity = '0'; 
-        setTimeout(() => staticLoader.remove(), 300); 
-      }
-    }, 1800);
-
-    return () => {
-      clearTimeout(bootTimer);
-      if (data?.subscription) {
-        data.subscription.unsubscribe();
-      } else if (typeof data === 'function') {
-        data();
-      }
-    };
   }, [i18n]);
 
-  // 🛡️ 2️⃣ صمام الأمان الزمني (Fail-Safe) لمنع تجميد الشاشة أثناء جلب البيانات بعد تسجيل الدخول
+  // 🛡️ 2️⃣ صمام الأمان الزمني لمنع تجميد الشاشة أثناء جلب البيانات بعد تسجيل الدخول
   useEffect(() => {
     if (session && !isInitialDataFetched) {
       const dataFailSafeTimer = setTimeout(() => {
@@ -200,11 +209,22 @@ export default function App() {
     return () => { isCurrentRequest = false; };
   }, [userId]);
 
-  // 🛑 التحكم في الشاشات العلوية الحرجة
-  if (appLoading) return null; 
+  // 🛑 بدلاً من ارجاع null الحالية المسببة للسواد، سنظهر شاشة شفافة أو مؤشر أمان صريح
+  if (appLoading) {
+    return (
+      <div style={{ backgroundColor: "#090F17", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", color: "#C9A84C", fontFamily: "sans-serif", direction: "rtl" }}>
+        <div style={{ textDirection: "rtl", textAlign: "center" }}>
+          <div style={{ width: "24px", height: "24px", border: "2px solid rgba(201,168,76,0.1)", borderTop: "2px solid #C9A84C", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 10px auto" }}></div>
+          <span style={{ fontSize: "13px", color: "#4b5966" }}>جاري تحضير واجهة المنصة...</span>
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // ✨ حل ذكي لمنع الشاشة السوداء المعلقة أثناء جلب بيانات الأكاديمية بعد تسجيل الدخول مباشرة
+  // ✨ شاشة المزامنة السحابية المؤقتة بعد تسجيل الدخول مباشرة
   if (session && !isInitialDataFetched) {
     return (
       <div style={{ backgroundColor: "#090F17", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "#C9A84C", fontFamily: "sans-serif", gap: "15px" }}>
