@@ -1,18 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import './index.css'
-import './i18n'
 
-// الدالة المسؤولة عن إزالة شاشة التحميل الأصلية من الـ HTML
-const removeLoadingScreen = () => {
-  const loader = document.querySelector('.app-loading-screen');
-  if (loader) loader.style.display = 'none';
-};
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+// إزالة كل شيء، فقط عرض أبسط نسخة من التطبيق
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App onAppReady={removeLoadingScreen} />
+    <div style={{color: 'red', fontSize: '30px', textAlign: 'center', marginTop: '100px'}}>
+      التطبيق يعمل الآن!
+    </div>
   </React.StrictMode>
 )
