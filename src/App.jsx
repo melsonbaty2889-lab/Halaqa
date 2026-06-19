@@ -35,7 +35,6 @@ function AppContent() {
   const [authView, setAuthView] = useState('login');
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
-  const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
 
   useEffect(() => {
     if (!supabase) {
@@ -99,9 +98,6 @@ function AppContent() {
     return (
       <MainApp 
         session={session} 
-        isDataLoading={false} 
-        dashboardData={dashboardData} 
-        setDashboardData={setDashboardData} 
         userRole={userRole} 
         trialDaysLeft={7} 
       />
