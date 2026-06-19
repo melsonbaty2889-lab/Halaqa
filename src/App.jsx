@@ -59,13 +59,13 @@ function MainAppContainer() {
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
 
-  // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها
+  // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها (تم تحديثها بالجدار المالي الذكي)
   const fetchDashboardDataCentral = async (uid) => {
     try {
-      // جلب بيانات الأكاديمية مدمج بها أعمدة الاشتراك المالي الآلي
+      // جلب بيانات الأكاديمية مدمج بها أعمدة النشاط والاشتراك المالي الجديد
       const { data: staff, error: staffError } = await supabase
         .from('staff')
-        .select('academies(id, name, subscription_status, trial_ends_at)')
+        .select('academies(id, name, is_active, subscription_status, trial_ends_at)')
         .eq('user_id', uid)
         .maybeSingle();
 
@@ -73,11 +73,20 @@ function MainAppContainer() {
         const academy = staff.academies;
         const academyId = academy.id;
         
-        // حساب الأيام المتبقية في الفترة التجريبية بدقة
+        // 1️⃣ حساب الأيام المتبقية في الفترة التجريبية بدقة
         let daysLeft = 0;
         if (academy.trial_ends_at) {
           const diffTime = new Date(academy.trial_ends_at) - new Date();
           daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        // 2️⃣ منطق جدار الحماية التلقائي بناءً على البيانات المسترجعة
+        let finalStatus = academy.subscription_status || 'trialing';
+        
+        if (academy.is_active === false) {
+          finalStatus = 'expired'; // حظر فوري إذا قام لوحة الإشراف بتعطيل الأكاديمية يدوياً
+        } else if (finalStatus === 'trialing' && daysLeft <= 0) {
+          finalStatus = 'expired'; // انتهاء تجريبي آلي بمجرد انقضاء الـ 7 أيام
         }
 
         const [studentsResult, paymentsResult] = await Promise.all([
@@ -87,7 +96,7 @@ function MainAppContainer() {
 
         return { 
           academyName: academy.name, 
-          status: academy.subscription_status || 'trialing', 
+          status: finalStatus, 
           trialDaysLeft: daysLeft > 0 ? daysLeft : 0,
           stats: { students: studentsResult.count || 0, pending: paymentsResult.count || 0 } 
         };
