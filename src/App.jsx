@@ -52,14 +52,14 @@ function MainAppContainer() {
   const [dashboardData, setDashboardData] = useState({ academyName: '', stats: { students: 0, pending: 0 } });
   const [isInitialDataFetched, setIsInitialDataFetched] = useState(false); 
 
-  // 💰 محرك الـ SaaS السحابي الجديد لإدارة الاشتراكات والأرباح
+  // 💰 محرك الـ SaaS السحابي لإدارة الاشتراكات والأرباح
   const [subscriptionStatus, setSubscriptionStatus] = useState('trialing'); // الأوضاع المتاحة: active, trialing, expired, past_due
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
 
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
 
-  // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها (تم تحديثها بالجدار المالي الذكي)
+  // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها (محدثة بالجدار المالي الذكي)
   const fetchDashboardDataCentral = async (uid) => {
     try {
       // جلب بيانات الأكاديمية مدمج بها أعمدة النشاط والاشتراك المالي الجديد
@@ -108,7 +108,7 @@ function MainAppContainer() {
     return { academyName: '', status: 'expired', trialDaysLeft: 0, stats: { students: 0, pending: 0 } };
   };
 
-  // 1️⃣ مراقبة الجلسة والتشغيل الأولي السريع للمنصة
+  // 1️⃣ مراقبة الجلسة والتهيئة الأولية من سوبابيس (منفصلة تماماً لحماية التحميل)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
@@ -122,6 +122,17 @@ function MainAppContainer() {
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
     });
 
+    return () => {
+      if (data?.subscription) {
+        data.subscription.unsubscribe();
+      } else if (typeof data === 'function') {
+        data();
+      }
+    };
+  }, [i18n]);
+
+  // ⏱️ 2️⃣ تايمر مستقل ومضمون لفك قفل الشاشة الخضراء عند التشغيل الأول والمنع من التجمد
+  useEffect(() => {
     const bootTimer = setTimeout(() => {
       setAppLoading(false);
       try {
@@ -129,17 +140,10 @@ function MainAppContainer() {
       } catch (e) {}
     }, 1800);
 
-    return () => {
-      if (data?.subscription) {
-        data.subscription.unsubscribe();
-      } else if (typeof data === 'function') {
-        data();
-      }
-      clearTimeout(bootTimer);
-    };
-  }, [i18n]);
+    return () => clearTimeout(bootTimer);
+  }, []); // تعمل مرة واحدة فقط عند فتح التطبيق لضمان ظهور شاشة الدخول بلا عوائق
 
-  // 2️⃣ 🛡️ صمام الأمان الزمني (Fail-Safe) لمنع تجميد شاشة الـ Splash للأبد في ظروف الشبكة السيئة
+  // 🛡️ 3️⃣ صمام الأمان الزمني (Fail-Safe) لمنع تجميد شاشة الـ Splash أثناء جلب البيانات بعد الدخول
   useEffect(() => {
     if (session && !isInitialDataFetched) {
       const dataFailSafeTimer = setTimeout(() => {
@@ -150,7 +154,7 @@ function MainAppContainer() {
     }
   }, [session, isInitialDataFetched]);
 
-  // 3️⃣ تتبع هوية المستخدم ومراقبة جدار الحماية المالي
+  // 4️⃣ تتبع هوية المستخدم ومراقبة جدار الحماية المالي بعد الدخول
   useEffect(() => {
     let isCurrentRequest = true;
     if (!userId) {
