@@ -1,36 +1,54 @@
-// 🚨 رادار الأعطال الشامل في القمة تماماً لضمان لقط أي خطأ أثناء حقن الموديلات (Module Evaluation)
-window.onerror = function (message, source, lineno, colno, error) {
-  const rootEl = document.getElementById('root');
-  if (rootEl) {
-    rootEl.innerHTML = `
-      <div style="padding: 30px; background: #090F17; color: #EF4444; min-height: 100vh; font-family: sans-serif; direction: rtl; text-align: right;">
-        <h2 style="color: #FBBF24; font-size: 1.5rem; margin-bottom: 10px;">🚨 رادار النظام: عطل أثناء الإقلاع</h2>
-        <p style="color: #94A3B8; margin-bottom: 20px;">حدث خطأ غير متوقع منع التطبيق من العمل. إليك تفاصيل العطل المباشرة:</p>
-        <pre style="background: #111827; padding: 20px; color: #F3F4F6; direction: ltr; text-align: left; overflow: auto; border-radius: 12px; border: 1px solid #374151; font-size: 0.9rem;">${message}\nفي الملف: ${source}\nالسطر: ${lineno} | العمود: ${colno}</pre>
-      </div>
-    `;
-  }
-  return false;
-};
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'; // تعديل المسار ليتناسب مع المجلدات الفرعية
+import { useTranslation } from 'react-i18next';
 
-import React, { Suspense } from 'react'
-import ReactDOM from 'react-dom/client'
+function MainApp({ session, userRole, trialDaysLeft }) {
+  const { t, i18n } = useTranslation();
+  const [currentTab, setCurrentTab] = useState('dashboard');
 
-// شاشة تحميل مبدئية فائقة السرعة لحماية التطبيق أثناء تحضير ملفات اللغات والـ i18n
-const InitialLoader = () => (
-  <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif' }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ width: '24px', height: '24px', border: '2px solid rgba(251,191,36,0.1)', borderTop: '2px solid #FBBF24', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 10px auto' }}></div>
-      <span style={{ fontSize: '13px' }}>جاري تحضير بيئة العمل...</span>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+  // دالة بسيطة لتبديل اللغة بشكل سريع وسلس
+  const toggleLanguage = () => {
+    const nextLang = i18n.language === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(nextLang);
+    document.body.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
+  };
+
+  return (
+    <div style={{ background: '#090F17', color: '#F3F4F6', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
+      {/* شريط علوي بسيط للتحكم بالمنصة وتبديل اللغة */}
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1E293B', paddingBottom: '15px', marginBottom: '20px' }}>
+        <div>
+          <h1 style={{ color: '#FBBF24', fontSize: '1.5rem', margin: 0 }}>
+            {t('welcome', { defaultValue: 'مرحباً بك في المنصة الذكية' })}
+          </h1>
+          <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+            الدور الحالي: {userRole || 'طالب'} | الأيام المتبقية للتجربة: {trialDaysLeft}
+          </span>
+        </div>
+        
+        <button 
+          onClick={toggleLanguage}
+          style={{ background: '#1E293B', color: '#FBBF24', border: '1px solid #334155', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+        >
+          {i18n.language === 'ar' ? 'English' : 'العربية'}
+        </button>
+      </header>
+
+      {/* محتوى لوحة التحكم الأساسية */}
+      <main style={{ background: '#111827', border: '1px solid #1E293B', borderRadius: '12px', padding: '30px', textAlign: 'center' }}>
+        <h3 style={{ color: '#F3F4F6', marginBottom: '10px' }}>لوحة التحكم الرئيسية جاهزة</h3>
+        <p style={{ color: '#94A3B8', fontSize: '14px' }}>تم تفعيل الحماية والربط العالمي مع نظام الترجمة بنجاح.</p>
+        
+        <button 
+          onClick={() => supabase.auth.signOut()}
+          style={{ marginTop: '20px', background: '#EF4444', color: '#FFF', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
+        >
+          تسجيل الخروج الآمن
+        </button>
+      </main>
     </div>
-  </div>
-);
+  );
+}
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <Suspense fallback={<InitialLoader />}>
-      <App />
-    </Suspense>
-  </React.StrictMode>,
-)
+// التصدير الافتراضي الصريح الذي تبحث عنه الواجهة الأساسية لحل خطأ الـ Build
+export default MainApp;
