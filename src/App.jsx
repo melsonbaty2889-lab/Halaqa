@@ -1,36 +1,16 @@
-import { useState, useEffect, Component } from 'react'; 
+import { useState, useEffect } from 'react'; 
 import { supabase } from './lib/supabase'; 
 import { useTranslation } from 'react-i18next';
 
-// ✨ تأكيد المسارات الصحيحة 100% لـ Vite و Vercel ومنع خطأ "./."
+// ✨ تأكيد المسارات الصحيحة لـ Vite و Vercel ومنع خطأ "./."
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
 import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
-import { Skeleton } from './components/Skeleton'; 
 
-// 🛡️ حزام الأمان لمنع انهيار الواجهة (Error Boundary)
-class ErrorBoundary extends Component {
-  state = { hasError: false };
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error, errorInfo) { console.error("Application Crashed:", error, errorInfo); }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#090F17', color: '#fff', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
-          <h2 style={{ color: '#C9A84C', marginBottom: '10px' }}>عذراً، حدث خطأ غير متوقع أثناء تحميل الواجهة</h2>
-          <p style={{ color: '#9CA3AF', fontSize: '14px' }}>جاري العمل على استقرار النظام تلقائياً</p>
-          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', background: '#C9A84C', color: '#090F17', border: 'none', padding: '10px 24px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>إعادة تحديث الصفحة</button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-function MainAppContainer() {
+export default function App() {
   const { i18n } = useTranslation();
 
   const getBootStatusSafe = () => {
@@ -53,42 +33,53 @@ function MainAppContainer() {
   const [isInitialDataFetched, setIsInitialDataFetched] = useState(false); 
 
   // 💰 محرك الـ SaaS السحابي لإدارة الاشتراكات والأرباح
-  const [subscriptionStatus, setSubscriptionStatus] = useState('trialing'); // الأوضاع المتاحة: active, trialing, expired, past_due
+  const [subscriptionStatus, setSubscriptionStatus] = useState('trialing'); 
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
 
   const isRtl = i18n.language === 'ar';
   const userId = session?.user?.id;
 
-  // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها (محدثة بالجدار المالي الذكي)
+  // 🌐 الدالة المركزية المستقرة والمفصولة تماماً لمنع انهيار الاستعلامات
   const fetchDashboardDataCentral = async (uid) => {
     try {
-      // جلب بيانات الأكاديمية مدمج بها أعمدة النشاط والاشتراك المالي الجديد
-      const { data: staff, error: staffError } = await supabase
+      // الخطوة 1: الحصول على معرف الأكاديمية الخاص بالموظف بشكل منفصل وآمن
+      const { data: staffData, error: staffError } = await supabase
         .from('staff')
-        .select('academies(id, name, is_active, subscription_status, trial_ends_at)')
+        .select('academy_id')
         .eq('user_id', uid)
         .maybeSingle();
 
-      if (!staffError && staff?.academies) {
-        const academy = staff.academies;
-        const academyId = academy.id;
-        
-        // 1️⃣ حساب الأيام المتبقية في الفترة التجريبية بدقة
+      if (staffError || !staffData?.academy_id) {
+        return { academyName: '', status: 'expired', trialDaysLeft: 0, stats: { students: 0, pending: 0 } };
+      }
+
+      const academyId = staffData.academy_id;
+
+      // الخطوة 2: جلب بيانات الأكاديمية المحددة مباشرة
+      const { data: academy, error: academyError } = await supabase
+        .from('academies')
+        .select('name, is_active, subscription_status, trial_ends_at')
+        .eq('id', academyId)
+        .maybeSingle();
+
+      if (!academyError && academy) {
+        // حساب الأيام المتبقية في الفترة التجريبية
         let daysLeft = 0;
         if (academy.trial_ends_at) {
           const diffTime = new Date(academy.trial_ends_at) - new Date();
           daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
 
-        // 2️⃣ منطق جدار الحماية التلقائي بناءً على البيانات المسترجعة
+        // منطق جدار الحماية التلقائي
         let finalStatus = academy.subscription_status || 'trialing';
         
         if (academy.is_active === false) {
-          finalStatus = 'expired'; // حظر فوري إذا قام لوحة الإشراف بتعطيل الأكاديمية يدوياً
+          finalStatus = 'expired'; 
         } else if (finalStatus === 'trialing' && daysLeft <= 0) {
-          finalStatus = 'expired'; // انتهاء تجريبي آلي بمجرد انقضاء الـ 7 أيام
+          finalStatus = 'expired'; 
         }
 
+        // جلب الإحصائيات بالتوازي لسرعة فائقة
         const [studentsResult, paymentsResult] = await Promise.all([
           supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academyId),
           supabase.from('payments').select('*', { count: 'exact', head: true }).eq('academy_id', academyId).eq('status', 'pending')
@@ -104,11 +95,10 @@ function MainAppContainer() {
     } catch (err) {
       console.error("Error loading SaaS dashboard stats:", err);
     }
-    // في حال عدم وجود أكاديمية أو حدوث خطأ، يتم توجيهه للأمان كـ تجريبي منتهي لحماية بيانات النظام
     return { academyName: '', status: 'expired', trialDaysLeft: 0, stats: { students: 0, pending: 0 } };
   };
 
-  // 1️⃣ مراقبة الجلسة والتهيئة الأولية من سوبابيس (منفصلة تماماً لحماية التحميل)
+  // 1️⃣ مراقبة الجلسة والتهيئة الأولية من سوبابيس 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
@@ -131,7 +121,7 @@ function MainAppContainer() {
     };
   }, [i18n]);
 
-  // ⏱️ 2️⃣ تايمر مستقل ومضمون لفك قفل الشاشة الخضراء عند التشغيل الأول والمنع من التجمد
+  // ⏱️ 2️⃣ تايمر مستقل ومضمون لفك قفل الشاشة الخضراء عند التشغيل الأول
   useEffect(() => {
     const bootTimer = setTimeout(() => {
       setAppLoading(false);
@@ -141,13 +131,12 @@ function MainAppContainer() {
     }, 1800);
 
     return () => clearTimeout(bootTimer);
-  }, []); // تعمل مرة واحدة فقط عند فتح التطبيق لضمان ظهور شاشة الدخول بلا عوائق
+  }, []); 
 
-  // 🛡️ 3️⃣ صمام الأمان الزمني (Fail-Safe) لمنع تجميد شاشة الـ Splash أثناء جلب البيانات بعد الدخول
+  // 🛡️ 3️⃣ صمام الأمان الزمني (Fail-Safe) لضمان فك شاشة التحميل مهما حدث
   useEffect(() => {
     if (session && !isInitialDataFetched) {
       const dataFailSafeTimer = setTimeout(() => {
-        console.warn("SaaS Safeguard Triggered: Data fetch took too long, unlocking screen.");
         setIsInitialDataFetched(true);
       }, 3500); 
       return () => clearTimeout(dataFailSafeTimer);
@@ -165,7 +154,7 @@ function MainAppContainer() {
       return;
     }
 
-    // 👑 حزام الأمان الخاص بحسابك الأدمن الرئيسي - يتخطى الحظر المالي دائماً
+    // حساب الأدمن الرئيسي يتخطى الحظر المالي دائماً
     if (userId === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
       setSubscriptionStatus('active');
@@ -193,7 +182,6 @@ function MainAppContainer() {
           setUserRole(role);
         }
 
-        // الفحص المالي العالمي والذكي لجميع الأدوار باستثناء السوبر أدمن
         if (role !== 'admin') {
           const fetchedData = await fetchDashboardDataCentral(userId);
           if (isCurrentRequest) {
@@ -221,9 +209,8 @@ function MainAppContainer() {
   if (appLoading || (session && !isInitialDataFetched)) return <SplashScreen />;
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 💳 في حالة وجود جلسة نشطة، يتم فحص جدار الحماية المالي فوراً
+  // 💳 في حالة وجود جلسة نشطة، يتم فحص جدار الحماية المالي
   if (session) {
-    // 🚧 جدار الدفع السحابي (Global Paywall Gate): يظهر إذا انتهت التجربة أو الاشتراك
     if (userRole !== 'admin' && (subscriptionStatus === 'expired' || subscriptionStatus === 'past_due')) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#090F17', color: '#fff', padding: '40px 20px', fontFamily: 'sans-serif', direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -238,7 +225,6 @@ function MainAppContainer() {
                 : 'We love having you here! To continue managing your academy, tracking student attendance, financial records, and invoices, please upgrade to the pro plan now.'}
             </p>
 
-            {/* 🏷️ كارت باقة الاشتراك الشهري الفوري */}
             <div style={{ border: '2px solid #C9A84C', background: 'rgba(201, 168, 76, 0.05)', borderRadius: '12px', padding: '24px', marginBottom: '30px', textAlign: 'center' }}>
               <span style={{ fontSize: '12px', background: '#C9A84C', color: '#090F17', padding: '4px 12px', borderRadius: '50px', fontWeight: 'bold', textTransform: 'uppercase' }}>
                 {isRtl ? 'الأكثر مبيعاً' : 'Most Popular'}
@@ -250,18 +236,17 @@ function MainAppContainer() {
               <p style={{ fontSize: '13px', color: '#9CA3AF' }}>{isRtl ? 'تشمل إدارة غير محدودة للطلاب والشهادات والتقارير المالية' : 'Includes unlimited students, attendance tracking & financial tools'}</p>
             </div>
 
-            {/* 💸 أزرار التحكم والاتصال المالي والترقية السريعة */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button 
-                onClick={() => window.open('https://thewinroute.com/checkout', '_blank')} // رابط بوابتك المالية الفورية
-                style={{ width: '100%', background: '#C9A84C', color: '#090F17', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', transition: '0.3s' }}
+                onClick={() => window.open('https://thewinroute.com/checkout', '_blank')} 
+                style={{ width: '100%', background: '#C9A84C', color: '#090F17', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}
               >
                 {isRtl ? 'تفعيل الاشتراك الآن' : 'Activate Subscription Now'}
               </button>
               
               <button 
                 onClick={() => supabase.auth.signOut()} 
-                style={{ width: '100%', background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', transition: '0.3s' }}
+                style={{ width: '100%', background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}
               >
                 {isRtl ? 'تسجيل الخروج' : 'Sign Out'}
               </button>
@@ -271,7 +256,6 @@ function MainAppContainer() {
       );
     }
 
-    // 🔓 إذا تخطى الفحص بنجاح (active أو trialing)، تفتح له المنصة بكامل طاقتها
     return (
       <MainApp 
         session={session} 
@@ -279,7 +263,7 @@ function MainAppContainer() {
         dashboardData={dashboardData} 
         setDashboardData={setDashboardData} 
         userRole={userRole} 
-        trialDaysLeft={trialDaysLeft} // تمرير عدد الأيام المتبقية لعرض شريط تنبيه تشجيعي بداخل لوحة التحكم
+        trialDaysLeft={trialDaysLeft} 
       />
     );
   }
@@ -291,13 +275,5 @@ function MainAppContainer() {
       {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
       {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
     </div>
-  );
-}
-
-export default function App() {
-  return (
-    <ErrorBoundary>
-      <MainAppContainer />
-    </ErrorBoundary>
   );
 }
