@@ -15,7 +15,6 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import './index.css'
 import './i18n' // 🔥 تم تقديم ملف الترجمة هنا لتهيئة النظام بالكامل أولاً
 import App from './App.jsx' // تأخير استدعاء التطبيق لضمان جاهزية البيئة للمكونات
 
