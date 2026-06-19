@@ -10,7 +10,7 @@ import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 
 export default function App() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const getBootStatusSafe = () => {
     try {
@@ -35,13 +35,12 @@ export default function App() {
   const [subscriptionStatus, setSubscriptionStatus] = useState('trialing'); 
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
 
-  const isRtl = i18n.language === 'ar';
+  const isRtl = i18n.language === 'ar' || i18n.dir() === 'rtl';
   const userId = session?.user?.id;
 
   // 🌐 الدالة المركزية لفحص حالة اشتراك الأكاديمية وجلب إحصائياتها
   const fetchDashboardDataCentral = async (uid) => {
     try {
-      // الخطوة أ: جلب الـ academy_id الخاص بالموظف الحالي بشكل آمن
       const { data: staffData, error: staffError } = await supabase
         .from('staff')
         .select('academy_id')
@@ -54,7 +53,6 @@ export default function App() {
 
       const academyId = staffData.academy_id;
 
-      // الخطوة ب: جلب بيانات الأكاديمية وفحص الصلاحيات المالية
       const { data: academy, error: academyError } = await supabase
         .from('academies')
         .select('name, is_active, subscription_status, trial_ends_at')
@@ -71,9 +69,9 @@ export default function App() {
         let finalStatus = academy.subscription_status || 'trialing';
         
         if (academy.is_active === false) {
-          finalStatus = 'expired'; // حظر يدوي من لوحة التحكم الرئيسية
+          finalStatus = 'expired'; 
         } else if (finalStatus === 'trialing' && daysLeft <= 0) {
-          finalStatus = 'expired'; // انتهاء تلقائي للمدة التجريبية (7 أيام)
+          finalStatus = 'expired'; 
         }
 
         const [studentsResult, paymentsResult] = await Promise.all([
@@ -94,7 +92,7 @@ export default function App() {
     return { academyName: '', status: 'expired', trialDaysLeft: 0, stats: { students: 0, pending: 0 } };
   };
 
-  // 1️⃣ 🛠️ تعديل الخطوة الأولى كاملة: مراقبة الجلسة والتشغيل الأولي وحذف الدائرة الخضراء نهائياً
+  // 1️⃣ 🛠️ مراقبة الجلسة والتشغيل الأولي وحذف الدائرة الخضراء نهائياً
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
@@ -103,24 +101,21 @@ export default function App() {
       localStorage.setItem('i18nextLng', urlLang);
     }
 
-    // الاستماع لتغييرات الجلسة من سوبابيس
     const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
     });
 
-    // تايمر التشغيل الأول: يقوم بفك القفل وحذف شاشة الـ HTML الخارجية برمجياً
     const bootTimer = setTimeout(() => {
       setAppLoading(false);
       try {
         sessionStorage.setItem('is_app_booted', 'true');
       } catch (e) {}
 
-      // 🚨 الحل السحري والنهائي لتدمير الدائرة الخضراء المعلقة وفك تجميد المتصفح
       const staticLoader = document.querySelector('.app-loading-screen');
       if (staticLoader) {
-        staticLoader.style.opacity = '0'; // تأثير تلاشي
-        setTimeout(() => staticLoader.remove(), 300); // مسح العنصر تماماً من المتصفح
+        staticLoader.style.opacity = '0'; 
+        setTimeout(() => staticLoader.remove(), 300); 
       }
     }, 1800);
 
@@ -155,7 +150,6 @@ export default function App() {
       return;
     }
 
-    // الحساب الرئيسي للأدمن يتخطى الحظر المالي دائماً لضمان استمرارية التحكم
     if (userId === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
       setSubscriptionStatus('active');
@@ -207,8 +201,19 @@ export default function App() {
   }, [userId]);
 
   // 🛑 التحكم في الشاشات العلوية الحرجة
-  if (appLoading || (session && !isInitialDataFetched)) return null; // نترك الشاشة الثابتة تعمل حتى يقوم كود التايمر بحذفها
+  if (appLoading) return null; 
   if (authView === 'update_password') return <UpdatePassword />;
+
+  // ✨ حل ذكي لمنع الشاشة السوداء المعلقة أثناء جلب بيانات الأكاديمية بعد تسجيل الدخول مباشرة
+  if (session && !isInitialDataFetched) {
+    return (
+      <div style={{ backgroundColor: "#090F17", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "#C9A84C", fontFamily: "sans-serif", gap: "15px" }}>
+        <div style={{ width: "32px", height: "32px", border: "3px solid rgba(201, 168, 76, 0.1)", borderTop: "3px solid #C9A84C", borderRadius: "50%", animation: "spinApp 0.8s linear infinite" }}></div>
+        <style>{`@keyframes spinApp { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <span style={{ fontSize: "14px", color: "#657585" }}>{isRtl ? 'جاري مزامنة بيانات الأكاديمية السحابية...' : 'Synchronizing cloud assets...'}</span>
+      </div>
+    );
+  }
 
   // 💳 التحقق المالي عند وجود جلسة نشطة
   if (session) {
