@@ -1,11 +1,18 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import './index.css' // 🎨 حقن ملف التايلوند والتنسيقات العالمية في نقطة الإنطلاق الأساسية
-import './i18n'      // 🌐 تشغيل محرك اللغات الفوري وثنائي الاتجاه
+import './index.css'
+import './i18n'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// الدالة المسؤولة عن إزالة شاشة التحميل الأصلية من الـ HTML
+const removeLoadingScreen = () => {
+  const loader = document.querySelector('.app-loading-screen');
+  if (loader) loader.style.display = 'none';
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
-    <App />
+    <App onAppReady={removeLoadingScreen} />
   </React.StrictMode>
 )
