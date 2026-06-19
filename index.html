@@ -2,102 +2,26 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
-    
-    <meta name="theme-color" content="#0a0f24" />
-    <meta name="description" content="منصة الحلقة الذكية - النظام السحابي الاحترافي لإدارة وتتبع حلقات تحفيظ القرآن الكريم والطلاب." />
-    <meta name="keywords" content="الحلقة الذكية, تحفيظ القرآن, إدارة الطلاب, حلقات تحفيظ, نظام تعليمي قرآني" />
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>الحلقة الذكية | Smart Halaqa</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="الحلقة الذكية" />
-    
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="الحلقة الذكية | Smart Halaqa" />
-    <meta property="og:description" content="النظام السحابي الاحترافي لإدارة وتتبع حلقات تحفيظ القرآن الكريم والطلاب." />
-    <meta property="og:site_name" content="الحلقة الذكية" />
-    <meta property="og:url" content="https://smart-halaqa.vercel.app" />
-    <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a0f24'/><text y='.75em' x='5' font-size='80'>🕌</text></svg>" />
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>" />
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a0f24'/><text y='.75em' x='5' font-size='80'>🕌</text></svg>" />
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
-    
     <style>
-      :root {
-        --bg-color: #0a0f24; /* التطابق اللوني التام لمنع الوميض البصري */
-        --text-color: #f8fafc;
-        --brand-green: #00c853;
-      }
-      * { 
-        margin: 0; 
-        padding: 0; 
-        box-sizing: border-box; 
-        -webkit-user-select: none; /* حماية واجهة التطبيق من التحديد العشوائي للنصوص في الجوال */
-      }
-      /* السماح بتحديد النصوص فقط داخل حقول الإدخال */
-      input, textarea { -webkit-user-select: text; }
-      
-      body { 
-        background-color: var(--bg-color); 
-        color: var(--text-color);
-        font-family: 'Cairo', 'Tajawal', sans-serif;
-        overflow-x: hidden;
-        -webkit-tap-highlight-color: transparent; /* إزالة الوميض الرمادي عند النقر في هواتف أندرويد */
-      }
-      
-      /* مؤشر التحميل الاحترافي الأولي السريع */
+      :root { --bg-color: #0a0f24; --brand-green: #00c853; }
+      body { background-color: var(--bg-color); margin: 0; }
       .app-loading-screen {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        width: 100vw;
-        background-color: var(--bg-color);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        height: 100vh; width: 100vw; background-color: var(--bg-color);
+        position: fixed; top: 0; left: 0; z-index: 9999;
       }
-      .app-loader {
-        width: 50px;
-        height: 50px;
-        border: 3px solid rgba(0, 200, 83, 0.1);
-        border-radius: 50%;
-        border-top-color: var(--brand-green);
-        animation: spin-loader 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      }
-      .app-loading-text {
-        margin-top: 24px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #cbd5e1;
-        font-family: 'Cairo', sans-serif;
-      }
-      @keyframes spin-loader {
-        to { transform: rotate(360deg); }
-      }
+      .app-loader { width: 50px; height: 50px; border: 3px solid rgba(0, 200, 83, 0.1); border-radius: 50%; border-top-color: var(--brand-green); animation: spin-loader 0.8s linear infinite; }
+      @keyframes spin-loader { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
-    <noscript>
-      <style>#root { display: none; }</style>
-      <div style="font-family: 'Cairo', sans-serif; text-align: center; padding: 50px; color: #f8fafc; background-color: #0a0f24; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <span style="font-size: 50px;">⚠️</span>
-        <h1 style="margin-top: 20px;">عذراً، الجافا سكريبت معطلة!</h1>
-        <p style="margin-top: 10px; color: #94a3b8;">تتطلب منصة الحلقة الذكية تفعيل الجافا سكريبت لتعمل لوحة التحكم بشكل صحيح.</p>
-      </div>
-    </noscript>
-
-    <div id="root">
-      <div class="app-loading-screen">
-        <div class="app-loader"></div>
-        <div class="app-loading-text">جاري تشغيل الحلقة الذكية...</div>
-      </div>
+    <div class="app-loading-screen">
+      <div class="app-loader"></div>
     </div>
+
+    <div id="root"></div>
     
     <script type="module" src="/src/main.jsx"></script>
   </body>
