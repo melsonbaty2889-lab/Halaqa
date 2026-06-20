@@ -1,15 +1,15 @@
 import React, { useState, useEffect, Component } from 'react';
 import { supabase } from './lib/supabase';
 
-// استيراد ثابت ومباشر (خالٍ تماماً من Lazy Loading المسبب لمشاكل الكاش على الهواتف)
+// استيراد ثابت ومباشر لضمان استقرار الأداء على الهواتف والمتصفحات
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
 import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
-import SubscriptionPage from './components/SubscriptionPage'; // 💳 استيراد صفحة الاشتراكات الجغرافية المحدثة
+import SubscriptionPage from './components/SubscriptionPage';
 
-// جدار حماية داخلي للـ React لضمان استقرار المكونات
+// جدار حماية داخلي للـ React لمعالجة أي أخطاء مفاجئة في الواجهة
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) {
@@ -20,8 +20,7 @@ class GlobalErrorBoundary extends Component {
       return (
         <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right' }}>
           <h2 style={{ color: '#FBBF24' }}>🚨 رادار الواجهة: عطل داخلي في المكونات</h2>
-          <p style={{ color: '#9CA3AF' }}>تأكد من ملفات الواجهة المعروضة حالياً:</p>
-          <pre style={{ background: '#111827', padding: '20px', color: '#FFF', direction: 'ltr', textAlign: 'left', overflow: 'auto', border: '1px solid #374151' }}>
+          <pre style={{ background: '#111827', padding: '20px', color: '#FFF', direction: 'ltr', textAlign: 'left', overflow: 'auto', border: '1px solid #374151', borderRadius: '8px' }}>
             {this.state.error?.stack || this.state.error?.toString()}
           </pre>
         </div>
@@ -36,7 +35,7 @@ function AppContent() {
   const [authView, setAuthView] = useState('login');
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
-  const [isActivated, setIsActivated] = useState(false); // 🔑 تتبع حالة الاشتراك المدفوع رسميًا
+  const [isActivated, setIsActivated] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -44,13 +43,14 @@ function AppContent() {
       return;
     }
 
-    // جلب حالة الجلسة الحالية فوراً
+    // جلب الجلسة الحالية فوراً عند الإقلاع
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
-      setLoading(false);
+      // تأخير بسيط لمحاكاة الشاشة الافتتاحية الأصلية بشكل سلس وأنيق
+      setTimeout(() => setLoading(false), 1200);
     }).catch(() => setLoading(false));
 
-    // مراقبة التغيرات في الحماية
+    // الاستماع لمتغيرات تسجيل الدخول والخروج
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
@@ -61,23 +61,22 @@ function AppContent() {
     };
   }, []);
 
-  // تحديد صلاحية المستخدم وحالة تفعيل الحساب عند تسجيل الدخول بنجاح
+  // التحقق من الصلاحيات وحالة تفعيل الحساب والاشتراك
   useEffect(() => {
     if (!session || !supabase) return;
     
     const uid = session.user.id;
     if (uid === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
-      setIsActivated(true); // الأدمن مفعل بشكل دائم ومطلق
+      setIsActivated(true);
       return;
     }
 
-    // جلب الـ role والـ is_activated معاً في طلب واحد فائق السرعة
     supabase.from('profiles').select('role, is_activated').eq('id', uid).maybeSingle()
       .then(({ data }) => {
         if (data) {
           setUserRole(data.role?.trim().toLowerCase().replace(/\s+/g, '_') || 'student');
-          setIsActivated(data.is_activated || false); // تعيين حالة الاشتراك الفعلي
+          setIsActivated(data.is_activated || false);
         } else {
           setUserRole('student');
           setIsActivated(false);
@@ -88,7 +87,7 @@ function AppContent() {
       });
   }, [session]);
 
-  // 🛡️ معادلة عالمية لحساب الأيام المتبقية من الفترة التجريبية
+  // معادلة حساب الأيام المتبقية في الفترة التجريبية (14 يوماً)
   const calculateTrialDaysLeft = () => {
     if (!session) return 0;
     const createdAt = new Date(session.user.created_at);
@@ -101,31 +100,37 @@ function AppContent() {
 
   const trialDaysLeft = userRole === 'admin' ? 999 : calculateTrialDaysLeft();
 
+  // ✨ الشاشة الافتتاحية الفخمة (Splash Screen) الأصلية للمنصة أثناء التحميل
   if (loading) {
     return (
-      <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '24px', height: '24px', border: '2px solid rgba(251,191,36,0.1)', borderTop: '2px solid #FBBF24', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 10px auto' }}></div>
-          <span style={{ fontSize: '13px' }}>جاري تشغيل المنصة بأمان...</span>
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', direction: 'rtl' }}>
+        <div style={{ textAlign: 'center', animation: 'fadeIn 1s ease-out' }}>
+          {/* حلقة ذهبية متحركة ترمز لشعار "الحلقة الذكية" */}
+          <div style={{ width: '65px', height: '65px', border: '3px solid rgba(251,191,36,0.08)', borderTop: '3px solid #FBBF24', borderBottom: '3px solid #FBBF24', borderRadius: '50%', animation: 'spin 1.2s linear infinite', margin: '0 auto 25px auto' }}></div>
+          <h1 style={{ color: '#FFF', fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.5px', margin: '0 0 8px 0' }}>منصة الحَلَقة الذكية</h1>
+          <p style={{ color: '#9CA3AF', fontSize: '0.85rem', margin: '0' }}>جاري تهيئة بيئة العمل السحابية الآمنة...</p>
         </div>
+        <style>{`
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        `}</style>
       </div>
     );
   }
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 🔒 جدار حماية الاشتراك: إذا انتهت الفترة التجريبية والحساب لم يتم تفعيله يدوياً والدور ليس أدمن، تظهر بوابة الدفع المحدثة فوراً
+  // 🔒 جدار حماية الاشتراك: إذا انتهت الـ 14 يوماً والحساب غير مفعّل يدوياً، تظهر صفحة الدفع
   if (session && trialDaysLeft <= 0 && userRole !== 'admin' && !isActivated) {
     return (
       <SubscriptionPage 
         session={session} 
-        onBack={() => supabase.auth.signOut()} // زر الخروج يقوم بقطع الجلسة بأمان لحين الدفع والتفعيل
+        onBack={() => supabase.auth.signOut()} 
       />
     );
   }
 
-  // التوجيه للوحة التحكم الأساسية وتمرير البيانات الموثقة
+  // إذا كانت الجلسة نشطة والحساب مفعّل، نفتح لوحة التحكم الاحترافية الكاملة
   if (session) {
     return (
       <MainApp 
@@ -136,7 +141,7 @@ function AppContent() {
     );
   }
 
-  // بوابات الزوار (تسجيل الدخول / إنشاء حساب / استعادة كلمة المرور)
+  // بوابات الزوار غير المسجلين
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
       {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
@@ -146,7 +151,7 @@ function AppContent() {
   );
 }
 
-// 🛡️ المكون الرئيسي محمي بالكامل بقفل النطاق (Domain Lock) لحظر أي سرقة للكود
+// قفل النطاق لحماية الملكية الفكرية
 export default function App() {
   const allowedHosts = ['smart-halaqa.vercel.app', 'localhost', '127.0.0.1'];
   const isAllowed = allowedHosts.includes(window.location.hostname);
