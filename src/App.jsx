@@ -7,6 +7,7 @@ import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
 import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
+import SubscriptionPage from './components/SubscriptionPage'; // 💳 استيراد صفحة الاشتراكات الجغرافية المحدثة
 
 // جدار حماية داخلي للـ React لضمان استقرار المكونات
 class GlobalErrorBoundary extends Component {
@@ -35,6 +36,7 @@ function AppContent() {
   const [authView, setAuthView] = useState('login');
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
+  const [isActivated, setIsActivated] = useState(false); // 🔑 تتبع حالة الاشتراك المدفوع رسميًا
 
   useEffect(() => {
     if (!supabase) {
@@ -59,38 +61,44 @@ function AppContent() {
     };
   }, []);
 
-  // تحديد صلاحية المستخدم عند تسجيل الدخول بنجاح
+  // تحديد صلاحية المستخدم وحالة تفعيل الحساب عند تسجيل الدخول بنجاح
   useEffect(() => {
     if (!session || !supabase) return;
     
     const uid = session.user.id;
     if (uid === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
+      setIsActivated(true); // الأدمن مفعل بشكل دائم ومطلق
       return;
     }
 
-    supabase.from('profiles').select('role').eq('id', uid).maybeSingle()
+    // جلب الـ role والـ is_activated معاً في طلب واحد فائق السرعة
+    supabase.from('profiles').select('role, is_activated').eq('id', uid).maybeSingle()
       .then(({ data }) => {
-        if (data?.role) {
-          setUserRole(data.role.trim().toLowerCase().replace(/\s+/g, '_'));
+        if (data) {
+          setUserRole(data.role?.trim().toLowerCase().replace(/\s+/g, '_') || 'student');
+          setIsActivated(data.is_activated || false); // تعيين حالة الاشتراك الفعلي
         } else {
           setUserRole('student');
+          setIsActivated(false);
         }
-      }).catch(() => setUserRole('student'));
+      }).catch(() => {
+        setUserRole('student');
+        setIsActivated(false);
+      });
   }, [session]);
 
-  // 🛡️ معادلة عالمية لحساب الأيام المتبقية من السيرفر مباشرة دون استهلاك باقة البيانات
+  // 🛡️ معادلة عالمية لحساب الأيام المتبقية من الفترة التجريبية
   const calculateTrialDaysLeft = () => {
     if (!session) return 0;
-    const createdAt = new Date(session.user.created_at); // تاريخ إنشاء الحساب الموثق
+    const createdAt = new Date(session.user.created_at);
     const today = new Date();
     const diffTime = today - createdAt;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // حساب الأيام المنقضية
-    const daysLeft = 14 - diffDays; // طرحها من الـ 14 يوماً التجريبية
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const daysLeft = 14 - diffDays;
     return daysLeft < 0 ? 0 : daysLeft;
   };
 
-  // لو كان الأدمن هو من يتصفح، نمنحه صلاحية مفتوحة دائماً (مثال: 999 يوم)، وللمستخدم العادي نحسب الأيام ديناميكياً
   const trialDaysLeft = userRole === 'admin' ? 999 : calculateTrialDaysLeft();
 
   if (loading) {
@@ -107,28 +115,17 @@ function AppContent() {
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 🔒 جدار حماية الفترة التجريبية: إذا انتهت الـ 14 يوماً والمستخدم ليس أدمن، يتم حظر الواجهة فوراً
-  if (session && trialDaysLeft <= 0 && userRole !== 'admin') {
+  // 🔒 جدار حماية الاشتراك: إذا انتهت الفترة التجريبية والحساب لم يتم تفعيله يدوياً والدور ليس أدمن، تظهر بوابة الدفع المحدثة فوراً
+  if (session && trialDaysLeft <= 0 && userRole !== 'admin' && !isActivated) {
     return (
-      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ background: '#111827', border: '1px solid #374151', padding: '40px', borderRadius: '16px', maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-          <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '15px' }}>⏳ انتهت الفترة التجريبية للمنصة</h2>
-          <p style={{ color: '#9CA3AF', fontSize: '1rem', lineHeight: '1.6', marginBottom: '25px' }}>
-            لقد انتهت المدة المتاحة لتجربة منصة <strong>"الحلقة الذكية"</strong> (14 يوماً). لحفظ سجلات طلابك ومجموعاتك والاستمرار في استخدام النظام، يرجى التواصل مع الإدارة لتفعيل الحساب بشكل دائم.
-          </p>
-          
-          <button 
-            onClick={() => supabase.auth.signOut()}
-            style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', width: '100%', transition: '0.3s' }}
-          >
-            تسجيل الخروج الآمن
-          </button>
-        </div>
-      </div>
+      <SubscriptionPage 
+        session={session} 
+        onBack={() => supabase.auth.signOut()} // زر الخروج يقوم بقطع الجلسة بأمان لحين الدفع والتفعيل
+      />
     );
   }
 
-  // التوجيه للوحة التحكم الأساسية وتمرير الأيام المحسوبة ديناميكياً
+  // التوجيه للوحة التحكم الأساسية وتمرير البيانات الموثقة
   if (session) {
     return (
       <MainApp 
