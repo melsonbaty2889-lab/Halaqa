@@ -29,7 +29,7 @@ const translations = {
     usdt: "العملات الرقمية المشفرة (USDT - TRC20)",
     creditCard: "البطاقات الائتمانية الدولية (Visa / MasterCard)",
     instapayInstructions: "قم بالتحويل إلى عنوان الانستا باي: company@instapay ثم أدخل رقم العملية بالأسفل ليتأكد النظام تلقائياً.",
-    usdtInstructions: "قم بتحويل المبلغ إلى شبكة TRC20 على العنوان: TXxxxxxxxxxxxxxxxxx ثم ارفع لقطة الشاشة.",
+    usdtInstructions: "قم بتحويل المبلغ إلى شبكة TRC20 على العنوان: TXxxxxxxxxxxxxxxxxx ثم أدخل رقم المعاملة السري بالأسفل.",
     placeholderTx: "أدخل رقم العملية أو المعرف هنا",
     btnConfirm: "تأكيد الدفع وإرسال للطلب للمراجعة الفورية 🚀",
     successMsg: "تم إرسال طلب تفعيل حسابك بنجاح! سيقوم الدعم الفني بمراجعته وفتح اللوحة لك خلال دقائق.",
@@ -61,7 +61,7 @@ const translations = {
     usdt: "Crypto Currency (USDT - TRC20)",
     creditCard: "International Credit Cards (Visa / MasterCard)",
     instapayInstructions: "Transfer to InstaPay Address: company@instapay then enter the transaction ID below.",
-    usdtInstructions: "Send USDT to TRC20 Address: TXxxxxxxxxxxxxxxxxx then upload the confirmation.",
+    usdtInstructions: "Send USDT to TRC20 Address: TXxxxxxxxxxxxxxxxxx then enter the transaction ID below.",
     placeholderTx: "Enter Transaction ID or Reference here",
     btnConfirm: "Confirm Payment & Activate Account 🚀",
     successMsg: "Your activation request has been sent! Our system will verify and open your dashboard within minutes.",
@@ -70,25 +70,23 @@ const translations = {
 };
 
 export default function SubscriptionPage({ session, onBack }) {
-  // 🔍 تحديد لغة المتصفح تلقائياً: إذا بدأت بـ ar تكون عربية، وغير ذلك (فرنسي، تركي، هندي...) تفتح إنجليزي فوراً كـ Fallback
   const initialLang = navigator.language.startsWith('ar') ? 'ar' : 'en';
   const [lang, setLang] = useState(initialLang);
-  const [region, setRegion] = useState('egypt'); // egypt, gcc, global
-  const [duration, setDuration] = useState('monthly'); // monthly, yearly, lifetime
+  const [region, setRegion] = useState('egypt'); 
+  const [duration, setDuration] = useState('monthly'); 
   const [txId, setTxId] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false); // [إضافة اليوم] حالة الانتظار لحماية البيانات
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
 
-  // تحديد الأسعار بناءً على المنطقة والمدة الزمنية المعتمدة
   const prices = {
     egypt: { monthly: "150", yearly: "1500", lifetime: "3500", curr: t.currencyEg },
     gcc: { monthly: "50", yearly: "500", lifetime: "1200", curr: t.currencyGcc },
     global: { monthly: "15", yearly: "150", lifetime: "300", curr: t.currencyGlobal }
   };
 
-  // محاكاة التعرف الذكي على الدولة من إعدادات جهاز العميل لتسهيل التجربة
   useEffect(() => {
     const userLoc = navigator.language;
     if (userLoc.includes('SA') || userLoc.includes('KW') || userLoc.includes('AE') || userLoc.includes('QA') || userLoc.includes('BH') || userLoc.includes('OM')) {
@@ -100,16 +98,55 @@ export default function SubscriptionPage({ session, onBack }) {
     }
   }, []);
 
+  // [تطوير الدالة] للربط الفعلي بقاعدة البيانات وحفظ العمليات
   const handleSubmitPayment = async () => {
+    // 1. إذا كان الدفع في مصر شهري أو سنوي يتم التوجيه لـ Paymob (مستقبلاً)
     if (region === 'egypt' && (duration === 'monthly' || duration === 'yearly')) {
-      // توجيه العميل مستقبلاً إلى رابط الدفع المباشر (Paymob)
       alert(isRTL ? "جاري توجيهك بأمان إلى بوابة الدفع الإلكترونية الرسمية..." : "Redirecting securely to the official payment gateway...");
       return;
     }
     
-    // للأنظمة الشبه مؤتمتة (Instapay أو USDT) يتم تسجيل الطلب في قاعدة البيانات ليتأكد الأدمن
-    setIsSubmitted(true);
+    // 2. التحقق من إدخال رقم المعاملة للوسائل اليدوية وشبه المؤتمتة
+    if ((duration === 'lifetime' || region === 'global' || region === 'gcc') && !txId.trim()) {
+      alert(isRTL ? "الرجاء إدخال رقم العملية أو المعرف لتأكيد التحويل" : "Please enter the Transaction ID to confirm transfer");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // حساب تاريخ انتهاء الاشتراك تلقائياً حسب نوع الباقة
+      const expiryDate = new Date();
+      if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
+      else if (duration === 'yearly') expiryDate.setDate(expiryDate.getDate() + 365);
+      else if (duration === 'lifetime') expiryDate.setDate(expiryDate.getDate() + 36500); // مدى الحياة (100 عام)
+
+      // إرسال الطلب وحفظه داخل جدول saas_subscriptions السحابي
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .insert([{
+          user_id: session?.user?.id,
+          plan_type: duration,
+          status: 'pending', // ينتظر موافقتك اليدوية كـ Admin
+          payment_gateway: region === 'egypt' ? 'instapay_vodafone' : (region === 'global' ? 'usdt_crypto' : 'gcc_local_methods'),
+          transaction_id: txId || 'ONLINE_GATEWAY_ATTEMPT',
+          amount: parseFloat(prices[region][duration]),
+          currency: region === 'egypt' ? 'EGP' : (region === 'gcc' ? 'SAR' : 'USD'),
+          expires_at: expiryDate.toISOString()
+        }]);
+
+      if (error) throw error;
+      
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error("🚨 خطأ أثناء رفع طلب الاشتراك:", err);
+      alert(isRTL ? "حدث خطأ أثناء حفظ طلبك، يرجى المحاولة مجدداً" : "Error saving your request, please try again");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // تحديد متى يجب عرض حقل رقم العملية (يظهر في باقة مدى الحياة، أو أي باقة خارج بوابات مصر المؤتمتة)
+  const shouldShowTxInput = duration === 'lifetime' || region === 'global' || region === 'gcc';
 
   return (
     <div style={{ background: '#090F17', color: '#FFF', minHeight: '100vh', padding: '30px 20px', fontFamily: 'sans-serif', direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left', boxSizing: 'border-box' }}>
@@ -238,8 +275,8 @@ export default function SubscriptionPage({ session, onBack }) {
             </div>
           )}
 
-          {/* التعليمات في حالة التحويل اليدوي/الشبه مؤتمت كباقة المؤسسين */}
-          {duration === 'lifetime' && (
+          {/* التعليمات في حالة التحويل اليدوي/الشبه مؤتمت بناء على الشرط المطور */}
+          {shouldShowTxInput && (
             <div style={{ background: '#1F2937', padding: '15px', borderRadius: '8px', marginTop: '20px', fontSize: '0.9rem', borderLeft: isRTL ? 'none' : '4px solid #EF4444', borderRight: isRTL ? '4px solid #EF4444' : 'none' }}>
               <p style={{ margin: '0 0 10px 0', color: '#9CA3AF', lineHeight: '1.6' }}>
                 {region === 'global' ? t.usdtInstructions : t.instapayInstructions}
@@ -261,9 +298,10 @@ export default function SubscriptionPage({ session, onBack }) {
           ) : (
             <button 
               onClick={handleSubmitPayment}
-              style={{ width: '100%', marginTop: '25px', padding: '14px', borderRadius: '8px', background: '#FBBF24', color: '#090F17', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s' }}
+              disabled={loading}
+              style={{ width: '100%', marginTop: '25px', padding: '14px', borderRadius: '8px', background: loading ? '#4B5563' : '#FBBF24', color: '#090F17', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s', opacity: loading ? 0.7 : 1 }}
             >
-              {t.btnConfirm}
+              {loading ? (isRTL ? "جاري معالجة ورفع طلبك..." : "Processing...") : t.btnConfirm}
             </button>
           )}
 
