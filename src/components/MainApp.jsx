@@ -12,7 +12,8 @@ import {
   FaCog, 
   FaAward, 
   FaWhatsapp, 
-  FaClock 
+  FaClock,
+  FaCrown // 👑 استيراد أيقونة الترقية الفخمة
 } from "react-icons/fa";
 
 // استيراد المكونات الداخلية للأقسام الأصلية كما هي
@@ -23,6 +24,7 @@ import Exams from './Exams.jsx';
 import Payments from './Payments.jsx';
 import Settings from './Settings.jsx'; 
 import Reports from './Reports.jsx';
+import SubscriptionPage from './SubscriptionPage.jsx'; // 💳 استيراد صفحة الاشتراكات للترقية المبكرة
 
 // 🛡️ درع الحماية الذكي للمكونات الداخلية
 class LocalErrorBoundary extends React.Component {
@@ -69,6 +71,9 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
 
   // [إضافة اشتراكات جديدة] حالة التحقق من تفعيل اشتراك المستخدم حياً من السيرفر
   const [accountActivated, setAccountActivated] = useState(true);
+
+  // ⚜️ حالة برمجية جديدة لفتح وإغلاق شاشة الترقية المبكرة بمرونة داخل اللوحة
+  const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
   // معرفة اتجاه اللغة الحالية
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
@@ -186,6 +191,16 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     );
   }
 
+  // ⚜️ جدار حماية الترقية المبكرة والربط المرن مع زر التراجع (يتم تفعيله صامتاً عندما يضغط المستخدم على زر ترقية الحساب)
+  if (showEarlyUpgrade) {
+    return (
+      <SubscriptionPage 
+        session={session} 
+        onBack={() => setShowEarlyUpgrade(false)} // يسمح له بالرجوع للوحته لأنه لا زال يملك أياماً تجريبية
+      />
+    );
+  }
+
   // شاشة الانتظار الداخلية الفخمة الأصلية
   if (loadingData) {
     return (
@@ -288,25 +303,53 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
 
-        {/* ⏳ عداد الأيام التجريبية الأصلي المحفّز للدفع */}
+        {/* ⏳ عداد الأيام التجريبية الأصلي المحفّز للدفع + دمج زر الترقية التفاعلي الفخم */}
         {userRole !== 'admin' && trialDaysLeft > 0 && (
-          <div style={{ 
-            backgroundColor: 'rgba(201, 168, 76, 0.08)', 
-            color: C.gold || '#C9A84C', 
-            padding: '8px 12px', 
-            borderRadius: '8px', 
-            fontSize: '12px', 
-            textAlign: 'center', 
-            marginBottom: '15px', 
-            marginTop: '10px',
-            border: '1px solid rgba(201, 168, 76, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px'
-          }}>
-            <FaClock />
-            <span>{isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '15px', marginTop: '10px' }}>
+            <div style={{ 
+              backgroundColor: 'rgba(201, 168, 76, 0.08)', 
+              color: C.gold || '#C9A84C', 
+              padding: '8px 12px', 
+              borderRadius: '8px', 
+              fontSize: '12px', 
+              textAlign: 'center', 
+              border: '1px solid rgba(201, 168, 76, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}>
+              <FaClock />
+              <span>{isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`}</span>
+            </div>
+
+            {/* 👑 زر الترقية المبكرة الذكي والمحفز بدون تغيير أي أبعاد هندسية */}
+            {!accountActivated && (
+              <button
+                onClick={() => setShowEarlyUpgrade(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 10px rgba(201, 168, 76, 0.2)',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <FaCrown />
+                <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
+              </button>
+            )}
           </div>
         )}
         
