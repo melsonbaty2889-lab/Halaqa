@@ -114,7 +114,22 @@ function AppContent() {
   );
 }
 
+// 🛡️ المكون الرئيسي محمي بالكامل بقفل النطاق (Domain Lock) لحظر أي سرقة للكود
 export default function App() {
+  const allowedHosts = ['smart-halaqa.vercel.app', 'localhost', '127.0.0.1'];
+  const isAllowed = allowedHosts.includes(window.location.hostname);
+
+  if (!isAllowed) {
+    return (
+      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
+        <p style={{ color: '#9CA3AF', fontSize: '1.1rem', textAlign: 'center', maxWidth: '500px' }}>
+          تم إيقاف تشغيل هذه المنصة تلقائياً لحماية حقوق الملكية الفكرية للمطور. النطاق الحالي غير مسجل في الخادم الرسمي.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <GlobalErrorBoundary>
       <AppContent />
