@@ -1,7 +1,10 @@
 import React, { useState, useEffect, Component } from 'react';
 import { supabase } from './lib/supabase';
 
-// استيراد ثابت ومباشر لضمان استقرار الأداء على الهواتف والمتصفحات
+// ⚜️ استيراد الشاشة الافتتاحية المطورة (الحلقة الذهبية المتوهجة للمنصة)
+import SplashScreen from './components/SplashScreen';
+
+// استيراد بوابات النظام الثابتة لضمان استقرار الأداء العالمي
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
@@ -19,7 +22,7 @@ class GlobalErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right' }}>
-          <h2 style={{ color: '#FBBF24' }}>🚨 رادار الواجهة: عطل داخلي في المكونات</h2>
+          <h2 style={{ color: '#E5C060' }}>🚨 رادار الواجهة: عطل داخلي في المكونات</h2>
           <pre style={{ background: '#111827', padding: '20px', color: '#FFF', direction: 'ltr', textAlign: 'left', overflow: 'auto', border: '1px solid #374151', borderRadius: '8px' }}>
             {this.state.error?.stack || this.state.error?.toString()}
           </pre>
@@ -38,6 +41,10 @@ function AppContent() {
   const [isActivated, setIsActivated] = useState(false);
 
   useEffect(() => {
+    // صمام أمان تنظيف المتصفح من أي مخلفات للودر القديم فور الإقلاع
+    const oldLoader = document.getElementById('fallback-loader');
+    if (oldLoader) oldLoader.remove();
+
     if (!supabase) {
       setLoading(false);
       return;
@@ -46,7 +53,7 @@ function AppContent() {
     // جلب الجلسة الحالية فوراً عند الإقلاع
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
-      // تأخير بسيط لمحاكاة الشاشة الافتتاحية الأصلية بشكل سلس وأنيق
+      // تأخير احترافي مدته 1.2 ثانية لاستعراض جمال الشاشة الافتتاحية السينمائية
       setTimeout(() => setLoading(false), 1200);
     }).catch(() => setLoading(false));
 
@@ -100,22 +107,9 @@ function AppContent() {
 
   const trialDaysLeft = userRole === 'admin' ? 999 : calculateTrialDaysLeft();
 
-  // ✨ الشاشة الافتتاحية الفخمة (Splash Screen) الأصلية للمنصة أثناء التحميل
+  // ✨ استدعاء الشاشة الافتتاحية الفخمة المطورة العالمية والمطابقة للتصميم الأصلي
   if (loading) {
-    return (
-      <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', direction: 'rtl' }}>
-        <div style={{ textAlign: 'center', animation: 'fadeIn 1s ease-out' }}>
-          {/* حلقة ذهبية متحركة ترمز لشعار "الحلقة الذكية" */}
-          <div style={{ width: '65px', height: '65px', border: '3px solid rgba(251,191,36,0.08)', borderTop: '3px solid #FBBF24', borderBottom: '3px solid #FBBF24', borderRadius: '50%', animation: 'spin 1.2s linear infinite', margin: '0 auto 25px auto' }}></div>
-          <h1 style={{ color: '#FFF', fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.5px', margin: '0 0 8px 0' }}>منصة الحَلَقة الذكية</h1>
-          <p style={{ color: '#9CA3AF', fontSize: '0.85rem', margin: '0' }}>جاري تهيئة بيئة العمل السحابية الآمنة...</p>
-        </div>
-        <style>{`
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-          @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        `}</style>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   if (authView === 'update_password') return <UpdatePassword />;
@@ -143,7 +137,7 @@ function AppContent() {
 
   // بوابات الزوار غير المسجلين
   return (
-    <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+    <div style={{ background: '#060B11', minHeight: '100vh', direction: 'rtl' }}>
       {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
       {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
       {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
@@ -158,8 +152,8 @@ export default function App() {
 
   if (!isAllowed) {
     return (
-      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-        <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
+      <div style={{ padding: '30px', background: '#060B11', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <h2 style={{ color: '#E5C060', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
         <p style={{ color: '#9CA3AF', fontSize: '1.1rem', textAlign: 'center', maxWidth: '500px' }}>
           تم إيقاف تشغيل هذه المنصة تلقائياً لحماية حقوق الملكية الفكرية للمطور. النطاق الحالي غير مسجل في الخادم الرسمي.
         </p>
