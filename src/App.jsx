@@ -1,10 +1,10 @@
 import React, { useState, useEffect, Component } from 'react';
 import { supabase } from './lib/supabase';
 
-// ⚜️ استيراد الشاشة الافتتاحية المطورة (الحلقة الذهبية المتوهجة للمنصة)
+// ⚜️ الشاشة الافتتاحية المطورة بالحلقة الذهبية
 import SplashScreen from './components/SplashScreen';
 
-// استيراد بوابات النظام الثابتة لضمان استقرار الأداء العالمي
+// استيراد بوابات النظام الثابتة الأصلية
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
 import ForgotPassword from './components/ForgotPassword';
@@ -12,7 +12,7 @@ import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 import SubscriptionPage from './components/SubscriptionPage';
 
-// جدار حماية داخلي للـ React لمعالجة أي أخطاء مفاجئة في الواجهة
+// جدار حماية داخلي للـ React
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) {
@@ -22,7 +22,7 @@ class GlobalErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right' }}>
-          <h2 style={{ color: '#E5C060' }}>🚨 رادار الواجهة: عطل داخلي في المكونات</h2>
+          <h2 style={{ color: '#FBBF24' }}>🚨 رادار الواجهة: عطل داخلي في المكونات</h2>
           <pre style={{ background: '#111827', padding: '20px', color: '#FFF', direction: 'ltr', textAlign: 'left', overflow: 'auto', border: '1px solid #374151', borderRadius: '8px' }}>
             {this.state.error?.stack || this.state.error?.toString()}
           </pre>
@@ -41,7 +41,7 @@ function AppContent() {
   const [isActivated, setIsActivated] = useState(false);
 
   useEffect(() => {
-    // صمام أمان تنظيف المتصفح من أي مخلفات للودر القديم فور الإقلاع
+    // إزالة أي مخلفات قديمة للودر القديم
     const oldLoader = document.getElementById('fallback-loader');
     if (oldLoader) oldLoader.remove();
 
@@ -50,10 +50,9 @@ function AppContent() {
       return;
     }
 
-    // جلب الجلسة الحالية فوراً عند الإقلاع
+    // جلب الجلسة الحالية
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
-      // تأخير احترافي مدته 1.2 ثانية لاستعراض جمال الشاشة الافتتاحية السينمائية
       setTimeout(() => setLoading(false), 1200);
     }).catch(() => setLoading(false));
 
@@ -68,7 +67,7 @@ function AppContent() {
     };
   }, []);
 
-  // التحقق من الصلاحيات وحالة تفعيل الحساب والاشتراك
+  // التحقق من الصلاحيات وحالة التفعيل
   useEffect(() => {
     if (!session || !supabase) return;
     
@@ -94,7 +93,6 @@ function AppContent() {
       });
   }, [session]);
 
-  // معادلة حساب الأيام المتبقية في الفترة التجريبية (14 يوماً)
   const calculateTrialDaysLeft = () => {
     if (!session) return 0;
     const createdAt = new Date(session.user.created_at);
@@ -107,14 +105,14 @@ function AppContent() {
 
   const trialDaysLeft = userRole === 'admin' ? 999 : calculateTrialDaysLeft();
 
-  // ✨ استدعاء الشاشة الافتتاحية الفخمة المطورة العالمية والمطابقة للتصميم الأصلي
+  // عرض الشاشة الافتتاحية الفخمة الجديدة
   if (loading) {
     return <SplashScreen />;
   }
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 🔒 جدار حماية الاشتراك: إذا انتهت الـ 14 يوماً والحساب غير مفعّل يدوياً، تظهر صفحة الدفع
+  // جدار حماية الاشتراك
   if (session && trialDaysLeft <= 0 && userRole !== 'admin' && !isActivated) {
     return (
       <SubscriptionPage 
@@ -124,7 +122,7 @@ function AppContent() {
     );
   }
 
-  // إذا كانت الجلسة نشطة والحساب مفعّل، نفتح لوحة التحكم الاحترافية الكاملة
+  // فتح لوحة التحكم الرئيسية بالأبعاد الأصلية
   if (session) {
     return (
       <MainApp 
@@ -135,9 +133,9 @@ function AppContent() {
     );
   }
 
-  // بوابات الزوار غير المسجلين
+  // بوابات الزوار بالخلفية الأصلية المستعادة
   return (
-    <div style={{ background: '#060B11', minHeight: '100vh', direction: 'rtl' }}>
+    <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
       {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
       {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
       {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
@@ -145,15 +143,15 @@ function AppContent() {
   );
 }
 
-// قفل النطاق لحماية الملكية الفكرية
+// قفل النطاق لحماية الملكية الفكرية بالخلفية الأصلية المستعادة
 export default function App() {
   const allowedHosts = ['smart-halaqa.vercel.app', 'localhost', '127.0.0.1'];
   const isAllowed = allowedHosts.includes(window.location.hostname);
 
   if (!isAllowed) {
     return (
-      <div style={{ padding: '30px', background: '#060B11', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-        <h2 style={{ color: '#E5C060', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
+      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
         <p style={{ color: '#9CA3AF', fontSize: '1.1rem', textAlign: 'center', maxWidth: '500px' }}>
           تم إيقاف تشغيل هذه المنصة تلقائياً لحماية حقوق الملكية الفكرية للمطور. النطاق الحالي غير مسجل في الخادم الرسمي.
         </p>
