@@ -79,6 +79,20 @@ function AppContent() {
       }).catch(() => setUserRole('student'));
   }, [session]);
 
+  // 🛡️ معادلة عالمية لحساب الأيام المتبقية من السيرفر مباشرة دون استهلاك باقة البيانات
+  const calculateTrialDaysLeft = () => {
+    if (!session) return 0;
+    const createdAt = new Date(session.user.created_at); // تاريخ إنشاء الحساب الموثق
+    const today = new Date();
+    const diffTime = today - createdAt;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // حساب الأيام المنقضية
+    const daysLeft = 14 - diffDays; // طرحها من الـ 14 يوماً التجريبية
+    return daysLeft < 0 ? 0 : daysLeft;
+  };
+
+  // لو كان الأدمن هو من يتصفح، نمنحه صلاحية مفتوحة دائماً (مثال: 999 يوم)، وللمستخدم العادي نحسب الأيام ديناميكياً
+  const trialDaysLeft = userRole === 'admin' ? 999 : calculateTrialDaysLeft();
+
   if (loading) {
     return (
       <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif' }}>
@@ -93,13 +107,34 @@ function AppContent() {
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // التوجيه للوحة التحكم الأساسية في حال وجود جلسة صالحة
+  // 🔒 جدار حماية الفترة التجريبية: إذا انتهت الـ 14 يوماً والمستخدم ليس أدمن، يتم حظر الواجهة فوراً
+  if (session && trialDaysLeft <= 0 && userRole !== 'admin') {
+    return (
+      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ background: '#111827', border: '1px solid #374151', padding: '40px', borderRadius: '16px', maxWidth: '500px', width: '100%', textAlign: 'center' }}>
+          <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '15px' }}>⏳ انتهت الفترة التجريبية للمنصة</h2>
+          <p style={{ color: '#9CA3AF', fontSize: '1rem', lineHeight: '1.6', marginBottom: '25px' }}>
+            لقد انتهت المدة المتاحة لتجربة منصة <strong>"الحلقة الذكية"</strong> (14 يوماً). لحفظ سجلات طلابك ومجموعاتك والاستمرار في استخدام النظام، يرجى التواصل مع الإدارة لتفعيل الحساب بشكل دائم.
+          </p>
+          
+          <button 
+            onClick={() => supabase.auth.signOut()}
+            style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', width: '100%', transition: '0.3s' }}
+          >
+            تسجيل الخروج الآمن
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // التوجيه للوحة التحكم الأساسية وتمرير الأيام المحسوبة ديناميكياً
   if (session) {
     return (
       <MainApp 
         session={session} 
         userRole={userRole} 
-        trialDaysLeft={7} 
+        trialDaysLeft={trialDaysLeft} 
       />
     );
   }
