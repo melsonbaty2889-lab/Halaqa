@@ -11,15 +11,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false, // إلغاء خرائط الكود في النسخة الحية لتسريع الـ Build وتقليص الحجم والأمان
-    chunkSizeWarningLimit: 1000, // رفع حد التحذيرات البرمجية للمكتبات الكبيرة مستقبلاً
+    chunkSizeWarningLimit: 2000, // رفع الحد لاستيعاب ملف الـ vendor الموحد والمستقر
     rollupOptions: {
       output: {
-        // الهندسة العكسية لتقسيم الكود (Code Splitting) لضمان سرعة صاروخية للموقع
+        // تجميع ذكي ومستقر يمنع التداخل الدائري ويحمي إقلاع المنصة
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react')) return 'vendor-react'; // عزل مكتبة ريأكت الأساسية
-            if (id.includes('lucide') || id.includes('icons')) return 'vendor-icons'; // عزل الأيقونات
-            return 'vendor-libs'; // عزل باقي المكتبات وقاعدة البيانات تلقائياً
+            return 'vendor'; // تجميع كل مكتبات node_modules في حزمة موحدة ومستقرة تماماً
           }
         },
       },
