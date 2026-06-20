@@ -112,12 +112,12 @@ function AppContent() {
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // جدار حماية الاشتراك
+  // 🔒 جدار حماية الاشتراك (شاشة القفل التامة والآمنة للمشتركين المنتهية فترة تجريبتهم)
   if (session && trialDaysLeft <= 0 && userRole !== 'admin' && !isActivated) {
     return (
       <SubscriptionPage 
         session={session} 
-        onBack={() => supabase.auth.signOut()} 
+        onBack={null} 
       />
     );
   }
