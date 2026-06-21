@@ -7,7 +7,6 @@ import {
   FaWhatsapp, FaReceipt, FaMosque, FaCheckCircle 
 } from "react-icons/fa";
 
-// مصفوفة الإجراءات خارج المكون لزيادة الأداء
 const QUICK_ACTIONS = [
   { id: 'attendance', ar: 'رصد الحضور والتسميع', en: 'Recitation & Attendance', icon: <FaBookOpen />, color: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' },
   { id: 'exams', ar: 'اختبارات الأجزاء والسور', en: 'Surah & Juz Exams', icon: <FaAward />, color: 'linear-gradient(135deg, #78350f 0%, #b45309 100%)' },
@@ -22,13 +21,20 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
   const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // --- نقطة فحص (Debug) ---
+  useEffect(() => {
+    console.log("🔍 Dashboard Data Received:", preloadedDashboardData);
+  }, [preloadedDashboardData]);
+  // -----------------------
+
   const academyData = preloadedDashboardData || { 
-    academyName: '', 
+    academyName: '...', 
     role: 'teacher', 
     stats: { students: 0, pending: 0, activeHalagas: 4, completedExams: 12 } 
   };
 
-  const isSuperAdmin = academyData.role === 'super_admin';
+  // تأكد من أن المقارنة دقيقة (تم تحويل الـ role لـ lowercase لزيادة الأمان)
+  const isSuperAdmin = academyData.role?.toLowerCase() === 'super_admin';
   const isRtl = i18n.language === 'ar';
 
   const translateText = (key, arText, enText) => {
@@ -36,9 +42,11 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     return isRtl ? arText : enText;
   };
 
-  // جلب طلبات السوبر أدمن
   useEffect(() => {
-    if (!isSuperAdmin) return;
+    if (!isSuperAdmin) {
+      setLoadingAdmin(false);
+      return;
+    }
 
     const fetchRequests = async () => {
       setLoadingAdmin(true);
@@ -61,7 +69,6 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     fetchRequests();
   }, [isSuperAdmin]);
 
-  // دالة تفعيل الحساب
   const handleApprove = async (profileId) => {
     setActionLoading(profileId);
     try {
@@ -98,7 +105,6 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     }
   };
 
-  /* 👑 عرض لوحة تحكم السوبر أدمن */
   if (isSuperAdmin) {
     return (
       <div style={{ minHeight: '100vh', background: '#090F17', color: '#fff', padding: '30px', fontFamily: 'sans-serif', direction: 'rtl' }}>
@@ -132,7 +138,6 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     );
   }
 
-  /* 🏫 عرض اللوحة التقليدية */
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 10px', fontFamily: "'Cairo', sans-serif", direction: isRtl ? 'rtl' : 'ltr' }}>
       <header style={{ marginBottom: '30px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '25px' }}>
