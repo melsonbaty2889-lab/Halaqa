@@ -1,14 +1,12 @@
 /* src/components/MainApp.module.css */
-
-/* الحاوية الرئيسية للوحة التحكم */
 .appContainer {
   display: flex;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
+  background-color: #0C1520; /* C.bg */
 }
 
-/* القائمة الجانبية الاحترافية */
 .sidebar {
   width: 260px;
   height: 100vh;
@@ -18,23 +16,36 @@
   position: relative;
   z-index: 2000;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #111C2A; /* C.surface */
+  border-right: 1px solid rgba(255,255,255,0.03);
 }
 
-/* التجاوب الذكي مع الهواتف بدون استخدام جافاسكريبت للحساب */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-100%); /* يختفي تلقائياً في اليسار */
-  }
-  
-  /* إذا كان الموقع عربياً يختفي في اليمين تلقائياً دون تداخل */
-  :global([dir="rtl"]) .sidebar {
-    transform: translateX(100%);
-  }
+.sidebarMobile {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-100%);
 }
 
-.sidebarActive {
-  transform: translateX(0) !important;
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+/* التنسيقات العامة للمحتوى */
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #111C2A;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.03);
+  margin-bottom: 25px;
 }
