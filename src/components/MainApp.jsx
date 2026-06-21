@@ -213,13 +213,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   };
 
+  // 🛠️ تم ترقية المصطلحات هنا لتعطي طابعاً احترافياً للمستخدم الأجنبي
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, ar: 'لوحة التحكم', en: 'Dashboard' },
     { id: 'students', icon: <FaUsers />, ar: 'إدارة الطلاب', en: 'Student Management' },
     { id: 'attendance', icon: <FaCalendarCheck />, ar: 'رصد الحضور والتسميع', en: 'Recitation & Attendance' },
     { id: 'exams', icon: <FaAward />, ar: 'اختبارات الأجزاء', en: 'Surah & Juz Exams' }, 
-    { id: 'reports', icon: <FaWhatsapp />, ar: 'تقارير الأولياء', en: 'WhatsApp Reports' }, 
-    { id: 'payments', icon: <FaMoneyBillWave />, ar: 'المالية والاشتراكات', en: 'Subscriptions & Finance' },
+    { id: 'reports', icon: <FaWhatsapp />, ar: 'تقارير الأولياء', en: 'Parent Reports' }, 
+    { id: 'payments', icon: <FaMoneyBillWave />, ar: 'المالية والاشتراكات', en: 'Billing & Finance' },
     { id: 'settings', icon: <FaCog />, ar: 'إعدادات الحلقة', en: 'Halaqa Settings' },
   ];
 
@@ -229,11 +230,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1999 }} />
       )}
       <aside style={{ width: 260, background: C.surface, height: '100vh', padding: '20px', display: !isMobile || sidebarOpen ? 'flex' : 'none', flexDirection: 'column', position: isMobile ? 'fixed' : 'relative', right: isMobile && isRtl ? 0 : 'auto', left: isMobile && !isRtl ? 0 : 'auto', top: 0, zIndex: 2000, boxShadow: C.shadow, transition: 'all 0.3s ease' }}>
-        <h2 style={{ color: C.gold, marginBottom: '5px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>{isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}</h2>
+        <h2 style={{ color: C.gold, marginBottom: '5px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: isRtl ? 'normal' : '0.5px' }}>{isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}</h2>
         
         {userRole !== 'admin' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '15px', marginTop: '10px' }}>
-            {/* 💡 شريط عرض العداد الذكي المتغير حسب وضع باقة الحساب */}
+            {/* 💡 شريط عرض العداد الذكي المتغير مع لمسة تباين نصوص أعلى للغة الإنجليزية */}
             <div style={{ 
               backgroundColor: isTrial ? 'rgba(201, 168, 76, 0.08)' : 'rgba(16, 185, 129, 0.08)', 
               color: isTrial ? (C.gold || '#C9A84C') : '#10B981', 
@@ -245,10 +246,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
-              gap: '6px' 
+              gap: '6px',
+              fontWeight: isRtl ? 'normal' : '600',
+              letterSpacing: isRtl ? 'normal' : '0.2px'
             }}>
               <FaClock />
-              <span>
+              <span style={{ fontWeight: isRtl ? '500' : '700' }}>
                 {isTrial 
                   ? (isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`)
                   : (isRtl ? `متبقي ${trialDaysLeft} يوماً على الاشتراك` : `${trialDaysLeft} subscription days left`)
@@ -260,15 +263,15 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             {isTrial && !accountActivated && (
               <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <FaCrown />
-                <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
+                <span style={{ letterSpacing: isRtl ? 'normal' : '0.3px' }}>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
               </button>
             )}
 
-            {/* 🎯 ميزة ذكاء فرونت إند إضافية: إذا قارب الاشتراك الفعلي على الانتهاء (اقل من 5 ايام)، يظهر زر التجديد تلقائياً */}
+            {/* زر التجديد التلقائي للاشتراكات الفعلية */}
             {!isTrial && trialDaysLeft <= 5 && (
               <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <FaCrown />
-                <span>{isRtl ? 'تجديد الاشتراك الحالي 🔄' : 'Renew Subscription'}</span>
+                <span style={{ letterSpacing: isRtl ? 'normal' : '0.3px' }}>{isRtl ? 'تجديد الاشتراك الحالي 🔄' : 'Renew Subscription'}</span>
               </button>
             )}
           </div>
@@ -276,13 +279,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         <nav style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 15, flex: 1, overflowY: 'auto' }}>
           {menuItems.map(item => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === item.id ? (C.gold || '#C9A84C') : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: '11px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '14px', fontWeight: activeTab === item.id ? '700' : '500', textAlign: isRtl ? 'right' : 'left' }}>
+            <button key={item.id} onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === item.id ? (C.gold || '#C9A84C') : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: '11px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '14px', fontWeight: activeTab === item.id ? '700' : '500', textAlign: isRtl ? 'right' : 'left', letterSpacing: isRtl ? 'normal' : '0.2px' }}>
               <span style={{ fontSize: '16px', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
               <span>{isRtl ? item.ar : item.en}</span>
             </button>
           ))}
         </nav>
-        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', marginTop: '15px' }}>
+        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', marginTop: '15px', letterSpacing: isRtl ? 'normal' : '0.5px' }}>
           <FaSignOutAlt /> {isRtl ? 'تسجيل الخروج' : 'Log Out'}
         </button>
       </aside>
@@ -293,7 +296,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               <FaBars size={18} />
             </button>
           )}
-          <div style={{ fontSize: '13px', color: '#657585', fontWeight: '500' }}>
+          <div style={{ fontSize: '13px', color: '#657585', fontWeight: '500', letterSpacing: isRtl ? 'normal' : '0.3px' }}>
             {isRtl ? 'لوحة المتابعة' : 'Management Portal'} / {isRtl ? menuItems.find(m => m.id === activeTab)?.ar : menuItems.find(m => m.id === activeTab)?.en}
           </div>
         </div>
