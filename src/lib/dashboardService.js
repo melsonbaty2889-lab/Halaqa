@@ -5,8 +5,8 @@
 
 export async function getDashboardStats(supabase, profile) {
   try {
-    // إذا كان المستخدم "سوبر أدمن" -> جلب إحصائيات المنصة كاملة
-    if (profile?.role === 'admin') {
+    // تم التوحيد على 'super_admin' لضمان التطابق مع واجهة المستخدم
+    if (profile?.role === 'super_admin') {
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
@@ -29,9 +29,10 @@ export async function getDashboardStats(supabase, profile) {
 
       if (studentsError) throw new Error('خطأ في جلب بيانات الأكاديمية');
 
-      return { studentsCount, academiesCount: null }; // لا نكشف إجمالي الأكاديميات للمستخدم العادي
+      return { studentsCount, academiesCount: null }; 
     }
 
+    // القيمة الافتراضية إذا لم يتطابق أي شرط
     return { studentsCount: 0, academiesCount: 0 };
 
   } catch (error) {
