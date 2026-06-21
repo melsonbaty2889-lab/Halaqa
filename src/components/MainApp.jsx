@@ -26,7 +26,7 @@ import Settings from './Settings.jsx';
 import Reports from './Reports.jsx';
 import SubscriptionPage from './SubscriptionPage.jsx';
 
-// معالج الأخطاء العالمي - مترجم وديناميكي بالكامل
+// 🛡️ معالج الأخطاء العالمي - يعزل أي وحدة داخلية تنهار ويمنع سقوط لوحة التحكم بالكامل
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -76,17 +76,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(true);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // 🌍 [الركائز الخمس] إعدادات العولمة الافتراضية المستدعاة ديناميكياً من السيرفر
+  // 🌍 [ركائز العولمة] الإعدادات الدولية المستدعاة ديناميكياً من قاعدة البيانات لكل عميل SaaS
   const [currency, setCurrency] = useState("USD");         
   const [timezone, setTimezone] = useState("UTC");         
   const [countryCode, setCountryCode] = useState("US");   
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   const isFetchLocked = useRef(false);
-
-  // 🌍 [الركيزة 2 و 3] إنشاء منسقات محلية ذكية بناءً على لغة واختيارات العميل الدولية لتنسيق الأرقام والوقت
   const numberFormatter = new Intl.NumberFormat(i18n.language || 'ar', { useGrouping: true });
-  
   const [academyTime, setAcademyTime] = useState("");
 
   useEffect(() => {
@@ -100,7 +97,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
 
-  // 🌍 [الركيزة 3] تحديث التوقيت المحلي للأكاديمية بناءً على منطقتها الزمنية الخاصة لمنع التضارب الدولي
+  // تحديث التوقيت الدولي الحي للأكاديمية بناءً على منطقتها الزمنية المعتمدة
   useEffect(() => {
     if (loadingData) return;
     const updateTime = () => {
@@ -129,7 +126,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         setLoadingData(false);
         return;
       }
-      
       isFetchLocked.current = true;
 
       try {
@@ -141,7 +137,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         if (profileData) setAccountActivated(profileData.is_activated ?? false);
 
-        // 🌍 [الركائز الخمس] جلب بيانات العولمة والعملة والمناطق الزمنية والبلد
+        // جلب الإعدادات الجغرافية للأكاديمية الحالية لدعم الفوترة والاتصالات المتعددة
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, currency, timezone, country_code)')
@@ -174,12 +170,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           if (!examsError && examsCount !== null) setCompletedExamsCount(examsCount);
         }
       } catch (error) {
-        console.error("خطأ جلب البيانات داخل MainApp:", error);
+        console.error("Error fetching system assets:", error);
       } finally {
         setLoadingData(false);
       }
     }
-    
     loadInitialData();
   }, [session]);
 
@@ -194,6 +189,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
+  // جدار الحماية الصارم للاشتراكات والمدفوعات المتأخرة لمنع الاستخدام غير المصرح به عالمياً
   const isBlockActive = userRole !== 'admin' && (
     (isTrial && trialDaysLeft <= 0 && !accountActivated) || 
     (!isTrial && trialDaysLeft <= 0)
@@ -209,7 +205,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           </h2>
           <p style={{ color: '#9CA3AF', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
             {isTrial 
-              ? (isRtl ? 'انتهت الفترة التجريبية للمنصة. برجاء ترقية حسابك أو التواصل مع الإدارة للتفعيل الحصري.' : 'The trial period for the platform has expired. Please upgrade your plan or contact administration for instant activation.')
+              ? (isRtl ? 'انتهت الفترة التجريبية للمنصة. يرجى تفعيل حسابك للاستفادة الكاملة من الأنظمة الدولية للأكاديمية.' : 'The platform trial period has expired. Please activate your account to unlock the full potential of global systems.')
               : (isRtl ? 'يرجى تجديد الاشتراك لتفادي انقطاع الخدمات والأدوات الذكية عن أكاديميتك.' : 'Please renew your subscription to prevent service interruptions across your virtual academy.')}
           </p>
           <button onClick={() => supabase.auth.signOut()} style={{ background: C.gold || '#C9A84C', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%', boxShadow: '0 4px 12px rgba(201,168,76,0.15)' }}>
@@ -220,33 +216,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
-  if (showEarlyUpgrade) {
-    return (
-      <SubscriptionPage 
-        session={session} 
-        onBack={() => setShowEarlyUpgrade(false)} 
-      />
-    );
-  }
+  if (showEarlyUpgrade) return <SubscriptionPage session={session} onBack={() => setShowEarlyUpgrade(false)} />;
 
   if (loadingData) {
     return (
       <div style={{ color: C.gold || '#C9A84C', backgroundColor: C.bg || '#0C1520', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', gap: '20px' }}>
         <div style={{ width: '40px', height: '40px', border: '3px solid rgba(201, 168, 76, 0.08)', borderTop: `3px solid ${C.gold || '#C9A84C'}`, borderRadius: '50%', animation: 'spinGlobal 0.75s linear infinite' }}></div>
         <style>{`@keyframes spinGlobal { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontWeight: '500', letterSpacing: isRtl ? '0' : '0.5px' }}>{t('loading', 'Loading system assets...')}</span>
+        <span style={{ fontWeight: '500' }}>{t('loading', 'Loading secure environment...')}</span>
       </div>
     );
   }
 
   const renderContent = () => {
-    const pageStyle = { backgroundColor: C.surface || '#111C2A', minHeight: '80vh', padding: '24px', color: C.text, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' };
     return (
-      <div style={pageStyle}>
+      <div style={{ backgroundColor: C.surface || '#111C2A', minHeight: '80vh', padding: '24px', color: C.text, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
         <LocalErrorBoundary key={activeTab}>
-          {activeTab === 'dashboard' && (
-            <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />
-          )}
+          {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
           {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} />}
           {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
@@ -258,24 +244,31 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   };
 
+  // 📌 توحيد كامل وضبط لعناصر القائمة الجانبية لتطابق الهوية العالمية الفاخرة المترجمة
   const menuItems = [
-    { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard' },
-    { id: 'students', icon: <FaUsers />, labelKey: 'students' },
-    { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'action_attendance' },
-    { id: 'exams', icon: <FaAward />, labelKey: 'action_exams' }, 
-    { id: 'reports', icon: <FaWhatsapp />, labelKey: 'action_reports' }, 
-    { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'action_payments' },
-    { id: 'settings', icon: <FaCog />, labelKey: 'settings' },
+    { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Dashboard' },
+    { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Student Management' },
+    { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Recitation & Attendance' },
+    { id: 'exams', icon: <FaAward />, labelKey: 'surah_juz_exams', def: 'Surah & Juz Exams' }, 
+    { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Parent Reports' }, 
+    { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Billing & Finance' },
+    { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'General Settings' },
   ];
 
   const mobilePositionStyle = isMobile ? (isRtl ? { right: 0 } : { left: 0 }) : {};
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row', width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, width: '100%', direction: isRtl ? 'rtl' : 'ltr', overflowX: 'hidden' }}>
+      
+      {/* طبقة حماية وعزل لمنع التداخل أو الاستجابة الشبحية عند فتح الـ Sidebar على الهاتف */}
       {isMobile && sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1999, backdropFilter: 'blur(4px)' }} />
+        <div 
+          onClick={() => setSidebarOpen(false)} 
+          style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1999, backdropFilter: 'blur(5px)' }} 
+        />
       )}
       
+      {/* القائمة الجانبية الاحترافية المعزولة جغرافياً */}
       <aside style={{ 
         width: 260, 
         background: C.surface, 
@@ -292,12 +285,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         borderRight: !isRtl && !isMobile ? '1px solid rgba(255,255,255,0.03)' : 'none',
         ...mobilePositionStyle
       }}>
-        {/* 🌍 [الركيزة 5] حماية نصوص العناوين من الانهيار عند تغيير اللغات الفاخرة */}
-        <h2 style={{ color: C.gold, marginBottom: '4px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', letterSpacing: isRtl ? 'normal' : '0.5px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+        <h2 style={{ color: C.gold, marginBottom: '4px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
 
-        {/* 🌍 [الركيزة 3] العداد الزمني الحي للمنطقة الزمنية الخاصة بالأكاديمية يظهر بوضوح بالخلفية */}
+        {/* ساعة التوقيت الدولي الحي للأكاديمية */}
         <div style={{ fontSize: '11px', color: '#657585', textAlign: 'center', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
           <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
           <span>{timezone} : {academyTime}</span>
@@ -305,7 +297,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         {userRole !== 'admin' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            {/* 🌍 [الركيزة 2] تنسيق الأرقام هنا يعتمد على دالة الفرمتة الدولية المصاغة بالأعلى */}
             <div style={{ 
               backgroundColor: isTrial ? 'rgba(201, 168, 76, 0.05)' : 'rgba(16, 185, 129, 0.05)', 
               color: isTrial ? (C.gold || '#C9A84C') : '#10B981', 
@@ -313,12 +304,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               borderRadius: '8px', 
               fontSize: '12px', 
               textAlign: 'center', 
-              border: isTrial ? '1px solid rgba(201, 168, 76, 0.15)' : '1px solid rgba(16, 185, 129, 0.15)', 
+              border: '1px solid rgba(201,168,76,0.15)', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               gap: '8px',
-              fontWeight: isRtl ? '500' : '600'
+              fontWeight: '600'
             }}>
               <FaClock style={{ flexShrink: 0 }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -334,13 +325,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
                 <span style={{ whiteSpace: 'nowrap' }}>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
               </button>
             )}
-
-            {!isTrial && trialDaysLeft <= 5 && (
-              <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                <FaCrown />
-                <span style={{ whiteSpace: 'nowrap' }}>{isRtl ? 'تجديد الاشتراك الحالي 🔄' : 'Renew Subscription'}</span>
-              </button>
-            )}
           </div>
         )}
         
@@ -352,7 +336,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
                 key={item.id} 
                 onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} 
                 style={{ 
-                  background: isSelected ? (C.gold || '#C9A84C') : 'transparent', 
+                  background: isSelected ? C.gold : 'transparent', 
                   color: isSelected ? '#000' : C.text, 
                   padding: '12px 16px', 
                   borderRadius: 8, 
@@ -365,36 +349,88 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
                   fontSize: '14px', 
                   fontWeight: isSelected ? '700' : '500', 
                   textAlign: isRtl ? 'right' : 'left',
-                  transition: 'all 0.2s ease',
-                  overflow: 'hidden'
+                  transition: 'all 0.2s ease'
                 }}
               >
-                {/* 🌍 [الركيزة 5] الحماية الكاملة لأسماء الأزرار الطويلة جداً بالإنجليزية من تخريب المحاذاة */}
                 <span style={{ fontSize: '16px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span> 
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>
-                  {t(item.labelKey)}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                  {t(item.labelKey, item.def)}
                 </span>
               </button>
             );
           })}
         </nav>
 
-        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: '700', fontSize: '14px', marginTop: '15px', transition: 'all 0.2s ease' }}>
+        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: '700', fontSize: '14px', marginTop: '15px' }}>
           <FaSignOutAlt /> <span>{t('logout', 'Log Out')}</span>
         </button>
       </aside>
 
-      <main style={{ flex: 1, overflowY: 'auto', padding: '20px', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', padding: '0 4px' }}>
-          {isMobile && (
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: '10px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <FaBars size={18} />
+      {/* 🚀 الحاوية الكبرى للمحتوى الرئيسي: محصنة بالكامل لمنع التداخل والطبقات العشوائية للنصوص */}
+      <main style={{ flex: 1, padding: '20px', width: '100%', overflowX: 'hidden', minWidth: 0 }}>
+        
+        {/* 🌟 هيدر التحكم العالمي الفاخر (Premium Global Control Header) */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginBottom: '25px', 
+          padding: '12px 20px', 
+          backgroundColor: C.surface, 
+          borderRadius: '12px', 
+          border: '1px solid rgba(255,255,255,0.03)',
+          gap: '15px',
+          flexWrap: 'wrap',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            {isMobile && (
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.1)`, borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
+                <FaBars size={16} />
+              </button>
+            )}
+            <div style={{ fontSize: '13px', color: '#657585', fontWeight: '600', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span style={{ color: C.gold }}>{t(menuItems.find(m => m.id === activeTab)?.labelKey, menuItems.find(m => m.id === activeTab)?.def)}</span>
+            </div>
+          </div>
+
+          {/* كروت كشف الركائز الجغرافية النشطة في اللوحة فورا */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            
+            {/* العملة الدولية للفواتير */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(201, 168, 76, 0.06)', border: '1px solid rgba(201, 168, 76, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: C.gold, fontWeight: '700' }} title="Active Billing Currency">
+              <FaMoneyBillWave size={13} />
+              <span>{currency}</span>
+            </div>
+
+            {/* بوابة الاتصال الدولي الخاصة بالواتساب */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: '#10B981', fontWeight: '700' }} title="WhatsApp International Gateway">
+              <FaWhatsapp size={13} />
+              <span>+{countryCode}</span>
+            </div>
+
+            {/* مفتاح التبديل الفوري لاختبار انعكاس التصميم ومرونته الفورية */}
+            <button 
+              onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')} 
+              style={{ 
+                background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)', 
+                color: '#FFF', 
+                border: '1px solid rgba(255,255,255,0.08)', 
+                padding: '6px 14px', 
+                borderRadius: '8px', 
+                fontSize: '11px', 
+                fontWeight: '700', 
+                cursor: 'pointer',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+              }}
+              title="Toggle System Language & Direction"
+            >
+              {isRtl ? 'English 🌐' : 'العربية 🌐'}
             </button>
-          )}
-          <div style={{ fontSize: '13px', color: '#657585', fontWeight: '600', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '80%' }}>
-            {(isRtl ? 'لوحة المتابعة' : 'Management Portal')} / {t(menuItems.find(m => m.id === activeTab)?.labelKey)}
           </div>
         </div>
+
+        {/* عرض المحتوى الداخلي النظيف المحصن من التكرار والتراكب البصري */}
         {renderContent()}
       </main>
     </div>
