@@ -3,15 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase'; 
 import { C } from '../constants/colors';
 import { 
-  FaUserGraduate, 
-  FaUserClock, 
-  FaBookOpen, 
-  FaAward, 
-  FaWhatsapp, 
-  FaReceipt, 
-  FaMosque, 
-  FaCheckCircle 
+  FaUserGraduate, FaUserClock, FaBookOpen, FaAward, 
+  FaWhatsapp, FaReceipt, FaMosque, FaCheckCircle 
 } from "react-icons/fa";
+
+// مصفوفة الإجراءات خارج المكون لزيادة الأداء
+const QUICK_ACTIONS = [
+  { id: 'attendance', ar: 'رصد الحضور والتسميع', en: 'Recitation & Attendance', icon: <FaBookOpen />, color: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' },
+  { id: 'exams', ar: 'اختبارات الأجزاء والسور', en: 'Surah & Juz Exams', icon: <FaAward />, color: 'linear-gradient(135deg, #78350f 0%, #b45309 100%)' },
+  { id: 'reports', ar: 'تقارير أولياء الأمور', en: 'WhatsApp Reports', icon: <FaWhatsapp />, color: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)' },
+  { id: 'payments', ar: 'تحصيل الرسوم والاشتراكات', en: 'Collect Fees', icon: <FaReceipt />, color: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)' },
+];
 
 export default function Dashboard({ session, setActiveTab, preloadedDashboardData }) {
   const { t, i18n } = useTranslation();
@@ -27,8 +29,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
   };
 
   const isSuperAdmin = academyData.role === 'super_admin';
-  const currentLang = i18n.language || 'ar';
-  const isRtl = currentLang === 'ar';
+  const isRtl = i18n.language === 'ar';
 
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
@@ -60,14 +61,13 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     fetchRequests();
   }, [isSuperAdmin]);
 
-  // دالة تفعيل الحساب المتكاملة (تحديث البروفايل + إنشاء سجل اشتراك)
+  // دالة تفعيل الحساب
   const handleApprove = async (profileId) => {
     setActionLoading(profileId);
     try {
       const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1); // اشتراك لمدة شهر
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-      // 1. تحديث حالة المستخدم إلى مدير ومفعل
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ role: 'manager', is_activated: true }) 
@@ -75,7 +75,6 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
 
       if (profileError) throw profileError;
 
-      // 2. إنشاء سجل اشتراك جديد
       const { error: subError } = await supabase
         .from('saas_subscriptions')
         .insert([
@@ -91,20 +90,13 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
       if (subError) throw subError;
       
       setPendingRequests(prev => prev.filter(req => req.id !== profileId));
-      alert('🎉 تم تفعيل حساب الأكاديمية بنجاح وإنشاء سجل اشتراك!');
+      alert('🎉 تم تفعيل حساب الأكاديمية بنجاح!');
     } catch (err) {
       alert('❌ حدث خطأ أثناء التفعيل: ' + err.message);
     } finally {
       setActionLoading(null);
     }
   };
-
-  const quickActions = [
-    { id: 'attendance', label: translateText('action_attendance', 'رصد الحضور والتسميع', 'Recitation & Attendance'), icon: <FaBookOpen />, color: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', shadow: 'rgba(37, 99, 235, 0.15)' },
-    { id: 'exams', label: translateText('action_exams', 'اختبارات الأجزاء والسور', 'Surah & Juz Exams'), icon: <FaAward />, color: 'linear-gradient(135deg, #78350f 0%, #b45309 100%)', shadow: 'rgba(180, 83, 9, 0.15)' },
-    { id: 'reports', label: translateText('action_reports', 'تقارير أولياء الأمور', 'WhatsApp Reports'), icon: <FaWhatsapp />, color: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', shadow: 'rgba(5, 150, 105, 0.15)' },
-    { id: 'payments', label: translateText('action_payments', 'تحصيل الرسوم والاشتراكات', 'Collect Fees'), icon: <FaReceipt />, color: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)', shadow: 'rgba(124, 58, 237, 0.15)' },
-  ];
 
   /* 👑 عرض لوحة تحكم السوبر أدمن */
   if (isSuperAdmin) {
@@ -149,10 +141,10 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', marginBottom: '40px' }}>
-        {quickActions.map((action) => (
+        {QUICK_ACTIONS.map((action) => (
           <button key={action.id} onClick={() => setActiveTab(action.id)} className="premium-action-card" style={{ background: action.color, borderRadius: '14px', padding: '20px 16px', color: '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <div style={{ fontSize: '24px' }}>{action.icon}</div>
-            <span style={{ fontSize: '14px', fontWeight: '600' }}>{action.label}</span>
+            <span style={{ fontSize: '14px', fontWeight: '600' }}>{isRtl ? action.ar : action.en}</span>
           </button>
         ))}
       </div>
