@@ -26,7 +26,7 @@ import Settings from './Settings.jsx';
 import Reports from './Reports.jsx';
 import SubscriptionPage from './SubscriptionPage.jsx';
 
-// معالج الأخطاء العالمي - يدعم الترجمة الفورية
+// معالج الأخطاء العالمي - مترجم وديناميكي بالكامل
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -76,13 +76,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(true);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // 🌍 [الركائز الخمس] - حالات البنية التحتية العالمية للأكاديمية النشطة
-  const [currency, setCurrency] = useState("USD");         // الركيزة 2: رمز العملة الافتراضي للبلد
-  const [timezone, setTimezone] = useState("UTC");         // الركيزة 3: المنطقة الزمنية الخاصة بالأكاديمية
-  const [countryCode, setCountryCode] = useState("US");   // الركيزة 1: مفتاح الاتصال الدولي للواتساب
+  // 🌍 [الركائز الخمس] إعدادات العولمة الافتراضية المستدعاة ديناميكياً من السيرفر
+  const [currency, setCurrency] = useState("USD");         
+  const [timezone, setTimezone] = useState("UTC");         
+  const [countryCode, setCountryCode] = useState("US");   
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   const isFetchLocked = useRef(false);
+
+  // 🌍 [الركيزة 2 و 3] إنشاء منسقات محلية ذكية بناءً على لغة واختيارات العميل الدولية لتنسيق الأرقام والوقت
+  const numberFormatter = new Intl.NumberFormat(i18n.language || 'ar', { useGrouping: true });
+  
+  const [academyTime, setAcademyTime] = useState("");
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -94,6 +99,27 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
+
+  // 🌍 [الركيزة 3] تحديث التوقيت المحلي للأكاديمية بناءً على منطقتها الزمنية الخاصة لمنع التضارب الدولي
+  useEffect(() => {
+    if (loadingData) return;
+    const updateTime = () => {
+      try {
+        const formatter = new Intl.DateTimeFormat(i18n.language || 'ar', {
+          timeZone: timezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        setAcademyTime(formatter.format(new Date()));
+      } catch (e) {
+        setAcademyTime(new Date().toLocaleTimeString());
+      }
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, [timezone, i18n.language, loadingData]);
 
   useEffect(() => {
     if (isFetchLocked.current) return;
@@ -115,7 +141,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         if (profileData) setAccountActivated(profileData.is_activated ?? false);
 
-        // 🌍 [الركائز الخمس] جلب بيانات العولمة المخزنة في جدول الأكاديميات لمنع عشوائية العرض دولياً
+        // 🌍 [الركائز الخمس] جلب بيانات العولمة والعملة والمناطق الزمنية والبلد
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, currency, timezone, country_code)')
@@ -129,7 +155,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           setAcademyId(currentAcademyId);
           if (currentAcademyName) setAcademyName(currentAcademyName); 
 
-          // تخصيص قيم الركائز العالمية بناءً على مكان العميل الدولي المستهدف
           if (staff?.academies?.currency) setCurrency(staff.academies.currency);
           if (staff?.academies?.timezone) setTimezone(staff.academies.timezone);
           if (staff?.academies?.country_code) setCountryCode(staff.academies.country_code);
@@ -214,7 +239,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
-  // 🌍 [الركائز الخمس] تمرير متغيرات العولمة إلى المكونات الداخلية لتعمل بديناميكية تامة
   const renderContent = () => {
     const pageStyle = { backgroundColor: C.surface || '#111C2A', minHeight: '80vh', padding: '24px', color: C.text, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' };
     return (
@@ -268,12 +292,20 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         borderRight: !isRtl && !isMobile ? '1px solid rgba(255,255,255,0.03)' : 'none',
         ...mobilePositionStyle
       }}>
-        <h2 style={{ color: C.gold, marginBottom: '8px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', letterSpacing: isRtl ? 'normal' : '0.5px' }}>
+        {/* 🌍 [الركيزة 5] حماية نصوص العناوين من الانهيار عند تغيير اللغات الفاخرة */}
+        <h2 style={{ color: C.gold, marginBottom: '4px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', letterSpacing: isRtl ? 'normal' : '0.5px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
+
+        {/* 🌍 [الركيزة 3] العداد الزمني الحي للمنطقة الزمنية الخاصة بالأكاديمية يظهر بوضوح بالخلفية */}
+        <div style={{ fontSize: '11px', color: '#657585', textAlign: 'center', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+          <span>{timezone} : {academyTime}</span>
+        </div>
         
         {userRole !== 'admin' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            {/* 🌍 [الركيزة 2] تنسيق الأرقام هنا يعتمد على دالة الفرمتة الدولية المصاغة بالأعلى */}
             <div style={{ 
               backgroundColor: isTrial ? 'rgba(201, 168, 76, 0.05)' : 'rgba(16, 185, 129, 0.05)', 
               color: isTrial ? (C.gold || '#C9A84C') : '#10B981', 
@@ -291,28 +323,28 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               <FaClock style={{ flexShrink: 0 }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {isTrial 
-                  ? (isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`)
-                  : (isRtl ? `متبقي ${trialDaysLeft} يوماً على الاشتراك` : `${trialDaysLeft} days left`)}
+                  ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft)} trial days left`)
+                  : (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} يوماً على الاشتراك` : `${numberFormatter.format(trialDaysLeft)} days left`)}
               </span>
             </div>
 
             {isTrial && !accountActivated && (
               <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(201,168,76,0.1)' }}>
                 <FaCrown />
-                <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
+                <span style={{ whiteSpace: 'nowrap' }}>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
               </button>
             )}
 
             {!isTrial && trialDaysLeft <= 5 && (
               <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <FaCrown />
-                <span>{isRtl ? 'تجديد الاشتراك الحالي 🔄' : 'Renew Subscription'}</span>
+                <span style={{ whiteSpace: 'nowrap' }}>{isRtl ? 'تجديد الاشتراك الحالي 🔄' : 'Renew Subscription'}</span>
               </button>
             )}
           </div>
         )}
         
-        <nav style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10, flex: 1, overflowY: 'auto' }}>
+        <nav style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, overflowY: 'auto' }}>
           {menuItems.map(item => {
             const isSelected = activeTab === item.id;
             return (
@@ -337,8 +369,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
                   overflow: 'hidden'
                 }}
               >
+                {/* 🌍 [الركيزة 5] الحماية الكاملة لأسماء الأزرار الطويلة جداً بالإنجليزية من تخريب المحاذاة */}
                 <span style={{ fontSize: '16px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span> 
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(item.labelKey)}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>
+                  {t(item.labelKey)}
+                </span>
               </button>
             );
           })}
@@ -356,7 +391,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               <FaBars size={18} />
             </button>
           )}
-          <div style={{ fontSize: '13px', color: '#657585', fontWeight: '600' }}>
+          <div style={{ fontSize: '13px', color: '#657585', fontWeight: '600', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '80%' }}>
             {(isRtl ? 'لوحة المتابعة' : 'Management Portal')} / {t(menuItems.find(m => m.id === activeTab)?.labelKey)}
           </div>
         </div>
