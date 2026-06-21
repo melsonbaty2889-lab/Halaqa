@@ -28,7 +28,8 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     stats: { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 } 
   };
 
-  const isSuperAdmin = academyData.role === 'super_admin';
+  // 🛠️ [التعديل الفعال هنا]: دعم كلا المسميين لضمان تفعيل اللوحة فوراً لحسابك
+  const isSuperAdmin = academyData.role === 'super_admin' || academyData.role === 'admin';
   const isRtl = i18n.language === 'ar';
 
   const translateText = (key, arText, enText) => {
@@ -97,7 +98,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     }
   };
 
-  // 👑 واجهة السوبر أدمن (تظهر فقط إذا كان الـ role هو super_admin)
+  // 👑 واجهة السوبر أدمن (تظهر فقط إذا كان الـ role هو super_admin أو admin)
   if (isSuperAdmin) {
     return (
       <div style={{ minHeight: '100vh', background: '#090F17', color: '#fff', padding: '30px', fontFamily: 'sans-serif', direction: 'rtl' }}>
