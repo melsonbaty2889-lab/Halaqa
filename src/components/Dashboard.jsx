@@ -21,16 +21,14 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
   const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // التأكد من وجود بيانات افتراضية لتجنب الخطأ
   const academyData = preloadedDashboardData || { 
     academyName: '...', 
     role: 'teacher', 
-    stats: { students: 0, pending: 0, activeHalagas: 4, completedExams: 12 } 
+    stats: { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 } 
   };
 
-  // سطر التصحيح الذي طلبته
-  alert("بيانات الأكاديمية هي: " + JSON.stringify(academyData));
-
-  const isSuperAdmin = academyData.role?.toLowerCase() === 'super_admin';
+  const isSuperAdmin = academyData.role === 'super_admin';
   const isRtl = i18n.language === 'ar';
 
   const translateText = (key, arText, enText) => {
@@ -80,20 +78,18 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
 
       const { error: subError } = await supabase
         .from('saas_subscriptions')
-        .insert([
-          { 
+        .insert([{ 
             user_id: profileId, 
             status: 'active', 
             plan_duration: 'monthly',
             expires_at: expiresAt.toISOString(),
             payment_gateway: 'manual_admin_approval'
-          }
-        ]);
+        }]);
 
       if (subError) throw subError;
       
       setPendingRequests(prev => prev.filter(req => req.id !== profileId));
-      alert('🎉 تم تفعيل حساب الأكاديمية بنجاح!');
+      alert('🎉 تم تفعيل الحساب بنجاح!');
     } catch (err) {
       alert('❌ حدث خطأ أثناء التفعيل: ' + err.message);
     } finally {
@@ -101,6 +97,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     }
   };
 
+  // 👑 واجهة السوبر أدمن
   if (isSuperAdmin) {
     return (
       <div style={{ minHeight: '100vh', background: '#090F17', color: '#fff', padding: '30px', fontFamily: 'sans-serif', direction: 'rtl' }}>
@@ -134,6 +131,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     );
   }
 
+  // 🏫 الواجهة التقليدية
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 10px', fontFamily: "'Cairo', sans-serif", direction: isRtl ? 'rtl' : 'ltr' }}>
       <header style={{ marginBottom: '30px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '25px' }}>
