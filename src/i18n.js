@@ -1,3 +1,4 @@
+/* src/i18n.js */
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -7,6 +8,7 @@ const resources = {
     translation: {
       // 1. مفاهيم عامة ونظام الملاحة
       welcome: "مرحباً بك في الحلقة الذكية",
+      welcome_back: "مرحباً بك مجدداً 👋",
       dashboard: "لوحة التحكم",
       students: "إدارة الطلاب",
       attendance: "سجل الحضور والغياب",
@@ -123,6 +125,7 @@ const resources = {
     translation: {
       // 1. General & Navigation
       welcome: "Welcome to Smart Halaqa",
+      welcome_back: "Welcome Back 👋",
       dashboard: "Dashboard",
       students: "Student Management",
       attendance: "Attendance Records",
@@ -229,8 +232,8 @@ const resources = {
       academy_overview: "Academy Performance",
       action_attendance: "Recitation & Attendance",
       action_exams: "Surah & Juz Exams",
-      action_reports: "WhatsApp Reports",
-      action_payments: "Collect Fees",
+      action_reports: "Parent Reports",
+      action_payments: "Billing & Finance",
       active_halagas: "Active Halagas Today",
       completed_exams: "Exams Passed (Month)"
     }
