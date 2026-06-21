@@ -1,5 +1,6 @@
 /* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* تحسين رندرة الخطوط لتبدو أكثر حدة ونعومة */
 body {
@@ -11,6 +12,15 @@ body {
   -webkit-font-smoothing: antialiased; /* تحسين مظهر الخطوط في المتصفحات */
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden; /* لمنع ظهور شريط تمرير أفقي غير مقصود */
+}
+
+/* 💡 التفعيل التلقائي والذكي للخط العالمي في الواجهة الإنجليزية دون تداخل مع الخط العربي */
+[dir="ltr"] body,
+[dir="ltr"] button,
+[dir="ltr"] input,
+[dir="ltr"] textarea,
+[dir="ltr"] select {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* ضبط سلوك الصناديق لتجنب مشاكل الـ padding في الحسابات */
