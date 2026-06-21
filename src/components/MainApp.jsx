@@ -26,7 +26,7 @@ import Settings from './Settings.jsx';
 import Reports from './Reports.jsx';
 import SubscriptionPage from './SubscriptionPage.jsx';
 
-// 🌟 معالج الأخطاء العالمي - تمت ترقيته ليدعم الترجمة الفورية عبر Props لضمان جودة الـ SaaS
+// معالج الأخطاء العالمي - يدعم الترجمة الفورية
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -57,7 +57,6 @@ class ErrorBoundaryInner extends React.Component {
   }
 }
 
-// وابل لتمرير دالة الترجمة إلى مكون الفئة بأعلى كفاءة لـ React Hooks
 function LocalErrorBoundary({ children }) {
   const { t } = useTranslation();
   return <ErrorBoundaryInner t={t}>{children}</ErrorBoundaryInner>;
@@ -76,6 +75,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [loadingData, setLoadingData] = useState(true);
   const [accountActivated, setAccountActivated] = useState(true);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
+
+  // 🌍 [الركائز الخمس] - حالات البنية التحتية العالمية للأكاديمية النشطة
+  const [currency, setCurrency] = useState("USD");         // الركيزة 2: رمز العملة الافتراضي للبلد
+  const [timezone, setTimezone] = useState("UTC");         // الركيزة 3: المنطقة الزمنية الخاصة بالأكاديمية
+  const [countryCode, setCountryCode] = useState("US");   // الركيزة 1: مفتاح الاتصال الدولي للواتساب
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   const isFetchLocked = useRef(false);
@@ -111,9 +115,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         if (profileData) setAccountActivated(profileData.is_activated ?? false);
 
+        // 🌍 [الركائز الخمس] جلب بيانات العولمة المخزنة في جدول الأكاديميات لمنع عشوائية العرض دولياً
         const { data: staff } = await supabase
           .from('staff')
-          .select('academy_id, academies(id, name)')
+          .select('academy_id, academies(id, name, currency, timezone, country_code)')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
@@ -123,6 +128,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         if (currentAcademyId) {
           setAcademyId(currentAcademyId);
           if (currentAcademyName) setAcademyName(currentAcademyName); 
+
+          // تخصيص قيم الركائز العالمية بناءً على مكان العميل الدولي المستهدف
+          if (staff?.academies?.currency) setCurrency(staff.academies.currency);
+          if (staff?.academies?.timezone) setTimezone(staff.academies.timezone);
+          if (staff?.academies?.country_code) setCountryCode(staff.academies.country_code);
 
           const { data: studentsData } = await supabase
             .from('students')
@@ -159,13 +169,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
-  // حماية حجب اللوحة في حال انتهاء الصلاحية المدفوعة أو التجريبية
   const isBlockActive = userRole !== 'admin' && (
     (isTrial && trialDaysLeft <= 0 && !accountActivated) || 
     (!isTrial && trialDaysLeft <= 0)
   );
 
-  // 🌟 شاشة الحظر الذكية مترجمة بالكامل للعالمية ومتناسقة مع نظام الألوان الفاخر الموحد لـ C
   if (!loadingData && isBlockActive) {
     return (
       <div style={{ background: C.bg || '#0C1520', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -206,26 +214,26 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
+  // 🌍 [الركائز الخمس] تمرير متغيرات العولمة إلى المكونات الداخلية لتعمل بديناميكية تامة
   const renderContent = () => {
     const pageStyle = { backgroundColor: C.surface || '#111C2A', minHeight: '80vh', padding: '24px', color: C.text, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' };
     return (
       <div style={pageStyle}>
         <LocalErrorBoundary key={activeTab}>
           {activeTab === 'dashboard' && (
-            <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} />
+            <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />
           )}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
-          {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} />}
+          {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} />}
           {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
-          {activeTab === 'payments' && <Payments students={students} academyId={academyId} />}
-          {activeTab === 'settings' && <Settings academyId={academyId} session={session} />}
-          {activeTab === 'reports' && <Reports students={students} academyId={academyId} />}
+          {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
+          {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
+          {activeTab === 'reports' && <Reports students={students} academyId={academyId} countryCode={countryCode} />}
         </LocalErrorBoundary>
       </div>
     );
   };
 
-  // 🌟 تفكيك وعولمة مصفوفة الملاحة لربطها بالـ i18n ومراعاة أوزان الخطوط وحماية المساحة
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard' },
     { id: 'students', icon: <FaUsers />, labelKey: 'students' },
@@ -236,7 +244,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     { id: 'settings', icon: <FaCog />, labelKey: 'settings' },
   ];
 
-  // التموضع الذكي للقائمة الجانبية للموبايل بناءً على اتجاه اللغات لمنع الشلل البصري
   const mobilePositionStyle = isMobile ? (isRtl ? { right: 0 } : { left: 0 }) : {};
 
   return (
@@ -267,7 +274,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         {userRole !== 'admin' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', marginTop: '10px' }}>
-            {/* شريط عرض العداد الذكي المتغير */}
             <div style={{ 
               backgroundColor: isTrial ? 'rgba(201, 168, 76, 0.05)' : 'rgba(16, 185, 129, 0.05)', 
               color: isTrial ? (C.gold || '#C9A84C') : '#10B981', 
@@ -290,7 +296,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               </span>
             </div>
 
-            {/* زر الترقية والتجديد الذكي بتأثير تدرج فاخر */}
             {isTrial && !accountActivated && (
               <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(201,168,76,0.1)' }}>
                 <FaCrown />
