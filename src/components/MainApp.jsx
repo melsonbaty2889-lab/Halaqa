@@ -54,7 +54,7 @@ class LocalErrorBoundary extends React.Component {
   }
 }
 
-export default function MainApp({ session, userRole, trialDaysLeft }) {
+export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true }) {
   const { t, i18n } = useTranslation(); 
   const [activeTab, setActiveTab] = useState("dashboard"); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
@@ -139,7 +139,6 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     loadInitialData();
   }, [session]);
 
-  // [تعديل الربط]: إضافة role: userRole هنا
   const preloadedDashboardData = {
     academyName: academyName,
     role: userRole, 
@@ -151,12 +150,23 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     }
   };
 
-  if (!loadingData && userRole !== 'admin' && trialDaysLeft <= 0 && !accountActivated) {
+  // حماية حجب اللوحة في حال انتهاء الصلاحية المدفوعة أو التجريبية
+  const isBlockActive = userRole !== 'admin' && (
+    (isTrial && trialDaysLeft <= 0 && !accountActivated) || 
+    (!isTrial && trialDaysLeft <= 0)
+  );
+
+  if (!loadingData && isBlockActive) {
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', direction: 'rtl', padding: '20px' }}>
         <div style={{ background: '#111C2A', padding: '30px', borderRadius: '12px', border: '1px solid rgba(201,168,76,0.2)', textAlign: 'center', maxWidth: '450px' }}>
           <FaClock size={40} color={C.gold || '#C9A84C'} style={{ marginBottom: '15px' }} />
-          <h2 style={{ color: '#FFF', fontSize: '1.4rem', marginBottom: '10px' }}>⚠️ انتهت الفترة التجريبية للمنصة</h2>
+          <h2 style={{ color: '#FFF', fontSize: '1.4rem', marginBottom: '10px' }}>
+            {isTrial ? '⚠️ انتهت الفترة التجريبية للمنصة' : '⚠️ انتهت صلاحية اشتراك المنصة الحالي'}
+          </h2>
+          <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px' }}>
+            {isTrial ? 'برجاء ترقية حسابك أو التواصل مع الإدارة للتفعيل الحصري.' : 'يرجى تجديد الاشتراك لتفادي انقطاع الخدمات والأدوات الذكية عن أكاديميتك.'}
+          </p>
           <button onClick={() => supabase.auth.signOut()} style={{ background: C.gold || '#C9A84C', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', width: '100%' }}>
             تسجيل الخروج لتجديد الاشتراك
           </button>
@@ -220,20 +230,50 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
       )}
       <aside style={{ width: 260, background: C.surface, height: '100vh', padding: '20px', display: !isMobile || sidebarOpen ? 'flex' : 'none', flexDirection: 'column', position: isMobile ? 'fixed' : 'relative', right: isMobile && isRtl ? 0 : 'auto', left: isMobile && !isRtl ? 0 : 'auto', top: 0, zIndex: 2000, boxShadow: C.shadow, transition: 'all 0.3s ease' }}>
         <h2 style={{ color: C.gold, marginBottom: '5px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>{isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}</h2>
-        {userRole !== 'admin' && trialDaysLeft > 0 && (
+        
+        {userRole !== 'admin' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '15px', marginTop: '10px' }}>
-            <div style={{ backgroundColor: 'rgba(201, 168, 76, 0.08)', color: C.gold || '#C9A84C', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', textAlign: 'center', border: '1px solid rgba(201, 168, 76, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            {/* 💡 شريط عرض العداد الذكي المتغير حسب وضع باقة الحساب */}
+            <div style={{ 
+              backgroundColor: isTrial ? 'rgba(201, 168, 76, 0.08)' : 'rgba(16, 185, 129, 0.08)', 
+              color: isTrial ? (C.gold || '#C9A84C') : '#10B981', 
+              padding: '8px 12px', 
+              borderRadius: '8px', 
+              fontSize: '12px', 
+              textAlign: 'center', 
+              border: isTrial ? '1px solid rgba(201, 168, 76, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '6px' 
+            }}>
               <FaClock />
-              <span>{isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`}</span>
+              <span>
+                {isTrial 
+                  ? (isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`)
+                  : (isRtl ? `متبقي ${trialDaysLeft} يوماً على الاشتراك` : `${trialDaysLeft} subscription days left`)
+                }
+              </span>
             </div>
-            {!accountActivated && (
+
+            {/* زر الترقية يظهر فقط في الوضع التجريبي */}
+            {isTrial && !accountActivated && (
               <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <FaCrown />
                 <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
               </button>
             )}
+
+            {/* 🎯 ميزة ذكاء فرونت إند إضافية: إذا قارب الاشتراك الفعلي على الانتهاء (اقل من 5 ايام)، يظهر زر التجديد تلقائياً */}
+            {!isTrial && trialDaysLeft <= 5 && (
+              <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <FaCrown />
+                <span>{isRtl ? 'تجديد الاشتراك الحالي 🔄' : 'Renew Subscription'}</span>
+              </button>
+            )}
           </div>
         )}
+        
         <nav style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 15, flex: 1, overflowY: 'auto' }}>
           {menuItems.map(item => (
             <button key={item.id} onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === item.id ? (C.gold || '#C9A84C') : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: '11px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '14px', fontWeight: activeTab === item.id ? '700' : '500', textAlign: isRtl ? 'right' : 'left' }}>
