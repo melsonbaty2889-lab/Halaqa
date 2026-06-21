@@ -21,7 +21,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
   const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  // التأكد من وجود بيانات افتراضية لتجنب الخطأ
+  // التأكد من استلام البيانات والـ role من MainApp
   const academyData = preloadedDashboardData || { 
     academyName: '...', 
     role: 'teacher', 
@@ -97,7 +97,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     }
   };
 
-  // 👑 واجهة السوبر أدمن
+  // 👑 واجهة السوبر أدمن (تظهر فقط إذا كان الـ role هو super_admin)
   if (isSuperAdmin) {
     return (
       <div style={{ minHeight: '100vh', background: '#090F17', color: '#fff', padding: '30px', fontFamily: 'sans-serif', direction: 'rtl' }}>
@@ -131,7 +131,7 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
     );
   }
 
-  // 🏫 الواجهة التقليدية
+  // 🏫 الواجهة التقليدية (للمستخدمين العاديين)
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 10px', fontFamily: "'Cairo', sans-serif", direction: isRtl ? 'rtl' : 'ltr' }}>
       <header style={{ marginBottom: '30px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '25px' }}>
