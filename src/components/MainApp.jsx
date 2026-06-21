@@ -13,10 +13,9 @@ import {
   FaAward, 
   FaWhatsapp, 
   FaClock,
-  FaCrown // 👑 استيراد أيقونة الترقية الفخمة
+  FaCrown 
 } from "react-icons/fa";
 
-// استيراد المكونات الداخلية للأقسام الأصلية كما هي
 import Dashboard from './Dashboard.jsx';
 import Students from './Students.jsx';
 import Attendance from './Attendance.jsx';
@@ -24,9 +23,8 @@ import Exams from './Exams.jsx';
 import Payments from './Payments.jsx';
 import Settings from './Settings.jsx'; 
 import Reports from './Reports.jsx';
-import SubscriptionPage from './SubscriptionPage.jsx'; // 💳 استيراد صفحة الاشتراكات للترقية المبكرة
+import SubscriptionPage from './SubscriptionPage.jsx';
 
-// 🛡️ درع الحماية الذكي للمكونات الداخلية
 class LocalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -62,41 +60,28 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   
-  // حالات تخزين بيانات الطلاب والمعلومات الأساسية
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [academyName, setAcademyName] = useState(""); 
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
-
-  // [إضافة اشتراكات جديدة] حالة التحقق من تفعيل اشتراك المستخدم حياً من السيرفر
   const [accountActivated, setAccountActivated] = useState(true);
-
-  // ⚜️ حالة برمجية جديدة لفتح وإغلاق شاشة الترقية المبكرة بمرونة داخل اللوحة
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // معرفة اتجاه اللغة الحالية
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
-
-  // صمام الأمان الاحترافي لمنع تكرار جلب البيانات
   const isFetchLocked = useRef(false);
 
-  // 1️⃣ مراقبة حجم الشاشة ديناميكياً
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2️⃣ ضبط اتجاه الصفحة بالكامل تلقائياً
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
 
-  // 3️⃣ جلب البيانات الأولية المطوّر + [دمج كود التحقق من تفعيل الاشتراك والـ Profile]
   useEffect(() => {
     if (isFetchLocked.current) return;
 
@@ -109,18 +94,14 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
       isFetchLocked.current = true;
 
       try {
-        // [كود الاشتراك الجديد] التحقق أولاً من حالة التفعيل للمستخدم في جدول profiles الحصري لقفل المنصة عند انتهاء الاشتراك
         const { data: profileData } = await supabase
           .from('profiles')
           .select('is_activated')
           .eq('id', session.user.id)
           .maybeSingle();
         
-        if (profileData) {
-          setAccountActivated(profileData.is_activated ?? false);
-        }
+        if (profileData) setAccountActivated(profileData.is_activated ?? false);
 
-        // جلب بيانات الأكاديمية والموظفين المعتمدة حياً
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name)')
@@ -134,7 +115,6 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
           setAcademyId(currentAcademyId);
           if (currentAcademyName) setAcademyName(currentAcademyName); 
 
-          // جلب مصفوفة الطلاب الحية
           const { data: studentsData } = await supabase
             .from('students')
             .select('*')
@@ -142,15 +122,12 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
           
           if (studentsData) setStudents(studentsData);
 
-          // استعلام حي لحساب إجمالي عدد الاختبارات الفعلية
           const { count: examsCount, error: examsError } = await supabase
             .from('exams')
             .select('*', { count: 'exact', head: true })
             .eq('academy_id', currentAcademyId);
 
-          if (!examsError && examsCount !== null) {
-            setCompletedExamsCount(examsCount);
-          }
+          if (!examsError && examsCount !== null) setCompletedExamsCount(examsCount);
         }
       } catch (error) {
         console.error("خطأ جلب البيانات داخل MainApp:", error);
@@ -162,9 +139,10 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     loadInitialData();
   }, [session]);
 
-  // تجهيز مصفوفة البيانات الممررة للـ Dashboard
+  // [تعديل الربط]: إضافة role: userRole هنا
   const preloadedDashboardData = {
     academyName: academyName,
+    role: userRole, 
     stats: {
       students: students.length,
       pending: students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length || 0,
@@ -173,16 +151,12 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     }
   };
 
-  // [كود أمان جديد للاشتراكات] إذا انتهت الفترة التجريبية وكان الحساب غير نشط بالخلفية يتم توجيهه للخروج أو الدفع تلقائياً
   if (!loadingData && userRole !== 'admin' && trialDaysLeft <= 0 && !accountActivated) {
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', direction: 'rtl', padding: '20px' }}>
         <div style={{ background: '#111C2A', padding: '30px', borderRadius: '12px', border: '1px solid rgba(201,168,76,0.2)', textAlign: 'center', maxWidth: '450px' }}>
           <FaClock size={40} color={C.gold || '#C9A84C'} style={{ marginBottom: '15px' }} />
           <h2 style={{ color: '#FFF', fontSize: '1.4rem', marginBottom: '10px' }}>⚠️ انتهت الفترة التجريبية للمنصة</h2>
-          <p style={{ color: '#9CA3AF', fontSize: '0.9rem', marginBottom: '20px', lineHeight: '1.6' }}>
-            عذراً يا هندسة، لقد انتهت فترة الـ 14 يوماً التجريبية الخاصة بك. يرجى تفعيل الحساب أو التواصل مع الإدارة لاستمرار الخدمة السحابية.
-          </p>
           <button onClick={() => supabase.auth.signOut()} style={{ background: C.gold || '#C9A84C', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', width: '100%' }}>
             تسجيل الخروج لتجديد الاشتراك
           </button>
@@ -191,63 +165,34 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     );
   }
 
-  // ⚜️ جدار حماية الترقية المبكرة والربط المرن مع زر التراجع (يتم تفعيله صامتاً عندما يضغط المستخدم على زر ترقية الحساب)
   if (showEarlyUpgrade) {
     return (
       <SubscriptionPage 
         session={session} 
-        onBack={() => setShowEarlyUpgrade(false)} // يسمح له بالرجوع للوحته لأنه لا زال يملك أياماً تجريبية
+        onBack={() => setShowEarlyUpgrade(false)} 
       />
     );
   }
 
-  // شاشة الانتظار الداخلية الفخمة الأصلية
   if (loadingData) {
     return (
-      <div style={{ 
-        color: C.gold || '#C9A84C', 
-        backgroundColor: '#0C1520', 
-        minHeight: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        fontSize: '1.2rem',
-        fontFamily: "'Cairo', sans-serif",
-        gap: '18px'
-      }}>
-        <div style={{
-          width: '42px',
-          height: '42px',
-          border: '3px solid rgba(201, 168, 76, 0.1)',
-          borderTop: `3px solid ${C.gold || '#C9A84C'}`,
-          borderRadius: '50%',
-          animation: 'spinLive 0.8s linear infinite'
-        }}></div>
-        <style>{`
-          @keyframes spinLive {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+      <div style={{ color: C.gold || '#C9A84C', backgroundColor: '#0C1520', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontFamily: "'Cairo', sans-serif", gap: '18px' }}>
+        <div style={{ width: '42px', height: '42px', border: '3px solid rgba(201, 168, 76, 0.1)', borderTop: `3px solid ${C.gold || '#C9A84C'}`, borderRadius: '50%', animation: 'spinLive 0.8s linear infinite' }}></div>
+        <style>{`@keyframes spinLive { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         <span>{isRtl ? 'جاري تحميل البيانات...' : 'Loading data...'}</span>
       </div>
     );
   }
 
-  // دالة عرض محتوى القسم المختار الأصلية
   const renderContent = () => {
     const pageStyle = { backgroundColor: '#111C2A', minHeight: '80vh', padding: '20px', color: C.text, borderRadius: '12px' };
-
     return (
       <div style={pageStyle}>
         <LocalErrorBoundary key={activeTab}>
           {activeTab === 'dashboard' && (
             <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} />
           )}
-          {activeTab === 'students' && (
-            <Students students={students} setStudents={setStudents} academyId={academyId} />
-          )}
+          {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
           {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} />}
           {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
           {activeTab === 'payments' && <Payments students={students} academyId={academyId} />}
@@ -258,7 +203,6 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
     );
   };
 
-  // القائمة السبعة الأصلية المرتبة كما هي في لقطات الشاشة تماماً دون أي تعديل بصري
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, ar: 'لوحة التحكم', en: 'Dashboard' },
     { id: 'students', icon: <FaUsers />, ar: 'إدارة الطلاب', en: 'Student Management' },
@@ -271,143 +215,50 @@ export default function MainApp({ session, userRole, trialDaysLeft }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, flexDirection: 'row', width: '100%' }}>
-      
       {isMobile && sidebarOpen && (
-        <div 
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: 'fixed', top: 0, bottom: 0, left: 0, right: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1999,
-            transition: 'opacity 0.3s ease'
-          }}
-        />
+        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1999 }} />
       )}
-
-      {/* 🏢 القائمة الجانبية الأصلية الفخمة بنفس التصميم والأبعاد والألوان */}
-      <aside style={{ 
-        width: 260, 
-        background: C.surface, 
-        height: '100vh', 
-        padding: '20px', 
-        display: !isMobile || sidebarOpen ? 'flex' : 'none',
-        flexDirection: 'column',
-        position: isMobile ? 'fixed' : 'relative',
-        right: isMobile && isRtl ? 0 : 'auto',
-        left: isMobile && !isRtl ? 0 : 'auto',
-        top: 0,
-        zIndex: 2000,
-        boxShadow: C.shadow,
-        transition: 'all 0.3s ease'
-      }}>
-        <h2 style={{ color: C.gold, marginBottom: '5px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>
-          {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
-        </h2>
-
-        {/* ⏳ عداد الأيام التجريبية الأصلي المحفّز للدفع + دمج زر الترقية التفاعلي الفخم */}
+      <aside style={{ width: 260, background: C.surface, height: '100vh', padding: '20px', display: !isMobile || sidebarOpen ? 'flex' : 'none', flexDirection: 'column', position: isMobile ? 'fixed' : 'relative', right: isMobile && isRtl ? 0 : 'auto', left: isMobile && !isRtl ? 0 : 'auto', top: 0, zIndex: 2000, boxShadow: C.shadow, transition: 'all 0.3s ease' }}>
+        <h2 style={{ color: C.gold, marginBottom: '5px', textAlign: 'center', fontSize: '1.4rem', fontWeight: 'bold' }}>{isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}</h2>
         {userRole !== 'admin' && trialDaysLeft > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '15px', marginTop: '10px' }}>
-            <div style={{ 
-              backgroundColor: 'rgba(201, 168, 76, 0.08)', 
-              color: C.gold || '#C9A84C', 
-              padding: '8px 12px', 
-              borderRadius: '8px', 
-              fontSize: '12px', 
-              textAlign: 'center', 
-              border: '1px solid rgba(201, 168, 76, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}>
+            <div style={{ backgroundColor: 'rgba(201, 168, 76, 0.08)', color: C.gold || '#C9A84C', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', textAlign: 'center', border: '1px solid rgba(201, 168, 76, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
               <FaClock />
               <span>{isRtl ? `متبقي ${trialDaysLeft} أيام تجريبية` : `${trialDaysLeft} trial days left`}</span>
             </div>
-
-            {/* 👑 زر الترقية المبكرة الذكي والمحفز بدون تغيير أي أبعاد هندسية */}
             {!accountActivated && (
-              <button
-                onClick={() => setShowEarlyUpgrade(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)',
-                  color: '#000',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: '0 4px 10px rgba(201, 168, 76, 0.2)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
+              <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <FaCrown />
                 <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
               </button>
             )}
           </div>
         )}
-        
         <nav style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 15, flex: 1, overflowY: 'auto' }}>
           {menuItems.map(item => (
-            <button 
-              key={item.id} 
-              onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }}
-              style={{ 
-                background: activeTab === item.id ? (C.gold || '#C9A84C') : 'transparent', 
-                color: activeTab === item.id ? '#000' : C.text, 
-                padding: '11px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', 
-                display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '14px',
-                fontWeight: activeTab === item.id ? '700' : '500',
-                textAlign: isRtl ? 'right' : 'left',
-                transition: 'all 0.2s ease'
-              }}
-            >
+            <button key={item.id} onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} style={{ background: activeTab === item.id ? (C.gold || '#C9A84C') : 'transparent', color: activeTab === item.id ? '#000' : C.text, padding: '11px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, width: '100%', fontSize: '14px', fontWeight: activeTab === item.id ? '700' : '500', textAlign: isRtl ? 'right' : 'left' }}>
               <span style={{ fontSize: '16px', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
               <span>{isRtl ? item.ar : item.en}</span>
             </button>
           ))}
         </nav>
-
-        <button 
-          onClick={() => supabase.auth.signOut()} 
-          style={{ 
-            background: 'transparent', border: '1px solid ' + C.danger, 
-            color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', 
-            display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center',
-            fontWeight: 'bold', fontSize: '14px', marginTop: '15px'
-          }}
-        >
+        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', marginTop: '15px' }}>
           <FaSignOutAlt /> {isRtl ? 'تسجيل الخروج' : 'Log Out'}
         </button>
       </aside>
-
-      {/* 💻 منطقة عرض المحتوى الرئيسي الأصلي */}
       <main style={{ flex: 1, overflowY: 'auto', padding: '15px', width: '100%' }}>
-        
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px', padding: '5px' }}>
           {isMobile && (
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)} 
-              style={{ padding: '10px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: '10px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <FaBars size={18} />
             </button>
           )}
-          
           <div style={{ fontSize: '13px', color: '#657585', fontWeight: '500' }}>
             {isRtl ? 'لوحة المتابعة' : 'Management Portal'} / {isRtl ? menuItems.find(m => m.id === activeTab)?.ar : menuItems.find(m => m.id === activeTab)?.en}
           </div>
         </div>
-
         {renderContent()}
       </main>
-
     </div>
   );
 }
