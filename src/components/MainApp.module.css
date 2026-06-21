@@ -1,1 +1,40 @@
+/* src/components/MainApp.module.css */
 
+/* الحاوية الرئيسية للوحة التحكم */
+.appContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* القائمة الجانبية الاحترافية */
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2000;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* التجاوب الذكي مع الهواتف بدون استخدام جافاسكريبت للحساب */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%); /* يختفي تلقائياً في اليسار */
+  }
+  
+  /* إذا كان الموقع عربياً يختفي في اليمين تلقائياً دون تداخل */
+  :global([dir="rtl"]) .sidebar {
+    transform: translateX(100%);
+  }
+}
+
+.sidebarActive {
+  transform: translateX(0) !important;
+}
