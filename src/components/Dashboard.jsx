@@ -21,19 +21,15 @@ export default function Dashboard({ session, setActiveTab, preloadedDashboardDat
   const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  // --- نقطة فحص (Debug) ---
-  useEffect(() => {
-    console.log("🔍 Dashboard Data Received:", preloadedDashboardData);
-  }, [preloadedDashboardData]);
-  // -----------------------
-
   const academyData = preloadedDashboardData || { 
     academyName: '...', 
     role: 'teacher', 
     stats: { students: 0, pending: 0, activeHalagas: 4, completedExams: 12 } 
   };
 
-  // تأكد من أن المقارنة دقيقة (تم تحويل الـ role لـ lowercase لزيادة الأمان)
+  // سطر التصحيح الذي طلبته
+  alert("بيانات الأكاديمية هي: " + JSON.stringify(academyData));
+
   const isSuperAdmin = academyData.role?.toLowerCase() === 'super_admin';
   const isRtl = i18n.language === 'ar';
 
