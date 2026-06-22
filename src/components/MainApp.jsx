@@ -258,9 +258,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'Core Configuration', ar: 'تهيئة النظام المتقدمة' },
   ], []);
 
-  const activeMenuItem = useMemo(() => {
-    return menuItems.find(m => m.id === activeTab) || menuItems[0];
-  }, [activeTab, menuItems]);
+  // ✅ تم إصلاح العطل هنا: القراءة مباشرة وبأعلى سرعة لمنع أخطاء تعارض الـ Hooks في بيئة الـ Production
+  const activeMenuItem = menuItems.find(m => m.id === activeTab) || menuItems[0];
 
   return (
     <div className={styles.appContainer}>
