@@ -1,10 +1,12 @@
 /* src/components/MainApp.module.css */
+
 .appContainer {
   display: flex;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
   transition: all 0.3s ease;
+  background-color: var(--bg, #0C1520);
 }
 
 .sidebar {
@@ -16,7 +18,18 @@
   position: relative;
   z-index: 2000;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface, #111C2A);
+  box-shadow: var(--shadow);
+}
+
+/* ضبط الحدود تلقائياً حسب اتجاه الصفحة */
+:global([dir="rtl"]) .sidebar:not(.sidebarMobile) {
+  border-left: 1px solid rgba(255, 255, 255, 0.03);
+  border-right: none;
+}
+:global([dir="ltr"]) .sidebar:not(.sidebarMobile) {
   border-right: 1px solid rgba(255, 255, 255, 0.03);
+  border-left: none;
 }
 
 .sidebarMobile {
@@ -24,6 +37,22 @@
   top: 0;
   bottom: 0;
   z-index: 2000;
+}
+
+/* مواضع القائمة الجانبية للهواتف تلقائياً حسب الاتجاه */
+:global([dir="rtl"]) .sidebarMobile {
+  right: 0;
+}
+:global([dir="ltr"]) .sidebarMobile {
+  left: 0;
+}
+
+/* إخفاء القائمة الجانبية انسيابياً على الهواتف */
+:global([dir="rtl"]) .sidebarHidden {
+  transform: translateX(100%);
+}
+:global([dir="ltr"]) .sidebarHidden {
+  transform: translateX(-100%);
 }
 
 .mainContent {
@@ -42,7 +71,384 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.03);
   margin-bottom: 25px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow, 0 4px 20px rgba(0,0,0,0.15));
   flex-wrap: wrap;
   gap: 15px;
+  background-color: var(--surface, #111C2A);
+}
+
+/* ==========================================================================
+   شاشات انتهاء الصلاحية والقيود الذكية (Block Active Screens)
+   ========================================================================== */
+.blockActiveWrapper {
+  background: var(--bg, #0C1520);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.blockActiveModal {
+  background: var(--surface, #111C2A);
+  padding: 40px 30px;
+  border-radius: 16px;
+  border: 1px solid rgba(201,168,76,0.15);
+  text-align: center;
+  max-width: 460px;
+  box-shadow: var(--shadow);
+}
+
+.blockActiveIcon {
+  margin-bottom: 20px;
+}
+
+.blockActiveTitle {
+  color: #FFF;
+  font-size: 1.35rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.blockActiveText {
+  color: #9CA3AF;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.blockActiveBtn {
+  background: var(--gold, #C9A84C);
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(201,168,76,0.15);
+}
+
+/* ==========================================================================
+   بيئة التحميل الآمنة (Loading Screen & Spinner)
+   ========================================================================== */
+.loadingWrapper {
+  color: var(--gold, #C9A84C);
+  background-color: var(--bg, #0C1520);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  gap: 20px;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(201, 168, 76, 0.08);
+  border-top: 3px solid var(--gold, #C9A84C);
+  border-radius: 50%;
+  animation: spinGlobal 0.75s linear infinite;
+}
+
+.loadingText {
+  font-weight: 500;
+}
+
+@keyframes spinGlobal {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   منظومة معالجة الأخطاء الذكية (ErrorBoundary Styles)
+   ========================================================================== */
+.errorInnerWrapper {
+  padding: 30px;
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid #EF4444;
+  border-radius: 12px;
+  color: #FCA5A5;
+  margin-top: 20px;
+  text-align: start;
+}
+
+.errorInnerTitle {
+  color: #F87171;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.errorInnerCode {
+  font-size: 13px;
+  opacity: 0.8;
+  background-color: rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.errorInnerBtn {
+  margin-top: 15px;
+  padding: 8px 20px;
+  background: #EF4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+/* حاوية محتوى التبويبات الفرعية */
+.contentWrapper {
+  background-color: var(--surface, #111C2A);
+  min-height: 80vh;
+  padding: 24px;
+  color: var(--text);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.02);
+}
+
+/* ==========================================================================
+   عناصر ومكونات الـ Sidebar الفرعية
+   ========================================================================== */
+.backdrop {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0,0,0,0.7);
+  z-index: 1999;
+  backdrop-filter: blur(5px);
+}
+
+.sidebarTitle {
+  color: var(--gold, #C9A84C);
+  margin-bottom: 4px;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarTimeContainer {
+  font-size: 11px;
+  color: #657585;
+  text-align: center;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sidebarTimeDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10B981;
+}
+
+.sidebarBadgeContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sidebarBadge {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.sidebarBadgeTrial {
+  background-color: rgba(201, 168, 76, 0.05);
+  color: var(--gold, #C9A84C);
+  border: 1px solid rgba(201,168,76,0.15);
+}
+
+.sidebarBadgeActive {
+  background-color: rgba(16, 185, 129, 0.05);
+  color: #10B981;
+  border: 1px solid rgba(16,185,129,0.15);
+}
+
+.sidebarUpgradeBtn {
+  background: linear-gradient(135deg, #C9A84C 0%, #A58230 100%);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(201,168,76,0.1);
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebarNavBtn {
+  background: transparent;
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+:global([dir="rtl"]) .sidebarNavBtn {
+  text-align: right;
+}
+:global([dir="ltr"]) .sidebarNavBtn {
+  text-align: left;
+}
+
+.sidebarNavBtnSelected {
+  background: var(--gold, #C9A84C);
+  color: #000;
+  font-weight: 700;
+}
+
+.sidebarNavIcon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebarNavLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebarSignOutBtn {
+  background: transparent;
+  border: 1px solid var(--danger, #EF4444);
+  color: var(--danger, #EF4444);
+  padding: 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 15px;
+}
+
+/* ==========================================================================
+   عناصر ومكونات الـ HeaderBar العلوي
+   ========================================================================== */
+.headerLeftSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.headerMobileToggle {
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.headerPathText {
+  font-size: 13px;
+  color: #657585;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.headerPathHighlight {
+  color: var(--gold, #C9A84C);
+}
+
+.headerRightSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.headerBadgeCurrency {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--gold, #C9A84C);
+  font-weight: 700;
+}
+
+.headerBadgeWhatsapp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #10B981;
+  font-weight: 700;
+}
+
+.headerLangBtn {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  color: #FFF;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
