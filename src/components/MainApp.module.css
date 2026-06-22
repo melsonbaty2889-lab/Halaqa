@@ -1,85 +1,59 @@
 /* src/components/MainApp.module.css */
 
+/* الحاوية الرئيسية للتطبيق */
 .appContainer {
-  display: flex;
   min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
-  transition: all 0.3s ease;
+  display: flex;
   background-color: var(--bg, #0C1520);
 }
 
-.sidebar {
-  width: 260px;
-  height: 100vh;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 2000;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--surface, #111C2A);
-  box-shadow: var(--shadow);
+@media (max-width: 768px) {
+  .appContainer {
+    display: block;
+  }
 }
 
-/* ضبط الحدود تلقائياً حسب اتجاه الصفحة */
-:global([dir="rtl"]) .sidebar:not(.sidebarMobile) {
-  border-left: 1px solid rgba(255, 255, 255, 0.03);
-  border-right: none;
-}
-:global([dir="ltr"]) .sidebar:not(.sidebarMobile) {
-  border-right: 1px solid rgba(255, 255, 255, 0.03);
-  border-left: none;
-}
-
-.sidebarMobile {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  z-index: 2000;
-}
-
-/* مواضع القائمة الجانبية للهواتف تلقائياً حسب الاتجاه */
-:global([dir="rtl"]) .sidebarMobile {
-  right: 0;
-}
-:global([dir="ltr"]) .sidebarMobile {
-  left: 0;
-}
-
-/* إخفاء القائمة الجانبية انسيابياً على الهواتف */
-:global([dir="rtl"]) .sidebarHidden {
-  transform: translateX(100%);
-}
-:global([dir="ltr"]) .sidebarHidden {
-  transform: translateX(-100%);
-}
-
-.mainContent {
-  flex: 1;
-  padding: 20px;
-  width: 100%;
-  overflow-x: hidden;
-  min-width: 0;
-}
-
-.headerBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
+/* شاشة حدود الخطأ الداخلي (Error Boundary) */
+.errorInnerWrapper {
+  padding: 30px;
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid #EF4444;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  margin-bottom: 25px;
-  box-shadow: var(--shadow, 0 4px 20px rgba(0,0,0,0.15));
-  flex-wrap: wrap;
-  gap: 15px;
-  background-color: var(--surface, #111C2A);
+  color: #FCA5A5;
+  margin-top: 20px;
+  text-align: start;
 }
 
-/* ==========================================================================
-   شاشات انتهاء الصلاحية والقيود الذكية (Block Active Screens)
-   ========================================================================== */
+.errorInnerTitle {
+  color: #F87171;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.errorInnerCode {
+  font-size: 13px;
+  opacity: 0.8;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.errorInnerBtn {
+  margin-top: 15px;
+  padding: 8px 20px;
+  background: #EF4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+/* شاشة حظر الحساب عند انتهاء الاشتراك */
 .blockActiveWrapper {
   background: var(--bg, #0C1520);
   min-height: 100vh;
@@ -94,13 +68,14 @@
   background: var(--surface, #111C2A);
   padding: 40px 30px;
   border-radius: 16px;
-  border: 1px solid rgba(201,168,76,0.15);
+  border: 1px solid rgba(201, 168, 76, 0.15);
   text-align: center;
   max-width: 460px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow, 0 10px 25px rgba(0, 0, 0, 0.3));
 }
 
 .blockActiveIcon {
+  color: var(--gold, #C9A84C);
   margin-bottom: 20px;
 }
 
@@ -128,12 +103,10 @@
   font-size: 14px;
   cursor: pointer;
   width: 100%;
-  box-shadow: 0 4px 12px rgba(201,168,76,0.15);
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
 }
 
-/* ==========================================================================
-   بيئة التحميل الآمنة (Loading Screen & Spinner)
-   ========================================================================== */
+/* شاشة التحميل الآمن وبيئة النظام */
 .loadingWrapper {
   color: var(--gold, #C9A84C);
   background-color: var(--bg, #0C1520);
@@ -164,70 +137,49 @@
   100% { transform: rotate(360deg); }
 }
 
-/* ==========================================================================
-   منظومة معالجة الأخطاء الذكية (ErrorBoundary Styles)
-   ========================================================================== */
-.errorInnerWrapper {
-  padding: 30px;
-  background-color: rgba(239, 68, 68, 0.05);
-  border: 1px solid #EF4444;
-  border-radius: 12px;
-  color: #FCA5A5;
-  margin-top: 20px;
-  text-align: start;
-}
-
-.errorInnerTitle {
-  color: #F87171;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-
-.errorInnerCode {
-  font-size: 13px;
-  opacity: 0.8;
-  background-color: rgba(0,0,0,0.3);
-  padding: 12px;
-  border-radius: 8px;
-  font-family: monospace;
-  word-break: break-all;
-}
-
-.errorInnerBtn {
-  margin-top: 15px;
-  padding: 8px 20px;
-  background: #EF4444;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 13px;
-}
-
-/* حاوية محتوى التبويبات الفرعية */
+/* حاوية المحتوى الرئيسي للتبويبات النشطة */
 .contentWrapper {
   background-color: var(--surface, #111C2A);
   min-height: 80vh;
   padding: 24px;
-  color: var(--text);
+  color: var(--text, #FFFFFF);
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.02);
+  border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-/* ==========================================================================
-   عناصر ومكونات الـ Sidebar الفرعية
-   ========================================================================== */
+/* غطاء الخلفية عند فتح القائمة في الهواتف */
 .backdrop {
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 1999;
   backdrop-filter: blur(5px);
+}
+
+/* القائمة الجانبية (Sidebar Layout) */
+.sidebar {
+  width: 260px;
+  background: var(--surface, #111C2A);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: var(--shadow, 0 10px 25px rgba(0, 0, 0, 0.3));
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  box-sizing: border-box;
+  z-index: 2000;
+  transition: transform 0.3s ease-in-out;
+}
+
+:global([dir="rtl"]) .sidebar {
+  border-left: 1px solid rgba(255, 255, 255, 0.03);
+}
+:global([dir="ltr"]) .sidebar {
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .sidebarTitle {
@@ -272,6 +224,7 @@
   border-radius: 8px;
   font-size: 12px;
   text-align: center;
+  border: 1px solid rgba(201, 168, 76, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,13 +235,17 @@
 .sidebarBadgeTrial {
   background-color: rgba(201, 168, 76, 0.05);
   color: var(--gold, #C9A84C);
-  border: 1px solid rgba(201,168,76,0.15);
 }
 
 .sidebarBadgeActive {
   background-color: rgba(16, 185, 129, 0.05);
   color: #10B981;
-  border: 1px solid rgba(16,185,129,0.15);
+}
+
+.sidebarBadge span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebarUpgradeBtn {
@@ -304,7 +261,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 2px 8px rgba(201,168,76,0.1);
+  box-shadow: 0 2px 8px rgba(201, 168, 76, 0.1);
+}
+
+.sidebarUpgradeBtn span {
+  white-space: nowrap;
 }
 
 .sidebarNav {
@@ -317,7 +278,7 @@
 
 .sidebarNavBtn {
   background: transparent;
-  color: var(--text);
+  color: var(--text, #FFFFFF);
   padding: 12px 16px;
   border-radius: 8px;
   border: none;
@@ -339,8 +300,8 @@
 }
 
 .sidebarNavBtnSelected {
-  background: var(--gold, #C9A84C);
-  color: #000;
+  background: var(--gold, #C9A84C) !important;
+  color: #000 !important;
   font-weight: 700;
 }
 
@@ -376,9 +337,42 @@
   margin-top: 15px;
 }
 
-/* ==========================================================================
-   عناصر ومكونات الـ HeaderBar العلوي
-   ========================================================================== */
+/* تخصيصات الهواتف للقائمة الجانبية */
+@media (max-width: 768px) {
+  .sidebarMobile {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+  }
+  :global([dir="rtl"]) .sidebarHidden {
+    transform: translateX(100%);
+  }
+  :global([dir="ltr"]) .sidebarHidden {
+    transform: translateX(-100%);
+  }
+}
+
+/* مساحة المحتوى الرئيسي الباقية من الشاشة */
+.mainContent {
+  flex: 1;
+  min-width: 0;
+  padding: 20px;
+}
+
+/* الهيدر العلوي للنظام (Header Bar) */
+.headerBar {
+  background-color: var(--surface, #111C2A);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  gap: 16px;
+}
+
 .headerLeftSection {
   display: flex;
   align-items: center;
@@ -388,8 +382,8 @@
 
 .headerMobileToggle {
   padding: 8px 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: #fff;
   cursor: pointer;
@@ -444,11 +438,11 @@
 .headerLangBtn {
   background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
   color: #FFF;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
