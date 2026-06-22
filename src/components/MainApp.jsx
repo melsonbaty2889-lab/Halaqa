@@ -1,9 +1,9 @@
 /* src/components/MainApp.jsx */
-import React, { useState, useEffect, useRef } from "react"; 
+import React, { useState, useEffect, useRef, useMemo } from "react"; 
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-import styles from './MainApp.module.css'; // استيراد التنسيقات العالمية المحسنة
+import styles from './MainApp.module.css'; 
 import { 
   FaChartLine, 
   FaUsers, 
@@ -27,7 +27,6 @@ import Settings from './Settings.jsx';
 import Reports from './Reports.jsx';
 import SubscriptionPage from './SubscriptionPage.jsx';
 
-// 🛡️ معالج الأخطاء العالمي - يعزل أي وحدة داخلية تنهار ويمنع سقوط لوحة التحكم بالكامل
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -67,8 +66,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { t, i18n } = useTranslation(); 
   const [activeTab, setActiveTab] = useState("dashboard"); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
-  
-  // 🌍 ضبط استقرار الهيدرات (Hydration Safe) لمنع وميض وتعارض الشاشات في تطبيقات SaaS الـ SSR
   const [isMobile, setIsMobile] = useState(false);
   
   const [students, setStudents] = useState([]);
@@ -79,19 +76,25 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(true);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // 🌍 [ركائز العولمة] الإعدادات الدولية المستدعاة ديناميكياً من قاعدة البيانات لكل عميل SaaS
   const [currency, setCurrency] = useState("USD");         
   const [timezone, setTimezone] = useState("UTC");         
   const [countryCode, setCountryCode] = useState("US");   
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
-  const isFetchLocked = useRef(false);
-  const numberFormatter = new Intl.NumberFormat(i18n.language || 'ar', { useGrouping: true });
+  
+  // ✅ قفل ذكي يعتمد على تتبع المعرّف الفريد للمستخدم الحالي لمنع مشاكل تسجيل الخروج والدخول
+  const lastFetchedUserId = useRef(null);
+
+  // ✅ تحسين الأداء: تجميد منسق الأرقام لمنع استهلاك الذاكرة والمعالج في كل رندر
+  const numberFormatter = useMemo(() => {
+    return new Intl.NumberFormat(i18n.language || 'ar', { useGrouping: true });
+  }, [i18n.language]);
+
   const [academyTime, setAcademyTime] = useState("");
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    handleResize(); // تعيين القيمة فوراً بعد التحميل في المتصفح
+    handleResize(); 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -101,7 +104,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     document.documentElement.lang = i18n.language || 'ar';
   }, [isRtl, i18n.language]);
 
-  // تحديث التوقيت الدولي الحي للأكاديمية بناءً على منطقتها الزمنية المعتمدة
   useEffect(() => {
     if (loadingData) return;
     const updateTime = () => {
@@ -123,29 +125,30 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [timezone, i18n.language, loadingData]);
 
   useEffect(() => {
-    if (isFetchLocked.current) return;
+    const currentUserId = session?.user?.id;
+    if (!currentUserId) {
+      setLoadingData(false);
+      return;
+    }
+
+    // إذا تم جلب بيانات هذا المستخدم بالفعل، نمنع التكرار (حماية الـ StrictMode)
+    if (lastFetchedUserId.current === currentUserId) return;
+    lastFetchedUserId.current = currentUserId;
 
     async function loadInitialData() {
-      if (!session?.user?.id) {
-        setLoadingData(false);
-        return;
-      }
-      isFetchLocked.current = true;
-
       try {
         const { data: profileData } = await supabase
           .from('profiles')
           .select('is_activated')
-          .eq('id', session.user.id)
+          .eq('id', currentUserId)
           .maybeSingle();
         
         if (profileData) setAccountActivated(profileData.is_activated ?? false);
 
-        // جلب الإعدادات الجغرافية للأكاديمية الحالية لدعم الفوترة والاتصالات المتعددة
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, currency, timezone, country_code)')
-          .eq('user_id', session.user.id)
+          .eq('user_id', currentUserId)
           .maybeSingle();
 
         const currentAcademyId = staff?.academies?.id || staff?.academy_id;
@@ -193,7 +196,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
-  // جدار الحماية الصارم للاشتراكات والمدفوعات المتأخرة لمنع الاستخدام غير المصرح به عالمياً
   const isBlockActive = userRole !== 'admin' && (
     (isTrial && trialDaysLeft <= 0 && !accountActivated) || 
     (!isTrial && trialDaysLeft <= 0)
@@ -248,7 +250,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   };
 
-  // 📌 توحيد كامل وضبط لعناصر القائمة الجانبية لتطابق الهوية العالمية الفاخرة المترجمة
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Dashboard' },
     { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Student Management' },
@@ -259,12 +260,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'General Settings' },
   ];
 
+  // ✅ تحسين واجهة المستخدم: استخراج التبويب الحالي مسبقاً لمنع تكرار عمليات البحث داخل الـ Render
+  const activeMenuItem = menuItems.find(m => m.id === activeTab);
   const mobilePositionStyle = isMobile ? (isRtl ? { right: 0 } : { left: 0 }) : {};
 
   return (
     <div className={styles.appContainer} dir={isRtl ? 'rtl' : 'ltr'} style={{ backgroundColor: C.bg, ...(!isMobile ? { display: 'flex' } : {}) }}>
       
-      {/* طبقة حماية وعزل لمنع التداخل أو الاستجابة الشبحية عند فتح الـ Sidebar على الهاتف */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)} 
@@ -272,11 +274,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         />
       )}
       
-      {/* القائمة الجانبية الاحترافية المعزولة جغرافياً */}
       <aside 
         className={`${styles.sidebar} ${isMobile ? styles.sidebarMobile : ''}`}
         style={{ 
           background: C.surface, 
+          // ✅ إزالة display: none لتفعيل عمل الـ CSS transitions الانسيابي عند سحب الـ Sidebar للخارج
           display: !isMobile || sidebarOpen ? 'flex' : 'none', 
           boxShadow: C.shadow, 
           borderLeft: isRtl && !isMobile ? '1px solid rgba(255,255,255,0.03)' : 'none',
@@ -285,11 +287,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           ...mobilePositionStyle
         }}
       >
-        <h2 style={{ color: C.gold, marginBottom: '4px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <h2 style={{ color: C.gold || '#C9A84C', marginBottom: '4px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
 
-        {/* ساعة التوقيت الدولي الحي للأكاديمية */}
         <div style={{ fontSize: '11px', color: '#657585', textAlign: 'center', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
           <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
           <span>{timezone} : {academyTime}</span>
@@ -336,7 +337,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
                 key={item.id} 
                 onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} 
                 style={{ 
-                  background: isSelected ? C.gold : 'transparent', 
+                  background: isSelected ? (C.gold || '#C9A84C') : 'transparent', 
                   color: isSelected ? '#000' : C.text, 
                   padding: '12px 16px', 
                   borderRadius: 8, 
@@ -361,15 +362,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           })}
         </nav>
 
-        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + C.danger, color: C.danger, padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: '700', fontSize: '14px', marginTop: '15px' }}>
+        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + (C.danger || '#EF4444'), color: C.danger || '#EF4444', padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: '700', fontSize: '14px', marginTop: '15px' }}>
           <FaSignOutAlt /> <span>{t('logout', 'Log Out')}</span>
         </button>
       </aside>
 
-      {/* 🚀 الحاوية الكبرى للمحتوى الرئيسي: محصنة بالكامل لمنع التداخل والطبقات العشوائية للنصوص */}
       <main className={styles.mainContent}>
-        
-        {/* 🌟 هيدر التحكم العالمي الفاخر (Premium Global Control Header) */}
         <div className={styles.headerBar} style={{ backgroundColor: C.surface }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
             {isMobile && (
@@ -378,26 +376,21 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               </button>
             )}
             <div style={{ fontSize: '13px', color: '#657585', fontWeight: '600', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span style={{ color: C.gold }}>{t(menuItems.find(m => m.id === activeTab)?.labelKey, menuItems.find(m => m.id === activeTab)?.def)}</span>
+              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span style={{ color: C.gold || '#C9A84C' }}>{t(activeMenuItem?.labelKey, activeMenuItem?.def)}</span>
             </div>
           </div>
 
-          {/* كروت كشف الركائز الجغرافية النشطة في اللوحة فورا */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            
-            {/* العملة الدولية للفواتير */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(201, 168, 76, 0.06)', border: '1px solid rgba(201, 168, 76, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: C.gold, fontWeight: '700' }} title="Active Billing Currency">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(201, 168, 76, 0.06)', border: '1px solid rgba(201, 168, 76, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: C.gold || '#C9A84C', fontWeight: '700' }} title="Active Billing Currency">
               <FaMoneyBillWave size={13} />
               <span>{currency}</span>
             </div>
 
-            {/* بوابة الاتصال الدولي الخاصة بالواتساب */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: '#10B981', fontWeight: '700' }} title="WhatsApp International Gateway">
               <FaWhatsapp size={13} />
               <span>+{countryCode}</span>
             </div>
 
-            {/* مفتاح التبديل الفوري لاختبار انعكاس التصميم ومرونته الفورية */}
             <button 
               onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')} 
               style={{ 
@@ -418,7 +411,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           </div>
         </div>
 
-        {/* عرض المحتوى الداخلي النظيف المحصن من التكرار والتراكب البصري */}
         {renderContent()}
       </main>
     </div>
