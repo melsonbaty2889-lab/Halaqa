@@ -1,7 +1,6 @@
 /* src/components/MainApp.jsx */
 import React, { useState, useEffect, useRef, useMemo } from "react"; 
 import { supabase } from '../lib/supabase';
-import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
 import styles from './MainApp.module.css'; 
 import { 
@@ -42,12 +41,12 @@ class ErrorBoundaryInner extends React.Component {
     const { t } = this.props;
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '30px', backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid #EF4444', borderRadius: '12px', color: '#FCA5A5', marginTop: '20px', textAlign: 'start' }}>
-          <h3 style={{ color: '#F87171', marginBottom: '10px', fontSize: '1.1rem', fontWeight: 'bold' }}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
-          <p style={{ fontSize: '13px', opacity: 0.8, backgroundColor: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+        <div className={styles.errorInnerWrapper}>
+          <h3 className={styles.errorInnerTitle}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
+          <p className={styles.errorInnerCode}>
             {this.state.error?.message || "Internal Context Error"}
           </p>
-          <button onClick={() => this.setState({ hasError: false, error: null })} style={{ marginTop: '15px', padding: '8px 20px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+          <button onClick={() => this.setState({ hasError: false, error: null })} className={styles.errorInnerBtn}>
             {t('save', 'Retry Operation')}
           </button>
         </div>
@@ -203,18 +202,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   if (!loadingData && isBlockActive) {
     return (
-      <div style={{ background: C.bg || '#0C1520', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', direction: isRtl ? 'rtl' : 'ltr' }}>
-        <div style={{ background: C.surface || '#111C2A', padding: '40px 30px', borderRadius: '16px', border: '1px solid rgba(201,168,76,0.15)', textAlign: 'center', maxWidth: '460px', boxShadow: C.shadow }}>
-          <FaClock size={44} color={C.gold || '#C9A84C'} style={{ marginBottom: '20px' }} />
-          <h2 style={{ color: '#FFF', fontSize: '1.35rem', fontWeight: 'bold', marginBottom: '12px' }}>
+      <div className={styles.blockActiveWrapper}>
+        <div className={styles.blockActiveModal}>
+          <FaClock size={44} className={styles.blockActiveIcon} />
+          <h2 className={styles.blockActiveTitle}>
             {isTrial ? t('pending_payments_alert', '⚠️ Trial Period Expired') : '⚠️ Subscription Period Expired'}
           </h2>
-          <p style={{ color: '#9CA3AF', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+          <p className={styles.blockActiveText}>
             {isTrial 
               ? (isRtl ? 'انتهت الفترة التجريبية للمنصة. يرجى تفعيل حسابك للاستفادة الكاملة من الأنظمة الدولية للأكاديمية.' : 'The platform trial period has expired. Please activate your account to unlock the full potential of global systems.')
               : (isRtl ? 'يرجى تجديد الاشتراك لتفادي انقطاع الخدمات والأدوات الذكية عن أكاديميتك.' : 'Please renew your subscription to prevent service interruptions across your virtual academy.')}
           </p>
-          <button onClick={() => supabase.auth.signOut()} style={{ background: C.gold || '#C9A84C', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%', boxShadow: '0 4px 12px rgba(201,168,76,0.15)' }}>
+          <button onClick={() => supabase.auth.signOut()} className={styles.blockActiveBtn}>
             {t('logout', 'Sign Out')}
           </button>
         </div>
@@ -226,17 +225,16 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   if (loadingData) {
     return (
-      <div style={{ color: C.gold || '#C9A84C', backgroundColor: C.bg || '#0C1520', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', gap: '20px' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(201, 168, 76, 0.08)', borderTop: `3px solid ${C.gold || '#C9A84C'}`, borderRadius: '50%', animation: 'spinGlobal 0.75s linear infinite' }}></div>
-        <style>{`@keyframes spinGlobal { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontWeight: '500' }}>{t('loading', 'Loading secure environment...')}</span>
+      <div className={styles.loadingWrapper}>
+        <div className={styles.loadingSpinner}></div>
+        <span className={styles.loadingText}>{t('loading', 'Loading secure environment...')}</span>
       </div>
     );
   }
 
   const renderContent = () => {
     return (
-      <div style={{ backgroundColor: C.surface || '#111C2A', minHeight: '80vh', padding: '24px', color: C.text, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
+      <div className={styles.contentWrapper}>
         <LocalErrorBoundary key={activeTab}>
           {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
@@ -260,60 +258,30 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'General Settings' },
   ];
 
-  // ✅ تحسين واجهة المستخدم: استخراج التبويب الحالي مسبقاً لمنع تكرار عمليات البحث داخل الـ Render
   const activeMenuItem = menuItems.find(m => m.id === activeTab);
-  const mobilePositionStyle = isMobile ? (isRtl ? { right: 0 } : { left: 0 }) : {};
 
   return (
-    <div className={styles.appContainer} dir={isRtl ? 'rtl' : 'ltr'} style={{ backgroundColor: C.bg, ...(!isMobile ? { display: 'flex' } : {}) }}>
+    <div className={styles.appContainer}>
       
       {isMobile && sidebarOpen && (
-        <div 
-          onClick={() => setSidebarOpen(false)} 
-          style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1999, backdropFilter: 'blur(5px)' }} 
-        />
+        <div onClick={() => setSidebarOpen(false)} className={styles.backdrop} />
       )}
       
-      <aside 
-        className={`${styles.sidebar} ${isMobile ? styles.sidebarMobile : ''}`}
-        style={{ 
-          background: C.surface, 
-          // ✅ إزالة display: none لتفعيل عمل الـ CSS transitions الانسيابي عند سحب الـ Sidebar للخارج
-          display: !isMobile || sidebarOpen ? 'flex' : 'none', 
-          boxShadow: C.shadow, 
-          borderLeft: isRtl && !isMobile ? '1px solid rgba(255,255,255,0.03)' : 'none',
-          borderRight: !isRtl && !isMobile ? '1px solid rgba(255,255,255,0.03)' : 'none',
-          transform: isMobile && !sidebarOpen ? (isRtl ? 'translateX(100%)' : 'translateX(-100%)') : 'translateX(0)',
-          ...mobilePositionStyle
-        }}
-      >
-        <h2 style={{ color: C.gold || '#C9A84C', marginBottom: '4px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <aside className={`${styles.sidebar} ${isMobile ? styles.sidebarMobile : ''} ${isMobile && !sidebarOpen ? styles.sidebarHidden : ''}`}>
+        <h2 className={styles.sidebarTitle}>
           {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
         </h2>
 
-        <div style={{ fontSize: '11px', color: '#657585', textAlign: 'center', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+        <div className={styles.sidebarTimeContainer}>
+          <span className={styles.sidebarTimeDot}></span>
           <span>{timezone} : {academyTime}</span>
         </div>
         
         {userRole !== 'admin' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            <div style={{ 
-              backgroundColor: isTrial ? 'rgba(201, 168, 76, 0.05)' : 'rgba(16, 185, 129, 0.05)', 
-              color: isTrial ? (C.gold || '#C9A84C') : '#10B981', 
-              padding: '10px 12px', 
-              borderRadius: '8px', 
-              fontSize: '12px', 
-              textAlign: 'center', 
-              border: '1px solid rgba(201,168,76,0.15)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '8px',
-              fontWeight: '600'
-            }}>
-              <FaClock style={{ flexShrink: 0 }} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div className={styles.sidebarBadgeContainer}>
+            <div className={`${styles.sidebarBadge} ${isTrial ? styles.sidebarBadgeTrial : styles.sidebarBadgeActive}`}>
+              <FaClock />
+              <span>
                 {isTrial 
                   ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft)} trial days left`)
                   : (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} يوماً على الاشتراك` : `${numberFormatter.format(trialDaysLeft)} days left`)}
@@ -321,40 +289,25 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             </div>
 
             {isTrial && !accountActivated && (
-              <button onClick={() => setShowEarlyUpgrade(true)} style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(201,168,76,0.1)' }}>
+              <button onClick={() => setShowEarlyUpgrade(true)} className={styles.sidebarUpgradeBtn}>
                 <FaCrown />
-                <span style={{ whiteSpace: 'nowrap' }}>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
+                <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
               </button>
             )}
           </div>
         )}
         
-        <nav style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, overflowY: 'auto' }}>
+        <nav className={styles.sidebarNav}>
           {menuItems.map(item => {
             const isSelected = activeTab === item.id;
             return (
               <button 
                 key={item.id} 
                 onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} 
-                style={{ 
-                  background: isSelected ? (C.gold || '#C9A84C') : 'transparent', 
-                  color: isSelected ? '#000' : C.text, 
-                  padding: '12px 16px', 
-                  borderRadius: 8, 
-                  border: 'none', 
-                  cursor: 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 12, 
-                  width: '100%', 
-                  fontSize: '14px', 
-                  fontWeight: isSelected ? '700' : '500', 
-                  textAlign: isRtl ? 'right' : 'left',
-                  transition: 'all 0.2s ease'
-                }}
+                className={`${styles.sidebarNavBtn} ${isSelected ? styles.sidebarNavBtnSelected : ''}`}
               >
-                <span style={{ fontSize: '16px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span> 
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                <span className={styles.sidebarNavIcon}>{item.icon}</span> 
+                <span className={styles.sidebarNavLabel}>
                   {t(item.labelKey, item.def)}
                 </span>
               </button>
@@ -362,48 +315,38 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           })}
         </nav>
 
-        <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', border: '1px solid ' + (C.danger || '#EF4444'), color: C.danger || '#EF4444', padding: '11px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center', fontWeight: '700', fontSize: '14px', marginTop: '15px' }}>
+        <button onClick={() => supabase.auth.signOut()} className={styles.sidebarSignOutBtn}>
           <FaSignOutAlt /> <span>{t('logout', 'Log Out')}</span>
         </button>
       </aside>
 
       <main className={styles.mainContent}>
-        <div className={styles.headerBar} style={{ backgroundColor: C.surface }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+        <div className={styles.headerBar}>
+          <div className={styles.headerLeftSection}>
             {isMobile && (
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.1)`, borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className={styles.headerMobileToggle}>
                 <FaBars size={16} />
               </button>
             )}
-            <div style={{ fontSize: '13px', color: '#657585', fontWeight: '600', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span style={{ color: C.gold || '#C9A84C' }}>{t(activeMenuItem?.labelKey, activeMenuItem?.def)}</span>
+            <div className={styles.headerPathText}>
+              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span className={styles.headerPathHighlight}>{t(activeMenuItem?.labelKey, activeMenuItem?.def)}</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(201, 168, 76, 0.06)', border: '1px solid rgba(201, 168, 76, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: C.gold || '#C9A84C', fontWeight: '700' }} title="Active Billing Currency">
+          <div className={styles.headerRightSection}>
+            <div className={styles.headerBadgeCurrency} title="Active Billing Currency">
               <FaMoneyBillWave size={13} />
               <span>{currency}</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.15)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: '#10B981', fontWeight: '700' }} title="WhatsApp International Gateway">
+            <div className={styles.headerBadgeWhatsapp} title="WhatsApp International Gateway">
               <FaWhatsapp size={13} />
               <span>+{countryCode}</span>
             </div>
 
             <button 
               onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')} 
-              style={{ 
-                background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)', 
-                color: '#FFF', 
-                border: '1px solid rgba(255,255,255,0.08)', 
-                padding: '6px 14px', 
-                borderRadius: '8px', 
-                fontSize: '11px', 
-                fontWeight: '700', 
-                cursor: 'pointer',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-              }}
+              className={styles.headerLangBtn}
               title="Toggle System Language & Direction"
             >
               {isRtl ? 'English 🌐' : 'العربية 🌐'}
