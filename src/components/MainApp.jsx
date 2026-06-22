@@ -130,7 +130,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       return;
     }
 
-    // إذا تم جلب بيانات هذا المستخدم بالفعل، نمنع التكرار (حماية الـ StrictMode)
     if (lastFetchedUserId.current === currentUserId) return;
     lastFetchedUserId.current = currentUserId;
 
@@ -248,17 +247,20 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   };
 
-  const menuItems = [
-    { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Dashboard' },
-    { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Student Management' },
-    { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Recitation & Attendance' },
-    { id: 'exams', icon: <FaAward />, labelKey: 'surah_juz_exams', def: 'Surah & Juz Exams' }, 
-    { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Parent Reports' }, 
-    { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Billing & Finance' },
-    { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'General Settings' },
-  ];
+  // ✅ القائمة الجانبية مجهزة تماماً بالمصطلحات العالمية المتقدمة وحلول العرض الفوري
+  const menuItems = useMemo(() => [
+    { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Control Center', ar: 'مركز التحكم والتحليلات' },
+    { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Student Directory', ar: 'سجل الروّاد والطلاب' },
+    { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Session Tracking', ar: 'متابعة الجلسات والتحصيل' },
+    { id: 'exams', icon: <FaAward />, labelKey: 'surah_juz_exams', def: 'Evaluation Suite', ar: 'نظام التقييم والجدارة' }, 
+    { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Automated Reporting', ar: 'التقارير الذكية والمشاركة' }, 
+    { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Billing & Revenue', ar: 'المنظومة المالية والفوترة' },
+    { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'Core Configuration', ar: 'تهيئة النظام المتقدمة' },
+  ], []);
 
-  const activeMenuItem = menuItems.find(m => m.id === activeTab);
+  const activeMenuItem = useMemo(() => {
+    return menuItems.find(m => m.id === activeTab) || menuItems[0];
+  }, [activeTab, menuItems]);
 
   return (
     <div className={styles.appContainer}>
@@ -308,7 +310,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               >
                 <span className={styles.sidebarNavIcon}>{item.icon}</span> 
                 <span className={styles.sidebarNavLabel}>
-                  {t(item.labelKey, item.def)}
+                  {isRtl ? item.ar : t(item.labelKey, item.def)}
                 </span>
               </button>
             );
@@ -329,7 +331,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
               </button>
             )}
             <div className={styles.headerPathText}>
-              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span className={styles.headerPathHighlight}>{t(activeMenuItem?.labelKey, activeMenuItem?.def)}</span>
+              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span className={styles.headerPathHighlight}>
+                {isRtl ? activeMenuItem?.ar : t(activeMenuItem?.labelKey, activeMenuItem?.def)}
+              </span>
             </div>
           </div>
 
