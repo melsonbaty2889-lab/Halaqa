@@ -2,12 +2,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
+/* 💡 تعريف الهوية اللونية الموحدة للمنصة عبر المتغيرات العالمية */
+:root {
+  --bg: #0C1520;
+  --surface: #111C2A;
+  --gold: #C9A84C;
+  --text: #FFFFFF;
+  --danger: #EF4444;
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
 /* تحسين رندرة الخطوط لتبدو أكثر حدة ونعومة */
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
-  background-color: #0C1520;
-  color: #E4DAC8;
+  background-color: var(--bg);
+  color: var(--text);
   direction: rtl;
   -webkit-font-smoothing: antialiased; /* تحسين مظهر الخطوط في المتصفحات */
   -moz-osx-font-smoothing: grayscale;
@@ -35,17 +45,23 @@ body {
   flex-direction: column;
 }
 
-/* إضافة تنسيق ناعم لشريط التمرير (ScrollBar) ليتناسب مع النمط المظلم */
+/* إضافة تنسيق ناعم لشريط التمرير (ScrollBar) ليتناسب مع النمط المظلم للمنصة */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0C1520;
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
   background: #162030;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C9A84C; /* لمسة ذهبية عند التمرير */
+  background: var(--gold); /* لمسة ذهبية عند التمرير الفأري */
+}
+
+/* تحسينات عامة لسلاسة الحركة والتنقل */
+html {
+  scroll-behavior: smooth;
 }
