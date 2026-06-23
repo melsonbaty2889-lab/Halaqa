@@ -43,7 +43,7 @@ class ErrorBoundaryInner extends React.Component {
     if (this.state.hasError) {
       return (
         <div className={styles.errorInnerWrapper}>
-          <h3 className={styles.errorInnerTitle}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
+          <h3> className={styles.errorInnerTitle}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
           <p className={styles.errorInnerCode}>
             {this.state.error?.message || "Internal Context Error"}
           </p>
@@ -71,9 +71,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(true);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  const [currency, setCurrency] = useState("USD");         
-  const [timezone, setTimezone] = useState("UTC");         
-  const [countryCode, setCountryCode] = useState("US");   
+  // 🌍 ضبط القيم الافتراضية لتناسب مصر تلقائياً إذا كان الداخل هو السوبر أدمن لإدارة المنصة
+  const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
+  const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");         
+  const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");         
+  const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   
@@ -181,7 +183,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [session]);
 
   const preloadedDashboardData = {
-    academyName: academyName,
+    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : academyName,
     role: userRole, 
     stats: {
       students: students.length,
@@ -191,7 +193,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
-  const isBlockActive = userRole !== 'admin' && (
+  const isBlockActive = userRole !== 'admin' && userRole !== 'super_admin' && (
     (isTrial && trialDaysLeft <= 0 && !accountActivated) || 
     (!isTrial && trialDaysLeft <= 0)
   );
@@ -228,7 +230,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
-  // ✅ تم تغيير آلية الرندر لاستخدام المكون المباشر لتلافي تداخل الـ Hooks في الـ Production تماماً
   const renderContent = () => {
     return (
       <div className={styles.contentWrapper}>
@@ -255,6 +256,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'Core Configuration', ar: 'تهيئة النظام المتقدمة' },
   ];
 
+  // 👑 تصفية القائمة الجانبية بناءً على صلاحيات المستخدم لمنع تكرار أو ظهور أزرار الأكاديمية للسوبر أدمن
+  const filteredMenuItems = menuItems.filter(item => {
+    if (isPlatformAdmin) {
+      return item.id === 'dashboard' || item.id === 'settings';
+    }
+    return true;
+  });
+
   const activeMenuItem = menuItems.find(m => m.id === activeTab) || menuItems[0];
 
   return (
@@ -274,7 +283,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           <span>{timezone} : {academyTime}</span>
         </div>
         
-        {userRole !== 'admin' && (
+        {!isPlatformAdmin && (
           <div className={styles.sidebarBadgeContainer}>
             <div className={`${styles.sidebarBadge} ${isTrial ? styles.sidebarBadgeTrial : styles.sidebarBadgeActive}`}>
               <FaClock />
@@ -295,7 +304,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         )}
         
         <nav className={styles.sidebarNav}>
-          {menuItems.map(item => {
+          {filteredMenuItems.map(item => {
             const isSelected = activeTab === item.id;
             return (
               <button 
@@ -335,7 +344,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           <div className={styles.headerRightSection}>
             <div className={styles.headerBadgeCurrency} title="Active Billing Currency">
               <FaMoneyBillWave size={13} />
-              <span>{currency}</span>
+              {/* 💡 تحويل ذكي للعملة لمنع الانقلاب التلقائي عند تحويل لغة الواجهة */}
+              <span>{currency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : currency}</span>
             </div>
 
             <div className={styles.headerBadgeWhatsapp} title="WhatsApp International Gateway">
