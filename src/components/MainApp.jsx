@@ -26,6 +26,7 @@ import Settings from './Settings.jsx';
 import Reports from './Reports.jsx';
 import SubscriptionPage from './SubscriptionPage.jsx';
 
+// ✅ المكون الأساسي لـ Error Boundary مجهز لاستقبال دالة t بآمان كامل
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -56,11 +57,6 @@ class ErrorBoundaryInner extends React.Component {
   }
 }
 
-function LocalErrorBoundary({ children }) {
-  const { t } = useTranslation();
-  return <ErrorBoundaryInner t={t}>{children}</ErrorBoundaryInner>;
-}
-
 export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true }) {
   const { t, i18n } = useTranslation(); 
   const [activeTab, setActiveTab] = useState("dashboard"); 
@@ -84,10 +80,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   // ✅ قفل ذكي يعتمد على تتبع المعرّف الفريد للمستخدم الحالي لمنع مشاكل تسجيل الخروج والدخول
   const lastFetchedUserId = useRef(null);
 
-  // ✅ تحسين الأداء: تجميد منسق الأرقام لمنع استهلاك الذاكرة والمعالج في كل رندر
+  // ✅ تجميد منسق الأرقام لمنع استهلاك الذاكرة والمعالج في كل رندر وبثبات مطلق
+  const currentLang = i18n.language || 'ar';
   const numberFormatter = useMemo(() => {
-    return new Intl.NumberFormat(i18n.language || 'ar', { useGrouping: true });
-  }, [i18n.language]);
+    return new Intl.NumberFormat(currentLang, { useGrouping: true });
+  }, [currentLang]);
 
   const [academyTime, setAcademyTime] = useState("");
 
@@ -100,14 +97,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-    document.documentElement.lang = i18n.language || 'ar';
-  }, [isRtl, i18n.language]);
+    document.documentElement.lang = currentLang;
+  }, [isRtl, currentLang]);
 
   useEffect(() => {
     if (loadingData) return;
     const updateTime = () => {
       try {
-        const formatter = new Intl.DateTimeFormat(i18n.language || 'ar', {
+        const formatter = new Intl.DateTimeFormat(currentLang, {
           timeZone: timezone,
           hour: '2-digit',
           minute: '2-digit',
@@ -121,7 +118,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
-  }, [timezone, i18n.language, loadingData]);
+  }, [timezone, currentLang, loadingData]);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
@@ -231,10 +228,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
+  // ✅ تم تغيير آلية الرندر لاستخدام المكون المباشر لتلافي تداخل الـ Hooks في الـ Production تماماً
   const renderContent = () => {
     return (
       <div className={styles.contentWrapper}>
-        <LocalErrorBoundary key={activeTab}>
+        <ErrorBoundaryInner key={activeTab} t={t}>
           {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />}
           {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
           {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} />}
@@ -242,13 +240,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
           {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
           {activeTab === 'reports' && <Reports students={students} academyId={academyId} countryCode={countryCode} />}
-        </LocalErrorBoundary>
+        </ErrorBoundaryInner>
       </div>
     );
   };
 
-  // ✅ القائمة الجانبية مجهزة تماماً بالمصطلحات العالمية المتقدمة وحلول العرض الفوري
-  const menuItems = useMemo(() => [
+  const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Control Center', ar: 'مركز التحكم والتحليلات' },
     { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Student Directory', ar: 'سجل الروّاد والطلاب' },
     { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Session Tracking', ar: 'متابعة الجلسات والتحصيل' },
@@ -256,9 +253,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Automated Reporting', ar: 'التقارير الذكية والمشاركة' }, 
     { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Billing & Revenue', ar: 'المنظومة المالية والفوترة' },
     { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'Core Configuration', ar: 'تهيئة النظام المتقدمة' },
-  ], []);
+  ];
 
-  // ✅ تم إصلاح العطل هنا: القراءة مباشرة وبأعلى سرعة لمنع أخطاء تعارض الـ Hooks في بيئة الـ Production
   const activeMenuItem = menuItems.find(m => m.id === activeTab) || menuItems[0];
 
   return (
