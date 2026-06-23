@@ -43,7 +43,7 @@ class ErrorBoundaryInner extends React.Component {
     if (this.state.hasError) {
       return (
         <div className={styles.errorInnerWrapper}>
-          <h3> className={styles.errorInnerTitle}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
+          <h3 className={styles.errorInnerTitle}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
           <p className={styles.errorInnerCode}>
             {this.state.error?.message || "Internal Context Error"}
           </p>
@@ -103,7 +103,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [isRtl, currentLang]);
 
   useEffect(() => {
-    if (loadingData) return;
+    // إتاحة تحديث الوقت فوراً حتى أثناء تحميل البيانات لضمان عدم توقف الواجهة الخارجية
     const updateTime = () => {
       try {
         const formatter = new Intl.DateTimeFormat(currentLang, {
@@ -120,7 +120,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
-  }, [timezone, currentLang, loadingData]);
+  }, [timezone, currentLang]);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
@@ -198,7 +198,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     (!isTrial && trialDaysLeft <= 0)
   );
 
-  if (!loadingData && isBlockActive) {
+  if (showEarlyUpgrade) return <SubscriptionPage session={session} onBack={() => setShowEarlyUpgrade(false)} />;
+
+  if (isBlockActive) {
     return (
       <div className={styles.blockActiveWrapper}>
         <div className={styles.blockActiveModal}>
@@ -219,18 +221,22 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
-  if (showEarlyUpgrade) return <SubscriptionPage session={session} onBack={() => setShowEarlyUpgrade(false)} />;
-
-  if (loadingData) {
-    return (
-      <div className={styles.loadingWrapper}>
-        <div className={styles.loadingSpinner}></div>
-        <span className={styles.loadingText}>{t('loading', 'Loading secure environment...')}</span>
-      </div>
-    );
-  }
-
+  // ✅ تغيير آلية الرندر الوسطى لتدعم التحميل الهيكلي الفخم والمستقر
   const renderContent = () => {
+    if (loadingData) {
+      return (
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', opacity: 0.7 }}>
+          <div style={{ height: '40px', width: '30%', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '8px', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '20px' }}>
+            <div style={{ height: '120px', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
+            <div style={{ height: '120px', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
+            <div style={{ height: '120px', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
+          </div>
+          <div style={{ height: '250px', width: '100%', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
+        </div>
+      );
+    }
+
     return (
       <div className={styles.contentWrapper}>
         <ErrorBoundaryInner key={activeTab} t={t}>
@@ -280,7 +286,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
         <div className={styles.sidebarTimeContainer}>
           <span className={styles.sidebarTimeDot}></span>
-          <span>{timezone} : {academyTime}</span>
+          <span>{timezone} : {academyTime || '--:--'}</span>
         </div>
         
         {!isPlatformAdmin && (
@@ -344,7 +350,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           <div className={styles.headerRightSection}>
             <div className={styles.headerBadgeCurrency} title="Active Billing Currency">
               <FaMoneyBillWave size={13} />
-              {/* 💡 تحويل ذكي للعملة لمنع الانقلاب التلقائي عند تحويل لغة الواجهة */}
               <span>{currency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : currency}</span>
             </div>
 
