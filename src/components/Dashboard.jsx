@@ -259,7 +259,7 @@ function AcademyView({ isRtl, greeting, academyData, setActiveTab, t }) {
               </div>
             </div>
             {academyData.stats.pending > 0 && (
-              <div style={{ background: '#ef4444', color: '#fff', minWidth: '22px', height: '22px', padding: '0 6px', borderRadius: '11px', display: 'flex', alignItems: 'center', justify-content: 'center', fontSize: '11px', fontWeight: '800', border: '2px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}>
+              <div style={{ background: '#ef4444', color: '#fff', minWidth: '22px', height: '22px', padding: '0 6px', borderRadius: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '800', border: '2px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}>
                 {academyData.stats.pending}
               </div>
             )}
