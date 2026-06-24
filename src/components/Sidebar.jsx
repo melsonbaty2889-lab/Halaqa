@@ -61,22 +61,22 @@ export default function Sidebar({
     <aside style={{
       position: isMobile ? 'fixed' : 'sticky',
       top: 0,
-      right: isRtl ? 0 : 'auto',   /* 🛠️ ينعكس لليمين في العربي */
-      left: isRtl ? 'auto' : 0,    /* 🛠️ ينعكس لليسار في الإنجليزي */
-      width: '260px',
-      minWidth: '260px',
+      right: isRtl ? 0 : 'auto',   
+      left: isRtl ? 'auto' : 0,    
+      width: '270px',
+      minWidth: '270px',
       height: '100vh',
       background: '#111827', 
       borderLeft: isRtl && !isMobile ? '1px solid #1f2937' : 'none',
       borderRight: !isRtl && !isMobile ? '1px solid #1f2937' : 'none',
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 1000,
-      transition: 'transform 0.3s ease-in-out',
+      zIndex: 9999, /* 🌟 رفع الـ zIndex لأعلى درجة لمنع تداخل الهيدر نهائياً */
+      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       transform: getSidebarTranslate(),
-      boxShadow: isMobile ? '0 0 20px rgba(0,0,0,0.5)' : 'none',
+      boxShadow: isMobile ? (isRtl ? '-10px 0 30px rgba(0,0,0,0.6)' : '10px 0 30px rgba(0,0,0,0.6)') : 'none',
       boxSizing: 'border-box',
-      padding: '20px',
+      padding: '24px 20px',
     }}>
       
       <h2 style={{
@@ -84,7 +84,7 @@ export default function Sidebar({
         fontSize: '1.4rem',
         fontWeight: 'bold',
         marginBottom: '5px',
-        textAlign: isRtl ? 'right' : 'left',
+        textAlign: 'start', /* 🌟 يتبع اتجاه الكومبوننت الأب تلقائياً */
         marginTop: 0
       }}>
         {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
@@ -96,30 +96,28 @@ export default function Sidebar({
         gap: '8px',
         color: '#9CA3AF',
         fontSize: '0.8rem',
-        marginBottom: '20px',
-        direction: 'ltr',
-        flexDirection: isRtl ? 'row' : 'row-reverse',
-        justifyContent: isRtl ? 'flex-end' : 'flex-start'
+        marginBottom: '25px',
+        justifyContent: 'flex-start',
+        flexDirection: isRtl ? 'row-reverse' : 'row' /* حماية توقيت المنطقة الزمنية من الانعكاس الرقمي */
       }}>
         <span style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%' }}></span>
         <span>{timezone.split('/')[1] || timezone} : {academyTime || '--:--'}</span>
       </div>
       
       {!isPlatformAdmin && (
-        <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '10px 12px',
+            gap: '10px',
+            padding: '12px',
             borderRadius: '8px',
             fontSize: '0.85rem',
-            flexDirection: isRtl ? 'row' : 'row-reverse',
-            background: isTrial ? 'rgba(219, 139, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            background: isTrial ? 'rgba(219, 139, 11, 0.12)' : 'rgba(16, 185, 129, 0.12)',
             color: isTrial ? '#F59E0B' : '#10B981',
-            border: isTrial ? '1px solid rgba(219, 139, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+            border: isTrial ? '1px solid rgba(219, 139, 11, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)',
           }}>
-            <FaClock />
+            <FaClock size={14} style={{ flexShrink: 0 }} />
             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isTrial 
                 ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft)} trial days left`)
@@ -136,7 +134,7 @@ export default function Sidebar({
                 justifyContent: 'center',
                 gap: '8px',
                 width: '100%',
-                padding: '10px',
+                padding: '12px',
                 background: 'linear-gradient(90deg, #F59E0B, #D97706)',
                 color: '#000',
                 fontWeight: 'bold',
@@ -144,7 +142,6 @@ export default function Sidebar({
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '0.85rem',
-                flexDirection: isRtl ? 'row' : 'row-reverse',
                 transition: 'opacity 0.2s'
               }}
               onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -157,7 +154,7 @@ export default function Sidebar({
         </div>
       )}
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto' }}>
         {filteredMenuItems.map(item => {
           const isSelected = activeTab === item.id;
           return (
@@ -172,17 +169,16 @@ export default function Sidebar({
                 alignItems: 'center',
                 gap: '12px',
                 width: '100%',
-                padding: '12px 14px',
+                padding: '12px 16px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isSelected ? '#1E293B' : 'transparent',
                 color: isSelected ? '#FBBF24' : '#9CA3AF',
                 cursor: 'pointer',
-                flexDirection: isRtl ? 'row' : 'row-reverse', /* لتأمين محاذاة النص والأيقونة بصورة متطابقة */
-                textAlign: isRtl ? 'right' : 'left',
-                fontSize: '0.95rem',
+                textAlign: 'start', /* 🌟 السر هنا: إجبار البراوزر على بدء النص من البداية المنطقية للغة الحالية */
+                fontSize: '0.9rem',
                 fontWeight: isSelected ? '600' : 'normal',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s ease',
                 boxSizing: 'border-box'
               }}
               onMouseEnter={(e) => {
@@ -198,13 +194,14 @@ export default function Sidebar({
                 }
               }}
             >
-              <span style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>{item.icon}</span> 
+              <span style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                {item.icon}
+              </span> 
               <span style={{
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                flex: 1,
-                textAlign: isRtl ? 'right' : 'left'
+                flex: 1
               }}>
                 {isRtl ? item.ar : t(item.labelKey, item.def)}
               </span>
@@ -228,7 +225,6 @@ export default function Sidebar({
           cursor: 'pointer',
           fontSize: '0.95rem',
           marginTop: 'auto',
-          flexDirection: isRtl ? 'row' : 'row-reverse',
           boxSizing: 'border-box',
           justifyContent: 'center'
         }}
