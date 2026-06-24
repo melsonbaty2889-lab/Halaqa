@@ -1,269 +1,302 @@
 /* src/components/Dashboard.jsx */
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import styles from './Dashboard.module.css';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase'; 
+import styles from './Dashboard.module.css'; // استيراد نظام التنسيق الحديث والمنفصل
 import { 
-  FaUsers, 
-  FaClock, 
-  FaCheckCircle, 
-  FaBuilding, 
-  FaGraduationCap, 
-  FaAward, 
-  FaMoneyBillWave,
-  FaExclamationTriangle,
-  FaSyncAlt
-} from 'react-icons/fa';
+  FaUserGraduate, FaUserClock, FaBookOpen, FaAward, 
+  FaWhatsapp, FaReceipt, FaMosque, FaCheckCircle, FaShieldAlt 
+} from "react-icons/fa";
 
-export default function Dashboard({ session, userRole, setActiveTab, preloadedDashboardData, currency }) {
-  
-  // 👑 الحالات البرمجية الثابتة والمحمية
-  const [loading, setLoading] = useState(true);
-  const [errorState, setErrorState] = useState(null);
-  const [pendingAcademies, setPendingAcademies] = useState([]);
-  const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
+export default function Dashboard({ session, setActiveTab, preloadedDashboardData }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
-  // 🛡️ فحص متعدد الطبقات وعالي الأمان للصلاحيات لمنع أي خطأ في التعرف على السوبر أدمن
-  const extractedRole = userRole || session?.user?.app_metadata?.role || session?.user?.user_metadata?.role || session?.user?.role;
-  const isPlatformAdmin = typeof extractedRole === 'string' && (
-    extractedRole.trim().toLowerCase() === 'super_admin' || 
-    extractedRole.trim().toLowerCase() === 'superadmin' || 
-    extractedRole.trim().toLowerCase() === 'admin'
-  );
-  
-  const stats = preloadedDashboardData?.stats || { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 };
-  const academyName = preloadedDashboardData?.academyName || "";
-  const activeCurrency = currency || "USD";
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loadingAdmin, setLoadingAdmin] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
 
-  // 🌍 دالة جلب البيانات مع حماية المنصة وحد أعلى للأمان (Limit 50)
-  const fetchDashboardData = useCallback(async () => {
-    if (!isPlatformAdmin) {
-      setLoading(false);
-      return;
-    }
+  // جلب البيانات الأساسية للوحة التحكم مع قيم افتراضية آمنة
+  const academyData = preloadedDashboardData || { 
+    academyName: '...', 
+    role: 'teacher', 
+    stats: { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 } 
+  };
+
+  // التأكد من صلاحية السوبر أدمن بشكل دقيق
+  const isSuperAdmin = academyData.role === 'super_admin' || academyData.role === 'admin';
+
+  // حساب الترحيب الذكي بناءً على التوقيت الحالي واسم المستخدم مسحوباً من الـ session
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const userFullName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
+    const nameSuffix = userFullName ? `، ${userFullName}` : '';
     
-    setLoading(true);
-    setErrorState(null);
-
-    try {
-      // 1. جلب طلبات التفعيل مع تحديد حد أقصى للحماية وسرعة الاستجابة
-      const { data: pendingData, error: pendingError } = await supabase
-        .from('academies')
-        .select('id, name, country_code, created_at')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(50); 
-        
-      if (pendingError) throw pendingError;
-      setPendingAcademies(pendingData || []);
-
-      // 2. جلب إجمالي العدد بدقة عالية دون تحميل بيانات الصفوف
-      const { count, error: countError } = await supabase
-        .from('academies')
-        .select('*', { count: 'exact', head: true });
-        
-      if (countError) throw countError;
-      setTotalAcademiesCount(count || 0);
-
-    } catch (err) {
-      console.error("🚨 Global Fetch Error:", err);
-      setErrorState("فشل في مزامنة البيانات الحية مع السيرفر. يرجى التحقق من الاتصال.");
-    } finally {
-      setLoading(false);
-    }
-  }, [isPlatformAdmin]);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
-  // دالة تفعيل الأكاديمية بنظام التحديث الفوري المتفائل (Optimistic UI)
-  const handleActivateAcademy = async (academyId) => {
-    try {
-      const { error } = await supabase
-        .from('academies')
-        .update({ status: 'active', is_activated: true })
-        .eq('id', academyId);
-      
-      if (error) throw error;
-
-      // تحديث الحالة فوراً لمنح المستخدم شعوراً بالسرعة الخارقة
-      setPendingAcademies(prev => prev.filter(ac => ac.id !== academyId));
-      setTotalAcademiesCount(prev => prev + 1);
-    } catch (err) {
-      console.error("🚨 Activation Failed:", err);
-      alert("عذراً، تعذر تفعيل الحساب حالياً. يرجى المحاولة مرة أخرى.");
+    if (hour < 12) {
+      return isRtl ? `صباح الخير والبركة 👋${nameSuffix}` : `Good morning 👋${nameSuffix}`;
+    } else {
+      return isRtl ? `مساء الخير والأنوار 👋${nameSuffix}` : `Good evening 👋${nameSuffix}`;
     }
   };
 
-  // ─── 🌟 تجربة مستخدم النخبة: شاشة التحميل الهيكلية (Skeleton Screen) ───
-  if (loading) {
-    return (
-      <div className={styles.dashboardContainer}>
-        <div className={styles.skeletonHeader}></div>
-        <div className={styles.skeletonGrid}>
-          <div className={styles.skeletonCard}></div>
-          <div className={styles.skeletonCard}></div>
-          <div className={styles.skeletonCard}></div>
-          <div className={styles.skeletonCard}></div>
-        </div>
-        <div className={styles.skeletonSection}></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!isSuperAdmin) {
+      setLoadingAdmin(false);
+      return;
+    }
 
-  // ─── 🛡️ واجهة معالجة الأخطاء الذكية (Fallback Screen) ───
-  if (errorState) {
-    return (
-      <div className={styles.errorWrapper}>
-        <FaExclamationTriangle className={styles.errorIcon} />
-        <h3>تنبيه النظام</h3>
-        <p>{errorState}</p>
-        <button onClick={fetchDashboardData} className={styles.retryBtn}>
-          <FaSyncAlt /> إعادة المحاولة الآن
-        </button>
-      </div>
-    );
-  }
+    const fetchRequests = async () => {
+      setLoadingAdmin(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('role', ['pending_manager', 'Pending manager', 'Pending Manager']) 
+          .order('created_at', { ascending: false });
 
-  // ─── الواجهة الأولى: لوحة تحكم السوبر أدمن والمسؤول العام ───
-  if (isPlatformAdmin) {
-    return (
-      <div className={styles.dashboardContainer}>
-        <div className={styles.dashboardHeader}>
-          <h1 className={styles.dashboardTitle}>إحصائيات المنصة العامة</h1>
-          <p className={styles.dashboardSubtitle}>{academyName || "الإدارة المركزية"}</p>
+        if (error) throw error;
+        setPendingRequests(data || []);
+      } catch (err) {
+        console.error('Error fetching requests:', err.message);
+      } finally {
+        setLoadingAdmin(false);
+      }
+    };
+
+    fetchRequests();
+  }, [isSuperAdmin]);
+
+  const handleApprove = async (profileId) => {
+    setActionLoading(profileId);
+    try {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: 'manager', is_activated: true }) 
+        .eq('id', profileId);
+
+      if (profileError) throw profileError;
+
+      const { error: subError } = await supabase
+        .from('saas_subscriptions')
+        .insert([{ 
+            user_id: profileId, 
+            status: 'active', 
+            plan_duration: 'monthly',
+            expires_at: expiresAt.toISOString(),
+            payment_gateway: 'manual_admin_approval'
+        }]);
+
+      if (subError) throw subError;
+      
+      setPendingRequests(prev => prev.filter(req => req.id !== profileId));
+      alert(isRtl ? '🎉 تم تفعيل الحساب بنجاح!' : '🎉 Account activated successfully!');
+    } catch (err) {
+      alert((isRtl ? '❌ حدث خطأ أثناء التفعيل: ' : '❌ Activation error: ') + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // رندر متجاوب وانسيابي مع الاحتفاظ بالاتجاه البرمجي السليم أثناء التنقل اللغوي
+  return (
+    <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+      {isSuperAdmin ? (
+        <SuperAdminView 
+          isRtl={isRtl}
+          loadingAdmin={loadingAdmin}
+          pendingRequests={pendingRequests}
+          actionLoading={actionLoading}
+          handleApprove={handleApprove}
+          t={t}
+        />
+      ) : (
+        <AcademyView 
+          isRtl={isRtl}
+          greeting={getGreeting()}
+          academyData={academyData}
+          setActiveTab={setActiveTab}
+          t={t}
+        />
+      )}
+    </div>
+  );
+}
+
+// 👑 مكوّن واجهة السوبر أدمن (Super Admin View Component)
+function SuperAdminView({ isRtl, loadingAdmin, pendingRequests, actionLoading, handleApprove, t }) {
+  return (
+    <div className={styles.superAdminView}>
+      {/* رأس صفحة السوبر أدمن */}
+      <header className={styles.adminHeader}>
+        <h1 className={styles.adminTitle}>
+          <FaShieldAlt />
+          {isRtl ? 'لوحة تحكم إدارة المنصة' : 'Platform Control Panel'}
+        </h1>
+        <p className={styles.adminSubtitle}>
+          {isRtl ? 'مراجعة وتفعيل طلبات الأكاديميات الجديدة فورياً' : 'Review and approve new academy setup requests'}
+        </p>
+      </header>
+
+      {/* كرت إجمالي الطلبات المعلقة */}
+      <div className={styles.summaryCard}>
+        <span className={styles.summaryCardLabel}>
+          {isRtl ? '📥 طلبات التسجيل المعلقة' : '📥 Pending Registrations'}
+        </span>
+        <div className={styles.summaryCardValue}>
+          {loadingAdmin ? '...' : pendingRequests.length}
         </div>
+      </div>
+
+      {/* قائمة الطلبات */}
+      <h2 className={styles.listTitle}>
+        {isRtl ? '📋 قائمة الطلبات الحالية' : '📋 Current Requests List'}
+      </h2>
+
+      {loadingAdmin ? (
+        <p className={styles.loadingText}>{isRtl ? 'جاري تحميل البيانات البرمجية...' : 'Loading system data...'}</p>
+      ) : pendingRequests.length === 0 ? (
+        <div className={styles.emptyState}>
+          {isRtl ? 'لا توجد طلبات تفعيل معلقة حالياً.. النظام مستقر ✨' : 'No pending requests available.. System clear ✨'}
+        </div>
+      ) : (
+        <div className={styles.requestsGrid}>
+          {pendingRequests.map((req) => (
+            <div key={req.id} className={styles.requestCard}>
+              <div className={styles.requestInfo}>
+                <h3 className={styles.requestName}>
+                  {req.name || (isRtl ? 'مدير أكاديمية جديد' : 'New Academy Manager')}
+                </h3>
+                <p className={styles.requestEmail}>
+                  {req.email}
+                </p>
+              </div>
+              <button 
+                disabled={actionLoading !== null} 
+                onClick={() => handleApprove(req.id)} 
+                className={`${styles.approveBtn} ${actionLoading === req.id ? styles.approveBtnLoading : styles.approveBtnActive}`}
+              >
+                {actionLoading === req.id ? (isRtl ? 'جاري التفعيل...' : 'Activating...') : (isRtl ? '✔ قبول وتفعيل الصلاحية' : '✔ Approve & Activate')}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 🏫 مكوّن واجهة الأكاديمية (Academy Dashboard View Component)
+function AcademyView({ isRtl, greeting, academyData, setActiveTab, t }) {
+  return (
+    <>
+      {/* رأس الصفحة */}
+      <header className={styles.academyHeader}>
+        <h1 className={styles.academyGreeting}>
+          {greeting}
+        </h1>
+        <p className={styles.academyNameText}>
+          {academyData.academyName}
+        </p>
+      </header>
+
+      {/* ⚡ مركز العمليات الذكي */}
+      <section className={styles.sectionQuickActions}>
+        <h2 className={`${styles.sectionTitle} ${!isRtl ? styles.ltrSpacing : ''}`}>
+          <span>⚡</span> {t('quick_actions')}
+        </h2>
+
+        <div className={styles.actionsContainer}>
+          
+          {/* حلقة التحضير اليومي */}
+          <button onClick={() => setActiveTab('attendance')} className={`${styles.premiumLaunchpadCard} ${styles.longCard} ${styles.attendanceBtn}`}>
+            <div className={styles.actionInner}>
+              <div className={styles.launchpadIconWrapper}><FaBookOpen /></div>
+              <div className={styles.actionText}>
+                <div className={styles.actionTitleText}>{t('action_attendance')}</div>
+                <div className={styles.actionSubtitleText}>{isRtl ? 'تسجيل الغياب والحفظ والمراجعة الفورية للحلقة الحالية' : 'Log attendance, memorization and reviews instantly'}</div>
+              </div>
+            </div>
+            <div className={styles.liveBadge}>
+              <span className={styles.pulseDot}></span>
+              <span className={styles.liveBadgeText}>{isRtl ? 'جاهز' : 'Live'}</span>
+            </div>
+          </button>
+
+          {/* كروت الاختبارات والتقارير */}
+          <div className={styles.actionsGrid}>
+            <button onClick={() => setActiveTab('exams')} className={`${styles.premiumLaunchpadCard} ${styles.gridCard} ${styles.examsBtn}`}>
+              <div className={styles.launchpadIconWrapper}><FaAward /></div>
+              <span className={styles.launchpadGridTitle}>{t('action_exams')}</span>
+            </button>
+
+            <button onClick={() => setActiveTab('reports')} className={`${styles.premiumLaunchpadCard} ${styles.gridCard} ${styles.reportsBtn}`}>
+              <div className={styles.launchpadIconWrapper}><FaWhatsapp /></div>
+              <span className={styles.launchpadGridTitle}>{t('action_reports')}</span>
+            </button>
+          </div>
+
+          {/* العمليات المالية */}
+          <button onClick={() => setActiveTab('payments')} className={`${styles.premiumLaunchpadCard} ${styles.longCard} ${styles.paymentsBtn}`}>
+            <div className={styles.actionInner}>
+              <div className={styles.launchpadIconWrapper}><FaReceipt /></div>
+              <div className={styles.actionText}>
+                <div className={styles.actionTitleText}>{t('action_payments')}</div>
+                <div className={styles.actionSubtitleText} style={{ color: '#ddd6fe' }}>{isRtl ? 'متابعة الاشتراكات وحالات السداد الشهرية' : 'Manage subscriptions and monthly billing'}</div>
+              </div>
+            </div>
+            {academyData.stats.pending > 0 && (
+              <div className={styles.pendingBadge}>
+                {academyData.stats.pending}
+              </div>
+            )}
+          </button>
+
+        </div>
+      </section>
+
+      {/* 📊 قسم التقرير العام */}
+      <section className={styles.sectionOverview}>
+        <h2 className={`${styles.sectionTitle} ${!isRtl ? styles.ltrSpacing : ''}`}>
+          <span>📊</span> {t('academy_overview')}
+        </h2>
 
         <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconWrapper} ${styles.blueIcon}`}>
-              <FaBuilding size={24} />
+          <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`}>
+            <div className={styles.statBoxInfo}>
+              <p className={styles.statLabel}>{t('total_students')}</p>
+              <h2 className={styles.statNumber}>{academyData.stats.students}</h2>
             </div>
-            <div className={styles.statInfo}>
-              <span className={styles.statLabel}>إجمالي الأكاديميات</span>
-              <h3 className={styles.statValue}>{totalAcademiesCount}</h3>
-            </div>
+            <div className={styles.statIcon} style={{ color: 'var(--gold)' }}><FaUserGraduate /></div>
           </div>
 
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconWrapper} ${styles.redIcon}`}>
-              <FaClock size={24} />
+          <div className={`${styles.premiumStatBox} ${styles.statBoxPayments}`}>
+            <div className={styles.statBoxInfo}>
+              <p className={styles.statLabel}>{t('pending_payments')}</p>
+              <h2 className={styles.statNumber}>{academyData.stats.pending}</h2>
             </div>
-            <div className={styles.statInfo}>
-              <span className={styles.statLabel}>طلبات تفعيل معلقة</span>
-              <h3 className={styles.statValue}>{pendingAcademies.length}</h3>
+            <div className={styles.statIcon} style={{ color: '#ef4444' }}><FaUserClock /></div>
+          </div>
+
+          <div className={`${styles.premiumStatBox} ${styles.statBoxHalagas}`}>
+            <div className={styles.statBoxInfo}>
+              <p className={styles.statLabel}>{t('active_halagas')}</p>
+              <h2 className={styles.statNumber}>{academyData.stats.activeHalagas || 0}</h2>
             </div>
+            <div className={styles.statIcon} style={{ color: '#38bdf8' }}><FaMosque /></div>
+          </div>
+
+          <div className={`${styles.premiumStatBox} ${styles.statBoxExams}`}>
+            <div className={styles.statBoxInfo}>
+              <p className={styles.statLabel}>{t('completed_exams')}</p>
+              <h2 className={styles.statNumber}>{academyData.stats.completedExams || 0}</h2>
+            </div>
+            <div className={styles.statIcon} style={{ color: '#34d399' }}><FaCheckCircle /></div>
           </div>
         </div>
-
-        <div className={styles.sectionContainer}>
-          <h2 className={styles.sectionTitle}>طلبات الانضمام والتفعيل المعلقة</h2>
-          
-          {pendingAcademies.length === 0 ? (
-            <div className={styles.emptyState}>
-              <FaCheckCircle size={48} className={styles.successCheckIcon} />
-              <h4>كل شيء تحت السيطرة!</h4>
-              <p>لا توجد طلبات تفعيل معلقة حالياً، النظام مستقر تماماً ✨</p>
-            </div>
-          ) : (
-            <div className={styles.tableResponsive}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>اسم الأكاديمية</th>
-                    <th>الدولة</th>
-                    <th>تاريخ ووقت الطلب (توقيت القاهرة)</th>
-                    <th className={styles.textCenter}>الإجراء</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingAcademies.map((academy) => (
-                    <tr key={academy.id}>
-                      <td className={styles.fw500}>{academy.name}</td>
-                      <td>{academy.country_code || 'غير محدد'}</td>
-                      <td className={styles.timeCell}>
-                        {academy.created_at ? (
-                          new Date(academy.created_at).toLocaleDateString('ar-EG', {
-                            timeZone: 'Africa/Cairo',
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })
-                        ) : '---'}
-                      </td>
-                      <td className={styles.textCenter}>
-                        <button 
-                          onClick={() => handleActivateAcademy(academy.id)}
-                          className={styles.activateBtn}
-                        >
-                          تفعيل الحساب
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ─── الواجهة الثانية: لوحة تحكم الأكاديميات والمستخدمين العاديين ───
-  return (
-    <div className={styles.dashboardContainer}>
-      <div className={styles.dashboardHeader}>
-        <h1 className={styles.dashboardTitle}>مركز التحكم والتحليلات</h1>
-        <p className={styles.dashboardSubtitle}>{academyName}</p>
-      </div>
-
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard} onClick={() => setActiveTab('students')}>
-          <div className={`${styles.statIconWrapper} ${styles.academyBlue}`}>
-            <FaUsers size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>إجمالي الطلاب</span>
-            <h3 className={styles.statValue}>{stats.students}</h3>
-          </div>
-        </div>
-
-        <div className={styles.statCard} onClick={() => setActiveTab('payments')}>
-          <div className={`${styles.statIconWrapper} ${styles.academyOrange}`}>
-            <FaMoneyBillWave size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>المعلقات المالية</span>
-            <h3 className={styles.statValue}>
-              {stats.pending} <span className={styles.currencySpan}>{activeCurrency === 'EGP' ? 'ج.م' : activeCurrency}</span>
-            </h3>
-          </div>
-        </div>
-
-        <div className={styles.statCard} onClick={() => setActiveTab('attendance')}>
-          <div className={`${styles.statIconWrapper} ${styles.academyGreen}`}>
-            <FaGraduationCap size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>الحلقات النشطة</span>
-            <h3 className={styles.statValue}>{stats.activeHalagas}</h3>
-          </div>
-        </div>
-
-        <div className={styles.statCard} onClick={() => setActiveTab('exams')}>
-          <div className={`${styles.statIconWrapper} ${styles.academyPurple}`}>
-            <FaAward size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>الاختبارات المجتازة</span>
-            <h3 className={styles.statValue}>{stats.completedExams}</h3>
-          </div>
-        </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
