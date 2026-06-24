@@ -5,7 +5,11 @@ import styles from './Dashboard.module.css';
 import { 
   FaUsers, 
   FaClock, 
-  FaCheckCircle, \n  FaBuilding, \n  FaGraduationCap, \n  FaAward, \n  FaMoneyBillWave,
+  FaCheckCircle, 
+  FaBuilding, 
+  FaGraduationCap, 
+  FaAward, 
+  FaMoneyBillWave,
   FaExclamationTriangle,
   FaSyncAlt
 } from 'react-icons/fa';
