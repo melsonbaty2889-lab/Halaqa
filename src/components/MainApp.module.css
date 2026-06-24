@@ -1,6 +1,5 @@
 /* src/components/MainApp.module.css */
 
-/* الحاوية الرئيسية للتطبيق - بنية مرنة ومتجاوبة */
 .appContainer {
   min-height: 100vh;
   display: flex;
@@ -9,11 +8,10 @@
 
 @media (max-width: 768px) {
   .appContainer {
-    flex-direction: column; /* تم الإصلاح هنا لمنع انهيار الهيكل ومحاذاة العناصر عمودياً بصورة مستقرة */
+    flex-direction: column; 
   }
 }
 
-/* شاشة حدود الخطأ الداخلي (Error Boundary) - متوافقة مع المتغيرات العالمية */
 .errorInnerWrapper {
   padding: 30px;
   background-color: rgba(239, 68, 68, 0.05);
@@ -58,7 +56,6 @@
   opacity: 0.9;
 }
 
-/* شاشة حظر الحساب عند انتهاء الاشتراك */
 .blockActiveWrapper {
   background: var(--bg);
   min-height: 100vh;
@@ -116,7 +113,6 @@
   opacity: 0.9;
 }
 
-/* شاشة التحميل الآمن وبيئة النظام */
 .loadingWrapper {
   color: var(--gold);
   background-color: var(--bg);
@@ -147,7 +143,6 @@
   100% { transform: rotate(360deg); }
 }
 
-/* حاوية المحتوى الرئيسي للتبويبات النشطة */
 .contentWrapper {
   background-color: var(--surface);
   min-height: 80vh;
@@ -157,7 +152,6 @@
   border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-/* غطاء الخلفية عند فتح القائمة في الهواتف */
 .backdrop {
   position: fixed;
   top: 0;
@@ -169,7 +163,6 @@
   backdrop-filter: blur(5px);
 }
 
-/* القائمة الجانبية (Sidebar Layout) */
 .sidebar {
   width: 260px;
   background: var(--surface);
@@ -185,11 +178,9 @@
   transition: transform 0.3s ease-in-out;
 }
 
-:global([dir="rtl"]) .sidebar {
-  border-left: 1px solid rgba(255, 255, 255, 0.03);
-}
-:global([dir="ltr"]) .sidebar {
-  border-right: 1px solid rgba(255, 255, 255, 0.03);
+/* 🛠️ استبدال البنية القديمة بخواص منطقية مرنة لقلب الحدود البصرية تلقائياً */
+.sidebar {
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .sidebarTitle {
@@ -289,11 +280,10 @@
   flex-direction: column;
   gap: 6px;
   flex: 1;
-  overflow-y: auto; /* تأمين تمرير عمودي مستقل تماماً لمنع الأشرطة المزدوجة المزعجة */
-  padding-right: 2px;
+  overflow-y: auto; 
+  padding-inline-end: 2px;
 }
 
-/* تخصيص شكل شريط التمرير للـ Sidebar ليكون فخماً ونظيفاً ومتناسقاً */
 .sidebarNav::-webkit-scrollbar {
   width: 4px;
 }
@@ -315,14 +305,8 @@
   width: 100%;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.25s ease; /* تنقل ناعم جداً للأزرار يمنع الوميض البصري المفاجئ */
-}
-
-:global([dir="rtl"]) .sidebarNavBtn {
-  text-align: right;
-}
-:global([dir="ltr"]) .sidebarNavBtn {
-  text-align: left;
+  text-align: start; /* 🛠️ محاذاة ذكية وحساسة للغة تلقائياً بفضل CSS Logical Alignment */
+  transition: all 0.25s ease; 
 }
 
 .sidebarNavBtn:hover:not(.sidebarNavBtnSelected) {
@@ -374,7 +358,6 @@
   background: rgba(239, 68, 68, 0.08);
 }
 
-/* تخصيصات الهواتف للقائمة الجانبية */
 @media (max-width: 768px) {
   .sidebarMobile {
     position: fixed;
@@ -382,22 +365,14 @@
     bottom: 0;
     height: 100vh;
   }
-  :global([dir="rtl"]) .sidebarHidden {
-    transform: translateX(100%);
-  }
-  :global([dir="ltr"]) .sidebarHidden {
-    transform: translateX(-100%);
-  }
 }
 
-/* مساحة المحتوى الرئيسي الباقية من الشاشة */
 .mainContent {
   flex: 1;
   min-width: 0;
   padding: 20px;
 }
 
-/* الهيدر العلوي للنظام (Header Bar) */
 .headerBar {
   background-color: var(--surface);
   display: flex;
