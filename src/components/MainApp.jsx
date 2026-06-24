@@ -253,14 +253,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Control Center', ar: 'مركز التحكم والتحليلات' },
-    { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Student Directory', ar: 'سجل الروّاد والطلاب' },
-    { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Session Tracking', ar: 'متابعة الجلسات والتحصيل' },
-    { id: 'exams', icon: <FaAward />, labelKey: 'surah_juz_exams', def: 'Evaluation Suite', ar: 'نظام التقييم والجدارة' }, 
-    { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Automated Reporting', ar: 'التقارير الذكية والمشاركة' }, 
-    { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Billing & Revenue', ar: 'المنظومة المالية والفوترة' },
-    { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'Core Configuration', ar: 'تهيئة النظام المتقدمة' },
-  ];
+  { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Dashboard', ar: 'لوحة التحكم' },
+  { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Faculty & Students', ar: 'الهيئة التعليمية والطلاب' },
+  { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Recitation & Attendance', ar: 'الحلقات والتسميع' },
+  { id: 'exams', icon: <FaAward />, labelKey: 'surah_juz_exams', def: 'Assessments & Certificates', ar: 'التقييمات والشهادات' }, 
+  { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Performance Insights', ar: 'تقارير الأداء والمشاركة' }, 
+  { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Tuition & Billing', ar: 'الرسوم والفوترة' },
+  { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'System Configuration', ar: 'إعدادات النظام' },
+];
 
   // 👑 تصفية القائمة الجانبية بناءً على صلاحيات المستخدم لمنع تكرار أو ظهور أزرار الأكاديمية للسوبر أدمن
   const filteredMenuItems = menuItems.filter(item => {
