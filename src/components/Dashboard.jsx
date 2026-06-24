@@ -1,5 +1,6 @@
 /* src/components/Dashboard.jsx */
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import styles from './Dashboard.module.css';
 import { 
@@ -15,6 +16,8 @@ import {
 } from 'react-icons/fa';
 
 export default function Dashboard({ session, userRole, setActiveTab, preloadedDashboardData, currency }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   
   // 👑 الحالات البرمجية الثابتة والمحمية
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,19 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
   const stats = preloadedDashboardData?.stats || { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 };
   const academyName = preloadedDashboardData?.academyName || "";
   const activeCurrency = currency || "USD";
+
+  // 🌍 دالة حساب الترحيب الذكي بناءً على التوقيت الحالي واسم المستخدم مسحوباً من الـ session
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const userFullName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
+    const nameSuffix = userFullName ? `، ${userFullName}` : '';
+    
+    if (hour < 12) {
+      return isRtl ? `صباح الخير والبركة 👋${nameSuffix}` : `Good morning 👋${nameSuffix}`;
+    } else {
+      return isRtl ? `مساء الخير والأنوار 👋${nameSuffix}` : `Good evening 👋${nameSuffix}`;
+    }
+  };
 
   // 🌍 دالة جلب البيانات مع حماية المنصة وحد أعلى للأمان (Limit 50)
   const fetchDashboardData = useCallback(async () => {
@@ -59,11 +75,11 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
 
     } catch (err) {
       console.error("🚨 Global Fetch Error:", err);
-      setErrorState("فشل في مزامنة البيانات الحية مع السيرفر. يرجى التحقق من الاتصال.");
+      setErrorState(isRtl ? "فشل في مزامنة البيانات الحية مع السيرفر. يرجى التحقق من الاتصال." : "Failed to sync live data with server. Please check your connection.");
     } finally {
       setLoading(false);
     }
-  }, [isPlatformAdmin]);
+  }, [isPlatformAdmin, isRtl]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -84,14 +100,14 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
       setTotalAcademiesCount(prev => prev + 1);
     } catch (err) {
       console.error("🚨 Activation Failed:", err);
-      alert("عذراً، تعذر تفعيل الحساب حالياً. يرجى المحاولة مرة أخرى.");
+      alert(isRtl ? "عذراً، تعذر تفعيل الحساب حالياً. يرجى المحاولة مرة أخرى." : "Sorry, account activation failed. Please try again.");
     }
   };
 
-  // ─── 🌟 تجربة مستخدم النخبة: شاشة التحميل الهيكلية (Skeleton Screen) ───
+  // ─── 🌟 شاشة التحميل الهيكلية المتجاوبة (Skeleton Screen) ───
   if (loading) {
     return (
-      <div className={styles.dashboardContainer}>
+      <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
         <div className={styles.skeletonHeader}></div>
         <div className={styles.skeletonGrid}>
           <div className={styles.skeletonCard}></div>
@@ -107,12 +123,12 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
   // ─── 🛡️ واجهة معالجة الأخطاء الذكية (Fallback Screen) ───
   if (errorState) {
     return (
-      <div className={styles.errorWrapper}>
+      <div className={styles.errorWrapper} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
         <FaExclamationTriangle className={styles.errorIcon} />
-        <h3>تنبيه النظام</h3>
+        <h3>{isRtl ? 'تنبيه النظام' : 'System Alert'}</h3>
         <p>{errorState}</p>
         <button onClick={fetchDashboardData} className={styles.retryBtn}>
-          <FaSyncAlt /> إعادة المحاولة الآن
+          <FaSyncAlt /> {isRtl ? 'إعادة المحاولة الآن' : 'Retry Now'}
         </button>
       </div>
     );
@@ -121,10 +137,10 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
   // ─── الواجهة الأولى: لوحة تحكم السوبر أدمن والمسؤول العام ───
   if (isPlatformAdmin) {
     return (
-      <div className={styles.dashboardContainer}>
+      <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
         <div className={styles.dashboardHeader}>
-          <h1 className={styles.dashboardTitle}>إحصائيات المنصة العامة</h1>
-          <p className={styles.dashboardSubtitle}>{academyName || "الإدارة المركزية"}</p>
+          <h1 className={styles.dashboardTitle}>{isRtl ? 'إحصائيات المنصة العامة' : 'General Platform Statistics'}</h1>
+          <p className={styles.dashboardSubtitle}>{academyName || (isRtl ? "الإدارة المركزية" : "Central Administration")}</p>
         </div>
 
         <div className={styles.statsGrid}>
@@ -133,7 +149,7 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
               <FaBuilding size={24} />
             </div>
             <div className={styles.statInfo}>
-              <span className={styles.statLabel}>إجمالي الأكاديميات</span>
+              <span className={styles.statLabel}>{isRtl ? 'إجمالي الأكاديميات' : 'Total Academies'}</span>
               <h3 className={styles.statValue}>{totalAcademiesCount}</h3>
             </div>
           </div>
@@ -143,40 +159,40 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
               <FaClock size={24} />
             </div>
             <div className={styles.statInfo}>
-              <span className={styles.statLabel}>طلبات تفعيل معلقة</span>
+              <span className={styles.statLabel}>{isRtl ? 'طلبات تفعيل معلقة' : 'Pending Activations'}</span>
               <h3 className={styles.statValue}>{pendingAcademies.length}</h3>
             </div>
           </div>
         </div>
 
         <div className={styles.sectionContainer}>
-          <h2 className={styles.sectionTitle}>طلبات الانضمام والتفعيل المعلقة</h2>
+          <h2 className={styles.sectionTitle}>{isRtl ? 'طلبات الانضمام والتفعيل المعلقة' : 'Pending Requests'}</h2>
           
           {pendingAcademies.length === 0 ? (
             <div className={styles.emptyState}>
               <FaCheckCircle size={48} className={styles.successCheckIcon} />
-              <h4>كل شيء تحت السيطرة!</h4>
-              <p>لا توجد طلبات تفعيل معلقة حالياً، النظام مستقر تماماً ✨</p>
+              <h4>{isRtl ? 'كل شيء تحت السيطرة!' : 'All clear!'}</h4>
+              <p>{isRtl ? 'لا توجد طلبات تفعيل معلقة حالياً، النظام مستقر تماماً ✨' : 'No pending requests available.. System clear ✨'}</p>
             </div>
           ) : (
             <div className={styles.tableResponsive}>
-              <table className={styles.table}>
+              <table className={styles.table} style={{ textAlign: isRtl ? 'right' : 'left' }}>
                 <thead>
                   <tr>
-                    <th>اسم الأكاديمية</th>
-                    <th>الدولة</th>
-                    <th>تاريخ ووقت الطلب (توقيت القاهرة)</th>
-                    <th className={styles.textCenter}>الإجراء</th>
+                    <th>{isRtl ? 'اسم الأكاديمية' : 'Academy Name'}</th>
+                    <th>{isRtl ? 'الدولة' : 'Country'}</th>
+                    <th>{isRtl ? 'تاريخ ووقت الطلب (توقيت القاهرة)' : 'Request Date (Cairo Time)'}</th>
+                    <th className={styles.textCenter}>{isRtl ? 'الإجراء' : 'Action'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pendingAcademies.map((academy) => (
                     <tr key={academy.id}>
                       <td className={styles.fw500}>{academy.name}</td>
-                      <td>{academy.country_code || 'غير محدد'}</td>
+                      <td>{academy.country_code || (isRtl ? 'غير محدد' : 'Not Specified')}</td>
                       <td className={styles.timeCell}>
                         {academy.created_at ? (
-                          new Date(academy.created_at).toLocaleDateString('ar-EG', {
+                          new Date(academy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', {
                             timeZone: 'Africa/Cairo',
                             year: 'numeric',
                             month: '2-digit',
@@ -192,7 +208,7 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
                           onClick={() => handleActivateAcademy(academy.id)}
                           className={styles.activateBtn}
                         >
-                          تفعيل الحساب
+                          {isRtl ? 'تفعيل الحساب' : 'Activate'}
                         </button>
                       </td>
                     </tr>
@@ -208,9 +224,9 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
 
   // ─── الواجهة الثانية: لوحة تحكم الأكاديميات والمستخدمين العاديين ───
   return (
-    <div className={styles.dashboardContainer}>
+    <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       <div className={styles.dashboardHeader}>
-        <h1 className={styles.dashboardTitle}>مركز التحكم والتحليلات</h1>
+        <h1 className={styles.dashboardTitle}>{getGreeting()}</h1>
         <p className={styles.dashboardSubtitle}>{academyName}</p>
       </div>
 
@@ -220,7 +236,7 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
             <FaUsers size={24} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>إجمالي الطلاب</span>
+            <span className={styles.statLabel}>{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</span>
             <h3 className={styles.statValue}>{stats.students}</h3>
           </div>
         </div>
@@ -230,9 +246,9 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
             <FaMoneyBillWave size={24} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>المعلقات المالية</span>
+            <span className={styles.statLabel}>{isRtl ? 'المعلقات المالية' : 'Pending Payments'}</span>
             <h3 className={styles.statValue}>
-              {stats.pending} <span className={styles.currencySpan}>{activeCurrency === 'EGP' ? 'ج.م' : activeCurrency}</span>
+              {stats.pending} <span className={styles.currencySpan}>{activeCurrency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : activeCurrency}</span>
             </h3>
           </div>
         </div>
@@ -242,7 +258,7 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
             <FaGraduationCap size={24} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>الحلقات النشطة</span>
+            <span className={styles.statLabel}>{isRtl ? 'الحلقات النشطة' : 'Active Halagas'}</span>
             <h3 className={styles.statValue}>{stats.activeHalagas}</h3>
           </div>
         </div>
@@ -252,7 +268,7 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
             <FaAward size={24} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>الاختبارات المجتازة</span>
+            <span className={styles.statLabel}>{isRtl ? 'الاختبارات المجتازة' : 'Completed Exams'}</span>
             <h3 className={styles.statValue}>{stats.completedExams}</h3>
           </div>
         </div>
