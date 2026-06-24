@@ -22,8 +22,13 @@ export default function Dashboard({ session, userRole, setActiveTab, preloadedDa
   const [pendingAcademies, setPendingAcademies] = useState([]);
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
 
-  // الفصل الصارم والآمن للواجهات بناءً على الصلاحيات لمنع التداخل نهائياً
-  const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
+  // 🛡️ فحص متعدد الطبقات وعالي الأمان للصلاحيات لمنع أي خطأ في التعرف على السوبر أدمن
+  const extractedRole = userRole || session?.user?.app_metadata?.role || session?.user?.user_metadata?.role || session?.user?.role;
+  const isPlatformAdmin = typeof extractedRole === 'string' && (
+    extractedRole.trim().toLowerCase() === 'super_admin' || 
+    extractedRole.trim().toLowerCase() === 'superadmin' || 
+    extractedRole.trim().toLowerCase() === 'admin'
+  );
   
   const stats = preloadedDashboardData?.stats || { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 };
   const academyName = preloadedDashboardData?.academyName || "";
