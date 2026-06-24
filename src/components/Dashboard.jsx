@@ -1,302 +1,291 @@
 /* src/components/Dashboard.jsx */
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase'; 
-import styles from './Dashboard.module.css'; // استيراد نظام التنسيق الحديث والمنفصل
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import styles from './Dashboard.module.css';
 import { 
-  FaUserGraduate, FaUserClock, FaBookOpen, FaAward, 
-  FaWhatsapp, FaReceipt, FaMosque, FaCheckCircle, FaShieldAlt 
-} from "react-icons/fa";
+  FaUsers, 
+  FaClock, 
+  FaCheckCircle, \n  FaBuilding, \n  FaGraduationCap, \n  FaAward, \n  FaMoneyBillWave,
+  FaExclamationTriangle,
+  FaSyncAlt
+} from 'react-icons/fa';
 
-export default function Dashboard({ session, setActiveTab, preloadedDashboardData }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
+// 🌍 دالة الدمج العالمية الفاخرة لتوحيد الوقت وعرض التاريخين الهجري والميلادي معاً بصيغة موحدة ومقيدة
+const formatDualDateTime = (dateString) => {
+  if (!dateString) return '─';
 
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [loadingAdmin, setLoadingAdmin] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null);
+  const date = new Date(dateString);
 
-  // جلب البيانات الأساسية للوحة التحكم مع قيم افتراضية آمنة
-  const academyData = preloadedDashboardData || { 
-    academyName: '...', 
-    role: 'teacher', 
-    stats: { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 } 
-  };
+  // 1️⃣ تنسيق التاريخ الهجري (تقويم أم القرى الاحترافي)
+  const hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+    timeZone: 'Africa/Cairo',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
 
-  // التأكد من صلاحية السوبر أدمن بشكل دقيق
-  const isSuperAdmin = academyData.role === 'super_admin' || academyData.role === 'admin';
+  // 2️⃣ تنسيق التاريخ الميلادي باللغة العربية
+  const gregorianDate = new Intl.DateTimeFormat('ar-EG', {
+    timeZone: 'Africa/Cairo',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
 
-  // حساب الترحيب الذكي بناءً على التوقيت الحالي واسم المستخدم مسحوباً من الـ session
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    const userFullName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
-    const nameSuffix = userFullName ? `، ${userFullName}` : '';
-    
-    if (hour < 12) {
-      return isRtl ? `صباح الخير والبركة 👋${nameSuffix}` : `Good morning 👋${nameSuffix}`;
-    } else {
-      return isRtl ? `مساء الخير والأنوار 👋${nameSuffix}` : `Good evening 👋${nameSuffix}`;
-    }
-  };
+  // 3️⃣ تنسيق الوقت (موحد للحسابين تماماً ومنع الفوارق الزمنية)
+  const timeString = new Intl.DateTimeFormat('ar-EG', {
+    timeZone: 'Africa/Cairo',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true
+  }).format(date);
 
-  useEffect(() => {
-    if (!isSuperAdmin) {
-      setLoadingAdmin(false);
+  // النتيجة النهائية الموحدة للحسابين: [ الهجري ] هـ • [ الميلادي ] م (الساعة [ الوقت ])
+  return `${hijriDate} هـ  •  ${gregorianDate} م  (الساعة ${timeString})`;
+};
+
+export default function Dashboard({ session, userRole, setActiveTab, preloadedDashboardData, currency }) {
+  
+  // 👑 الحالات البرمجية الثابتة والمحمية
+  const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState(null);
+  const [pendingAcademies, setPendingAcademies] = useState([]);
+  const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
+  const [approvingId, setApprovingId] = useState(null);
+
+  const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
+  const stats = preloadedDashboardData?.stats || { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 };
+  const academyName = preloadedDashboardData?.academyName || "";
+  const activeCurrency = currency || "USD";
+
+  // 🌍 دالة جلب البيانات مع حماية المنصة وحد أعلى للأمان (Limit 50)
+  const fetchDashboardData = useCallback(async () => {
+    if (!isPlatformAdmin) {
+      setLoading(false);
       return;
     }
-
-    const fetchRequests = async () => {
-      setLoadingAdmin(true);
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .in('role', ['pending_manager', 'Pending manager', 'Pending Manager']) 
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setPendingRequests(data || []);
-      } catch (err) {
-        console.error('Error fetching requests:', err.message);
-      } finally {
-        setLoadingAdmin(false);
-      }
-    };
-
-    fetchRequests();
-  }, [isSuperAdmin]);
-
-  const handleApprove = async (profileId) => {
-    setActionLoading(profileId);
+    
+    setLoading(true);
+    setErrorState(null);
     try {
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
+      // 1. جلب الأكاديميات المعلقة
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('academies')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ role: 'manager', is_activated: true }) 
-        .eq('id', profileId);
+      if (pendingError) throw pendingError;
+      setPendingAcademies(pendingData || []);
 
-      if (profileError) throw profileError;
+      // 2. جلب إجمالي عدد الأكاديميات في المنصة لقسم الإحصائيات
+      const { count, error: countError } = await supabase
+        .from('academies')
+        .select('*', { count: 'exact', head: true });
 
-      const { error: subError } = await supabase
-        .from('saas_subscriptions')
-        .insert([{ 
-            user_id: profileId, 
-            status: 'active', 
-            plan_duration: 'monthly',
-            expires_at: expiresAt.toISOString(),
-            payment_gateway: 'manual_admin_approval'
-        }]);
+      if (countError) throw countError;
+      setTotalAcademiesCount(count || 0);
 
-      if (subError) throw subError;
-      
-      setPendingRequests(prev => prev.filter(req => req.id !== profileId));
-      alert(isRtl ? '🎉 تم تفعيل الحساب بنجاح!' : '🎉 Account activated successfully!');
     } catch (err) {
-      alert((isRtl ? '❌ حدث خطأ أثناء التفعيل: ' : '❌ Activation error: ') + err.message);
+      console.error('Error fetching admin dashboard data:', err);
+      setErrorState(err.message || 'حدث خطأ أثناء جلب البيانات المالية والإدارية.');
     } finally {
-      setActionLoading(null);
+      setLoading(false);
+    }
+  }, [isPlatformAdmin]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // ⚡ دالة الموافقة وتفعيل الحسابات الفورية للأكاديميات
+  const handleApprove = async (academyId) => {
+    if (!academyId || approvingId) return;
+    setApprovingId(academyId);
+    try {
+      const { error } = await supabase
+        .from('academies')
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('id', academyId);
+
+      if (error) throw error;
+
+      // تحديث مصفوفة العرض محلياً لمنع إعادة التحميل غير الضرورية
+      setPendingAcademies(prev => prev.filter(item => item.id !== academyId));
+      setTotalAcademiesCount(prev => prev + 1);
+    } catch (err) {
+      alert('خطأ أثناء تفعيل الأكاديمية: ' + err.message);
+    } finally {
+      setApprovingId(null);
     }
   };
 
-  // رندر متجاوب وانسيابي مع الاحتفاظ بالاتجاه البرمجي السليم أثناء التنقل اللغوي
-  return (
-    <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
-      {isSuperAdmin ? (
-        <SuperAdminView 
-          isRtl={isRtl}
-          loadingAdmin={loadingAdmin}
-          pendingRequests={pendingRequests}
-          actionLoading={actionLoading}
-          handleApprove={handleApprove}
-          t={t}
-        />
-      ) : (
-        <AcademyView 
-          isRtl={isRtl}
-          greeting={getGreeting()}
-          academyData={academyData}
-          setActiveTab={setActiveTab}
-          t={t}
-        />
-      )}
-    </div>
-  );
-}
+  // 🛑 معالجة شاشات الخطأ المفاجئ وحماية الواجهة
+  if (errorState) {
+    return (
+      <div className={styles.errorWrapper}>
+        <FaExclamationTriangle className={styles.errorIcon} />
+        <h3>فشل تحميل لوحة القيادة</h3>
+        <p>{errorState}</p>
+        <button onClick={fetchDashboardData} className={styles.retryBtn}>
+          <FaSyncAlt /> إعادة المحاولة الآن
+        </button>
+      </div>
+    );
+  }
 
-// 👑 مكوّن واجهة السوبر أدمن (Super Admin View Component)
-function SuperAdminView({ isRtl, loadingAdmin, pendingRequests, actionLoading, handleApprove, t }) {
-  return (
-    <div className={styles.superAdminView}>
-      {/* رأس صفحة السوبر أدمن */}
-      <header className={styles.adminHeader}>
-        <h1 className={styles.adminTitle}>
-          <FaShieldAlt />
-          {isRtl ? 'لوحة تحكم إدارة المنصة' : 'Platform Control Panel'}
-        </h1>
-        <p className={styles.adminSubtitle}>
-          {isRtl ? 'مراجعة وتفعيل طلبات الأكاديميات الجديدة فورياً' : 'Review and approve new academy setup requests'}
-        </p>
-      </header>
+  // 👑 1. عرض واجهة السوبر أدمن (Super Admin View)
+  if (isPlatformAdmin) {
+    return (
+      <div className={styles.dashboardContainer}>
+        <div className={styles.superAdminView}>
+          <div className={styles.adminHeader}>
+            <h2 className={styles.adminTitle}>
+              <FaBuilding size={22} /> لوحة التحكم العليا للمنصة
+            </h2>
+            <p className={styles.adminSubtitle}>إدارة طلبات الأكاديميات الجديدة ومتابعة الإحصائيات العامة للمنصة</p>
+          </div>
 
-      {/* كرت إجمالي الطلبات المعلقة */}
-      <div className={styles.summaryCard}>
-        <span className={styles.summaryCardLabel}>
-          {isRtl ? '📥 طلبات التسجيل المعلقة' : '📥 Pending Registrations'}
-        </span>
-        <div className={styles.summaryCardValue}>
-          {loadingAdmin ? '...' : pendingRequests.length}
+          <div className={styles.summaryCard}>
+            <span className={styles.summaryCardLabel}>إجمالي الأكاديميات النشطة</span>
+            <div className={styles.summaryCardValue}>{totalAcademiesCount}</div>
+          </div>
+
+          <h3 className={styles.listTitle}>طلبات الانضمام المعلقة مراجعتها</h3>
+          
+          {loading ? (
+            <p className={styles.loadingText}>جاري تحميل طلبات التسجيل الجديدة وتأمين الاتصال...</p>
+          ) : pendingAcademies.length === 0 ? (
+            <div className={styles.emptyState}>لا توجد أي طلبات أكاديميات معلقة في الوقت الحالي.</div>
+          ) : (
+            <div className={styles.requestsGrid}>
+              {pendingAcademies.map((academy) => (
+                <div key={academy.id} className={styles.requestCard}>
+                  <div className={styles.requestInfo}>
+                    <h4 className={styles.requestName}>{academy.name || academy.academy_name}</h4>
+                    <p className={styles.requestEmail}>{academy.email}</p>
+                    
+                    {/* 💎 تطبيق توحيد الوقت الهجري والميلادي هنا بدقة متناهية للسوبر أدمن والمستخدم */}
+                    <span style={{ color: '#657585', fontSize: '12px', marginTop: '6px', display: 'block' }}>
+                      تاريخ تقديم الطلب: {formatDualDateTime(academy.created_at)}
+                    </span>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleApprove(academy.id)}
+                    disabled={approvingId === academy.id}
+                    className={`${styles.approveBtn} ${styles.approveBtnActive} ${approvingId === academy.id ? styles.approveBtnLoading : ''}`}
+                  >
+                    {approvingId === academy.id ? 'جاري التفعيل...' : 'تفعيل والموافقة فوراً'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+    );
+  }
 
-      {/* قائمة الطلبات */}
-      <h2 className={styles.listTitle}>
-        {isRtl ? '📋 قائمة الطلبات الحالية' : '📋 Current Requests List'}
-      </h2>
-
-      {loadingAdmin ? (
-        <p className={styles.loadingText}>{isRtl ? 'جاري تحميل البيانات البرمجية...' : 'Loading system data...'}</p>
-      ) : pendingRequests.length === 0 ? (
-        <div className={styles.emptyState}>
-          {isRtl ? 'لا توجد طلبات تفعيل معلقة حالياً.. النظام مستقر ✨' : 'No pending requests available.. System clear ✨'}
-        </div>
-      ) : (
-        <div className={styles.requestsGrid}>
-          {pendingRequests.map((req) => (
-            <div key={req.id} className={styles.requestCard}>
-              <div className={styles.requestInfo}>
-                <h3 className={styles.requestName}>
-                  {req.name || (isRtl ? 'مدير أكاديمية جديد' : 'New Academy Manager')}
-                </h3>
-                <p className={styles.requestEmail}>
-                  {req.email}
-                </p>
-              </div>
-              <button 
-                disabled={actionLoading !== null} 
-                onClick={() => handleApprove(req.id)} 
-                className={`${styles.approveBtn} ${actionLoading === req.id ? styles.approveBtnLoading : styles.approveBtnActive}`}
-              >
-                {actionLoading === req.id ? (isRtl ? 'جاري التفعيل...' : 'Activating...') : (isRtl ? '✔ قبول وتفعيل الصلاحية' : '✔ Approve & Activate')}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// 🏫 مكوّن واجهة الأكاديمية (Academy Dashboard View Component)
-function AcademyView({ isRtl, greeting, academyData, setActiveTab, t }) {
+  // 🏫 2. عرض واجهة الأكاديمية والعمليات (Academy View)
   return (
-    <>
-      {/* رأس الصفحة */}
-      <header className={styles.academyHeader}>
-        <h1 className={styles.academyGreeting}>
-          {greeting}
-        </h1>
-        <p className={styles.academyNameText}>
-          {academyData.academyName}
-        </p>
-      </header>
+    <div className={styles.dashboardContainer}>
+      <div className={styles.academyHeader}>
+        <h2 className={styles.academyGreeting}>مرحباً بك مجدداً في لوحة القيادة 👋</h2>
+        <p className={styles.academyNameText}>إدارة وحلقات: <span style={{ color: '#fff' }}>{academyName || 'أكاديمية القرآن الكريم'}</span></p>
+      </div>
 
-      {/* ⚡ مركز العمليات الذكي */}
-      <section className={styles.sectionQuickActions}>
-        <h2 className={`${styles.sectionTitle} ${!isRtl ? styles.ltrSpacing : ''}`}>
-          <span>⚡</span> {t('quick_actions')}
-        </h2>
-
+      {/* ⚡ قسم الإجراءات السريعة والعمودية لمنع التشتت */}
+      <div className={styles.sectionQuickActions}>
+        <h3 className={`${styles.sectionTitle} ${styles.ltrSpacing}`}>
+          <FaClock size={14} /> الإجراءات والعمليات السريعة
+        </h3>
         <div className={styles.actionsContainer}>
-          
-          {/* حلقة التحضير اليومي */}
-          <button onClick={() => setActiveTab('attendance')} className={`${styles.premiumLaunchpadCard} ${styles.longCard} ${styles.attendanceBtn}`}>
+          <div className={`${styles.premiumLaunchpadCard} ${styles.longCard} ${styles.attendanceBtn}`} onClick={() => setActiveTab('attendance')}>
             <div className={styles.actionInner}>
-              <div className={styles.launchpadIconWrapper}><FaBookOpen /></div>
+              <div className={styles.launchpadIconWrapper}>
+                <FaUsers />
+              </div>
               <div className={styles.actionText}>
-                <div className={styles.actionTitleText}>{t('action_attendance')}</div>
-                <div className={styles.actionSubtitleText}>{isRtl ? 'تسجيل الغياب والحفظ والمراجعة الفورية للحلقة الحالية' : 'Log attendance, memorization and reviews instantly'}</div>
+                <div className={styles.actionTitleText}>تسجيل الحضور والغياب اليومي</div>
+                <div className={styles.actionSubtitleText}>متابعة حضور الطلاب في الحلقات وحفظ الأجزاء الحالية</div>
               </div>
             </div>
             <div className={styles.liveBadge}>
               <span className={styles.pulseDot}></span>
-              <span className={styles.liveBadgeText}>{isRtl ? 'جاهز' : 'Live'}</span>
+              <span className={styles.liveBadgeText}>تحديث مباشر</span>
             </div>
-          </button>
+          </div>
 
-          {/* كروت الاختبارات والتقارير */}
           <div className={styles.actionsGrid}>
-            <button onClick={() => setActiveTab('exams')} className={`${styles.premiumLaunchpadCard} ${styles.gridCard} ${styles.examsBtn}`}>
-              <div className={styles.launchpadIconWrapper}><FaAward /></div>
-              <span className={styles.launchpadGridTitle}>{t('action_exams')}</span>
-            </button>
-
-            <button onClick={() => setActiveTab('reports')} className={`${styles.premiumLaunchpadCard} ${styles.gridCard} ${styles.reportsBtn}`}>
-              <div className={styles.launchpadIconWrapper}><FaWhatsapp /></div>
-              <span className={styles.launchpadGridTitle}>{t('action_reports')}</span>
-            </button>
-          </div>
-
-          {/* العمليات المالية */}
-          <button onClick={() => setActiveTab('payments')} className={`${styles.premiumLaunchpadCard} ${styles.longCard} ${styles.paymentsBtn}`}>
-            <div className={styles.actionInner}>
-              <div className={styles.launchpadIconWrapper}><FaReceipt /></div>
-              <div className={styles.actionText}>
-                <div className={styles.actionTitleText}>{t('action_payments')}</div>
-                <div className={styles.actionSubtitleText} style={{ color: '#ddd6fe' }}>{isRtl ? 'متابعة الاشتراكات وحالات السداد الشهرية' : 'Manage subscriptions and monthly billing'}</div>
+            <div className={`${styles.premiumLaunchpadCard} ${styles.gridCard} ${styles.examsBtn}`} onClick={() => setActiveTab('exams')}>
+              <div className={styles.launchpadIconWrapper}>
+                <FaCheckCircle />
               </div>
+              <div className={styles.launchpadGridTitle}>رصد درجات الاختبارات</div>
             </div>
-            {academyData.stats.pending > 0 && (
-              <div className={styles.pendingBadge}>
-                {academyData.stats.pending}
+
+            <div className={`${styles.premiumLaunchpadCard} ${styles.gridCard} ${styles.reportsBtn}`} onClick={() => setActiveTab('reports')}>
+              <div className={styles.launchpadIconWrapper}>
+                <FaBuilding />
               </div>
-            )}
-          </button>
-
-        </div>
-      </section>
-
-      {/* 📊 قسم التقرير العام */}
-      <section className={styles.sectionOverview}>
-        <h2 className={`${styles.sectionTitle} ${!isRtl ? styles.ltrSpacing : ''}`}>
-          <span>📊</span> {t('academy_overview')}
-        </h2>
-
-        <div className={styles.statsGrid}>
-          <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`}>
-            <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{t('total_students')}</p>
-              <h2 className={styles.statNumber}>{academyData.stats.students}</h2>
+              <div className={styles.launchpadGridTitle}>إصدار تقارير أولياء الأمور</div>
             </div>
-            <div className={styles.statIcon} style={{ color: 'var(--gold)' }}><FaUserGraduate /></div>
-          </div>
-
-          <div className={`${styles.premiumStatBox} ${styles.statBoxPayments}`}>
-            <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{t('pending_payments')}</p>
-              <h2 className={styles.statNumber}>{academyData.stats.pending}</h2>
-            </div>
-            <div className={styles.statIcon} style={{ color: '#ef4444' }}><FaUserClock /></div>
-          </div>
-
-          <div className={`${styles.premiumStatBox} ${styles.statBoxHalagas}`}>
-            <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{t('active_halagas')}</p>
-              <h2 className={styles.statNumber}>{academyData.stats.activeHalagas || 0}</h2>
-            </div>
-            <div className={styles.statIcon} style={{ color: '#38bdf8' }}><FaMosque /></div>
-          </div>
-
-          <div className={`${styles.premiumStatBox} ${styles.statBoxExams}`}>
-            <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{t('completed_exams')}</p>
-              <h2 className={styles.statNumber}>{academyData.stats.completedExams || 0}</h2>
-            </div>
-            <div className={styles.statIcon} style={{ color: '#34d399' }}><FaCheckCircle /></div>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+
+      {/* 📊 قسم شبكة الإحصائيات الأفقية الشاملة */}
+      <div className={styles.sectionOverview}>
+        <h3 className={`${styles.sectionTitle} ${styles.ltrSpacing}`}>
+          <FaUsers size={14} /> نظرة عامة على مؤشرات الأكاديمية
+        </h3>
+      </div>
+
+      <div className={styles.statsGrid}>
+        <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`} onClick={() => setActiveTab('students')}>
+          <div className={styles.statBoxInfo}>
+            <p className={styles.statLabel}>إجمالي الطلاب</p>
+            <h3 className={styles.statNumber}>{stats.students}</h3>
+          </div>
+          <div className={styles.statIcon}>
+            <FaUsers />
+          </div>
+        </div>
+
+        <div className={`${styles.premiumStatBox} ${styles.statBoxPayments}`} onClick={() => setActiveTab('payments')}>
+          <div className={styles.statBoxInfo}>
+            <p className={styles.statLabel}>المعلقات المالية</p>
+            <h3 className={styles.statNumber}>
+              {stats.pending} <span style={{ fontSize: '14px', color: 'var(--gold)' }}>{activeCurrency === 'EGP' ? 'ج.م' : activeCurrency}</span>
+            </h3>
+          </div>
+          <div className={styles.statIcon}>
+            <FaMoneyBillWave />
+          </div>
+        </div>
+
+        <div className={`${styles.premiumStatBox} ${styles.statBoxHalagas}`} onClick={() => setActiveTab('attendance')}>
+          <div className={styles.statBoxInfo}>
+            <p className={styles.statLabel}>الحلقات النشطة</p>
+            <h3 className={styles.statNumber}>{stats.activeHalagas}</h3>
+          </div>
+          <div className={styles.statIcon}>
+            <FaGraduationCap />
+          </div>
+        </div>
+
+        <div className={`${styles.premiumStatBox} ${styles.statBoxExams}`} onClick={() => setActiveTab('exams')}>
+          <div className={styles.statBoxInfo}>
+            <p className={styles.statLabel}>الاختبارات المجتازة</p>
+            <h3 className={styles.statNumber}>{stats.completedExams}</h3>
+          </div>
+          <div className={styles.statIcon}>
+            <FaAward />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
