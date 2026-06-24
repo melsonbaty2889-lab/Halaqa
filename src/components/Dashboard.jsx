@@ -35,7 +35,7 @@ export default function Dashboard({
     return () => { isComponentMounted.current = false; };
   }, []);
 
-  // 👑 ترحيب مؤسسي مرن يمنع اختناق النصوص وتداخلها على الشاشات الصغيرة
+  // 👑 ترحيب مؤسسي ذكي يلتف تلقائياً ويمنع تشويه النصوص أو كسر الشاشة
   const getGreeting = () => {
     try {
       const currentHour = new Intl.DateTimeFormat('en-US', {
@@ -45,8 +45,11 @@ export default function Dashboard({
       }).format(new Date());
       
       const hour = parseInt(currentHour, 10) || new Date().getHours();
-      const userFullName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
-      
+      // تنظيف الاسم وجعله مقتصراً على الاسم الأول والثنائي لمنع تدمير التصميم
+      let rawName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
+      const nameParts = rawName.split(' ').filter(Boolean);
+      const userFullName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : rawName;
+
       if (hour < 12) {
         return isRtl 
           ? `صباح الخير والبركة${userFullName ? `، الأستاذ ${userFullName}` : ''} 🌟`
@@ -57,7 +60,7 @@ export default function Dashboard({
           : `Good evening${userFullName ? `, ${userFullName}` : ''} ✨`;
       }
     } catch (e) {
-      return isRtl ? 'السلام عليكم، أهلاً بكم في المنصة' : 'Welcome to your dashboard';
+      return isRtl ? 'السلام عليكم، أهلاً بكم' : 'Welcome to your dashboard';
     }
   };
 
@@ -76,47 +79,40 @@ export default function Dashboard({
     }
   };
 
-  // 🛡️ نظام اعتراض واصلاح التاريخ الهجري لمنع عطل الـ BC (Anti-Glitch Engine)
+  // 🛡️ المحرك الأمني الصارم لتقويم أم القرى - يمنع تماماً ظهور خطأ "قبل الميلاد BC" بالإنجليزية
   const getHijriDate = () => {
     try {
-      const options = {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: timezone
-      };
+      const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone: timezone };
 
       if (isRtl) {
         return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', options).format(new Date());
       } else {
-        let formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', options);
-        let formattedStr = formatter.format(new Date());
+        // استخراج أرقام أم القرى النقية والمعصومة من تشوهات المتصفحات القديمة
+        const rawArabicHijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+          year: 'numeric', month: 'numeric', day: 'numeric', timeZone: timezone
+        }).format(new Date());
+        
+        const cleanDigits = rawArabicHijri.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        const dateParts = cleanDigits.split(/[\/\s-]/).filter(Boolean).map(Number);
+        
+        // فك تفريعي دقيق للمصفوفة بناءً على نمط النظام المشهور (يوم/شهر/سنة أو سنة/شهر/يوم)
+        let hYear = dateParts.find(p => p > 1300) || 1448;
+        let hMonth = dateParts.find(p => p <= 12 && p > 0) || 1;
+        let hDay = dateParts.find(p => p !== hYear && p !== hMonth) || 1;
 
-        if (formattedStr.includes('BC') || formattedStr.includes('BCE') || parseInt(formattedStr.match(/\d+/)?.[0] || 0) > 2000) {
-          const rawArabicHijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
-            year: 'numeric', month: 'numeric', day: 'numeric', timeZone: timezone
-          }).format(new Date());
-          
-          const cleanDigits = rawArabicHijri.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-          const [hYear, hMonth, hDay] = cleanDigits.split(/[\/\s-]/).map(Number);
-          
-          const islamicMonths = [
-            "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", 
-            "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", 
-            "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
-          ];
-          
-          return `${islamicMonths[(hMonth - 1) || 0]} ${hDay || 1}, ${hYear || 1448} AH`;
-        }
-
-        return formattedStr.includes('AH') ? formattedStr : `${formattedStr} AH`;
+        const islamicMonths = [
+          "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", 
+          "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", 
+          "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+        ];
+        
+        return `${islamicMonths[(hMonth - 1) || 0]} ${hDay}, ${hYear} AH`;
       }
     } catch (e) {
       return isRtl ? "١٠ محرم ١٤٤٨ هـ" : "Muharram 10, 1448 AH";
     }
   };
 
-  // 🔄 دالة جلب البيانات الصافية والمصححة (تم إزالة التكرار)
   const fetchDashboardData = useCallback(async (showOverlayLoading = true) => {
     if (!isPlatformAdmin) { setLoading(false); return; }
     if (showOverlayLoading) setLoading(true);
@@ -141,7 +137,7 @@ export default function Dashboard({
       }
     } catch (err) {
       if (isComponentMounted.current) {
-        setErrorState(isRtl ? "فشل اتصال المزامنة الحية مع نواة السيرفر المركزي." : "Central cloud core sync execution latency.");
+        setErrorState(isRtl ? "فشل اتصال المزامنة الحية." : "Central cloud core sync execution latency.");
       }
     } finally {
       if (isComponentMounted.current) {
@@ -175,17 +171,15 @@ export default function Dashboard({
     } catch (err) {
       if (isComponentMounted.current) {
         setPendingAcademies(rollbackSnapshot);
-        alert(isRtl 
-          ? "فشل تفعيل الترخيص نتيجة انقطاع طارئ في الشبكة السحابية." 
-          : "Operational licensing activation failure. State rolled back.");
+        alert(isRtl ? "فشل تفعيل الترخيص." : "Activation failure.");
       }
     }
   };
 
   if (loading) {
     return (
-      <div className={styles.dashboardContainer} style={{ padding: '24px', opacity: 0.6 }}>
-        <div className={styles.skeletonHeader} style={{ height: '45px', backgroundColor: '#1e293b', borderRadius: '8px', marginBottom: '24px' }}></div>
+      <div style={{ padding: '24px', opacity: 0.6, maxWidth: '100%', overflow: 'hidden' }}>
+        <div style={{ height: '45px', backgroundColor: '#1e293b', borderRadius: '8px', marginBottom: '24px' }}></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
           <div style={{ height: '130px', backgroundColor: '#1e293b', borderRadius: '12px' }}></div>
           <div style={{ height: '130px', backgroundColor: '#1e293b', borderRadius: '12px' }}></div>
@@ -194,34 +188,41 @@ export default function Dashboard({
     );
   }
 
-  if (isPlatformAdmin) {
-    return (
-      <AdminDashboard 
-        isRtl={isRtl}
-        academyName={academyName}
-        getGregorianDate={getGregorianDate}
-        getHijriDate={getHijriDate}
-        totalAcademiesCount={totalAcademiesCount}
-        pendingAcademies={pendingAcademies}
-        handleActivateAcademy={handleActivateAcademy}
-        errorState={errorState}
-        isRefreshing={isRefreshing}
-        onRefresh={handleManualRefresh}
-      />
-    );
-  }
-
+  // 🛡️ طوق النجاة لمنع التمرير الأفقي وعزل الحواشي على الهواتف الذكية
   return (
-    <AcademyDashboard 
-      isRtl={isRtl}
-      greeting={getGreeting()}
-      academyName={academyName}
-      stats={stats}
-      setActiveTab={setActiveTab}
-      t={t}
-      currency={activeCurrency}
-      getGregorianDate={getGregorianDate}
-      getHijriDate={getHijriDate}
-    />
+    <div style={{ 
+      width: '100%', 
+      maxWidth: '100vw', 
+      overflowX: 'hidden', 
+      position: 'relative',
+      boxSizing: 'border-box'
+    }}>
+      {isPlatformAdmin ? (
+        <AdminDashboard 
+          isRtl={isRtl}
+          academyName={academyName}
+          getGregorianDate={getGregorianDate}
+          getHijriDate={getHijriDate}
+          totalAcademiesCount={totalAcademiesCount}
+          pendingAcademies={pendingAcademies}
+          handleActivateAcademy={handleActivateAcademy}
+          errorState={errorState}
+          isRefreshing={isRefreshing}
+          onRefresh={handleManualRefresh}
+        />
+      ) : (
+        <AcademyDashboard 
+          isRtl={isRtl}
+          greeting={getGreeting()}
+          academyName={academyName}
+          stats={stats}
+          setActiveTab={setActiveTab}
+          t={t}
+          currency={activeCurrency}
+          getGregorianDate={getGregorianDate}
+          getHijriDate={getHijriDate}
+        />
+      )}
+    </div>
   );
 }
