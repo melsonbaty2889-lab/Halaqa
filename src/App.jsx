@@ -34,14 +34,14 @@ class GlobalErrorBoundary extends Component {
 function AppContent() {
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login');
-  const [loading, setLoading] = useState(true); // لفحص وجود الجلسة (Auth)
-  const [fetchingData, setFetchingData] = useState(false); // لمنع الوميض والتنقل العشوائي أثناء جلب بيانات السيرفر
+  const [loading, setLoading] = useState(true); 
+  const [fetchingData, setFetchingData] = useState(false); 
 
   const [userRole, setUserRole] = useState(null);
   const [isActivated, setIsActivated] = useState(false);
   const [daysLeft, setDaysLeft] = useState(0);
   const [isTrial, setIsTrial] = useState(true);
-  const [hasAcademy, setHasAcademy] = useState(false); // فحص حقيقي للأكاديمية من الداتابيز
+  const [hasAcademy, setHasAcademy] = useState(false); 
 
   useEffect(() => {
     const oldLoader = document.getElementById('fallback-loader');
@@ -56,6 +56,8 @@ function AppContent() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
+      // إذا تم تسجيل الخروج، أعد الواجهة الافتراضية إلى شاشة تسجيل الدخول
+      if (event === 'SIGNED_OUT') setAuthView('login');
     });
     return () => { if (subscription) subscription.unsubscribe(); };
   }, []);
@@ -67,7 +69,6 @@ function AppContent() {
     }
     const uid = session.user.id;
 
-    // استثناء المطور / الأدمن الرئيسي
     if (uid === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
       setUserRole('admin');
       setIsActivated(true);
@@ -79,9 +80,8 @@ function AppContent() {
     }
 
     async function fetchUserStatusAndSubscription() {
-      setFetchingData(true); // تثبيت الشاشة الافتتاحية لحين اكتمال كافة البيانات حماية لـ UX
+      setFetchingData(true); 
       try {
-        // 1. جلب بيانات الملف الشخصي والرتبة
         const { data: profileData } = await supabase
           .from('profiles')
           .select('role, is_activated')
@@ -98,7 +98,6 @@ function AppContent() {
         setUserRole(calculatedRole);
         setIsActivated(calculatedActivation);
 
-        // 2. جلب بيانات الاشتراك الفعلي
         const { data: subData } = await supabase
           .from('saas_subscriptions')
           .select('expires_at')
@@ -127,7 +126,6 @@ function AppContent() {
           setIsTrial(true);
         }
 
-        // 3. 🛡️ فحص الأكاديمية الحقيقي والمستقر مباشرة من السيرفر (جدول staff)
         const { data: staffData } = await supabase
           .from('staff')
           .select('academy_id')
@@ -137,7 +135,6 @@ function AppContent() {
         const academyIdFromDb = staffData?.academy_id;
         const academyIdFromMeta = session.user?.user_metadata?.academy_id;
 
-        // إذا كانت الأكاديمية مسجلة في السيرفر أو الميتا داتا نعتبره يمتلك أكاديمية
         if (academyIdFromDb || academyIdFromMeta) {
           setHasAcademy(true);
         } else {
@@ -152,49 +149,46 @@ function AppContent() {
         setIsTrial(true);
         setHasAcademy(false);
       } finally {
-        setFetchingData(false); // فك الحجز وعرض الشاشة المناسبة فوراً وبشكل نهائي وبدون وميض
+        setFetchingData(false); 
       }
     }
 
     fetchUserStatusAndSubscription();
   }, [session]);
 
-  // ⏸️ حظر العرض: طالما أن الجلسة تفحص أو البيانات يتم جلبها، ابقِ الـ SplashScreen نشطاً
   if (loading || (session && fetchingData)) return <SplashScreen />;
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 🛡️ منطق المنع المالي والأمان لحماية التطبيق
   const isBlockActive = userRole !== 'admin' && (
     (isTrial && daysLeft <= 0 && !isActivated) || 
     (!isTrial && daysLeft <= 0)
   );
 
-  // 🔐 بوابات التوجيه المرتّبة والمحكمة للمستخدم المسجل
   if (session) {
-    // البوابة الأولى: إذا كان الاشتراك منتهياً، يذهب لصفحة الاشتراك فوراً
     if (isBlockActive) {
       return <SubscriptionPage session={session} onBack={null} />;
     }
 
-    // البوابة الثانية: الاشتراك سليم، نتحقق هل أنشأ أكاديمية؟ (باستثناء الإدارة العليا للمنصة)
     const isPlatformAdmin = userRole === 'admin' || userRole === 'super_admin';
     if (!hasAcademy && !isPlatformAdmin) {
       return (
         <CreateAcademy 
           session={session} 
           onAcademyCreated={() => {
-            // عند نجاح الإنشاء، نقوم بعمل إعادة تحميل لإعادة بناء الحالة والبيانات بشكل كامل ومستقر من السيرفر
-            window.location.reload();
+            // 🚀 تعديل ذكي: انتقال ناعم وفوري لداخل التطبيق بدون عمل ريلود للمتصفح
+            setHasAcademy(true);
           }} 
+          onLogout={async () => {
+            // 🔓 إعطاء الحرية الكاملة للمستخدم لتسجيل الخروج بدلاً من احتجازه
+            await supabase.auth.signOut();
+          }}
         />
       );
     }
 
-    // البوابة الثالثة: الاستقرار والتوجه للوحة التحكم
     return <MainApp session={session} userRole={userRole} trialDaysLeft={daysLeft} isTrial={isTrial} />;
   }
 
-  // بوابات غير المسجلين (الزوار)
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
       {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
