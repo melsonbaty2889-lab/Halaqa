@@ -1,32 +1,25 @@
 /* src/components/MainApp.jsx */
-import React, { useState, useEffect, useRef, useMemo } from "react"; 
+import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react"; 
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import styles from './MainApp.module.css'; 
-import { 
-  FaChartLine, 
-  FaUsers, 
-  FaCalendarCheck, 
-  FaMoneyBillWave, 
-  FaBars, 
-  FaSignOutAlt, 
-  FaCog, 
-  FaAward, 
-  FaWhatsapp, 
-  FaClock,
-  FaCrown 
-} from "react-icons/fa";
+import { FaClock, FaWifi } from "react-icons/fa";
 
-import Dashboard from './Dashboard.jsx';
-import Students from './Students.jsx';
-import Attendance from './Attendance.jsx';
-import Exams from './Exams.jsx'; 
-import Payments from './Payments.jsx';
-import Settings from './Settings.jsx'; 
-import Reports from './Reports.jsx';
-import SubscriptionPage from './SubscriptionPage.jsx';
+// استيراد المكونات الهيكلية الثابتة (تحميل فوري لأهميتها)
+import Sidebar from './Sidebar.jsx';
+import Header from './Header.jsx';
+import Dashboard from './Dashboard.jsx'; // لوحة التحكم تفتح فوراً لتجربة مستخدم ممتازة
 
-// ✅ المكون الأساسي لـ Error Boundary مجهز لاستقبال دالة t بآمان كامل
+// 🚀 [ميزة غير مسبوقة 1]: التحميل الديناميكي المتطور (Code Splitting) لتقليص حجم الباقة وسرعة البرق
+const Students = lazy(() => import('./Students.jsx'));
+const Attendance = lazy(() => import('./Attendance.jsx'));
+const Exams = lazy(() => import('./Exams.jsx')); 
+const Payments = lazy(() => import('./Payments.jsx'));
+const Settings = lazy(() => import('./Settings.jsx')); 
+const Reports = lazy(() => import('./Reports.jsx'));
+const SubscriptionPage = lazy(() => import('./SubscriptionPage.jsx'));
+
+// مكون معالجة الأخطاء الذكي
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -36,19 +29,17 @@ class ErrorBoundaryInner extends React.Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("🚨 Global Platform Error Logged:", error, errorInfo);
+    console.error("🚨 Centralized Module Error Logged:", error, errorInfo);
   }
   render() {
     const { t } = this.props;
     if (this.state.hasError) {
       return (
-        <div className={styles.errorInnerWrapper}>
-          <h3 className={styles.errorInnerTitle}>⚠️ {t('errorLoading', 'An unexpected system error occurred within this module')}</h3>
-          <p className={styles.errorInnerCode}>
-            {this.state.error?.message || "Internal Context Error"}
-          </p>
-          <button onClick={() => this.setState({ hasError: false, error: null })} className={styles.errorInnerBtn}>
-            {t('save', 'Retry Operation')}
+        <div className={styles.errorInnerWrapper} style={{ padding: '20px', background: '#1e293b', borderRadius: '12px', textAlign: 'center', color: '#EF4444' }}>
+          <h3>⚠️ {t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم')}</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{this.state.error?.message || "Internal Context Error"}</p>
+          <button onClick={() => this.setState({ hasError: false, error: null })} style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            {t('retry', 'إعادة المحاولة')}
           </button>
         </div>
       );
@@ -62,6 +53,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [activeTab, setActiveTab] = useState("dashboard"); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine); // 🌐 تتبع حالة الإنترنت فورياً
   
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
@@ -71,24 +63,32 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(true);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // 🌍 ضبط القيم الافتراضية لتناسب مصر تلقائياً إذا كان الداخل هو السوبر أدمن لإدارة المنصة
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");         
   const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");         
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
-  
-  // ✅ قفل ذكي يعتمد على تتبع المعرّف الفريد للمستخدم الحالي لمنع مشاكل تسجيل الخروج والدخول
   const lastFetchedUserId = useRef(null);
-
-  // ✅ تجميد منسق الأرقام لمنع استهلاك الذاكرة والمعالج في كل رندر وبثبات مطلق
   const currentLang = i18n.language || 'ar';
+
   const numberFormatter = useMemo(() => {
     return new Intl.NumberFormat(currentLang, { useGrouping: true });
   }, [currentLang]);
 
   const [academyTime, setAcademyTime] = useState("");
+
+  // 🌐 مراقبة حالة اتصال النظام السحابي بالإنترنت لمنع فقد البيانات
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -103,7 +103,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [isRtl, currentLang]);
 
   useEffect(() => {
-    // إتاحة تحديث الوقت فوراً حتى أثناء تحميل البيانات لضمان عدم توقف الواجهة الخارجية
     const updateTime = () => {
       try {
         const formatter = new Intl.DateTimeFormat(currentLang, {
@@ -198,178 +197,115 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     (!isTrial && trialDaysLeft <= 0)
   );
 
-  if (showEarlyUpgrade) return <SubscriptionPage session={session} onBack={() => setShowEarlyUpgrade(false)} />;
+  if (showEarlyUpgrade) {
+    return (
+      <Suspense fallback={<div style={{ padding: '40px', color: '#FBBF24' }}>Loading Infrastructure Module...</div>}>
+        <SubscriptionPage session={session} onBack={() => setShowEarlyUpgrade(false)} />
+      </Suspense>
+    );
+  }
 
   if (isBlockActive) {
     return (
-      <div className={styles.blockActiveWrapper}>
-        <div className={styles.blockActiveModal}>
-          <FaClock size={44} className={styles.blockActiveIcon} />
-          <h2 className={styles.blockActiveTitle}>
-            {isTrial ? t('pending_payments_alert', '⚠️ Trial Period Expired') : '⚠️ Subscription Period Expired'}
+      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#090F17', padding: '20px', direction: isRtl ? 'rtl' : 'ltr' }}>
+        <div style={{ maxWidth: '500px', background: '#111827', padding: '40px', borderRadius: '16px', border: '1px solid #1f2937', textAlign: 'center' }}>
+          <FaClock size={44} style={{ color: '#EF4444', marginBottom: '20px' }} />
+          <h2 style={{ color: '#FFF', fontSize: '1.5rem', marginBottom: '15px' }}>
+            {isTrial ? t('pending_payments_alert', '⚠️ Trial Period Concluded') : '⚠️ Institutional License Expired'}
           </h2>
-          <p className={styles.blockActiveText}>
+          <p style={{ color: '#9CA3AF', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '30px' }}>
             {isTrial 
-              ? (isRtl ? 'انتهت الفترة التجريبية للمنصة. يرجى تفعيل حسابك للاستفادة الكاملة من الأنظمة الدولية للأكاديمية.' : 'The platform trial period has expired. Please activate your account to unlock the full potential of global systems.')
-              : (isRtl ? 'يرجى تجديد الاشتراك لتفادي انقطاع الخدمات والأدوات الذكية عن أكاديميتك.' : 'Please renew your subscription to prevent service interruptions across your virtual academy.')}
+              ? (isRtl ? 'انتهت الصلاحية التجريبية للنظام. يرجى ترقية الحساب لتجنب تعليق البنية التحتية والخدمات السحابية للأكاديمية.' : 'Trial period concluded. Please upgrade your account to prevent service suspension and maintain access to the academy\'s cloud infrastructure.')
+              : (isRtl ? 'يرجى تجديد الترخيص المؤسسي لتفادي إيقاف الأنظمة التشغيلية للحلقات والأكاديمية.' : 'Please renew your institutional license to prevent operational downtime across your academy.')}
           </p>
-          <button onClick={() => supabase.auth.signOut()} className={styles.blockActiveBtn}>
-            {t('logout', 'Sign Out')}
+          <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', padding: '12px', background: '#EF4444', color: '#FFF', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+            {t('logout', 'تسجيل الخروج من النظام')}
           </button>
         </div>
       </div>
     );
   }
 
-  // ✅ تغيير آلية الرندر الوسطى لتدعم التحميل الهيكلي الفخم والمستقر
+  // هيدر تحميل المحتوى (Skeleton Loader الفخم الموحد)
+  const skeletonLoader = (
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', opacity: 0.5 }}>
+      <div style={{ height: '35px', width: '25%', backgroundColor: '#334155', borderRadius: '6px' }}></div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '20px' }}>
+        <div style={{ height: '110px', backgroundColor: '#1e293b', borderRadius: '10px' }}></div>
+        <div style={{ height: '110px', backgroundColor: '#1e293b', borderRadius: '10px' }}></div>
+        <div style={{ height: '110px', backgroundColor: '#1e293b', borderRadius: '10px' }}></div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
-    if (loadingData) {
-      return (
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', opacity: 0.7 }}>
-          <div style={{ height: '40px', width: '30%', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '8px', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '20px' }}>
-            <div style={{ height: '120px', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
-            <div style={{ height: '120px', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
-            <div style={{ height: '120px', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
-          </div>
-          <div style={{ height: '250px', width: '100%', backgroundColor: 'var(--bg-card, #e2e8f0)', borderRadius: '12px' }}></div>
-        </div>
-      );
+    if (loadingData) return skeletonLoader;
+
+    // 🔒 [ميزة غير مسبوقة 2]: جدار الحماية والأمن السيبراني للأدوار لمنع حقن الحالات العشوائية
+    if (isPlatformAdmin && activeTab !== 'dashboard' && activeTab !== 'settings') {
+      return <div style={{ padding: '24px', color: '#EF4444', fontWeight: 'bold' }}>⚠️ Access Denied: Insufficient Node Permissions.</div>;
     }
 
     return (
-      <div className={styles.contentWrapper}>
+      <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto', boxSizing: 'border-box' }}>
         <ErrorBoundaryInner key={activeTab} t={t}>
-          {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />}
-          {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
-          {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} />}
-          {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
-          {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
-          {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
-          {activeTab === 'reports' && <Reports students={students} academyId={academyId} countryCode={countryCode} />}
+          {/* Suspense يحمي النظام من الانهيار أثناء جلب كود الصفحة ديناميكياً */}
+          <Suspense fallback={skeletonLoader}>
+            {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />}
+            {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
+            {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} />}
+            {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
+            {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
+            {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
+            {activeTab === 'reports' && <Reports students={students} academyId={academyId} countryCode={countryCode} />}
+          </Suspense>
         </ErrorBoundaryInner>
       </div>
     );
   };
 
-  const menuItems = [
-  { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Dashboard', ar: 'لوحة التحكم' },
-  { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Faculty & Students', ar: 'الهيئة التعليمية والطلاب' },
-  { id: 'attendance', icon: <FaCalendarCheck />, labelKey: 'recitation_attendance', def: 'Recitation & Attendance', ar: 'الحلقات والتسميع' },
-  { id: 'exams', icon: <FaAward />, labelKey: 'surah_juz_exams', def: 'Assessments & Certificates', ar: 'التقييمات والشهادات' }, 
-  { id: 'reports', icon: <FaWhatsapp />, labelKey: 'parent_reports', def: 'Performance Insights', ar: 'تقارير الأداء والمشاركة' }, 
-  { id: 'payments', icon: <FaMoneyBillWave />, labelKey: 'billing_finance', def: 'Tuition & Billing', ar: 'الرسوم والفوترة' },
-  { id: 'settings', icon: <FaCog />, labelKey: 'general_settings', def: 'System Configuration', ar: 'إعدادات النظام' },
-];
-
-  // 👑 تصفية القائمة الجانبية بناءً على صلاحيات المستخدم لمنع تكرار أو ظهور أزرار الأكاديمية للسوبر أدمن
-  const filteredMenuItems = menuItems.filter(item => {
-    if (isPlatformAdmin) {
-      return item.id === 'dashboard' || item.id === 'settings';
-    }
-    return true;
-  });
-
-  const activeMenuItem = menuItems.find(m => m.id === activeTab) || menuItems[0];
-
   return (
-    <div className={styles.appContainer}>
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      background: '#0f172a', 
+      color: '#fff',
+      fontFamily: "'Cairo', sans-serif",
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
       
       {isMobile && sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} className={styles.backdrop} />
+        <div 
+          onClick={() => setSidebarOpen(false)} 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999, backdropFilter: 'blur(4px)' }} 
+        />
       )}
       
-      <aside className={`${styles.sidebar} ${isMobile ? styles.sidebarMobile : ''} ${isMobile && !sidebarOpen ? styles.sidebarHidden : ''}`}>
-        <h2 className={styles.sidebarTitle}>
-          {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
-        </h2>
+      <Sidebar 
+        activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
+        isMobile={isMobile} isRtl={isRtl} t={t} userRole={userRole} trialDaysLeft={trialDaysLeft} isTrial={isTrial}
+        accountActivated={accountActivated} setShowEarlyUpgrade={setShowEarlyUpgrade} numberFormatter={numberFormatter}
+        timezone={timezone} academyTime={academyTime}
+      />
 
-        <div className={styles.sidebarTimeContainer}>
-          <span className={styles.sidebarTimeDot}></span>
-          <span>{timezone} : {academyTime || '--:--'}</span>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: '100vh' }}>
         
-        {!isPlatformAdmin && (
-          <div className={styles.sidebarBadgeContainer}>
-            <div className={`${styles.sidebarBadge} ${isTrial ? styles.sidebarBadgeTrial : styles.sidebarBadgeActive}`}>
-              <FaClock />
-              <span>
-                {isTrial 
-                  ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft)} trial days left`)
-                  : (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft)} يوماً على الاشتراك` : `${numberFormatter.format(trialDaysLeft)} days left`)}
-              </span>
-            </div>
+        <Header 
+          sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} isMobile={isMobile} isRtl={isRtl}
+          t={t} currency={currency} countryCode={countryCode} i18n={i18n} activeTab={activeTab}
+        />
 
-            {isTrial && !accountActivated && (
-              <button onClick={() => setShowEarlyUpgrade(true)} className={styles.sidebarUpgradeBtn}>
-                <FaCrown />
-                <span>{isRtl ? 'ترقية الحساب الآن' : 'Upgrade Account Now'}</span>
-              </button>
-            )}
+        {/* 🌐 [ميزة غير مسبوقة 3]: شريط إشعار فوري ذكي لحالة مزامنة السيرفر السحابي */}
+        {!isOnline && (
+          <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
+            <FaWifi style={{ animation: 'pulse 1s infinite' }} />
+            <span>{isRtl ? 'تم قطع الاتصال بالبنية التحتية السحابية. يعمل النظام حالياً في وضع الحفظ المؤقت المحلي.' : 'Disconnected from cloud core. Running on local cache mode.'}</span>
           </div>
         )}
-        
-        <nav className={styles.sidebarNav}>
-          {filteredMenuItems.map(item => {
-            const isSelected = activeTab === item.id;
-            return (
-              <button 
-                key={item.id} 
-                onClick={() => { setActiveTab(item.id); if(isMobile) setSidebarOpen(false); }} 
-                className={`${styles.sidebarNavBtn} ${isSelected ? styles.sidebarNavBtnSelected : ''}`}
-              >
-                <span className={styles.sidebarNavIcon}>{item.icon}</span> 
-                <span className={styles.sidebarNavLabel}>
-                  {isRtl ? item.ar : t(item.labelKey, item.def)}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <button onClick={() => supabase.auth.signOut()} className={styles.sidebarSignOutBtn}>
-          <FaSignOutAlt /> <span>{t('logout', 'Log Out')}</span>
-        </button>
-      </aside>
-
-      <main className={styles.mainContent}>
-        <div className={styles.headerBar}>
-          <div className={styles.headerLeftSection}>
-            {isMobile && (
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className={styles.headerMobileToggle}>
-                <FaBars size={16} />
-              </button>
-            )}
-            <div className={styles.headerPathText}>
-              {isRtl ? 'بوابة الإدارة العالمية' : 'Global Management Portal'} / <span className={styles.headerPathHighlight}>
-                {isRtl ? activeMenuItem?.ar : t(activeMenuItem?.labelKey, activeMenuItem?.def)}
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.headerRightSection}>
-            <div className={styles.headerBadgeCurrency} title="Active Billing Currency">
-              <FaMoneyBillWave size={13} />
-              <span>{currency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : currency}</span>
-            </div>
-
-            <div className={styles.headerBadgeWhatsapp} title="WhatsApp International Gateway">
-              <FaWhatsapp size={13} />
-              <span>+{countryCode}</span>
-            </div>
-
-            <button 
-              onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')} 
-              className={styles.headerLangBtn}
-              title="Toggle System Language & Direction"
-            >
-              {isRtl ? 'English 🌐' : 'العربية 🌐'}
-            </button>
-          </div>
-        </div>
 
         {renderContent()}
-      </main>
+      </div>
     </div>
   );
 }
