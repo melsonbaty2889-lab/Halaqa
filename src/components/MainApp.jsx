@@ -5,12 +5,10 @@ import { useTranslation } from 'react-i18next';
 import styles from './MainApp.module.css'; 
 import { FaClock, FaWifi } from "react-icons/fa";
 
-// استيراد المكونات الهيكلية الثابتة (تحميل فوري لأهميتها)
 import Sidebar from './Sidebar.jsx';
 import Header from './Header.jsx';
-import Dashboard from './Dashboard.jsx'; // لوحة التحكم تفتح فوراً لتجربة مستخدم ممتازة
+import Dashboard from './Dashboard.jsx'; 
 
-// 🚀 [ميزة غير مسبوقة 1]: التحميل الديناميكي المتطور (Code Splitting) لتقليص حجم الباقة وسرعة البرق
 const Students = lazy(() => import('./Students.jsx'));
 const Attendance = lazy(() => import('./Attendance.jsx'));
 const Exams = lazy(() => import('./Exams.jsx')); 
@@ -19,7 +17,6 @@ const Settings = lazy(() => import('./Settings.jsx'));
 const Reports = lazy(() => import('./Reports.jsx'));
 const SubscriptionPage = lazy(() => import('./SubscriptionPage.jsx'));
 
-// مكون معالجة الأخطاء الذكي
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
@@ -53,7 +50,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [activeTab, setActiveTab] = useState("dashboard"); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine); // 🌐 تتبع حالة الإنترنت فورياً
+  const [isOnline, setIsOnline] = useState(navigator.onLine); 
   
   const [students, setStudents] = useState([]);
   const [academyId, setAcademyId] = useState(null);
@@ -78,7 +75,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const [academyTime, setAcademyTime] = useState("");
 
-  // 🌐 مراقبة حالة اتصال النظام السحابي بالإنترنت لمنع فقد البيانات
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -226,7 +222,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     );
   }
 
-  // هيدر تحميل المحتوى (Skeleton Loader الفخم الموحد)
   const skeletonLoader = (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', opacity: 0.5 }}>
       <div style={{ height: '35px', width: '25%', backgroundColor: '#334155', borderRadius: '6px' }}></div>
@@ -241,7 +236,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const renderContent = () => {
     if (loadingData) return skeletonLoader;
 
-    // 🔒 [ميزة غير مسبوقة 2]: جدار الحماية والأمن السيبراني للأدوار لمنع حقن الحالات العشوائية
     if (isPlatformAdmin && activeTab !== 'dashboard' && activeTab !== 'settings') {
       return <div style={{ padding: '24px', color: '#EF4444', fontWeight: 'bold' }}>⚠️ Access Denied: Insufficient Node Permissions.</div>;
     }
@@ -249,7 +243,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return (
       <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto', boxSizing: 'border-box' }}>
         <ErrorBoundaryInner key={activeTab} t={t}>
-          {/* Suspense يحمي النظام من الانهيار أثناء جلب كود الصفحة ديناميكياً */}
           <Suspense fallback={skeletonLoader}>
             {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} />}
             {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
@@ -272,7 +265,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       color: '#fff',
       fontFamily: "'Cairo', sans-serif",
       overflow: 'hidden',
-      position: 'relative'
+      position: 'relative',
+      flexDirection: isRtl ? 'row' : 'row-reverse' /* 🛠️ قلب الاتجاه الأفقي للتطبيق بالكامل بناءً على الحماية اللغوية */
     }}>
       
       {isMobile && sidebarOpen && (
@@ -296,7 +290,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           t={t} currency={currency} countryCode={countryCode} i18n={i18n} activeTab={activeTab}
         />
 
-        {/* 🌐 [ميزة غير مسبوقة 3]: شريط إشعار فوري ذكي لحالة مزامنة السيرفر السحابي */}
         {!isOnline && (
           <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
             <FaWifi style={{ animation: 'pulse 1s infinite' }} />
