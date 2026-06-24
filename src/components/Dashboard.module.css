@@ -1,9 +1,16 @@
 /* src/components/Dashboard.module.css */
 
+/* 🌌 تأثير الظهور الانسيابي للوحة التحكم عند التحميل */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .dashboardContainer {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 24px 16px 40px 16px; /* مسافة تنفس مثالية للواجهة بأكملها */
+  padding: 24px 16px 40px 16px;
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* 👑 واجهة السوبر أدمن (Super Admin View) */
@@ -15,6 +22,11 @@
   margin-bottom: 32px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   padding-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .adminTitle {
@@ -37,6 +49,38 @@
   font-size: 0.95rem;
   margin: 8px 0 0 0;
   font-weight: 500;
+}
+
+/* 🔄 زر المزامنة السحابية الحية وتأثيرات الدوران الاحترافية */
+.refreshBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.refreshBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.spinning svg {
+  animation: spin 0.8s linear infinite;
+  color: #3b82f6 !important;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(36deg); }
 }
 
 .summaryCard {
@@ -168,6 +212,19 @@
   font-weight: 600;
 }
 
+/* 📅 وحدة التوقيت والمواقيت الإسلامية المزدوجة بالنمط الزجاجي */
+.dateTimeBadge {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  backdropFilter: blur(8px);
+  min-width: 160px;
+}
+
 .sectionQuickActions,
 .sectionOverview {
   margin-bottom: 40px;
@@ -197,6 +254,8 @@
 
 /* 💎 الكروت السريعة: مظهر زجاجي موحد فخم مقتبس من Stripe & Vercel */
 .premiumLaunchpadCard {
+  border: none;
+  font-family: inherit;
   border-radius: 14px;
   color: #fff;
   cursor: pointer;
@@ -418,14 +477,37 @@
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
+/* 🦴 الهياكل العظمية لشحن البيانات بتأثير الشيمر الفخم (Skeleton Loading Wave) */
+.skeletonHeader, .skeletonCard {
+  background: linear-gradient(90deg, #1e293b 25%, #2d3d57 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* 📱 التجاوب الكامل والدعم الشامل للشاشات الصغيرة (Mobile Responsive) */
 @media (max-width: 768px) {
   .dashboardContainer {
     padding: 16px 12px 30px 12px;
   }
   
+  .adminHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .refreshBtn {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .actionsGrid {
-    grid-template-columns: 1fr; /* تحويل الكروت السريعة لعمود واحد مريح على الموبايل */
+    grid-template-columns: 1fr;
     gap: 12px;
   }
   
@@ -434,7 +516,7 @@
   }
   
   .statsGrid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* مرونة كاملة لعدم خروج الأرقام عن الحافة */
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
   }
   
