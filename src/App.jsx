@@ -1,3 +1,4 @@
+/* Src/App.jsx */
 import React, { useState, useEffect, Component } from 'react';
 import { supabase } from './lib/supabase';
 
@@ -8,6 +9,8 @@ import ForgotPassword from './components/ForgotPassword';
 import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 import SubscriptionPage from './components/SubscriptionPage';
+// 🚀 استيراد المكون المفقود هنا
+import CreateAcademy from './components/CreateAcademy'; 
 
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -96,16 +99,14 @@ function AppContent() {
           .maybeSingle();
 
         if (subData && subData.expires_at) {
-          // حساب الأيام المتبقية للاشتراك المدفوع الفعلي ديناميكياً
           const expires = new Date(subData.expires_at);
           const today = new Date();
           const diffTime = expires - today;
           const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           
           setDaysLeft(remainingDays < 0 ? 0 : remainingDays);
-          setIsTrial(false); // الحساب يمتلك باقة مفعلة رسمياً وليس تجريبياً
+          setIsTrial(false);
         } else {
-          // في حال عدم وجود سطر اشتراك، نعود تلقائياً للحسبة التجريبية من تاريخ الإنشاء
           const createdAt = new Date(session.user.created_at);
           const today = new Date();
           const diffTime = today - createdAt;
@@ -139,7 +140,26 @@ function AppContent() {
   if (session && isBlockActive) {
     return <SubscriptionPage session={session} onBack={null} />;
   }
+
+  // 🔐 توجيه المستخدم الذكي عند توفر الجلسة النشطة
   if (session) {
+    const academyId = session.user?.user_metadata?.academy_id;
+    const isPlatformAdmin = userRole === 'admin' || userRole === 'super_admin';
+
+    // إذا لم يكن لديه أكاديمية، وليس مسؤول المنصة (أدمن) -> اعرض له صفحة الإنشاء فوراً
+    if (!academyId && !isPlatformAdmin) {
+      return (
+        <CreateAcademy 
+          session={session} 
+          onAcademyCreated={() => {
+            // تحديث نافذة التطبيق لإعادة قراءة بيانات الجلسة بعد حفظ المعرف بنجاح
+            window.location.reload();
+          }} 
+        />
+      );
+    }
+
+    // السيناريو الطبيعي: التوجه للتطبيق الرئيسي
     return <MainApp session={session} userRole={userRole} trialDaysLeft={daysLeft} isTrial={isTrial} />;
   }
 
