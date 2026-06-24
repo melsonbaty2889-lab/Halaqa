@@ -34,7 +34,6 @@ export default function Sidebar({
 
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
 
-  // 👑 القائمة العالمية والمستقبلية المعتمدة
   const menuItems = [
     { id: 'dashboard', icon: <FaChartLine />, labelKey: 'dashboard', def: 'Dashboard', ar: 'لوحة التحكم' },
     { id: 'students', icon: <FaUsers />, labelKey: 'student_management', def: 'Faculty & Students', ar: 'الهيئة التعليمية والطلاب' },
@@ -52,7 +51,6 @@ export default function Sidebar({
     return true;
   });
 
-  // حساب الحالات الديناميكية للظهور في الموبايل
   const getSidebarTranslate = () => {
     if (!isMobile) return 'translateX(0)';
     if (sidebarOpen) return 'translateX(0)';
@@ -63,12 +61,12 @@ export default function Sidebar({
     <aside style={{
       position: isMobile ? 'fixed' : 'sticky',
       top: 0,
-      right: isRtl ? 0 : 'auto',
-      left: isRtl ? 'auto' : 0,
+      right: isRtl ? 0 : 'auto',   /* 🛠️ ينعكس لليمين في العربي */
+      left: isRtl ? 'auto' : 0,    /* 🛠️ ينعكس لليسار في الإنجليزي */
       width: '260px',
       minWidth: '260px',
       height: '100vh',
-      background: '#111827', // لون داكن عميق فخم
+      background: '#111827', 
       borderLeft: isRtl && !isMobile ? '1px solid #1f2937' : 'none',
       borderRight: !isRtl && !isMobile ? '1px solid #1f2937' : 'none',
       display: 'flex',
@@ -81,7 +79,6 @@ export default function Sidebar({
       padding: '20px',
     }}>
       
-      {/* العنوان الرئيسي للمنصة */}
       <h2 style={{
         color: '#FBBF24',
         fontSize: '1.4rem',
@@ -93,7 +90,6 @@ export default function Sidebar({
         {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
       </h2>
 
-      {/* التوقيت الدولي للأكاديمية */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -102,13 +98,13 @@ export default function Sidebar({
         fontSize: '0.8rem',
         marginBottom: '20px',
         direction: 'ltr',
+        flexDirection: isRtl ? 'row' : 'row-reverse',
         justifyContent: isRtl ? 'flex-end' : 'flex-start'
       }}>
         <span style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%' }}></span>
         <span>{timezone.split('/')[1] || timezone} : {academyTime || '--:--'}</span>
       </div>
       
-      {/* كرت حالة الاشتراك والترقية */}
       {!isPlatformAdmin && (
         <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{
@@ -118,6 +114,7 @@ export default function Sidebar({
             padding: '10px 12px',
             borderRadius: '8px',
             fontSize: '0.85rem',
+            flexDirection: isRtl ? 'row' : 'row-reverse',
             background: isTrial ? 'rgba(219, 139, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
             color: isTrial ? '#F59E0B' : '#10B981',
             border: isTrial ? '1px solid rgba(219, 139, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
@@ -147,6 +144,7 @@ export default function Sidebar({
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '0.85rem',
+                flexDirection: isRtl ? 'row' : 'row-reverse',
                 transition: 'opacity 0.2s'
               }}
               onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -159,7 +157,6 @@ export default function Sidebar({
         </div>
       )}
       
-      {/* أزرار القائمة الجانبية المحدثة */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
         {filteredMenuItems.map(item => {
           const isSelected = activeTab === item.id;
@@ -181,6 +178,7 @@ export default function Sidebar({
                 background: isSelected ? '#1E293B' : 'transparent',
                 color: isSelected ? '#FBBF24' : '#9CA3AF',
                 cursor: 'pointer',
+                flexDirection: isRtl ? 'row' : 'row-reverse', /* لتأمين محاذاة النص والأيقونة بصورة متطابقة */
                 textAlign: isRtl ? 'right' : 'left',
                 fontSize: '0.95rem',
                 fontWeight: isSelected ? '600' : 'normal',
@@ -204,7 +202,9 @@ export default function Sidebar({
               <span style={{
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                flex: 1,
+                textAlign: isRtl ? 'right' : 'left'
               }}>
                 {isRtl ? item.ar : t(item.labelKey, item.def)}
               </span>
@@ -213,7 +213,6 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* زر تسجيل الخروج الثابت بالأسفل */}
       <button 
         onClick={() => supabase.auth.signOut()} 
         style={{
@@ -229,6 +228,7 @@ export default function Sidebar({
           cursor: 'pointer',
           fontSize: '0.95rem',
           marginTop: 'auto',
+          flexDirection: isRtl ? 'row' : 'row-reverse',
           boxSizing: 'border-box',
           justifyContent: 'center'
         }}
