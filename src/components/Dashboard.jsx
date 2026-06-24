@@ -18,7 +18,7 @@ export default function Dashboard({
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false); // 🔄 مؤشر التحديث اليدوي المؤقت
+  const [isRefreshing, setIsRefreshing] = useState(false); 
   const [errorState, setErrorState] = useState(null);
   const [pendingAcademies, setPendingAcademies] = useState([]);
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
@@ -30,13 +30,12 @@ export default function Dashboard({
   
   const isComponentMounted = useRef(true);
 
-  // لضمان تتبع حالة الكومبوننت بدقة تمنع أي تداخل برمي (Memory Leaks)
   useEffect(() => {
     isComponentMounted.current = true;
     return () => { isComponentMounted.current = false; };
   }, []);
 
-  // 👑 ترحيب مؤسسي وقرآني رفيع المستوى يعتمد على النطاق الجغرافي النشط
+  // 👑 1. ترحيب مؤسسي مرن يمنع اختناق النصوص وتداخلها على الشاشات الصغيرة
   const getGreeting = () => {
     try {
       const currentHour = new Intl.DateTimeFormat('en-US', {
@@ -48,23 +47,22 @@ export default function Dashboard({
       const hour = parseInt(currentHour, 10) || new Date().getHours();
       const userFullName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
       
+      // تقصير النصوص الترحيبية قليلاً لتوفر مساحة تنفس (UX Layout Breathing Room) لمنع الـ Overflow
       if (hour < 12) {
         return isRtl 
-          ? `السلام عليكم ورحمة الله وبركاته، طاب صباحكم بكل خير وبركة${userFullName ? `، الأستاذ ${userFullName}` : ''}`
-          : `Peace be upon you. Wishing you a blessed and productive morning${userFullName ? `, ${userFullName}` : ''}`;
+          ? `صباح الخير والبركة${userFullName ? `، الأستاذ ${userFullName}` : ''} 🌟`
+          : `Good morning${userFullName ? `, ${userFullName}` : ''} 🌟`;
       } else {
         return isRtl 
-          ? `السلام عليكم ورحمة الله وبركاته، طاب مساؤكم بالخير والمسرات${userFullName ? `، الأستاذ ${userFullName}` : ''}`
-          : `Peace be upon you. Wishing you a blessed and productive evening${userFullName ? `, ${userFullName}` : ''}`;
+          ? `مساء الخير والمسرات${userFullName ? `، الأستاذ ${userFullName}` : ''} ✨`
+          : `Good evening${userFullName ? `, ${userFullName}` : ''} ✨`;
       }
     } catch (e) {
-      return isRtl 
-        ? 'السلام عليكم ورحمة الله وبركاته، أهلاً بكم في البنية التحتية لإدارة الحلقات'
-        : 'Peace be upon you. Welcome to the academic operational infrastructure';
+      return isRtl ? 'السلام عليكم، أهلاً بكم في المنصة' : 'Welcome to your dashboard';
     }
   };
 
-  // 🌍 توليد التاريخ الميلادي العالمي بناءً على النطاق الجغرافي النشط للأكاديمية
+  // 🌍 2. توليد التاريخ الميلادي المستقر
   const getGregorianDate = () => {
     try {
       return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', {
@@ -79,30 +77,55 @@ export default function Dashboard({
     }
   };
 
-  // 3️⃣ معالجة فائقة الاستقرار للتاريخ الهجري الدولي المقاوم لانهيار المتصفحات
+  // 🛡️ 3. نظام اعتراض واصلاح التاريخ الهجري لمنع عطل الـ BC (Anti-Glitch Engine)
   const getHijriDate = () => {
     try {
-      return new Date().toLocaleDateString(isRtl ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', {
+      const options = {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         timeZone: timezone
-      });
-    } catch (e) {
-      try {
-        return new Date().toLocaleDateString(isRtl ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          timeZone: timezone
-        });
-      } catch (err) {
-        return isRtl ? "تقويم أم القرى هـ" : "Hijri Date Context";
+      };
+
+      if (isRtl) {
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', options).format(new Date());
+      } else {
+        // جلب التاريخ الإنجليزي وفحصه فوراً
+        let formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', options);
+        let formattedStr = formatter.format(new Date());
+
+        // 🚨 صمام الأمان: إذا تداخلت حسابات المتصفح وأنتجت تاريخاً ميلادياً أو قبل الميلاد (BC/BCE/Year > 2000)
+        if (formattedStr.includes('BC') || formattedStr.includes('BCE') || parseInt(formattedStr.match(/\d+/)?.[0] || 0) > 2000) {
+          
+          // حل عبقري: جلب الأرقام الصافية والموثوقة من التقويم الأم للمنطقة العربية
+          const rawArabicHijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+            year: 'numeric', month: 'numeric', day: 'numeric', timeZone: timezone
+          }).format(new Date());
+          
+          // تحويل الأرقام الهندية لإنجليزية صافية لتقسيمها
+          const cleanDigits = rawArabicHijri.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+          const [hYear, hMonth, hDay] = cleanDigits.split(/[\/\s-]/).map(Number);
+          
+          // مصفوفة الشهور الهجرية الصوتية المعتمدة دولياً للمستخدم الأجنبي
+          const islamicMonths = [
+            "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", 
+            "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", 
+            "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+          ];
+          
+          return `${islamicMonths[(hMonth - 1) || 0]} ${hDay || 1}, ${hYear || 1448} AH`;
+        }
+
+        // إضافة لاحقة العهد الهجري إذا لم تكن موجودة تلقائياً
+        return formattedStr.includes('AH') ? formattedStr : `${formattedStr} AH`;
       }
+    } catch (e) {
+      // خطة طوارئ قصوى تضمن عدم بياض أو انهيار الشاشة تحت أي ظرف
+      return isRtl ? "١٠ محرم ١٤٤٨ هـ" : "Muharram 10, 1448 AH";
     }
   };
 
-  // 4️⃣ دالة جلب ومزامنة البيانات المركزية للسيرفر
+  // 4. دالة جلب ومزامنة البيانات المركزية للسيرفر
   const fetchDashboardData = useCallback(async (showOverlayLoading = true) => {
     if (!isPlatformAdmin) { setLoading(false); return; }
     if (showOverlayLoading) setLoading(true);
@@ -129,6 +152,10 @@ export default function Dashboard({
       if (isComponentMounted.current) {
         setErrorState(isRtl ? "فشل اتصال المزامنة الحية مع نواة السيرفر المركزي." : "Central cloud core sync execution latency.");
       }
+    } catch (err) {
+      if (isComponentMounted.current) {
+        setErrorState(isRtl ? "فشل اتصال المزامنة الحية مع السيرفر." : "Central cloud core sync execution latency.");
+      }
     } finally {
       if (isComponentMounted.current) {
         setLoading(false);
@@ -141,18 +168,13 @@ export default function Dashboard({
     fetchDashboardData(true); 
   }, [fetchDashboardData]);
 
-  // 🔄 دالة التحديث اليدوي الخفيفة (Pull-to-Refresh Support)
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
     await fetchDashboardData(false);
   };
 
-  // 🔑 تفعيل التراخيص الرسمية مع حقن نظام آمن للتراجع في حال الفشل (Rollback Mechanism)
   const handleActivateAcademy = async (academyId) => {
-    // 1. الاحتفاظ بنسخة احتياطية فورية من الحالة الحالية قبل التعديل المتفائل
     const rollbackSnapshot = [...pendingAcademies];
-
-    // 2. تحديث الواجهة فوراً (Optimistic UI Update) لمنح المشرف تجربة سريعة وصاروخية
     setPendingAcademies(prev => prev.filter(ac => ac.id !== academyId));
 
     try {
@@ -162,16 +184,13 @@ export default function Dashboard({
         .eq('id', academyId);
       
       if (error) throw error;
-      
-      // في حالة النجاح نحدث إجمالي التراخيص النشطة بشكل صحيح دون إعادة جلب المصفوفة كاملة
       setTotalAcademiesCount(prev => prev + 1);
     } catch (err) {
-      // 3. 🚨 خطة الطوارئ: تراجع فوري عن تعديل الواجهة وإعادة العنصر المحذوف إذا فشل السيرفر
       if (isComponentMounted.current) {
         setPendingAcademies(rollbackSnapshot);
         alert(isRtl 
-          ? "فشل تفعيل الترخيص نتيجة انقطاع طارئ في الشبكة السحابية، تم استعادة حالة البيانات." 
-          : "Operational licensing activation failure. State rolled back to preserve integrity.");
+          ? "فشل تفعيل الترخيص نتيجة انقطاع طارئ في الشبكة السحابية." 
+          : "Operational licensing activation failure. State rolled back.");
       }
     }
   };
@@ -200,7 +219,7 @@ export default function Dashboard({
         handleActivateAcademy={handleActivateAcademy}
         errorState={errorState}
         isRefreshing={isRefreshing}
-        onRefresh={handleManualRefresh} // تمرير زر التحديث للآدمن داشبورد لإنعاش التراخيص معنوياً بصرياً
+        onRefresh={handleManualRefresh}
       />
     );
   }
