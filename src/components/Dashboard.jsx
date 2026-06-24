@@ -35,7 +35,7 @@ export default function Dashboard({
     return () => { isComponentMounted.current = false; };
   }, []);
 
-  // 👑 1. ترحيب مؤسسي مرن يمنع اختناق النصوص وتداخلها على الشاشات الصغيرة
+  // 👑 ترحيب مؤسسي مرن يمنع اختناق النصوص وتداخلها على الشاشات الصغيرة
   const getGreeting = () => {
     try {
       const currentHour = new Intl.DateTimeFormat('en-US', {
@@ -47,7 +47,6 @@ export default function Dashboard({
       const hour = parseInt(currentHour, 10) || new Date().getHours();
       const userFullName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
       
-      // تقصير النصوص الترحيبية قليلاً لتوفر مساحة تنفس (UX Layout Breathing Room) لمنع الـ Overflow
       if (hour < 12) {
         return isRtl 
           ? `صباح الخير والبركة${userFullName ? `، الأستاذ ${userFullName}` : ''} 🌟`
@@ -62,7 +61,7 @@ export default function Dashboard({
     }
   };
 
-  // 🌍 2. توليد التاريخ الميلادي المستقر
+  // 🌍 توليد التاريخ الميلادي المستقر
   const getGregorianDate = () => {
     try {
       return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', {
@@ -77,7 +76,7 @@ export default function Dashboard({
     }
   };
 
-  // 🛡️ 3. نظام اعتراض واصلاح التاريخ الهجري لمنع عطل الـ BC (Anti-Glitch Engine)
+  // 🛡️ نظام اعتراض واصلاح التاريخ الهجري لمنع عطل الـ BC (Anti-Glitch Engine)
   const getHijriDate = () => {
     try {
       const options = {
@@ -90,23 +89,17 @@ export default function Dashboard({
       if (isRtl) {
         return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', options).format(new Date());
       } else {
-        // جلب التاريخ الإنجليزي وفحصه فوراً
         let formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', options);
         let formattedStr = formatter.format(new Date());
 
-        // 🚨 صمام الأمان: إذا تداخلت حسابات المتصفح وأنتجت تاريخاً ميلادياً أو قبل الميلاد (BC/BCE/Year > 2000)
         if (formattedStr.includes('BC') || formattedStr.includes('BCE') || parseInt(formattedStr.match(/\d+/)?.[0] || 0) > 2000) {
-          
-          // حل عبقري: جلب الأرقام الصافية والموثوقة من التقويم الأم للمنطقة العربية
           const rawArabicHijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
             year: 'numeric', month: 'numeric', day: 'numeric', timeZone: timezone
           }).format(new Date());
           
-          // تحويل الأرقام الهندية لإنجليزية صافية لتقسيمها
           const cleanDigits = rawArabicHijri.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
           const [hYear, hMonth, hDay] = cleanDigits.split(/[\/\s-]/).map(Number);
           
-          // مصفوفة الشهور الهجرية الصوتية المعتمدة دولياً للمستخدم الأجنبي
           const islamicMonths = [
             "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", 
             "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", 
@@ -116,16 +109,14 @@ export default function Dashboard({
           return `${islamicMonths[(hMonth - 1) || 0]} ${hDay || 1}, ${hYear || 1448} AH`;
         }
 
-        // إضافة لاحقة العهد الهجري إذا لم تكن موجودة تلقائياً
         return formattedStr.includes('AH') ? formattedStr : `${formattedStr} AH`;
       }
     } catch (e) {
-      // خطة طوارئ قصوى تضمن عدم بياض أو انهيار الشاشة تحت أي ظرف
       return isRtl ? "١٠ محرم ١٤٤٨ هـ" : "Muharram 10, 1448 AH";
     }
   };
 
-  // 4. دالة جلب ومزامنة البيانات المركزية للسيرفر
+  // 🔄 دالة جلب البيانات الصافية والمصححة (تم إزالة التكرار)
   const fetchDashboardData = useCallback(async (showOverlayLoading = true) => {
     if (!isPlatformAdmin) { setLoading(false); return; }
     if (showOverlayLoading) setLoading(true);
@@ -151,10 +142,6 @@ export default function Dashboard({
     } catch (err) {
       if (isComponentMounted.current) {
         setErrorState(isRtl ? "فشل اتصال المزامنة الحية مع نواة السيرفر المركزي." : "Central cloud core sync execution latency.");
-      }
-    } catch (err) {
-      if (isComponentMounted.current) {
-        setErrorState(isRtl ? "فشل اتصال المزامنة الحية مع السيرفر." : "Central cloud core sync execution latency.");
       }
     } finally {
       if (isComponentMounted.current) {
