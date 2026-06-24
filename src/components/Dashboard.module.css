@@ -39,13 +39,13 @@
 }
 
 .summaryCard {
-  background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   padding: 24px;
   border-radius: 14px;
   max-width: 340px;
   margin-bottom: 35px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .summaryCardLabel {
@@ -192,6 +192,7 @@
   gap: 15px;
 }
 
+/* 💎 تحديث الكروت السريعة إلى مظهر زجاجي موحد فخم بدلاً من الألوان الصاخبة */
 .premiumLaunchpadCard {
   border-radius: 14px;
   color: #fff;
@@ -200,14 +201,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .premiumLaunchpadCard:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.12);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+  transform: translateY(-4px);
+  filter: none !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 .longCard {
@@ -222,21 +225,22 @@
   padding: 20px 10px;
 }
 
-.attendanceBtn {
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-}
+/* التمييز اللوني الذكي عبر الحواف والتوهج المحيطي فقط (Premium Glow) */
+.attendanceBtn { border-inline-start: 3px solid #2563eb !important; }
+.attendanceBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(37, 99, 235, 0.15) !important; }
+.attendanceBtn .launchpadIconWrapper { color: #3b82f6; }
 
-.examsBtn {
-  background: linear-gradient(135deg, #78350f 0%, #b45309 100%);
-}
+.examsBtn { border-inline-start: 3px solid #b45309 !important; }
+.examsBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(180, 83, 9, 0.15) !important; }
+.examsBtn .launchpadIconWrapper { color: #f59e0b; }
 
-.reportsBtn {
-  background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
-}
+.reportsBtn { border-inline-start: 3px solid #059669 !important; }
+.reportsBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(5, 150, 105, 0.15) !important; }
+.reportsBtn .launchpadIconWrapper { color: #10b981; }
 
-.paymentsBtn {
-  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-}
+.paymentsBtn { border-inline-start: 3px solid #7c3aed !important; }
+.paymentsBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(124, 58, 237, 0.15) !important; }
+.paymentsBtn .launchpadIconWrapper { color: #a78bfa; }
 
 .actionInner {
   display: flex;
@@ -256,29 +260,30 @@
 
 .actionSubtitleText {
   font-size: 12px;
-  color: #93c5fd;
-  margin-top: 2px;
+  color: #8a99a8;
+  margin-top: 4px;
 }
 
 .paymentsSubtitleText {
   font-size: 12px;
-  color: #ddd6fe;
-  margin-top: 2px;
+  color: #8a99a8;
+  margin-top: 4px;
 }
 
 .liveBadge {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(52, 211, 153, 0.1);
   padding: 4px 10px;
   border-radius: 20px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
 }
 
 .liveBadgeText {
   font-size: 11px;
   font-weight: 600;
-  color: #fff;
+  color: #34d399;
   white-space: nowrap;
 }
 
@@ -293,6 +298,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.premiumLaunchpadCard:hover .launchpadIconWrapper {
+  transform: scale(1.1);
 }
 
 .launchpadGridTitle {
@@ -318,6 +328,7 @@
   white-space: nowrap;
 }
 
+/* 📊 تحديث كروت الإحصائيات الفاخرة (Premium Stat Boxes) */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -325,27 +336,44 @@
 }
 
 .premiumStatBox {
-  background: var(--surface);
-  padding: 22px 20px;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
+  padding: 24px 20px !important;
   border-radius: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.02);
-  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-.statBoxStudents { border-top: 4px solid var(--gold); }
-.statBoxPayments { border-top: 4px solid #ef4444; }
-.statBoxHalagas { border-top: 4px solid #38bdf8; }
-.statBoxExams { border-top: 4px solid #34d399; }
+.premiumStatBox:hover {
+  transform: translateY(-4px) !important;
+}
+
+/* توحيد حواف الكروت العلوية وإضافة توهج ناعم مخصص لكل كرت عند التمرير */
+.statBoxStudents { border-top: 3px solid var(--gold) !important; }
+.statBoxStudents:hover { border-color: var(--gold) !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 168, 76, 0.1) !important; }
+.statBoxStudents .statIcon { color: var(--gold); }
+
+.statBoxPayments { border-top: 3px solid #ef4444 !important; }
+.statBoxPayments:hover { border-color: #ef4444 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(239, 68, 68, 0.1) !important; }
+.statBoxPayments .statIcon { color: #ef4444; }
+
+.statBoxHalagas { border-top: 3px solid #38bdf8 !important; }
+.statBoxHalagas:hover { border-color: #38bdf8 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.1) !important; }
+.statBoxHalagas .statIcon { color: #38bdf8; }
+
+.statBoxExams { border-top: 3px solid #34d399 !important; }
+.statBoxExams:hover { border-color: #34d399 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 211, 153, 0.1) !important; }
+.statBoxExams .statIcon { color: #34d399; }
 
 .statBoxInfo {
   text-align: start;
 }
 
 .statLabel {
-  color: #94a3b8;
+  color: #8a99a8;
   margin: 0 0 6px 0;
   font-size: 13px;
   font-weight: 600;
@@ -362,9 +390,14 @@
 
 .statIcon {
   font-size: 26px;
-  opacity: 0.85;
+  opacity: 0.9;
   display: flex;
   align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.premiumStatBox:hover .statIcon {
+  transform: scale(1.1);
 }
 
 .pulseDot {
