@@ -81,8 +81,8 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
       color: '#fff',
       fontFamily: "'Cairo', sans-serif"
     }}>
-      <h2 style={{ color: C.gold, marginBottom: '20px' }}>🚀 أنشئ أكاديميتك الأولى</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '30px' }}>ابدأ رحلتك الإدارية المنظمة</p>
+      <h2 style={{ color: C.gold, marginBottom: '20px' }}>إنشاء أكاديمية جديدة</h2>
+      <p style={{ color: '#94a3b8', marginBottom: '30px' }}>يرجى إدخال اسم الأكاديمية لتهيئة وإعداد حسابك</p>
 
       <form
         onSubmit={handleSubmit}
@@ -97,7 +97,7 @@ export default function CreateAcademy({ session, onAcademyCreated }) {
       >
         <input
           type="text"
-          placeholder="اسم الأكاديمية (مثلاً: دار القرآن)"
+          placeholder="اسم الأكاديمية"
           value={name}
           onChange={(e) => setName(e.target.value)}
           style={{
