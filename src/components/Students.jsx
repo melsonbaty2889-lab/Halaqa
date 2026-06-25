@@ -39,7 +39,7 @@ export default function Students({ students = [], setStudents, academyId }) {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  // ✨ تحسين 1: حفظ دالة حساب العمر في الذاكرة
+  // حساب العمر في الذاكرة
   const calculateAge = useCallback((dateOfBirth) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -52,7 +52,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     return age;
   }, []);
 
-  // ✨ تحسين 2: حفظ دالة معالجة النصوص العربية لمنع تكرار الحساب
+  // معالجة النصوص العربية لمنع تكرار الحساب
   const normalizeArabic = useCallback((str) => {
     if (!str) return '';
     return str
@@ -63,7 +63,7 @@ export default function Students({ students = [], setStudents, academyId }) {
       .toLowerCase();
   }, []);
 
-  // ✨ تحسين 3: فلترة الطلاب بذكاء عالي وحفظ النتيجة (Memoized Filter)
+  // فلترة الطلاب بذكاء عالي وحفظ النتيجة
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
     
@@ -80,7 +80,7 @@ export default function Students({ students = [], setStudents, academyId }) {
     });
   }, [students, searchTerm, showArchived, normalizeArabic]);
 
-  // ✨ تحسين 4: حفظ مصفوفات الخيارات الثابتة لتجنب إعادة بنائها في كل ريندر
+  // حفظ مصفوفات الخيارات الثابتة
   const paymentPlans = useMemo(() => [
     { value: 'شهري', label: 'اشتراك شهري دوري' },
     { value: 'فصلي', label: 'اشتراك فصلي (كل 3 شهور)' },
@@ -104,10 +104,26 @@ export default function Students({ students = [], setStudents, academyId }) {
   const handleAddStudent = async (e) => {
     e.preventDefault();
     if (!name.trim()) return showMessage('اسم الطالب مطلوب', 'error');
-    if (!academyId) return showMessage('معرّف الأكاديمية غير موجود', 'error');
 
     setIsAdding(true);
     setError(null);
+
+    // 🔄 شبكة أمان احتياطية: إذا لم يمرر المكون الأب المعرف، نجلبها تلقائياً من الـ Auth Metadata
+    let activeAcademyId = academyId;
+    if (!activeAcademyId) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        activeAcademyId = user?.user_metadata?.academy_id || user?.user_metadata?.academyId;
+      } catch (err) {
+        console.error('فشل جلب معرف الأكاديمية الاحتياطي:', err);
+      }
+    }
+
+    // إذا استمرت المشكلة حتى بعد المحاولة الاحتياطية
+    if (!activeAcademyId) {
+      setIsAdding(false);
+      return showMessage('معرّف الأكاديمية غير موجود، يرجى إعادة تسجيل الدخول أو التحقق من الحساب', 'error');
+    }
     
     const autoSurahText = getQuranProgress(currentQuarterIndex).text;
 
@@ -121,7 +137,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           current_surah: autoSurahText,             
           notes: notes.trim() || null,                 
           gender: gender,                              
-          academy_id: academyId,
+          academy_id: activeAcademyId, // 🔥 نستخدم المعرف النشط والآمن هنا
           status: 'active',
           is_archived: false,
           birth_date: birthDate || null, 
