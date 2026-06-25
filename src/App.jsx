@@ -1,5 +1,5 @@
-/* Src/App.jsx */
-import React, { useState, useEffect, Component } from 'react';
+/* src/App.jsx — refactored */
+import React, { useState, useEffect, useRef, Component } from 'react';
 import { supabase } from './lib/supabase';
 
 import SplashScreen from './components/SplashScreen';
@@ -9,13 +9,21 @@ import ForgotPassword from './components/ForgotPassword';
 import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 import SubscriptionPage from './components/SubscriptionPage';
-import CreateAcademy from './components/CreateAcademy'; 
+import CreateAcademy from './components/CreateAcademy';
 
+// Error boundary must be a class component
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
+
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
+
+  componentDidCatch(error, info) {
+    // TODO: replace with real logging/telemetry
+    // console.error('GlobalErrorBoundary caught:', { error, info });
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -31,45 +39,112 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
+const DEFAULT_TRIAL_DAYS = 14;
+// Prefer environment-configured admin list and allowed hosts
+const ADMIN_UIDS = new Set(
+  (process.env.REACT_APP_ADMIN_UIDS || 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+);
+const ALLOWED_HOSTS = (process.env.REACT_APP_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,localhost,127.0.0.1')
+  .split(',')
+  .map((s) => s.trim());
+
 function AppContent() {
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login');
-  const [loading, setLoading] = useState(true); 
-  const [fetchingData, setFetchingData] = useState(false); 
+  const [loading, setLoading] = useState(true);
+  const [fetchingData, setFetchingData] = useState(false);
 
   const [userRole, setUserRole] = useState(null);
   const [isActivated, setIsActivated] = useState(false);
   const [daysLeft, setDaysLeft] = useState(0);
   const [isTrial, setIsTrial] = useState(true);
-  const [hasAcademy, setHasAcademy] = useState(false); 
+  const [hasAcademy, setHasAcademy] = useState(false);
+
+  // refs to avoid setting state after unmount and to clear timers
+  const mountedRef = useRef(true);
+  const loadingTimeoutRef = useRef(null);
 
   useEffect(() => {
-    const oldLoader = document.getElementById('fallback-loader');
-    if (oldLoader) oldLoader.remove();
-    if (!supabase) { setLoading(false); return; }
-    
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setTimeout(() => setLoading(false), 1200);
-    }).catch(() => setLoading(false));
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+  useEffect(() => {
+    // Remove fallback loader if present
+    const oldLoader = typeof document !== 'undefined' ? document.getElementById('fallback-loader') : null;
+    if (oldLoader) oldLoader.remove();
+
+    if (!supabase) {
+      if (mountedRef.current) setLoading(false);
+      return;
+    }
+
+    // initial session
+    let isCancelled = false;
+    async function loadSession() {
+      try {
+        const res = await supabase.auth.getSession();
+        const initialSession = res?.data?.session ?? null;
+        if (!isCancelled && mountedRef.current) {
+          setSession(initialSession);
+          // keep a short splash; store timeout ref so we can clear on unmount
+          loadingTimeoutRef.current = setTimeout(() => {
+            if (mountedRef.current) setLoading(false);
+          }, 1200);
+        }
+      } catch (err) {
+        if (mountedRef.current) setLoading(false);
+      }
+    }
+    loadSession();
+
+    // subscribe to auth changes
+    const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!mountedRef.current) return;
       setSession(currentSession);
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
-      // إذا تم تسجيل الخروج، أعد الواجهة الافتراضية إلى شاشة تسجيل الدخول
       if (event === 'SIGNED_OUT') setAuthView('login');
     });
-    return () => { if (subscription) subscription.unsubscribe(); };
+    const subscription = data?.subscription ?? data?.value ?? null;
+
+    return () => {
+      isCancelled = true;
+      if (subscription?.unsubscribe) {
+        try {
+          subscription.unsubscribe();
+        } catch (e) {
+          // ignore unsubscribe errors
+        }
+      }
+    };
   }, []);
 
   useEffect(() => {
     if (!session || !supabase) {
-      setFetchingData(false);
+      if (mountedRef.current) setFetchingData(false);
       return;
     }
-    const uid = session.user.id;
 
-    if (uid === 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9') {
+    const uid = session.user?.id;
+    if (!uid) {
+      setUserRole('student');
+      setIsActivated(false);
+      setIsTrial(true);
+      setDaysLeft(0);
+      setHasAcademy(false);
+      return;
+    }
+
+    // fast-path admin UIDs
+    if (ADMIN_UIDS.has(uid)) {
       setUserRole('admin');
       setIsActivated(true);
       setDaysLeft(999);
@@ -79,26 +154,29 @@ function AppContent() {
       return;
     }
 
+    let cancelled = false;
+    setFetchingData(true);
+
     async function fetchUserStatusAndSubscription() {
-      setFetchingData(true); 
       try {
-        const { data: profileData } = await supabase
+        // profile
+        const profileResp = await supabase
           .from('profiles')
           .select('role, is_activated')
           .eq('id', uid)
           .maybeSingle();
-        
-        let calculatedRole = 'student';
-        let calculatedActivation = false;
 
-        if (profileData) {
-          calculatedRole = profileData.role?.trim().toLowerCase().replace(/\s+/g, '_') || 'student';
-          calculatedActivation = profileData.is_activated || false;
+        const profileData = profileResp?.data ?? null;
+        const calculatedRole = profileData?.role?.trim().toLowerCase().replace(/\s+/g, '_') || 'student';
+        const calculatedActivation = !!profileData?.is_activated;
+
+        if (!cancelled && mountedRef.current) {
+          setUserRole(calculatedRole);
+          setIsActivated(calculatedActivation);
         }
-        setUserRole(calculatedRole);
-        setIsActivated(calculatedActivation);
 
-        const { data: subData } = await supabase
+        // subscription
+        const subResp = await supabase
           .from('saas_subscriptions')
           .select('expires_at')
           .eq('user_id', uid)
@@ -107,80 +185,95 @@ function AppContent() {
           .limit(1)
           .maybeSingle();
 
-        if (subData && subData.expires_at) {
-          const expires = new Date(subData.expires_at);
-          const today = new Date();
-          const diffTime = expires - today;
-          const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
-          setDaysLeft(remainingDays < 0 ? 0 : remainingDays);
-          setIsTrial(false);
-        } else {
-          const createdAt = new Date(session.user.created_at);
-          const today = new Date();
-          const diffTime = today - createdAt;
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          const remainingTrial = 14 - diffDays;
-          
-          setDaysLeft(remainingTrial < 0 ? 0 : remainingTrial);
-          setIsTrial(true);
+        const subData = subResp?.data ?? null;
+
+        if (!cancelled && mountedRef.current) {
+          if (subData?.expires_at) {
+            const expires = new Date(subData.expires_at);
+            const today = new Date();
+            const diffTime = expires.getTime() - today.getTime();
+            const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            setDaysLeft(Math.max(0, remainingDays));
+            setIsTrial(false);
+          } else {
+            // trial calculation using user.created_at (fallback)
+            const createdAtStr = session.user?.created_at;
+            const createdAt = createdAtStr ? new Date(createdAtStr) : new Date();
+            const today = new Date();
+            const diffTime = today.getTime() - createdAt.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const remainingTrial = DEFAULT_TRIAL_DAYS - diffDays;
+            setDaysLeft(Math.max(0, remainingTrial));
+            setIsTrial(true);
+          }
         }
 
-        const { data: staffData } = await supabase
+        // academy (staff) check
+        const staffResp = await supabase
           .from('staff')
           .select('academy_id')
           .eq('user_id', uid)
           .maybeSingle();
 
-        const academyIdFromDb = staffData?.academy_id;
+        const academyIdFromDb = staffResp?.data?.academy_id;
         const academyIdFromMeta = session.user?.user_metadata?.academy_id;
 
-        if (academyIdFromDb || academyIdFromMeta) {
-          setHasAcademy(true);
-        } else {
+        if (!cancelled && mountedRef.current) {
+          setHasAcademy(!!(academyIdFromDb || academyIdFromMeta));
+        }
+      } catch (err) {
+        // keep defaults on error
+        // console.error('Error fetching user status/subscription:', err);
+        if (mountedRef.current) {
+          setUserRole('student');
+          setIsActivated(false);
+          setDaysLeft(0);
+          setIsTrial(true);
           setHasAcademy(false);
         }
-
-      } catch (err) {
-        console.error("خطأ جلب الصلاحيات والاشتراك الذكي:", err);
-        setUserRole('student');
-        setIsActivated(false);
-        setDaysLeft(0);
-        setIsTrial(true);
-        setHasAcademy(false);
       } finally {
-        setFetchingData(false); 
+        if (!cancelled && mountedRef.current) {
+          setFetchingData(false);
+        }
       }
     }
 
     fetchUserStatusAndSubscription();
+
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
   if (loading || (session && fetchingData)) return <SplashScreen />;
   if (authView === 'update_password') return <UpdatePassword />;
 
-  const isBlockActive = userRole !== 'admin' && (
-    (isTrial && daysLeft <= 0 && !isActivated) || 
-    (!isTrial && daysLeft <= 0)
-  );
+  // computed block: when the platform should block access
+  const isBlockActive =
+    userRole !== 'admin' &&
+    ((isTrial && daysLeft <= 0 && !isActivated) || (!isTrial && daysLeft <= 0));
 
   if (session) {
     if (isBlockActive) {
-      return <SubscriptionPage session={session} onBack={null} />;
+      // pass a proper back handler if you want to support "back to login"
+      return <SubscriptionPage session={session} onBack={() => {/* optionally: setAuthView('login') */}} />;
     }
 
     const isPlatformAdmin = userRole === 'admin' || userRole === 'super_admin';
     if (!hasAcademy && !isPlatformAdmin) {
       return (
-        <CreateAcademy 
-          session={session} 
+        <CreateAcademy
+          session={session}
           onAcademyCreated={() => {
-            // 🚀 تعديل ذكي: انتقال ناعم وفوري لداخل التطبيق بدون عمل ريلود للمتصفح
+            // immediate, local update — no hard reload
             setHasAcademy(true);
-          }} 
+          }}
           onLogout={async () => {
-            // 🔓 إعطاء الحرية الكاملة للمستخدم لتسجيل الخروج بدلاً من احتجازه
-            await supabase.auth.signOut();
+            try {
+              await supabase.auth.signOut();
+            } catch (err) {
+              // console.warn('Logout failed', err);
+            }
           }}
         />
       );
@@ -199,16 +292,22 @@ function AppContent() {
 }
 
 export default function App() {
-  const allowedHosts = ['smart-halaqa.vercel.app', 'localhost', '127.0.0.1'];
-  const isAllowed = allowedHosts.includes(window.location.hostname);
+  // safe check for SSR
+  const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
+
+  const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true; // allow when unknown (e.g., SSR) — adjust per deployment needs
   if (!isAllowed) {
     return (
-      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
-        <p style={{ color: '#9CA3AF', fontSize: '1.1rem', textAlign: 'center', maxWidth: '500px' }}>تم إيقاف تشغيل هذه المنصة تلقائياً لحماية حقوق الملكية الفكرية للمطور.</p>
+        <p style={{ color: '#9CA3AF', fontSize: '1.1rem', textAlign: 'center', maxWidth: '600px' }}>
+          تم إيقاف تشغيل هذه المنصة تلقائياً لحماية حقوق الملكية والتشغيل من مضيف غير معتمد.
+          تواصل مع فريق الدعم أو شغّل التطبيق على نطاق معتمد.
+        </p>
       </div>
     );
   }
+
   return (
     <GlobalErrorBoundary>
       <AppContent />
