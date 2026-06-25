@@ -47,14 +47,17 @@ class ErrorBoundaryInner extends React.Component {
 
 export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true }) {
   const { t, i18n } = useTranslation(); 
+  
+  // 🌟 استرجاع التبويب النشط من ذاكرة المتصفح عند الإقلاع لمنع التصفير (Reset)
   const [activeTab, setActiveTab] = useState(() => {
-  return localStorage.getItem('smart_halaqa_tab') || 'dashboard';
-});
+    return localStorage.getItem('smart_halaqa_tab') || 'dashboard';
+  });
 
-// حفظ التبويب الجديد تلقائياً في الذاكرة كلما قام المستخدم بتغييره
-useEffect(() => {
-  localStorage.setItem('smart_halaqa_tab', activeTab);
-}, [activeTab]); 
+  // 🌟 حفظ التبويب الجديد تلقائياً في الذاكرة كلما قام المستخدم بتغييره
+  useEffect(() => {
+    localStorage.setItem('smart_halaqa_tab', activeTab);
+  }, [activeTab]); 
+
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine); 
@@ -273,7 +276,7 @@ useEffect(() => {
       fontFamily: "'Cairo', sans-serif",
       overflow: 'hidden',
       position: 'relative',
-      flexDirection: isRtl ? 'row' : 'row-reverse' /* 🛠️ قلب الاتجاه الأفقي للتطبيق بالكامل بناءً على الحماية اللغوية */
+      flexDirection: isRtl ? 'row' : 'row-reverse'
     }}>
       
       {isMobile && sidebarOpen && (
