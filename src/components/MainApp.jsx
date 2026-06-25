@@ -47,7 +47,14 @@ class ErrorBoundaryInner extends React.Component {
 
 export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true }) {
   const { t, i18n } = useTranslation(); 
-  const [activeTab, setActiveTab] = useState("dashboard"); 
+  const [activeTab, setActiveTab] = useState(() => {
+  return localStorage.getItem('smart_halaqa_tab') || 'dashboard';
+});
+
+// حفظ التبويب الجديد تلقائياً في الذاكرة كلما قام المستخدم بتغييره
+useEffect(() => {
+  localStorage.setItem('smart_halaqa_tab', activeTab);
+}, [activeTab]); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine); 
