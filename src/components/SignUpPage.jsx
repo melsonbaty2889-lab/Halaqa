@@ -29,14 +29,15 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     setLoading(true);
     try {
-      // 🌟 إرسال طلب تسجيل كـ مدير/صاحب مركز (Manager) لينتقل إلى قائمة الانتظار تلقائياً
+      // 🌟 تم التعديل هنا ليرسل الحساب كـ مدير/صاحب أكاديمية (admin) مباشر لتستقبل اشتراكه
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: { 
           data: { 
             full_name: name.trim(),
-            requested_role: 'manager',     // تعديل الدور هنا ليكون مدير أكاديمية/مركز قيد الانتظار
+            role: 'admin',                 // 💡 الحل الجوهري: إرسال الـ role كـ admin مباشرة لقاعدة البيانات
+            requested_role: 'admin',       // احتياطياً إذا كان الـ Trigger في قاعدة البيانات يقرأ هذا الحقل
             lang: isRtl ? 'ar' : 'en' 
           },
           emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
@@ -62,6 +63,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
       console.error("SignUp Error:", err);
       setError(err.message);
     } finally {
+      style={{}}
       setLoading(false);
     }
   };
