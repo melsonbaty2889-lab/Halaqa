@@ -31,6 +31,9 @@ export default function Dashboard({
   
   const isComponentMounted = useRef(true);
 
+  // 🎯 استخراج اسم المستخدم بشكل آمن وموحد لمنع الأخطاء البرمجية
+  const userFullName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
+
   useEffect(() => {
     isComponentMounted.current = true;
     return () => { isComponentMounted.current = false; };
@@ -47,18 +50,17 @@ export default function Dashboard({
       
       const hour = parseInt(currentHour, 10) || new Date().getHours();
       // تنظيف الاسم وجعله مقتصراً على الاسم الأول والثنائي لمنع تدمير التصميم
-      let rawName = session?.user?.user_metadata?.name || session?.user?.user_metadata?.full_name || '';
-      const nameParts = rawName.split(' ').filter(Boolean);
-      const userFullName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : rawName;
+      const nameParts = userFullName.split(' ').filter(Boolean);
+      const cleanName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : userFullName;
 
       if (hour < 12) {
         return isRtl 
-          ? `صباح الخير والبركة${userFullName ? `، الأستاذ ${userFullName}` : ''} 🌟`
-          : `Good morning${userFullName ? `, ${userFullName}` : ''} 🌟`;
+          ? `صباح الخير والبركة${cleanName ? `، الأستاذ ${cleanName}` : ''} 🌟`
+          : `Good morning${cleanName ? `, ${cleanName}` : ''} 🌟`;
       } else {
         return isRtl 
-          ? `مساء الخير والمسرات${userFullName ? `، الأستاذ ${userFullName}` : ''} ✨`
-          : `Good evening${userFullName ? `, ${userFullName}` : ''} ✨`;
+          ? `مساء الخير والمسرات${cleanName ? `، الأستاذ ${cleanName}` : ''} ✨`
+          : `Good evening${cleanName ? `, ${cleanName}` : ''} ✨`;
       }
     } catch (e) {
       return isRtl ? 'السلام عليكم، أهلاً بكم' : 'Welcome to your dashboard';
@@ -189,7 +191,6 @@ export default function Dashboard({
     );
   }
 
-  // 🛡️ طوق النجاة لمنع التمرير الأفقي وعزل الحواشي على الهواتف الذكية
   return (
     <div style={{ 
       width: '100%', 
@@ -201,7 +202,7 @@ export default function Dashboard({
       {isSuperAdmin ? (
         <AdminDashboard 
           isRtl={isRtl}
-          academyName={userProfile?.full_name}
+          academyName={userFullName} // ✅ تم التصحيح هنا لاستخدام المتغير الآمن المعرف بالأعلى بدلاً من userProfile المفقود
           getGregorianDate={getGregorianDate}
           getHijriDate={getHijriDate}
           totalAcademiesCount={totalAcademiesCount}
