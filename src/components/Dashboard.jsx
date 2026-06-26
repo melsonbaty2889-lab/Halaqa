@@ -23,6 +23,7 @@ export default function Dashboard({
   const [pendingAcademies, setPendingAcademies] = useState([]);
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
 
+  const isSuperAdmin = userRole === 'super_admin';
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const stats = preloadedDashboardData?.stats || { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 };
   const academyName = preloadedDashboardData?.academyName || "";
@@ -197,7 +198,7 @@ export default function Dashboard({
       position: 'relative',
       boxSizing: 'border-box'
     }}>
-      {isPlatformAdmin ? (
+      {isisSuperAdmin ? (
         <AdminDashboard 
           isRtl={isRtl}
           academyName={academyName}
