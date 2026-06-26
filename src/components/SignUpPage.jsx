@@ -63,7 +63,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
       console.error("SignUp Error:", err);
       setError(err.message);
     } finally {
-      style={{}}
       setLoading(false);
     }
   };
