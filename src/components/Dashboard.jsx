@@ -8,7 +8,8 @@ import AcademyDashboard from './AcademyDashboard';
 
 export default function Dashboard({ 
   session, 
-  userRole, 
+  userRole,
+  isActivated,
   setActiveTab, 
   preloadedDashboardData, 
   currency,
@@ -191,6 +192,32 @@ export default function Dashboard({
     );
   }
 
+  if (!isSuperAdmin && (preloadedDashboardData?.is_activated === false || preloadedDashboardData?.status === 'pending')) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '65vh',
+        padding: '40px',
+        textAlign: 'center',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ fontSize: '64px', marginBottom: '20px', animation: 'pulse 2s infinite' }}>⏳</div>
+        <h2 style={{ color: '#f8fafc', marginBottom: '12px', fontWeight: '600' }}>
+          {isRtl ? 'حسابك الأكاديمي قيد المراجعة والتحضير' : 'Your Academy is Being Prepared'}
+        </h2>
+        <p style={{ color: '#94a3b8', maxWidth: '500px', lineHeight: '1.6', fontSize: '16px' }}>
+          {isRtl 
+            ? 'أهلاً بك! تم تأكيد بريدك الإلكتروني بنجاح، وملف الأكاديمية الخاص بك الآن في طابور التدقيق والتهيئة للتشغيل العالمي. سيتم فتح لوحة التحكم تلقائياً فور موافقة الإدارة العليا.'
+            : 'Welcome! Your email has been verified. Your academy profile is currently in the review queue. Your dashboard will unlock automatically once approved.'}
+        </p>
+      </div>
+    );
+  }
+
+  // 🌍 اللوحات الرئيسية المستقرة (تعمل فقط إذا عبر المستخدم حارس الأمان بالأعلى)
   return (
     <div style={{ 
       width: '100%', 
@@ -202,7 +229,7 @@ export default function Dashboard({
       {isSuperAdmin ? (
         <AdminDashboard 
           isRtl={isRtl}
-          academyName={userFullName} // ✅ تم التصحيح هنا لاستخدام المتغير الآمن المعرف بالأعلى بدلاً من userProfile المفقود
+          academyName={userFullName} 
           getGregorianDate={getGregorianDate}
           getHijriDate={getHijriDate}
           totalAcademiesCount={totalAcademiesCount}
