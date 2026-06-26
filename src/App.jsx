@@ -1,4 +1,4 @@
-/* src/App.jsx — refactored */
+/* src/App.jsx */
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { supabase } from './lib/supabase';
 
@@ -109,9 +109,19 @@ function AppContent() {
     // subscribe to auth changes
     const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (!mountedRef.current) return;
-      setSession(currentSession);
+      
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
-      if (event === 'SIGNED_OUT') setAuthView('login');
+      
+      // 💡 حل مشكلة طرد المستخدم من صفحة الـ SignUp تلقائياً
+      setSession((prevSession) => {
+        if (event === 'SIGNED_OUT' && prevSession !== null) {
+          setAuthView('login');
+          setUserRole(null);
+          setIsActivated(false);
+          setHasAcademy(false);
+        }
+        return currentSession;
+      });
     });
     const subscription = data?.subscription ?? data?.value ?? null;
 
@@ -222,8 +232,6 @@ function AppContent() {
           setHasAcademy(!!(academyIdFromDb || academyIdFromMeta));
         }
       } catch (err) {
-        // keep defaults on error
-        // console.error('Error fetching user status/subscription:', err);
         if (mountedRef.current) {
           setUserRole('student');
           setIsActivated(false);
@@ -245,7 +253,11 @@ function AppContent() {
     };
   }, [session]);
 
-  if (loading || (session && fetchingData)) return <SplashScreen />;
+  // 💡 إصلاح جوهري: منع تدمير شجرة المكونات وفقدان البيانات أثناء جلب البيانات بالخلفية.
+  // يتم عرض الـ SplashScreen فقط في التحميل الأولي للموقع أو إذا كانت الجلسة نشطة ولم يتم جلب الـ Role بعد.
+  const isInitialFetching = session && fetchingData && userRole === null;
+  if (loading || isInitialFetching) return <SplashScreen />;
+  
   if (authView === 'update_password') return <UpdatePassword />;
 
   // computed block: when the platform should block access
@@ -255,7 +267,6 @@ function AppContent() {
 
   if (session) {
     if (isBlockActive) {
-      // pass a proper back handler if you want to support "back to login"
       return <SubscriptionPage session={session} onBack={() => {/* optionally: setAuthView('login') */}} />;
     }
 
@@ -295,7 +306,7 @@ export default function App() {
   // safe check for SSR
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
 
-  const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true; // allow when unknown (e.g., SSR) — adjust per deployment needs
+  const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
   if (!isAllowed) {
     return (
       <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
