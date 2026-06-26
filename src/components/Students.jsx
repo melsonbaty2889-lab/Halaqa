@@ -108,15 +108,20 @@ export default function Students({ students = [], setStudents, academyId }) {
     setIsAdding(true);
     setError(null);
 
-    // 🔄 شبكة أمان احتياطية: إذا لم يمرر المكون الأب المعرف، نجلبها تلقائياً من الـ Auth Metadata
     let activeAcademyId = academyId;
-    if (!activeAcademyId) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        activeAcademyId = user?.user_metadata?.academy_id || user?.user_metadata?.academyId;
-      } catch (err) {
-        console.error('فشل جلب معرف الأكاديمية الاحتياطي:', err);
+    let currentUserId = null;
+
+    // 🛠️ التعديل الآمن هنا: جلب بيانات المستخدم الحالي دائماً لتعبئة الحقول الرابطة
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        currentUserId = user.id;
+        if (!activeAcademyId) {
+          activeAcademyId = user.user_metadata?.academy_id || user.user_metadata?.academyId;
+        }
       }
+    } catch (err) {
+      console.error('فشل جلب بيانات المستخدم والأكاديمية الاحتياطية:', err);
     }
 
     // إذا استمرت المشكلة حتى بعد المحاولة الاحتياطية
@@ -137,7 +142,8 @@ export default function Students({ students = [], setStudents, academyId }) {
           current_surah: autoSurahText,             
           notes: notes.trim() || null,                 
           gender: gender,                              
-          academy_id: activeAcademyId, // 🔥 نستخدم المعرف النشط والآمن هنا
+          academy_id: activeAcademyId, 
+          added_by: currentUserId, // 🔥 التعديل المضاف: ربط الطالب بـ ID الحساب الفعلي لمنع اختفائه بعد الـ Refresh
           status: 'active',
           is_archived: false,
           birth_date: birthDate || null, 
