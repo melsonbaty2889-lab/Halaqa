@@ -115,7 +115,7 @@ export default function Dashboard({
   };
 
   const fetchDashboardData = useCallback(async (showOverlayLoading = true) => {
-    if (!isPlatformAdmin) { setLoading(false); return; }
+    if (!isSuperAdmin) { setLoading(false); return; }
     if (showOverlayLoading) setLoading(true);
     setErrorState(null);
     try {
@@ -146,7 +146,7 @@ export default function Dashboard({
         setIsRefreshing(false);
       }
     }
-  }, [isPlatformAdmin, isRtl]);
+  }, [isSuperAdmin, isRtl]);
 
   useEffect(() => { 
     fetchDashboardData(true); 
@@ -198,7 +198,7 @@ export default function Dashboard({
       position: 'relative',
       boxSizing: 'border-box'
     }}>
-      {isisSuperAdmin ? (
+      {isSuperAdmin ? (
         <AdminDashboard 
           isRtl={isRtl}
           academyName={academyName}
