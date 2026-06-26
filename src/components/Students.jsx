@@ -117,9 +117,11 @@ export default function Students({ students = [], setStudents, academyId }) {
       if (user) {
         currentUserId = user.id;
         
-        // 🛠️ التعديل الاحترافي هنا: إذا لم يتم تمرير معرف الأكاديمية كـ Prop، نجلبه بأمان من جدول profiles
+        // 🛠️ التعديل الذكي هنا: جلب معرف الأكاديمية ديناميكياً بحسب نوع الحساب
         if (!activeAcademyId) {
-          const { data: profileData, error: profileError } = await supabase
+          
+          // أ. محاولة الجلب من جدول profiles (في حال كان سوبر أدمن)
+          const { data: profileData } = await supabase
             .from('profiles')
             .select('academy_id')
             .eq('id', user.id)
@@ -127,14 +129,29 @@ export default function Students({ students = [], setStudents, academyId }) {
           
           if (profileData?.academy_id) {
             activeAcademyId = profileData.academy_id;
+          } else {
+            // ب. إذا لم يجدها، يبحث في جدول staff (حيث يربط المدراء والمعلمين بالأكاديمية)
+            const { data: staffData } = await supabase
+              .from('staff')
+              .select('academy_id')
+              .eq('user_id', user.id)
+              .maybeSingle(); // استخدام maybeSingle لتجنب الأخطاء إذا لم يكن الحساب مسجلاً كموظف
+            
+            if (staffData?.academy_id) {
+              activeAcademyId = staffData.academy_id;
+            } 
+            // جـ. خيار احتياطي أخير من الـ metadata
+            else if (user.user_metadata?.academy_id) {
+              activeAcademyId = user.user_metadata.academy_id;
+            }
           }
         }
       }
     } catch (err) {
-      console.error('فشل جلب بيانات المستخدم والأكاديمية من جدول الصلاحيات:', err);
+      console.error('فشل جلب بيانات المستخدم والأكاديمية من جداول الصلاحيات:', err);
     }
 
-    // إذا استمرت المشكلة ولم نجد معرف أكاديمية مرتبط
+    // إذا استمرت المشكلة ولم نجد معرف أكاديمية مرتبط بالحساب بأي طريقة
     if (!activeAcademyId) {
       setIsAdding(false);
       return showMessage('معرّف الأكاديمية غير موجود، يرجى التحقق من ربط هذا الحساب بأكاديمية مفعلة', 'error');
