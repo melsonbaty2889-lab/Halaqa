@@ -111,23 +111,33 @@ export default function Students({ students = [], setStudents, academyId }) {
     let activeAcademyId = academyId;
     let currentUserId = null;
 
-    // 🛠️ التعديل الآمن هنا: جلب بيانات المستخدم الحالي دائماً لتعبئة الحقول الرابطة
     try {
+      // 1. جلب بيانات مستخدم الـ Auth الحالي
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         currentUserId = user.id;
+        
+        // 🛠️ التعديل الاحترافي هنا: إذا لم يتم تمرير معرف الأكاديمية كـ Prop، نجلبه بأمان من جدول profiles
         if (!activeAcademyId) {
-          activeAcademyId = user.user_metadata?.academy_id || user.user_metadata?.academyId;
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('academy_id')
+            .eq('id', user.id)
+            .single();
+          
+          if (profileData?.academy_id) {
+            activeAcademyId = profileData.academy_id;
+          }
         }
       }
     } catch (err) {
-      console.error('فشل جلب بيانات المستخدم والأكاديمية الاحتياطية:', err);
+      console.error('فشل جلب بيانات المستخدم والأكاديمية من جدول الصلاحيات:', err);
     }
 
-    // إذا استمرت المشكلة حتى بعد المحاولة الاحتياطية
+    // إذا استمرت المشكلة ولم نجد معرف أكاديمية مرتبط
     if (!activeAcademyId) {
       setIsAdding(false);
-      return showMessage('معرّف الأكاديمية غير موجود، يرجى إعادة تسجيل الدخول أو التحقق من الحساب', 'error');
+      return showMessage('معرّف الأكاديمية غير موجود، يرجى التحقق من ربط هذا الحساب بأكاديمية مفعلة', 'error');
     }
     
     const autoSurahText = getQuranProgress(currentQuarterIndex).text;
@@ -143,7 +153,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           notes: notes.trim() || null,                 
           gender: gender,                              
           academy_id: activeAcademyId, 
-          added_by: currentUserId, // 🔥 التعديل المضاف: ربط الطالب بـ ID الحساب الفعلي لمنع اختفائه بعد الـ Refresh
+          added_by: currentUserId, 
           teacher_id: currentUserId,
           status: 'active',
           is_archived: false,
