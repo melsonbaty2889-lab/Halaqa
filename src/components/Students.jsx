@@ -144,6 +144,7 @@ export default function Students({ students = [], setStudents, academyId }) {
           gender: gender,                              
           academy_id: activeAcademyId, 
           added_by: currentUserId, // 🔥 التعديل المضاف: ربط الطالب بـ ID الحساب الفعلي لمنع اختفائه بعد الـ Refresh
+          teacher_id: currentUserId,
           status: 'active',
           is_archived: false,
           birth_date: birthDate || null, 
