@@ -201,7 +201,7 @@ export default function Dashboard({
       {isSuperAdmin ? (
         <AdminDashboard 
           isRtl={isRtl}
-          academyName={academyName}
+          academyName={userProfile?.full_name}
           getGregorianDate={getGregorianDate}
           getHijriDate={getHijriDate}
           totalAcademiesCount={totalAcademiesCount}
