@@ -1,0 +1,534 @@
+/* src/components/Dashboard.module.css */
+
+/* 🌌 تأثير الظهور الانسيابي للوحة التحكم عند التحميل */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboardContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px 40px 16px;
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 👑 واجهة السوبر أدمن (Super Admin View) */
+.superAdminView {
+  text-align: start;
+}
+
+.adminHeader {
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.adminTitle {
+  color: #fff;
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: -0.3px;
+}
+
+.adminTitle svg {
+  color: var(--gold);
+}
+
+.adminSubtitle {
+  color: #8A99A8;
+  font-size: 0.95rem;
+  margin: 8px 0 0 0;
+  font-weight: 500;
+}
+
+/* 🔄 زر المزامنة السحابية الحية وتأثيرات الدوران الاحترافية */
+.refreshBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.refreshBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.spinning svg {
+  animation: spin 0.8s linear infinite;
+  color: #3b82f6 !important;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(36deg); }
+}
+
+.summaryCard {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 24px;
+  border-radius: 14px;
+  max-width: 340px;
+  margin-bottom: 35px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.summaryCardLabel {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryCardValue {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--gold);
+  margin-top: 8px;
+  font-family: system-ui;
+}
+
+.listTitle {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loadingText {
+  color: #657585;
+  font-size: 14px;
+}
+
+.emptyState {
+  padding: 50px 20px;
+  background: var(--surface);
+  border-radius: 14px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.requestsGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.requestCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.requestInfo {
+  text-align: start;
+}
+
+.requestName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px 0;
+}
+
+.requestEmail {
+  color: #657585;
+  font-size: 13px;
+  margin: 0;
+  font-family: monospace;
+}
+
+.approveBtn {
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.approveBtnActive {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.approveBtnLoading {
+  background: #065F46;
+}
+
+/* 🏫 واجهة الأكاديمية والعمليات (Academy View) */
+.academyHeader {
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 24px;
+  text-align: start;
+}
+
+.academyGreeting {
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.academyNameText {
+  color: var(--gold);
+  font-size: 1.05rem;
+  margin: 8px 0 0 0;
+  font-weight: 600;
+}
+
+/* 📅 وحدة التوقيت والمواقيت الإسلامية المزدوجة بالنمط الزجاجي */
+.dateTimeBadge {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  backdropFilter: blur(8px);
+  min-width: 160px;
+}
+
+.sectionQuickActions,
+.sectionOverview {
+  margin-bottom: 40px;
+  text-align: start;
+}
+
+.sectionTitle {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ltrSpacing {
+  letter-spacing: 0.5px;
+}
+
+.actionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 💎 الكروت السريعة: مظهر زجاجي موحد فخم مقتبس من Stripe & Vercel */
+.premiumLaunchpadCard {
+  border: none;
+  font-family: inherit;
+  border-radius: 14px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.premiumLaunchpadCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.longCard {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gridCard {
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+}
+
+/* تمييز احترافي ناعم بالحواف والتوهج المحيطي فقط لمنع التشتت اللوني */
+.attendanceBtn { border-inline-start: 3px solid #2563eb !important; }
+.attendanceBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(37, 99, 235, 0.15) !important; }
+.attendanceBtn .launchpadIconWrapper { color: #3b82f6; }
+
+.examsBtn { border-inline-start: 3px solid #b45309 !important; }
+.examsBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(180, 83, 9, 0.15) !important; }
+.examsBtn .launchpadIconWrapper { color: #f59e0b; }
+
+.reportsBtn { border-inline-start: 3px solid #059669 !important; }
+.reportsBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(5, 150, 105, 0.15) !important; }
+.reportsBtn .launchpadIconWrapper { color: #10b981; }
+
+.paymentsBtn { border-inline-start: 3px solid #7c3aed !important; }
+.paymentsBtn:hover { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(124, 58, 237, 0.15) !important; }
+.paymentsBtn .launchpadIconWrapper { color: #a78bfa; }
+
+.actionInner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.actionText {
+  text-align: start;
+}
+
+.actionTitleText {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.actionSubtitleText {
+  font-size: 12.5px;
+  color: #8A99A8;
+  margin-top: 4px;
+}
+
+.paymentsSubtitleText {
+  font-size: 12.5px;
+  color: #8A99A8;
+  margin-top: 4px;
+}
+
+.liveBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(52, 211, 153, 0.08);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+.liveBadgeText {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+  white-space: nowrap;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.launchpadIconWrapper {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premiumLaunchpadCard:hover .launchpadIconWrapper {
+  transform: scale(1.12);
+}
+
+.launchpadGridTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pendingBadge {
+  background: #ef4444;
+  color: #fff;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+}
+
+/* 📊 كروت الإحصائيات الفاخرة (Premium Stat Boxes) */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.premiumStatBox {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
+  padding: 24px 20px !important;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.premiumStatBox:hover {
+  transform: translateY(-4px) !important;
+}
+
+/* توحيد وثبات الحواف العلوية مع توهج ناعم يعكس قيمة الكرت */
+.statBoxStudents { border-top: 3px solid var(--gold) !important; }
+.statBoxStudents:hover { border-color: var(--gold) !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 168, 76, 0.1) !important; }
+.statBoxStudents .statIcon { color: var(--gold); }
+
+.statBoxPayments { border-top: 3px solid #ef4444 !important; }
+.statBoxPayments:hover { border-color: #ef4444 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(239, 68, 68, 0.1) !important; }
+.statBoxPayments .statIcon { color: #ef4444; }
+
+.statBoxHalagas { border-top: 3px solid #38bdf8 !important; }
+.statBoxHalagas:hover { border-color: #38bdf8 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.1) !important; }
+.statBoxHalagas .statIcon { color: #38bdf8; }
+
+.statBoxExams { border-top: 3px solid #34d399 !important; }
+.statBoxExams:hover { border-color: #34d399 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 211, 153, 0.1) !important; }
+.statBoxExams .statIcon { color: #34d399; }
+
+.statBoxInfo {
+  text-align: start;
+}
+
+.statLabel {
+  color: #8A99A8;
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.statNumber {
+  color: #fff;
+  margin: 0;
+  font-size: 2.1rem;
+  font-weight: 800;
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.statIcon {
+  font-size: 26px;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.premiumStatBox:hover .statIcon {
+  transform: scale(1.12);
+}
+
+.pulseDot {
+  width: 7px;
+  height: 7px;
+  background-color: #34d399;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+  animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+/* 🦴 الهياكل العظمية لشحن البيانات بتأثير الشيمر الفخم (Skeleton Loading Wave) */
+.skeletonHeader, .skeletonCard {
+  background: linear-gradient(90deg, #1e293b 25%, #2d3d57 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 📱 التجاوب الكامل والدعم الشامل للشاشات الصغيرة (Mobile Responsive) */
+@media (max-width: 768px) {
+  .dashboardContainer {
+    padding: 16px 12px 30px 12px;
+  }
+  
+  .adminHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .refreshBtn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .actionsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .premiumLaunchpadCard {
+    padding: 16px;
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  
+  .premiumStatBox {
+    padding: 16px 14px !important;
+  }
+  
+  .statNumber {
+    font-size: 1.7rem;
+  }
+  
+  .academyGreeting {
+    font-size: 1.4rem;
+  }
+}
