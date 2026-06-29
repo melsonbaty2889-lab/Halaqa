@@ -9,7 +9,8 @@ import {
   FaUserClock, 
   FaMosque, 
   FaCheckCircle,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaChartLine // إضافة أيقونة المؤشرات الإحصائية بشكل آمن
 } from 'react-icons/fa';
 
 export default function AcademyDashboard({ 
@@ -23,13 +24,15 @@ export default function AcademyDashboard({
   getGregorianDate  // دالة التاريخ الميلادي الذكية (مرّرة من الموجه الرئيسي)
 }) {
   
-  // تفكيك آمن للبيانات مع وضع قيم افتراضية لمنع انهيار الرندر (Defensive Coding)
-  const {
-    students = 0,
-    pending = 0,
-    activeHalagas = 0,
-    completedExams = 0
-  } = stats;
+  // دمج وتفكيك البيانات القديمة والجديدة بذكاء ودفاعية كاملة لضمان استقرار العرض
+  const studentsCount = stats.studentsCount !== undefined ? stats.studentsCount : (stats.students || 0);
+  const pendingCount = stats.overdueCount !== undefined ? stats.overdueCount : (stats.pending || 0);
+  const activeHalagas = stats.activeHalagas || 0;
+  const completedExams = stats.completedExams || 0;
+  
+  // المؤشرات اللحظية الجديدة المجلوبة من الـ Service المطور (تظهر عند توفرها)
+  const attendanceRate = stats.attendanceRate || null;
+  const totalPagesMuted = stats.totalPagesMuted || null;
 
   return (
     <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -48,7 +51,7 @@ export default function AcademyDashboard({
           <p className={styles.academyNameText}>{academyName || (isRtl ? 'الأكاديمية القرآنيّة' : 'Quran Academy')}</p>
         </div>
 
-        {/* وحدة التوقيت والمواقيت الإسلامية المزدوجة (تظهر تلقائياً عند تمرير الدالات) */}
+        {/* وحدة التوقيت والمواقيت الإسلامية المزدوجة */}
         {(getHijriDate || getGregorianDate) && (
           <div style={{
             background: 'rgba(30, 41, 59, 0.4)',
@@ -131,17 +134,39 @@ export default function AcademyDashboard({
           <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`}>
             <div className={styles.statBoxInfo}>
               <p className={styles.statLabel}>{t('total_students')}</p>
-              <h2 className={styles.statNumber}>{students}</h2>
+              <h2 className={styles.statNumber}>{studentsCount}</h2>
             </div>
             <div className={styles.statIcon}><FaUserGraduate /></div>
           </div>
 
-          {/* كرت الحالات المالية والمستحقات المعلقة (يتحول للون التنبيه الأحمر تلقائياً عند وجود مبالغ مستحقة) */}
+          {/* كرت نسبة الحضور اليومي الفوري (يظهر ديناميكياً إذا تم تفعيله من السيرفر) */}
+          {attendanceRate !== null && (
+            <div className={`${styles.premiumStatBox} ${styles.statBoxHalagas}`} style={{ borderBottom: '3px solid #3B82F6' }}>
+              <div className={styles.statBoxInfo}>
+                <p className={styles.statLabel}>{t('attendance_rate') || (isRtl ? 'نسبة الحضور اليومي' : 'Attendance Rate')}</p>
+                <h2 className={styles.statNumber} style={{ color: '#3B82F6' }}>{attendanceRate}</h2>
+              </div>
+              <div className={styles.statIcon}><FaCheckCircle style={{ color: '#3B82F6' }} /></div>
+            </div>
+          )}
+
+          {/* كرت إجمالي الصفحات المسمّعة اليوم (يظهر ديناميكياً إذا تم تفعيله من السيرفر) */}
+          {totalPagesMuted !== null && (
+            <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`} style={{ borderBottom: '3px solid #10B981' }}>
+              <div className={styles.statBoxInfo}>
+                <p className={styles.statLabel}>{t('pages_muted_today') || (isRtl ? 'الصفحات المسمّعة اليوم' : 'Pages Recited Today')}</p>
+                <h2 className={styles.statNumber} style={{ color: '#10B981' }}>{totalPagesMuted}</h2>
+              </div>
+              <div className={styles.statIcon}><FaBookOpen style={{ color: '#10B981' }} /></div>
+            </div>
+          )}
+
+          {/* كرت الحالات المالية والمستحقات المعلقة */}
           <div className={`${styles.premiumStatBox} ${styles.statBoxPayments}`}>
             <div className={styles.statBoxInfo}>
               <p className={styles.statLabel}>{t('pending_payments')}</p>
-              <h2 className={styles.statNumber} style={{ color: pending > 0 ? '#F87171' : 'inherit' }}>
-                {pending}
+              <h2 className={styles.statNumber} style={{ color: pendingCount > 0 ? '#F87171' : 'inherit' }}>
+                {pendingCount}
               </h2>
             </div>
             <div className={styles.statIcon}><FaUserClock /></div>
