@@ -42,7 +42,7 @@ export default function Dashboard({
   const getGreeting = () => {
     return isRtl 
       ? 'السلام عليكم ورحمة الله وبركاته'
-      : 'Assalamu Alaikum wa Rahmatullah wa Barakatuh';
+      : 'Assalamu Alaikum';
   };
 
   // 4. معالجة وجلب البيانات الحية للأكاديمية ديناميكياً
