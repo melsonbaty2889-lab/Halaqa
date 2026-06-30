@@ -9,9 +9,12 @@ import {
   FaUserClock, 
   FaMosque, 
   FaCheckCircle,
-  FaCalendarAlt,
-  FaChartLine // إضافة أيقونة المؤشرات الإحصائية بشكل آمن
+  FaCalendarAlt
 } from 'react-icons/fa';
+
+// استيراد المكونات الجديدة التي صممناها
+import ActiveHalaqas from './ActiveHalaqas';
+import AchievementChart from './AchievementChart';
 
 export default function AcademyDashboard({ 
   isRtl, 
@@ -139,7 +142,7 @@ export default function AcademyDashboard({
             <div className={styles.statIcon}><FaUserGraduate /></div>
           </div>
 
-          {/* كرت نسبة الحضور اليومي الفوري (يظهر ديناميكياً إذا تم تفعيله من السيرفر) */}
+          {/* كرت نسبة الحضور اليومي الفوري */}
           {attendanceRate !== null && (
             <div className={`${styles.premiumStatBox} ${styles.statBoxHalagas}`} style={{ borderBottom: '3px solid #3B82F6' }}>
               <div className={styles.statBoxInfo}>
@@ -150,7 +153,7 @@ export default function AcademyDashboard({
             </div>
           )}
 
-          {/* كرت إجمالي الصفحات المسمّعة اليوم (يظهر ديناميكياً إذا تم تفعيله من السيرفر) */}
+          {/* كرت إجمالي الصفحات المسمّعة اليوم */}
           {totalPagesMuted !== null && (
             <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`} style={{ borderBottom: '3px solid #10B981' }}>
               <div className={styles.statBoxInfo}>
@@ -192,6 +195,20 @@ export default function AcademyDashboard({
 
         </div>
       </section>
+
+      {/* 📈 قسم التحليلات المتقدمة والنشاط اليومي (مدمج بمرونة كاملة) */}
+      <section className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch w-full">
+        {/* جدول حلقات اليوم النشطة */}
+        <div className="w-full">
+          <ActiveHalaqas isRtl={isRtl} t={t} />
+        </div>
+
+        {/* منحنى الإنجاز البياني البصري */}
+        <div className="w-full">
+          <AchievementChart isRtl={isRtl} />
+        </div>
+      </section>
+
     </div>
   );
 }
