@@ -196,11 +196,16 @@ export default function AcademyDashboard({
         </div>
       </section>
 
-      {/* 📈 قسم التحليلات المتقدمة والنشاط اليومي (مدمج بمرونة كاملة) */}
+            {/* 📈 قسم التحليلات المتقدمة والنشاط اليومي (مدمج بمرونة كاملة) */}
       <section className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch w-full">
-        {/* جدول حلقات اليوم النشطة */}
+        
+        {/* جدول حلقات اليوم النشطة الحقيقية والموصولة بقاعدة البيانات الفورية */}
         <div className="w-full">
-          <ActiveHalaqas isRtl={isRtl} t={t} />
+          <ActiveHalaqas 
+            isRtl={isRtl} 
+            t={t} 
+            halaqas={stats.activeHalaqasData} 
+          />
         </div>
 
         {/* منحنى الإنجاز البياني البصري */}
