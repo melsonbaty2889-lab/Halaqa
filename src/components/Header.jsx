@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaBars, FaMoneyBillWave, FaWhatsapp } from "react-icons/fa";
+import { FaBars, FaMoneyBillWave, FaWhatsapp, FaGlobe } from "react-icons/fa";
 
 export default function Header({ 
   sidebarOpen, 
@@ -13,6 +13,7 @@ export default function Header({
   activeTab
 }) {
 
+  // المصطلحات المهنية المعتمدة دولياً لأنظمة إدارة الأكاديميات التعليمية والقرآنية
   const menuTitles = {
     dashboard: { en: 'Dashboard', ar: 'لوحة التحكم' },
     students: { en: 'Faculty & Students', ar: 'الهيئة التعليمية والطلاب' },
@@ -27,83 +28,79 @@ export default function Header({
 
   return (
     <header 
-      className="backdrop-blur-md border-b border-white/5 sticky top-0 transition-all duration-300"
-      style={{
-        height: '65px',
-        // 💡 ربط الخلفية بالهوية اللونية الموحدة للمنصة
-        background: 'var(--surface)', 
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexDirection: isRtl ? 'row' : 'row-reverse', 
-        padding: isMobile ? '0 16px' : '0 24px',
-        boxSizing: 'border-box',
-        zIndex: 999,
-      }}
+      className={`h-[65px] sticky top-0 z-[999] w-full border-b border-white/5 backdrop-blur-md bg-[var(--surface)] px-4 md:px-6 flex items-center justify-between transition-all duration-300 ${
+        isRtl ? 'flex-row' : 'flex-row-reverse'
+      }`}
     >
       
-      {/* القسم المخصص لأدوات البوابة (العملة، الدولة، اللغة) */}
+      {/* 🌐 القسم الأيسر (في الواجهة العربية): أدوات التحكم والبادجات الذكية */}
       <div 
-        className="flex items-center flex-shrink-0"
-        style={{ 
-          gap: isMobile ? '8px' : '12px',
-          flexDirection: isRtl ? 'row' : 'row-reverse' 
-        }}
+        className={`flex items-center gap-2 md:gap-3 flex-shrink-0 ${
+          isRtl ? 'flex-row' : 'flex-row-reverse'
+        }`}
       >
-        
-        {/* زر تحويل اللغة والمحاذاة الفوري - مظهر ناعم تفاعلي */}
+        {/* زر تبديل اللغة الاحترافي - مايكرو إنيميشن ناعم */}
         <button 
           onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')} 
-          className="bg-white/5 hover:bg-white/10 active:scale-95 text-white border-none py-1.5 px-3 rounded-lg text-xs font-semibold cursor-pointer transition-all whitespace-nowrap"
-          title="Change System Language"
+          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 active:scale-95 text-white border-none h-8 px-2.5 md:px-3 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap select-none"
+          title={isRtl ? 'Switch to English' : 'التحويل إلى العربية'}
         >
-          {isRtl ? 'English 🌐' : 'العربية 🌐'}
+          <FaGlobe className="text-blue-400 text-xs md:text-sm" />
+          <span className="hidden xs:inline">{isRtl ? 'English' : 'العربية'}</span>
         </button>
 
-        {/* بادج بوابة الواتساب الدولية */}
+        {/* بادج بوابة الواتساب الدولية - معالجة الاستجابة للموبايل بالاكتفاء بالأيقونة عند صغر الشاشة */}
         <div 
-          className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 py-1.5 px-2.5 rounded-lg text-xs font-semibold border border-blue-500/15" 
-          title="WhatsApp Gateway"
+          className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 h-8 px-2 md:px-2.5 rounded-xl text-xs font-semibold border border-blue-500/15" 
+          title="WhatsApp Gateway Status"
         >
-          <FaWhatsapp size={13} />
-          <span style={{ direction: 'ltr' }}>+{countryCode}</span>
+          <FaWhatsapp size={14} className="text-emerald-400" />
+          <span className="direction-ltr hidden sm:inline">+{countryCode}</span>
         </div>
 
-        {/* بادج العملة */}
+        {/* بادج العملة النشطة للفواتير */}
         <div 
-          className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 py-1.5 px-2.5 rounded-lg text-xs font-semibold border border-emerald-500/15" 
+          className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 h-8 px-2 md:px-2.5 rounded-xl text-xs font-bold border border-emerald-500/15 select-none" 
           title="Active Billing Currency"
         >
-          <FaMoneyBillWave size={13} />
-          <span>{currency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : currency}</span>
+          <FaMoneyBillWave size={13} className="opacity-80" />
+          <span className="tracking-wide">
+            {currency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : currency}
+          </span>
         </div>
       </div>
 
-      {/* القسم الخاص بـ: زر القائمة للموبايل + المسار الحركي للعنوان */}
+      {/* 📑 القسم الأيمن (في الواجهة العربية): العناوين والمسار الذكي + زر الموبايل */}
       <div 
-        className="flex items-center gap-3 min-w-0" 
+        className={`flex items-center gap-3 min-w-0 flex-shrink`} 
         style={{ flexDirection: isRtl ? 'row' : 'row-reverse' }}
       >
-        {/* نص المسار الذكي المطور لتجربة SaaS احترافية وعالمية */}
+        {/* المسار الذكي المطور (Breadcrumb) - مع حماية كاملة ضد التمدد العشوائي للنصوص */}
         <div 
-          className="text-slate-400 text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis font-medium"
-          style={{ textAlign: isRtl ? 'right' : 'left' }}
+          className={`text-xs md:text-sm font-medium tracking-wide min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${
+            isRtl ? 'text-right' : 'text-left'
+          }`}
         >
-          {!isMobile && (isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy')} 
-          {!isMobile && <span className="mx-2 text-slate-600">/</span>}
-          {/* إبراز اسم الصفحة الحالية بلون النص الأساسي اللامع */}
-          <span className="text-white font-bold">
+          {/* يختفي المسار الفرعي على الهواتف لترك مساحة كافية للعنوان الأساسي */}
+          <span className="text-slate-400 hidden md:inline">
+            {isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy'}
+          </span> 
+          <span className="mx-2 text-slate-600 hidden md:inline">/</span>
+          
+          {/* إبراز اسم الصفحة المفتوحة حالياً بلون مضيء وتوهج خفيف */}
+          <span className="text-white font-bold bg-white/[0.02] md:bg-transparent px-2.5 py-1 md:p-0 rounded-lg border border-white/5 md:border-none">
             {isRtl ? currentTitle.ar : currentTitle.en}
           </span>
         </div>
 
+        {/* زر الهامبرغر المطور للموبايل بلمسة ذهبية فاخرة */}
         {isMobile && (
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)} 
-            className="bg-white/5 hover:bg-white/10 active:scale-95 border-none p-2 rounded-lg cursor-pointer flex items-center justify-center transition-all"
-            style={{ color: 'var(--gold)' }} // ربط لون زر الهامبرغر بالذهبي الموحد
+            className="bg-white/5 hover:bg-white/10 active:scale-90 text-[var(--gold)] border-none w-9 h-9 rounded-xl cursor-pointer flex items-center justify-center transition-all flex-shrink-0"
+            aria-label="Toggle Sidebar Menu"
           >
-            <FaBars size={16} />
+            <FaBars size={15} />
           </button>
         )}
       </div>
