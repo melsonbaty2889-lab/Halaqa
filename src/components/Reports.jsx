@@ -10,10 +10,12 @@ import {
   FaUserCheck, 
   FaUserTimes, 
   FaEdit, 
-  FaUndo 
+  FaUndo,
+  FaCopy,
+  FaSearch
 } from 'react-icons/fa';
 
-export default function Reports({ students, academyId }) {
+export default function Reports({ students = [], academyId }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
@@ -21,10 +23,12 @@ export default function Reports({ students, academyId }) {
   // تاريخ اليوم كافتراضي لربط التقارير بجلسة الرصد
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // حالات تخزين البيانات والتصفية
+  // حالات تخزين البيانات والتصفية والبحث
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'present' | 'absent'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [copiedId, setCopiedId] = useState(null); // لتتبع أي طالب تم نسخ تقريره مؤخراً
   
   // ذاكرة الإرسال لتتبع الطلاب الذين تم مراسلة أولياء أمورهم اليوم (Session Memory)
   const [sentLogs, setSentLogs] = useState({});
@@ -92,8 +96,8 @@ export default function Reports({ students, academyId }) {
     localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
-  // معالج النصوص الديناميكي (Dynamic Parser) لاستبدال الأقواد بالبيانات الفعلية
-  const generateWhatsAppLink = (student, record) => {
+  // معالج تحويل النصوص الموحد (Unified Parser) لتوليد الرسالة النهائية بدقة فائقة
+  const getParsedMessage = (student, record) => {
     const statusText = () => {
       if (!record) return isRtl ? 'حاضر (افتراضي)' : 'Present (Default)';
       switch (record.status) {
@@ -115,39 +119,65 @@ export default function Reports({ students, academyId }) {
       }
     };
 
-    // استبدال المتغيرات النصية داخل القالب المفتاحى
-    let parsedMessage = messageTemplate
-      .replace('[اسم_الطالب]', student.name || '')
-      .replace('[التاريخ]', selectedDate)
-      .replace('[الحالة]', statusText())
-      .replace('[الحفظ]', record?.memorization || (record?.status === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')))
-      .replace('[المراجعة]', record?.revision || '---')
-      .replace('[الماضي]', record?.distant_revision || '---')
-      .replace('[التقييم]', gradeText())
-      .replace('[الملاحظات]', record?.notes || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
+    // استخدام التعبيرات المنتظمة (Regex) للاستبدال الشامل والعالمي مهما تكرر الوسم بالقالب
+    return messageTemplate
+      .replace(/\[اسم_الطالب\]/g, student.name || '')
+      .replace(/\[التاريخ\]/g, selectedDate)
+      .replace(/\[الحالة\]/g, statusText())
+      .replace(/\[الحفظ\]/g, record?.memorization || (record?.status === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')))
+      .replace(/\[المراجعة\]/g, record?.revision || '---')
+      .replace(/\[الماضي\]/g, record?.distant_revision || '---')
+      .replace(/\[التقييم\]/g, gradeText())
+      .replace(/\[الملاحظات\]/g, record?.notes || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
+  };
 
-    // تنظيف رقم الهاتف (دعم أرقام الهواتف بمصر والدول العربية تلقائياً)
+  // دالة لتوليد رابط الواتساب الجاهز
+  const generateWhatsAppLink = (student, record) => {
+    const parsedMessage = getParsedMessage(student, record);
     let phone = student.parent_phone || '';
     phone = phone.replace(/\s+/g, '').replace(/[+\-]/g, '');
     
-    // إذا كان الرقم يبدأ بـ 01 بمصر، نقوم بإضافة كود الدولة الدولي تلقائياً 20
     if (phone.startsWith('01') && phone.length === 11) {
       phone = '20' + phone;
     }
-
-    // توليد الرابط العالمي المتجاوب للكمبيوتر والموبايل
     return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(parsedMessage)}`;
   };
 
-  // تصفية الطلاب ديناميكياً بناءً على التبويب المختار وعملية رصد الحضور
+  // ميزة التنافسية: دالة النسخ السريع للحافظة بنقرة واحدة
+  const handleCopyToClipboard = (student, record) => {
+    const text = getParsedMessage(student, record);
+    navigator.clipboard.writeText(text);
+    setCopiedId(student.id);
+    markAsSent(student.id); // نعتبره تم إرساله وحفظه تيسيراً للعمل
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // ميزة التنافسية: إدراج التاج التلقائي عند نقر المعلم عليه لتوفير وقت الكتابة
+  const handleTagClick = (tag) => {
+    setMessageTemplate(prev => prev + " " + tag);
+  };
+
+  // تصفية الطلاب ديناميكياً بناءً على التبويب المختار، عملية رصد الحضور، ونص البحث السريع
   const filteredStudents = students.filter(student => {
     const rec = attendanceRecords[student.id];
-    const status = rec?.status || 'present'; // افتراض الحضور إذا لم يرصد بعد
+    const status = rec?.status || 'present';
 
-    if (activeTab === 'present') return status === 'present' || status === 'late';
-    if (activeTab === 'absent') return status === 'absent' || status === 'excused';
-    return true; // تبويب الكل 'all'
+    // فلترة التبويبات
+    let matchesTab = true;
+    if (activeTab === 'present') matchesTab = (status === 'present' || status === 'late');
+    else if (activeTab === 'absent') matchesTab = (status === 'absent' || status === 'excused');
+
+    // فلترة البحث الذكي بالاسم أو الهاتف
+    const matchesSearch = student.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          student.parent_phone?.includes(searchTerm);
+
+    return matchesTab && matchesSearch;
   });
+
+  // حساب مؤشرات الإنجاز والشريط البصري العالمي للتقارير المرسلة اليوم
+  const totalInCurrentTab = filteredStudents.length;
+  const sentInCurrentTab = filteredStudents.filter(s => sentLogs[s.id]).length;
+  const completionPercentage = totalInCurrentTab > 0 ? Math.round((sentInCurrentTab / totalInCurrentTab) * 100) : 0;
 
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif" }}>
@@ -186,12 +216,46 @@ export default function Reports({ students, academyId }) {
           onChange={(e) => setMessageTemplate(e.target.value)}
           style={{ width: '100%', background: '#0F172A', border: '1px solid #233247', color: '#fff', borderRadius: '8px', padding: '12px', fontSize: '13px', outline: 'none', resize: 'vertical', lineHeight: '1.6', boxSizing: 'border-box' }}
         />
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-          {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[التقييم]'].map(tag => (
-            <span key={tag} style={{ background: 'rgba(201, 168, 76, 0.08)', color: C.gold, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', border: '1px solid rgba(201, 168, 76, 0.15)' }}>{tag}</span>
+        {/* التحديث هنا: عند النقر على وسم يتم إضافته تلقائياً وتوسيع القائمة لتشمل كل الميزات الفعالة */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+          {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
+            <span 
+              key={tag} 
+              onClick={() => handleTagClick(tag)}
+              style={{ background: 'rgba(201, 168, 76, 0.08)', color: C.gold, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', border: '1px solid rgba(201, 168, 76, 0.15)', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(201, 168, 76, 0.18)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(201, 168, 76, 0.08)'}
+            >
+              {tag}
+            </span>
           ))}
         </div>
       </div>
+
+      {/* 🔍 شريط البحث الذكي المدمج في التقارير لأداء صاروخي */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#0F172A', padding: '10px 14px', borderRadius: '10px', border: '1px solid #233247', marginBottom: '16px' }}>
+        <FaSearch style={{ color: '#64748b' }} size={14} />
+        <input 
+          type="text"
+          placeholder={isRtl ? "بحث سريع باسم الطالب أو رقم الهاتف..." : "Quick search by name or phone..."}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%', fontSize: '13px' }}
+        />
+      </div>
+
+      {/* 🏆 شريط الإنجاز والمتابعة البصري الفائق والمنافس */}
+      {totalInCurrentTab > 0 && (
+        <div style={{ background: '#111C2A', padding: '12px 16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.02)', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', fontWeight: '700' }}>
+            <span style={{ color: '#94a3b8' }}>📈 {isRtl ? "معدل إنجاز إرسال تقارير القائمة الحالية:" : "Current List Reporting Progress:"}</span>
+            <span style={{ color: C.gold }}>{sentInCurrentTab} {isRtl ? "من" : "of"} {totalInCurrentTab} ({completionPercentage}%)</span>
+          </div>
+          <div style={{ width: '100%', height: '6px', background: '#0F172A', borderRadius: '10px', overflow: 'hidden' }}>
+            <div style={{ width: `${completionPercentage}%`, height: '100%', background: `linear-gradient(90deg, ${C.gold || '#C9A84C'}, #10B981)`, transition: 'width 0.4s ease-out' }} />
+          </div>
+        </div>
+      )}
 
       {/* 🗂️ أزرار التصفية والتبويبات الذكية */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: '#0F172A', padding: '4px', borderRadius: '10px', border: '1px solid #233247' }}>
@@ -208,7 +272,7 @@ export default function Reports({ students, academyId }) {
 
       {/* عرض قائمة الطلاب للتقارير */}
       {loading ? (
-        <div style={{ textItems: 'center', padding: '40px 0', color: '#94a3b8', textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
           <div style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.05)', borderTop: `3px solid ${C.gold}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 10px auto' }}></div>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
           <span>{isRtl ? "جاري تجهيز التقارير الحية..." : "Preparing live reports..."}</span>
@@ -251,9 +315,10 @@ export default function Reports({ students, academyId }) {
                   </div>
 
                   {/* معلومات الأداء السريع في الكرت ليعرف الشيخ ماذا يرسل */}
-                  <div style={{ display: 'flex', gap: '10px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' }}>
-                    <div>{isRtl ? "حفظ:" : "Save:"} <span style={{ color: '#fff' }}>{record?.memorization || '---'}</span></div>
-                    <div>{isRtl ? "تقييم:" : "Grade:"} <span style={{ color: C.gold }}>{record?.daily_grade ? (isRtl ? (record.daily_grade === 'excellent' ? 'ممتاز' : record.daily_grade === 'good' ? 'جيد' : 'يحتاج تركيز') : record.daily_grade) : '---'}</span></div>
+                  <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' }}>
+                    <div>{isRtl ? "حفظ جديد:" : "New Memorization:"} <span style={{ color: '#fff', fontWeight: '600' }}>{record?.memorization || '---'}</span></div>
+                    <div>{isRtl ? "مراجعة:" : "Revision:"} <span style={{ color: '#fff', fontWeight: '600' }}>{record?.revision || '---'}</span></div>
+                    <div>{isRtl ? "تقييم:" : "Grade:"} <span style={{ color: C.gold, fontWeight: '700' }}>{record?.daily_grade ? (isRtl ? (record.daily_grade === 'excellent' ? 'ممتاز ⭐' : record.daily_grade === 'good' ? 'جيد' : 'يحتاج تركيز') : record.daily_grade) : '---'}</span></div>
                   </div>
 
                   {/* إجراءات الإرسال والتحكم الذكي */}
@@ -262,11 +327,32 @@ export default function Reports({ students, academyId }) {
                       <button 
                         onClick={() => resetSentLog(student.id)}
                         title={isRtl ? "إعادة تعيين كغير مرسل" : "Reset as unsent"}
-                        style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: '8px', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: '8px', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
                       >
                         <FaUndo size={12} />
                       </button>
                     )}
+
+                    {/* زر النسخ البديل السريع لحالات الطوارئ والأداء الفائق */}
+                    <button
+                      onClick={() => handleCopyToClipboard(student, record)}
+                      title={isRtl ? "نسخ نص التقرير بالكامل" : "Copy full report text"}
+                      style={{ 
+                        padding: '10px 12px', 
+                        background: copiedId === student.id ? '#10B981' : 'rgba(255,255,255,0.06)', 
+                        border: 'none', 
+                        borderRadius: '8px', 
+                        color: copiedId === student.id ? '#fff' : C.gold || '#C9A84C', 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <FaCopy size={13} />
+                      {copiedId === student.id && <span style={{ fontSize: '10px', marginRight: '4px', marginLeft: '4px', fontWeight: 'bold' }}>{isRtl ? "تم!" : "Copied!"}</span>}
+                    </button>
                     
                     <a 
                       href={generateWhatsAppLink(student, record)}
