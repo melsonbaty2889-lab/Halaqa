@@ -1,7 +1,6 @@
 /* src/components/Sidebar.jsx */
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useTranslation } from 'react-i18next';
 import { 
   FaThLarge, 
   FaUserGraduate, 
@@ -27,7 +26,6 @@ export default function Sidebar({
   setSidebarOpen,
   isMobile,
   isRtl,
-  t,
   userRole,
   trialDaysLeft,
   isTrial,
@@ -37,20 +35,19 @@ export default function Sidebar({
   timezone,
   academyTime
 }) {
-  // 🌟 حالات داخلية مستقلة لحماية كود المكون الأب من الانهيار
+  // 🌟 حالات داخلية مستقلة لحماية المكون من الانهيار وحفظ وضعية القائمة المتقلصة
   const [isSlim, setIsSlim] = useState(() => localStorage.getItem('smart_halaqa_slim') === 'true');
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [activeBranch, setActiveBranch] = useState(isRtl ? "الأكاديمية الرئيسية (الفرع العام)" : "Main Academy (General Branch)");
 
-  // حفظ تفضيلات المستخدم للوضع المصغر تلقائياً لراحة الاستخدام
   useEffect(() => {
     localStorage.setItem('smart_halaqa_slim', isSlim);
   }, [isSlim]);
 
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
 
-  // 🛡️ درع الحماية السحابي لمنع توقف الأزرار عند تحديث سيرفر Vercel
+  // 🛡️ درع الحماية السحابي لمعالجة أخطاء الـ Chunk Rendering على خوادم Vercel
   const handleTabChange = async (tabId) => {
     try {
       setActiveTab(tabId);
@@ -61,7 +58,7 @@ export default function Sidebar({
     }
   };
 
-  // ⌨️ نظام اختصارات الكيبورد العالمي للمحترفين والمدراء (Alt + Number)
+  // ⌨️ نظام اختصارات الكيبورد الاحترافي لمدراء المنصة (Alt + Number)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.altKey && !isMobile) {
@@ -77,39 +74,39 @@ export default function Sidebar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMobile, userRole]);
 
-  // 💎 مصفوفة العناصر المحدثة بالمسميات القرآنية والتربوية الفاخرة المعتمدة
+  // 💎 مصفوفة المسميات المعتمدة والمحصنة من تعارض كاش ملفات الترجمة الخارجية
   const menuItems = [
-    { id: 'dashboard', label: t('dashboard', isRtl ? 'لوحة المتابعة' : 'Overview'), icon: <FaThLarge /> },
-    { id: 'students', label: t('students', isRtl ? 'الطلاب والمحفظون' : 'Students & Instructors'), icon: <FaUserGraduate /> },
-    { id: 'attendance', label: t('attendance', isRtl ? 'الحلقات والتسميع' : 'Halaqat & Recitation'), icon: <FaClipboardCheck /> },
+    { id: 'dashboard', labelAr: 'لوحة المتابعة', labelEn: 'Overview', icon: <FaThLarge /> },
+    { id: 'students', labelAr: 'الطلاب والمحفظون', labelEn: 'Students & Instructors', icon: <FaUserGraduate /> },
+    { id: 'attendance', labelAr: 'الحلقات والتسميع', labelEn: 'Halaqat & Recitation', icon: <FaClipboardCheck /> },
     { 
       id: 'exams', 
-      label: t('exams', isRtl ? 'الإختبارات والشهادات' : 'Assessments & Degrees'), 
+      labelAr: 'الاختبارات والشهادات', 
+      labelEn: 'Assessments & Degrees', 
       icon: <FaGraduationCap />,
       badge: isRtl ? "نشط" : "Live",
       badgeColor: '#10B981'
     },
-    { id: 'reports', label: t('reports', isRtl ? 'حصاد الأداء' : 'Performance Analytics'), icon: <FaChartBar /> },
+    { id: 'reports', labelAr: 'حصاد الأداء', labelEn: 'Performance Analytics', icon: <FaChartBar /> },
     { 
       id: 'payments', 
-      label: t('payments', isRtl ? 'المالية والاشتراكات' : 'Financial Suite'), 
+      labelAr: 'المالية والاشتراكات', 
+      labelEn: 'Financial Suite', 
       icon: <FaMoneyBillWave />,
       badge: "⚡",
       badgeColor: '#FBBF24'
     },
-    { id: 'settings', label: t('settings', isRtl ? 'إعدادات الأكاديمية' : 'Academy Settings'), icon: <FaCog /> },
+    { id: 'settings', labelAr: 'إعدادات الأكاديمية', labelEn: 'Academy Settings', icon: <FaCog /> },
   ];
 
   const filteredItems = isPlatformAdmin 
     ? menuItems.filter(item => item.id === 'dashboard' || item.id === 'settings')
     : menuItems;
 
-  // فروع الأكاديميات الذكية والمبنية للتوسعات المستقبلية (Enterprise Feature)
   const mockBranches = isRtl 
     ? ["الأكاديمية الرئيسية (الفرع العام)", "حلقات البنين والمتميزين", "حلقات البنات والبراعم"]
     : ["Main Academy (General Branch)", "Boys & Premium Halaqas", "Girls & Kids Sections"];
 
-  // تحديد عرض القائمة ديناميكياً بناءً على وضعية الانكماش الحالي
   const sidebarWidth = isMobile ? '280px' : (isSlim ? '78px' : '285px');
 
   return (
@@ -131,18 +128,19 @@ export default function Sidebar({
       transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       boxSizing: 'border-box',
       padding: isSlim && !isMobile ? '24px 10px' : '24px 16px',
-      overflowX: 'visible'
+      overflowX: 'visible',
+      direction: isRtl ? 'rtl' : 'ltr' // إصلاح شامل لمنع مشاكل بتر النصوص من اليسار واليمين وعكس العناصر تلقائياً
     }}>
       
-      {/* 🔄 زر التبديل والطيّ السريع للوضع المصغر (Slim Toggle Button) */}
+      {/* 🔄 زر الطيّ السريع المطور المتوافق مع هندسة الاتجاهات الناتجة */}
       {!isMobile && (
         <button 
           onClick={() => setIsSlim(!isSlim)}
           style={{
             position: 'absolute',
             top: '32px',
-            left: isRtl ? '-14px' : 'auto',
-            right: !isRtl ? '-14px' : 'auto',
+            left: isRtl ? '-13px' : 'auto',
+            right: !isRtl ? '-13px' : 'auto',
             width: '26px',
             height: '26px',
             borderRadius: '50%',
@@ -164,7 +162,7 @@ export default function Sidebar({
         </button>
       )}
 
-      {/* 🏢 الجزء العلوي: مبدل فروع الأكاديميات الذكي والمستقل (Workspace Switcher) */}
+      {/* 🏢 الجزء العلوي: مبدل فروع الأكاديميات التفاعلي السلس */}
       <div style={{ position: 'relative', marginBottom: '18px' }}>
         <div 
           onClick={() => !isSlim && setShowWorkspaceDropdown(!showWorkspaceDropdown)}
@@ -194,8 +192,8 @@ export default function Sidebar({
           </div>
           
           {!isSlim && (
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ minWidth: 0, width: '90%' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <h1 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h1>
@@ -203,12 +201,12 @@ export default function Sidebar({
                   {isPlatformAdmin ? 'Platform Admin' : activeBranch}
                 </span>
               </div>
-              {!isPlatformAdmin && <FaChevronDown size={10} style={{ color: '#6B7280', transition: 'transform 0.2s', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none' }} />}
+              {!isPlatformAdmin && <FaChevronDown size={10} style={{ color: '#6B7280', flexShrink: 0, transition: 'transform 0.2s', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none' }} />}
             </div>
           )}
         </div>
 
-        {/* قائمة فروع الأكاديمية المنسدلة الاحترافية */}
+        {/* المنسدلة الاحترافية للفروع */}
         {showWorkspaceDropdown && !isSlim && (
           <div style={{
             position: 'absolute',
@@ -221,10 +219,9 @@ export default function Sidebar({
             marginTop: '8px',
             boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
             zIndex: 1050,
-            padding: '6px',
-            direction: isRtl ? 'rtl' : 'ltr'
+            padding: '6px'
           }}>
-            <span style={{ display: 'block', padding: '6px 10px', fontSize: '0.68rem', color: '#6B7280', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            <span style={{ display: 'block', padding: '6px 10px', fontSize: '0.68rem', color: '#6B7280', fontWeight: 'bold' }}>
               {isRtl ? 'تبديل فرع الأكاديمية' : 'Switch Workspace Branch'}
             </span>
             {mockBranches.map((branch, i) => (
@@ -257,7 +254,7 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* 🕒 ويدجيت توقيت الأكاديمية الجغرافي والمنطقة الزمنية */}
+      {/* 🕒 ويدجيت توقيت النظام والمناطق الزمنية المباشرة */}
       {!isSlim && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 8px', marginBottom: '20px', opacity: 0.85 }}>
           <span style={{ width: '6px', height: '6px', backgroundColor: '#10B981', borderRadius: '50%', display: 'inline-block' }}></span>
@@ -267,10 +264,10 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* 🔍 مشغل لوحة الأوامر السريعة الاحترافي (Command Palette Trigger Input) */}
+      {/* 🔍 مشغل لوحة الأوامر السريعة الموحد (Command Palette Input Simulator) */}
       <div style={{ marginBottom: '22px', padding: '0 4px' }}>
         <div 
-          onClick={() => console.log("⌨️ Command Palette Triggered via Ctrl+K Simulator")}
+          onClick={() => console.log("⌨️ Command Palette Triggered")}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -286,9 +283,9 @@ export default function Sidebar({
           onMouseEnter={(e) => e.currentTarget.style.borderColor = '#4b5563'}
           onMouseLeave={(e) => e.currentTarget.style.borderColor = '#334155'}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FaSearch size={13} style={{ color: '#6B7280' }} />
-            {!isSlim && <span style={{ fontSize: '0.8rem' }}>{isRtl ? 'بحث سريع...' : 'Quick Command...'}</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <FaSearch size={13} style={{ color: '#6B7280', flexShrink: 0 }} />
+            {!isSlim && <span style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isRtl ? 'بحث سريع...' : 'Quick Command...'}</span>}
           </div>
           {!isSlim && (
             <kbd style={{
@@ -298,13 +295,14 @@ export default function Sidebar({
               padding: '1px 5px',
               fontSize: '0.65rem',
               color: '#64748b',
-              fontFamily: 'monospace'
+              fontFamily: 'monospace',
+              flexShrink: 0
             }}>Ctrl K</kbd>
           )}
         </div>
       </div>
 
-      {/* 🎫 كارت الاشتراك والترقية الذكي المستوحى من [Screenshot_20260701-131736.png] */}
+      {/* 🎫 كارت متابعة أيام الفترة التجريبية وتفعيل النظام المستقر من لقطات الشاشة */}
       {!isPlatformAdmin && (isTrial || !accountActivated) && (
         <div 
           onClick={() => setShowEarlyUpgrade(true)}
@@ -336,22 +334,21 @@ export default function Sidebar({
             alignItems: 'center', 
             justifyContent: isSlim ? 'center' : 'space-between',
             width: '100%',
-            flexDirection: isRtl ? 'row' : 'row-reverse'
+            gap: '6px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: isSlim ? '0' : '10px' }}>
-              <FaClock style={{ color: '#FBBF24', fontSize: '1.05rem' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: isSlim ? '0' : '10px', minWidth: 0 }}>
+              <FaClock style={{ color: '#FBBF24', fontSize: '1.05rem', flexShrink: 0 }} />
               {!isSlim && (
-                <span style={{ fontSize: '0.88rem', color: '#FBBF24', fontWeight: '700' }}>
+                <span style={{ fontSize: '0.85rem', color: '#FBBF24', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {isTrial 
                     ? (isRtl ? `متبقى ${numberFormatter.format(trialDaysLeft || 10)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft || 10)} Trial Days Left`)
                     : (isRtl ? 'تفعيل الأكاديمية' : 'Activate System')}
                 </span>
               )}
             </div>
-            {!isSlim && <FaCrown style={{ color: 'rgba(251, 191, 36, 0.55)', fontSize: '0.9rem' }} />}
+            {!isSlim && <FaCrown style={{ color: 'rgba(251, 191, 36, 0.55)', fontSize: '0.9rem', flexShrink: 0 }} />}
           </div>
 
-          {/* خط التقدم البصري التفاعلي وفحصه للأيام المتبقية */}
           {isTrial && !isSlim && (
             <div style={{ width: '100%', height: '4px', backgroundColor: '#1f2937', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
               <div style={{ 
@@ -364,10 +361,12 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* 🔘 أزرار التنقل السلسة بالاتجاهين مع دعم الـ Badges والـ Tooltips للوضع المصغر */}
+      {/* 🔘 أزرار التنقل الرئيسية المصلحة كلياً من مشاكل المحاذاة والبتر من اليسار */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
         {filteredItems.map((item, index) => {
           const isActive = activeTab === item.id;
+          const displayLabel = isRtl ? item.labelAr : item.labelEn;
+
           return (
             <div
               key={item.id}
@@ -391,10 +390,9 @@ export default function Sidebar({
                   cursor: 'pointer',
                   fontSize: '0.92rem',
                   fontWeight: isActive ? '700' : '500',
-                  textAlign: isRtl ? 'right' : 'left',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: isActive ? (isRtl ? 'inset -4px 0px 0px #FBBF24' : 'inset 4px 0px 0px #FBBF24') : 'none',
-                  flexDirection: isRtl ? 'row' : 'row-reverse'
+                  flexDirection: 'row' // الاعتماد الكامل على التوجيه الفطري اللغوي للحاوية الأب
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -409,25 +407,32 @@ export default function Sidebar({
                   }
                 }}
               >
-                {/* الأيقونة */}
+                {/* الأيقونة الموحدة الثابتة البناء للحفاظ على ترشيد المساحة الحركية */}
                 <span style={{ 
                   fontSize: '1.15rem', 
                   display: 'flex', 
                   alignItems: 'center', 
                   color: isActive ? '#FBBF24' : '#6B7280',
-                  transition: 'color 0.2s'
+                  transition: 'color 0.2s',
+                  flexShrink: 0
                 }}>
                   {item.icon}
                 </span>
 
-                {/* النص البرمجي التفاعلي */}
+                {/* نص المصطلح المعالج والمحمي من البتر الجانبي الخاطئ */}
                 {(!isSlim || isMobile) && (
-                  <span style={{ flex: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                    {item.label}
+                  <span style={{ 
+                    flex: 1, 
+                    whiteSpace: 'nowrap', 
+                    textOverflow: 'ellipsis', 
+                    overflow: 'hidden',
+                    textAlign: isRtl ? 'right' : 'left'
+                  }}>
+                    {displayLabel}
                   </span>
                 )}
 
-                {/* العداد الذكي / الكبسولة التفاعلية (Dynamic Badge) */}
+                {/* الكبسولة التفاعلية (Badges) */}
                 {item.badge && (!isSlim || isMobile) && (
                   <span style={{
                     fontSize: '0.68rem',
@@ -436,14 +441,15 @@ export default function Sidebar({
                     backgroundColor: item.badgeColor,
                     color: '#000',
                     fontWeight: 'bold',
-                    lineHeight: '1'
+                    lineHeight: '1',
+                    flexShrink: 0
                   }}>
                     {item.badge}
                   </span>
                 )}
               </button>
 
-              {/* 💡 نظام التلميحات الفاخر الفوري للوضع المصغر (Micro UI Hover Floating Tooltip) */}
+              {/* 💡 نظام التلميحات العائمة (Tooltips) عند انكماش القائمة الجانبية في الوضع المكتبي */}
               {isSlim && !isMobile && hoveredItem === index && (
                 <div style={{
                   position: 'absolute',
@@ -461,10 +467,9 @@ export default function Sidebar({
                   boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
                   border: '1px solid #334155',
                   zIndex: 2000,
-                  pointerEvents: 'none',
-                  animation: 'fadeIn 0.15s ease'
+                  pointerEvents: 'none'
                 }}>
-                  {item.label}
+                  {displayLabel}
                 </div>
               )}
             </div>
@@ -472,7 +477,7 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* 🔴 الجزء السفلي: زر تسجيل الخروج المحمي تزامناً مع أبعاد الأيقونات والوضع المصغر */}
+      {/* 🔴 الجزء السفلي: زر تسجيل الخروج متناسق الأبعاد مع التعديل الهيكلي الجديد */}
       <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1f2937' }}>
         <button
           onClick={() => supabase.auth.signOut()}
@@ -490,15 +495,14 @@ export default function Sidebar({
             cursor: 'pointer',
             fontSize: '0.92rem',
             fontWeight: '600',
-            textAlign: isRtl ? 'right' : 'left',
             transition: 'all 0.2s',
-            flexDirection: isRtl ? 'row' : 'row-reverse'
+            flexDirection: 'row'
           }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
-          <FaSignOutAlt style={{ fontSize: '1.15rem' }} />
-          {(!isSlim || isMobile) && <span>{isRtl ? 'تسجيل الخروج' : 'Log Out'}</span>}
+          <FaSignOutAlt style={{ fontSize: '1.15rem', flexShrink: 0 }} />
+          {(!isSlim || isMobile) && <span style={{ flex: 1, textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'تسجيل الخروج' : 'Log Out'}</span>}
         </button>
       </div>
 
