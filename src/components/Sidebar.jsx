@@ -74,6 +74,50 @@ export default function Sidebar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMobile, userRole]);
 
+  // 🔍 مشغل ومحاكي لوحة الأوامر السريعة الشامل عند النقر بالماوس أو الموبايل
+  const handleSearchClick = () => {
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      code: 'KeyK',
+      keyCode: 75,
+      ctrlKey: true,
+      metaKey: true,
+      bubbles: true,
+      cancelable: true
+    });
+    window.dispatchEvent(event);
+  };
+
+  // 🌙 دالة المعالجة الحصينة لتوليد التاريخ الهجري ومنع أخطاء الـ ICU والـ BC في المتصفحات
+  const getSafeHijriDate = () => {
+    try {
+      if (isRtl) {
+        return new Date().toLocaleDateString('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      
+      // استخراج الأرقام الصافية لتجنب ترجمة المتصفح الخاطئة للأشهر الهجرية إلى ميلادية بالإنجليزية
+      const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic', {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric'
+      }).formatToParts(new Date());
+      
+      const day = parts.find(p => p.type === 'day')?.value || '';
+      const monthNum = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
+      const year = parts.find(p => p.type === 'year')?.value || '';
+      
+      const hijriMonthsEn = [
+        "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+        "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+        "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+      ];
+      
+      return `${hijriMonthsEn[monthNum - 1] || 'Muharram'} ${day}, ${year} AH`;
+    } catch (e) {
+      return isRtl ? "١٦ محرم ١٤٤٨ هـ" : "16 Muharram 1448 AH";
+    }
+  };
+
   // 💎 مصفوفة المسميات المعتمدة والمحصنة من تعارض كاش ملفات الترجمة الخارجية
   const menuItems = [
     { id: 'dashboard', labelAr: 'لوحة المتابعة', labelEn: 'Overview', icon: <FaThLarge /> },
@@ -129,7 +173,7 @@ export default function Sidebar({
       boxSizing: 'border-box',
       padding: isSlim && !isMobile ? '24px 10px' : '24px 16px',
       overflowX: 'visible',
-      direction: isRtl ? 'rtl' : 'ltr' // إصلاح شامل لمنع مشاكل بتر النصوص من اليسار واليمين وعكس العناصر تلقائياً
+      direction: isRtl ? 'rtl' : 'ltr'
     }}>
       
       {/* 🔄 زر الطيّ السريع المطور المتوافق مع هندسة الاتجاهات الناتجة */}
@@ -162,8 +206,8 @@ export default function Sidebar({
         </button>
       )}
 
-      {/* 🏢 الجزء العلوي: مبدل فروع الأكاديميات التفاعلي السلس */}
-      <div style={{ position: 'relative', marginBottom: '18px' }}>
+      {/* 🏢 الجزء العلوي الثابت: مبدل فروع الأكاديميات التفاعلي السلس */}
+      <div style={{ position: 'relative', marginBottom: '18px', flexShrink: 0 }}>
         <div 
           onClick={() => !isSlim && setShowWorkspaceDropdown(!showWorkspaceDropdown)}
           style={{ 
@@ -254,267 +298,256 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* 🕒 ويدجيت توقيت النظام والمناطق الزمنية والتاريخ المباشر بالتوزيع الرأسي المتدرج */}
-      {!isSlim && (
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '5px', 
-          padding: '0 8px', 
-          marginBottom: '22px', 
-          opacity: 0.9 
-        }}>
-          {/* 1. التوقيت والمنطقة الزمنية */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '6px', height: '6px', backgroundColor: '#10B981', borderRadius: '50%', display: 'inline-block' }}></span>
-            <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
-              {timezone?.split('/')[1] || 'UTC'} : {academyTime || '--:--'}
-            </span>
-          </div>
-          
-          {/* 2. التاريخ الميلادي */}
-          <div style={{ 
-            fontSize: '0.72rem', 
-            color: '#9CA3AF', 
-            paddingRight: isRtl ? '12px' : '0',
-            paddingLeft: !isRtl ? '12px' : '0',
-            marginTop: '2px',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}>
-            <span>📅 </span>
-            {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </div>
+      {/* 📜 حاوية المحتوى المرن القابل للتمرير: تحمي العناصر وتضمن بقاء زر خروج مرئياً دائماً على الموبايل */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'visible',
+        display: 'flex',
+        flexDirection: 'column',
+        scrollbarWidth: 'none', // إخفاء الشريط لمتصفحات Firefox
+        msOverflowStyle: 'none' // إخفاء لمتصفحات IE
+      }}>
+        {/* إخفاء شريط التمرير لمتصفحات Webkit (Chrome/Safari) */}
+        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
 
-          {/* 3. التاريخ الهجري المميز */}
-          <div style={{ 
-            fontSize: '0.72rem', 
-            color: '#FBBF24', 
-            fontWeight: '500',
-            paddingRight: isRtl ? '12px' : '0',
-            paddingLeft: !isRtl ? '12px' : '0',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}>
-            <span>🌙 </span>
-            {new Date().toLocaleDateString(isRtl ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' })}
+        {/* 🕒 ويدجيت توقيت النظام والمناطق الزمنية المباشرة مع التواريخ المعدلة */}
+        {!isSlim && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '0 8px', marginBottom: '20px', opacity: 0.85, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '6px', height: '6px', backgroundColor: '#10B981', borderRadius: '50%', display: 'inline-block' }}></span>
+              <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
+                {timezone?.split('/')[1] || 'UTC'} : {academyTime || '--:--'}
+              </span>
+            </div>
+            
+            {/* التاريخ الميلادي المنسق */}
+            <div style={{ fontSize: '0.72rem', color: '#9CA3AF', paddingRight: isRtl ? '12px' : '0', paddingLeft: !isRtl ? '12px' : '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span>📅 </span>
+              {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+
+            {/* التاريخ الهجري المحمي والمنقح من الأخطاء والـ BC */}
+            <div style={{ fontSize: '0.72rem', color: '#FBBF24', fontWeight: '500', paddingRight: isRtl ? '12px' : '0', paddingLeft: !isRtl ? '12px' : '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span>🌙 </span>
+              {getSafeHijriDate()}
+            </div>
+          </div>
+        )}
+
+        {/* 🔍 مشغل لوحة الأوامر السريعة الموحد التفاعلي */}
+        <div style={{ marginBottom: '22px', padding: '0 4px', flexShrink: 0 }}>
+          <div 
+            onClick={handleSearchClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: isSlim ? 'center' : 'space-between',
+              padding: '10px 12px',
+              backgroundColor: '#1e293b',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              color: '#9CA3AF',
+              transition: 'border 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#4b5563'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#334155'}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+              <FaSearch size={13} style={{ color: '#6B7280', flexShrink: 0 }} />
+              {!isSlim && <span style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isRtl ? 'بحث سريع...' : 'Quick Command...'}</span>}
+            </div>
+            {!isSlim && (
+              <kbd style={{
+                background: '#0f172a',
+                border: '1px solid #475569',
+                borderRadius: '4px',
+                padding: '1px 5px',
+                fontSize: '0.65rem',
+                color: '#64748b',
+                fontFamily: 'monospace',
+                flexShrink: 0
+              }}>Ctrl K</kbd>
+            )}
           </div>
         </div>
-      )}
 
-      {/* 🔍 مشغل لوحة الأوامر السريعة الموحد (Command Palette Input Simulator) */}
-      <div style={{ marginBottom: '22px', padding: '0 4px' }}>
-        <div 
-          onClick={() => console.log("⌨️ Command Palette Triggered")}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: isSlim ? 'center' : 'space-between',
-            padding: '10px 12px',
-            backgroundColor: '#1e293b',
-            border: '1px solid #334155',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            color: '#9CA3AF',
-            transition: 'border 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.borderColor = '#4b5563'}
-          onMouseLeave={(e) => e.currentTarget.style.borderColor = '#334155'}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-            <FaSearch size={13} style={{ color: '#6B7280', flexShrink: 0 }} />
-            {!isSlim && <span style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isRtl ? 'بحث سريع...' : 'Quick Command...'}</span>}
-          </div>
-          {!isSlim && (
-            <kbd style={{
-              background: '#0f172a',
-              border: '1px solid #475569',
-              borderRadius: '4px',
-              padding: '1px 5px',
-              fontSize: '0.65rem',
-              color: '#64748b',
-              fontFamily: 'monospace',
+        {/* 🎫 كارت متابعة أيام الفترة التجريبية وتفعيل النظام المستقر */}
+        {!isPlatformAdmin && (isTrial || !accountActivated) && (
+          <div 
+            onClick={() => setShowEarlyUpgrade(true)}
+            style={{
+              background: 'linear-gradient(145deg, rgba(217, 119, 6, 0.12) 0%, rgba(17, 24, 39, 0.95) 100%)',
+              border: '1px solid rgba(217, 119, 6, 0.45)',
+              borderRadius: '12px',
+              padding: isSlim ? '10px 6px' : '14px',
+              marginBottom: '24px',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: isSlim ? 'center' : 'stretch',
+              justifyContent: 'center',
               flexShrink: 0
-            }}>Ctrl K</kbd>
-          )}
-        </div>
-      </div>
-
-      {/* 🎫 كارت متابعة أيام الفترة التجريبية وتفعيل النظام المستقر من لقطات الشاشة */}
-      {!isPlatformAdmin && (isTrial || !accountActivated) && (
-        <div 
-          onClick={() => setShowEarlyUpgrade(true)}
-          style={{
-            background: 'linear-gradient(145deg, rgba(217, 119, 6, 0.12) 0%, rgba(17, 24, 39, 0.95) 100%)',
-            border: '1px solid rgba(217, 119, 6, 0.45)',
-            borderRadius: '12px',
-            padding: isSlim ? '10px 6px' : '14px',
-            marginBottom: '24px',
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: isSlim ? 'center' : 'stretch',
-            justifyContent: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#FBBF24';
-            e.currentTarget.style.boxShadow = '0 6px 22px rgba(251, 191, 36, 0.18)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(217, 119, 6, 0.45)';
-            e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-          }}
-        >
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: isSlim ? 'center' : 'space-between',
-            width: '100%',
-            gap: '6px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: isSlim ? '0' : '10px', minWidth: 0 }}>
-              <FaClock style={{ color: '#FBBF24', fontSize: '1.05rem', flexShrink: 0 }} />
-              {!isSlim && (
-                <span style={{ fontSize: '0.85rem', color: '#FBBF24', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {isTrial 
-                    ? (isRtl ? `متبقى ${numberFormatter.format(trialDaysLeft || 10)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft || 10)} Trial Days Left`)
-                    : (isRtl ? 'تفعيل الأكاديمية' : 'Activate System')}
-                </span>
-              )}
-            </div>
-            {!isSlim && <FaCrown style={{ color: 'rgba(251, 191, 36, 0.55)', fontSize: '0.9rem', flexShrink: 0 }} />}
-          </div>
-
-          {isTrial && !isSlim && (
-            <div style={{ width: '100%', height: '4px', backgroundColor: '#1f2937', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
-              <div style={{ 
-                width: `${Math.min(100, ((trialDaysLeft || 10) / 14) * 100)}%`, 
-                height: '100%', 
-                backgroundColor: '#FBBF24'
-              }}></div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 🔘 أزرار التنقل الرئيسية المصلحة كلياً من مشاكل المحاذاة والبتر من اليسار */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-        {filteredItems.map((item, index) => {
-          const isActive = activeTab === item.id;
-          const displayLabel = isRtl ? item.labelAr : item.labelEn;
-
-          return (
-            <div
-              key={item.id}
-              onMouseEnter={() => setHoveredItem(index)}
-              onMouseLeave={() => setHoveredItem(null)}
-              style={{ position: 'relative' }}
-            >
-              <button
-                onClick={() => handleTabChange(item.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: isSlim && !isMobile ? 'center' : 'flex-start',
-                  gap: isSlim && !isMobile ? '0' : '14px',
-                  width: '100%',
-                  padding: '12px 16px',
-                  backgroundColor: isActive ? 'rgba(251, 191, 36, 0.08)' : 'transparent',
-                  color: isActive ? '#FBBF24' : '#9CA3AF',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.92rem',
-                  fontWeight: isActive ? '700' : '500',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: isActive ? (isRtl ? 'inset -4px 0px 0px #FBBF24' : 'inset 4px 0px 0px #FBBF24') : 'none',
-                  flexDirection: 'row'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.color = '#FFF';
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.color = '#9CA3AF';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                <span style={{ 
-                  fontSize: '1.15rem', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  color: isActive ? '#FBBF24' : '#6B7280',
-                  transition: 'color 0.2s',
-                  flexShrink: 0
-                }}>
-                  {item.icon}
-                </span>
-
-                {(!isSlim || isMobile) && (
-                  <span style={{ 
-                    flex: 1, 
-                    whiteSpace: 'nowrap', 
-                    textOverflow: 'ellipsis', 
-                    overflow: 'hidden',
-                    textAlign: isRtl ? 'right' : 'left'
-                  }}>
-                    {displayLabel}
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#FBBF24';
+              e.currentTarget.style.boxShadow = '0 6px 22px rgba(251, 191, 36, 0.18)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(217, 119, 6, 0.45)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+            }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: isSlim ? 'center' : 'space-between',
+              width: '100%',
+              gap: '6px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isSlim ? '0' : '10px', minWidth: 0 }}>
+                <FaClock style={{ color: '#FBBF24', fontSize: '1.05rem', flexShrink: 0 }} />
+                {!isSlim && (
+                  <span style={{ fontSize: '0.85rem', color: '#FBBF24', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {isTrial 
+                      ? (isRtl ? `متبقى ${numberFormatter.format(trialDaysLeft || 10)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft || 10)} Trial Days Left`)
+                      : (isRtl ? 'تفعيل الأكاديمية' : 'Activate System')}
                   </span>
                 )}
+              </div>
+              {!isSlim && <FaCrown style={{ color: 'rgba(251, 191, 36, 0.55)', fontSize: '0.9rem', flexShrink: 0 }} />}
+            </div>
 
-                {item.badge && (!isSlim || isMobile) && (
-                  <span style={{
-                    fontSize: '0.68rem',
-                    padding: '2px 7px',
-                    borderRadius: '10px',
-                    backgroundColor: item.badgeColor,
-                    color: '#000',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
+            {isTrial && !isSlim && (
+              <div style={{ width: '100%', height: '4px', backgroundColor: '#1f2937', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
+                <div style={{ 
+                  width: `${Math.min(100, ((trialDaysLeft || 10) / 14) * 100)}%`, 
+                  height: '100%', 
+                  backgroundColor: '#FBBF24'
+                }}></div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 🔘 أزرار التنقل الرئيسية المصلحة كلياً */}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          {filteredItems.map((item, index) => {
+            const isActive = activeTab === item.id;
+            const displayLabel = isRtl ? item.labelAr : item.labelEn;
+
+            return (
+              <div
+                key={item.id}
+                onMouseEnter={() => setHoveredItem(index)}
+                onMouseLeave={() => setHoveredItem(null)}
+                style={{ position: 'relative' }}
+              >
+                <button
+                  onClick={() => handleTabChange(item.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: isSlim && !isMobile ? 'center' : 'flex-start',
+                    gap: isSlim && !isMobile ? '0' : '14px',
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: isActive ? 'rgba(251, 191, 36, 0.08)' : 'transparent',
+                    color: isActive ? '#FBBF24' : '#9CA3AF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.92rem',
+                    fontWeight: isActive ? '700' : '500',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isActive ? (isRtl ? 'inset -4px 0px 0px #FBBF24' : 'inset 4px 0px 0px #FBBF24') : 'none',
+                    flexDirection: 'row'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = '#FFF';
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = '#9CA3AF';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <span style={{ 
+                    fontSize: '1.15rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    color: isActive ? '#FBBF24' : '#6B7280',
+                    transition: 'color 0.2s',
                     flexShrink: 0
                   }}>
-                    {item.badge}
+                    {item.icon}
                   </span>
+
+                  {(!isSlim || isMobile) && (
+                    <span style={{ 
+                      flex: 1, 
+                      whiteSpace: 'nowrap', 
+                      textOverflow: 'ellipsis', 
+                      overflow: 'hidden',
+                      textAlign: isRtl ? 'right' : 'left'
+                    }}>
+                      {displayLabel}
+                    </span>
+                  )}
+
+                  {item.badge && (!isSlim || isMobile) && (
+                    <span style={{
+                      fontSize: '0.68rem',
+                      padding: '2px 7px',
+                      borderRadius: '10px',
+                      backgroundColor: item.badgeColor,
+                      color: '#000',
+                      fontWeight: 'bold',
+                      lineHeight: '1',
+                      flexShrink: 0
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+
+                {isSlim && !isMobile && hoveredItem === index && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    left: isRtl ? 'auto' : '85px',
+                    right: isRtl ? '85px' : 'auto',
+                    backgroundColor: '#1f2937',
+                    color: '#FFF',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                    border: '1px solid #334155',
+                    zIndex: 2000,
+                    pointerEvents: 'none'
+                  }}>
+                    {displayLabel}
+                  </div>
                 )}
-              </button>
+              </div>
+            );
+          })}
+        </nav>
+      </div>
 
-              {isSlim && !isMobile && hoveredItem === index && (
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  left: isRtl ? 'auto' : '85px',
-                  right: isRtl ? '85px' : 'auto',
-                  backgroundColor: '#1f2937',
-                  color: '#FFF',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontSize: '0.8rem',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                  border: '1px solid #334155',
-                  zIndex: 2000,
-                  pointerEvents: 'none'
-                }}>
-                  {displayLabel}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
-
-      {/* 🔴 الجزء السفلي: زر تسجيل الخروج متناسق الأبعاد مع التعديل الهيكلي الجديد */}
-      <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1f2937' }}>
+      {/* 🔴 الجزء السفلي الثابت والمستقر: زر تسجيل الخروج يظهر الآن بثبات تام في جميع الأجهزة والقياسات */}
+      <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1f2937', flexShrink: 0 }}>
         <button
           onClick={() => supabase.auth.signOut()}
           style={{
