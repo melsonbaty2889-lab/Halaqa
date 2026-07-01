@@ -95,7 +95,6 @@ export default function Sidebar({
         return new Date().toLocaleDateString('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
       }
       
-      // استخراج الأرقام الصافية لتجنب ترجمة المتصفح الخاطئة للأشهر الهجرية إلى ميلادية بالإنجليزية
       const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic', {
         day: 'numeric',
         month: 'numeric',
@@ -206,95 +205,209 @@ export default function Sidebar({
         </button>
       )}
 
-      {/* 🏢 الجزء العلوي الثابت: مبدل فروع الأكاديميات التفاعلي السلس */}
-      <div style={{ position: 'relative', marginBottom: '18px', flexShrink: 0 }}>
+      {/* 🏢 الجزء العلوي المطور: مبدل فروع الأكاديميات التفاعلي الفاخر ذو التصميم الحديث والشعار الذكي الجديد */}
+      <div style={{ position: 'relative', marginBottom: '20px', flexShrink: 0 }}>
         <div 
-          onClick={() => !isSlim && setShowWorkspaceDropdown(!showWorkspaceDropdown)}
+          onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '12px', 
-            padding: '6px',
-            borderRadius: '8px',
-            cursor: isSlim ? 'default' : 'pointer',
-            backgroundColor: showWorkspaceDropdown ? 'rgba(255,255,255,0.03)' : 'transparent',
-            transition: 'background 0.2s'
+            padding: '8px',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            backgroundColor: showWorkspaceDropdown ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.01)',
+            border: '1px solid',
+            borderColor: showWorkspaceDropdown ? 'rgba(251, 191, 36, 0.2)' : 'transparent',
+            transition: 'all 0.2s ease-in-out'
+          }}
+          onMouseEnter={(e) => {
+            if (!showWorkspaceDropdown) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
+          }}
+          onMouseLeave={(e) => {
+            if (!showWorkspaceDropdown) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.01)';
           }}
         >
+          {/* 👑 حاوية الشعار الاحترافية الحاضنة لـ SVG الحلقة الذكية المضيء ومؤشر الاتصال */}
           <div style={{ 
             width: '42px', 
             height: '42px', 
-            background: 'linear-gradient(135deg, #FBBF24 0%, #D97706 100%)', 
+            background: '#1f2937', 
             borderRadius: '10px', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
-            flexShrink: 0
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            flexShrink: 0,
+            position: 'relative',
+            overflow: 'visible'
           }}>
-            <span style={{ color: '#000', fontWeight: '900', fontSize: '1.25rem' }}>ح</span>
+            {/* 💎 شعار الـ SVG الذكي الهندسي الفاخر */}
+            <svg 
+              viewBox="0 0 100 100" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: '100%', height: '100%', transform: 'scale(1.15)' }}
+            >
+              <defs>
+                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFF" />
+                  <stop offset="60%" stopColor="#FBBF24" />
+                  <stop offset="100%" stopColor="#D97706" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <circle cx="50" cy="52" r="38" stroke="rgba(255,255,255,0.07)" strokeWidth="3" strokeDasharray="6 4" />
+              <path 
+                d="M72 32C66 24 55 20 44 23C29 27 18 41 20 57C22 73 37 84 53 82C67 80 78 68 78 54C78 46 72 39 64 39C54 39 49 46 42 46C36 46 32 41 34 34C36 27 45 25 54 27" 
+                stroke="url(#logoGrad)" 
+                strokeWidth="7.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                style={{ filter: 'drop-shadow(0px 2px 8px rgba(217, 119, 6, 0.3))' }}
+              />
+              <circle cx="72" cy="32" r="5" fill="#FFF" filter="url(#glow)" />
+              <circle cx="72" cy="32" r="2.5" fill="#D97706" />
+            </svg>
+
+            {/* نقطة الاتصال الخضراء الذكية النشطة */}
+            <span style={{
+              position: 'absolute',
+              bottom: '-2px',
+              right: isRtl ? '-2px' : 'auto',
+              left: !isRtl ? '-2px' : 'auto',
+              width: '10px',
+              height: '10px',
+              backgroundColor: '#10B981',
+              borderRadius: '50%',
+              border: '2px solid #111827',
+              zIndex: 5
+            }}></span>
           </div>
           
           {!isSlim && (
             <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <h1 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h1 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.3px' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h1>
-                <span style={{ fontSize: '0.72rem', color: '#9CA3AF', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ fontSize: '0.75rem', color: '#9CA3AF', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
                   {isPlatformAdmin ? 'Platform Admin' : activeBranch}
                 </span>
               </div>
-              {!isPlatformAdmin && <FaChevronDown size={10} style={{ color: '#6B7280', flexShrink: 0, transition: 'transform 0.2s', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none' }} />}
+              {!isPlatformAdmin && (
+                <FaChevronDown 
+                  size={12} 
+                  style={{ 
+                    color: showWorkspaceDropdown ? '#FBBF24' : '#6B7280', 
+                    flexShrink: 0, 
+                    transition: 'transform 0.25s ease, color 0.2s', 
+                    transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none' 
+                  }} 
+                />
+              )}
             </div>
           )}
         </div>
 
-        {/* المنسدلة الاحترافية للفروع */}
-        {showWorkspaceDropdown && !isSlim && (
+        {/* المنسدلة الاحترافية الفاخرة للفروع - تدعم وضع الانكماش Slim Mode كـ Popover جانبي */}
+        {showWorkspaceDropdown && (
           <div style={{
             position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
+            top: isSlim && !isMobile ? '0' : '100%',
+            left: isSlim && !isMobile ? (isRtl ? 'auto' : '82px') : '0',
+            right: isSlim && !isMobile ? (isRtl ? '82px' : 'auto') : '0',
+            width: isSlim && !isMobile ? '240px' : '100%',
             backgroundColor: '#1f2937',
             border: '1px solid #334155',
-            borderRadius: '10px',
-            marginTop: '8px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            borderRadius: '12px',
+            marginTop: isSlim && !isMobile ? '0' : '8px',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.4)',
             zIndex: 1050,
-            padding: '6px'
+            padding: '8px',
+            backdropFilter: 'blur(8px)'
           }}>
-            <span style={{ display: 'block', padding: '6px 10px', fontSize: '0.68rem', color: '#6B7280', fontWeight: 'bold' }}>
-              {isRtl ? 'تبديل فرع الأكاديمية' : 'Switch Workspace Branch'}
-            </span>
-            {mockBranches.map((branch, i) => (
-              <div 
-                key={i}
-                onClick={() => {
-                  setActiveBranch(branch);
-                  setShowWorkspaceDropdown(false);
-                }}
-                style={{
-                  padding: '10px',
-                  fontSize: '0.82rem',
-                  color: activeBranch === branch ? '#FBBF24' : '#E2E8F0',
-                  backgroundColor: activeBranch === branch ? 'rgba(251, 191, 36, 0.08)' : 'transparent',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: activeBranch === branch ? 'bold' : 'normal'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = activeBranch === branch ? 'rgba(251, 191, 36, 0.08)' : 'transparent'}
-              >
-                <FaExchangeAlt size={10} style={{ opacity: activeBranch === branch ? 1 : 0.3 }} />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{branch}</span>
-              </div>
-            ))}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              padding: '6px 10px 10px 10px',
+              borderBottom: '1px solid #334155',
+              marginBottom: '6px'
+            }}>
+              <span style={{ fontSize: '0.72rem', color: '#9CA3AF', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {isRtl ? 'تبديل فرع الأكاديمية' : 'Academy Workspaces'}
+              </span>
+              <span style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', color: '#FBBF24', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                {mockBranches.length} {isRtl ? 'فروع' : 'Branches'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {mockBranches.map((branch, i) => {
+                const isSelected = activeBranch === branch;
+                return (
+                  <div 
+                    key={i}
+                    onClick={() => {
+                      if (!isPlatformAdmin) {
+                        setActiveBranch(branch);
+                      }
+                      setShowWorkspaceDropdown(false);
+                    }}
+                    style={{
+                      padding: '10px 12px',
+                      fontSize: '0.85rem',
+                      color: isSelected ? '#FBBF24' : '#E2E8F0',
+                      backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.06)' : 'transparent',
+                      borderLeft: !isRtl && isSelected ? '3px solid #FBBF24' : 'none',
+                      borderRight: isRtl && isSelected ? '3px solid #FBBF24' : 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontWeight: isSelected ? '700' : '500',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = isSelected ? 'rgba(251, 191, 36, 0.09)' : 'rgba(255,255,255,0.03)';
+                      if(!isSelected) e.currentTarget.style.color = '#FFF';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = isSelected ? 'rgba(251, 191, 36, 0.06)' : 'transparent';
+                      if(!isSelected) e.currentTarget.style.color = '#E2E8F0';
+                    }}
+                  >
+                    <FaExchangeAlt 
+                      size={11} 
+                      style={{ 
+                        color: isSelected ? '#FBBF24' : '#6B7280', 
+                        opacity: isSelected ? 1 : 0.4,
+                        transform: isSelected ? 'scale(1.1)' : 'none',
+                        transition: 'transform 0.2s'
+                      }} 
+                    />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {branch}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+        )}
+
+        {/* طبقة نقر خلفية لحماية وإغلاق القائمة المنسدلة عند النقر بالخارج */}
+        {showWorkspaceDropdown && (
+          <div 
+            onClick={() => setShowWorkspaceDropdown(false)}
+            style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0, zIndex: 1040, background: 'transparent' }}
+          />
         )}
       </div>
 
@@ -305,10 +418,9 @@ export default function Sidebar({
         overflowX: 'visible',
         display: 'flex',
         flexDirection: 'column',
-        scrollbarWidth: 'none', // إخفاء الشريط لمتصفحات Firefox
-        msOverflowStyle: 'none' // إخفاء لمتصفحات IE
+        scrollbarWidth: 'none', 
+        msOverflowStyle: 'none' 
       }}>
-        {/* إخفاء شريط التمرير لمتصفحات Webkit (Chrome/Safari) */}
         <style>{`div::-webkit-scrollbar { display: none; }`}</style>
 
         {/* 🕒 ويدجيت توقيت النظام والمناطق الزمنية المباشرة مع التواريخ المعدلة */}
