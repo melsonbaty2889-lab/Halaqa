@@ -28,10 +28,15 @@ export default function Payments({ students, academyId }) {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
 
-  // States الخاصة بنافذة الواتساب الاحترافية الجديدة
+  // أنظمة الفلترة والبحث المتقدمة
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // all | paid | pending
+
+  // نافذة الواتساب الاحترافية ونبرة الرسائل الدولية
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [selectedStudentForModal, setSelectedStudentForModal] = useState(null);
+  const [msgTone, setMsgTone] = useState('friendly'); // friendly | official
 
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
@@ -58,16 +63,45 @@ export default function Payments({ students, academyId }) {
     fetchPayments();
   }, [selectedMonth, academyId]);
 
-  const handleTogglePayment = async (studentId, currentRecord) => {
+  // منطق التحصيل المرن مع دعم الدفع الجزئي
+  const handleTogglePayment = async (studentId, currentRecord, expectedAmount) => {
     setActionLoading(studentId);
-    const isPaid = currentRecord?.status === 'مدفوع';
+    const isPaid = currentRecord?.status === 'مدفوع' || currentRecord?.status === 'مدفوع جزئياً';
+    
+    let status = 'غير مدفوع';
+    let amount = 0;
+
+    if (!isPaid) {
+      const promptMsg = translateText(
+        'enterAmountPrompt',
+        `أدخل المبلغ المراد تحصيله (قيمة الاشتراك المستهدفة: ${expectedAmount}):`,
+        `Enter amount to collect (Target subscription fee: ${expectedAmount}):`
+      );
+      const inputAmount = window.prompt(promptMsg, expectedAmount);
+      
+      if (inputAmount === null) {
+        setActionLoading(null);
+        return; // إلغاء العملية الإدخال
+      }
+      
+      const parsedAmount = parseFloat(inputAmount);
+      if (isNaN(parsedAmount) || parsedAmount < 0) {
+        alert(translateText('invalidAmount', 'الرجاء إدخال مبلغ صحيح', 'Please enter a valid amount'));
+        setActionLoading(null);
+        return;
+      }
+
+      amount = parsedAmount;
+      status = parsedAmount >= expectedAmount ? 'مدفوع' : parsedAmount > 0 ? 'مدفوع جزئياً' : 'غير مدفوع';
+    }
+
     const payload = {
       ...(currentRecord?.id ? { id: currentRecord.id } : {}),
       student_id: studentId,
       academy_id: academyId,
       month: selectedMonth,
-      amount: isPaid ? 0 : DEFAULT_SUBSCRIPTION_AMOUNT,
-      status: isPaid ? 'غير مدفوع' : 'مدفوع'
+      amount: amount,
+      status: status
     };
 
     const { data, error } = await supabase.from('payments').upsert(payload).select();
@@ -76,116 +110,235 @@ export default function Payments({ students, academyId }) {
     setActionLoading(null);
   };
 
-  // تحضير فتح النافذة المنبثقة المخصصة للواتساب بدلاً من Prompt المتصفح
+  // محرك إنشاء رسائل الواتساب متعدد الأنماط والنبرات دولياً
+  const generateWhatsAppMessage = (student, currentRecord, tone, lang) => {
+    const isRtlLang = lang === 'ar';
+    const [year, month] = selectedMonth.split('-');
+    const formattedMonth = `${month}/${year}`;
+    const expectedAmount = student.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+    const currency = student.currency || (isRtlLang ? 'ج.م' : 'EGP');
+    
+    const isPaid = currentRecord?.status === 'مدفوع';
+    const isPartial = currentRecord?.status === 'مدفوع جزئياً';
+    const paidAmount = currentRecord?.amount || 0;
+    const remainingAmount = expectedAmount - paidAmount;
+
+    if (isPaid) {
+      return isRtlLang
+        ? `السلام عليكم ورحمة الله وبركاته،\nنود أن نشكركم على سداد اشتراك الطالب (${student.name}) لشهر (${formattedMonth}).\nبارك الله فيكم وفي جهودكم مكللة بالنجاح. ✨\n— إدارة الأكاديمية`
+        : `Peace be upon you,\nWe would like to thank you for paying the subscription for student (${student.name}) for the month of (${formattedMonth}).\nThank you for your support! ✨\n— Academy Management`;
+    }
+
+    if (isPartial) {
+      return isRtlLang
+        ? `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم بخصوص المتبقي من اشتراك الطالب (${student.name}) لشهر (${formattedMonth}). تم سداد (${paidAmount} ${currency}) والمتبقي المستحق هو (${remainingAmount} ${currency}).\nشاكرين ومقدرين حسن تعاونكم. 🙏\n— إدارة الأكاديمية`
+        : `Peace be upon you,\nThis is a friendly reminder regarding the remaining fee for student (${student.name}) for the month of (${formattedMonth}). Paid: (${paidAmount} ${currency}), Remaining due: (${remainingAmount} ${currency}).\nThank you for your cooperation! 🙏\n— Academy Management`;
+    }
+
+    // حالات عدم السداد الكامل بالاعتماد على النبرة المحددة
+    if (isRtlLang) {
+      if (tone === 'official') {
+        return `إشعار رسمي السادة أولياء الأمور الكرام،\nيرجى التكرم بالعلم أن اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) مستحق السداد بمبلغ (${expectedAmount} ${currency}).\nالرجاء المسارعة بالتسوية المالية لضمان استمرارية العملية التعليمية بانتظام.\n— الشؤون المالية للأكاديمية`;
+      }
+      return `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم الكريم بخصوص استحقاق اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) بمبلغ (${expectedAmount} ${currency}).\nشاكرين ومقدرين حسن تعاونكم وحرصكم الدائم. 🙏\n— إدارة الحلقة`;
+    } else {
+      if (tone === 'official') {
+        return `Official Notice to respected parents,\nPlease be informed that the subscription fee for student (${student.name}) for (${formattedMonth}) is due. Amount: (${expectedAmount} ${currency}).\nPlease settle the payment promptly to ensure continuous classes.\n— Finance Department`;
+      }
+      return `Peace be upon you,\nThis is a friendly reminder regarding the subscription for student (${student.name}) for the month of (${formattedMonth}) amounting to (${expectedAmount} ${currency}).\nThank you for your cooperation! 🙏\n— Center Management`;
+    }
+  };
+
   const openReminderModal = (student, currentRecord) => {
     if (!student.parent_phone) {
       return alert(translateText('noPhone', 'لا يوجد رقم هاتف مسجل لولي الأمر.', 'No phone number registered for the parent.'));
     }
-
-    const isPaid = currentRecord?.status === 'مدفوع';
-    const [year, month] = selectedMonth.split('-');
-    const formattedMonth = `${month}/${year}`;
-
-    let defaultMsg = "";
-    if (isRtl) {
-      defaultMsg = isPaid 
-        ? `السلام عليكم ورحمة الله وبركاته،\nنود أن نشكركم على سداد اشتراك الطالب (${student.name}) لشهر (${formattedMonth}).\nبارك الله فيكم وفي جهودكم مكللة بالنجاح. ✨\n— إدارة الحلقة الذكية`
-        : `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم الكريم بخصوص استحقاق اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) بمبلغ (${DEFAULT_SUBSCRIPTION_AMOUNT} ج.م).\nشاكرين ومقرارين حسن تعاونكم وحرصكم الدائم. 🙏\n— إدارة الحلقة الذكية`;
-    } else {
-      defaultMsg = isPaid
-        ? `Peace be upon you,\nWe would like to thank you for paying the subscription for student (${student.name}) for the month of (${formattedMonth}).\nThank you for your support! ✨\n— Smart Halaqa Management`
-        : `Peace be upon you,\nThis is a friendly reminder regarding the subscription for student (${student.name}) for the month of (${formattedMonth}) amounting to (${DEFAULT_SUBSCRIPTION_AMOUNT} EGP).\nThank you for your cooperation! 🙏\n— Smart Halaqa Management`;
-    }
-
     setSelectedStudentForModal(student);
+    setMsgTone('friendly');
+    const defaultMsg = generateWhatsAppMessage(student, currentRecord, 'friendly', currentLang);
     setModalMessage(defaultMsg);
     setIsModalOpen(true);
   };
 
-  // التنفيذ الفعلي للإرسال بعد المراجعة والتعديل داخل الـ Modal
+  const handleToneChange = (newTone) => {
+    setMsgTone(newTone);
+    if (selectedStudentForModal) {
+      const rec = paymentsData[selectedStudentForModal.id];
+      const updatedMsg = generateWhatsAppMessage(selectedStudentForModal, rec, newTone, currentLang);
+      setModalMessage(updatedMsg);
+    }
+  };
+
   const handleConfirmWhatsAppSend = () => {
     if (!selectedStudentForModal) return;
 
     let cleanPhone = selectedStudentForModal.parent_phone.trim().replace(/[^\d]/g, '');
-    if (!cleanPhone.startsWith('2') && cleanPhone.length === 11) {
+    
+    // معالجة ذكية للأرقام المحلية والدولية لتجنب فشل الإرسال
+    if (cleanPhone.startsWith('01') && cleanPhone.length === 11) {
       cleanPhone = '2' + cleanPhone;
+    } else if (cleanPhone.startsWith('00')) {
+      cleanPhone = cleanPhone.substring(2);
     }
 
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(modalMessage)}`, "_blank");
     setIsModalOpen(false);
   };
 
-  const total = Object.values(paymentsData).reduce((sum, r) => sum + (r.status === 'مدفوع' ? r.amount : 0), 0);
+  // الحساب المتقدم للمؤشرات الثلاثية (تعدد العملات والاشتراكات الفردية)
+  let totalCollected = 0;
+  let totalPending = 0;
+
+  students?.forEach(s => {
+    const rec = paymentsData[s.id];
+    const expected = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+    if (rec?.status === 'مدفوع') {
+      totalCollected += rec.amount || expected;
+    } else if (rec?.status === 'مدفوع جزئياً') {
+      totalCollected += rec.amount || 0;
+      totalPending += Math.max(0, expected - (rec.amount || 0));
+    } else {
+      totalPending += expected;
+    }
+  });
+
+  const totalTarget = totalCollected + totalPending;
+  const collectionRate = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
+
+  // محرك الفلترة المحلي المزدوج (البحث + تبويب الحالة)
+  const filteredStudents = students?.filter(s => {
+    const rec = paymentsData[s.id];
+    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (s.parent_phone && s.parent_phone.includes(searchTerm));
+    
+    const isPaid = rec?.status === 'مدفوع';
+    const isPartial = rec?.status === 'مدفوع جزئياً';
+
+    if (activeTab === 'paid') return matchesSearch && (isPaid || isPartial);
+    if (activeTab === 'pending') return matchesSearch && !isPaid;
+    return matchesSearch;
+  });
 
   return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", minHeight: '100vh' }}>
+    <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", minHeight: '100vh', paddingBottom: '40px' }}>
       <PageHeader 
         title={translateText('financialTitle', 'المالية واشتراكات الطلاب', 'Financials & Student Subscriptions')} 
         sub={translateText('financialSub', 'متابعة الإيرادات والتحصيل', 'Revenue & Collection Tracking')} 
       />
       
+      {/* لوحة المؤشرات الثلاثية الذكية التنافسية */}
       <div style={{ 
         display: 'flex', 
-        gap: '20px', 
-        marginBottom: '20px', 
-        alignItems: 'center', 
+        gap: '16px', 
+        marginBottom: '24px', 
         flexDirection: isMobile ? 'column' : 'row' 
       }}>
-        <Card style={{ padding: '15px', flex: 1, borderRight: isRtl ? `4px solid ${C.gold}` : 'none', borderLeft: !isRtl ? `4px solid ${C.gold}` : 'none', width: '100%', boxSizing: 'border-box' }}>
-          <h4 style={{ margin: 0, color: C.muted, textAlign: isRtl ? 'right' : 'left' }}>{translateText('totalCollected', 'إجمالي التحصيل', 'Total Collected')}</h4>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '5px 0 0 0', color: '#fff', textAlign: isRtl ? 'right' : 'left' }}>
-            {total} {translateText('currency', 'ج.م', 'EGP')}
+        <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #10b981` : 'none', borderLeft: !isRtl ? `4px solid #10b981` : 'none', width: '100%', boxSizing: 'border-box' }}>
+          <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalCollected', 'إجمالي التحصيل الفعلي', 'Total Collected')}</h4>
+          <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#10b981' }}>
+            {totalCollected} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
           </p>
         </Card>
-        
-        <input 
-          type="month" 
-          value={selectedMonth} 
-          onChange={(e) => setSelectedMonth(e.target.value)} 
-          style={{ 
-            padding: '12px 16px', 
-            borderRadius: '12px', 
-            width: isMobile ? '100%' : 'auto',
-            background: '#162030',
-            border: '1px solid #334155',
-            color: '#fff',
-            outline: 'none',
-            boxSizing: 'border-box',
-            fontSize: '14px',
-            fontWeight: '600'
-          }} 
-        />
+
+        <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #f59e0b` : 'none', borderLeft: !isRtl ? `4px solid #f59e0b` : 'none', width: '100%', boxSizing: 'border-box' }}>
+          <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalPending', 'المبالغ المعلقة/المتأخرة', 'Pending Balance')}</h4>
+          <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#f59e0b' }}>
+            {totalPending} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
+          </p>
+        </Card>
+
+        <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid ${C.gold}` : 'none', borderLeft: !isRtl ? `4px solid ${C.gold}` : 'none', width: '100%', boxSizing: 'border-box' }}>
+          <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('collectionRate', 'نسبة إنجاز التحصيل', 'Collection Rate')}</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
+            <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: 0, color: '#fff' }}>{collectionRate}%</p>
+            <div style={{ flex: 1, height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${collectionRate}%`, height: '100%', background: C.gold, transition: 'width 0.4s ease' }} />
+            </div>
+          </div>
+        </Card>
       </div>
 
+      {/* قسم أدوات التحكم (البحث والفلترة والشهور) */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '16px', 
+        marginBottom: '20px', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        flexDirection: isMobile ? 'column' : 'row'
+      }}>
+        <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
+          <button 
+            onClick={() => setActiveTab('all')}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'all' ? C.gold : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+          >
+            {translateText('tabAll', 'الكل', 'All')} ({students?.length || 0})
+          </button>
+          <button 
+            onClick={() => setActiveTab('paid')}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'paid' ? '#10b981' : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+          >
+            {translateText('tabPaid', 'مسدد ✅', 'Paid')}
+          </button>
+          <button 
+            onClick={() => setActiveTab('pending')}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'pending' ? '#ef4444' : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+          >
+            {translateText('tabPending', 'معلّق ⏳', 'Pending')}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
+          <input 
+            type="text"
+            placeholder={translateText('searchPlaceholder', 'بحث باسم الطالب أو الهاتف...', 'Search by student or phone...')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', width: isMobile ? '100%' : '240px'
+            }}
+          />
+          <input 
+            type="month" 
+            value={selectedMonth} 
+            onChange={(e) => setSelectedMonth(e.target.value)} 
+            style={{ 
+              padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', fontWeight: '600'
+            }} 
+          />
+        </div>
+      </div>
+
+      {/* جدول البيانات واستعراض الطلاب */}
       <Card style={{ padding: 0, background: 'transparent', boxShadow: 'none' }}>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {students?.map(s => {
+            {filteredStudents?.map(s => {
               const rec = paymentsData[s.id];
               const isPaid = rec?.status === 'مدفوع';
+              const isPartial = rec?.status === 'مدفوع جزئياً';
+              const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+              const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
+
               return (
                 <div key={s.id} style={{ 
-                  background: C.surface, 
-                  padding: '16px', 
-                  borderRadius: '14px', 
-                  display: 'flex', 
-                  flexDirection: isRtl ? 'row' : 'row-reverse', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  border: '1px solid rgba(255,255,255,0.04)',
-                  boxSizing: 'border-box'
+                  background: C.surface, padding: '16px', borderRadius: '14px', display: 'flex', flexDirection: isRtl ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.04)', boxSizing: 'border-box'
                 }}>
-                  <div style={{ textAlign: isRtl ? 'right' : 'left', flex: 1, paddingLeft: isRtl ? '0' : '8px', paddingRight: isRtl ? '8px' : '0' }}>
-                    <div style={{ fontWeight: '700', marginBottom: '6px', color: '#fff', fontSize: '15px', lineHeight: '1.4' }}>{s.name}</div>
-                    <Badge color={isPaid ? "success" : "danger"}>
-                      {isPaid ? translateText('paidStatus', 'مسدد', 'Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
-                    </Badge>
+                  <div style={{ textAlign: isRtl ? 'right' : 'left', flex: 1 }}>
+                    <div style={{ fontWeight: '700', marginBottom: '6px', color: '#fff', fontSize: '15px' }}>{s.name}</div>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
+                        {isPaid ? translateText('paidStatus', 'مسدد', 'Paid') : isPartial ? translateText('partialStatus', 'جزئي', 'Partial') : translateText('unpaidStatus', 'معلّق', 'Pending')}
+                      </Badge>
+                      {isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({rec.amount} / {expectedAmount} {currency})</span>}
+                      {!isPaid && !isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({expectedAmount} {currency})</span>}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '90px' }}>
-                    <Btn style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold', width: '100%' }} onClick={() => handleTogglePayment(s.id, rec)}>
-                      {actionLoading === s.id ? "..." : isPaid ? translateText('cancelAction', 'إلغاء', 'Cancel') : translateText('payAction', 'قبض', 'Collect')}
+                    <Btn style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold' }} onClick={() => handleTogglePayment(s.id, rec, expectedAmount)}>
+                      {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل/إلغاء', 'Edit/Cancel') : translateText('payAction', 'قبض', 'Collect')}
                     </Btn>
-                    <Btn style={{ padding: '8px 14px', fontSize: '13px', background: '#128C7E', color: '#fff', fontWeight: 'bold', width: '100%' }} onClick={() => openReminderModal(s, rec)}>
+                    <Btn style={{ padding: '8px 14px', fontSize: '13px', background: '#128C7E', color: '#fff', fontWeight: 'bold' }} onClick={() => openReminderModal(s, rec)}>
                       {translateText('whatsappBtn', 'واتساب 💬', 'WhatsApp 💬')}
                     </Btn>
                   </div>
@@ -198,26 +351,35 @@ export default function Payments({ students, academyId }) {
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('studentName', 'اسم الطالب', 'Student Name')}</TH>
+                <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('expectedFee', 'الاشتراك المطلوب', 'Required Subscription')}</TH>
                 <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('statusLabel', 'الحالة', 'Status')}</TH>
                 <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('actionsLabel', 'الإجراءات', 'Actions')}</TH>
               </tr>
             </thead>
             <tbody>
-              {students?.map(s => {
+              {filteredStudents?.map(s => {
                 const rec = paymentsData[s.id];
                 const isPaid = rec?.status === 'مدفوع';
+                const isPartial = rec?.status === 'مدفوع جزئياً';
+                const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+                const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
+
                 return (
                   <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'all 0.2s' }}>
                     <TD style={{ color: '#fff', fontWeight: '500', textAlign: isRtl ? 'right' : 'left' }}>{s.name}</TD>
+                    <TD style={{ color: '#94a3b8', textAlign: isRtl ? 'right' : 'left' }}>{expectedAmount} {currency}</TD>
                     <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
-                      <Badge color={isPaid ? "success" : "danger"}>
-                        {isPaid ? translateText('paidStatus', 'مسدد', 'Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
-                      </Badge>
+                      <div style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
+                        <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
+                          {isPaid ? translateText('paidStatus', 'مسدد بالكامل', 'Fully Paid') : isPartial ? translateText('partialStatus', 'مسدد جزئياً', 'Partially Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
+                        </Badge>
+                        {isPartial && <span style={{ fontSize: '13px', color: '#94a3b8' }}>({translateText('collectedLabel', 'المحصل', 'Collected')}: {rec.amount} {currency})</span>}
+                      </div>
                     </TD>
                     <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <Btn style={{ fontWeight: '600' }} onClick={() => handleTogglePayment(s.id, rec)}>
-                          {actionLoading === s.id ? "..." : isPaid ? translateText('cancelAction', 'إلغاء', 'Cancel') : translateText('payAction', 'قبض', 'Collect')}
+                        <Btn style={{ fontWeight: '600' }} onClick={() => handleTogglePayment(s.id, rec, expectedAmount)}>
+                          {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل / إلغاء', 'Edit / Cancel') : translateText('payAction', 'قبض', 'Collect')}
                         </Btn>
                         <Btn style={{ background: '#128C7E', color: '#fff', fontWeight: '600' }} onClick={() => openReminderModal(s, rec)}>
                           {translateText('whatsappBtn', 'واتساب 💬', 'WhatsApp 💬')}
@@ -232,7 +394,7 @@ export default function Payments({ students, academyId }) {
         )}
       </Card>
 
-      {/* 🌟 النافذة المنبثقة الاحترافية الفاخرة للتحكم الكامل بنص الواتساب قبل الإرسال */}
+      {/* النافذة المنبثقة الاحترافية للمراجعة واختيار النبرة قبل الإرسال */}
       {isModalOpen && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -245,16 +407,29 @@ export default function Payments({ students, academyId }) {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
           }}>
             <h3 style={{ margin: '0 0 12px 0', color: '#fff', fontSize: '18px', fontWeight: '700', textAlign: isRtl ? 'right' : 'left' }}>
-              {translateText('reviewTitle', 'مراجعة وتعديل نص الرسالة', 'Review & Edit Message')}
+              {translateText('reviewTitle', 'مراجعة وتعديل نص الرسالة التذكيرية', 'Review & Edit Message')}
             </h3>
-            <p style={{ margin: '0 0 16px 0', color: C.muted, fontSize: '13px', textAlign: isRtl ? 'right' : 'left', lineHeight: '1.5' }}>
-              {translateText('reviewSub', 'يمكنك تعديل الرسالة أدناه بحرية قبل الانتقال للواتساب لإرسالها لولي الأمر:', 'You can freely edit the message below before opening WhatsApp:')}
-            </p>
             
+            {/* أداة التحكم العالمية في نبرة المراسلة */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', justifyContent: isRtl ? 'flex-start' : 'flex-end' }}>
+              <button 
+                onClick={() => handleToneChange('friendly')}
+                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: msgTone === 'friendly' ? C.gold : '#1e293b', color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                😊 {translateText('toneFriendly', 'ودية', 'Friendly')}
+              </button>
+              <button 
+                onClick={() => handleToneChange('official')}
+                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: msgTone === 'official' ? C.gold : '#1e293b', color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                🏛️ {translateText('toneOfficial', 'رسمية حازمة', 'Official')}
+              </button>
+            </div>
+
             <textarea
               value={modalMessage}
               onChange={(e) => setModalMessage(e.target.value)}
-              rows={6}
+              rows={7}
               style={{
                 width: '100%', background: '#0f172a', border: '1px solid #334155',
                 borderRadius: '12px', padding: '12px', color: '#fff', fontSize: '14px',
@@ -269,7 +444,7 @@ export default function Payments({ students, academyId }) {
                 style={{
                   background: 'transparent', border: '1px solid #334155', color: '#94a3b8',
                   padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: '600',
-                  cursor: 'pointer', transition: 'all 0.2s'
+                  cursor: 'pointer'
                 }}
               >
                 {translateText('cancelModal', 'إلغاء', 'Cancel')}
@@ -279,7 +454,7 @@ export default function Payments({ students, academyId }) {
                 style={{
                   background: '#128C7E', border: 'none', color: '#fff',
                   padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                 }}
               >
                 {translateText('sendModal', 'فتح الواتساب وإرسال 🚀', 'Open WhatsApp & Send 🚀')}
