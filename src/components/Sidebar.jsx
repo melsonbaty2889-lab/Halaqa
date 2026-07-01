@@ -254,13 +254,53 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* 🕒 ويدجيت توقيت النظام والمناطق الزمنية المباشرة */}
+      {/* 🕒 ويدجيت توقيت النظام والمناطق الزمنية والتاريخ المباشر بالتوزيع الرأسي المتدرج */}
       {!isSlim && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 8px', marginBottom: '20px', opacity: 0.85 }}>
-          <span style={{ width: '6px', height: '6px', backgroundColor: '#10B981', borderRadius: '50%', display: 'inline-block' }}></span>
-          <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
-            {timezone?.split('/')[1] || 'UTC'} : {academyTime || '--:--'}
-          </span>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '5px', 
+          padding: '0 8px', 
+          marginBottom: '22px', 
+          opacity: 0.9 
+        }}>
+          {/* 1. التوقيت والمنطقة الزمنية */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '6px', height: '6px', backgroundColor: '#10B981', borderRadius: '50%', display: 'inline-block' }}></span>
+            <span style={{ fontSize: '0.78rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
+              {timezone?.split('/')[1] || 'UTC'} : {academyTime || '--:--'}
+            </span>
+          </div>
+          
+          {/* 2. التاريخ الميلادي */}
+          <div style={{ 
+            fontSize: '0.72rem', 
+            color: '#9CA3AF', 
+            paddingRight: isRtl ? '12px' : '0',
+            paddingLeft: !isRtl ? '12px' : '0',
+            marginTop: '2px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            <span>📅 </span>
+            {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+
+          {/* 3. التاريخ الهجري المميز */}
+          <div style={{ 
+            fontSize: '0.72rem', 
+            color: '#FBBF24', 
+            fontWeight: '500',
+            paddingRight: isRtl ? '12px' : '0',
+            paddingLeft: !isRtl ? '12px' : '0',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            <span>🌙 </span>
+            {new Date().toLocaleDateString(isRtl ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
         </div>
       )}
 
@@ -392,7 +432,7 @@ export default function Sidebar({
                   fontWeight: isActive ? '700' : '500',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: isActive ? (isRtl ? 'inset -4px 0px 0px #FBBF24' : 'inset 4px 0px 0px #FBBF24') : 'none',
-                  flexDirection: 'row' // الاعتماد الكامل على التوجيه الفطري اللغوي للحاوية الأب
+                  flexDirection: 'row'
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -407,7 +447,6 @@ export default function Sidebar({
                   }
                 }}
               >
-                {/* الأيقونة الموحدة الثابتة البناء للحفاظ على ترشيد المساحة الحركية */}
                 <span style={{ 
                   fontSize: '1.15rem', 
                   display: 'flex', 
@@ -419,7 +458,6 @@ export default function Sidebar({
                   {item.icon}
                 </span>
 
-                {/* نص المصطلح المعالج والمحمي من البتر الجانبي الخاطئ */}
                 {(!isSlim || isMobile) && (
                   <span style={{ 
                     flex: 1, 
@@ -432,7 +470,6 @@ export default function Sidebar({
                   </span>
                 )}
 
-                {/* الكبسولة التفاعلية (Badges) */}
                 {item.badge && (!isSlim || isMobile) && (
                   <span style={{
                     fontSize: '0.68rem',
@@ -449,7 +486,6 @@ export default function Sidebar({
                 )}
               </button>
 
-              {/* 💡 نظام التلميحات العائمة (Tooltips) عند انكماش القائمة الجانبية في الوضع المكتبي */}
               {isSlim && !isMobile && hoveredItem === index && (
                 <div style={{
                   position: 'absolute',
