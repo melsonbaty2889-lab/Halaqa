@@ -57,7 +57,7 @@ export default function Attendance({ students, academyId }) {
         setAttendanceData(mappedData);
       } catch (error) {
         console.error("🚨 خطأ أثناء جلب البيانات:", error);
-      } finaly {
+      } finally {
         setLoadingFetch(false);
       }
     }
@@ -113,7 +113,7 @@ export default function Attendance({ students, academyId }) {
     } catch (error) {
       console.error("🚨 خطأ أثناء الحفظ المجمع:", error);
       setMessage({ text: `${translateText('saveFailed', 'فشل حفظ الكشف:', 'Save failed:')} ${error.message}`, type: 'error' });
-    } finaly {
+    } finally {
       setIsSaving(false);
     }
   };
@@ -124,7 +124,7 @@ export default function Attendance({ students, academyId }) {
       {/* التحكم العلوي بالتاريخ وهيدر الصفحة المتجاوب */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-2 margin-0">
+          <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-2 m-0">
             {translateText('recitation_attendance', 'رصد الحضور والإنتاجية القرآنية اليومية', 'Recitation & Attendance')}
           </h2>
           <p className="text-xs text-slate-400 mt-1 font-medium">
@@ -269,7 +269,7 @@ const StudentCard = memo(({ student, record, updateStudentField, isRtl, t }) => 
 
       {/* لوحة رصد المتابعة الثلاثية والتقييم، تفتح فقط في حال حضور الطالب أو تأخره */}
       {isPresent && (
-        <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-4 animate-fadeIn transition-all">
+        <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-4 transition-all">
           
           {/* شبكة الثالوث القرآني المتجاوبة (الحفظ - المراجعة - الماضي المبتعد) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -328,9 +328,9 @@ const StudentCard = memo(({ student, record, updateStudentField, isRtl, t }) => 
               <div className="flex gap-2">
                 {['excellent', 'good', 'needs_improvement'].map(grade => {
                   const gradeStyles = {
-                    excellent: 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/5 font-extrabold',
-                    good: 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/5 font-extrabold',
-                    needs_improvement: 'bg-red-500 text-white shadow-md shadow-red-500/5 font-extrabold'
+                    excellent: 'bg-emerald-500 text-slate-950 font-extrabold shadow-sm',
+                    good: 'bg-amber-500 text-slate-950 font-extrabold shadow-sm',
+                    needs_improvement: 'bg-red-500 text-white font-extrabold shadow-sm'
                   };
                   const gradeLabels = {
                     excellent: t('excellent'),
@@ -346,7 +346,7 @@ const StudentCard = memo(({ student, record, updateStudentField, isRtl, t }) => 
                       className={`flex-1 p-2 rounded-lg border text-[10px] font-bold transition-all ${
                         isSelected 
                           ? gradeStyles[grade] + ' border-transparent'
-                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-850'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800'
                       }`}
                     >
                       {gradeLabels[grade]}
