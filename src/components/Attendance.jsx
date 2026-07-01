@@ -1,6 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { sessionService } from '../lib/sessionService'; // الربط الذكي مع ملف الخدمات الموحد
-import { C } from '../constants/colors';
+import { sessionService } from '../lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
 import { 
   FaCalendarAlt, 
@@ -12,6 +11,7 @@ import {
   FaBookOpen, 
   FaBook, 
   FaHistory, 
+  FaSpinner, 
   FaGraduationCap 
 } from 'react-icons/fa';
 
@@ -26,19 +26,12 @@ export default function Attendance({ students, academyId }) {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
     return isRtl ? arText : enText;
   };
 
-  // 🔄 جلب البيانات عبر ملف الخدمات sessionService لتوحيد بنية المشروع
+  // 🔄 جلب البيانات التراكمية للحلقة لليوم المحدد عبر السيرفيس الموحد
   useEffect(() => {
     async function fetchExistingAttendance() {
       if (!academyId || !selectedDate || students.length === 0) return;
@@ -46,10 +39,9 @@ export default function Attendance({ students, academyId }) {
       setMessage({ text: '', type: '' });
 
       try {
-        // استخدام خدمة جلب الحضور الموحدة
         const data = await sessionService.fetchAttendance(academyId, selectedDate);
-
         const mappedData = {};
+        
         if (data) {
           data.forEach(record => {
             mappedData[record.student_id] = {
@@ -65,7 +57,7 @@ export default function Attendance({ students, academyId }) {
         setAttendanceData(mappedData);
       } catch (error) {
         console.error("🚨 خطأ أثناء جلب البيانات:", error);
-      } finally {
+      } finaly {
         setLoadingFetch(false);
       }
     }
@@ -73,7 +65,7 @@ export default function Attendance({ students, academyId }) {
     fetchExistingAttendance();
   }, [selectedDate, academyId, students]);
 
-  // دالة تحديث الحقول الممررة للكروت الفرعية
+  // تحديث حقل معين لطالب داخل كرت المتابعة مع حماية الهيكل البنيوي للـ state
   const updateStudentField = (studentId, field, value) => {
     setAttendanceData(prev => ({
       ...prev,
@@ -84,10 +76,10 @@ export default function Attendance({ students, academyId }) {
     }));
   };
 
-  // 🔥 حفظ السجل كاملاً بطلب واحد مجمع عبر خدمات sessionService
+  // 🔥 دالة الحفظ المجمع والذكي لكامل الحلقة بطلب شبكة واحد
   const handleSaveAttendance = async () => {
     if (!academyId) {
-      setMessage({ text: translateText('errorLoading', 'حدث خطأ في تحميل البيانات', 'Error loading data'), type: 'error' });
+      setMessage({ text: translateText('errorLoading', 'حدث خطأ في تحميل بيانات الأكاديمية', 'Error loading academy data'), type: 'error' });
       return;
     }
 
@@ -112,91 +104,67 @@ export default function Attendance({ students, academyId }) {
         };
       });
 
-      // تنفيذ الحفظ المجمع من خلال السيرفيس
       await sessionService.upsertAttendance(attendanceRecords);
 
       setMessage({ 
-        text: translateText('attendanceSavedSuccess', 'تم اعتماد وحفظ كشف الحضور والإنتاجية القرآنية بنجاح! 🎉', 'Attendance and recitation progress saved successfully! 🎉'), 
+        text: translateText('attendanceSavedSuccess', 'تم اعتماد وحفظ كشف الحضور والإنتاجية القرآنية اليومية للحلقة بنجاح! 🎉', 'Attendance and daily recitation sheet saved successfully! 🎉'), 
         type: 'success' 
       });
     } catch (error) {
       console.error("🚨 خطأ أثناء الحفظ المجمع:", error);
-      setMessage({ text: `${translateText('saveFailed', 'فشل الحفظ:', 'Save failed:')} ${error.message}`, type: 'error' });
-    } finally {
+      setMessage({ text: `${translateText('saveFailed', 'فشل حفظ الكشف:', 'Save failed:')} ${error.message}`, type: 'error' });
+    } finaly {
       setIsSaving(false);
     }
   };
 
   return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif" }}>
+    <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* التحكم العلوي بالتاريخ والهيدر */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '25px', 
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: '15px' 
-      }}>
-        <div style={{ textAlign: isRtl ? 'right' : 'left', width: isMobile ? '100%' : 'auto' }}>
-          <h2 style={{ color: C.gold || '#C9A84C', margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
-            {translateText('recitation_attendance', 'رصد الحضور والتحضير الأكاديمي', 'Recitation & Attendance')}
+      {/* التحكم العلوي بالتاريخ وهيدر الصفحة المتجاوب */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-2 margin-0">
+            {translateText('recitation_attendance', 'رصد الحضور والإنتاجية القرآنية اليومية', 'Recitation & Attendance')}
           </h2>
-          <p style={{ color: '#94a3b8', margin: '4px 0 0 0', fontSize: '13px' }}>
-            {translateText('attendanceSub', 'متابعة الثالوث القرآني اليومي وتقييم الطلاب', 'Track the quranic triad and grade students daily')}
+          <p className="text-xs text-slate-400 mt-1 font-medium">
+            {translateText('attendanceSub', 'تتبع كفاءة الثالوث القرآني اليومي (الحفظ الجديد، المراجعة القريبة والبعيدة).', 'Track daily Quranic triad performance (New Memorization, Revision, Distant).')}
           </p>
         </div>
         
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '10px', 
-          background: '#162030', 
-          padding: '10px 16px', 
-          borderRadius: '12px', 
-          border: '1px solid #334155',
-          width: isMobile ? '100%' : 'auto',
-          boxSizing: 'border-box'
-        }}>
-          <FaCalendarAlt style={{ color: C.gold || '#C9A84C' }} />
+        {/* منقي وفلتر التاريخ الذكي */}
+        <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-2.5 px-4 rounded-xl w-full md:w-auto box-border shadow-inner">
+          <FaCalendarAlt className="text-amber-500 text-sm" />
           <input 
             type="date" 
             value={selectedDate} 
             onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '600', width: '100%' }}
+            className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full md:w-auto"
           />
         </div>
       </div>
 
-      {/* رسائل التنبيه */}
+      {/* لوحة عرض الرسائل التحذيرية أو رسائل النجاح */}
       {message.text && (
-        <div style={{ 
-          padding: '14px', 
-          borderRadius: '10px', 
-          marginBottom: '20px', 
-          backgroundColor: message.type === 'success' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)', 
-          color: message.type === 'success' ? '#10B981' : '#EF4444', 
-          border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-          fontSize: '14px',
-          fontWeight: '600',
-          textAlign: isRtl ? 'right' : 'left'
-        }}>
+        <div className={`p-4 rounded-xl mb-5 text-xs font-bold border ${
+          message.type === 'success' 
+            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+            : 'bg-red-500/10 text-red-400 border-red-500/20'
+        } ${isRtl ? 'text-right' : 'text-left'}`}>
           {message.text}
         </div>
       )}
 
-      {/* مؤشر تحميل ناعم */}
+      {/* الهيكل الرئيسي للتحميل وعرض الكروت للطلاب */}
       {loadingFetch ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '40px 0' }}>
-          <div style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.05)', borderTop: `3px solid ${C.gold || '#C9A84C'}`, borderRadius: '50%', animation: 'spinAttendance 0.8s linear infinite' }}></div>
-          <span style={{ color: '#94a3b8', fontSize: '13px' }}>{translateText('loadingAttendanceData', 'جاري جلب السجل الشامل للحلقة...', 'Fetching comprehensive halaqa record...')}</span>
-          <style>{`@keyframes spinAttendance { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <div className="flex flex-col items-center justify-center gap-3 py-14">
+          <FaSpinner className="animate-spin text-amber-500 text-xl" />
+          <span className="text-xs text-slate-400 font-bold">{translateText('loadingAttendanceData', 'جاري استدعاء السجل البنيوي الشامل للحلقة...', 'Fetching comprehensive halaqa records...')}</span>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '30px' }}>
+        <div className="flex flex-col gap-4 mb-6">
           {students.length === 0 ? (
-            <p style={{ color: '#94a3b8', opacity: 0.6, textAlign: 'center', padding: '20px' }}>
+            <p className="text-center text-xs text-slate-500 py-10">
               {t('no_students_registered')}
             </p>
           ) : (
@@ -206,43 +174,22 @@ export default function Attendance({ students, academyId }) {
                 student={student}
                 record={attendanceData[student.id] || {}}
                 updateStudentField={updateStudentField}
-                isMobile={isMobile}
                 isRtl={isRtl}
                 t={t}
-                C={C}
               />
             ))
           )}
         </div>
       )}
 
-      {/* زر الحفظ النهائي المجمع */}
+      {/* زر الاعتماد المجمع للحلقة بالكامل */}
       {!loadingFetch && students.length > 0 && (
         <button 
           onClick={handleSaveAttendance}
           disabled={isSaving}
-          style={{ 
-            width: '100%', 
-            padding: '14px', 
-            background: C.gold || '#C9A84C', 
-            color: '#000', 
-            border: 'none', 
-            borderRadius: '12px', 
-            fontSize: '15px', 
-            fontWeight: '700', 
-            cursor: isSaving ? 'not-allowed' : 'pointer', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '10px', 
-            opacity: isSaving ? 0.7 : 1, 
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(201, 168, 76, 0.15)'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = isSaving ? 0.7 : 1}
+          className="w-full p-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/5 active:scale-[0.995] transition-all"
         >
-          <FaSave /> {isSaving ? translateText('saving', 'جاري الحفظ والاعتماد التراكمي...', 'Saving and adopting...') : translateText('saveBtn', 'اعتماد وحفظ كشف الحضور والتسميع اليومي 🚀', 'Adopt & Save Recitation Sheet 🚀')}
+          <FaSave /> {isSaving ? translateText('saving', 'جاري معالجة وتوثيق الإنتاجية قرآنياً...', 'Saving and adopting records...') : translateText('saveBtn', 'اعتماد وحفظ الكشف الشامل والتسميع اليومي للحلقة 🚀', 'Adopt & Save Comprehensive Halaqa Sheet 🚀')}
         </button>
       )}
     </div>
@@ -250,157 +197,145 @@ export default function Attendance({ students, academyId }) {
 }
 
 /* ------------------------------------------------------------- */
-/* 💎 المكون الفرعي المعزول والمحمي من التكرار العشوائي StudentCard */
+/* 💎 المكون الفرعي الميمو المطور والمعزول للأداء العالي StudentCard */
 /* ------------------------------------------------------------- */
-const StudentCard = memo(({ student, record, updateStudentField, isMobile, isRtl, t, C }) => {
+const StudentCard = memo(({ student, record, updateStudentField, isRtl, t }) => {
   const currentStatus = record.status || 'present';
   const isPresent = currentStatus === 'present' || currentStatus === 'late';
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      background: C.surface || '#111C2A', 
-      padding: '20px', 
-      borderRadius: '16px', 
-      border: '1px solid rgba(255,255,255,0.04)', 
-      gap: '16px',
-      boxSizing: 'border-box',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      transition: 'transform 0.2s ease'
-    }}
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-    >
+    <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-800/80 p-5 rounded-2xl flex flex-col gap-4 transition-all hover:border-slate-700/60 box-border shadow-sm">
       
-      {/* اسم الطالب + أزرار حالة الحضور */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: isMobile ? 'column' : 'row', 
-        justifyContent: 'space-between', 
-        alignItems: isMobile ? 'stretch' : 'center',
-        gap: '12px'
-      }}>
-        <div style={{ textAlign: isRtl ? 'right' : 'left' }}>
-          <span style={{ fontWeight: '700', fontSize: '16px', color: '#fff' }}>{student.name}</span>
-          <span style={{ display: 'block', fontSize: '12px', color: C.gold || '#C9A84C', marginTop: '2px' }}>
+      {/* سطر بيانات الطالب ومفاتيح اختيار الحضور السريع المتجاوبة كلياً */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+        <div className={isRtl ? 'text-right' : 'text-left'}>
+          <span className="text-sm font-extrabold text-white tracking-wide block">{student.name}</span>
+          <span className="text-[11px] font-bold text-amber-500/80 block mt-1">
             {t('memorization_prefix')} {student.current_surah || t('not_specified_yet')}
           </span>
         </div>
         
-        {/* أزرار الحضور */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-end' }}>
+        {/* أزرار الحضور التفاعلية ذات النمط العصري المنفصل */}
+        <div className="grid grid-cols-2 sm:flex gap-2 w-full lg:w-auto justify-center lg:justify-end">
           <button 
+            type="button"
             onClick={() => updateStudentField(student.id, 'status', 'present')} 
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'present' ? '#10B981' : 'rgba(16, 185, 129, 0.05)', color: currentStatus === 'present' ? '#fff' : '#10B981', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+            className={`flex items-center justify-center gap-1.5 p-2 px-3.5 rounded-xl border text-[11px] font-bold transition-all ${
+              currentStatus === 'present' 
+                ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-extrabold shadow-md shadow-emerald-500/10' 
+                : 'bg-slate-950 text-emerald-400 border-slate-800/80 hover:bg-slate-900'
+            }`}
           >
-            <FaCheck size={11} /> {t('present')}
+            <FaCheck size={10} /> {t('present')}
           </button>
 
           <button 
+            type="button"
             onClick={() => updateStudentField(student.id, 'status', 'absent')} 
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'absent' ? '#EF4444' : 'rgba(239, 68, 68, 0.05)', color: currentStatus === 'absent' ? '#fff' : '#EF4444', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+            className={`flex items-center justify-center gap-1.5 p-2 px-3.5 rounded-xl border text-[11px] font-bold transition-all ${
+              currentStatus === 'absent' 
+                ? 'bg-red-500 text-white border-red-500 font-extrabold shadow-md shadow-red-500/10' 
+                : 'bg-slate-950 text-red-400 border-slate-800/80 hover:bg-slate-900'
+            }`}
           >
-            <FaTimes size={11} /> {t('absent')}
+            <FaTimes size={10} /> {t('absent')}
           </button>
 
           <button 
+            type="button"
             onClick={() => updateStudentField(student.id, 'status', 'late')} 
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'late' ? '#F59E0B' : 'rgba(245, 158, 11, 0.05)', color: currentStatus === 'late' ? '#fff' : '#F59E0B', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+            className={`flex items-center justify-center gap-1.5 p-2 px-3.5 rounded-xl border text-[11px] font-bold transition-all ${
+              currentStatus === 'late' 
+                ? 'bg-amber-500 text-slate-950 border-amber-500 font-extrabold shadow-md shadow-amber-500/10' 
+                : 'bg-slate-950 text-amber-400 border-slate-800/80 hover:bg-slate-900'
+            }`}
           >
-            <FaClock size={11} /> {t('late')}
+            <FaClock size={10} /> {t('late')}
           </button>
 
           <button 
+            type="button"
             onClick={() => updateStudentField(student.id, 'status', 'excused')} 
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: currentStatus === 'excused' ? '#3B82F6' : 'rgba(59, 130, 246, 0.05)', color: currentStatus === 'excused' ? '#fff' : '#3B82F6', fontWeight: '600', fontSize: '12px', transition: 'all 0.2s' }}
+            className={`flex items-center justify-center gap-1.5 p-2 px-3.5 rounded-xl border text-[11px] font-bold transition-all ${
+              currentStatus === 'excused' 
+                ? 'bg-blue-600 text-white border-blue-600 font-extrabold shadow-md shadow-blue-600/10' 
+                : 'bg-slate-950 text-blue-400 border-slate-800/80 hover:bg-slate-900'
+            }`}
           >
-            <FaUserClock size={11} /> {t('excused')}
+            <FaUserClock size={10} /> {t('excused')}
           </button>
         </div>
       </div>
 
-      {/* لوحة التسميع والمتابعة القرآنية الثلاثية */}
+      {/* لوحة رصد المتابعة الثلاثية والتقييم، تفتح فقط في حال حضور الطالب أو تأخره */}
       {isPresent && (
-        <div style={{ 
-          backgroundColor: 'rgba(0,0,0,0.15)', 
-          padding: '14px', 
-          borderRadius: '12px', 
-          border: '1px solid rgba(255,255,255,0.02)',
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '12px',
-          animation: 'fadeInSlideAttendance 0.2s ease-out'
-        }}>
+        <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-4 animate-fadeIn transition-all">
           
-          {/* حقول المدخلات */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', 
-            gap: '10px' 
-          }}>
-            {/* الحفظ الجديد */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaBookOpen size={12} color={C.gold || '#C9A84C'} /> {t('memorization')}
+          {/* شبكة الثالوث القرآني المتجاوبة (الحفظ - المراجعة - الماضي المبتعد) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* مدخل الحفظ الجديد */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
+                <FaBookOpen className="text-amber-500 text-xs" /> {t('memorization')}
               </label>
               <input 
                 type="text" 
                 placeholder={isRtl ? "مثال: البقرة ١-١٥" : "e.g., Al-Baqarah 1-15"}
                 value={record.memorization || ''}
                 onChange={(e) => updateStudentField(student.id, 'memorization', e.target.value)}
-                style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '8px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', textAlign: isRtl ? 'right' : 'left' }}
+                className={`w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40 ${isRtl ? 'text-right' : 'text-left'}`}
               />
             </div>
 
-            {/* المراجعة القريبة */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaBook size={12} color="#10B981" /> {t('revision')}
+            {/* مدخل المراجعة القريبة */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
+                <FaBook className="text-emerald-400 text-xs" /> {t('revision')}
               </label>
               <input 
                 type="text" 
                 placeholder={isRtl ? "مثال: آخر ٥ صفحات" : "e.g., Last 5 pages"}
                 value={record.revision || ''}
                 onChange={(e) => updateStudentField(student.id, 'revision', e.target.value)}
-                style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '8px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', textAlign: isRtl ? 'right' : 'left' }}
+                className={`w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500/40 ${isRtl ? 'text-right' : 'text-left'}`}
               />
             </div>
 
-            {/* المراجعة البعيدة */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaHistory size={12} color="#3B82F6" /> {isRtl ? "المراجعة البعيدة (الماضي)" : "Distant Revision"}
+            {/* مدخل المراجعة البعيدة (الماضي التراكمي) */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
+                <FaHistory className="text-blue-400 text-xs" /> {isRtl ? "المراجعة البعيدة (الماضي)" : "Distant Revision"}
               </label>
               <input 
                 type="text" 
-                placeholder={isRtl ? "مثال: جزء عمّ كاملاً" : "e.g., Juz Amma"}
+                placeholder={isRtl ? "مثال: جزء عم كاملاً" : "e.g., Juz Amma"}
                 value={record.distant_revision || ''}
                 onChange={(e) => updateStudentField(student.id, 'distant_revision', e.target.value)}
-                style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '8px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', textAlign: isRtl ? 'right' : 'left' }}
+                className={`w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500/40 ${isRtl ? 'text-right' : 'text-left'}`}
               />
             </div>
           </div>
 
-          {/* نظام التقييم السريع والملاحظات */}
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row', 
-            alignItems: isMobile ? 'stretch' : 'center', 
-            gap: '12px',
-            marginTop: '4px' 
-          }}>
-            {/* التقييم اليومي */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaGraduationCap size={13} color={C.gold || '#C9A84C'} /> {t('daily_grade')}
+          {/* نظام رصد تقييم الحصة السريع والملاحظات النوعية لليوم */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mt-1">
+            
+            {/* التقييم السريع الملون */}
+            <div className="flex flex-col gap-1.5 flex-1">
+              <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
+                <FaGraduationCap className="text-amber-500" /> {t('daily_grade')}
               </span>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div className="flex gap-2">
                 {['excellent', 'good', 'needs_improvement'].map(grade => {
-                  const gradeColors = {
-                    excellent: { bg: '#10B981', text: t('excellent') },
-                    good: { bg: '#F59E0B', text: t('good') },
-                    needs_improvement: { bg: '#EF4444', text: t('needs_improvement') }
+                  const gradeStyles = {
+                    excellent: 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/5 font-extrabold',
+                    good: 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/5 font-extrabold',
+                    needs_improvement: 'bg-red-500 text-white shadow-md shadow-red-500/5 font-extrabold'
+                  };
+                  const gradeLabels = {
+                    excellent: t('excellent'),
+                    good: t('good'),
+                    needs_improvement: t('needs_improvement')
                   };
                   const isSelected = record.daily_grade === grade;
                   return (
@@ -408,51 +343,36 @@ const StudentCard = memo(({ student, record, updateStudentField, isMobile, isRtl
                       key={grade}
                       type="button"
                       onClick={() => updateStudentField(student.id, 'daily_grade', grade)}
-                      style={{
-                        flex: 1,
-                        padding: '7px 10px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        background: isSelected ? gradeColors[grade].bg : 'rgba(255,255,255,0.03)',
-                        color: isSelected ? '#000' : '#94a3b8'
-                      }}
+                      className={`flex-1 p-2 rounded-lg border text-[10px] font-bold transition-all ${
+                        isSelected 
+                          ? gradeStyles[grade] + ' border-transparent'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-850'
+                      }`}
                     >
-                      {gradeColors[grade].text}
+                      {gradeLabels[grade]}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* صندوق الملاحظات */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{isRtl ? "ملاحظة خاصة باليوم" : "Today's specific note"}</span>
+            {/* حقل الملاحظات الفردية لليوم */}
+            <div className="flex flex-col gap-1.5 flex-1">
+              <span className="text-[11px] text-slate-400 font-bold">{isRtl ? "ملاحظة التوجيه الخاصة باليوم" : "Today's specific directive"}</span>
               <input 
                 type="text" 
-                placeholder={t('notes') || 'ملاحظات...'}
+                placeholder={t('notes') || 'اكتب ملاحظات المعلم هنا...'}
                 value={record.notes || ''}
                 onChange={(e) => updateStudentField(student.id, 'notes', e.target.value)}
-                style={{ background: '#0F172A', border: '1px solid #233247', color: '#fff', padding: '7px 12px', borderRadius: '8px', outline: 'none', fontSize: '13px', boxSizing: 'border-box', textAlign: isRtl ? 'right' : 'left' }}
+                className={`w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-slate-700 box-border ${isRtl ? 'text-right' : 'text-left'}`}
               />
             </div>
           </div>
 
         </div>
       )}
-
-      <style>{`
-        @keyframes fadeInSlideAttendance {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 });
 
-// تعيين اسم للمكون لسهولة تتبعه أثناء الـ Debugging
 StudentCard.displayName = 'StudentCard';
