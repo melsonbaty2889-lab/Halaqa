@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'; 
 import { supabase } from '../lib/supabase';
-import { sessionService } from '../lib/sessionService'; // 🔗 تم الربط المباشر بملف الخدمات الموحد
-import { C } from '../constants/colors';
+import { sessionService } from '../lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
 import { 
   FaAward, 
@@ -11,7 +10,9 @@ import {
   FaSearch, 
   FaGraduationCap, 
   FaSpinner, 
-  FaCalendarAlt 
+  FaCalendarAlt,
+  FaFileCertificate,
+  FaPrint
 } from 'react-icons/fa';
 
 export default function Exams({ students, academyId }) {
@@ -75,7 +76,7 @@ export default function Exams({ students, academyId }) {
           students (name)
         `)
         .eq('academy_id', academyId)
-        .order('date', { ascending: false }); // الترتيب بناءً على تاريخ الاختبار
+        .order('date', { ascending: false });
 
       if (error) throw error;
       if (data) setExamLogs(data);
@@ -104,7 +105,6 @@ export default function Exams({ students, academyId }) {
     setFeedbackMsg({ type: '', text: '' });
 
     try {
-      // 🚀 استدعاء الدالة المركزية الموحدة من الـ sessionService لضمان التربيط
       const result = await sessionService.saveStudentExam({
         studentId: selectedStudent,
         academyId: academyId,
@@ -121,7 +121,7 @@ export default function Exams({ students, academyId }) {
 
       setFeedbackMsg({ 
         type: 'success', 
-        text: isRtl ? 'تم الحفظ بنجاح وإدراج النتيجة في السجل! 🎉' : 'Saved successfully and logged! 🎉' 
+        text: isRtl ? 'تم اعتماد الاختبار بنجاح وإدراج النتيجة في لوحة الشرف! 🎉' : 'Exam certified successfully and added to honor roll! 🎉' 
       });
       
       // تصفير النموذج للحصص القادمة
@@ -131,7 +131,6 @@ export default function Exams({ students, academyId }) {
       setWarnings(0);
       setNotes('');
       
-      // تحديث السجل التلقائي بالأسفل
       fetchExamLogs();
     } catch (err) {
       console.error(err);
@@ -144,7 +143,14 @@ export default function Exams({ students, academyId }) {
     }
   };
 
-  // 🔍 تحديث الفلترة لتقرأ من الحقل الصحيح والموحد (exam_target)
+  // محاكي طباعة الشهادة للطالب المتفوق
+  const handlePrintCertificate = (log) => {
+    alert(isRtl 
+      ? `جاري تجهيز شهادة التقدير الكبرى للطالب: ${log.students?.name} لنجاحه في اختبار ${log.exam_target} بمعدل ${log.final_score}%` 
+      : `Generating formal certificate for ${log.students?.name} for passing ${log.exam_target} with score ${log.final_score}%`
+    );
+  };
+
   const filteredLogs = examLogs.filter(log => {
     const studentName = log.students?.name?.toLowerCase() || '';
     const content = log.exam_target?.toLowerCase() || ''; 
@@ -153,45 +159,48 @@ export default function Exams({ students, academyId }) {
   });
 
   return (
-    <div style={{ fontFamily: "'Cairo', sans-serif", direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      <div style={{ backgroundColor: C.surface, padding: '20px', borderRadius: '12px', marginBottom: '20px', border: `1px solid ${C.border}` }}>
-        <h2 style={{ color: C.gold, fontSize: '1.6rem', display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
-          <FaAward /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية 🏆' : 'Quranic Exams & Promotions Panel 🏆'}
+      {/* هيدر اللوحة التوضيحي الفاخر */}
+      <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md mb-6">
+        <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-3 margin-0">
+          <FaAward className="text-amber-500" /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية الرسمية' : 'Quranic Exams & Milestones Panel'}
         </h2>
-        <p style={{ color: '#8A99AD', fontSize: '14px', marginTop: '8px', marginBottom: 0 }}>
+        <p className="text-xs text-slate-400 mt-2 font-medium">
           {isRtl 
-            ? `نظام تقييم مرن ملائم لكافة الأعمار والدول. (وزن الخطأ الحالي: ${mistakeWeight} درجات | وزن التنبيه الحالي: ${promptWeight} درجات).` 
-            : `Flexible assessment system for all ages and countries. (Current error weight: ${mistakeWeight} | Current warning weight: ${promptWeight}).`
+            ? `نظام التقييم والاختبارات الكبرى للأجزاء والسور (وزن خطأ الحفظ: ${mistakeWeight} درجات | وزن تنبيه الفتح: ${promptWeight} درجات).` 
+            : `Formal evaluation tracking for juz and milestones. (Error weight: ${mistakeWeight} | Warning weight: ${promptWeight}).`
           }
         </p>
       </div>
 
-      <div style={{ backgroundColor: C.surface, padding: '25px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
-        <h3 style={{ color: '#FFF', fontSize: '1.2rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FaGraduationCap style={{ color: C.gold }} /> {isRtl ? 'إجراء اختبار حي للطالب / الطالبة' : 'Conduct Live Student Exam'}
+      {/* نموذج إجراء الاختبار الحي */}
+      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/20 backdrop-blur-md">
+        <h3 className="text-base font-bold text-white mb-5 flex items-center gap-2">
+          <FaGraduationCap className="text-amber-400 text-lg" /> {isRtl ? 'عقد لجنة اختبار وإصدار تقييم موثق' : 'Conduct Official Live Exam'}
         </h3>
 
+        {/* رسائل التغذية الراجعة */}
         {feedbackMsg.text && (
-          <div style={{
-            padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', fontWeight: 'bold',
-            backgroundColor: feedbackMsg.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-            color: feedbackMsg.type === 'success' ? '#10B981' : '#EF4444',
-            border: `1px solid ${feedbackMsg.type === 'success' ? '#10B981' : '#EF4444'}`
-          }}>
+          <div className={`p-4 rounded-xl mb-5 text-xs font-bold border ${
+            feedbackMsg.type === 'success' 
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+              : 'bg-red-500/10 text-red-400 border-red-500/20'
+          }`}>
             {feedbackMsg.text}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+        {/* حقول الاختيار التفاعلية */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
-            <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'اختر الطالب / الطالبة' : 'Select Student'}</label>
+            <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'اختر الطالب الخاضع للاختبار' : 'Select Student'}</label>
             <select 
               value={selectedStudent} 
               onChange={(e) => setSelectedStudent(e.target.value)}
-              style={{ width: '100%', padding: '12px', backgroundColor: '#0D1622', border: `1px solid ${C.border}`, borderRadius: '8px', color: '#FFF', fontSize: '14px', textAlign: isRtl ? 'right' : 'left' }}
+              className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40"
             >
-              <option value="">{isRtl ? '-- اختر الطالب من الحلقة --' : '-- Select student from list --'}</option>
+              <option value="">{isRtl ? '-- ابحث واختر الطالب --' : '-- Select student --'}</option>
               {students.map(std => (
                 <option key={std.id} value={std.id}>{std.name}</option>
               ))}
@@ -199,69 +208,72 @@ export default function Exams({ students, academyId }) {
           </div>
 
           <div>
-            <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'نوع التقييم' : 'Assessment Type'}</label>
+            <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'مستوى ونوع الاختبار الرسمي' : 'Assessment Scope'}</label>
             <select 
               value={examType} 
               onChange={(e) => setExamType(e.target.value)}
-              style={{ width: '100%', padding: '12px', backgroundColor: '#0D1622', border: `1px solid ${C.border}`, borderRadius: '8px', color: '#FFF', fontSize: '14px', textAlign: isRtl ? 'right' : 'left' }}
+              className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40"
             >
               <option value="surah">{isRtl ? 'سورة قصيرة / كاملة' : 'Short / Full Surah'}</option>
-              <option value="juz">{isRtl ? 'اختبار جزء قرآن كامل' : 'Full Quranic Juz'}</option>
-              <option value="verses">{isRtl ? 'آيات محددة' : 'Specific Verses'}</option>
+              <option value="juz">{isRtl ? 'اختبار جزء قرآن كامل (مثال: جزء عم)' : 'Full Quranic Juz'}</option>
+              <option value="verses">{isRtl ? 'مجموعة آيات محددة ومقاطع' : 'Specific Verses'}</option>
             </select>
           </div>
         </div>
 
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'المحتوى المراد امتحانه' : 'Exam Content'}</label>
+        {/* محتوى الاختبار */}
+        <div className="mb-5">
+          <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'المحتوى الدقيق للجنة الاختبار' : 'Exam Content / Target'}</label>
           <input 
             type="text" 
             value={examContent}
             onChange={(e) => setExamContent(e.target.value)}
-            placeholder={isRtl ? "مثال: سورة النبأ، أو جزء عم كاملاً" : "e.g., Surah An-Naba, or Juz Amma"}
-            style={{ width: '100%', padding: '12px', backgroundColor: '#0D1622', border: `1px solid ${C.border}`, borderRadius: '8px', color: '#FFF', fontSize: '14px' }}
+            placeholder={isRtl ? "مثال: سورة البقرة كاملة، أو ربع يس" : "e.g., Al-Baqarah Complete, or Juz Amma"}
+            className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40"
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '25px' }}>
-          <div style={{ backgroundColor: '#132235', padding: '15px', borderRadius: '10px', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <span style={{ display: 'block', color: '#F87171', fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>{isRtl ? 'الخطأ الكامل (نسيان/تبديل)' : 'Full Error (Forgotten/Swapped)'}</span>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
-              <button type="button" onClick={() => setFullErrors(prev => Math.max(0, prev - 1))} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#2D3748', color: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaMinus style={{margin:'auto'}}/></button>
-              <span style={{ fontSize: '22px', fontWeight: 'bold', color: '#FFF', minWidth: '30px' }}>{fullErrors}</span>
-              <button type="button" onClick={() => setFullErrors(prev => prev + 1)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#EF4444', color: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaPlus style={{margin:'auto'}}/></button>
+        {/* لوحة العدادات المتقدمة للأخطاء والتنبيهات */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+          <div className="p-4 rounded-xl border border-red-500/10 bg-slate-950/40 text-center">
+            <span className="block text-xs font-bold text-red-400 mb-3">{isRtl ? 'الخطأ الكامل (نسيان/تبديل كلمة)' : 'Full Errors (Deductions)'}</span>
+            <div className="flex items-center justify-center gap-4">
+              <button type="button" onClick={() => setFullErrors(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors"><FaMinus size={11} /></button>
+              <span className="text-xl font-extrabold text-white min-w-[24px]">{fullErrors}</span>
+              <button type="button" onClick={() => setFullErrors(prev => prev + 1)} className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors"><FaPlus size={11} /></button>
             </div>
-            <span style={{ display: 'block', color: '#6B7280', fontSize: '11px', marginTop: '8px' }}>(-{mistakeWeight} {isRtl ? 'درجات للواحد' : 'points each'})</span>
+            <span className="block text-[10px] text-slate-500 mt-2">(-{mistakeWeight} {isRtl ? 'درجات للخطأ' : 'pts each'})</span>
           </div>
 
-          <div style={{ backgroundColor: '#132235', padding: '15px', borderRadius: '10px', textAlign: 'center', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-            <span style={{ display: 'block', color: '#F59E0B', fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>{isRtl ? 'الردة / التنبيه (الفتح)' : 'Warning / Prompt'}</span>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
-              <button type="button" onClick={() => setWarnings(prev => Math.max(0, prev - 1))} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#2D3748', color: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaMinus style={{margin:'auto'}}/></button>
-              <span style={{ fontSize: '22px', fontWeight: 'bold', color: '#FFF', minWidth: '30px' }}>{warnings}</span>
-              <button type="button" onClick={() => setWarnings(prev => prev + 1)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#F59E0B', color: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaPlus style={{margin:'auto'}}/></button>
+          <div className="p-4 rounded-xl border border-amber-500/10 bg-slate-950/40 text-center">
+            <span className="block text-xs font-bold text-amber-400 mb-3">{isRtl ? 'الردة / التنبيه (مساعدة الفتح للشيخ)' : 'Warnings / Prompts Given'}</span>
+            <div className="flex items-center justify-center gap-4">
+              <button type="button" onClick={() => setWarnings(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors"><FaMinus size={11} /></button>
+              <span className="text-xl font-extrabold text-white min-w-[24px]">{warnings}</span>
+              <button type="button" onClick={() => setWarnings(prev => prev + 1)} className="w-9 h-9 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center transition-colors"><FaPlus size={11} /></button>
             </div>
-            <span style={{ display: 'block', color: '#6B7280', fontSize: '11px', marginTop: '8px' }}>(-{promptWeight} {isRtl ? 'درجات للواحد' : 'points each'})</span>
+            <span className="block text-[10px] text-slate-500 mt-2">(-{promptWeight} {isRtl ? 'درجات للتنبيه' : 'pts each'})</span>
           </div>
         </div>
 
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ display: 'block', color: '#BACCDD', marginBottom: '10px', fontSize: '14px' }}>{isRtl ? 'مخارج الحروف والتجويد الفطري' : 'Tajweed & Articulation Quality'}</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+        {/* تقييم التجويد */}
+        <div className="mb-5">
+          <label className="block text-xs font-bold text-slate-400 mb-3">{isRtl ? 'جودة الأداء النغمي والتجويد الفطري' : 'Tajweed & Articulation Standard'}</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { id: 'excellent', ar: 'ممتاز ومجود ✨', en: 'Excellent & Tajweed ✨' },
-              { id: 'good', ar: 'حسن التلاوة 👍', en: 'Good Recitation 👍' },
-              { id: 'needs_work', ar: 'بحاجة لضبط المخارج 🎯', en: 'Needs Articulation Work 🎯' }
+              { id: 'good', ar: 'حسن التلاوة والأداء 👍', en: 'Good Recitation 👍' },
+              { id: 'needs_work', ar: 'بحاجة لضبط المخارج والمدود 🎯', en: 'Needs Articulation Work 🎯' }
             ].map(item => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setTajweedRating(item.id)}
-                style={{
-                  padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s ease',
-                  backgroundColor: tajweedRating === item.id ? (C.gold || '#C9A84C') : '#132235',
-                  color: tajweedRating === item.id ? '#000' : C.text
-                }}
+                className={`p-3 text-xs font-bold rounded-xl border transition-all ${
+                  tajweedRating === item.id 
+                    ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/10' 
+                    : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'
+                }`}
               >
                 {isRtl ? item.ar : item.en}
               </button>
@@ -269,92 +281,110 @@ export default function Exams({ students, academyId }) {
           </div>
         </div>
 
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ display: 'block', color: '#BACCDD', marginBottom: '8px', fontSize: '14px' }}>{isRtl ? 'عبارة ثناء ورسالة تشجيعية للطالب' : 'Praise & Motivational Message to Student'}</label>
+        {/* عبارة الثناء والتقدير */}
+        <div className="mb-5">
+          <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'عبارة ثناء ورسالة تقديرية تظهر بالشهادة' : 'Praise & Certification Note'}</label>
           <textarea 
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={isRtl ? "مثال: أداء متميز ومبارك، زادك الله توفيقاً وثباتاً." : "e.g., Outstanding performance, may Allah bless and grant you steadfastness."}
-            rows={3}
-            style={{ width: '100%', padding: '12px', backgroundColor: '#0D1622', border: `1px solid ${C.border}`, borderRadius: '8px', color: '#FFF', fontSize: '14px', resize: 'vertical', fontFamily: 'inherit' }}
+            placeholder={isRtl ? "مثال: أداء راسخ وتلاوة يملؤها الخشوع، بارك الله في حفظك." : "e.g., Profound performance and serene recitation, may Allah bless your memory."}
+            rows={2}
+            className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40 resize-none font-sans"
           />
         </div>
 
-        <div style={{
-          backgroundColor: '#0A111A', padding: '20px', borderRadius: '10px', textAlign: 'center', marginBottom: '25px',
-          border: `1px dashed ${calculatedScore >= 90 ? '#10B981' : calculatedScore >= 75 ? '#F59E0B' : '#EF4444'}`
-        }}>
-          <span style={{ color: '#BACCDD', fontSize: '15px' }}>{isRtl ? 'الدرجة المستحقة المحتسبة حياً:' : 'Live Calculated Score:'}</span>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: calculatedScore >= 90 ? '#10B981' : calculatedScore >= 75 ? '#F59E0B' : '#EF4444', marginTop: '5px' }}>
+        {/* شاشة احتساب النتيجة المباشرة الذكية */}
+        <div className={`p-4 rounded-xl text-center mb-6 border border-dashed ${
+          calculatedScore >= 90 ? 'border-emerald-500/30 bg-emerald-500/5' : calculatedScore >= 75 ? 'border-amber-500/30 bg-amber-500/5' : 'border-red-500/30 bg-red-500/5'
+        }`}>
+          <span className="text-xs text-slate-400 font-bold">{isRtl ? 'الدرجة المستحقة الإجمالية للاختبار:' : 'Live Dynamic Score Matched:'}</span>
+          <div className={`text-3xl font-extrabold mt-1.5 ${
+            calculatedScore >= 90 ? 'text-emerald-400' : calculatedScore >= 75 ? 'text-amber-400' : 'text-red-400'
+          }`}>
             {calculatedScore} / 100
           </div>
         </div>
 
+        {/* زر الاعتماد النهائي */}
         <button
           onClick={handleSaveExam}
           disabled={isSubmitting}
-          style={{
-            width: '100%', padding: '15px', backgroundColor: C.gold || '#C9A84C', color: '#000', border: 'none',
-            borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: isSubmitting ? 0.6 : 1
-          }}
+          className="w-full p-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/5 active:scale-[0.99] transition-all"
         >
-          <FaCheckCircle /> {isSubmitting ? (isRtl ? 'جاري الحفظ...' : 'Saving...') : (isRtl ? 'اعتماد نتيجة الاختبار وإدراجها بـ لوحة الشرف 🚀' : 'Certify Exam & Include in Honor Roll 🚀')}
+          <FaCheckCircle /> {isSubmitting ? (isRtl ? 'جاري توثيق الدرجة...' : 'Certifying...') : (isRtl ? 'اعتماد نتيجة الاختبار الحالية وإدراجها بلوحة الشرف 🚀' : 'Certify Official Exam & Log to Registry 🚀')}
         </button>
-
       </div>
 
-      {/* 📊 الجدول السفلي بعد معالجة وتصحيح حقول الأعمدة المحدثة */}
-      <div style={{ backgroundColor: C.surface, padding: '20px', borderRadius: '12px', marginTop: '25px', border: `1px solid ${C.border}` }}>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-          <FaSearch style={{ position: 'absolute', right: isRtl ? '15px' : 'auto', left: !isRtl ? '15px' : 'auto', color: '#657585' }} />
+      {/* 📊 جدول سجل التقييمات والاختبارات الكبرى السابق */}
+      <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md mt-6">
+        
+        {/* محرك البحث السريع */}
+        <div className="relative mb-4 flex items-center">
+          <FaSearch className={`absolute ${isRtl ? 'right-4' : 'left-4'} text-slate-500 text-xs`} />
           <input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isRtl ? "ابحث عن اسم طالب أو سورة لمعاينة الشهادات والنتائج المعتمدة السابقة..." : "Search by student name or surah to view previous certified certificates..."}
-            style={{ width: '100%', padding: isRtl ? '12px 45px 12px 15px' : '12px 15px 12px 45px', backgroundColor: '#0D1622', border: `1px solid ${C.border}`, borderRadius: '8px', color: '#FFF', fontSize: '14px' }}
+            placeholder={isRtl ? "ابحث باسم الطالب أو السورة لاستعراض الشهادات المعتمدة..." : "Search certified records by name or surah..."}
+            className={`w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-slate-700 ${isRtl ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
           />
         </div>
 
         {loadingLogs ? (
-          <div style={{ textAlign: 'center', color: C.gold, padding: '20px' }}>
-            <FaSpinner className="animate-spin" style={{ marginRight: '8px' }} /> {isRtl ? 'جاري تحميل السجل البنيوي...' : 'Loading logs...'}
+          <div className="text-center text-amber-400 py-6 text-xs font-bold flex items-center justify-center gap-2">
+            <FaSpinner className="animate-spin" /> {isRtl ? 'جاري تحميل سجل اللجان والشهادات...' : 'Loading matrix logs...'}
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#657585', padding: '30px 10px', fontSize: '14px' }}>
-            {isRtl ? 'لا يوجد اختبارات مسجلة تطابق بحثك حالياً.' : 'No recorded exams match your search currently.'}
+          <div className="text-center text-slate-500 py-8 text-xs">
+            {isRtl ? 'لا توجد اختبارات كبرى مسجلة تطابق مدخلاتك حالياً.' : 'No grand exams indexed for this query currently.'}
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', fontSize: '14px', textAlign: isRtl ? 'right' : 'left' }}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" style={{ textAlign: isRtl ? 'right' : 'left' }}>
               <thead>
-                <tr style={{ borderBottom: `2px solid ${C.border}`, color: '#BACCDD' }}>
-                  <th style={{ padding: '12px' }}>{isRtl ? 'الطالب' : 'Student'}</th>
-                  <th style={{ padding: '12px' }}>{isRtl ? 'المحتوى' : 'Content'}</th>
-                  <th style={{ padding: '12px' }}>{isRtl ? 'الدرجة' : 'Score'}</th>
-                  <th style={{ padding: '12px' }}>{isRtl ? 'التجويد' : 'Tajweed'}</th>
-                  <th style={{ padding: '12px' }}><FaCalendarAlt /> {isRtl ? 'التاريخ' : 'Date'}</th>
+                <tr className="border-b border-slate-800/80 text-slate-400 font-bold">
+                  <th className="pb-3 px-3">{isRtl ? 'الطالب' : 'Student'}</th>
+                  <th className="pb-3 px-3">{isRtl ? 'المستوى ونطاق التميز' : 'Target Scope'}</th>
+                  <th className="pb-3 px-3 text-center">{isRtl ? 'الدرجة الموثقة' : 'Score Card'}</th>
+                  <th className="pb-3 px-3 text-center">{isRtl ? 'التجويد والأداء' : 'Tajweed Line'}</th>
+                  <th className="pb-3 px-3 text-center">{isRtl ? 'تاريخ اللجنة' : 'Date'}</th>
+                  <th className="pb-3 px-3 text-center">{isRtl ? 'الشهادة' : 'Certificate'}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-900/60 font-medium">
                 {filteredLogs.map(log => (
-                  <tr key={log.id} style={{ borderBottom: `1px solid ${C.border}`, color: '#FFF' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{log.students?.name || (isRtl ? 'طالب محذوف' : 'Deleted Student')}</td>
-                    <td style={{ padding: '12px' }}>
-                      <span style={{ backgroundColor: '#1E293B', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', marginLeft: '6px', marginRight: '6px' }}>
+                  <tr key={log.id} className="hover:bg-slate-900/30 transition-colors text-slate-200">
+                    <td className="py-3.5 px-3 font-bold text-white">{log.students?.name || (isRtl ? 'طالب غير متوفر' : 'N/A')}</td>
+                    <td className="py-3.5 px-3">
+                      <span className="bg-slate-900 border border-slate-800 text-[10px] px-1.5 py-0.5 rounded text-slate-400 mx-1">
                         {log.exam_type === 'surah' ? (isRtl ? 'سورة' : 'Surah') : log.exam_type === 'juz' ? (isRtl ? 'جزء' : 'Juz') : (isRtl ? 'آيات' : 'Verses')}
                       </span>
-                      {log.exam_target} {/* ✅ تصحيح: تم الاستبدال من exam_content إلى exam_target ليعمل العرض */}
+                      <span className="text-slate-300">{log.exam_target}</span>
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: log.final_score >= 90 ? '#10B981' : log.final_score >= 75 ? '#F59E0B' : '#EF4444' }}>
-                      {log.final_score} / 100 {/* ✅ تصحيح: تم الاستبدال من score إلى final_score ليعمل العرض */}
+                    <td className={`py-3.5 px-3 text-center font-extrabold ${log.final_score >= 90 ? 'text-emerald-400' : log.final_score >= 75 ? 'text-amber-400' : 'text-red-400'}`}>
+                      {log.final_score}%
                     </td>
-                    <td style={{ padding: '12px', fontSize: '13px' }}>
-                      {log.tajweed_grade === 'excellent' ? ' ممتاز ✨' : log.tajweed_grade === 'good' ? 'حسن 👍' : 'ضبط مخارج 🎯'} {/* ✅ تصحيح: تم الاستبدال من tajweed_rating إلى tajweed_grade ليعمل العرض */}
+                    <td className="py-3.5 px-3 text-center text-[11px] text-slate-400">
+                      {log.tajweed_grade === 'excellent' ? 'امتياز ومجود ✨' : log.tajweed_grade === 'good' ? 'حسن التلاوة 👍' : 'ضبط مخارج 🎯'}
                     </td>
-                    <td style={{ padding: '12px', color: '#657585', fontSize: '12px' }}>
-                      {log.date ? new Date(log.date).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : (isRtl ? 'بلا تاريخ' : 'No Date')}
+                    <td className="py-3.5 px-3 text-center text-slate-500 font-mono text-[11px]">
+                      {log.date ? new Date(log.date).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '—'}
+                    </td>
+                    {/* ميزة توليد وطباعة الشهادة المضافة للمتفوقين */}
+                    <td className="py-3.5 px-3 text-center">
+                      <button
+                        onClick={() => handlePrintCertificate(log)}
+                        disabled={log.final_score < 75}
+                        className={`p-1.5 rounded-lg border text-[10px] font-bold inline-flex items-center gap-1.5 transition-all active:scale-90 ${
+                          log.final_score >= 90 
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-slate-950' 
+                            : 'bg-slate-950 text-slate-600 border-slate-900 disabled:opacity-20'
+                        }`}
+                        title={isRtl ? "طباعة شهادة التقدير الرسمية" : "Print Official Milestone Certificate"}
+                      >
+                        <FaPrint size={11} />
+                        <span>{isRtl ? 'الشهادة' : 'Cert'}</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
