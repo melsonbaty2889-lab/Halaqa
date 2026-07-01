@@ -28,14 +28,16 @@ export default function Dashboard({
   const academyName = preloadedDashboardData?.academyName || "";
   const userFullName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
 
-  // 2. دمج آمن ومطور للبيانات مسبقة التحميل مع المؤشرات اللحظية المجلوبة من السيرفر
+    // دمج آمن ومطور للبيانات مسبقة التحميل مع المؤشرات اللحظية المجلوبة من السيرفر
   const baseStats = preloadedDashboardData?.stats || { students: 0, pending: 0, activeHalagas: 0, completedExams: 0 };
   const stats = {
     ...baseStats,
     students: liveStats?.studentsCount !== undefined ? liveStats.studentsCount : (baseStats.students || 0),
     pending: liveStats?.overdueCount !== undefined ? liveStats.overdueCount : (baseStats.pending || 0),
     attendanceRate: liveStats?.attendanceRate || null,
-    totalPagesRecited: liveStats?.totalPagesRecited || null // التسمية اللغوية الصحيحة عالمياً
+    totalPagesRecited: liveStats?.totalPagesRecited || null,
+    // 👇 هذا هو السطر المطور المسؤول عن نقل مصفوفة الحلقات الحية إلى كروت العرض
+    activeHalaqasData: liveStats?.activeHalaqasData || [] 
   };
 
   // 3. الترحيب العالمي الموحد والمستقر (تحية السلام)
