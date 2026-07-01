@@ -9,13 +9,29 @@ import Sidebar from './Sidebar.jsx';
 import Header from './Header.jsx';
 import Dashboard from './Dashboard.jsx'; 
 
-const Students = lazy(() => import('./Students.jsx'));
-const Attendance = lazy(() => import('./Attendance.jsx'));
-const Exams = lazy(() => import('./Exams.jsx')); 
-const Payments = lazy(() => import('./Payments.jsx'));
-const Settings = lazy(() => import('./Settings.jsx')); 
-const Reports = lazy(() => import('./Reports.jsx'));
-const SubscriptionPage = lazy(() => import('./SubscriptionPage.jsx'));
+// 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء البناء القديم (Chunk Load/Fetch Failure) تلقائياً
+const safeLazy = (importFn) => {
+  return lazy(() =>
+    importFn().catch((error) => {
+      const errorMsg = error?.message || error?.toString() || '';
+      if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
+        console.warn("🚨 تم رصد نسخة بناء قديمة في كاش المتصفح، جاري إعادة تحميل المنظومة لجلب التحديثات...");
+        window.location.reload();
+        return new Promise(() => {}); // إرجاع وعد معلق لضمان عدم ظهور شاشات خطأ مؤقتة أثناء التحديث
+      }
+      throw error;
+    })
+  );
+};
+
+// 🌐 تحسين عالمي: استيراد الأقسام ديناميكياً عبر درع الصيانة safeLazy لمنع توقف الصفحات
+const Students = safeLazy(() => import('./Students.jsx'));
+const Attendance = safeLazy(() => import('./Attendance.jsx'));
+const Exams = safeLazy(() => import('./Exams.jsx')); 
+const Payments = safeLazy(() => import('./Payments.jsx'));
+const Settings = safeLazy(() => import('./Settings.jsx')); 
+const Reports = safeLazy(() => import('./Reports.jsx'));
+const SubscriptionPage = safeLazy(() => import('./SubscriptionPage.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -31,6 +47,14 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     const { t } = this.props;
     if (this.state.hasError) {
+      const errorMsg = this.state.error?.message || this.state.error?.toString() || '';
+      
+      // في حال تسلل الخطأ إلى الحارس الداخلي، يتم تداركه فوراً وإعادة تحميل الصفحة
+      if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
+        window.location.reload();
+        return null;
+      }
+
       return (
         <div className={styles.errorInnerWrapper} style={{ padding: '20px', background: '#1e293b', borderRadius: '12px', textAlign: 'center', color: '#EF4444' }}>
           <h3>⚠️ {t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم')}</h3>
