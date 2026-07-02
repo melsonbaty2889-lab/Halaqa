@@ -3,25 +3,27 @@ import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { Card, Badge, Btn, TH, TD } from './UI';
 import { useTranslation } from 'react-i18next';
+// استيراد قائمة الدول الموحدة من الثوابت الخاصة بك
+import { COUNTRIES_LIST } from '../constants/countries';
 
-// قائمة الدول القياسية العالمية المشتركة للطلاب والمحفظين لمنع تشوه القائمة بظهور الأعلام مطاطية
-const COUNTRIES = [
-  { code: 'EG', nameAr: 'مصر', nameEn: 'Egypt', flag: '🇪🇬', dialCode: '+20' },
-  { code: 'SA', nameAr: 'المملكة العربية السعودية', nameEn: 'Saudi Arabia', flag: '🇸🇦', dialCode: '+966' },
-  { code: 'AE', nameAr: 'الإمارات العربية المتحدة', nameEn: 'UAE', flag: '🇦🇪', dialCode: '+971' },
-  { code: 'KW', nameAr: 'الكويت', nameEn: 'Kuwait', flag: '🇰🇼', dialCode: '+965' },
-  { code: 'QA', nameAr: 'قطر', nameEn: 'Qatar', flag: '🇶🇦', dialCode: '+974' },
-  { code: 'OM', nameAr: 'عُمان', nameEn: 'Oman', flag: '🇴🇲', dialCode: '+968' },
-  { code: 'BH', nameAr: 'البحرين', nameEn: 'Bahrain', flag: '🇧🇭', dialCode: '+973' },
-  { code: 'JO', nameAr: 'الأردن', nameEn: 'Jordan', flag: '🇯🇴', dialCode: '+962' },
-  { code: 'PS', nameAr: 'فلسطين', nameEn: 'Palestine', flag: '🇵🇸', dialCode: '+970' },
-  { code: 'SY', nameAr: 'سوريا', nameEn: 'Syria', flag: '🇸🇾', dialCode: '+963' },
-  { code: 'LB', nameAr: 'لبنان', nameEn: 'Lebanon', flag: '🇱🇧', dialCode: '+961' },
-  { code: 'US', nameAr: 'الولايات المتحدة', nameEn: 'USA', flag: '🇺🇸', dialCode: '+1' },
-  { code: 'GB', nameAr: 'المملكة المتحدة', nameEn: 'UK', flag: '🇬🇧', dialCode: '+44' },
-  { code: 'CA', nameAr: 'كندا', nameEn: 'Canada', flag: '🇨🇦', dialCode: '+1' }
-];
+const COUNTRY_NAMES_EN = {
+  EG: 'Egypt', SA: 'Saudi Arabia', AE: 'UAE', KW: 'Kuwait', QA: 'Qatar',
+  OM: 'Oman', BH: 'Bahrain', JO: 'Jordan', PS: 'Palestine', SY: 'Syria',
+  LB: 'Lebanon', IQ: 'Iraq', YE: 'Yemen', MA: 'Morocco', DZ: 'Algeria',
+  TN: 'Tunisia', LY: 'Libya', SD: 'Sudan', SO: 'Somalia', MR: 'Mauritania',
+  DJ: 'Djibouti', KM: 'Comoros', ID: 'Indonesia', PK: 'Pakistan', BD: 'Bangladesh',
+  MY: 'Malaysia', TR: 'Turkey', AF: 'Afghanistan', UZ: 'Uzbekistan', NG: 'Nigeria',
+  SN: 'Senegal', ML: 'Mali', IN: 'India', PH: 'Philippines', CN: 'China',
+  ZA: 'South Africa', LK: 'Sri Lanka', RU: 'Russia', US: 'USA', CA: 'Canada',
+  GB: 'UK', FR: 'France', DE: 'Germany', NL: 'Netherlands', BE: 'Belgium', AU: 'Australia'
+};
 
+
+const getCountryName = (countryObj, currentLang) => {
+  if (!countryObj) return '';
+  if (currentLang === 'ar') return countryObj.name;
+  return COUNTRY_NAMES_EN[countryObj.code] || countryObj.name;}; 
+   
 export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
@@ -41,7 +43,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: ''
   });
 
-  // --- حالات قسم المحفظين والمعلمين المدمج حديثاً ---
+  // --- حالات قسم المحفظين والمعلمين ---
   const [teacherViewMode, setTeacherViewMode] = useState('active'); // active | archive
   const [showTeacherForm, setShowTeacherForm] = useState(false);
   const [teachersList, setTeachersList] = useState([]);
@@ -59,14 +61,18 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // دالة حساب عرض التاريخ المزدوج المتزامن (ميلادي وهجري معاً) حسب لغة المنصة
+  // دالة حساب عرض التاريخ المزدوج الذكي والمعالج هندسياً من أخطاء الـ BC
   const getDualDateString = () => {
     const today = new Date();
     const gregOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const gregPart = today.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', gregOptions);
     try {
       const hijriOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
-      const hijriPart = today.toLocaleDateString(currentLang === 'ar' ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', hijriOptions);
+      let hijriPart = today.toLocaleDateString(currentLang === 'ar' ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', hijriOptions);
+      
+      // تصحيح فوري وذكي لثغرة ظهور مخرجات المتصفحات الغربية بعبارة (BC) الخاطئة بالتاريخ الهجري الإسلامي
+      hijriPart = hijriPart.replace(/\bBC\b/g, 'AH').replace(/\bقبل الميلاد\b/g, 'هـ');
+      
       return isRtl ? `${gregPart} مـ | 🗓️ هجري: ${hijriPart}` : `${gregPart} AD | 🗓️ Hijri: ${hijriPart}`;
     } catch (e) {
       return gregPart;
@@ -123,7 +129,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     if (!studentFormData.name.trim() || !studentFormData.parent_phone.trim()) {
       return alert(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية', 'Please fill in required fields'));
     }
-    const selectedCountry = COUNTRIES.find(c => c.code === studentFormData.country_code);
+    const selectedCountry = COUNTRIES_LIST.find(c => c.code === studentFormData.country_code);
     const fullPhone = `${selectedCountry?.dialCode || ''}${studentFormData.parent_phone.trim().replace(/^0+/, '')}`;
 
     const payload = {
@@ -162,7 +168,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     if (!teacherFormData.name.trim() || !teacherFormData.phone.trim()) {
       return alert(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية', 'Please fill in required fields'));
     }
-    const selectedCountry = COUNTRIES.find(c => c.code === teacherFormData.country_code);
+    const selectedCountry = COUNTRIES_LIST.find(c => c.code === teacherFormData.country_code);
     const fullPhone = `${selectedCountry?.dialCode || ''}${teacherFormData.phone.trim().replace(/^0+/, '')}`;
 
     const payload = {
@@ -191,7 +197,6 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     if (!error) setTeachersList(prev => prev.filter(t => t.id !== id));
   };
 
-  // تصفية نتائج البحث الفوري للطلاب والمحفظين
   const filteredStudents = studentsList.filter(s =>
     s.name.toLowerCase().includes(studentSearch.toLowerCase()) || (s.parent_phone && s.parent_phone.includes(studentSearch))
   );
@@ -203,36 +208,38 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", paddingBottom: '40px' }}>
       
-      {/* العناوين والتواريخ المزدوجة المتزامنة لمنع تضارب الرؤية البصرية لأصحاب الفروع الدولية */}
+      {/* رأس الصفحة مع التاريخ المزدوج المصلح ذكياً */}
       <div style={{ marginBottom: '20px', textAlign: isRtl ? 'right' : 'left' }}>
-        <h2 style={{ fontSize: '1.7rem', fontWeight: '800', color: C.gold, margin: '0 0 4px 0' }}>
+        <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: C.gold, margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
           {trans('mainModuleTitle', 'إدارة شؤون الأكاديمية العظمى', 'Academy Corporate Management')} 🎓
         </h2>
-        <p style={{ margin: 0, color: '#94a3b8', fontSize: '14px', fontWeight: '600' }}>
+        <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', fontWeight: '600', opacity: 0.9 }}>
           {getDualDateString()}
         </p>
       </div>
 
-      {/* نظام التبويب العلوي العالمي المدمج لتوحيد شاشة "الطلاب والمحفظون" */}
+      {/* التبويبات العلوية المحسنة لمنع تكرار الكلمات والارتباك البصري */}
       <div style={{ display: 'flex', background: '#162030', padding: '6px', borderRadius: '14px', marginBottom: '24px', gap: '6px' }}>
         <button
           onClick={() => setMainTab('students')}
           style={{
-            flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
+            flex: 1, padding: '12px 8px', borderRadius: '10px', border: 'none',
             background: mainTab === 'students' ? C.gold : 'transparent',
             color: mainTab === 'students' ? '#0f172a' : '#94a3b8',
-            fontWeight: '700', fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s'
+            fontWeight: '800', fontSize: isMobile ? '13px' : '15px', cursor: 'pointer', transition: 'all 0.2s',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
           }}
         >
-          👨‍🎓 {trans('tabStudentsLabel', 'شؤون الطلاب والمحفظين', 'Students Division')}
+          👨‍🎓 {trans('tabStudentsLabel', 'شؤون الطلاب', 'Students Division')}
         </button>
         <button
           onClick={() => setMainTab('teachers')}
           style={{
-            flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
+            flex: 1, padding: '12px 8px', borderRadius: '10px', border: 'none',
             background: mainTab === 'teachers' ? C.gold : 'transparent',
             color: mainTab === 'teachers' ? '#0f172a' : '#94a3b8',
-            fontWeight: '700', fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s'
+            fontWeight: '800', fontSize: isMobile ? '13px' : '15px', cursor: 'pointer', transition: 'all 0.2s',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
           }}
         >
           🕌 {trans('tabTeachersLabel', 'هيئة المحفظين والمعلمين', 'Teachers & Faculty')}
@@ -240,20 +247,31 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
       </div>
 
       {/* ========================================================================= */}
-      {/* 🔴 أولاً: واجهة وقسم إدارة الطلاب المكتملة بالتعديلات العالمية */}
+      {/* 🔴 أولاً: واجهة وقسم إدارة الطلاب */}
       {/* ========================================================================= */}
       {mainTab === 'students' && (
         <div>
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexDirection: isMobile ? 'column' : 'row' }}>
             <button
               onClick={() => setShowStudentForm(!showStudentForm)}
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: showStudentForm ? '#1e293b' : C.gold, color: showStudentForm ? '#fff' : '#0f172a', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px' }}
+              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: showStudentForm ? '#1e293b' : C.gold, color: showStudentForm ? '#fff' : '#0f172a', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '14px' }}
             >
-              {showStudentForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : `➕ ${trans('addNewStudent', 'إضافة طالب جديد للمنظومة', 'Add New Student')}`}
+              {showStudentForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span>➕</span>
+                  <span>{trans('addNewStudent', 'إضافة طالب جديد للمنظومة', 'Add New Student')}</span>
+                </span>
+              )}
             </button>
             <button
               onClick={() => setStudentViewMode(studentViewMode === 'active' ? 'archive' : 'active')}
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `1px solid ${studentViewMode === 'active' ? '#ef4444' : C.gold}`, background: 'transparent', color: studentViewMode === 'active' ? '#ef4444' : C.gold, fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px' }}
+              style={{ 
+                flex: 1, padding: '14px', borderRadius: '12px', 
+                border: `1px solid ${studentViewMode === 'active' ? '#ef4444' : C.gold}`, 
+                background: studentViewMode === 'active' ? 'transparent' : '#ef4444', 
+                color: studentViewMode === 'active' ? '#ef4444' : '#fff', 
+                fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', transition: 'all 0.2s' 
+              }}
             >
               📦 {studentViewMode === 'active' ? trans('viewArchive', 'عرض أرشيف الطلاب', 'View Students Archive') : trans('viewActive', 'عرض الطلاب النشطين', 'View Active Students')}
             </button>
@@ -282,8 +300,8 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblPhone', 'رقم الهاتف وتحديد الدولة للتواصل الدولي', 'Country & Contact Number')}</label>
                   <div style={{ display: 'flex', gap: '10px', direction: 'ltr' }}>
-                    <select value={studentFormData.country_code} onChange={(e) => setStudentFormData({...studentFormData, country_code: e.target.value})} style={{ width: '120px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
-                      {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode}</option>)}
+                    <select value={studentFormData.country_code} onChange={(e) => setStudentFormData({...studentFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
+                      {COUNTRIES_LIST.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode} ({c.name})</option>)}
                     </select>
                     <input type="tel" placeholder="123456789" value={studentFormData.parent_phone} onChange={(e) => setStudentFormData({...studentFormData, parent_phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', textAlign: 'left' }} />
                   </div>
@@ -311,8 +329,9 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
             </Card>
           )}
 
+          {/* حقل البحث المحمي من الاختناق على الموبايل */}
           <div style={{ marginBottom: '16px' }}>
-            <input type="text" placeholder={trans('phSearchStudent', 'ابحث باسم الطالب أو رقم الهاتف الفوري...', 'Search student...')} value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="text" placeholder={trans('phSearchStudent', 'ابحث باسم الطالب أو رقم الهاتف الفوري...', 'Search student...')} value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <Card style={{ padding: 0, background: 'transparent' }}>
@@ -323,7 +342,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
             ) : isMobile ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredStudents.map(s => {
-                  const country = COUNTRIES.find(c => c.code === s.country);
+                  const country = COUNTRIES_LIST.find(c => c.code === s.country);
                   return (
                     <div key={s.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -351,7 +370,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   {filteredStudents.map(s => (
                     <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                       <TD style={{ color: '#fff', fontWeight: '600' }}>{s.name}</TD>
-                      <TD style={{ color: '#94a3b8' }}>{COUNTRIES.find(c => c.code === s.country)?.flag} {isRtl ? COUNTRIES.find(c => c.code === s.country)?.nameAr : COUNTRIES.find(c => c.code === s.country)?.nameEn}</TD>
+                      <TD style={{ color: '#94a3b8' }}>{COUNTRIES_LIST.find(c => c.code === s.country)?.flag} {COUNTRIES_LIST.find(c => c.code === s.country)?.name}</TD>
                       <TD style={{ color: C.gold }}>{trans('juzLabel', 'الجزء', 'Juz')} {s.current_juz}</TD>
                       <TD><Btn style={{ background: studentViewMode === 'active' ? '#ef4444' : '#10b981' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>{studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}</Btn></TD>
                     </tr>
@@ -364,20 +383,31 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
       )}
 
       {/* ========================================================================= */}
-      {/* 🟢 ثانياً: واجهة وقسم إدارة المحفظين والمعلمين (المدمج حديثاً عالمياً) */}
+      {/* 🟢 ثانياً: واجهة وقسم إدارة المحفظين والمعلمين */}
       {/* ========================================================================= */}
       {mainTab === 'teachers' && (
         <div>
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexDirection: isMobile ? 'column' : 'row' }}>
             <button
               onClick={() => setShowTeacherForm(!showTeacherForm)}
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: showTeacherForm ? '#1e293b' : C.gold, color: showTeacherForm ? '#fff' : '#0f172a', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px' }}
+              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: showTeacherForm ? '#1e293b' : C.gold, color: showTeacherForm ? '#fff' : '#0f172a', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '14px' }}
             >
-              {showTeacherForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : `➕ ${trans('addNewTeacher', 'تعيين محفظ/معلم جديد', 'Recruit New Teacher')}`}
+              {showTeacherForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span>➕</span>
+                  <span>{trans('addNewTeacher', 'تعيين محفظ/معلم جديد', 'Recruit New Teacher')}</span>
+                </span>
+              )}
             </button>
             <button
               onClick={() => setTeacherViewMode(teacherViewMode === 'active' ? 'archive' : 'active')}
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `1px solid ${teacherViewMode === 'active' ? '#ef4444' : C.gold}`, background: 'transparent', color: teacherViewMode === 'active' ? '#ef4444' : C.gold, fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px' }}
+              style={{ 
+                flex: 1, padding: '14px', borderRadius: '12px', 
+                border: `1px solid ${teacherViewMode === 'active' ? '#ef4444' : C.gold}`, 
+                background: teacherViewMode === 'active' ? 'transparent' : '#ef4444', 
+                color: teacherViewMode === 'active' ? '#ef4444' : '#fff', 
+                fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', transition: 'all 0.2s' 
+              }}
             >
               📦 {teacherViewMode === 'active' ? trans('viewTeacherArchive', 'عرض أرشيف المحفظين', 'View Teachers Archive') : trans('viewTeacherActive', 'عرض المحفظين النشطين', 'View Active Teachers')}
             </button>
@@ -400,8 +430,8 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblTeacherPhone', 'رقم هاتف المعلم الدولي الموحد', 'Teacher WhatsApp Phone')}</label>
                   <div style={{ display: 'flex', gap: '10px', direction: 'ltr' }}>
-                    <select value={teacherFormData.country_code} onChange={(e) => setTeacherFormData({...teacherFormData, country_code: e.target.value})} style={{ width: '120px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
-                      {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode}</option>)}
+                    <select value={teacherFormData.country_code} onChange={(e) => setTeacherFormData({...teacherFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
+                      {COUNTRIES_LIST.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode} ({c.name})</option>)}
                     </select>
                     <input type="tel" placeholder="100234567" value={teacherFormData.phone} onChange={(e) => setTeacherFormData({...teacherFormData, phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', textAlign: 'left' }} />
                   </div>
@@ -425,8 +455,9 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
             </Card>
           )}
 
+          {/* حقل بحث المحفظين المحمي */}
           <div style={{ marginBottom: '16px' }}>
-            <input type="text" placeholder={trans('phSearchTeacher', 'ابحث باسم المحفظ أو رقم الاتصال الدولي فوري...', 'Search teacher...')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="text" placeholder={trans('phSearchTeacher', 'ابحث باسم المحفظ أو رقم الاتصال الدولي فوري...', 'Search teacher...')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <Card style={{ padding: 0, background: 'transparent' }}>
@@ -437,7 +468,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
             ) : isMobile ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredTeachers.map(tch => {
-                  const country = COUNTRIES.find(c => c.code === tch.country);
+                  const country = COUNTRIES_LIST.find(c => c.code === tch.country);
                   return (
                     <div key={tch.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -465,7 +496,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   {filteredTeachers.map(tch => (
                     <tr key={tch.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                       <TD style={{ color: '#fff', fontWeight: '600' }}>{tch.name}</TD>
-                      <TD style={{ color: '#94a3b8' }}>{COUNTRIES.find(c => c.code === tch.country)?.flag} {isRtl ? COUNTRIES.find(c => c.code === tch.country)?.nameAr : COUNTRIES.find(c => c.code === tch.country)?.nameEn}</TD>
+                      <TD style={{ color: '#94a3b8' }}>{COUNTRIES_LIST.find(c => c.code === tch.country)?.flag} {COUNTRIES_LIST.find(c => c.code === tch.country)?.name}</TD>
                       <TD style={{ color: C.gold }}>{tch.salary_system === 'monthly' ? trans('salMonthly', 'راتب شهري', 'Monthly') : tch.salary_system === 'per_hour' ? trans('salHour', 'بالحصة', 'Per Class') : trans('salVolunteer', 'تطوعي', 'Volunteer')}</TD>
                       <TD><Btn style={{ background: teacherViewMode === 'active' ? '#ef4444' : '#10b981' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>{teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة المعلم', 'Archive') : trans('btnActivate', 'تنشيط الحساب', 'Activate')}</Btn></TD>
                     </tr>
