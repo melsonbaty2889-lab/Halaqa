@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate', // تحديث التطبيق تلقائياً في الخلفية عند رفع كود جديد
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
-        name: 'Smart Halaqa | المنصة الذكية للحلقات',
+        name: 'Smart Halaqa | الحلقة الذكية',
         short_name: 'SmartHalaqa',
         description: 'منصة عالمية متطورة لإدارة حلقات وأكاديميات تحفيظ القرآن الكريم',
         theme_color: '#090F17',
