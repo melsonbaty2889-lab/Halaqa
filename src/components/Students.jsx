@@ -3,27 +3,9 @@ import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { Card, Badge, Btn, TH, TD } from './UI';
 import { useTranslation } from 'react-i18next';
-// استيراد قائمة الدول الموحدة من الثوابت الخاصة بك
+// استيراد قائمة الدول الموحدة والعالمية الجديدة
 import { COUNTRIES_LIST } from '../constants/countries';
 
-const COUNTRY_NAMES_EN = {
-  EG: 'Egypt', SA: 'Saudi Arabia', AE: 'UAE', KW: 'Kuwait', QA: 'Qatar',
-  OM: 'Oman', BH: 'Bahrain', JO: 'Jordan', PS: 'Palestine', SY: 'Syria',
-  LB: 'Lebanon', IQ: 'Iraq', YE: 'Yemen', MA: 'Morocco', DZ: 'Algeria',
-  TN: 'Tunisia', LY: 'Libya', SD: 'Sudan', SO: 'Somalia', MR: 'Mauritania',
-  DJ: 'Djibouti', KM: 'Comoros', ID: 'Indonesia', PK: 'Pakistan', BD: 'Bangladesh',
-  MY: 'Malaysia', TR: 'Turkey', AF: 'Afghanistan', UZ: 'Uzbekistan', NG: 'Nigeria',
-  SN: 'Senegal', ML: 'Mali', IN: 'India', PH: 'Philippines', CN: 'China',
-  ZA: 'South Africa', LK: 'Sri Lanka', RU: 'Russia', US: 'USA', CA: 'Canada',
-  GB: 'UK', FR: 'France', DE: 'Germany', NL: 'Netherlands', BE: 'Belgium', AU: 'Australia'
-};
-
-
-const getCountryName = (countryObj, currentLang) => {
-  if (!countryObj) return '';
-  if (currentLang === 'ar') return countryObj.name;
-  return COUNTRY_NAMES_EN[countryObj.code] || countryObj.name;}; 
-   
 export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
@@ -85,7 +67,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     return isRtl ? fallbackAr : fallbackEn;
   };
 
-  // تأثير جلب بيانات الطلاب
+  // تأثير جلب بيانات الطلاب من سوبابيس
   useEffect(() => {
     const fetchStudents = async () => {
       if (!academyId || mainTab !== 'students') return;
@@ -104,7 +86,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     fetchStudents();
   }, [academyId, studentViewMode, mainTab, refreshTrigger]);
 
-  // تأثير جلب بيانات المحفظين والمعلمين
+  // تأثير جلب بيانات المحفظين والمعلمين من سوبابيس
   useEffect(() => {
     const fetchTeachers = async () => {
       if (!academyId || mainTab !== 'teachers') return;
@@ -301,7 +283,11 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblPhone', 'رقم الهاتف وتحديد الدولة للتواصل الدولي', 'Country & Contact Number')}</label>
                   <div style={{ display: 'flex', gap: '10px', direction: 'ltr' }}>
                     <select value={studentFormData.country_code} onChange={(e) => setStudentFormData({...studentFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
-                      {COUNTRIES_LIST.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode} ({c.name})</option>)}
+                      {COUNTRIES_LIST.map(c => (
+                        <option key={c.code} value={c.code}>
+                          {c.flag} {c.dialCode} ({currentLang === 'ar' ? c.nameAr : c.nameEn})
+                        </option>
+                      ))}
                     </select>
                     <input type="tel" placeholder="123456789" value={studentFormData.parent_phone} onChange={(e) => setStudentFormData({...studentFormData, parent_phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', textAlign: 'left' }} />
                   </div>
@@ -347,7 +333,9 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                     <div key={s.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontWeight: '700', color: '#fff' }}>{s.name}</div>
-                        <div style={{ fontSize: '12px', color: C.gold, marginTop: '4px' }}>{country?.flag} {trans('juzShort', 'جزء', 'Juz')} {s.current_juz}</div>
+                        <div style={{ fontSize: '12px', color: C.gold, marginTop: '4px' }}>
+                          {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : s.country} | {trans('juzShort', 'جزء', 'Juz')} {s.current_juz}
+                        </div>
                       </div>
                       <Btn style={{ padding: '6px 12px', fontSize: '12px', background: 'rgba(255,255,255,0.05)', color: '#fff' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>
                         {studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
@@ -370,7 +358,12 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   {filteredStudents.map(s => (
                     <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                       <TD style={{ color: '#fff', fontWeight: '600' }}>{s.name}</TD>
-                      <TD style={{ color: '#94a3b8' }}>{COUNTRIES_LIST.find(c => c.code === s.country)?.flag} {COUNTRIES_LIST.find(c => c.code === s.country)?.name}</TD>
+                      <TD style={{ color: '#94a3b8' }}>
+                        {(() => {
+                          const c = COUNTRIES_LIST.find(item => item.code === s.country);
+                          return c ? `${c.flag} ${currentLang === 'ar' ? c.nameAr : c.nameEn}` : s.country;
+                        })()}
+                      </TD>
                       <TD style={{ color: C.gold }}>{trans('juzLabel', 'الجزء', 'Juz')} {s.current_juz}</TD>
                       <TD><Btn style={{ background: studentViewMode === 'active' ? '#ef4444' : '#10b981' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>{studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}</Btn></TD>
                     </tr>
@@ -431,7 +424,11 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblTeacherPhone', 'رقم هاتف المعلم الدولي الموحد', 'Teacher WhatsApp Phone')}</label>
                   <div style={{ display: 'flex', gap: '10px', direction: 'ltr' }}>
                     <select value={teacherFormData.country_code} onChange={(e) => setTeacherFormData({...teacherFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
-                      {COUNTRIES_LIST.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode} ({c.name})</option>)}
+                      {COUNTRIES_LIST.map(c => (
+                        <option key={c.code} value={c.code}>
+                          {c.flag} {c.dialCode} ({currentLang === 'ar' ? c.nameAr : c.nameEn})
+                        </option>
+                      ))}
                     </select>
                     <input type="tel" placeholder="100234567" value={teacherFormData.phone} onChange={(e) => setTeacherFormData({...teacherFormData, phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', textAlign: 'left' }} />
                   </div>
@@ -473,7 +470,9 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                     <div key={tch.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontWeight: '700', color: '#fff' }}>{tch.name}</div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{country?.flag} {tch.phone}</div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                          {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : tch.country} | {tch.phone}
+                        </div>
                       </div>
                       <Btn style={{ padding: '6px 12px', fontSize: '12px', background: 'rgba(255,255,255,0.05)', color: '#fff' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>
                         {teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
@@ -496,7 +495,12 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   {filteredTeachers.map(tch => (
                     <tr key={tch.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                       <TD style={{ color: '#fff', fontWeight: '600' }}>{tch.name}</TD>
-                      <TD style={{ color: '#94a3b8' }}>{COUNTRIES_LIST.find(c => c.code === tch.country)?.flag} {COUNTRIES_LIST.find(c => c.code === tch.country)?.name}</TD>
+                      <TD style={{ color: '#94a3b8' }}>
+                        {(() => {
+                          const c = COUNTRIES_LIST.find(item => item.code === tch.country);
+                          return c ? `${c.flag} ${currentLang === 'ar' ? c.nameAr : c.nameEn}` : tch.country;
+                        })()}
+                      </TD>
                       <TD style={{ color: C.gold }}>{tch.salary_system === 'monthly' ? trans('salMonthly', 'راتب شهري', 'Monthly') : tch.salary_system === 'per_hour' ? trans('salHour', 'بالحصة', 'Per Class') : trans('salVolunteer', 'تطوعي', 'Volunteer')}</TD>
                       <TD><Btn style={{ background: teacherViewMode === 'active' ? '#ef4444' : '#10b981' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>{teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة المعلم', 'Archive') : trans('btnActivate', 'تنشيط الحساب', 'Activate')}</Btn></TD>
                     </tr>
