@@ -63,7 +63,7 @@ export const COUNTRIES_LIST = [
   { code: 'GB', flag: '🇬🇧', dialCode: '+44', nameAr: 'المملكة المتحدة', nameEn: 'United Kingdom' },
   { code: 'US', flag: '🇺🇸', dialCode: '+1', nameAr: 'الولايات المتحدة الأمريكية', nameEn: 'United States' },
   { code: 'UZ', flag: '🇺🇿', dialCode: '+998', nameAr: 'أوزبكستان', nameEn: 'Uzbekistan' },
-  { code: 'YE', flag: '🇾🇪', dialCode: '+967', nameAr: 'اليمن', nameEn: 'Yemen' }
+  { code: 'YE', flag: '🇾🇪', dialCode: '+967', nameAr: 'اليمن', nameEn: 'Yemen' },
   { code: 'ML', flag: '🇲🇱', dialCode: '+223', nameAr: 'مالي', nameEn: 'Mali' },
   { code: 'NE', flag: '🇳🇪', dialCode: '+227', nameAr: 'النيجر', nameEn: 'Niger' },
   
