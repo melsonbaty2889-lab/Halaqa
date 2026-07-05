@@ -9,10 +9,9 @@ import QuranProgressBar from './QuranProgressBar';
 import { getQuranProgress } from '../utils/quranUtils';
 import { COUNTRIES_LIST } from '../constants/countries';
 import { 
-  FaArrowLeft, FaArrowRight, FaUser, FaCalendarAlt, FaPhone, 
-  FaUserShield, FaGlobe, FaMoneyBillWave, FaFileAlt, FaEdit, 
-  FaTimes, FaSave, FaCheckCircle, FaExclamationCircle, FaGraduationCap,
-  FaBookOpen, FaInfoCircle, FaCheckSquare
+  FaArrowLeft, FaArrowRight, FaSave, FaTimes, FaEdit, 
+  FaCheckCircle, FaExclamationCircle, FaGraduationCap,
+  FaBookOpen, FaInfoCircle, FaMoneyBillWave, FaCheckSquare
 } from 'react-icons/fa';
 
 export default function StudentProfile() {
@@ -20,7 +19,7 @@ export default function StudentProfile() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   
-  // تحديد اتجاه الصفحة ديناميكياً بناءً على أي لغة في العالم (وليس العربية فقط)
+  const currentLang = i18n.language || 'ar';
   const isRtl = i18n.dir() === 'rtl';
   
   const [student, setStudent] = useState(null);
@@ -65,8 +64,12 @@ export default function StudentProfile() {
     if(e) e.preventDefault();
     setSaving(true);
 
+    // حساب الربع الحالي ديناميكياً
     const selectedIndex = parseInt(student.current_quarter_index) || 0;
     const autoSurahText = getQuranProgress(selectedIndex).text;
+
+    // حساب الجزء الفعلي من خلال الربع لحفظه في حقل current_juz للمزامنة بين الصفحتين
+    const calculatedJuz = Math.floor(selectedIndex / 8) + 1;
 
     try {
       const { error } = await supabase
@@ -77,10 +80,11 @@ export default function StudentProfile() {
           parent_phone: student.parent_phone?.trim() || null,
           birth_date: student.birth_date || null,
           gender: student.gender,
-          country_code: student.country_code || null,
-          payment_plan: student.payment_plan, // هنا يتم حفظ الـ slug العالمي مثل 'monthly'
+          country: student.country || student.country_code || null, // دعم الحقلين منعاً للمشاكل
+          subscription_system: student.subscription_system || student.payment_plan || 'monthly', // مطابقة مع حقل الإنشاء
           status: student.status || 'active',
           current_quarter_index: selectedIndex,
+          current_juz: calculatedJuz, // تحديث متزامن للجزء لكي يظهر في جدول الطلاب الرئيسي
           current_surah: autoSurahText,
           notes: student.notes?.trim() || null
         })
@@ -88,7 +92,11 @@ export default function StudentProfile() {
       
       if (error) throw error;
 
-      setStudent(prev => ({ ...prev, current_surah: autoSurahText }));
+      setStudent(prev => ({ 
+        ...prev, 
+        current_surah: autoSurahText,
+        current_juz: calculatedJuz
+      }));
       setIsEditing(false);
       triggerToast(t('profile_updated_success'), "success");
     } catch (error) {
@@ -117,9 +125,10 @@ export default function StudentProfile() {
   }
 
   const currentAge = calculateAge(student.birth_date);
-  const matchedCountry = COUNTRIES_LIST.find(c => c.code === student.country_code);
+  // البحث عن الدولة بدعم مرن لأسماء الحقول المتباينة
+  const studentCountryCode = student.country || student.country_code || "EG";
+  const matchedCountry = COUNTRIES_LIST.find(c => c.code === studentCountryCode);
 
-  // إدارة الحالات العالمية عبر الرموز التعبيرية ومفاتيح الترجمة المرنة
   const getStatusStyle = (status) => {
     switch(status) {
       case 'paused': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', label: t('status_paused') };
@@ -129,7 +138,6 @@ export default function StudentProfile() {
   };
   const statusInfo = getStatusStyle(student.status);
 
-  // مصفوفات الخيارات المعتمدة كلياً على مفاتيح الترجمة العالمية (i18n Keys)
   const statusOptions = [
     { value: "active", label: t('status_active') },
     { value: "paused", label: t('status_paused') },
@@ -143,21 +151,19 @@ export default function StudentProfile() {
 
   const countryOptions = COUNTRIES_LIST.map(c => ({
     value: c.code,
-    // عرض اسم الدولة بناءً على حقل الـ Language المفعّل في الكود الخاص بك
-    label: `${c.flag} ${isRtl ? c.name_ar : c.name_en} (${c.code})`
+    // برمجة دفاعية تدعم الـ CamelCase والـ Snake_case معاً لأسماء الدول
+    label: `${c.flag} ${isRtl ? (c.name_ar || c.nameAr) : (c.name_en || c.nameEn)} (${c.code})`
   }));
 
   const paymentOptions = [
     { value: "monthly", label: t('plan_monthly') },
-    { value: "quarterly", label: t('plan_quarterly') },
-    { value: "yearly", label: t('plan_yearly') },
-    { value: "scholarship", label: t('plan_scholarship') }
+    { value: "per_hour", label: t('plan_per_hour') },
+    { value: "free", label: t('plan_free') }
   ];
 
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '480px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
       
-      {/* نظام التنبيهات العالمي العائم */}
       {inlineMessage.text && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '12px 20px', borderRadius: '30px', zIndex: 1200, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', fontSize: '14px', fontWeight: 'bold' }}>
           {inlineMessage.type === 'success' ? <FaCheckCircle /> : <FaExclamationCircle />}
@@ -165,7 +171,6 @@ export default function StudentProfile() {
         </div>
       )}
 
-      {/* شريط الملاحة المتجاوب لغوياً وعالمياً */}
       <PageHeader 
         title={isEditing ? "" : student.name}
         sub={isEditing ? "" : `${t('student_id')}: #${student.id}`}
@@ -176,10 +181,8 @@ export default function StudentProfile() {
         }
       />
 
-      {/* كارت معلومات الطالب الرئيسي */}
       <Card style={{ borderRadius: '16px 16px 0 0', display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', borderBottom: 'none' }}>
         
-        {/* شارة الحالة العائمة المتوافقة مع الـ Direction */}
         <div style={{ position: 'absolute', top: '16px', left: isRtl ? '16px' : 'auto', right: isRtl ? 'auto' : '16px' }}>
           {isEditing ? (
             <Select 
@@ -195,7 +198,6 @@ export default function StudentProfile() {
           )}
         </div>
 
-        {/* الأفاتار الثقافي اللطيف المدعوم بالـ Gender */}
         <div style={{ width: '54px', height: '54px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
           {student.gender === 'female' ? '🧕' : '🙋‍♂️'}
         </div>
@@ -213,7 +215,7 @@ export default function StudentProfile() {
               <h3 style={{ margin: 0, color: '#fff', fontSize: '17px', fontWeight: 'bold' }}>{student.name}</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>
                 <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
-                <span>{matchedCountry ? (isRtl ? matchedCountry.name_ar : matchedCountry.name_en) : ''}</span>
+                <span>{matchedCountry ? (isRtl ? (matchedCountry.name_ar || matchedCountry.nameAr) : (matchedCountry.name_en || matchedCountry.nameEn)) : ''}</span>
                 {currentAge !== null && <span>• {currentAge} {t('years_old')}</span>}
               </div>
             </div>
@@ -221,7 +223,6 @@ export default function StudentProfile() {
         </div>
       </Card>
 
-      {/* شريط التبويبات العالمي (يعمل بمرونة مع أي عدد لغات دون تعديل الكود) */}
       <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`, padding: '4px' }}>
         {[
           { id: 'quran', label: t('tab_quran_track'), icon: <FaBookOpen size={12} /> },
@@ -239,10 +240,8 @@ export default function StudentProfile() {
         ))}
       </div>
 
-      {/* محتوى كارت البيانات الموحد */}
       <Card style={{ borderRadius: '0 0 16px 16px', borderTop: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
-        {/* TAB 1: المسار القرآني والأكاديمي */}
         {activeTab === 'quran' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ background: '#0C1520', padding: '14px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
@@ -274,7 +273,6 @@ export default function StudentProfile() {
           </div>
         )}
 
-        {/* TAB 2: البيانات الشخصية والاتصال الدولي الهجين */}
         {activeTab === 'personal' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -296,8 +294,8 @@ export default function StudentProfile() {
 
             <Select 
               label={t('country_geographic_region')} 
-              value={student.country_code || "EG"} 
-              onChange={(e) => setStudent({...student, country_code: e.target.value})} 
+              value={student.country || student.country_code || "EG"} 
+              onChange={(e) => setStudent({...student, country: e.target.value, country_code: e.target.value})} 
               disabled={!isEditing}
               options={countryOptions}
             />
@@ -320,7 +318,7 @@ export default function StudentProfile() {
                     placeholder={t('not_specified')} 
                     onChange={(e) => setStudent({...student, parent_phone: e.target.value})} 
                     disabled={!isEditing}
-                    style={{ textAlign: 'left', direction: 'ltr' }} // حماية الأرقام الدولية من الانعكاس البصري
+                    style={{ textAlign: 'left', direction: 'ltr' }} 
                   />
                 </div>
                 {!isEditing && student.parent_phone && (
@@ -339,13 +337,12 @@ export default function StudentProfile() {
           </div>
         )}
 
-        {/* TAB 3: النظام المالي والملاحظات */}
         {activeTab === 'financial' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <Select 
               label={t('financial_tariff_plan')} 
-              value={student.payment_plan || "monthly"} 
-              onChange={(e) => setStudent({...student, payment_plan: e.target.value})} 
+              value={student.subscription_system || student.payment_plan || "monthly"} 
+              onChange={(e) => setStudent({...student, subscription_system: e.target.value, payment_plan: e.target.value})} 
               disabled={!isEditing}
               options={paymentOptions}
             />
@@ -362,7 +359,6 @@ export default function StudentProfile() {
           </div>
         )}
 
-        {/* أزرار الإجراءات التفاعلية السفلية */}
         <div style={{ marginTop: '4px' }}>
           {isEditing ? (
             <div style={{ display: 'flex', gap: '10px' }}>
