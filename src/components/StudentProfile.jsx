@@ -6,6 +6,7 @@ import { C } from "../constants/colors";
 import { Btn, Card, Input, Select, PageHeader } from './UI'; 
 import QuranProgressSelector from './QuranProgressSelector';
 import QuranProgressBar from './QuranProgressBar';
+import AchievementChart from './AchievementChart'; // استيراد المخطط الأسطوري الجديد
 import { getQuranProgress } from '../utils/quranUtils';
 import { COUNTRIES_LIST } from '../constants/countries';
 import { 
@@ -29,11 +30,16 @@ export default function StudentProfile() {
   const [activeTab, setActiveTab] = useState('quran'); 
   const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
 
+  // حالات خاصة بمنحنى الإنجاز الأسبوعي الحقيقي
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(true);
+
   const triggerToast = (text, type = 'success') => {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
   };
 
+  // 1. تأثير جلب بيانات الطالب الأساسية
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -50,6 +56,67 @@ export default function StudentProfile() {
     fetchStudent();
   }, [id, t]);
 
+  // 2. تأثير جلب بيانات جدول المتابعة اليومية وحساب الصفحات الحقيقية للمنحنى
+  useEffect(() => {
+    const fetchWeeklyAchievement = async () => {
+      if (!id) return;
+      try {
+        setChartLoading(true);
+        
+        // حساب نطاق آخر 7 أيام من تاريخ اليوم الحالي
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const formattedDate = sevenDaysAgo.toISOString().split('T')[0];
+
+        // استعلام ذكي يعتمد على الفهارس المركبة في جدولك
+        const { data, error } = await supabase
+          .from('daily_progress')
+          .select('date, new_hifz_start, new_hifz_end, review_start, review_end')
+          .eq('student_id', id)
+          .gte('date', formattedDate)
+          .order('date', { ascending: true });
+
+        if (error) throw error;
+
+        const daysMapAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const daysMapEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // خوارزمية فك النطاقات النصية وحساب فوارق الصفحات التراكمية بأمان
+        const processedChartData = data.map(record => {
+          const recordDate = new Date(record.date);
+          const dayIndex = recordDate.getDay();
+
+          const calculatePages = (start, end) => {
+            const startNum = parseInt(start, 10);
+            const endNum = parseInt(end, 10);
+            if (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum) {
+              return (endNum - startNum) + 1;
+            }
+            return 0;
+          };
+
+          const newHifzPages = calculatePages(record.new_hifz_start, record.new_hifz_end);
+          const reviewPages = calculatePages(record.review_start, record.review_end);
+
+          return {
+            dayAr: daysMapAr[dayIndex],
+            dayEn: daysMapEn[dayIndex],
+            pages: newHifzPages + reviewPages // جمع الحفظ والمراجعة معاً
+          };
+        });
+
+        setWeeklyData(processedChartData);
+      } catch (err) {
+        console.error("Error processing weekly achievement chart:", err);
+      } finally {
+        setChartLoading(false);
+      }
+    };
+
+    // نقوم بالجلب فقط عند استدعاء الواجهة لمعرف طالب صالح
+    fetchWeeklyAchievement();
+  }, [id]);
+
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -64,11 +131,8 @@ export default function StudentProfile() {
     if(e) e.preventDefault();
     setSaving(true);
 
-    // حساب الربع الحالي ديناميكياً
     const selectedIndex = parseInt(student.current_quarter_index) || 0;
     const autoSurahText = getQuranProgress(selectedIndex).text;
-
-    // حساب الجزء الفعلي من خلال الربع لحفظه في حقل current_juz للمزامنة بين الصفحتين
     const calculatedJuz = Math.floor(selectedIndex / 8) + 1;
 
     try {
@@ -80,11 +144,11 @@ export default function StudentProfile() {
           parent_phone: student.parent_phone?.trim() || null,
           birth_date: student.birth_date || null,
           gender: student.gender,
-          country: student.country || student.country_code || null, // دعم الحقلين منعاً للمشاكل
-          subscription_system: student.subscription_system || student.payment_plan || 'monthly', // مطابقة مع حقل الإنشاء
+          country: student.country || student.country_code || null, 
+          subscription_system: student.subscription_system || student.payment_plan || 'monthly', 
           status: student.status || 'active',
           current_quarter_index: selectedIndex,
-          current_juz: calculatedJuz, // تحديث متزامن للجزء لكي يظهر في جدول الطلاب الرئيسي
+          current_juz: calculatedJuz, 
           current_surah: autoSurahText,
           notes: student.notes?.trim() || null
         })
@@ -125,7 +189,6 @@ export default function StudentProfile() {
   }
 
   const currentAge = calculateAge(student.birth_date);
-  // البحث عن الدولة بدعم مرن لأسماء الحقول المتباينة
   const studentCountryCode = student.country || student.country_code || "EG";
   const matchedCountry = COUNTRIES_LIST.find(c => c.code === studentCountryCode);
 
@@ -151,7 +214,6 @@ export default function StudentProfile() {
 
   const countryOptions = COUNTRIES_LIST.map(c => ({
     value: c.code,
-    // برمجة دفاعية تدعم الـ CamelCase والـ Snake_case معاً لأسماء الدول
     label: `${c.flag} ${isRtl ? (c.name_ar || c.nameAr) : (c.name_en || c.nameEn)} (${c.code})`
   }));
 
@@ -257,6 +319,18 @@ export default function StudentProfile() {
                 <span style={{ color: '#9CA3AF' }}>{t('current_surah')}</span>
                 <span style={{ fontWeight: 'bold', color: '#10B981' }}>{student.current_surah || t('not_specified')}</span>
               </div>
+            </div>
+
+            {/* حقن منحنى الإنجاز الأسبوعي المطور هنا ليعمل تلقائياً بالبيانات الحية القادمة من السوبابيز */}
+            <div className="w-full">
+              {chartLoading ? (
+                <div style={{ background: '#0C1520', padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'center', fontSize: '12px', color: '#9CA3AF' }}>
+                  <span style={{ display: 'inline-block', marginRight: '6px' }}>⏳</span>
+                  {isRtl ? 'جاري تحليل منحنى الإنجاز الأسبوعي من السجلات...' : 'Analyzing weekly achievement logs...'}
+                </div>
+              ) : (
+                <AchievementChart data={weeklyData} isRtl={isRtl} />
+              )}
             </div>
 
             {isEditing && (
