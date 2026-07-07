@@ -1,8 +1,10 @@
 /* src/App.jsx */
 import React, { useState, useEffect, useRef, Component, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
+import { useAcademy } from './context/AcademyContext';
+import { FaSpinner, FaClock, FaSignOutAlt, FaLock, FaWifi } from 'react-icons/fa';
 
-// مكونات الإقلاع والولوج الأساسية (تُحمل استاتيكياً لسرعة العرض الأولية)
+// مكونات الإقلاع والولوج الأساسية (تُحمل استاتيكياً لضمان أعلى سرعة عرض أولية)
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
@@ -11,16 +13,16 @@ import UpdatePassword from './components/UpdatePassword';
 import MainApp from './components/MainApp';
 import CreateAcademy from './components/CreateAcademy';
 
-// 🌐 تحسين عالمي: استيراد المكونات الضخمة ديناميكياً لتقليص حجم الباقة الأساسية والتفوق في سرعة التحميل
+// 🌐 تحميل اللوحات الكبيرة ديناميكياً لتسريع استجابة الموقع وتقليص حجم الحزمة الأساسية
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const SubscriptionPage = lazy(() => import('./components/SubscriptionPage'));
 
-// 🛡️ درع الأمان المطور: اصطياد أخطاء التحديثات الفجائية ومعالجتها صامتاً
+// 🛡️ درع الأمان: اصطياد أخطاء التحديثات المفاجئة على المخدم وإعادة الإنعاش التلقائي للمنصة
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
     if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-      console.warn("🚨 تحديث حي على المخدم، جاري إنعاش التطبيق عالي الأداء...");
+      console.warn("🚨 جاري تحديث المنظومة، جاري إعادة تحميل التطبيق تلقائياً...");
       window.location.reload();
     }
   };
@@ -28,7 +30,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
 }
 
-// حارس المكونات الذكي متوافق مع أنظمة التتبع العالمية (Sentry / LogRocket Ready)
+// حارس المكونات الذكي متوافق مع أنظمة المراقبة والمتابعة العالمية
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
 
@@ -37,7 +39,6 @@ class GlobalErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // 🌍 ميزة تنافسية: هنا يتم إرسال تقرير الخطأ فوراً لخوادم المراقبة الخاصة بك دون تدسير من المستخدم
     console.error("Telemetry Log -> Central Error Tracker:", error, errorInfo);
   }
 
@@ -50,11 +51,11 @@ class GlobalErrorBoundary extends Component {
       }
 
       return (
-        <div style={{ padding: '40px 20px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ padding: '40px 20px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: "'Cairo', sans-serif", direction: 'rtl', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ background: '#111827', padding: '30px', borderRadius: '12px', border: '1px solid #1F2937', maxWidth: '600px', width: '100%' }}>
-            <h2 style={{ color: '#FBBF24', marginBottom: '15px' }}>🚨 عطل غير متوقع في الواجهة التشغيلية</h2>
-            <p style={{ color: '#9CA3AF', marginBottom: '20px' }}>يرجى إعادة تحميل الصفحة، وفي حال استمرار المشكلة تم إرسال تقرير تلقائي للدعم الفني.</p>
-            <button onClick={() => window.location.reload()} style={{ background: '#3B82F6', color: '#FFF', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>إعادة تشغيل النظام</button>
+            <h2 style={{ color: '#FBBF24', marginBottom: '15px', fontSize: '20px' }}>🚨 عذراً، حدث خطأ غير متوقع في النظام</h2>
+            <p style={{ color: '#9CA3AF', marginBottom: '20px', fontSize: '14px' }}>يرجى إعادة تحميل الصفحة. في حال استمرار المشكلة، فقد تم إرسال تقرير تلقائي لفريق الدعم الفني للمنصة لمعالجته فوراً.</p>
+            <button onClick={() => window.location.reload()} style={{ background: '#C9A84C', color: '#000', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>إعادة تشغيل النظام</button>
           </div>
         </div>
       );
@@ -63,281 +64,158 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-const DEFAULT_TRIAL_DAYS = 14;
-
-const ADMIN_UIDS = new Set(
-  (import.meta.env.VITE_ADMIN_UIDS || 'cb4a2d6c-4e4f-4752-96e9-b21dd0f66cf9')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-);
-
 const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,localhost,127.0.0.1')
   .split(',')
   .map((s) => s.trim());
 
 function AppContent() {
-  const [session, setSession] = useState(null);
+  const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
-  const [loading, setLoading] = useState(true);
-  const [fetchingData, setFetchingData] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
-  
-  // 🌐 ميزة استقرار الشبكة العالمية لقراءة حالة الإنترنت الفورية لمنع فقدان بيانات الحلقات
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
-  const [account, setAccount] = useState({
-    userRole: null,
-    isActivated: false,
-    daysLeft: 0,
-    isTrial: true,
-    hasAcademy: false
-  });
-
-  const mountedRef = useRef(true);
-  const loadingTimeoutRef = useRef(null);
+  const goldColor = '#C9A84C';
 
   useEffect(() => {
-    mountedRef.current = true;
-    
-    // تفعيل مستشعرات حالة الإنترنت العالمية
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    return () => {
-      mountedRef.current = false;
-      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
-    const oldLoader = typeof document !== 'undefined' ? document.getElementById('fallback-loader') : null;
-    if (oldLoader) oldLoader.remove();
-
-    if (!supabase) {
-      if (mountedRef.current) setLoading(false);
-      return;
-    }
-
-    let isCancelled = false;
-    async function loadSession() {
-      try {
-        const res = await supabase.auth.getSession();
-        const initialSession = res?.data?.session ?? null;
-        if (!isCancelled && mountedRef.current) {
-          setSession(initialSession);
-          loadingTimeoutRef.current = setTimeout(() => {
-            if (mountedRef.current) setLoading(false);
-          }, 1200);
-        }
-      } catch (err) {
-        if (mountedRef.current) setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthView('update_password');
       }
-    }
-    loadSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (!mountedRef.current) return;
-      
-      if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
-      
-      setSession((prevSession) => {
-        if (event === 'SIGNED_OUT' && prevSession !== null) {
-          setAuthView('login');
-          setAccount({ userRole: null, isActivated: false, daysLeft: 0, isTrial: true, hasAcademy: false });
-          setIsDataLoaded(false);
-        }
-        return currentSession;
-      });
     });
 
     return () => {
-      isCancelled = true;
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
       if (subscription) subscription.unsubscribe();
     };
   }, []);
 
-  useEffect(() => {
-    if (!session || !supabase) {
-      if (mountedRef.current) {
-        setFetchingData(false);
-        setIsDataLoaded(false);
-      }
-      return;
-    }
+  // 1️⃣ بوابة التحميل والتهيئة الأولية للمنظومة
+  if (appState === 'LOADING') {
+    return <SplashScreen />;
+  }
 
-    const uid = session.user?.id;
-    if (!uid) {
-      setAccount({ userRole: 'student', isActivated: false, daysLeft: 0, isTrial: true, hasAcademy: false });
-      setIsDataLoaded(true);
-      return;
-    }
+  // 2️⃣ حارس تعديل وتحديث كلمات المرور
+  if (authView === 'update_password') {
+    return <UpdatePassword />;
+  }
 
-    let cancelled = false;
-    setFetchingData(true);
-
-    async function fetchUserStatusAndSubscription() {
-      const userUpdates = { userRole: 'student', isActivated: false, daysLeft: 0, isTrial: true, hasAcademy: false };
-
-      try {
-        const profileResp = await supabase.from('profiles').select('role, is_activated').eq('id', uid).maybeSingle();
-        const profileData = profileResp?.data ?? null;
-        
-        // القراءة القياسية من قاعدة البيانات
-        userUpdates.userRole = profileData?.role?.trim().toLowerCase().replace(/\s+/g, '_') || 'student';
-        
-        // 🌟 الشرط الذهبي: التحقق المباشر من بريد السوبر أدمن لتفادي مشاكل الكاش أو تأخر استجابة المخدم
-        if (session.user?.email === 'melsonbaty89@gmail.com') {
-          userUpdates.userRole = 'super_admin';
-        }
-
-        userUpdates.isActivated = !!profileData?.is_activated;
-
-        const subResp = await supabase.from('saas_subscriptions').select('expires_at').eq('user_id', uid).eq('status', 'active').order('expires_at', { ascending: false }).limit(1).maybeSingle();
-        const subData = subResp?.data ?? null;
-
-        if (subData?.expires_at) {
-          const expires = new Date(subData.expires_at);
-          const today = new Date();
-          const diffTime = expires.getTime() - today.getTime();
-          userUpdates.daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-          userUpdates.isTrial = false;
-        } else {
-          const createdAtStr = session.user?.created_at;
-          const createdAt = createdAtStr ? new Date(createdAtStr) : new Date();
-          const today = new Date();
-          const diffTime = today.getTime() - createdAt.getTime();
-          const remainingTrial = DEFAULT_TRIAL_DAYS - Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          userUpdates.daysLeft = Math.max(0, remainingTrial);
-          userUpdates.isTrial = true;
-        }
-
-        const staffResp = await supabase.from('staff').select('academy_id').eq('user_id', uid).maybeSingle();
-        userUpdates.hasAcademy = !!(staffResp?.data?.academy_id || session.user?.user_metadata?.academy_id);
-
-        if (!cancelled && mountedRef.current) {
-          setAccount(userUpdates);
-          setIsDataLoaded(true);
-        }
-      } catch (err) {
-        if (!cancelled && mountedRef.current) {
-          setAccount({ userRole: 'student', isActivated: false, daysLeft: 0, isTrial: true, hasAcademy: false });
-          setIsDataLoaded(true);
-        }
-      } finally {
-        if (!cancelled && mountedRef.current) {
-          setFetchingData(false);
-        }
-      }
-    }
-
-    fetchUserStatusAndSubscription();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [session]);
-
-  const isInitialFetching = session && !isDataLoaded;
-  if (loading || isInitialFetching) return <SplashScreen />;
-  
-  if (authView === 'update_password') return <UpdatePassword />;
-
-  const isBlockActive =
-    account.userRole !== 'admin' &&
-    account.userRole !== 'super_admin' &&
-    ((account.isTrial && account.daysLeft <= 0 && !account.isActivated) || (!account.isTrial && account.daysLeft <= 0));
-
-  if (session) {
-    if (account.userRole === 'super_admin') {
-      return (
-        <Suspense fallback={<SplashScreen />}>
-          <AdminDashboard 
-            session={session} 
-            onLogout={async () => {
-              try {
-                await supabase.auth.signOut();
-              } catch (err) {
-                console.error(err);
-              }
-            }}
+  // 3️⃣ شاشات الولوج وتوثيق الحسابات (الزوار)
+  if (appState === 'UNAUTHENTICATED') {
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+        {authView === 'login' && (
+          <LoginPage 
+            onSwitchToSignUp={() => setAuthView('signup')} 
+            onSwitchToForgotPassword={() => setAuthView('forgot')} 
           />
-        </Suspense>
-      );
-    }
+        )}
+        {authView === 'signup' && (
+          <SignUpPage onSwitchToLogin={() => setAuthView('login')} />
+        )}
+        {authView === 'forgot' && (
+          <ForgotPassword onBackToLogin={() => setAuthView('login')} />
+        )}
+      </div>
+    );
+  }
 
-    if (isBlockActive) {
-      const currentLang = localStorage.getItem('i18nextLng') || 'ar';
-      return (
-        <Suspense fallback={<SplashScreen />}>
-          <SubscriptionPage 
-            session={session} 
-            onBack={() => {}} 
-            currentLang={currentLang} 
-          />
-        </Suspense>
-      );
-    }
+  // 4️⃣ شاشة الانتظار: الحساب مسجل ولكن لم يتم اعتماده وتفعيله بعد من الإدارة العامة للمنصة
+  if (appState === 'PENDING_APPROVAL') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif", direction: 'rtl' }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px 30px', borderRadius: '20px', border: '1px solid #1E2D3D', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
+          <div style={{ width: '70px', height: '70px', background: 'rgba(201, 168, 76, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+            <FaClock style={{ color: goldColor, fontSize: '32px' }} />
+          </div>
+          <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '700', marginBottom: '12px' }}>طلب تأسيس الأكاديمية قيد الاعتماد</h2>
+          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.7', marginBottom: '30px' }}>
+            مرحباً بكم في منصتنا. تم استلام طلب تسجيل مركزكم بنجاح. حسابكم الحالي ({profile?.full_name || 'المشرف'}) قيد المراجعة والتدقيق الآن من قبل الإدارة العامة للمنصة لتفعيل منظومتكم التعليمية السحابية.
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <a href="https://wa.me/201012345678" target="_blank" rel="noreferrer" style={{ padding: '14px', background: goldColor, color: '#000', borderRadius: '12px', fontSize: '15px', fontWeight: '700', textDecoration: 'none', display: 'block' }}>
+              💬 التواصل المباشر مع الدعم الفني لتسريع الاعتماد
+            </a>
+            <button onClick={logout} style={{ padding: '14px', background: 'transparent', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <FaSignOutAlt />
+              تسجيل الخروج
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    const isPlatformAdmin = account.userRole === 'admin';
-    if (!account.hasAcademy && !isPlatformAdmin) {
-      return (
-        <CreateAcademy
-          session={session}
-          onAcademyCreated={() => {
-            setAccount(prev => ({ ...prev, hasAcademy: true }));
-          }}
-          onLogout={async () => {
-            try {
-              await supabase.auth.signOut();
-            } catch (err) {}
-          }}
+  // 5️⃣ لوحة التحكم العليا للمنصة (المشرف العام للمنظومة بالكامل)
+  if (appState === 'SUPER_ADMIN') {
+    return (
+      <Suspense fallback={<SplashScreen />}>
+        <AdminDashboard 
+          session={{ user }} 
+          onLogout={logout} 
         />
-      );
-    }
+      </Suspense>
+    );
+  }
 
+  // 6️⃣ الحساب معتمد ومفعل ولكن لم يقم بإنشاء بيانات الأكاديمية/المركز الخاص به بعد
+  if (appState === 'NO_ACADEMY') {
+    return (
+      <CreateAcademy
+        session={{ user }}
+        onAcademyCreated={refreshStatus}
+        onLogout={logout}
+      />
+    );
+  }
+
+  // 7️⃣ المنظومة التعليمية النشطة بالكامل للأكاديمية (حلقات التحفيظ، المعلمون، الطلاب)
+  if (appState === 'FULLY_ACTIVE') {
     return (
       <>
-        {/* 🌐 شريط تنبيه ذكي غير معطل للمستخدم يظهر فقط عند انقطاع الإنترنت فجأة للحفاظ على ثقة المستخدم وحماية البيانات */}
+        {/* شريط تنبيه علوي ذكي يظهر بلطف عند انقطاع الإنترنت لحماية بيانات الحفظ والتسميع اللحظية */}
         {!isOnline && (
-          <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '6px 12px', fontSize: '0.9rem', fontWeight: 'bold', position: 'fixed', top: 0, width: '100%', zIndex: 9999, transition: 'all 0.3s ease' }}>
-            ⚠️ أنت تعمل حالياً دون اتصال بالإنترنت. يرجى التحقق من الشبكة لضمان مزامنة درجات وتسميع الطلاب.
+          <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '8px 12px', fontSize: '0.9rem', fontWeight: '600', position: 'fixed', top: 0, width: '100%', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: "'Cairo', sans-serif" }}>
+            <FaWifi />
+            <span>تنبيه: انقطع الاتصال بالإنترنت. يرجى التحقق من الشبكة لضمان مزامنة بيانات الحفظ والاختبارات الحية للحلقات.</span>
           </div>
         )}
         <MainApp 
-          session={session} 
-          userRole={account.userRole} 
-          trialDaysLeft={account.daysLeft} 
-          isTrial={account.isTrial} 
-          isActivated={account.isActivated} 
+          session={{ user }} 
+          userRole={profile?.role} 
+          trialDaysLeft={14} 
+          isTrial={true} 
+          isActivated={profile?.is_activated} 
         />
       </>
     );
   }
 
+  // صمام الأمان والخصوصية للحالات الطارئة
   return (
-    <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
-      {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
-      {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
-      {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
+    <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif" }}>
+      <FaLock style={{ fontSize: '40px', color: goldColor, marginBottom: '15px' }} />
+      <p style={{ color: '#9CA3AF' }}>عذراً، لا تملك الصلاحية الكافية للوصول إلى هذه الصفحة.</p>
+      <button onClick={logout} style={{ marginTop: '15px', background: goldColor, color: '#000', padding: '8px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>تسجيل الخروج</button>
     </div>
   );
 }
 
 export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
-
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
+
   if (!isAllowed) {
     return (
-      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: 'sans-serif', direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2 style={{ color: '#FBBF24', fontSize: '1.6rem', marginBottom: '10px' }}>🔒 نظام الحماية الثلاثي: غير مصرح بالتشغيل</h2>
-        <p style={{ color: '#9CA3AF', fontSize: '1.1rem', textAlign: 'center', maxWidth: '600px' }}>
-          تم إيقاف تشغيل هذه المنصة تلقائياً لحماية حقوق الملكية والتشغيل من مضيف غير معتمد.
+      <div style={{ padding: '30px', background: '#090F17', color: '#EF4444', minHeight: '100vh', fontFamily: "'Cairo', sans-serif", direction: 'rtl', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <h2 style={{ color: '#FBBF24', fontSize: '22px', marginBottom: '12px', fontWeight: '700' }}>🔒 نظام الحماية: النطاق الحالي غير مصرح له بتشغيل المنصة</h2>
+        <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '600px', lineHeight: '1.7' }}>
+          تم إيقاف تشغيل هذه النسخة تلقائياً لحماية حقوق الملكية الفكرية وتراخيص التشغيل السحابي؛ نظراً لمحاولة تشغيل النظام عبر مضيف أو نطاق (Domain) غير معتمد برمجياً في خوادم الإدارة.
         </p>
       </div>
     );
