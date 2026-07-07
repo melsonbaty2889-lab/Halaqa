@@ -186,7 +186,15 @@ function AppContent() {
       try {
         const profileResp = await supabase.from('profiles').select('role, is_activated').eq('id', uid).maybeSingle();
         const profileData = profileResp?.data ?? null;
+        
+        // القراءة القياسية من قاعدة البيانات
         userUpdates.userRole = profileData?.role?.trim().toLowerCase().replace(/\s+/g, '_') || 'student';
+        
+        // 🌟 الشرط الذهبي: التحقق المباشر من بريد السوبر أدمن لتفادي مشاكل الكاش أو تأخر استجابة المخدم
+        if (session.user?.email === 'melsonbaty89@gmail.com') {
+          userUpdates.userRole = 'super_admin';
+        }
+
         userUpdates.isActivated = !!profileData?.is_activated;
 
         const subResp = await supabase.from('saas_subscriptions').select('expires_at').eq('user_id', uid).eq('status', 'active').order('expires_at', { ascending: false }).limit(1).maybeSingle();
