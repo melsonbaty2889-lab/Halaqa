@@ -16,6 +16,8 @@ export const AcademyProvider = ({ children }) => {
 
     try {
       setUser(currentUser);
+      
+      // 1. جلب بيانات الحساب من جدول profiles
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
@@ -23,43 +25,76 @@ export const AcademyProvider = ({ children }) => {
         .single();
 
       if (profError || !profData) {
+        console.error("🚨 خطأ في جلب البروفايل أو الحساب غير موجود في الجدول:", profError);
         setAppState('UNAUTHENTICATED');
         return;
       }
 
       setProfile(profData);
 
+      // 2. إذا كان الحساب هو السوبر أدمن العام للمنصة
       if (profData.role === 'super_admin') {
         setAppState('SUPER_ADMIN');
-      } else if (profData.role === 'admin' && !profData.is_activated) {
+        return;
+      }
+
+      // 3. الحماية المشتركة: إذا كان الحساب غير مفعل من الإدارة (لأي دور كان)
+      if (profData.is_activated === false) {
         setAppState('PENDING_APPROVAL');
-      } else {
-        // فحص الأكاديمية
+        return;
+      }
+
+      // 4. إذا كان الحساب مفعل ودوره مدير أكاديمية (admin)
+      if (profData.role === 'admin') {
         const { data: acadData } = await supabase
           .from('academies')
           .select('*')
           .eq('owner_id', currentUser.id)
-          .single();
+          .maybeSingle(); // استخدام maybeSingle لتفادي أخطاء جلب عنصر وحيد
 
         if (acadData) {
+          // إذا كانت الأكاديمية موجودة ونشطة يدخل، وإلا ينتظر التفعيل
           setAppState(acadData.is_active ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
         } else {
-          setAppState(profData.role === 'admin' ? 'NO_ACADEMY' : 'UNAUTHENTICATED');
+          // أدمن مفعل ولكن لم ينشئ أكاديمية بعد
+          setAppState('NO_ACADEMY');
         }
+        return;
       }
+
+      // 5. إذا كان الحساب مفعل ودوره (طالب، معلم، ولي أمر)
+      if (['student', 'teacher', 'parent'].includes(profData.role)) {
+        setAppState('FULLY_ACTIVE'); 
+        return;
+      }
+
+      // حالة احتياطية إذا وجد دور غير معرف بالمنظومة
+      setAppState('UNAUTHENTICATED');
+
     } catch (e) {
+      console.error("🚨 خطأ غير متوقع أثناء معالجة الصلاحيات:", e);
       setAppState('UNAUTHENTICATED');
     }
   };
 
   useEffect(() => {
+    // الفحص الفوري عند إقلاع التطبيق
     supabase.auth.getSession().then(({ data: { session } }) => fetchUserStatus(session?.user));
+    
+    // مراقبة تغير حالة الدخول والخروج في الوقت الفعلي
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => fetchUserStatus(session?.user));
+    
     return () => subscription.unsubscribe();
   }, []);
 
   return (
-    <AcademyContext.Provider value={{ user, profile, appState, logout: () => supabase.auth.signOut(), refreshStatus: () => fetchUserStatus(user) }}>
+    <AcademyContext.Provider value={{ 
+      user, 
+      profile, 
+      appState, 
+      logout: () => supabase.auth.signOut(), 
+      refreshStatus: () => fetchUserStatus(user) 
+    }}>
       {children}
     </AcademyContext.Provider>
   );
