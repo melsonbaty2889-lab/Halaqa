@@ -31,18 +31,18 @@ export default function SignUpPage({ onSwitchToLogin }) {
     try {
       // 🌟 تم التعديل هنا ليرسل الحساب كـ مدير/صاحب أكاديمية (admin) مباشر لتستقبل اشتراكه
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password.trim(),
-        options: { 
-          data: { 
-            full_name: name.trim(),
-            role: 'admin',                 // 💡 الحل الجوهري: إرسال الـ role كـ admin مباشرة لقاعدة البيانات
-            requested_role: 'admin',       // احتياطياً إذا كان الـ Trigger في قاعدة البيانات يقرأ هذا الحقل
-            lang: isRtl ? 'ar' : 'en' 
-          },
-          emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
-        }
-      });
+  email: email.trim(),
+  password: password.trim(),
+  options: { 
+    data: { 
+      full_name: name.trim(),
+      role: 'admin',                 
+      requested_role: 'admin',       
+      preferred_language: isRtl ? 'ar' : 'en' // 🌟 تم تعديل المفتاح هنا ليطابق قاعدة البيانات تماماً
+    },
+    emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
+  }
+});
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
