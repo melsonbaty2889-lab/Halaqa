@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { FaEnvelope, FaLock, FaUser, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaUser, FaArrowRight, FaArrowLeft, FaSchool } from 'react-icons/fa';
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { t, i18n } = useTranslation();
   const [name, setName] = useState('');
+  const [academyName, setAcademyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [refCode, setRefCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
@@ -15,12 +17,19 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const isRtl = i18n.language === 'ar';
   const goldColor = '#C9A84C';
 
+  // التقاط كود الإحالة تلقائياً من رابط الصفحة إن وجد (مثال: domain.com/signup?ref=XXXX)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) setRefCode(ref);
+  }, []);
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg('');
 
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    if (!name.trim() || !academyName.trim() || !email.trim() || !password.trim()) {
       return setError(isRtl ? 'برجاء ملء جميع الحقول المطلوبة' : 'Please fill in all required fields');
     }
     if (password.length < 6) {
@@ -29,25 +38,25 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     setLoading(true);
     try {
-      // 🌟 تم التعديل هنا ليرسل الحساب كـ مدير/صاحب أكاديمية (admin) مباشر لتستقبل اشتراكه
       const { data: authData, error: authError } = await supabase.auth.signUp({
-  email: email.trim(),
-  password: password.trim(),
-  options: { 
-    data: { 
-      full_name: name.trim(),
-      role: 'admin',                 
-      requested_role: 'admin',       
-      preferred_language: isRtl ? 'ar' : 'en' // 🌟 تم تعديل المفتاح هنا ليطابق قاعدة البيانات تماماً
-    },
-    emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
-  }
-});
+        email: email.trim(),
+        password: password.trim(),
+        options: { 
+          data: { 
+            full_name: name.trim(),
+            academy_name: academyName.trim(),
+            role: 'admin',                 
+            requested_role: 'admin',       
+            preferred_language: isRtl ? 'ar' : 'en',
+            referred_by: refCode || null
+          },
+          emailRedirectTo: `${window.location.origin}?lang=${isRtl ? 'ar' : 'en'}`
+        }
+      });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // رسالة نجاح مخصصة لطلب تسجيل المركز/الأكاديمية
       setSuccessMsg(
         isRtl 
           ? "✅ تم إرسال طلب تسجيل مركزك بنجاح! يرجى تأكيد بريدك الإلكتروني أولاً، ثم انتظار موافقة الإدارة العليا لتفعيل لوحة تحكم الأكاديمية الخاصة بك." 
@@ -56,6 +65,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       // تفريغ الحقول بعد النجاح
       setName('');
+      setAcademyName('');
       setEmail('');
       setPassword('');
 
@@ -82,7 +92,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'أنشئ حساب الإدارة لإدارة حلقاتك ومعلميك بذكاء' : 'Create an admin account to manage your circles and teachers smartly'}
         </p>
 
-        {/* تنبيه النجاح المدمج */}
         {successMsg && (
           <div style={{ 
             background: 'rgba(16, 185, 129, 0.1)', 
@@ -99,7 +108,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </div>
         )}
 
-        {/* تنبيه الخطأ المدمج */}
         {error && (
           <div style={{ 
             background: 'rgba(239, 68, 68, 0.1)', 
@@ -127,6 +135,23 @@ export default function SignUpPage({ onSwitchToLogin }) {
               placeholder={isRtl ? 'اسم المسؤول الكامل' : 'Manager Full Name'}
               value={name} 
               onChange={e => setName(e.target.value)} 
+              required
+              onInvalid={(e) => e.target.setCustomValidity(getRequiredMsg())}
+              onInput={(e) => e.target.setCustomValidity('')}
+              style={{ width: '100%', padding: '14px 15px 14px ' + (isRtl ? '15px' : '45px'), paddingRight: isRtl ? '45px' : '15px', borderRadius: '12px', border: '1px solid #223147', background: '#090F16', color: '#fff', fontSize: '14px', outline: 'none', textAlign: isRtl ? 'right' : 'left' }}
+            />
+          </div>
+
+          {/* حقل اسم الأكاديمية */}
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '15px', color: '#64748b' }}>
+              <FaSchool />
+            </span>
+            <input 
+              type="text" 
+              placeholder={isRtl ? 'اسم الأكاديمية / المركز القرآني' : 'Academy / Center Name'}
+              value={academyName} 
+              onChange={e => setAcademyName(e.target.value)} 
               required
               onInvalid={(e) => e.target.setCustomValidity(getRequiredMsg())}
               onInput={(e) => e.target.setCustomValidity('')}
