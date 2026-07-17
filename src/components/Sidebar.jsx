@@ -134,9 +134,8 @@ export default function Sidebar({
     { id: 'settings', labelAr: 'إعدادات الأكاديمية', labelEn: 'Academy Settings', icon: <FaCog /> },
   ];
 
-  const filteredItems = isPlatformAdmin 
-    ? menuItems.filter(item => item.id === 'dashboard' || item.id === 'settings')
-    : menuItems;
+  // 🔓 تفعيل العرض الكامل للمسؤول العام لمعاينة وبناء كافة المنظومات التشغيلية
+  const filteredItems = menuItems;
 
   const branchDictionary = {
     main: { ar: "الأكاديمية الرئيسية (الفرع العام)", en: "Main Academy (General Branch)" },
