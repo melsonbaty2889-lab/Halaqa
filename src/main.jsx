@@ -4,6 +4,7 @@ import './index.css'
 import './i18n'
 import App from './App.jsx'
 import { AcademyProvider } from './context/AcademyContext' 
+import { DataProvider } from './context/DataContext' // 👈 استيراد الـ Provider الجديد
 
 // رادار الأعطال
 window.onerror = function (message, source, lineno, colno, error) {
@@ -23,9 +24,11 @@ const InitialLoader = () => (
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AcademyProvider>
-      <Suspense fallback={<InitialLoader />}>
-        <App />
-      </Suspense>
+      <DataProvider> {/* 👈 تغليف التطبيق بالـ DataProvider ليكون تحت الـ AcademyProvider مباشرة */}
+        <Suspense fallback={<InitialLoader />}>
+          <App />
+        </Suspense>
+      </DataProvider>
     </AcademyProvider>
   </React.StrictMode>,
 )

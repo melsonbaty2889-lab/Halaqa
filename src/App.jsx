@@ -36,7 +36,7 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,localhost,127.0.0.1').split(',').map((s) => s.trim());
+const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
 
 function AppContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
