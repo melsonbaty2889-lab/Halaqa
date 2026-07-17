@@ -95,6 +95,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(() => isActivated ?? true);
   const [academyIsActive, setAcademyIsActive] = useState(false); 
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
+  const [databaseTables, setDatabaseTables] = useState([]);
 
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");         
