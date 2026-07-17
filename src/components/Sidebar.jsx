@@ -16,7 +16,9 @@ import {
   FaChevronRight,
   FaSearch,
   FaExchangeAlt,
-  FaChevronDown
+  FaChevronDown,
+  FaChalkboardTeacher, // 👨‍🏫 أيقونة الكادر التعليمي
+  FaUsers // 🕌 أيقونة الحلقات والمجموعات
 } from 'react-icons/fa';
 
 export default function Sidebar({
@@ -34,13 +36,12 @@ export default function Sidebar({
   numberFormatter,
   timezone,
   academyTime,
-  onSearchClick // دالة اختيارية يمكن تمريرها من المكون الأب لتشغيل البحث مباشرة
+  onSearchClick 
 }) {
   const [isSlim, setIsSlim] = useState(() => localStorage.getItem('smart_halaqa_slim') === 'true');
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
   
-  // 🌐 إصلاح اللغة: استخدام مفتاح تعريفي بدلاً من نص ثابت لضمان الترجمة الفورية عند قلب اللغة
   const [activeBranchKey, setActiveBranchKey] = useState('main');
 
   useEffect(() => {
@@ -59,11 +60,11 @@ export default function Sidebar({
     }
   };
 
-  // نظام اختصارات الكيبورد (Ctrl + K أو الأرقام السريعة)
+  // نظام اختصارات الكيبورد (Ctrl + K أو الأرقام السريعة المحدثة للتنقل الشامل)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.altKey && !isMobile) {
-        const targetTabs = ['dashboard', 'students', 'attendance', 'exams', 'reports', 'payments', 'settings'];
+        const targetTabs = ['dashboard', 'students', 'teachers', 'halaqas', 'attendance', 'exams', 'reports', 'payments', 'settings'];
         const index = parseInt(e.key) - 1;
         if (index >= 0 && index < targetTabs.length) {
           if (isPlatformAdmin && targetTabs[index] !== 'dashboard' && targetTabs[index] !== 'settings') return;
@@ -75,12 +76,10 @@ export default function Sidebar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMobile, userRole]);
 
-  // 🔍 إصلاح البحث: تشغيل دائم على الموبايل والكمبيوتر بحدث قياسي آمن وعالمي
   const handleSearchTrigger = () => {
     if (onSearchClick) {
       onSearchClick();
     } else {
-      // إرسال حدث مخصص يلتقطه مودال البحث في أي مكان بالتطبيق بسهولة
       const toggleEvent = new CustomEvent('toggle-command-palette');
       window.dispatchEvent(toggleEvent);
     }
@@ -108,10 +107,13 @@ export default function Sidebar({
     }
   };
 
+  // 🌐 مسميات معيارية منافسة تواكب الأنظمة العالمية وتناسب الهوية الإسلامية والتربوية
   const menuItems = [
     { id: 'dashboard', labelAr: 'لوحة المتابعة', labelEn: 'Overview', icon: <FaThLarge /> },
-    { id: 'students', labelAr: 'الطلاب والمحفظون', labelEn: 'Students & Instructors', icon: <FaUserGraduate /> },
-    { id: 'attendance', labelAr: 'الحلقات والتسميع', labelEn: 'Halaqat & Recitation', icon: <FaClipboardCheck /> },
+    { id: 'students', labelAr: 'شؤون الطلاب والدارسين', labelEn: 'Student Affairs & Learners', icon: <FaUserGraduate /> },
+    { id: 'teachers', labelAr: 'الكادر التعليمي والتربوي', labelEn: 'Faculty & Instructors', icon: <FaChalkboardTeacher /> },
+    { id: 'halaqas', labelAr: 'الحلقات والمجموعات التعليمية', labelEn: 'Learning Circles (Halaqas)', icon: <FaUsers /> },
+    { id: 'attendance', labelAr: 'التحضير ومتابعة التسميع', labelEn: 'Attendance & Recitation', icon: <FaClipboardCheck /> },
     { 
       id: 'exams', 
       labelAr: 'الاختبارات والشهادات', 
@@ -136,7 +138,6 @@ export default function Sidebar({
     ? menuItems.filter(item => item.id === 'dashboard' || item.id === 'settings')
     : menuItems;
 
-  // 🗺️ قاموس ترجمة الفروع الديناميكي لحل مشكلة ثبات اللغة العربية
   const branchDictionary = {
     main: { ar: "الأكاديمية الرئيسية (الفرع العام)", en: "Main Academy (General Branch)" },
     boys: { ar: "حلقات البنين والمتميزين", en: "Boys & Premium Halaqas" },
@@ -167,7 +168,6 @@ export default function Sidebar({
       direction: isRtl ? 'rtl' : 'ltr'
     }}>
       
-      {/* زر الطيّ السريع المطور */}
       {!isMobile && (
         <button 
           onClick={() => setIsSlim(!isSlim)}
@@ -197,7 +197,6 @@ export default function Sidebar({
         </button>
       )}
 
-      {/* الجزء العلوي: الهوية وشعار المصحف والحلقة التقني الفاخر الجديد */}
       <div style={{ position: 'relative', marginBottom: '20px', flexShrink: 0 }}>
         <div 
           onClick={() => !isPlatformAdmin && setShowWorkspaceDropdown(!showWorkspaceDropdown)}
@@ -214,7 +213,6 @@ export default function Sidebar({
             transition: 'all 0.2s ease-in-out'
           }}
         >
-          {/* حاوية الشعار الاحترافية الجديدة كلياً (قرآن كريم + حلقة دائرية مذهبة) */}
           <div style={{ 
             width: '42px', 
             height: '42px', 
@@ -228,7 +226,6 @@ export default function Sidebar({
             flexShrink: 0,
             position: 'relative'
           }}>
-            {/* SVG شعار الهوية الإسلامية التقنية الواضح والفاخر */}
             <svg 
               viewBox="0 0 100 100" 
               fill="none" 
@@ -246,45 +243,13 @@ export default function Sidebar({
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
-              
-              {/* 1. الحلقة الخارجية (ترمز للحلقات والمتابعة الذكية) */}
               <circle cx="50" cy="50" r="40" stroke="url(#quranGold)" strokeWidth="3" strokeDasharray="4 3" opacity="0.4" />
               <circle cx="50" cy="50" r="34" stroke="url(#quranGold)" strokeWidth="1.5" opacity="0.2" />
-
-              {/* 2. رسمة المصحف الشريف المفتوح / حامل السورة (واضحة وتعبر عن الهوية فورا) */}
-              {/* الجانب الأيسر من المصحف */}
-              <path 
-                d="M50 68C40 64 26 65 18 69V35C26 31 40 30 50 35" 
-                stroke="url(#quranGold)" 
-                strokeWidth="4" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-              />
-              {/* الجانب الأيمن من المصحف */}
-              <path 
-                d="M50 68C60 64 74 65 82 69V35C74 31 60 30 50 35" 
-                stroke="url(#quranGold)" 
-                strokeWidth="4" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-              />
-              
-              {/* قاعدة حامل المصحف (الكرسي / المرفوع) */}
-              <path 
-                d="M32 67L45 77M68 67L55 77M50 35V68" 
-                stroke="url(#quranGold)" 
-                strokeWidth="3.5" 
-                strokeLinecap="round" 
-              />
-
-              {/* 3. النجم المضيء العلوي (يرمز للذكاء والريادة والهدوء) */}
-              <path 
-                d="M50 14L52 20L58 22L52 24L50 30L48 24L42 22L48 20Z" 
-                fill="#FFF" 
-                filter="url(#glowEffect)" 
-              />
+              <path d="M50 68C40 64 26 65 18 69V35C26 31 40 30 50 35" stroke="url(#quranGold)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M50 68C60 64 74 65 82 69V35C74 31 60 30 50 35" stroke="url(#quranGold)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M32 67L45 77M68 67L55 77M50 35V68" stroke="url(#quranGold)" strokeWidth="3.5" strokeLinecap="round" />
+              <path d="M50 14L52 20L58 22L52 24L50 30L48 24L42 22L48 20Z" fill="#FFF" filter="url(#glowEffect)" />
             </svg>
-
             <span style={{
               position: 'absolute', bottom: '-1px', right: isRtl ? '-1px' : 'auto', left: !isRtl ? '-1px' : 'auto',
               width: '9px', height: '9px', backgroundColor: '#10B981', borderRadius: '50%', border: '2px solid #111827'
@@ -315,7 +280,6 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* منسدلة تبديل فروع الأكاديمية */}
         {showWorkspaceDropdown && (
           <div style={{
             position: 'absolute',
@@ -335,7 +299,6 @@ export default function Sidebar({
                 {isRtl ? 'تبديل فرع الأكاديمية' : 'Academy Workspaces'}
               </span>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {Object.keys(branchDictionary).map((key) => {
                 const isSelected = activeBranchKey === key;
@@ -373,10 +336,8 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* حاوية المحتوى القابل للتمرير */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         
-        {/* التوقيت والمناطق الزمنية المباشرة */}
         {!isSlim && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '0 8px', marginBottom: '20px', opacity: 0.85 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -396,7 +357,6 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* 🔍 تم الإصلاح: مشغل لوحة البحث السريع ليعمل بلمسة واحدة على الجوال والكمبيوتر دون كيبورد */}
         <div style={{ marginBottom: '22px', padding: '0 4px', flexShrink: 0 }}>
           <div 
             onClick={handleSearchTrigger}
@@ -427,7 +387,6 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* كارت الفترة التجريبية */}
         {!isPlatformAdmin && (isTrial || !accountActivated) && (
           <div 
             onClick={() => setShowEarlyUpgrade(true)}
@@ -458,7 +417,6 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* أزرار التنقل الرئيسية */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {filteredItems.map((item, index) => {
             const isActive = activeTab === item.id;
@@ -504,7 +462,6 @@ export default function Sidebar({
         </nav>
       </div>
 
-      {/* تسجيل الخروج */}
       <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1f2937', flexShrink: 0 }}>
         <button
           onClick={() => supabase.auth.signOut()}
