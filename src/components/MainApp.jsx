@@ -363,6 +363,31 @@ async function loadInitialData() {
             {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
             {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
             {activeTab === 'reports' && <Reports students={students} academyId={academyId} countryCode={countryCode} />}
+            {/* 👨‍🏫 واجهة منظومة المعلمين الاحترافية العالمية */}
+            {activeTab === 'teachers' && (
+              <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
+                <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>
+                  {isRtl ? '👨‍🏫 الكادر التعليمي والتربوي' : '👨‍🏫 Faculty & Instructors'}
+                </h2>
+                <p style={{ color: '#9CA3AF' }}>
+                  {isRtl ? 'إجمالي الكفاءات التعليمية النشطة بالمؤسسة:' : 'Total active educational faculty within the institution:'}{' '}
+                  <strong style={{ color: '#FFF', margin: '0 4px' }}>{teachers.length}</strong>
+                </p>
+              </div>
+            )}
+
+            {/* 🕌 واجهة منظومة الحلقات الاحترافية العالمية */}
+            {activeTab === 'halaqas' && (
+              <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
+                <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>
+                  {isRtl ? '🕌 الحلقات والمجموعات التعليمية' : '🕌 Learning Circles (Halaqas)'}
+                </h2>
+                <p style={{ color: '#9CA3AF' }}>
+                  {isRtl ? 'إجمالي المجموعات والمسارات التشغيلية حالياً:' : 'Total operational circles & study groups currently active:'}{' '}
+                  <strong style={{ color: '#FFF', margin: '0 4px' }}>{halaqas.length}</strong>
+                </p>
+              </div>
+            )}
           </Suspense>
         </ErrorBoundaryInner>
       </div>
