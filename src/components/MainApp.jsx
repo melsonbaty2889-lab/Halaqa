@@ -181,7 +181,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     if (lastFetchedUserId.current === currentUserId) return;
     lastFetchedUserId.current = currentUserId;
 
-    async function loadInitialData() {
+async function loadInitialData() {
       try {
         const { data: profileData } = await supabase
           .from('profiles')
@@ -223,6 +223,19 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             .eq('academy_id', currentAcademyId);
 
           if (!examsError && examsCount !== null) setCompletedExamsCount(examsCount);
+
+          // 📋 الكود الجديد لجلب بيانات المعلمين والحلقات التابعة للأكاديمية تلقائياً
+          const { data: teachersData } = await supabase
+            .from('teachers')
+            .select('*')
+            .eq('academy_id', currentAcademyId);
+          if (teachersData) setTeachers(teachersData);
+
+          const { data: halaqasData } = await supabase
+            .from('halaqas')
+            .select('*')
+            .eq('academy_id', currentAcademyId);
+          if (halaqasData) setHalaqas(halaqasData);
         }
       } catch (error) {
         console.error("Error fetching system assets:", error);
