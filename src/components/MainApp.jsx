@@ -153,6 +153,21 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [timezone, currentLang]);
+  // 📋 جلب جداول قاعدة البيانات عند فتح التطبيق
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_all_tables');
+        if (error) throw error;
+        if (data) {
+          setDatabaseTables(data.map(row => row.table_name));
+        }
+      } catch (err) {
+        console.error("حدث خطأ أثناء جلب الجداول:", err);
+      }
+    };
+    fetchTables();
+  }, []);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
