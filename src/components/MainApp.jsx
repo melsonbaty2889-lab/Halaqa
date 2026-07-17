@@ -330,6 +330,15 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
     return (
       <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto', boxSizing: 'border-box' }}>
+        
+        {/* 📋 شريط معاينة الجداول الجديد */}
+        {databaseTables.length > 0 && (
+          <div style={{ background: '#1e293b', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155', color: '#38BDF8', fontSize: '0.9rem', direction: 'rtl' }}>
+            <strong>📋 الجداول المكتشفة في Supabase حالياً: </strong>
+            <span style={{ color: '#FFF', marginRight: '8px' }}>{databaseTables.join(' | ')}</span>
+          </div>
+        )}
+
         <ErrorBoundaryInner key={activeTab} t={t}>
           <Suspense fallback={skeletonLoader}>
             {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />}
