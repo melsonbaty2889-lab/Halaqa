@@ -291,10 +291,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const renderContent = () => {
     if (loadingData) return skeletonLoader;
 
-    if (isPlatformAdmin && activeTab !== 'dashboard' && activeTab !== 'settings') {
-      return <div style={{ padding: '24px', color: '#EF4444', fontWeight: 'bold' }}>⚠️ Access Denied: Insufficient Node Permissions.</div>;
-    }
-
+    // تم تعديل الشرط هنا: إذا كان الحساب غير مفعل وليس مسؤولاً، يرى فقط الداشبورد والملفات الأساسية
+    // أو إذا كنت تريد فتح كل شيء للمسؤول دون قيود، يمكنك ببساطة إزالة شرط الـ Access Denied تماماً.
+    
     if (!currentActivationState && !isPlatformAdmin) {
       return (
         <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto', boxSizing: 'border-box' }}>
@@ -328,7 +327,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         </ErrorBoundaryInner>
       </div>
     );
-  };
+};
 
   return (
     <div style={{
