@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { sessionService } from '../lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
 import { 
@@ -15,12 +15,13 @@ import {
   FaGraduationCap 
 } from 'react-icons/fa';
 
-export default function Attendance({ students, academyId }) {
+export default function Attendance({ students, academyId, halaqas = [] }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedHalaqaId, setSelectedHalaqaId] = useState(''); // الحالة الجديدة لتخزين الحلقة المختارة
   const [attendanceData, setAttendanceData] = useState({});
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -30,6 +31,12 @@ export default function Attendance({ students, academyId }) {
     if (i18n.exists(key)) return t(key);
     return isRtl ? arText : enText;
   };
+
+  // 🔍 فلترة الطلاب ديناميكياً بناءً على الحلقة المختارة
+  const filteredStudents = useMemo(() => {
+    if (!selectedHalaqaId) return students;
+    return students.filter(student => student.halaqa_id === selectedHalaqaId);
+  }, [students, selectedHalaqaId]);
 
   // 🔄 جلب البيانات التراكمية للحلقة لليوم المحدد عبر السيرفيس الموحد
   useEffect(() => {
@@ -76,7 +83,7 @@ export default function Attendance({ students, academyId }) {
     }));
   };
 
-  // 🔥 دالة الحفظ المجمع والذكي لكامل الحلقة بطلب شبكة واحد
+  // 🔥 دالة الحفظ المجمع والذكي للطلاب المفلترين بطلب شبكة واحد
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'حدث خطأ في تحميل بيانات الأكاديمية', 'Error loading academy data'), type: 'error' });
@@ -87,7 +94,7 @@ export default function Attendance({ students, academyId }) {
     setMessage({ text: '', type: '' });
 
     try {
-      const attendanceRecords = students.map(student => {
+      const attendanceRecords = filteredStudents.map(student => {
         const currentRecord = attendanceData[student.id];
         const isPresent = !currentRecord?.status || currentRecord.status === 'present' || currentRecord.status === 'late';
         
@@ -132,15 +139,39 @@ export default function Attendance({ students, academyId }) {
           </p>
         </div>
         
-        {/* منقي وفلتر التاريخ الذكي */}
-        <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-2.5 px-4 rounded-xl w-full md:w-auto box-border shadow-inner">
-          <FaCalendarAlt className="text-amber-500 text-sm" />
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full md:w-auto"
-          />
+        {/* أزرار الفلترة المجمعة (الحلقة والتاريخ) */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          
+          {/* منقي وقائمة اختيار الحلقة الذكية */}
+          <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-2.5 px-4 rounded-xl w-full sm:w-auto box-border shadow-inner">
+            <FaBookOpen className="text-amber-500 text-sm" />
+            <select
+              value={selectedHalaqaId}
+              onChange={(e) => setSelectedHalaqaId(e.target.value)}
+              className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full sm:w-auto text-slate-100 pr-2"
+              style={{ backgroundColor: '#0f172a' }}
+            >
+              <option value="" className="bg-slate-950 text-white">
+                {isRtl ? 'جميع الحلقات والمجموعات' : 'All Learning Circles'}
+              </option>
+              {halaqas.map(halaqa => (
+                <option key={halaqa.id} value={halaqa.id} className="bg-slate-950 text-white">
+                  {isRtl ? (halaqa.name_ar || halaqa.name_en) : (halaqa.name_en || halaqa.name_ar)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* منقي وفلتر التاريخ الذكي */}
+          <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-2.5 px-4 rounded-xl w-full sm:w-auto box-border shadow-inner">
+            <FaCalendarAlt className="text-amber-500 text-sm" />
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full sm:w-auto"
+            />
+          </div>
         </div>
       </div>
 
@@ -163,12 +194,12 @@ export default function Attendance({ students, academyId }) {
         </div>
       ) : (
         <div className="flex flex-col gap-4 mb-6">
-          {students.length === 0 ? (
+          {filteredStudents.length === 0 ? (
             <p className="text-center text-xs text-slate-500 py-10">
               {t('no_students_registered')}
             </p>
           ) : (
-            students.map(student => (
+            filteredStudents.map(student => (
               <StudentCard 
                 key={student.id}
                 student={student}
@@ -183,13 +214,13 @@ export default function Attendance({ students, academyId }) {
       )}
 
       {/* زر الاعتماد المجمع للحلقة بالكامل */}
-      {!loadingFetch && students.length > 0 && (
+      {!loadingFetch && filteredStudents.length > 0 && (
         <button 
           onClick={handleSaveAttendance}
           disabled={isSaving}
           className="w-full p-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/5 active:scale-[0.995] transition-all"
         >
-          <FaSave /> {isSaving ? translateText('saving', 'جاري معالجة وتوثيق الإنتاجية قرآنياً...', 'Saving and adopting records...') : translateText('saveBtn', 'اعتماد وحفظ الكشف الشامل والتسميع اليومي للحلقة 🚀', 'Adopt & Save Comprehensive Halaqa Sheet 🚀')}
+          <FaSave /> {isSaving ? translateText('saving', 'جاري معالجة وتوثيق الإنتاجية قرآنياً...', 'Saving and adopting records...') : translateText('saveBtn', 'اعtemuan وحفظ الكشف الشامل والتسميع اليومي للحلقة 🚀', 'Adopt & Save Comprehensive Halaqa Sheet 🚀')}
         </button>
       )}
     </div>
