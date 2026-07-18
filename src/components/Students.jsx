@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 // استيراد قائمة الدول الموحدة والعالمية الجديدة
 import { COUNTRIES_LIST } from '../constants/countries';
 
-export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
+export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas = [] }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
@@ -22,7 +22,8 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
   const [studentLoading, setStudentLoading] = useState(false);
   const [studentFormData, setStudentFormData] = useState({
     name: '', gender: 'male', parent_name: '', country_code: 'EG',
-    parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: ''
+    parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: '',
+    halaqa_id: '' // إضافة الحقل الجديد في بنية الحالة
   });
 
   // --- حالات قسم المحفظين والمعلمين ---
@@ -65,15 +66,6 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
   const trans = (key, fallbackAr, fallbackEn) => {
     if (i18n.exists(key)) return t(key);
     return isRtl ? fallbackAr : fallbackEn;
-  };
-
-  // دالة مساعدة لتنسيق التاريخ القادم من سوبابيس بشكل جمالي واحترافي
-  const formatDate = (isoString) => {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    return date.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', {
-      year: 'numeric', month: 'short', day: 'numeric'
-    });
   };
 
   // تأثير جلب بيانات الطلاب من سوبابيس
@@ -136,6 +128,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
       current_juz: parseInt(studentFormData.juz_start),
       current_quarter: parseInt(studentFormData.quarter_start),
       notes: studentFormData.notes.trim(),
+      halaqa_id: studentFormData.halaqa_id || null, // ربط معرف الحلقة ديناميكياً بقاعدة البيانات
       is_archived: false
     };
 
@@ -145,7 +138,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
       setShowStudentForm(false);
       setStudentFormData({
         name: '', gender: 'male', parent_name: '', country_code: 'EG',
-        parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: ''
+        parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: '', halaqa_id: ''
       });
     }
   };
@@ -278,6 +271,20 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblFullName', 'اسم الطالب بالكامل', 'Student Full Name')}</label>
                   <input type="text" placeholder={trans('phFullName', 'أدخل الاسم بالكامل وبمرونة هيكلية دولية...', 'Enter full name...')} value={studentFormData.name} onChange={(e) => setStudentFormData({...studentFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }} />
                 </div>
+                
+                {/* قائمة منسدلة جديدة لتعيين واختيار الحلقة المباشرة للطالب */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ color: C.gold, fontSize: '14px', fontWeight: '700' }}>{trans('lblStudentHalaqa', 'تنسيب وتعيين الحلقة القرآنية', 'Assign Quranic Halaqa')}</label>
+                  <select value={studentFormData.halaqa_id} onChange={(e) => setStudentFormData({...studentFormData, halaqa_id: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
+                    <option value="">{trans('unassignedHalaqaOption', '🚫 بدون حلقة حالياً (غير مدرج)', 'No Halaqa (Unassigned)')}</option>
+                    {halaqas.map(h => (
+                      <option key={h.id} value={h.id}>
+                        🔹 {isRtl ? h.name_ar : h.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblGender', 'الجنس', 'Gender')}</label>
@@ -336,81 +343,88 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
             {studentLoading ? (
               <p style={{ color: C.muted, textAlign: 'center', padding: '20px' }}>...</p>
             ) : filteredStudents.length === 0 ? (
-              <div style={{ padding: '30px', textAlign: 'center', background: C.surface, borderRadius: '12px', border: '1px dashed #334155' }}><p style={{ margin: 0, color: C.muted }}>{trans('noStudentsFound', 'لا يوجد نتائج مطابقة', 'No results found')}</p></div>
-            ) : isMobile ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {filteredStudents.map(s => {
-                  const country = COUNTRIES_LIST.find(c => c.code === s.country);
-                  return (
-                    <div key={s.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ maxWidth: '70%' }}>
-                        <div style={{ fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(s.created_at)}</div>
-                        <div style={{ fontSize: '12px', color: C.gold, marginTop: '4px' }}>
-                          {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : s.country} | {trans('juzShort', 'جزء', 'Juz')} {s.current_juz}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        {s.parent_phone && (
-                          <a href={`https://wa.me/${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '8px', display: 'inline-flex', textDecoration: 'none' }}>
-                            💬
-                          </a>
-                        )}
-                        <Btn style={{ padding: '8px 12px', fontSize: '12px', background: studentViewMode === 'active' ? '#334155' : '#059669', color: '#fff' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>
-                          {studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
-                        </Btn>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div style={{ padding: '30px', textAlign: 'center', background: '#162030', borderRadius: '12px', border: '1px dashed #334155' }}>
+                <p style={{ margin: 0, color: '#94a3b8' }}>{trans('noStudentsFound', 'لم يتم العثور على طلاب مسجلين مطبقين للبحث', 'No students found')}</p>
               </div>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
+            ) : !isMobile ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: isRtl ? 'right' : 'left' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <TH>{trans('thName', 'اسم الطالب', 'Name')}</TH>
-                    <TH>{trans('thCountry', 'الدولة', 'Country')}</TH>
-                    <TH>{trans('thLevel', 'المستوى الحالي', 'Level')}</TH>
-                    <TH>{trans('thActions', 'العمليات', 'Actions')}</TH>
+                  <tr style={{ borderBottom: '2px solid #334155' }}>
+                    <TH>{trans('thStudentName', 'الاسم / الحلقة', 'Name / Halaqa')}</TH>
+                    <TH>{trans('thGender', 'الجنس', 'Gender')}</TH>
+                    <TH>{trans('thParentContact', 'ولي الأمر والتواصل', 'Guardian & Contact')}</TH>
+                    <TH>{trans('thSubscription', 'نظام الاشتراك', 'Subscription')}</TH>
+                    <TH>{trans('thActions', 'التحكم الإجرائي', 'Actions')}</TH>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map(s => (
-                    <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <TD>
-                        <div style={{ color: '#fff', fontWeight: '600', maxWidth: '240px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.name}>{s.name}</div>
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(s.created_at)}</div>
-                      </TD>
-                      <TD style={{ color: '#94a3b8' }}>
-                        {(() => {
-                          const c = COUNTRIES_LIST.find(item => item.code === s.country);
-                          return c ? `${c.flag} ${currentLang === 'ar' ? c.nameAr : c.nameEn}` : s.country;
-                        })()}
-                      </TD>
-                      <TD style={{ color: C.gold }}>{trans('juzLabel', 'الجزء', 'Juz')} {s.current_juz}</TD>
-                      <TD>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          {s.parent_phone && (
-                            <a href={`https://wa.me/${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '6px 10px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10b981', fontWeight: '700' }}>
-                              <span>💬</span> {!isMobile && <span>WhatsApp</span>}
-                            </a>
-                          )}
-                          <Btn style={{ background: studentViewMode === 'active' ? '#334155' : '#059669', transition: 'all 0.2s' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>
-                            {studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
+                  {filteredStudents.map(student => {
+                    const matchedHalaqa = halaqas.find(h => h.id === student.halaqa_id);
+                    return (
+                      <tr key={student.id} style={{ borderBottom: '1px solid #1e293b' }}>
+                        <TD>
+                          <div style={{ fontWeight: '700', color: '#fff' }}>{student.name}</div>
+                          <div style={{ fontSize: '11px', color: C.gold, marginTop: '2px', fontWeight: '600' }}>
+                            📢 {matchedHalaqa ? (isRtl ? matchedHalaqa.name_ar : matchedHalaqa.name_en) : trans('unassignedHalaqaText', 'غير مدرج بحلقة حالياً', 'Unassigned')}
+                          </div>
+                        </TD>
+                        <TD>
+                          <Badge color={student.gender === 'male' ? 'blue' : 'pink'}>
+                            {student.gender === 'male' ? trans('genMale', 'ذكر', 'Male') : trans('genFemale', 'أنثى', 'Female')}
+                          </Badge>
+                        </TD>
+                        <TD>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#cbd5e1' }}>{student.parent_name || '—'}</div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', direction: 'ltr', display: 'inline-block' }}>{student.parent_phone}</div>
+                        </TD>
+                        <TD>
+                          <Badge color="orange">{student.subscription_system}</Badge>
+                        </TD>
+                        <TD>
+                          <Btn onClick={() => toggleArchiveStudent(student.id, student.is_archived)} color={student.is_archived ? 'green' : 'red'}>
+                            {student.is_archived ? trans('activateBtn', 'تنشيط ⚡', 'Activate ⚡') : trans('archiveBtn', 'أرشفة 📦', 'Archive 📦')}
                           </Btn>
-                        </div>
-                      </TD>
-                    </tr>
-                  ))}
+                        </TD>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredStudents.map(student => {
+                  const matchedHalaqa = halaqas.find(h => h.id === student.halaqa_id);
+                  return (
+                    <Card key={student.id} style={{ padding: '16px', background: '#162030', border: '1px solid #334155' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: '700', color: '#fff' }}>{student.name}</span>
+                        <Badge color={student.gender === 'male' ? 'blue' : 'pink'}>
+                          {student.gender === 'male' ? '🧑' : '👧'}
+                        </Badge>
+                      </div>
+                      <div style={{ fontSize: '12px', color: C.gold, marginBottom: '6px', fontWeight: '600' }}>
+                        📖 {matchedHalaqa ? (isRtl ? matchedHalaqa.name_ar : matchedHalaqa.name_en) : trans('unassignedHalaqaText', 'غير مدرج بحلقة حالياً', 'Unassigned')}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px' }}>
+                        👤 {student.parent_name || '—'} | 📞 {student.parent_phone}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Badge color="orange">{student.subscription_system}</Badge>
+                        <Btn onClick={() => toggleArchiveStudent(student.id, student.is_archived)} color={student.is_archived ? 'green' : 'red'}>
+                          {student.is_archived ? '⚡' : '📦'}
+                        </Btn>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
             )}
           </Card>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 🟢 ثانياً: واجهة وقسم إدارة المحفظين والمعلمين */}
+      {/* 🟢 ثانياً: واجهة وقسم إدارة المعلمين والمحفظين */}
       {/* ========================================================================= */}
       {mainTab === 'teachers' && (
         <div>
@@ -422,7 +436,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
               {showTeacherForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <span>➕</span>
-                  <span>{trans('addNewTeacher', 'تعيين محفظ/معلم جديد', 'Recruit New Teacher')}</span>
+                  <span>{trans('addNewTeacher', 'إضافة معلم/محفظ جديد', 'Add New Teacher')}</span>
                 </span>
               )}
             </button>
@@ -436,7 +450,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                 fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', transition: 'all 0.2s' 
               }}
             >
-              📦 {teacherViewMode === 'active' ? trans('viewTeacherArchive', 'عرض أرشيف المحفظين', 'View Teachers Archive') : trans('viewTeacherActive', 'عرض المحفظين النشطين', 'View Active Teachers')}
+              📦 {teacherViewMode === 'active' ? trans('viewTeacherArchive', 'عرض أرشيف المعلمين', 'View Teachers Archive') : trans('viewTeacherActive', 'عرض المعلمين النشطين', 'View Active Teachers')}
             </button>
           </div>
 
@@ -444,18 +458,28 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
             <Card style={{ padding: '24px', marginBottom: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
               <form onSubmit={handleCreateTeacher} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblTeacherName', 'اسم المحفظ/المعلم بالكامل', 'Teacher Full Name')}</label>
-                  <input type="text" placeholder={trans('phTeacherName', 'أدخل اسم المعلم ثلاثياً أو كاملاً...', 'Enter teacher name...')} value={teacherFormData.name} onChange={(e) => setTeacherFormData({...teacherFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }} />
+                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblTeacherName', 'اسم المعلم بالكامل', 'Teacher Full Name')}</label>
+                  <input type="text" placeholder={trans('phTeacherName', 'أدخل اسم المعلم/المحفظ الثلاثي...', 'Enter teacher name...')} value={teacherFormData.name} onChange={(e) => setTeacherFormData({...teacherFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblGender', 'الجنس', 'Gender')}</label>
+                    <select value={teacherFormData.gender} onChange={(e) => setTeacherFormData({...teacherFormData, gender: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
+                      <option value="male">{trans('genMale', 'ذكر 🧑', 'Male 🧑')}</option>
+                      <option value="female">{trans('genFemale', 'أنثى 👧', 'Female 👧')}</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblSalarySystem', 'نظام الاحتساب المالي للمرتب', 'Salary System')}</label>
+                    <select value={teacherFormData.salary_type} onChange={(e) => setTeacherFormData({...teacherFormData, salary_type: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
+                      <option value="monthly">{trans('salMonthly', 'راتب شهري مقطوع ثابت', 'Fixed Monthly')}</option>
+                      <option value="per_hour">{trans('salHour', 'احتساب مالي بالحصة/الساعة', 'Per Hour/Class')}</option>
+                      <option value="volunteer">{trans('salVolunteer', 'عمل تطوعي (بدون مقابل)', 'Volunteer')}</option>
+                    </select>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblGender', 'الجنس', 'Gender')}</label>
-                  <select value={teacherFormData.gender} onChange={(e) => setTeacherFormData({...teacherFormData, gender: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
-                    <option value="male">{trans('genMale', 'ذكر 🧑', 'Male 🧑')}</option>
-                    <option value="female">{trans('genFemale', 'أنثى 👧', 'Female 👧')}</option>
-                  </select>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblTeacherPhone', 'رقم هاتف المعلم الدولي الموحد', 'Teacher WhatsApp Phone')}</label>
+                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblTeacherPhone', 'رقم الاتصال الدولي والبلد', 'Contact Number & Country')}</label>
                   <div style={{ display: 'flex', gap: '10px', direction: 'ltr' }}>
                     <select value={teacherFormData.country_code} onChange={(e) => setTeacherFormData({...teacherFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
                       {COUNTRIES_LIST.map(c => (
@@ -464,107 +488,90 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                         </option>
                       ))}
                     </select>
-                    <input type="tel" placeholder="100234567" value={teacherFormData.phone} onChange={(e) => setTeacherFormData({...teacherFormData, phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', textAlign: 'left' }} />
+                    <input type="tel" placeholder="123456789" value={teacherFormData.phone} onChange={(e) => setTeacherFormData({...teacherFormData, phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', textAlign: 'left' }} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblSalarySystem', 'هيكل مستحقات الراتب والرواتب الموظفين', 'Salary Structures System')}</label>
-                  <select value={teacherFormData.salary_type} onChange={(e) => setTeacherFormData({...teacherFormData, salary_type: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
-                    <option value="monthly">{trans('salMonthly', 'راتب شهري مقطوع ومحدد ثابت', 'Fixed Monthly Salary')}</option>
-                    <option value="per_hour">{trans('salHour', 'محاسبة إنتاجية بالساعة / الحصة المقررة', 'Pay Per Class / Hour')}</option>
-                    <option value="volunteer">{trans('salVolunteer', 'عمل تطوعي / بدون أجر احتسابي', 'Volunteer / No Salary')}</option>
-                  </select>
+                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblNotes', 'ملاحظات وتوجيهات إدارية', 'Notes / Remarks')}</label>
+                  <textarea rows="2" placeholder={trans('phTeacherNotes', 'اكتب أي ملاحظات تخص كفاءة المعلم هنا...', 'Any administrative remarks...')} value={teacherFormData.notes} onChange={(e) => setTeacherFormData({...teacherFormData, notes: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontFamily: 'inherit' }} />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{trans('lblNotes', 'ملاحظات الكفاءة والمقاصد التعليمية', 'Specialization & Skills Notes')}</label>
-                  <textarea rows={3} placeholder={trans('phTeacherNotes', 'أدخل الروايات المسندة، التخصصات القرنائية، أو النطاقات الزمنية المتوافقة...', 'Enter achievements, certifications, narrations, or available shifts...')} value={teacherFormData.notes} onChange={(e) => setTeacherFormData({...teacherFormData, notes: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', resize: 'none' }} />
-                </div>
-                <button type="submit" style={{ padding: '14px', borderRadius: '10px', border: 'none', background: C.gold, color: '#0f172a', fontWeight: '700', cursor: 'pointer', fontSize: '15px', marginTop: '6px' }}>
-                  {trans('btnConfirmAddTeacher', 'اعتماد وتعيين المعلم رسمياً في الأكاديمية 🚀', 'Save & Appoint Teacher 🚀')}
+                <button type="submit" style={{ padding: '14px', borderRadius: '10px', border: 'none', background: C.gold, color: '#0f172a', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>
+                  {trans('btnConfirmAddTeacher', 'اعتماد وحفظ المعلم الجديد في النظام 🚀', 'Save Teacher 🚀')}
                 </button>
               </form>
             </Card>
           )}
 
-          {/* حقل بحث المحفظين المحمي */}
+          {/* حقل البحث للمعلمين */}
           <div style={{ marginBottom: '16px' }}>
-            <input type="text" placeholder={trans('phSearchTeacher', 'ابحث باسم المحفظ أو رقم الاتصال الدولي فوري...', 'Search teacher...')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="text" placeholder={trans('phSearchTeacher', 'ابحث باسم المعلم أو رقم الهاتف الفوري...', 'Search teacher...')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <Card style={{ padding: 0, background: 'transparent' }}>
             {teacherLoading ? (
               <p style={{ color: C.muted, textAlign: 'center', padding: '20px' }}>...</p>
             ) : filteredTeachers.length === 0 ? (
-              <div style={{ padding: '30px', textAlign: 'center', background: C.surface, borderRadius: '12px', border: '1px dashed #334155' }}><p style={{ margin: 0, color: C.muted }}>{trans('noTeachersFound', 'لا يوجد معلمون مسجلون يطابقون البحث الحاضر', 'No teachers found')}</p></div>
-            ) : isMobile ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {filteredTeachers.map(tch => {
-                  const country = COUNTRIES_LIST.find(c => c.code === tch.country);
-                  return (
-                    <div key={tch.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ maxWidth: '70%' }}>
-                        <div style={{ fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tch.name}</div>
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(tch.created_at)}</div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                          {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : tch.country}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        {tch.phone && (
-                          <a href={`https://wa.me/${tch.phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '8px', display: 'inline-flex', textDecoration: 'none' }}>
-                            💬
-                          </a>
-                        )}
-                        <Btn style={{ padding: '8px 12px', fontSize: '12px', background: teacherViewMode === 'active' ? '#334155' : '#059669', color: '#fff' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>
-                          {teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
-                        </Btn>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div style={{ padding: '30px', textAlign: 'center', background: '#162030', borderRadius: '12px', border: '1px dashed #334155' }}>
+                <p style={{ margin: 0, color: '#94a3b8' }}>{trans('noTeachersFound', 'لم يتم العثور على معلمين مسجلين', 'No teachers found')}</p>
               </div>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
+            ) : !isMobile ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: isRtl ? 'right' : 'left' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <TH>{trans('thName', 'اسم المحفظ', 'Name')}</TH>
-                    <TH>{trans('thCountry', 'الدولة', 'Country')}</TH>
-                    <TH>{trans('thPhone', 'رقم الهاتف', 'Phone')}</TH>
-                    <TH>{trans('thActions', 'العمليات', 'Actions')}</TH>
+                  <tr style={{ borderBottom: '2px solid #334155' }}>
+                    <TH>{trans('thTeacherName', 'اسم المعلم/المحفظ', 'Teacher Name')}</TH>
+                    <TH>{trans('thGender', 'الجنس', 'Gender')}</TH>
+                    <TH>{trans('thTeacherPhone', 'رقم الاتصال الدولي', 'Phone Number')}</TH>
+                    <TH>{trans('thSalarySystem', 'النظام المالي', 'Salary System')}</TH>
+                    <TH>{trans('thActions', 'التحكم الإجرائي', 'Actions')}</TH>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTeachers.map(tch => (
-                    <tr key={tch.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                  {filteredTeachers.map(teacher => (
+                    <tr key={teacher.id} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <TD style={{ fontWeight: '700', color: '#fff' }}>{teacher.name}</TD>
                       <TD>
-                        <div style={{ color: '#fff', fontWeight: '600', maxWidth: '240px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={tch.name}>{tch.name}</div>
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(tch.created_at)}</div>
+                        <Badge color={teacher.gender === 'male' ? 'blue' : 'pink'}>
+                          {teacher.gender === 'male' ? trans('genMale', 'ذكر', 'Male') : trans('genFemale', 'أنثى', 'Female')}
+                        </Badge>
                       </TD>
-                      <TD style={{ color: '#94a3b8' }}>
-                        {(() => {
-                          const c = COUNTRIES_LIST.find(item => item.code === tch.country);
-                          return c ? `${c.flag} ${currentLang === 'ar' ? c.nameAr : c.nameEn}` : tch.country;
-                        })()}
-                      </TD>
-                      <TD style={{ color: '#94a3b8', direction: 'ltr', textAlign: isRtl ? 'right' : 'left' }}>{tch.phone}</TD>
+                      <TD style={{ direction: 'ltr', display: 'table-cell' }}>{teacher.phone}</TD>
+                      <TD><Badge color="orange">{teacher.salary_system}</Badge></TD>
                       <TD>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          {tch.phone && (
-                            <a href={`https://wa.me/${tch.phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '6px 10px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10b981', fontWeight: '700' }}>
-                              <span>💬</span> {!isMobile && <span>WhatsApp</span>}
-                            </a>
-                          )}
-                          <Btn style={{ background: teacherViewMode === 'active' ? '#334155' : '#059669', transition: 'all 0.2s' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>{teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}</Btn>
-                        </div>
+                        <Btn onClick={() => toggleArchiveTeacher(teacher.id, teacher.is_archived)} color={teacher.is_archived ? 'green' : 'red'}>
+                          {teacher.is_archived ? trans('activateBtn', 'تنشيط ⚡', 'Activate ⚡') : trans('archiveBtn', 'أرشفة 📦', 'Archive 📦')}
+                        </Btn>
                       </TD>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredTeachers.map(teacher => (
+                  <Card key={teacher.id} style={{ padding: '16px', background: '#162030', border: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: '700', color: '#fff' }}>{teacher.name}</span>
+                      <Badge color={teacher.gender === 'male' ? 'blue' : 'pink'}>
+                        {teacher.gender === 'male' ? '🧑' : '👧'}
+                      </Badge>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px', direction: 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
+                      📞 {teacher.phone}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Badge color="orange">{teacher.salary_system}</Badge>
+                      <Btn onClick={() => toggleArchiveTeacher(teacher.id, teacher.is_archived)} color={teacher.is_archived ? 'green' : 'red'}>
+                        {teacher.is_archived ? '⚡' : '📦'}
+                      </Btn>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             )}
           </Card>
         </div>
       )}
+
     </div>
   );
 }
