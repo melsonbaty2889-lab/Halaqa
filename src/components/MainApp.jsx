@@ -32,6 +32,7 @@ const Payments = safeLazy(() => import('./Payments.jsx'));
 const Settings = safeLazy(() => import('./Settings.jsx')); 
 const Reports = safeLazy(() => import('./Reports.jsx'));
 const SubscriptionPage = safeLazy(() => import('./SubscriptionPage.jsx'));
+const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx')); // 🕌 استيراد مكون إدارة الحلقات الجديد
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -155,6 +156,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [timezone, currentLang]);
+
   // 📋 جلب جداول قاعدة البيانات عند فتح التطبيق
   useEffect(() => {
     const fetchTables = async () => {
@@ -181,7 +183,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     if (lastFetchedUserId.current === currentUserId) return;
     lastFetchedUserId.current = currentUserId;
 
-async function loadInitialData() {
+    async function loadInitialData() {
       try {
         const { data: profileData } = await supabase
           .from('profiles')
@@ -224,7 +226,7 @@ async function loadInitialData() {
 
           if (!examsError && examsCount !== null) setCompletedExamsCount(examsCount);
 
-          // 📋 الكود الجديد لجلب بيانات المعلمين والحلقات التابعة للأكاديمية تلقائياً
+          // 📋 جلب بيانات المعلمين والحلقات التابعة للأكاديمية تلقائياً
           const { data: teachersData } = await supabase
             .from('teachers')
             .select('*')
@@ -246,10 +248,61 @@ async function loadInitialData() {
     loadInitialData();
   }, [session]);
 
-  // 🛠️ التعديل الأخير: إجبار جدار الحماية على الفتح لمعاينة عمل أزرار التنقل بشكل كامل وسليم
+  // 🛠️ ربط وتحديث مصفوفة الحلقات لتضمين أسماء المعلمين ديناميكياً للعرض المحمي
+  const enrichedHalaqas = useMemo(() => {
+    return halaqas.map(h => {
+      const teacher = teachers.find(t => t.id === h.teacher_id);
+      return {
+        ...h,
+        teacher_name: teacher ? teacher.name : (h.teacher_name || (isRtl ? 'غير معين' : 'Unassigned'))
+      };
+    });
+  }, [halaqas, teachers, isRtl]);
+
+  // 💾 دالة إنشاء حلقة جديدة وإرسالها لـ Supabase فورياً
+  const handleCreateHalaqa = async (formData) => {
+    try {
+      const { data, error } = await supabase
+        .from('halaqas')
+        .insert([{ 
+          name_ar: formData.name_ar,
+          name_en: formData.name_en,
+          teacher_id: formData.teacher_id,
+          start_time: formData.start_time || null,
+          end_time: formData.end_time || null,
+          status: formData.status,
+          academy_id: academyId,
+          is_archived: false
+        }])
+        .select();
+
+      if (error) throw error;
+      if (data) {
+        setHalaqas(prev => [data[0], ...prev]);
+      }
+    } catch (err) {
+      console.error("Error creating new halaqa row:", err);
+      alert(isRtl ? "حدث خطأ أثناء حفظ الحلقة، يرجى التحقق من بنية الجدول" : "Failed to create halaqa, check table constraints");
+    }
+  };
+
+  // 📦 دالة أرشفة أو تنشيط الحلقة داخل Supabase فوريّاً
+  const handleToggleArchiveHalaqa = async (id, currentArchivedStatus) => {
+    try {
+      const { error } = await supabase
+        .from('halaqas')
+        .update({ is_archived: !currentArchivedStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      setHalaqas(prev => prev.map(h => h.id === id ? { ...h, is_archived: !currentArchivedStatus } : h));
+    } catch (err) {
+      console.error("Error changing archive status:", err);
+    }
+  };
+
   const currentActivationState = true; 
 
-  // طباعة قيم الفحص لمعرفة البيانات الحقيقية المستلمة من Supabase
   console.log("📊 فحص جدار الحماية والبيانات الحالية:", { 
     activeTab, 
     isActivatedProp: isActivated, 
@@ -265,7 +318,7 @@ async function loadInitialData() {
     stats: {
       students: students.length,
       pending: students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length || 0,
-      activeHalagas: students.length > 0 ? Math.ceil(students.length / 8) : 0, 
+      activeHalagas: halaqas.filter(h => !h.is_archived).length, 
       completedExams: completedExamsCount 
     }
   };
@@ -321,9 +374,6 @@ async function loadInitialData() {
 
   const renderContent = () => {
     if (loadingData) return skeletonLoader;
-
-    // تم تعديل الشرط هنا: إذا كان الحساب غير مفعل وليس مسؤولاً، يرى فقط الداشبورد والملفات الأساسية
-    // أو إذا كنت تريد فتح كل شيء للمسؤول دون قيود، يمكنك ببساطة إزالة شرط الـ Access Denied تماماً.
     
     if (!currentActivationState && !isPlatformAdmin) {
       return (
@@ -363,6 +413,7 @@ async function loadInitialData() {
             {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
             {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
             {activeTab === 'reports' && <Reports students={students} academyId={academyId} countryCode={countryCode} />}
+            
             {/* 👨‍🏫 واجهة منظومة المعلمين الاحترافية العالمية */}
             {activeTab === 'teachers' && (
               <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -376,23 +427,25 @@ async function loadInitialData() {
               </div>
             )}
 
-            {/* 🕌 واجهة منظومة الحلقات الاحترافية العالمية */}
+            {/* 🕌 واجهة منظومة الحلقات الاحترافية المربوطة والمحدثة بالكامل */}
             {activeTab === 'halaqas' && (
-              <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
-                <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>
-                  {isRtl ? '🕌 الحلقات والمجموعات التعليمية' : '🕌 Learning Circles (Halaqas)'}
-                </h2>
-                <p style={{ color: '#9CA3AF' }}>
-                  {isRtl ? 'إجمالي المجموعات والمسارات التشغيلية حالياً:' : 'Total operational circles & study groups currently active:'}{' '}
-                  <strong style={{ color: '#FFF', margin: '0 4px' }}>{halaqas.length}</strong>
-                </p>
-              </div>
+              <ActiveHalaqas 
+                halaqas={enrichedHalaqas}
+                teachers={teachers}
+                students={students}
+                isLoading={loadingData}
+                error={null}
+                isRtl={isRtl}
+                isMobile={isMobile}
+                onCreateHalaqa={handleCreateHalaqa}
+                onToggleArchiveHalaqa={handleToggleArchiveHalaqa}
+              />
             )}
           </Suspense>
         </ErrorBoundaryInner>
       </div>
     );
-};
+  };
 
   return (
     <div style={{
