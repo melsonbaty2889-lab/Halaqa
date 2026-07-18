@@ -67,6 +67,15 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
     return isRtl ? fallbackAr : fallbackEn;
   };
 
+  // دالة مساعدة لتنسيق التاريخ القادم من سوبابيس بشكل جمالي واحترافي
+  const formatDate = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  };
+
   // تأثير جلب بيانات الطلاب من سوبابيس
   useEffect(() => {
     const fetchStudents = async () => {
@@ -112,7 +121,9 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
       return alert(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية', 'Please fill in required fields'));
     }
     const selectedCountry = COUNTRIES_LIST.find(c => c.code === studentFormData.country_code);
-    const fullPhone = `${selectedCountry?.dialCode || ''}${studentFormData.parent_phone.trim().replace(/^0+/, '')}`;
+    // تنظيف الرقم من أي أصفار في البداية للحصول على رابط واتساب عالمي سليم
+    const cleanPhone = studentFormData.parent_phone.trim().replace(/^0+/, '').replace(/\D/g, '');
+    const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
 
     const payload = {
       academy_id: academyId,
@@ -151,7 +162,8 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
       return alert(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية', 'Please fill in required fields'));
     }
     const selectedCountry = COUNTRIES_LIST.find(c => c.code === teacherFormData.country_code);
-    const fullPhone = `${selectedCountry?.dialCode || ''}${teacherFormData.phone.trim().replace(/^0+/, '')}`;
+    const cleanPhone = teacherFormData.phone.trim().replace(/^0+/, '').replace(/\D/g, '');
+    const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
 
     const payload = {
       academy_id: academyId,
@@ -331,15 +343,23 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   const country = COUNTRIES_LIST.find(c => c.code === s.country);
                   return (
                     <div key={s.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: '700', color: '#fff' }}>{s.name}</div>
+                      <div style={{ maxWidth: '70%' }}>
+                        <div style={{ fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(s.created_at)}</div>
                         <div style={{ fontSize: '12px', color: C.gold, marginTop: '4px' }}>
                           {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : s.country} | {trans('juzShort', 'جزء', 'Juz')} {s.current_juz}
                         </div>
                       </div>
-                      <Btn style={{ padding: '6px 12px', fontSize: '12px', background: 'rgba(255,255,255,0.05)', color: '#fff' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>
-                        {studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
-                      </Btn>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        {s.parent_phone && (
+                          <a href={`https://wa.me/${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '8px', display: 'inline-flex', textDecoration: 'none' }}>
+                            💬
+                          </a>
+                        )}
+                        <Btn style={{ padding: '8px 12px', fontSize: '12px', background: studentViewMode === 'active' ? '#334155' : '#059669', color: '#fff' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>
+                          {studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
+                        </Btn>
+                      </div>
                     </div>
                   );
                 })}
@@ -357,7 +377,10 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                 <tbody>
                   {filteredStudents.map(s => (
                     <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <TD style={{ color: '#fff', fontWeight: '600' }}>{s.name}</TD>
+                      <TD>
+                        <div style={{ color: '#fff', fontWeight: '600', maxWidth: '240px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.name}>{s.name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(s.created_at)}</div>
+                      </TD>
                       <TD style={{ color: '#94a3b8' }}>
                         {(() => {
                           const c = COUNTRIES_LIST.find(item => item.code === s.country);
@@ -365,7 +388,18 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                         })()}
                       </TD>
                       <TD style={{ color: C.gold }}>{trans('juzLabel', 'الجزء', 'Juz')} {s.current_juz}</TD>
-                      <TD><Btn style={{ background: studentViewMode === 'active' ? '#ef4444' : '#10b981' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>{studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}</Btn></TD>
+                      <TD>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {s.parent_phone && (
+                            <a href={`https://wa.me/${s.parent_phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '6px 10px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10b981', fontWeight: '700' }}>
+                              <span>💬</span> {!isMobile && <span>WhatsApp</span>}
+                            </a>
+                          )}
+                          <Btn style={{ background: studentViewMode === 'active' ? '#334155' : '#059669', transition: 'all 0.2s' }} onClick={() => toggleArchiveStudent(s.id, s.is_archived)}>
+                            {studentViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
+                          </Btn>
+                        </div>
+                      </TD>
                     </tr>
                   ))}
                 </tbody>
@@ -468,15 +502,23 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
                   const country = COUNTRIES_LIST.find(c => c.code === tch.country);
                   return (
                     <div key={tch.id} style={{ background: C.surface, padding: '14px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: '700', color: '#fff' }}>{tch.name}</div>
+                      <div style={{ maxWidth: '70%' }}>
+                        <div style={{ fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tch.name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(tch.created_at)}</div>
                         <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                          {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : tch.country} | {tch.phone}
+                          {country ? `${country.flag} ${currentLang === 'ar' ? country.nameAr : country.nameEn}` : tch.country}
                         </div>
                       </div>
-                      <Btn style={{ padding: '6px 12px', fontSize: '12px', background: 'rgba(255,255,255,0.05)', color: '#fff' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>
-                        {teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
-                      </Btn>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        {tch.phone && (
+                          <a href={`https://wa.me/${tch.phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '8px', display: 'inline-flex', textDecoration: 'none' }}>
+                            💬
+                          </a>
+                        )}
+                        <Btn style={{ padding: '8px 12px', fontSize: '12px', background: teacherViewMode === 'active' ? '#334155' : '#059669', color: '#fff' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>
+                          {teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}
+                        </Btn>
+                      </div>
                     </div>
                   );
                 })}
@@ -485,24 +527,36 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger }) {
               <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <TH>{trans('thTeacherName', 'اسم المعلم/المحفظ', 'Teacher Name')}</TH>
-                    <TH>{trans('thCountry', 'الدولة المنتمي لها', 'Country')}</TH>
-                    <TH>{trans('thSalarySystem', 'نظام المستحقات المالي', 'Compensation')}</TH>
-                    <TH>{trans('thActions', 'العمليات السيادية', 'Actions')}</TH>
+                    <TH>{trans('thName', 'اسم المحفظ', 'Name')}</TH>
+                    <TH>{trans('thCountry', 'الدولة', 'Country')}</TH>
+                    <TH>{trans('thPhone', 'رقم الهاتف', 'Phone')}</TH>
+                    <TH>{trans('thActions', 'العمليات', 'Actions')}</TH>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTeachers.map(tch => (
                     <tr key={tch.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <TD style={{ color: '#fff', fontWeight: '600' }}>{tch.name}</TD>
+                      <TD>
+                        <div style={{ color: '#fff', fontWeight: '600', maxWidth: '240px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={tch.name}>{tch.name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>⏱️ {formatDate(tch.created_at)}</div>
+                      </TD>
                       <TD style={{ color: '#94a3b8' }}>
                         {(() => {
                           const c = COUNTRIES_LIST.find(item => item.code === tch.country);
                           return c ? `${c.flag} ${currentLang === 'ar' ? c.nameAr : c.nameEn}` : tch.country;
                         })()}
                       </TD>
-                      <TD style={{ color: C.gold }}>{tch.salary_system === 'monthly' ? trans('salMonthly', 'راتب شهري', 'Monthly') : tch.salary_system === 'per_hour' ? trans('salHour', 'بالحصة', 'Per Class') : trans('salVolunteer', 'تطوعي', 'Volunteer')}</TD>
-                      <TD><Btn style={{ background: teacherViewMode === 'active' ? '#ef4444' : '#10b981' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>{teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة المعلم', 'Archive') : trans('btnActivate', 'تنشيط الحساب', 'Activate')}</Btn></TD>
+                      <TD style={{ color: '#94a3b8', direction: 'ltr', textAlign: isRtl ? 'right' : 'left' }}>{tch.phone}</TD>
+                      <TD>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {tch.phone && (
+                            <a href={`https://wa.me/${tch.phone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '6px 10px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10b981', fontWeight: '700' }}>
+                              <span>💬</span> {!isMobile && <span>WhatsApp</span>}
+                            </a>
+                          )}
+                          <Btn style={{ background: teacherViewMode === 'active' ? '#334155' : '#059669', transition: 'all 0.2s' }} onClick={() => toggleArchiveTeacher(tch.id, tch.is_archived)}>{teacherViewMode === 'active' ? trans('btnArchive', 'أرشفة', 'Archive') : trans('btnActivate', 'تنشيط', 'Activate')}</Btn>
+                        </div>
+                      </TD>
                     </tr>
                   ))}
                 </tbody>
