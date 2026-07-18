@@ -407,8 +407,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         <ErrorBoundaryInner key={activeTab} t={t}>
           <Suspense fallback={skeletonLoader}>
             {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />}
-            {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} />}
-            {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} />}
+            
+            {/* 👨‍🎓 تمرير الحلقات لصفحة الطلاب لتفعيل التعيين الفوري والتلقائي */}
+            {activeTab === 'students' && <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />}
+            
+            {/* 📝 تمرير الحلقات لصفحة الحضور لتفعيل الفلترة الذكية المعتمدة مسبقاً */}
+            {activeTab === 'attendance' && <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} />}
+            
             {activeTab === 'exams' && <Exams students={students} academyId={academyId} />}
             {activeTab === 'payments' && <Payments students={students} academyId={academyId} currency={currency} />}
             {activeTab === 'settings' && <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />}
