@@ -72,10 +72,14 @@ export default function Sidebar({
     }
   };
 
-  const handleSearchTrigger = () => {
+  const handleSearchTrigger = (e) => {
+    e.preventDefault();
+    console.log("🔍 Search button clicked trigger fired.");
     if (onSearchClick) {
+      console.log("➡️ Executing onSearchClick from parent props.");
       onSearchClick();
     } else {
+      console.log("➡️ Dispatching global custom event: toggle-command-palette");
       const toggleEvent = new CustomEvent('toggle-command-palette');
       window.dispatchEvent(toggleEvent);
     }
@@ -93,7 +97,6 @@ export default function Sidebar({
       const hijriMonthsEn = ["Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"];
       return `${hijriMonthsEn[monthNum - 1] || 'Muharram'} ${day}, ${year} AH`;
     } catch (e) {
-      // خطة بديلة ديناميكية تعود بالتاريخ الحالي بصيغة مبسطة بدلاً من نص متجمد
       return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
     }
   };
@@ -153,7 +156,6 @@ export default function Sidebar({
       direction: isRtl ? 'rtl' : 'ltr'
     }}>
       
-      {/* ستايل داخلي مخفي لمنع ظهور شريط التمرير على متصفحات الموبايل (Webkit) نهائياً */}
       <style>{`
         aside::-webkit-scrollbar { display: none !important; }
         aside *::-webkit-scrollbar { display: none !important; }
@@ -264,7 +266,6 @@ export default function Sidebar({
         
         {!isSlim && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 6px', marginBottom: '14px' }}>
-            {/* ضبط اتجاه حاوية التوقيت إلى ltr وتعديل التموضع لضمان التنسيق في الواجهتين دون انقلاب الرموز */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', direction: 'ltr', justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
               <span style={{ width: '5px', height: '5px', backgroundColor: '#10B981', borderRadius: '50%' }}></span>
               <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: '600' }}>
@@ -280,13 +281,16 @@ export default function Sidebar({
           </div>
         )}
 
+        {/* تعديل حاوية البحث إلى زر HTML حقيقي لضمان التقاط ضغطات شاشات اللمس والموبايل */}
         <div style={{ marginBottom: '16px', padding: '0 2px', flexShrink: 0 }}>
-          <div 
+          <button 
+            type="button"
             onClick={handleSearchTrigger}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: isSlim ? 'center' : 'space-between',
               padding: '8px 10px', backgroundColor: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1E293B',
-              borderRadius: '8px', cursor: 'pointer', color: '#9CA3AF', transition: 'all 0.2s'
+              borderRadius: '8px', cursor: 'pointer', color: '#9CA3AF', transition: 'all 0.2s',
+              width: '100%', outline: 'none', fontFamily: 'inherit', fontStyle: 'inherit'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
@@ -298,7 +302,7 @@ export default function Sidebar({
                 background: '#0F172A', border: '1px solid #334155', borderRadius: '4px', padding: '1px 4px', fontSize: '0.6rem', color: '#9CA3AF', fontFamily: 'monospace'
               }}>{isMobile ? "Tap" : "Ctrl K"}</kbd>
             )}
-          </div>
+          </button>
         </div>
 
         {!isPlatformAdmin && (isTrial || !accountActivated) && (
