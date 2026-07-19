@@ -17,7 +17,7 @@ import {
   FaChevronDown,
   FaChalkboardTeacher, 
   FaUsers,
-  FaWifi // إضافة أيقونة حالة الشبكة كإضافة مرئية فقط
+  FaWifi 
 } from 'react-icons/fa';
 
 export default function Sidebar({
@@ -42,7 +42,7 @@ export default function Sidebar({
   const [hoveredItem, setHoveredItem] = useState(null);
   const [activeBranchKey, setActiveBranchKey] = useState('main');
   
-  // إضافة مرئية فقط لمراقبة حالة الإنترنت دون المساس بمنطق النظام الأساسي
+  // مراقبة حالة الإنترنت
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -82,23 +82,22 @@ export default function Sidebar({
   };
 
   const getSafeHijriDate = () => {
-  try {
-    if (isRtl) {
-      return new Date().toLocaleDateString('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
+    try {
+      if (isRtl) {
+        return new Date().toLocaleDateString('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(new Date());
+      const day = parts.find(p => p.type === 'day')?.value || '';
+      const monthNum = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
+      const year = parts.find(p => p.type === 'year')?.value || '';
+      const hijriMonthsEn = ["Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"];
+      return `${hijriMonthsEn[monthNum - 1] || 'Muharram'} ${day}, ${year} AH`;
+    } catch (e) {
+      // خطة بديلة ديناميكية تعود بالتاريخ الحالي بصيغة مبسطة بدلاً من نص متجمد
+      return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
     }
-    const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(new Date());
-    const day = parts.find(p => p.type === 'day')?.value || '';
-    const monthNum = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
-    const year = parts.find(p => p.type === 'year')?.value || '';
-    const hijriMonthsEn = ["Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"];
-    return `${hijriMonthsEn[monthNum - 1] || 'Muharram'} ${day}, ${year} AH`;
-  } catch (e) {
-    // خطة بديلة ديناميكية تعود بالتاريخ الحالي بصيغة مبسطة بدلاً من نص متجمد
-    return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
-  }
-};
+  };
 
-  // 🌐 تعديل المسميات والمصطلحات فقط لتكون بسيطة وعالمية مع الحفاظ على الـ ids تماماً
   const menuItems = [
     { id: 'dashboard', labelAr: 'الرئيسية والتحليلات', labelEn: 'Home & Analytics', icon: <FaThLarge /> },
     { id: 'students', labelAr: 'شؤون الطلاب', labelEn: 'Students Suite', icon: <FaUserGraduate /> },
@@ -118,7 +117,7 @@ export default function Sidebar({
       labelAr: 'المالية والاشتراكات', 
       labelEn: 'Finance & Billing', 
       icon: <FaMoneyBillWave />,
-      badge: "👑", // إضافة جمالية عالمية تعكس حسابات الـ SaaS
+      badge: "👑", 
       badgeColor: '#FBBF24'
     },
     { id: 'settings', labelAr: 'إعدادات المنصة', labelEn: 'System Settings', icon: <FaCog /> },
@@ -153,6 +152,12 @@ export default function Sidebar({
       overflowX: 'visible',
       direction: isRtl ? 'rtl' : 'ltr'
     }}>
+      
+      {/* ستايل داخلي مخفي لمنع ظهور شريط التمرير على متصفحات الموبايل (Webkit) نهائياً */}
+      <style>{`
+        aside::-webkit-scrollbar { display: none !important; }
+        aside *::-webkit-scrollbar { display: none !important; }
+      `}</style>
       
       {!isMobile && (
         <button 
@@ -259,7 +264,8 @@ export default function Sidebar({
         
         {!isSlim && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 6px', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* ضبط اتجاه حاوية التوقيت إلى ltr وتعديل التموضع لضمان التنسيق في الواجهتين دون انقلاب الرموز */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', direction: 'ltr', justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
               <span style={{ width: '5px', height: '5px', backgroundColor: '#10B981', borderRadius: '50%' }}></span>
               <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: '600' }}>
                 {timezone?.split('/')[1] || 'Cairo'} : {academyTime || '--:--'}
@@ -362,7 +368,6 @@ export default function Sidebar({
 
       <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(30, 41, 59, 0.6)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         
-        {/* إضافة مرئية فقط: شارة ذكية لربط حالة الاتصال الفوري لتعزيز جودة الـ SaaS */}
         {!isSlim && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px',
