@@ -32,6 +32,19 @@ export default function Payments({ students, academyId }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // all | paid | pending
 
+  // نظام التنبيهات الذكي (Toast) بديل الـ alert التقليدي
+  const [toast, setToast] = useState({ message: '', type: null });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: null }), 4000);
+  };
+
+  // نافذة التحصيل المنبثقة الاحترافية (Collection Modal) بديل الـ prompt التقليدي
+  const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
+  const [collectStudent, setCollectStudent] = useState(null);
+  const [collectAmount, setCollectAmount] = useState('');
+
   // نافذة الواتساب الاحترافية ونبرة الرسائل الدولية
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -63,51 +76,57 @@ export default function Payments({ students, academyId }) {
     fetchPayments();
   }, [selectedMonth, academyId]);
 
-  // منطق التحصيل المرن مع دعم الدفع الجزئي
-  const handleTogglePayment = async (studentId, currentRecord, expectedAmount) => {
-    setActionLoading(studentId);
-    const isPaid = currentRecord?.status === 'مدفوع' || currentRecord?.status === 'مدفوع جزئياً';
-    
+  // فتح نافذة التحصيل وإعداد البيانات الخاصة بالطالب
+  const openCollectModal = (student, currentRecord, expectedAmount) => {
+    setCollectStudent({
+      id: student.id,
+      name: student.name,
+      expectedAmount: expectedAmount,
+      currentRecord: currentRecord
+    });
+    // افتراضياً يوضع المبلغ الحالي المسدد أو القيمة الكاملة المطلوبة تسهيلاً للمستخدم
+    setCollectAmount(currentRecord ? currentRecord.amount.toString() : expectedAmount.toString());
+    setIsCollectModalOpen(true);
+  };
+
+  // معالجة وحفظ عملية التحصيل من النافذة المنبثقة المخصصة
+  const handleConfirmPayment = async () => {
+    if (!collectStudent) return;
+    setActionLoading(collectStudent.id);
+    setIsCollectModalOpen(false);
+
+    const parsedAmount = parseFloat(collectAmount);
+    if (isNaN(parsedAmount) || parsedAmount < 0) {
+      showToast(translateText('invalidAmount', 'الرجاء إدخال مبلغ صحيح', 'Please enter a valid amount'), 'error');
+      setActionLoading(null);
+      return;
+    }
+
     let status = 'غير مدفوع';
-    let amount = 0;
-
-    if (!isPaid) {
-      const promptMsg = translateText(
-        'enterAmountPrompt',
-        `أدخل المبلغ المراد تحصيله (قيمة الاشتراك المستهدفة: ${expectedAmount}):`,
-        `Enter amount to collect (Target subscription fee: ${expectedAmount}):`
-      );
-      const inputAmount = window.prompt(promptMsg, expectedAmount);
-      
-      if (inputAmount === null) {
-        setActionLoading(null);
-        return; // إلغاء العملية الإدخال
-      }
-      
-      const parsedAmount = parseFloat(inputAmount);
-      if (isNaN(parsedAmount) || parsedAmount < 0) {
-        alert(translateText('invalidAmount', 'الرجاء إدخال مبلغ صحيح', 'Please enter a valid amount'));
-        setActionLoading(null);
-        return;
-      }
-
-      amount = parsedAmount;
-      status = parsedAmount >= expectedAmount ? 'مدفوع' : parsedAmount > 0 ? 'مدفوع جزئياً' : 'غير مدفوع';
+    if (parsedAmount >= collectStudent.expectedAmount) {
+      status = 'مدفوع';
+    } else if (parsedAmount > 0) {
+      status = 'مدفوع جزئياً';
     }
 
     const payload = {
-      ...(currentRecord?.id ? { id: currentRecord.id } : {}),
-      student_id: studentId,
+      ...(collectStudent.currentRecord?.id ? { id: collectStudent.currentRecord.id } : {}),
+      student_id: collectStudent.id,
       academy_id: academyId,
       month: selectedMonth,
-      amount: amount,
+      amount: parsedAmount,
       status: status
     };
 
     const { data, error } = await supabase.from('payments').upsert(payload).select();
-    if (error) alert(translateText('errorOccurred', 'حدث خطأ: ', 'An error occurred: ') + error.message);
-    else if (data) setPaymentsData(prev => ({ ...prev, [studentId]: data[0] }));
+    if (error) {
+      showToast(translateText('errorOccurred', 'حدث خطأ: ', 'An error occurred: ') + error.message, 'error');
+    } else if (data) {
+      setPaymentsData(prev => ({ ...prev, [collectStudent.id]: data[0] }));
+      showToast(translateText('saveSuccess', 'تم تحديث حالة الدفع بنجاح ✨', 'Payment updated successfully ✨'), 'success');
+    }
     setActionLoading(null);
+    setCollectStudent(null);
   };
 
   // محرك إنشاء رسائل الواتساب متعدد الأنماط والنبرات دولياً
@@ -135,7 +154,6 @@ export default function Payments({ students, academyId }) {
         : `Peace be upon you,\nThis is a friendly reminder regarding the remaining fee for student (${student.name}) for the month of (${formattedMonth}). Paid: (${paidAmount} ${currency}), Remaining due: (${remainingAmount} ${currency}).\nThank you for your cooperation! 🙏\n— Academy Management`;
     }
 
-    // حالات عدم السداد الكامل بالاعتماد على النبرة المحددة
     if (isRtlLang) {
       if (tone === 'official') {
         return `إشعار رسمي السادة أولياء الأمور الكرام،\nيرجى التكرم بالعلم أن اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) مستحق السداد بمبلغ (${expectedAmount} ${currency}).\nالرجاء المسارعة بالتسوية المالية لضمان استمرارية العملية التعليمية بانتظام.\n— الشؤون المالية للأكاديمية`;
@@ -151,7 +169,7 @@ export default function Payments({ students, academyId }) {
 
   const openReminderModal = (student, currentRecord) => {
     if (!student.parent_phone) {
-      return alert(translateText('noPhone', 'لا يوجد رقم هاتف مسجل لولي الأمر.', 'No phone number registered for the parent.'));
+      return showToast(translateText('noPhone', 'لا يوجد رقم هاتف مسجل لولي الأمر.', 'No phone number registered for the parent.'), 'error');
     }
     setSelectedStudentForModal(student);
     setMsgTone('friendly');
@@ -174,7 +192,6 @@ export default function Payments({ students, academyId }) {
 
     let cleanPhone = selectedStudentForModal.parent_phone.trim().replace(/[^\d]/g, '');
     
-    // معالجة ذكية للأرقام المحلية والدولية لتجنب فشل الإرسال
     if (cleanPhone.startsWith('01') && cleanPhone.length === 11) {
       cleanPhone = '2' + cleanPhone;
     } else if (cleanPhone.startsWith('00')) {
@@ -185,7 +202,7 @@ export default function Payments({ students, academyId }) {
     setIsModalOpen(false);
   };
 
-  // الحساب المتقدم للمؤشرات الثلاثية (تعدد العملات والاشتراكات الفردية)
+  // الحساب المتقدم للمؤشرات الثلاثية
   let totalCollected = 0;
   let totalPending = 0;
 
@@ -205,7 +222,7 @@ export default function Payments({ students, academyId }) {
   const totalTarget = totalCollected + totalPending;
   const collectionRate = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
 
-  // محرك الفلترة المحلي المزدوج (البحث + تبويب الحالة)
+  // محرك الفلترة المحلي المزدوج
   const filteredStudents = students?.filter(s => {
     const rec = paymentsData[s.id];
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -221,18 +238,27 @@ export default function Payments({ students, academyId }) {
 
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", minHeight: '100vh', paddingBottom: '40px' }}>
+      
+      {/* نظام التنبيهات المخصص العائم (Toast CSS Component) */}
+      {toast.message && (
+        <div style={{
+          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          background: toast.type === 'success' ? '#10b981' : '#ef4444', color: '#fff',
+          padding: '12px 24px', borderRadius: '10px', zIndex: 10000, fontWeight: '700',
+          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', gap: '8px',
+          transition: 'all 0.3s ease-in-out', border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          {toast.type === 'success' ? '✅' : '❌'} {toast.message}
+        </div>
+      )}
+
       <PageHeader 
         title={translateText('financialTitle', 'المالية واشتراكات الطلاب', 'Financials & Student Subscriptions')} 
         sub={translateText('financialSub', 'متابعة الإيرادات والتحصيل', 'Revenue & Collection Tracking')} 
       />
       
-      {/* لوحة المؤشرات الثلاثية الذكية التنافسية */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '16px', 
-        marginBottom: '24px', 
-        flexDirection: isMobile ? 'column' : 'row' 
-      }}>
+      {/* لوحة المؤشرات الثلاثية */}
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexDirection: isMobile ? 'column' : 'row' }}>
         <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #10b981` : 'none', borderLeft: !isRtl ? `4px solid #10b981` : 'none', width: '100%', boxSizing: 'border-box' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalCollected', 'إجمالي التحصيل الفعلي', 'Total Collected')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#10b981' }}>
@@ -260,12 +286,7 @@ export default function Payments({ students, academyId }) {
 
       {/* قسم أدوات التحكم (البحث والفلترة والشهور) */}
       <div style={{ 
-        display: 'flex', 
-        gap: '16px', 
-        marginBottom: '20px', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        flexDirection: isMobile ? 'column' : 'row'
+        display: 'flex', gap: '16px', marginBottom: '20px', justifyContent: 'space-between', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row'
       }}>
         <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
           <button 
@@ -302,9 +323,7 @@ export default function Payments({ students, academyId }) {
             type="month" 
             value={selectedMonth} 
             onChange={(e) => setSelectedMonth(e.target.value)} 
-            style={{ 
-              padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', fontWeight: '600'
-            }} 
+            style={{ padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', fontWeight: '600' }} 
           />
         </div>
       </div>
@@ -335,7 +354,7 @@ export default function Payments({ students, academyId }) {
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '90px' }}>
-                    <Btn style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold' }} onClick={() => handleTogglePayment(s.id, rec, expectedAmount)}>
+                    <Btn style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold' }} onClick={() => openCollectModal(s, rec, expectedAmount)}>
                       {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل/إلغاء', 'Edit/Cancel') : translateText('payAction', 'قبض', 'Collect')}
                     </Btn>
                     <Btn style={{ padding: '8px 14px', fontSize: '13px', background: '#128C7E', color: '#fff', fontWeight: 'bold' }} onClick={() => openReminderModal(s, rec)}>
@@ -369,7 +388,7 @@ export default function Payments({ students, academyId }) {
                     <TD style={{ color: '#fff', fontWeight: '500', textAlign: isRtl ? 'right' : 'left' }}>{s.name}</TD>
                     <TD style={{ color: '#94a3b8', textAlign: isRtl ? 'right' : 'left' }}>{expectedAmount} {currency}</TD>
                     <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
-                      <div style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
                           {isPaid ? translateText('paidStatus', 'مسدد بالكامل', 'Fully Paid') : isPartial ? translateText('partialStatus', 'مسدد جزئياً', 'Partially Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
                         </Badge>
@@ -378,7 +397,7 @@ export default function Payments({ students, academyId }) {
                     </TD>
                     <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <Btn style={{ fontWeight: '600' }} onClick={() => handleTogglePayment(s.id, rec, expectedAmount)}>
+                        <Btn style={{ fontWeight: '600' }} onClick={() => openCollectModal(s, rec, expectedAmount)}>
                           {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل / إلغاء', 'Edit / Cancel') : translateText('payAction', 'قبض', 'Collect')}
                         </Btn>
                         <Btn style={{ background: '#128C7E', color: '#fff', fontWeight: '600' }} onClick={() => openReminderModal(s, rec)}>
@@ -394,7 +413,77 @@ export default function Payments({ students, academyId }) {
         )}
       </Card>
 
-      {/* النافذة المنبثقة الاحترافية للمراجعة واختيار النبرة قبل الإرسال */}
+      {/* نافذة تحصيل الاشتراكات المنبثقة والمخصصة (Collection Modal) */}
+      {isCollectModalOpen && collectStudent && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px', backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#162030', borderRadius: '16px', width: '100%', maxWidth: '440px',
+            border: '1px solid #334155', padding: '24px', boxSizing: 'border-box',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#fff', fontSize: '18px', fontWeight: '700', textAlign: isRtl ? 'right' : 'left' }}>
+              {translateText('collectTitle', 'تسجيل وتحصيل المبالغ والاشتراكات', 'Collect Subscription Fee')}
+            </h3>
+            
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 20px 0', textAlign: isRtl ? 'right' : 'left' }}>
+              {translateText('studentLabel', 'الطالب:', 'Student:')} <span style={{ color: C.gold, fontWeight: '700' }}>{collectStudent.name}</span>
+            </p>
+
+            <div style={{ marginBottom: '16px', textAlign: isRtl ? 'right' : 'left' }}>
+              <label style={{ display: 'block', color: '#fff', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                {translateText('amountFieldLabel', 'المبلغ المستلم للتحصيل:', 'Amount to Collect:')}
+              </label>
+              <input
+                type="number"
+                value={collectAmount}
+                onChange={(e) => setCollectAmount(e.target.value)}
+                style={{
+                  width: '100%', background: '#0f172a', border: '1px solid #334155',
+                  borderRadius: '10px', padding: '12px', color: '#fff', fontSize: '16px',
+                  outline: 'none', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center'
+                }}
+              />
+            </div>
+
+            {/* أزرار تسريع التعبئة الذكية */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+              <button
+                onClick={() => setCollectAmount(collectStudent.expectedAmount.toString())}
+                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: '#1e293b', color: '#10b981', fontSize: '12px', cursor: 'pointer', fontWeight: '700' }}
+              >
+                💰 {translateText('fullAmountBtn', 'كامل المبلغ', 'Full Fee')}
+              </button>
+              <button
+                onClick={() => setCollectAmount('0')}
+                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: '#1e293b', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: '700' }}
+              >
+                🔄 {translateText('resetAmountBtn', 'تصفير / إلغاء السداد', 'Reset Payment')}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', flexDirection: isRtl ? 'row' : 'row-reverse' }}>
+              <button 
+                onClick={() => setIsCollectModalOpen(false)}
+                style={{ background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                {translateText('cancelModal', 'إلغاء', 'Cancel')}
+              </button>
+              <button 
+                onClick={handleConfirmPayment}
+                style={{ background: C.gold, border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                {translateText('savePaymentBtn', 'تأكيد وحفظ 💾', 'Confirm & Save 💾')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* النافذة المنبثقة للمراجعة واختيار النبرة للواتساب */}
       {isModalOpen && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -410,7 +499,6 @@ export default function Payments({ students, academyId }) {
               {translateText('reviewTitle', 'مراجعة وتعديل نص الرسالة التذكيرية', 'Review & Edit Message')}
             </h3>
             
-            {/* أداة التحكم العالمية في نبرة المراسلة */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', justifyContent: isRtl ? 'flex-start' : 'flex-end' }}>
               <button 
                 onClick={() => handleToneChange('friendly')}
@@ -441,20 +529,14 @@ export default function Payments({ students, academyId }) {
             <div style={{ display: 'flex', gap: '12px', marginTop: '20px', justifyContent: 'flex-end', flexDirection: isRtl ? 'row' : 'row-reverse' }}>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                style={{
-                  background: 'transparent', border: '1px solid #334155', color: '#94a3b8',
-                  padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: '600',
-                  cursor: 'pointer'
-                }}
+                style={{ background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
               >
                 {translateText('cancelModal', 'إلغاء', 'Cancel')}
               </button>
               <button 
                 onClick={handleConfirmWhatsAppSend}
                 style={{
-                  background: '#128C7E', border: 'none', color: '#fff',
-                  padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                  background: '#128C7E', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                 }}
               >
                 {translateText('sendModal', 'فتح الواتساب وإرسال 🚀', 'Open WhatsApp & Send 🚀')}
