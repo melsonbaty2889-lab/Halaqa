@@ -30,9 +30,9 @@ export default function Payments({ students, academyId }) {
 
   // أنظمة الفلترة والبحث المتقدمة
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // all | paid | pending
+  const [activeTab, setActiveTab] = useState('all'); 
 
-  // نظام التنبيهات الذكي (Toast) بديل الـ alert التقليدي
+  // نظام التنبيهات الذكي (Toast)
   const [toast, setToast] = useState({ message: '', type: null });
 
   const showToast = (message, type = 'success') => {
@@ -40,7 +40,16 @@ export default function Payments({ students, academyId }) {
     setTimeout(() => setToast({ message: '', type: null }), 4000);
   };
 
-  // نافذة التحصيل المنبثقة الاحترافية (Collection Modal) بديل الـ prompt التقليدي
+  // ميكانيكية التنسيق المالي الدولي المعياري (SaaS Currency Engine)
+  const formatMoney = (amount) => {
+    const locale = isRtl ? 'ar-EG' : 'en-US';
+    return new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // نافذة التحصيل المنبثقة الاحترافية (Collection Modal)
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
   const [collectStudent, setCollectStudent] = useState(null);
   const [collectAmount, setCollectAmount] = useState('');
@@ -49,7 +58,7 @@ export default function Payments({ students, academyId }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [selectedStudentForModal, setSelectedStudentForModal] = useState(null);
-  const [msgTone, setMsgTone] = useState('friendly'); // friendly | official
+  const [msgTone, setMsgTone] = useState('friendly'); 
 
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
@@ -76,7 +85,6 @@ export default function Payments({ students, academyId }) {
     fetchPayments();
   }, [selectedMonth, academyId]);
 
-  // فتح نافذة التحصيل وإعداد البيانات الخاصة بالطالب
   const openCollectModal = (student, currentRecord, expectedAmount) => {
     setCollectStudent({
       id: student.id,
@@ -84,12 +92,10 @@ export default function Payments({ students, academyId }) {
       expectedAmount: expectedAmount,
       currentRecord: currentRecord
     });
-    // افتراضياً يوضع المبلغ الحالي المسدد أو القيمة الكاملة المطلوبة تسهيلاً للمستخدم
     setCollectAmount(currentRecord ? currentRecord.amount.toString() : expectedAmount.toString());
     setIsCollectModalOpen(true);
   };
 
-  // معالجة وحفظ عملية التحصيل من النافذة المنبثقة المخصصة
   const handleConfirmPayment = async () => {
     if (!collectStudent) return;
     setActionLoading(collectStudent.id);
@@ -129,7 +135,6 @@ export default function Payments({ students, academyId }) {
     setCollectStudent(null);
   };
 
-  // محرك إنشاء رسائل الواتساب متعدد الأنماط والنبرات دولياً
   const generateWhatsAppMessage = (student, currentRecord, tone, lang) => {
     const isRtlLang = lang === 'ar';
     const [year, month] = selectedMonth.split('-');
@@ -150,20 +155,20 @@ export default function Payments({ students, academyId }) {
 
     if (isPartial) {
       return isRtlLang
-        ? `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم بخصوص المتبقي من اشتراك الطالب (${student.name}) لشهر (${formattedMonth}). تم سداد (${paidAmount} ${currency}) والمتبقي المستحق هو (${remainingAmount} ${currency}).\nشاكرين ومقدرين حسن تعاونكم. 🙏\n— إدارة الأكاديمية`
-        : `Peace be upon you,\nThis is a friendly reminder regarding the remaining fee for student (${student.name}) for the month of (${formattedMonth}). Paid: (${paidAmount} ${currency}), Remaining due: (${remainingAmount} ${currency}).\nThank you for your cooperation! 🙏\n— Academy Management`;
+        ? `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم بخصوص المتبقي من اشتراك الطالب (${student.name}) لشهر (${formattedMonth}). تم سداد (${formatMoney(paidAmount)} ${currency}) والمتبقي المستحق هو (${formatMoney(remainingAmount)} ${currency}).\nشاكرين ومقدرين حسن تعاونكم. 🙏\n— إدارة الأكاديمية`
+        : `Peace be upon you,\nThis is a friendly reminder regarding the remaining fee for student (${student.name}) for the month of (${formattedMonth}). Paid: (${formatMoney(paidAmount)} ${currency}), Remaining due: (${formatMoney(remainingAmount)} ${currency}).\nThank you for your cooperation! 🙏\n— Academy Management`;
     }
 
     if (isRtlLang) {
       if (tone === 'official') {
-        return `إشعار رسمي السادة أولياء الأمور الكرام،\nيرجى التكرم بالعلم أن اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) مستحق السداد بمبلغ (${expectedAmount} ${currency}).\nالرجاء المسارعة بالتسوية المالية لضمان استمرارية العملية التعليمية بانتظام.\n— الشؤون المالية للأكاديمية`;
+        return `إشعار رسمي السادة أولياء الأمور الكرام،\nيرجى التكرم بالعلم أن اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) مستحق السداد بمبلغ (${formatMoney(expectedAmount)} ${currency}).\nالرجاء المسارعة بالتسوية المالية لضمان استمرارية العملية العملية بانتظام.\n— الشؤون المالية للأكاديمية`;
       }
-      return `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم الكريم بخصوص استحقاق اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) بمبلغ (${expectedAmount} ${currency}).\nشاكرين ومقدرين حسن تعاونكم وحرصكم الدائم. 🙏\n— إدارة الحلقة`;
+      return `السلام عليكم ورحمة الله وبركاته،\nنود تذكيركم الكريم بخصوص استحقاق اشتراك الطالب (${student.name}) لشهر (${formattedMonth}) بمبلغ (${formatMoney(expectedAmount)} ${currency}).\nشاكرين ومقدرين حسن تعاونكم وحرصكم الدائم. 🙏\n— إدارة الحلقة`;
     } else {
       if (tone === 'official') {
-        return `Official Notice to respected parents,\nPlease be informed that the subscription fee for student (${student.name}) for (${formattedMonth}) is due. Amount: (${expectedAmount} ${currency}).\nPlease settle the payment promptly to ensure continuous classes.\n— Finance Department`;
+        return `Official Notice to respected parents,\nPlease be informed that the subscription fee for student (${student.name}) for (${formattedMonth}) is due. Amount: (${formatMoney(expectedAmount)} ${currency}).\nPlease settle the payment promptly to ensure continuous classes.\n— Finance Department`;
       }
-      return `Peace be upon you,\nThis is a friendly reminder regarding the subscription for student (${student.name}) for the month of (${formattedMonth}) amounting to (${expectedAmount} ${currency}).\nThank you for your cooperation! 🙏\n— Center Management`;
+      return `Peace be upon you,\nThis is a friendly reminder regarding the subscription for student (${student.name}) for the month of (${formattedMonth}) amounting to (${formatMoney(expectedAmount)} ${currency}).\nThank you for your cooperation! 🙏\n— Center Management`;
     }
   };
 
@@ -222,7 +227,6 @@ export default function Payments({ students, academyId }) {
   const totalTarget = totalCollected + totalPending;
   const collectionRate = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
 
-  // محرك الفلترة المحلي المزدوج
   const filteredStudents = students?.filter(s => {
     const rec = paymentsData[s.id];
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -239,7 +243,16 @@ export default function Payments({ students, academyId }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", minHeight: '100vh', paddingBottom: '40px' }}>
       
-      {/* نظام التنبيهات المخصص العائم (Toast CSS Component) */}
+      {/* حقن ستايل تأثير الانسيابية للـ Skeleton المتوافق عالمياً */}
+      <style>{`
+        @keyframes saasPulse {
+          0% { opacity: 0.6; }
+          50% { opacity: 0.2; }
+          100% { opacity: 0.6; }
+        }
+      `}</style>
+
+      {/* نظام التنبيهات المخصص العائم */}
       {toast.message && (
         <div style={{
           position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
@@ -262,14 +275,14 @@ export default function Payments({ students, academyId }) {
         <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #10b981` : 'none', borderLeft: !isRtl ? `4px solid #10b981` : 'none', width: '100%', boxSizing: 'border-box' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalCollected', 'إجمالي التحصيل الفعلي', 'Total Collected')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#10b981' }}>
-            {totalCollected} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
+            {formatMoney(totalCollected)} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
           </p>
         </Card>
 
         <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #f59e0b` : 'none', borderLeft: !isRtl ? `4px solid #f59e0b` : 'none', width: '100%', boxSizing: 'border-box' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalPending', 'المبالغ المعلقة/المتأخرة', 'Pending Balance')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#f59e0b' }}>
-            {totalPending} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
+            {formatMoney(totalPending)} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
           </p>
         </Card>
 
@@ -285,9 +298,7 @@ export default function Payments({ students, academyId }) {
       </div>
 
       {/* قسم أدوات التحكم (البحث والفلترة والشهور) */}
-      <div style={{ 
-        display: 'flex', gap: '16px', marginBottom: '20px', justifyContent: 'space-between', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row'
-      }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', justifyContent: 'space-between', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row' }}>
         <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
           <button 
             onClick={() => setActiveTab('all')}
@@ -315,9 +326,7 @@ export default function Payments({ students, academyId }) {
             placeholder={translateText('searchPlaceholder', 'بحث باسم الطالب أو الهاتف...', 'Search by student or phone...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', width: isMobile ? '100%' : '240px'
-            }}
+            style={{ padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', width: isMobile ? '100%' : '240px' }}
           />
           <input 
             type="month" 
@@ -328,9 +337,45 @@ export default function Payments({ students, academyId }) {
         </div>
       </div>
 
-      {/* جدول البيانات واستعراض الطلاب */}
+      {/* جدول البيانات واستعراض الطلاب مع دعم تأثير الـ Skeleton Loader */}
       <Card style={{ padding: 0, background: 'transparent', boxShadow: 'none' }}>
-        {isMobile ? (
+        {loading ? (
+          /* واجهة التحصيل الذكية للـ Skeleton Loader لمنع الـ Layout Shift */
+          isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[1, 2, 3].map(n => (
+                <div key={n} style={{ background: C.surface, padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.04)', animation: 'saasPulse 1.5s infinite ease-in-out', boxSizing: 'border-box' }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ width: '45%', height: '14px', background: '#334155', borderRadius: '4px' }} />
+                    <div style={{ width: '25%', height: '12px', background: '#334155', borderRadius: '4px' }} />
+                  </div>
+                  <div style={{ width: '85px', height: '32px', background: '#334155', borderRadius: '8px' }} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('studentName', 'اسم الطالب', 'Student Name')}</TH>
+                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('expectedFee', 'الاشتراك المطلوب', 'Required Subscription')}</TH>
+                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('statusLabel', 'الحالة', 'Status')}</TH>
+                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('actionsLabel', 'الإجراءات', 'Actions')}</TH>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3].map(n => (
+                  <tr key={n} style={{ borderBottom: `1px solid ${C.border}`, animation: 'saasPulse 1.5s infinite ease-in-out' }}>
+                    <TD><div style={{ width: '150px', height: '14px', background: '#334155', borderRadius: '4px' }} /></TD>
+                    <TD><div style={{ width: '70px', height: '14px', background: '#334155', borderRadius: '4px' }} /></TD>
+                    <TD><div style={{ width: '90px', height: '22px', background: '#334155', borderRadius: '12px' }} /></TD>
+                    <TD><div style={{ width: '130px', height: '32px', background: '#334155', borderRadius: '8px' }} /></TD>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        ) : isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {filteredStudents?.map(s => {
               const rec = paymentsData[s.id];
@@ -349,8 +394,8 @@ export default function Payments({ students, academyId }) {
                       <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
                         {isPaid ? translateText('paidStatus', 'مسدد', 'Paid') : isPartial ? translateText('partialStatus', 'جزئي', 'Partial') : translateText('unpaidStatus', 'معلّق', 'Pending')}
                       </Badge>
-                      {isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({rec.amount} / {expectedAmount} {currency})</span>}
-                      {!isPaid && !isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({expectedAmount} {currency})</span>}
+                      {isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({formatMoney(rec.amount)} / {formatMoney(expectedAmount)} {currency})</span>}
+                      {!isPaid && !isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({formatMoney(expectedAmount)} {currency})</span>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '90px' }}>
@@ -386,13 +431,13 @@ export default function Payments({ students, academyId }) {
                 return (
                   <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'all 0.2s' }}>
                     <TD style={{ color: '#fff', fontWeight: '500', textAlign: isRtl ? 'right' : 'left' }}>{s.name}</TD>
-                    <TD style={{ color: '#94a3b8', textAlign: isRtl ? 'right' : 'left' }}>{expectedAmount} {currency}</TD>
+                    <TD style={{ color: '#94a3b8', textAlign: isRtl ? 'right' : 'left' }}>{formatMoney(expectedAmount)} {currency}</TD>
                     <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
                           {isPaid ? translateText('paidStatus', 'مسدد بالكامل', 'Fully Paid') : isPartial ? translateText('partialStatus', 'مسدد جزئياً', 'Partially Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
                         </Badge>
-                        {isPartial && <span style={{ fontSize: '13px', color: '#94a3b8' }}>({translateText('collectedLabel', 'المحصل', 'Collected')}: {rec.amount} {currency})</span>}
+                        {isPartial && <span style={{ fontSize: '13px', color: '#94a3b8' }}>({translateText('collectedLabel', 'المحصل', 'Collected')}: {formatMoney(rec.amount)} {currency})</span>}
                       </div>
                     </TD>
                     <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
@@ -449,7 +494,6 @@ export default function Payments({ students, academyId }) {
               />
             </div>
 
-            {/* أزرار تسريع التعبئة الذكية */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
               <button
                 onClick={() => setCollectAmount(collectStudent.expectedAmount.toString())}
