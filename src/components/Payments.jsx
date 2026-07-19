@@ -11,13 +11,6 @@ export default function Payments({ students, academyId }) {
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const getCurrentMonth = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -40,7 +33,7 @@ export default function Payments({ students, academyId }) {
     setTimeout(() => setToast({ message: '', type: null }), 4000);
   };
 
-  // ميكانيكية التنسيق المالي الدولي المعياري (SaaS Currency Engine)
+  // ميكانيكية التنسيق المالي الدولي المعياري
   const formatMoney = (amount) => {
     const locale = isRtl ? 'ar-EG' : 'en-US';
     return new Intl.NumberFormat(locale, {
@@ -49,7 +42,7 @@ export default function Payments({ students, academyId }) {
     }).format(amount);
   };
 
-  // نافذة التحصيل المنبثقة الاحترافية (Collection Modal)
+  // نافذة التحصيل المنبثقة الاحترافية
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
   const [collectStudent, setCollectStudent] = useState(null);
   const [collectAmount, setCollectAmount] = useState('');
@@ -243,12 +236,31 @@ export default function Payments({ students, academyId }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", minHeight: '100vh', paddingBottom: '40px' }}>
       
-      {/* حقن ستايل تأثير الانسيابية للـ Skeleton المتوافق عالمياً */}
+      {/* ستايل حقن الـ CSS Media Queries البديلة لـ Resize Listener لمنع التقطيع والـ Lag */}
       <style>{`
         @keyframes saasPulse {
           0% { opacity: 0.6; }
           50% { opacity: 0.2; }
           100% { opacity: 0.6; }
+        }
+        .stats-container { display: flex; gap: 16px; margin-bottom: 24px; flex-direction: row; }
+        .controls-container { display: flex; gap: 16px; margin-bottom: 20px; justify-content: space-between; align-items: center; flex-direction: row; }
+        .filter-buttons { display: flex; gap: 8px; width: auto; }
+        .search-inputs { display: flex; gap: 12px; width: auto; flex-direction: row; }
+        .search-field { padding: 10px 16px; border-radius: 10px; background: #162030; border: 1px solid #334155; color: #fff; outline: none; font-size: 14px; width: 240px; }
+        .stat-card { padding: 20px; flex: 1; width: 100%; box-sizing: border-box; }
+        
+        .desktop-view { display: block; }
+        .mobile-view { display: none; }
+
+        @media (max-width: 768px) {
+          .stats-container { flex-direction: column; }
+          .controls-container { flex-direction: column; align-items: stretch; }
+          .filter-buttons { width: 100%; overflow-x: auto; padding-bottom: 4px; }
+          .search-inputs { flex-direction: column; width: 100%; }
+          .search-field { width: 100%; }
+          .desktop-view { display: none; }
+          .mobile-view { display: flex; flex-direction: column; gap: 12px; }
         }
       `}</style>
 
@@ -271,22 +283,22 @@ export default function Payments({ students, academyId }) {
       />
       
       {/* لوحة المؤشرات الثلاثية */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexDirection: isMobile ? 'column' : 'row' }}>
-        <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #10b981` : 'none', borderLeft: !isRtl ? `4px solid #10b981` : 'none', width: '100%', boxSizing: 'border-box' }}>
+      <div className="stats-container">
+        <Card className="stat-card" style={{ borderRight: isRtl ? `4px solid #10b981` : 'none', borderLeft: !isRtl ? `4px solid #10b981` : 'none' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalCollected', 'إجمالي التحصيل الفعلي', 'Total Collected')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#10b981' }}>
             {formatMoney(totalCollected)} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
           </p>
         </Card>
 
-        <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid #f59e0b` : 'none', borderLeft: !isRtl ? `4px solid #f59e0b` : 'none', width: '100%', boxSizing: 'border-box' }}>
+        <Card className="stat-card" style={{ borderRight: isRtl ? `4px solid #f59e0b` : 'none', borderLeft: !isRtl ? `4px solid #f59e0b` : 'none' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalPending', 'المبالغ المعلقة/المتأخرة', 'Pending Balance')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#f59e0b' }}>
             {formatMoney(totalPending)} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
           </p>
         </Card>
 
-        <Card style={{ padding: '20px', flex: 1, borderRight: isRtl ? `4px solid ${C.gold}` : 'none', borderLeft: !isRtl ? `4px solid ${C.gold}` : 'none', width: '100%', boxSizing: 'border-box' }}>
+        <Card className="stat-card" style={{ borderRight: isRtl ? `4px solid ${C.gold}` : 'none', borderLeft: !isRtl ? `4px solid ${C.gold}` : 'none' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('collectionRate', 'نسبة إنجاز التحصيل', 'Collection Rate')}</h4>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
             <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: 0, color: '#fff' }}>{collectionRate}%</p>
@@ -298,35 +310,35 @@ export default function Payments({ students, academyId }) {
       </div>
 
       {/* قسم أدوات التحكم (البحث والفلترة والشهور) */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', justifyContent: 'space-between', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row' }}>
-        <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
+      <div className="controls-container">
+        <div className="filter-buttons">
           <button 
             onClick={() => setActiveTab('all')}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'all' ? C.gold : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'all' ? C.gold : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             {translateText('tabAll', 'الكل', 'All')} ({students?.length || 0})
           </button>
           <button 
             onClick={() => setActiveTab('paid')}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'paid' ? '#10b981' : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'paid' ? '#10b981' : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             {translateText('tabPaid', 'مسدد ✅', 'Paid')}
           </button>
           <button 
             onClick={() => setActiveTab('pending')}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'pending' ? '#ef4444' : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeTab === 'pending' ? '#ef4444' : '#162030', color: '#fff', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             {translateText('tabPending', 'معلّق ⏳', 'Pending')}
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
+        <div className="search-inputs">
           <input 
             type="text"
             placeholder={translateText('searchPlaceholder', 'بحث باسم الطالب أو الهاتف...', 'Search by student or phone...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ padding: '10px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', fontSize: '14px', width: isMobile ? '100%' : '240px' }}
+            className="search-field"
           />
           <input 
             type="month" 
@@ -337,12 +349,12 @@ export default function Payments({ students, academyId }) {
         </div>
       </div>
 
-      {/* جدول البيانات واستعراض الطلاب مع دعم تأثير الـ Skeleton Loader */}
+      {/* جدول البيانات واستعراض الطلاب مع دعم تأثير الـ Skeleton Loader الذكي بتجاوب الـ CSS */}
       <Card style={{ padding: 0, background: 'transparent', boxShadow: 'none' }}>
         {loading ? (
-          /* واجهة التحصيل الذكية للـ Skeleton Loader لمنع الـ Layout Shift */
-          isMobile ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <>
+            {/* حالة التحميل على الهواتف */}
+            <div className="mobile-view">
               {[1, 2, 3].map(n => (
                 <div key={n} style={{ background: C.surface, padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.04)', animation: 'saasPulse 1.5s infinite ease-in-out', boxSizing: 'border-box' }}>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -353,74 +365,34 @@ export default function Payments({ students, academyId }) {
                 </div>
               ))}
             </div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('studentName', 'اسم الطالب', 'Student Name')}</TH>
-                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('expectedFee', 'الاشتراك المطلوب', 'Required Subscription')}</TH>
-                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('statusLabel', 'الحالة', 'Status')}</TH>
-                  <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('actionsLabel', 'الإجراءات', 'Actions')}</TH>
-                </tr>
-              </thead>
-              <tbody>
-                {[1, 2, 3].map(n => (
-                  <tr key={n} style={{ borderBottom: `1px solid ${C.border}`, animation: 'saasPulse 1.5s infinite ease-in-out' }}>
-                    <TD><div style={{ width: '150px', height: '14px', background: '#334155', borderRadius: '4px' }} /></TD>
-                    <TD><div style={{ width: '70px', height: '14px', background: '#334155', borderRadius: '4px' }} /></TD>
-                    <TD><div style={{ width: '90px', height: '22px', background: '#334155', borderRadius: '12px' }} /></TD>
-                    <TD><div style={{ width: '130px', height: '32px', background: '#334155', borderRadius: '8px' }} /></TD>
+            {/* حالة التحميل على الشاشات الكبيرة */}
+            <div className="desktop-view">
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('studentName', 'اسم الطالب', 'Student Name')}</TH>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('expectedFee', 'الاشتراك المطلوب', 'Required Subscription')}</TH>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('statusLabel', 'الحالة', 'Status')}</TH>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('actionsLabel', 'الإجراءات', 'Actions')}</TH>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        ) : isMobile ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredStudents?.map(s => {
-              const rec = paymentsData[s.id];
-              const isPaid = rec?.status === 'مدفوع';
-              const isPartial = rec?.status === 'مدفوع جزئياً';
-              const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
-              const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
-
-              return (
-                <div key={s.id} style={{ 
-                  background: C.surface, padding: '16px', borderRadius: '14px', display: 'flex', flexDirection: isRtl ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.04)', boxSizing: 'border-box'
-                }}>
-                  <div style={{ textAlign: isRtl ? 'right' : 'left', flex: 1 }}>
-                    <div style={{ fontWeight: '700', marginBottom: '6px', color: '#fff', fontSize: '15px' }}>{s.name}</div>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
-                        {isPaid ? translateText('paidStatus', 'مسدد', 'Paid') : isPartial ? translateText('partialStatus', 'جزئي', 'Partial') : translateText('unpaidStatus', 'معلّق', 'Pending')}
-                      </Badge>
-                      {isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({formatMoney(rec.amount)} / {formatMoney(expectedAmount)} {currency})</span>}
-                      {!isPaid && !isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({formatMoney(expectedAmount)} {currency})</span>}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '90px' }}>
-                    <Btn style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold' }} onClick={() => openCollectModal(s, rec, expectedAmount)}>
-                      {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل/إلغاء', 'Edit/Cancel') : translateText('payAction', 'قبض', 'Collect')}
-                    </Btn>
-                    <Btn style={{ padding: '8px 14px', fontSize: '13px', background: '#128C7E', color: '#fff', fontWeight: 'bold' }} onClick={() => openReminderModal(s, rec)}>
-                      {translateText('whatsappBtn', 'واتساب 💬', 'WhatsApp 💬')}
-                    </Btn>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                </thead>
+                <tbody>
+                  {[1, 2, 3].map(n => (
+                    <tr key={n} style={{ borderBottom: `1px solid ${C.border}`, animation: 'saasPulse 1.5s infinite ease-in-out' }}>
+                      <TD><div style={{ width: '150px', height: '14px', background: '#334155', borderRadius: '4px' }} /></TD>
+                      <TD><div style={{ width: '70px', height: '14px', background: '#334155', borderRadius: '4px' }} /></TD>
+                      <TD><div style={{ width: '90px', height: '22px', background: '#334155', borderRadius: '12px' }} /></TD>
+                      <TD><div style={{ width: '130px', height: '32px', background: '#334155', borderRadius: '8px' }} /></TD>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
-            <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('studentName', 'اسم الطالب', 'Student Name')}</TH>
-                <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('expectedFee', 'الاشتراك المطلوب', 'Required Subscription')}</TH>
-                <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('statusLabel', 'الحالة', 'Status')}</TH>
-                <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('actionsLabel', 'الإجراءات', 'Actions')}</TH>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* واجهة الهواتف الذكية */}
+            <div className="mobile-view">
               {filteredStudents?.map(s => {
                 const rec = paymentsData[s.id];
                 const isPaid = rec?.status === 'مدفوع';
@@ -429,32 +401,80 @@ export default function Payments({ students, academyId }) {
                 const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
 
                 return (
-                  <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'all 0.2s' }}>
-                    <TD style={{ color: '#fff', fontWeight: '500', textAlign: isRtl ? 'right' : 'left' }}>{s.name}</TD>
-                    <TD style={{ color: '#94a3b8', textAlign: isRtl ? 'right' : 'left' }}>{formatMoney(expectedAmount)} {currency}</TD>
-                    <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div key={s.id} style={{ 
+                    background: C.surface, padding: '16px', borderRadius: '14px', display: 'flex', flexDirection: isRtl ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.04)', boxSizing: 'border-box'
+                  }}>
+                    <div style={{ textAlign: isRtl ? 'right' : 'left', flex: 1 }}>
+                      <div style={{ fontWeight: '700', marginBottom: '6px', color: '#fff', fontSize: '15px' }}>{s.name}</div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
-                          {isPaid ? translateText('paidStatus', 'مسدد بالكامل', 'Fully Paid') : isPartial ? translateText('partialStatus', 'مسدد جزئياً', 'Partially Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
+                          {isPaid ? translateText('paidStatus', 'مسدد', 'Paid') : isPartial ? translateText('partialStatus', 'جزئي', 'Partial') : translateText('unpaidStatus', 'معلّق', 'Pending')}
                         </Badge>
-                        {isPartial && <span style={{ fontSize: '13px', color: '#94a3b8' }}>({translateText('collectedLabel', 'المحصل', 'Collected')}: {formatMoney(rec.amount)} {currency})</span>}
+                        {isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({formatMoney(rec.amount)} / {formatMoney(expectedAmount)} {currency})</span>}
+                        {!isPaid && !isPartial && <span style={{ fontSize: '12px', color: C.muted }}>({formatMoney(expectedAmount)} {currency})</span>}
                       </div>
-                    </TD>
-                    <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Btn style={{ fontWeight: '600' }} onClick={() => openCollectModal(s, rec, expectedAmount)}>
-                          {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل / إلغاء', 'Edit / Cancel') : translateText('payAction', 'قبض', 'Collect')}
-                        </Btn>
-                        <Btn style={{ background: '#128C7E', color: '#fff', fontWeight: '600' }} onClick={() => openReminderModal(s, rec)}>
-                          {translateText('whatsappBtn', 'واتساب 💬', 'WhatsApp 💬')}
-                        </Btn>
-                      </div>
-                    </TD>
-                  </tr>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '90px' }}>
+                      <Btn style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold' }} onClick={() => openCollectModal(s, rec, expectedAmount)}>
+                        {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل/إلغاء', 'Edit/Cancel') : translateText('payAction', 'قبض', 'Collect')}
+                      </Btn>
+                      <Btn style={{ padding: '8px 14px', fontSize: '13px', background: '#128C7E', color: '#fff', fontWeight: 'bold' }} onClick={() => openReminderModal(s, rec)}>
+                        {translateText('whatsappBtn', 'واتساب 💬', 'WhatsApp 💬')}
+                      </Btn>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+
+            {/* واجهة الشاشات الكبيرة */}
+            <div className="desktop-view">
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: C.surface, borderRadius: '12px', overflow: 'hidden' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('studentName', 'اسم الطالب', 'Student Name')}</TH>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('expectedFee', 'الاشتراك المطلوب', 'Required Subscription')}</TH>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('statusLabel', 'الحالة', 'Status')}</TH>
+                    <TH style={{ textAlign: isRtl ? 'right' : 'left' }}>{translateText('actionsLabel', 'الإجراءات', 'Actions')}</TH>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents?.map(s => {
+                    const rec = paymentsData[s.id];
+                    const isPaid = rec?.status === 'مدفوع';
+                    const isPartial = rec?.status === 'مدفوع جزئياً';
+                    const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+                    const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
+
+                    return (
+                      <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'all 0.2s' }}>
+                        <TD style={{ color: '#fff', fontWeight: '500', textAlign: isRtl ? 'right' : 'left' }}>{s.name}</TD>
+                        <TD style={{ color: '#94a3b8', textAlign: isRtl ? 'right' : 'left' }}>{formatMoney(expectedAmount)} {currency}</TD>
+                        <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Badge color={isPaid ? "success" : isPartial ? "warning" : "danger"}>
+                              {isPaid ? translateText('paidStatus', 'مسدد بالكامل', 'Fully Paid') : isPartial ? translateText('partialStatus', 'مسدد جزئياً', 'Partially Paid') : translateText('unpaidStatus', 'معلّق', 'Pending')}
+                            </Badge>
+                            {isPartial && <span style={{ fontSize: '13px', color: '#94a3b8' }}>({translateText('collectedLabel', 'المحصل', 'Collected')}: {formatMoney(rec.amount)} {currency})</span>}
+                          </div>
+                        </TD>
+                        <TD style={{ textAlign: isRtl ? 'right' : 'left' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <Btn style={{ fontWeight: '600' }} onClick={() => openCollectModal(s, rec, expectedAmount)}>
+                              {actionLoading === s.id ? "..." : isPaid || isPartial ? translateText('cancelAction', 'تعديل / إلغاء', 'Edit / Cancel') : translateText('payAction', 'قبض', 'Collect')}
+                            </Btn>
+                            <Btn style={{ background: '#128C7E', color: '#fff', fontWeight: '600' }} onClick={() => openReminderModal(s, rec)}>
+                              {translateText('whatsappBtn', 'واتساب 💬', 'WhatsApp 💬')}
+                            </Btn>
+                          </div>
+                        </TD>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Card>
 
