@@ -96,13 +96,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [accountActivated, setAccountActivated] = useState(() => isActivated ?? true);
   const [academyIsActive, setAcademyIsActive] = useState(false); 
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
-  const [databaseTables, setDatabaseTables] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [halaqas, setHalaqas] = useState([]);
 
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
-  const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");         
-  const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");         
+  const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
+  const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
@@ -156,22 +155,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [timezone, currentLang]);
-
-  // 📋 جلب جداول قاعدة البيانات عند فتح التطبيق
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const { data, error } = await supabase.rpc('get_all_tables');
-        if (error) throw error;
-        if (data) {
-          setDatabaseTables(data.map(row => row.table_name));
-        }
-      } catch (err) {
-        console.error("حدث خطأ أثناء جلب الجداول:", err);
-      }
-    };
-    fetchTables();
-  }, []);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
@@ -396,14 +379,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return (
       <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto', boxSizing: 'border-box' }}>
         
-        {/* 📋 شريط معاينة الجداول الجديد */}
-        {databaseTables.length > 0 && (
-          <div style={{ background: '#1e293b', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155', color: '#38BDF8', fontSize: '0.9rem', direction: 'rtl' }}>
-            <strong>📋 الجداول المكتشفة في Supabase حالياً: </strong>
-            <span style={{ color: '#FFF', marginRight: '8px' }}>{databaseTables.join(' | ')}</span>
-          </div>
-        )}
-
         <ErrorBoundaryInner key={activeTab} t={t}>
           <Suspense fallback={skeletonLoader}>
             {activeTab === 'dashboard' && <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />}
