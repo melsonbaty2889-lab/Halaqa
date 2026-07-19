@@ -6,13 +6,14 @@ import { C } from "../constants/colors";
 import { Btn, Card, Input, Select, PageHeader } from './UI'; 
 import QuranProgressSelector from './QuranProgressSelector';
 import QuranProgressBar from './QuranProgressBar';
-import AchievementChart from './AchievementChart'; // استيراد المخطط الأسطوري الجديد
+import AchievementChart from './AchievementChart'; 
 import { getQuranProgress } from '../utils/quranUtils';
 import { COUNTRIES_LIST } from '../constants/countries';
 import { 
   FaArrowLeft, FaArrowRight, FaSave, FaTimes, FaEdit, 
   FaCheckCircle, FaExclamationCircle, FaGraduationCap,
-  FaBookOpen, FaInfoCircle, FaMoneyBillWave, FaCheckSquare
+  FaBookOpen, FaInfoCircle, FaMoneyBillWave, FaCheckSquare,
+  FaFire, FaAward, FaCrown
 } from 'react-icons/fa';
 
 export default function StudentProfile() {
@@ -39,7 +40,7 @@ export default function StudentProfile() {
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
   };
 
-  // 1. تأثير جلب بيانات الطالب الأساسية
+  // 1. تأثير جلب بيانات الطالب الأساسية والسلاسل المحدثة
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -113,7 +114,6 @@ export default function StudentProfile() {
       }
     };
 
-    // نقوم بالجلب فقط عند استدعاء الواجهة لمعرف طالب صالح
     fetchWeeklyAchievement();
   }, [id]);
 
@@ -306,6 +306,58 @@ export default function StudentProfile() {
         
         {activeTab === 'quran' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            
+            {/* مؤشرات السلاسل اليومية الذكية (Streaks Widget) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                <FaFire size={20} style={{ color: '#EF4444' }} />
+                <div style={{ textAlign: 'start' }}>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{isRtl ? 'السلسلة الحالية' : 'Current Streak'}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#EF4444' }}>{student.current_streak || 0} {isRtl ? 'يوم' : 'Days'}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(245, 158, 11, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                <FaCrown size={18} style={{ color: '#F59E0B' }} />
+                <div style={{ textAlign: 'start' }}>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{isRtl ? 'أطول سلسلة' : 'Longest Streak'}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#F59E0B' }}>{student.longest_streak || 0} {isRtl ? 'يوم' : 'Days'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* نظام الشارات التكيفية المبني على قواعد الإتقان */}
+            <div style={{ background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'start' }}>
+              <div style={{ fontSize: '12px', color: C.gold, fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FaAward style={{ color: C.gold }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {/* شارة السلسلة المتقدة */}
+                {(student.current_streak >= 3) && (
+                  <span style={{ background: 'linear-gradient(135deg, #EF4444, #F59E0B)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}>
+                    🔥 {isRtl ? 'شعلة الحفظ' : 'Hifz Spark'}
+                  </span>
+                )}
+                {/* شارة تقدم الأرباح والأجزاء */}
+                {(student.current_quarter_index >= 8) && (
+                  <span style={{ background: 'linear-gradient(135deg, #3B82F6, #10B981)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>
+                    ⭐ {isRtl ? 'مُتقن الأجزاء' : 'Juz Mastery'}
+                  </span>
+                )}
+                {/* شارة المثابرة والإنتاجية الأسبوعية */}
+                {weeklyData.length >= 4 && (
+                  <span style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(139,92,246,0.3)' }}>
+                    👑 {isRtl ? 'المثابر الأسبوعي' : 'Weekly Achiever'}
+                  </span>
+                )}
+                {/* رسالة حالة فارغة تحفيزية */}
+                {(!student.current_streak || student.current_streak < 3) && (student.current_quarter_index || 0) < 8 && weeklyData.length < 4 && (
+                  <span style={{ color: '#6B7280', fontSize: '11px', fontStyle: 'italic' }}>
+                    {isRtl ? 'سيتم فتح الشارات التكيفية عند زيادة الالتزام والحفظ التدريجي.' : 'Badges unlock with consistent daily logs and progress.'}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div style={{ background: '#0C1520', padding: '14px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', textAlign: 'start' }}>
                 <span style={{ fontSize: '12px', color: C.gold, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -321,7 +373,6 @@ export default function StudentProfile() {
               </div>
             </div>
 
-            {/* حقن منحنى الإنجاز الأسبوعي المطور هنا ليعمل تلقائياً بالبيانات الحية القادمة من السوبابيز */}
             <div className="w-full">
               {chartLoading ? (
                 <div style={{ background: '#0C1520', padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'center', fontSize: '12px', color: '#9CA3AF' }}>
