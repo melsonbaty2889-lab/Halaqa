@@ -82,20 +82,21 @@ export default function Sidebar({
   };
 
   const getSafeHijriDate = () => {
-    try {
-      if (isRtl) {
-        return new Date().toLocaleDateString('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
-      }
-      const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(new Date());
-      const day = parts.find(p => p.type === 'day')?.value || '';
-      const monthNum = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
-      const year = parts.find(p => p.type === 'year')?.value || '';
-      const hijriMonthsEn = ["Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"];
-      return `${hijriMonthsEn[monthNum - 1] || 'Muharram'} ${day}, ${year} AH`;
-    } catch (e) {
-      return isRtl ? "٥ صفر ١٤٤٨ هـ" : "5 Safar 1448 AH";
+  try {
+    if (isRtl) {
+      return new Date().toLocaleDateString('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
     }
-  };
+    const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(new Date());
+    const day = parts.find(p => p.type === 'day')?.value || '';
+    const monthNum = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
+    const year = parts.find(p => p.type === 'year')?.value || '';
+    const hijriMonthsEn = ["Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"];
+    return `${hijriMonthsEn[monthNum - 1] || 'Muharram'} ${day}, ${year} AH`;
+  } catch (e) {
+    // خطة بديلة ديناميكية تعود بالتاريخ الحالي بصيغة مبسطة بدلاً من نص متجمد
+    return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
+  }
+};
 
   // 🌐 تعديل المسميات والمصطلحات فقط لتكون بسيطة وعالمية مع الحفاظ على الـ ids تماماً
   const menuItems = [
