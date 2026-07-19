@@ -10,13 +10,11 @@ import {
   FaCog, 
   FaSignOutAlt, 
   FaClock, 
-  FaChevronLeft,
-  FaChevronRight,
-  FaSearch,
-  FaExchangeAlt,
-  FaChevronDown,
+  FaSearch, 
+  FaExchangeAlt, 
+  FaChevronDown, 
   FaChalkboardTeacher, 
-  FaUsers,
+  FaUsers, 
   FaWifi 
 } from 'react-icons/fa';
 
@@ -37,9 +35,7 @@ export default function Sidebar({
   academyTime,
   onSearchClick 
 }) {
-  const [isSlim, setIsSlim] = useState(() => localStorage.getItem('smart_halaqa_slim') === 'true');
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState(null);
   const [activeBranchKey, setActiveBranchKey] = useState('main');
   
   // مراقبة حالة الإنترنت
@@ -56,10 +52,6 @@ export default function Sidebar({
     };
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('smart_halaqa_slim', isSlim);
-  }, [isSlim]);
-
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
 
   const handleTabChange = async (tabId) => {
@@ -73,16 +65,23 @@ export default function Sidebar({
   };
 
   const handleSearchTrigger = (e) => {
-    e.preventDefault();
-    console.log("🔍 Search button clicked trigger fired.");
-    if (onSearchClick) {
-      console.log("➡️ Executing onSearchClick from parent props.");
-      onSearchClick();
-    } else {
-      console.log("➡️ Dispatching global custom event: toggle-command-palette");
-      const toggleEvent = new CustomEvent('toggle-command-palette');
-      window.dispatchEvent(toggleEvent);
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation(); // منع التداخل مع أحداث سحب القائمة في الموبايل
     }
+    
+    console.log("🔍 [Sidebar] Search trigger fired successfully.");
+
+    if (typeof onSearchClick === 'function') {
+      console.log("➡️ Executing onSearchClick prop function.");
+      onSearchClick();
+      return;
+    }
+
+    console.log("➡️ Broadcasting global search events to window pipeline...");
+    window.dispatchEvent(new CustomEvent('toggle-command-palette'));
+    window.dispatchEvent(new CustomEvent('toggle-search'));
+    window.dispatchEvent(new CustomEvent('open-search'));
   };
 
   const getSafeHijriDate = () => {
@@ -132,7 +131,7 @@ export default function Sidebar({
     girls: { ar: "حلقات البنات", en: "Girls Section" }
   };
 
-  const sidebarWidth = isMobile ? '280px' : (isSlim ? '76px' : '275px');
+  const sidebarWidth = isMobile ? '280px' : '275px';
 
   return (
     <aside style={{
@@ -149,9 +148,9 @@ export default function Sidebar({
       right: isMobile ? (isRtl ? 0 : 'auto') : 'auto',
       zIndex: 1000,
       transform: isMobile ? (sidebarOpen ? 'translateX(0)' : `translateX(${isRtl ? '100%' : '-100%'})`) : 'none',
-      transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       boxSizing: 'border-box',
-      padding: isSlim && !isMobile ? '20px 8px' : '20px 12px',
+      padding: '20px 12px',
       overflowX: 'visible',
       direction: isRtl ? 'rtl' : 'ltr'
     }}>
@@ -160,33 +159,8 @@ export default function Sidebar({
         aside::-webkit-scrollbar { display: none !important; }
         aside *::-webkit-scrollbar { display: none !important; }
       `}</style>
-      
-      {!isMobile && (
-        <button 
-          onClick={() => setIsSlim(!isSlim)}
-          style={{
-            position: 'absolute',
-            top: '28px',
-            left: isRtl ? '-12px' : 'auto',
-            right: !isRtl ? '-12px' : 'auto',
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            backgroundColor: '#1E293B',
-            border: '1px solid #334155',
-            color: '#FBBF24',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 1010,
-            boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
-          }}
-        >
-          {isSlim ? (isRtl ? <FaChevronLeft size={9} /> : <FaChevronRight size={9} />) : (isRtl ? <FaChevronRight size={9} /> : <FaChevronLeft size={9} />)}
-        </button>
-      )}
 
+      {/* هوية الأكاديمية واختيار الفروع */}
       <div style={{ position: 'relative', marginBottom: '16px', flexShrink: 0 }}>
         <div 
           onClick={() => !isPlatformAdmin && setShowWorkspaceDropdown(!showWorkspaceDropdown)}
@@ -213,27 +187,24 @@ export default function Sidebar({
             }}></span>
           </div>
           
-          {!isSlim && (
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h1 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#FFF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
-                </h1>
-                <span style={{ fontSize: '0.7rem', color: '#9CA3AF', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '1px' }}>
-                  {isPlatformAdmin ? 'Platform Admin' : (isRtl ? branchDictionary[activeBranchKey].ar : branchDictionary[activeBranchKey].en)}
-                </span>
-              </div>
-              {!isPlatformAdmin && <FaChevronDown size={10} style={{ color: '#6B7280', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#FFF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
+              </h1>
+              <span style={{ fontSize: '0.7rem', color: '#9CA3AF', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '1px' }}>
+                {isPlatformAdmin ? 'Platform Admin' : (isRtl ? branchDictionary[activeBranchKey].ar : branchDictionary[activeBranchKey].en)}
+              </span>
             </div>
-          )}
+            {!isPlatformAdmin && <FaChevronDown size={10} style={{ color: '#6B7280', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />}
+          </div>
         </div>
 
         {showWorkspaceDropdown && (
           <div style={{
-            position: 'absolute', top: isSlim && !isMobile ? '0' : '100%',
-            left: isSlim && !isMobile ? (isRtl ? 'auto' : '78px') : '0', right: isSlim && !isMobile ? (isRtl ? '78px' : 'auto') : '0',
-            width: isSlim && !isMobile ? '220px' : '100%', backgroundColor: '#1E293B', border: '1px solid #334155',
-            borderRadius: '10px', marginTop: isSlim && !isMobile ? '0' : '6px', boxShadow: '0 12px 20px rgba(0,0,0,0.5)', zIndex: 1050, padding: '6px'
+            position: 'absolute', top: '100%', left: '0', right: '0',
+            width: '100%', backgroundColor: '#1E293B', border: '1px solid #334155',
+            borderRadius: '10px', marginTop: '6px', boxShadow: '0 12px 20px rgba(0,0,0,0.5)', zIndex: 1050, padding: '6px'
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {Object.keys(branchDictionary).map((key) => {
@@ -264,79 +235,78 @@ export default function Sidebar({
 
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         
-        {!isSlim && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 6px', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', direction: 'ltr', justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
-              <span style={{ width: '5px', height: '5px', backgroundColor: '#10B981', borderRadius: '50%' }}></span>
-              <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: '600' }}>
-                {timezone?.split('/')[1] || 'Cairo'} : {academyTime || '--:--'}
-              </span>
-            </div>
-            <div style={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: '500' }}>
-              <span>📅 </span>{new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </div>
-            <div style={{ fontSize: '0.7rem', color: '#FBBF24', fontWeight: '600' }}>
-              <span>🌙 </span>{getSafeHijriDate()}
-            </div>
+        {/* قطاع التوقيت والتواريخ الهجرية والميلادية */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 6px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', direction: 'ltr', justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
+            <span style={{ width: '5px', height: '5px', backgroundColor: '#10B981', borderRadius: '50%' }}></span>
+            <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: '600' }}>
+              {timezone?.split('/')[1] || 'Cairo'} : {academyTime || '--:--'}
+            </span>
           </div>
-        )}
+          <div style={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: '500' }}>
+            <span>📅 </span>{new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#FBBF24', fontWeight: '600' }}>
+            <span>🌙 </span>{getSafeHijriDate()}
+          </div>
+        </div>
 
-        {/* تعديل حاوية البحث إلى زر HTML حقيقي لضمان التقاط ضغطات شاشات اللمس والموبايل */}
-        <div style={{ marginBottom: '16px', padding: '0 2px', flexShrink: 0 }}>
+        {/* زر البحث السريع المتطور والمحمي من أعطال اللمس */}
+        <div style={{ marginBottom: '16px', padding: '0 2px', flexShrink: 0, position: 'relative', zIndex: 50 }}>
           <button 
             type="button"
             onClick={handleSearchTrigger}
+            onTouchStart={(e) => handleSearchTrigger(e)}
             style={{
-              display: 'flex', alignItems: 'center', justifyContent: isSlim ? 'center' : 'space-between',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '8px 10px', backgroundColor: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1E293B',
               borderRadius: '8px', cursor: 'pointer', color: '#9CA3AF', transition: 'all 0.2s',
-              width: '100%', outline: 'none', fontFamily: 'inherit', fontStyle: 'inherit'
+              width: '100%', outline: 'none', fontFamily: 'inherit', fontStyle: 'inherit',
+              position: 'relative', pointerEvents: 'auto', zIndex: 60
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, pointerEvents: 'none' }}>
               <FaSearch size={11} style={{ color: '#FBBF24', flexShrink: 0 }} />
-              {!isSlim && <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>{isRtl ? 'بحث سريع...' : 'Quick Search...'}</span>}
+              <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>{isRtl ? 'بحث سريع...' : 'Quick Search...'}</span>
             </div>
-            {!isSlim && (
-              <kbd style={{
-                background: '#0F172A', border: '1px solid #334155', borderRadius: '4px', padding: '1px 4px', fontSize: '0.6rem', color: '#9CA3AF', fontFamily: 'monospace'
-              }}>{isMobile ? "Tap" : "Ctrl K"}</kbd>
-            )}
+            <kbd style={{
+              background: '#0F172A', border: '1px solid #334155', borderRadius: '4px', padding: '1px 4px', fontSize: '0.6rem', color: '#9CA3AF', fontFamily: 'monospace', pointerEvents: 'none'
+            }}>{isMobile ? "Tap" : "Ctrl K"}</kbd>
           </button>
         </div>
 
+        {/* مؤشر الفترة التجريبية وتفعيل النظام */}
         {!isPlatformAdmin && (isTrial || !accountActivated) && (
           <div 
             onClick={() => setShowEarlyUpgrade(true)}
             style={{
               background: 'linear-gradient(145deg, rgba(217, 119, 6, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%)',
-              border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '10px', padding: isSlim ? '8px 4px' : '12px', marginBottom: '16px',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: isSlim ? 'center' : 'stretch'
+              border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '10px', padding: '12px', marginBottom: '16px',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'stretch'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <FaClock style={{ color: '#FBBF24', fontSize: '0.95rem', flexShrink: 0 }} />
-              {!isSlim && (
-                <span style={{ fontSize: '0.78rem', color: '#FBBF24', fontWeight: '700' }}>
-                  {isTrial ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft || 10)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft || 10)} Days Left`) : (isRtl ? 'تفعيل الحساب الكامل' : 'Activate System')}
-                </span>
-              )}
+              <span style={{ fontSize: '0.78rem', color: '#FBBF24', fontWeight: '700' }}>
+                {isTrial ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft || 10)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft || 10)} Days Left`) : (isRtl ? 'تفعيل الحساب الكامل' : 'Activate System')}
+              </span>
             </div>
           </div>
         )}
 
+        {/* أزرار التنقل والقائمة الرئيسية */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {menuItems.map((item, index) => {
+          {menuItems.map((item) => {
             const isActive = activeTab === item.id;
             const displayLabel = isRtl ? item.labelAr : item.labelEn;
 
             return (
-              <div key={item.id} onMouseEnter={() => setHoveredItem(index)} onMouseLeave={() => setHoveredItem(null)} style={{ position: 'relative' }}>
+              <div key={item.id} style={{ position: 'relative' }}>
                 <button
                   onClick={() => handleTabChange(item.id)}
                   style={{
-                    display: 'flex', alignItems: 'center', justifyContent: isSlim && !isMobile ? 'center' : 'flex-start',
-                    gap: isSlim && !isMobile ? '0' : '12px', width: '100%', padding: '10px 12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                    gap: '12px', width: '100%', padding: '10px 12px',
                     backgroundColor: isActive ? 'rgba(251, 191, 36, 0.08)' : 'transparent',
                     color: isActive ? '#FBBF24' : '#9CA3AF', border: 'none', borderRadius: '8px', cursor: 'pointer',
                     fontSize: '0.82rem', fontWeight: isActive ? '700' : '500', transition: 'all 0.15s ease',
@@ -346,55 +316,43 @@ export default function Sidebar({
                   <span style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', color: isActive ? '#FBBF24' : '#475569', flexShrink: 0 }}>
                     {item.icon}
                   </span>
-                  {(!isSlim || isMobile) && <span style={{ flex: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', textAlign: isRtl ? 'right' : 'left' }}>{displayLabel}</span>}
-                  {item.badge && (!isSlim || isMobile) && (
+                  <span style={{ flex: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', textAlign: isRtl ? 'right' : 'left' }}>{displayLabel}</span>
+                  {item.badge && (
                     <span style={{ fontSize: '0.62rem', padding: '1px 5px', borderRadius: '6px', backgroundColor: item.badgeColor, color: '#000', fontWeight: 'bold' }}>
                       {item.badge}
                     </span>
                   )}
                 </button>
-
-                {isSlim && !isMobile && hoveredItem === index && (
-                  <div style={{
-                    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-                    left: isRtl ? 'auto' : '78px', right: isRtl ? '78px' : 'auto',
-                    backgroundColor: '#1E293B', color: '#FFF', padding: '5px 10px', borderRadius: '6px',
-                    fontSize: '0.75rem', fontWeight: '600', whiteSpace: 'nowrap', border: '1px solid #334155', zIndex: 2000
-                  }}>
-                    {displayLabel}
-                  </div>
-                )}
               </div>
             );
           })}
         </nav>
       </div>
 
+      {/* التذييل مؤشر اتصال السحابة وتسجيل الخروج */}
       <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(30, 41, 59, 0.6)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         
-        {!isSlim && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px',
-            backgroundColor: isOnline ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)',
-            border: '1px solid', borderColor: isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-            fontSize: '0.68rem', color: isOnline ? '#10B981' : '#EF4444'
-          }}>
-            <FaWifi size={10} />
-            <span>{isOnline ? (isRtl ? "اتصال سحابي آمن مفعّل" : "Secure Cloud Active") : (isRtl ? "وضع الحفظ المحلي مؤقتاً" : "Offline Sync Mode")}</span>
-          </div>
-        )}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px',
+          backgroundColor: isOnline ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+          border: '1px solid', borderColor: isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          fontSize: '0.68rem', color: isOnline ? '#10B981' : '#EF4444'
+        }}>
+          <FaWifi size={10} />
+          <span>{isOnline ? (isRtl ? "اتصال سحابي آمن مفعّل" : "Secure Cloud Active") : (isRtl ? "وضع الحفظ المحلي مؤقتاً" : "Offline Sync Mode")}</span>
+        </div>
 
         <button
           onClick={() => supabase.auth.signOut()}
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: isSlim && !isMobile ? 'center' : 'flex-start',
-            gap: isSlim && !isMobile ? '0' : '12px', width: '100%', padding: '10px 12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+            gap: '12px', width: '100%', padding: '10px 12px',
             backgroundColor: 'transparent', color: '#F87171', border: 'none', borderRadius: '8px', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.15s'
           }}
         >
           <FaSignOutAlt style={{ fontSize: '1rem', flexShrink: 0 }} />
-          {(!isSlim || isMobile) && <span style={{ flex: 1, textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'تسجيل الخروج' : 'Log Out'}</span>}
+          <span style={{ flex: 1, textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'تسجيل الخروج' : 'Log Out'}</span>
         </button>
       </div>
 
