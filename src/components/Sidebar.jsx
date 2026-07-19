@@ -52,8 +52,6 @@ export default function Sidebar({
     };
   }, []);
 
-  const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
-
   const handleTabChange = async (tabId) => {
     try {
       setActiveTab(tabId);
@@ -82,6 +80,7 @@ export default function Sidebar({
     window.dispatchEvent(new CustomEvent('toggle-command-palette'));
     window.dispatchEvent(new CustomEvent('toggle-search'));
     window.dispatchEvent(new CustomEvent('open-search'));
+    window.dispatchEvent(new CustomEvent('openSearch'));
   };
 
   const getSafeHijriDate = () => {
@@ -160,13 +159,13 @@ export default function Sidebar({
         aside *::-webkit-scrollbar { display: none !important; }
       `}</style>
 
-      {/* هوية الأكاديمية واختيار الفروع */}
+      {/* هوية الأكاديمية واختيار الفروع (تم فتحها لتعمل مع الـ Admin أيضاً) */}
       <div style={{ position: 'relative', marginBottom: '16px', flexShrink: 0 }}>
         <div 
-          onClick={() => !isPlatformAdmin && setShowWorkspaceDropdown(!showWorkspaceDropdown)}
+          onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
           style={{ 
             display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '12px',
-            cursor: isPlatformAdmin ? 'default' : 'pointer',
+            cursor: 'pointer',
             backgroundColor: showWorkspaceDropdown ? 'rgba(30, 41, 59, 0.8)' : 'transparent',
             border: '1px solid', borderColor: showWorkspaceDropdown ? 'rgba(251, 191, 36, 0.25)' : 'transparent',
             transition: 'all 0.2s'
@@ -193,10 +192,10 @@ export default function Sidebar({
                 {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
               </h1>
               <span style={{ fontSize: '0.7rem', color: '#9CA3AF', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '1px' }}>
-                {isPlatformAdmin ? 'Platform Admin' : (isRtl ? branchDictionary[activeBranchKey].ar : branchDictionary[activeBranchKey].en)}
+                {userRole === 'super_admin' || userRole === 'admin' ? `Platform Admin (${isRtl ? branchDictionary[activeBranchKey].ar : branchDictionary[activeBranchKey].en})` : (isRtl ? branchDictionary[activeBranchKey].ar : branchDictionary[activeBranchKey].en)}
               </span>
             </div>
-            {!isPlatformAdmin && <FaChevronDown size={10} style={{ color: '#6B7280', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />}
+            <FaChevronDown size={10} style={{ color: '#6B7280', transform: showWorkspaceDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </div>
         </div>
 
@@ -275,10 +274,10 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* مؤشر الفترة التجريبية وتفعيل النظام */}
-        {!isPlatformAdmin && (isTrial || !accountActivated) && (
+        {/* مؤشر الفترة التجريبية وتفعيل النظام (مفتوح للجميع الآن ولا يختفي للـ Admin) */}
+        {(isTrial || !accountActivated) && (
           <div 
-            onClick={() => setShowEarlyUpgrade(true)}
+            onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
             style={{
               background: 'linear-gradient(145deg, rgba(217, 119, 6, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%)',
               border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '10px', padding: '12px', marginBottom: '16px',
@@ -288,7 +287,7 @@ export default function Sidebar({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <FaClock style={{ color: '#FBBF24', fontSize: '0.95rem', flexShrink: 0 }} />
               <span style={{ fontSize: '0.78rem', color: '#FBBF24', fontWeight: '700' }}>
-                {isTrial ? (isRtl ? `متبقي ${numberFormatter.format(trialDaysLeft || 10)} أيام تجريبية` : `${numberFormatter.format(trialDaysLeft || 10)} Days Left`) : (isRtl ? 'تفعيل الحساب الكامل' : 'Activate System')}
+                {isTrial ? (isRtl ? `متبقي ${numberFormatter ? numberFormatter.format(trialDaysLeft || 10) : (trialDaysLeft || 10)} أيام تجريبية` : `${trialDaysLeft || 10} Days Left`) : (isRtl ? 'تفعيل الحساب الكامل' : 'Activate System')}
               </span>
             </div>
           </div>
@@ -329,7 +328,7 @@ export default function Sidebar({
         </nav>
       </div>
 
-      {/* التذييل مؤشر اتصال السحابة وتسجيل الخروج */}
+      {/* التذييل: مؤشر اتصال السحابة وتسجيل الخروج */}
       <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(30, 41, 59, 0.6)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         
         <div style={{
