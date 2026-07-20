@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
-// قاموس الترجمات الموحد
+// 1. قاموس الترجمات الموحد
 const translations = {
   ar: {
     currentEntity: 'الحالية',
@@ -101,7 +101,7 @@ const translations = {
   }
 };
 
-export default function EnterpriseSidebar({ 
+export function EnterpriseSidebar({ 
   currentAcademyId, 
   currentUserRole = 'admin', 
   activeSection = 'dashboard', 
@@ -115,7 +115,6 @@ export default function EnterpriseSidebar({
   const [currentEntity, setCurrentEntity] = useState(null);
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
 
-  // ضمان اختيار ترجمة آمنة دائماً
   const langKey = translations[currentLang] ? currentLang : 'ar';
   const t = translations[langKey];
   const isRtl = langKey === 'ar';
@@ -149,7 +148,6 @@ export default function EnterpriseSidebar({
     }).format(currentTime);
   }, [currentTime, isRtl]);
 
-  // جلب الكيانات بأمان
   useEffect(() => {
     let isMounted = true;
     const fetchPermittedEntities = async () => {
@@ -181,7 +179,6 @@ export default function EnterpriseSidebar({
     return () => { isMounted = false; };
   }, [currentAcademyId]);
 
-  // دالة الخروج الآمنة مع إعادة التوجيه المباشر
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -365,7 +362,7 @@ export default function EnterpriseSidebar({
         ))}
       </div>
 
-      {/* 4. أسفل القائمة الثابت وزر الخروج الآمن */}
+      {/* 4. أسفل القائمة الثابت */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <span style={{
@@ -407,3 +404,7 @@ export default function EnterpriseSidebar({
     </aside>
   );
 }
+
+// تصدير متعدد لمنع خطأ Import Mismatch نهائياً
+export const Sidebar = EnterpriseSidebar;
+export default EnterpriseSidebar;
