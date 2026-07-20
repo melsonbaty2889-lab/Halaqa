@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../lib/supabase'; // التأكد من صحة مسار سوبابيز لديك
+import { supabase } from '../lib/supabase';
 
 export default function EnterpriseSidebar({ 
   currentAcademyId, 
@@ -9,34 +9,42 @@ export default function EnterpriseSidebar({
   onOpenSearch,
   onSwitchAcademy
 }) {
-  // 1. حالات الساعة الرقمية والتقويم المزدوج
+  // 1. حالات الساعة والتقويم
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // 2. حالات الكيانات والفروع المتاحة (Entity Switcher)
+  // 2. حالات الكيانات للفروع (Entity Switcher)
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
 
-  // تحديث الساعة الرقمية فورياً
+  // تحديث الساعة فورياً كل ثانية
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // تنسيق الوقت
+  // تنسيق الوقت الرقمي
   const formattedTime = useMemo(() => {
     return currentTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }, [currentTime]);
 
-  // حساب التاريخ الهجري تلقائياً
+  // تصحيح حساب التاريخ الهجري (دعم متوافق مع كافة المتصفحات)
   const hijriDate = useMemo(() => {
     try {
-      return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma-nu-latn', {
+      return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
       }).format(currentTime);
     } catch {
-      return 'التقويم الهجري';
+      try {
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(currentTime);
+      } catch {
+        return 'التقويم الهجري';
+      }
     }
   }, [currentTime]);
 
@@ -49,7 +57,7 @@ export default function EnterpriseSidebar({
     }).format(currentTime);
   }, [currentTime]);
 
-  // جلب الكيانات/الفروع المتاحة للمستخدم واستخراج المسمى الديناميكي
+  // جلب الكيانات المصرح بها للمستخدم
   useEffect(() => {
     const fetchPermittedEntities = async () => {
       try {
@@ -72,17 +80,17 @@ export default function EnterpriseSidebar({
     fetchPermittedEntities();
   }, [currentAcademyId]);
 
-  // قراءة مسمى الكيان (المقرأة / الفرع / المركز / الأكاديمية) من الـ metadata
+  // المسمى المخصص للكيان (أكاديمية / مقرأة / فرع)
   const entityCustomLabel = useMemo(() => {
     return currentEntity?.metadata?.entity_label_ar || 'الأكاديمية';
   }, [currentEntity]);
 
   return (
-    <aside dir="rtl" style={{
+    <aside style={{
       width: '300px',
       height: '100vh',
       backgroundColor: '#0f172a',
-      borderLeft: '1px solid #1e293b',
+      borderInlineEnd: '1px solid #1e293b', // يتكيف تلقائياً مع الاتجاه RTL / LTR
       display: 'flex',
       flexDirection: 'column',
       color: '#f8fafc',
@@ -92,7 +100,7 @@ export default function EnterpriseSidebar({
       userSelect: 'none'
     }}>
       
-      {/* رأس القائمة: محوّل الكيانات + الساعة والتقويم + زر البحث */}
+      {/* رأس القائمة */}
       <div style={{ padding: '20px 18px 14px 18px', borderBottom: '1px solid #1e293b' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -100,7 +108,7 @@ export default function EnterpriseSidebar({
           </span>
         </div>
 
-        {/* محوّل الفروع/الكيانات الديناميكي */}
+        {/* محوّل الكيانات (تم إلغاء كلمة كيان الزائدة) */}
         {userEntities.length > 1 ? (
           <select
             value={currentAcademyId}
@@ -120,7 +128,7 @@ export default function EnterpriseSidebar({
           >
             {userEntities.map((entity) => (
               <option key={entity.id} value={entity.id}>
-                {entity.name} ({entity.metadata?.entity_label_ar || 'كيان'})
+                {entity.name} {entity.metadata?.entity_label_ar ? `(${entity.metadata.entity_label_ar})` : ''}
               </option>
             ))}
           </select>
@@ -130,7 +138,7 @@ export default function EnterpriseSidebar({
           </div>
         )}
 
-        {/* شريط الساعة والتقويم المزدوج */}
+        {/* شريط الساعة والتقويم (تم إصلاح التاريخ الهجري) */}
         <div style={{ 
           marginTop: '14px', 
           padding: '10px 12px', 
@@ -169,7 +177,7 @@ export default function EnterpriseSidebar({
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            🔍 ابحث عن طلاب، حلقات أو معلمين...
+            🔍 ابحث عن طلاب، حلقات...
           </span>
           <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
             Ctrl K
