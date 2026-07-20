@@ -1,7 +1,8 @@
+/* src/components/Sidebar.jsx */
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function EnterpriseSidebar({ 
+export function EnterpriseSidebar({ 
   currentAcademyId, 
   currentUserRole = 'admin', 
   activeSection = 'dashboard', 
@@ -19,7 +20,6 @@ export default function EnterpriseSidebar({
   // 3. حالات اشتراك الـ SaaS والربط السحابي
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
   const [planTier, setPlanTier] = useState('الباقة الاحترافية');
-  const [dbStatus, setDbStatus] = useState('synchronized');
 
   // تحديث الساعة فورياً
   useEffect(() => {
@@ -64,18 +64,26 @@ export default function EnterpriseSidebar({
 
   // جلب الكيانات المتاحة للمستخدم
   useEffect(() => {
+    let isMounted = true;
     const fetchPermittedEntities = async () => {
       try {
         const { data, error } = await supabase
           .from('academies')
-          .select('id, name, slug, metadata');
+          .select('id, name, slug, metadata, subscription_end_date');
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
+        if (isMounted && data && data.length > 0) {
           setUserEntities(data);
           const active = data.find(item => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
+
+          if (active && active.subscription_end_date) {
+            const endDate = new Date(active.subscription_end_date);
+            const diffTime = endDate.getTime() - new Date().getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+          }
         }
       } catch (err) {
         console.error('Error fetching entities:', err);
@@ -83,12 +91,25 @@ export default function EnterpriseSidebar({
     };
 
     fetchPermittedEntities();
+    return () => { isMounted = false; };
   }, [currentAcademyId]);
 
   // المسمى المخصص للكيان
   const entityCustomLabel = useMemo(() => {
     return currentEntity?.metadata?.entity_label_ar || 'الأكاديمية';
   }, [currentEntity]);
+
+  // دالة الخروج الأمني مع مسح الجلسة
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.clear();
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Logout error:', err);
+      window.location.href = '/login';
+    }
+  };
 
   // المحاور الأربعة الذهبية المعتمدة نهائياً
   const globalNavigationPillars = useMemo(() => [
@@ -149,7 +170,7 @@ export default function EnterpriseSidebar({
     }}>
       
       {/* 1. رأس القائمة: اختيار الكيان والمسمى */}
-      <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b' }}>
+      <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
             {entityCustomLabel} الحالية
@@ -161,7 +182,7 @@ export default function EnterpriseSidebar({
 
         {userEntities.length > 1 ? (
           <select
-            value={currentAcademyId}
+            value={currentAcademyId || ''}
             onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
             style={{
               width: '100%',
@@ -236,13 +257,13 @@ export default function EnterpriseSidebar({
       </div>
 
       {/* 4. مؤشر صلاحية الاشتراك */}
-      <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b' }}>
+      <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
           <span style={{ color: '#94a3b8' }}>صلاحية النظام:</span>
           <span style={{ color: '#10b981', fontWeight: '800' }}>متبقي {subscriptionDaysLeft} يوم</span>
         </div>
         <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{ width: '100%', height: '100%', background: '#10b981' }} />
+          <div style={{ width: `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%`, height: '100%', background: '#10b981' }} />
         </div>
       </div>
 
@@ -305,7 +326,7 @@ export default function EnterpriseSidebar({
       </div>
 
       {/* 6. أسفل القائمة: حالة الربط السحابي وزر إنهاء الجلسة */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16' }}>
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <span style={{
             width: '7px',
@@ -320,7 +341,7 @@ export default function EnterpriseSidebar({
         </div>
 
         <button
-          onClick={async () => await supabase.auth.signOut()}
+          onClick={handleLogout}
           style={{
             width: '100%',
             padding: '8px',
@@ -346,3 +367,7 @@ export default function EnterpriseSidebar({
     </aside>
   );
 }
+
+// تصدير متوافق مع كافة أنماط الـ Import
+export const Sidebar = EnterpriseSidebar;
+export default EnterpriseSidebar;
