@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { Card, Badge, Btn, TH, TD } from './UI';
@@ -6,13 +6,41 @@ import { useTranslation } from 'react-i18next';
 // استيراد قائمة الدول الموحدة والعالمية الجديدة
 import { COUNTRIES_LIST } from '../constants/countries';
 
+// 1. عزل دالة التاريخ خارج المكون لمنع إعادة الحساب غير الضرورية مع كل عملية إدخال أو تغيير في الحالة
+const getDualDateString = (lang, isRtl) => {
+  const today = new Date();
+  const gregOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const gregPart = today.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', gregOptions);
+  
+  try {
+    const hijriOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
+    let hijriPart = today.toLocaleDateString(
+      lang === 'ar' ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', 
+      hijriOptions
+    );
+    
+    // تصحيح فوري وذكي لثغرة ظهور مخرجات المتصفحات الغربية بعبارة (BC) الخاطئة بالتاريخ الهجري
+    hijriPart = hijriPart.replace(/\bBC\b/g, 'AH').replace(/\bقبل الميلاد\b/g, 'هـ');
+    
+    return isRtl ? `${gregPart} مـ | 🗓️ هجري: ${hijriPart}` : `${gregPart} AD | 🗓️ Hijri: ${hijriPart}`;
+  } catch (e) {
+    return gregPart;
+  }
+};
+
 export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas = [] }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
+  // 2. استخدام useMemo لتحديث التاريخ فقط عند تغيير لغة النظام
+  const dualDateString = useMemo(() => getDualDateString(currentLang, isRtl), [currentLang, isRtl]);
+
   // التبويب الرئيسي الموحد للتحكم بالواجهة (طلاب أم محفظون)
   const [mainTab, setMainTab] = useState('students'); // students | teachers
+
+  // رسائل الخطأ والنظام لعرضها بشكل احترافي بدل الـ Alert البدائي
+  const [errorMessage, setErrorMessage] = useState('');
 
   // --- حالات قسم الطلاب ---
   const [studentViewMode, setStudentViewMode] = useState('active'); // active | archive
@@ -23,7 +51,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
   const [studentFormData, setStudentFormData] = useState({
     name: '', gender: 'male', parent_name: '', country_code: 'EG',
     parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: '',
-    halaqa_id: '' // إضافة الحقل الجديد في بنية الحالة
+    halaqa_id: ''
   });
 
   // --- حالات قسم المحفظين والمعلمين ---
@@ -44,36 +72,20 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // دالة حساب عرض التاريخ المزدوج الذكي والمعالج هندسياً من أخطاء الـ BC
-  const getDualDateString = () => {
-    const today = new Date();
-    const gregOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const gregPart = today.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', gregOptions);
-    try {
-      const hijriOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
-      let hijriPart = today.toLocaleDateString(currentLang === 'ar' ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', hijriOptions);
-      
-      // تصحيح فوري وذكي لثغرة ظهور مخرجات المتصفحات الغربية بعبارة (BC) الخاطئة بالتاريخ الهجري الإسلامي
-      hijriPart = hijriPart.replace(/\bBC\b/g, 'AH').replace(/\bقبل الميلاد\b/g, 'هـ');
-      
-      return isRtl ? `${gregPart} مـ | 🗓️ هجري: ${hijriPart}` : `${gregPart} AD | 🗓️ Hijri: ${hijriPart}`;
-    } catch (e) {
-      return gregPart;
-    }
-  };
-
   // محرك الترجمة الفورية المحمي ضد غياب ملفات الترجمة الثابتة
   const trans = (key, fallbackAr, fallbackEn) => {
     if (i18n.exists(key)) return t(key);
     return isRtl ? fallbackAr : fallbackEn;
   };
 
-  // تأثير جلب بيانات الطلاب من سوبابيس
+  // تأثير جلب بيانات الطلاب من سوبابيس مع معالجة الأخطاء
   useEffect(() => {
     const fetchStudents = async () => {
       if (!academyId || mainTab !== 'students') return;
       setStudentLoading(true);
+      setErrorMessage('');
       const isArchivedStatus = studentViewMode === 'archive';
+      
       const { data, error } = await supabase
         .from('students')
         .select('*')
@@ -81,18 +93,25 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
         .eq('is_archived', isArchivedStatus)
         .order('created_at', { ascending: false });
 
-      if (!error && data) setStudentsList(data);
+      if (error) {
+        setErrorMessage(trans('fetchError', 'حدث خطأ أثناء جلب البيانات من السيرفر', 'Error fetching data from server'));
+        console.error(error);
+      } else if (data) {
+        setStudentsList(data);
+      }
       setStudentLoading(false);
     };
     fetchStudents();
   }, [academyId, studentViewMode, mainTab, refreshTrigger]);
 
-  // تأثير جلب بيانات المحفظين والمعلمين من سوبابيس
+  // تأثير جلب بيانات المحفظين والمعلمين من سوبابيس مع معالجة الأخطاء
   useEffect(() => {
     const fetchTeachers = async () => {
       if (!academyId || mainTab !== 'teachers') return;
       setTeacherLoading(true);
+      setErrorMessage('');
       const isArchivedStatus = teacherViewMode === 'archive';
+      
       const { data, error } = await supabase
         .from('teachers')
         .select('*')
@@ -100,7 +119,12 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
         .eq('is_archived', isArchivedStatus)
         .order('created_at', { ascending: false });
 
-      if (!error && data) setTeachersList(data);
+      if (error) {
+        setErrorMessage(trans('fetchError', 'حدث خطأ أثناء جلب البيانات من السيرفر', 'Error fetching data from server'));
+        console.error(error);
+      } else if (data) {
+        setTeachersList(data);
+      }
       setTeacherLoading(false);
     };
     fetchTeachers();
@@ -109,11 +133,12 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
   // --- معالجة عمليات الطلاب ---
   const handleCreateStudent = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
     if (!studentFormData.name.trim() || !studentFormData.parent_phone.trim()) {
-      return alert(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية', 'Please fill in required fields'));
+      return setErrorMessage(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية (*)', 'Please fill in required fields (*)'));
     }
+    
     const selectedCountry = COUNTRIES_LIST.find(c => c.code === studentFormData.country_code);
-    // تنظيف الرقم من أي أصفار في البداية للحصول على رابط واتساب عالمي سليم
     const cleanPhone = studentFormData.parent_phone.trim().replace(/^0+/, '').replace(/\D/g, '');
     const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
 
@@ -128,12 +153,15 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
       current_juz: parseInt(studentFormData.juz_start),
       current_quarter: parseInt(studentFormData.quarter_start),
       notes: studentFormData.notes.trim(),
-      halaqa_id: studentFormData.halaqa_id || null, // ربط معرف الحلقة ديناميكياً بقاعدة البيانات
+      halaqa_id: studentFormData.halaqa_id || null,
       is_archived: false
     };
 
     const { data, error } = await supabase.from('students').insert(payload).select();
-    if (!error && data) {
+    if (error) {
+      setErrorMessage(trans('saveError', 'فشل في حفظ البيانات، يرجى المحاولة لاحقاً', 'Failed to save data, please try again'));
+      console.error(error);
+    } else if (data) {
       setStudentsList(prev => [data[0], ...prev]);
       setShowStudentForm(false);
       setStudentFormData({
@@ -144,16 +172,23 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
   };
 
   const toggleArchiveStudent = async (id, currentStatus) => {
+    setErrorMessage('');
     const { error } = await supabase.from('students').update({ is_archived: !currentStatus }).eq('id', id);
-    if (!error) setStudentsList(prev => prev.filter(s => s.id !== id));
+    if (error) {
+      setErrorMessage(trans('archiveError', 'فشلت عملية نقل السجل لإجراء الأرشفة', 'Failed to change archive status'));
+    } else {
+      setStudentsList(prev => prev.filter(s => s.id !== id));
+    }
   };
 
   // --- معالجة عمليات المحفظين ---
   const handleCreateTeacher = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
     if (!teacherFormData.name.trim() || !teacherFormData.phone.trim()) {
-      return alert(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية', 'Please fill in required fields'));
+      return setErrorMessage(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية (*)', 'Please fill in required fields (*)'));
     }
+    
     const selectedCountry = COUNTRIES_LIST.find(c => c.code === teacherFormData.country_code);
     const cleanPhone = teacherFormData.phone.trim().replace(/^0+/, '').replace(/\D/g, '');
     const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
@@ -170,7 +205,10 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
     };
 
     const { data, error } = await supabase.from('teachers').insert(payload).select();
-    if (!error && data) {
+    if (error) {
+      setErrorMessage(trans('saveError', 'فشل في حفظ البيانات، يرجى المحاولة لاحقاً', 'Failed to save data, please try again'));
+      console.error(error);
+    } else if (data) {
       setTeachersList(prev => [data[0], ...prev]);
       setShowTeacherForm(false);
       setTeacherFormData({
@@ -180,8 +218,13 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
   };
 
   const toggleArchiveTeacher = async (id, currentStatus) => {
+    setErrorMessage('');
     const { error } = await supabase.from('teachers').update({ is_archived: !currentStatus }).eq('id', id);
-    if (!error) setTeachersList(prev => prev.filter(t => t.id !== id));
+    if (error) {
+      setErrorMessage(trans('archiveError', 'فشلت عملية نقل السجل لإجراء الأرشفة', 'Failed to change archive status'));
+    } else {
+      setTeachersList(prev => prev.filter(t => t.id !== id));
+    }
   };
 
   const filteredStudents = studentsList.filter(s =>
@@ -195,20 +238,28 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", paddingBottom: '40px' }}>
       
-      {/* رأس الصفحة مع التاريخ المزدوج المصلح ذكياً */}
+      {/* رأس الصفحة مع التاريخ المزدوج الذكي والمعالج من التحميل المتكرر */}
       <div style={{ marginBottom: '20px', textAlign: isRtl ? 'right' : 'left' }}>
         <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: C.gold, margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
           {trans('mainModuleTitle', 'إدارة شؤون الأكاديمية العظمى', 'Academy Corporate Management')} 🎓
         </h2>
         <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', fontWeight: '600', opacity: 0.9 }}>
-          {getDualDateString()}
+          {dualDateString}
         </p>
       </div>
 
-      {/* التبويبات العلوية المحسنة لمنع تكرار الكلمات والارتباك البصري */}
+      {/* شريط الإشعارات والتحذيرات الاحترافي المدمج بدلاً من البوب أب الافتراضي المتصفح */}
+      {errorMessage && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'between', alignItems: 'center' }}>
+          <span>⚠️ {errorMessage}</span>
+          <button onClick={() => setErrorMessage('')} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', marginRight: 'auto', marginLeft: isRtl ? '0' : 'auto' }}>✖</button>
+        </div>
+      )}
+
+      {/* التبويبات العلوية المحسنة */}
       <div style={{ display: 'flex', background: '#162030', padding: '6px', borderRadius: '14px', marginBottom: '24px', gap: '6px' }}>
         <button
-          onClick={() => setMainTab('students')}
+          onClick={() => { setMainTab('students'); setErrorMessage(''); }}
           style={{
             flex: 1, padding: '12px 8px', borderRadius: '10px', border: 'none',
             background: mainTab === 'students' ? C.gold : 'transparent',
@@ -220,7 +271,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
           👨‍🎓 {trans('tabStudentsLabel', 'شؤون الطلاب', 'Students Division')}
         </button>
         <button
-          onClick={() => setMainTab('teachers')}
+          onClick={() => { setMainTab('teachers'); setErrorMessage(''); }}
           style={{
             flex: 1, padding: '12px 8px', borderRadius: '10px', border: 'none',
             background: mainTab === 'teachers' ? C.gold : 'transparent',
@@ -272,7 +323,6 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
                   <input type="text" placeholder={trans('phFullName', 'أدخل الاسم بالكامل وبمرونة هيكلية دولية...', 'Enter full name...')} value={studentFormData.name} onChange={(e) => setStudentFormData({...studentFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }} />
                 </div>
                 
-                {/* قائمة منسدلة جديدة لتعيين واختيار الحلقة المباشرة للطالب */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ color: C.gold, fontSize: '14px', fontWeight: '700' }}>{trans('lblStudentHalaqa', 'تنسيب وتعيين الحلقة القرآنية', 'Assign Quranic Halaqa')}</label>
                   <select value={studentFormData.halaqa_id} onChange={(e) => setStudentFormData({...studentFormData, halaqa_id: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none' }}>
@@ -334,7 +384,6 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
             </Card>
           )}
 
-          {/* حقل البحث المحمي من الاختناق على الموبايل */}
           <div style={{ marginBottom: '16px' }}>
             <input type="text" placeholder={trans('phSearchStudent', 'ابحث باسم الطالب أو رقم الهاتف الفوري...', 'Search student...')} value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
           </div>
@@ -502,7 +551,6 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
             </Card>
           )}
 
-          {/* حقل البحث للمعلمين */}
           <div style={{ marginBottom: '16px' }}>
             <input type="text" placeholder={trans('phSearchTeacher', 'ابحث باسم المعلم أو رقم الهاتف الفوري...', 'Search teacher...')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
           </div>
