@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
-// قاموس الترجمة المدمج داخل المكون
 const translations = {
   ar: {
     entityHeader: 'الحالية',
@@ -16,10 +15,10 @@ const translations = {
     loading: 'جاري التحميل...',
     defaultHijri: 'التقويم الهجري',
     pillars: {
-      liveOps: '1. مركز القيادة الحية | Live Operations Hub',
-      academicCore: '2. الشؤون القرآنية والأكاديمية | Academic Core',
-      engagement: '3. تفاعل الدارسين والأسر | Engagement Network',
-      governance: '4. الخزينة والحوكمة | Treasury & Governance'
+      liveOps: '1. مركز القيادة الحية',
+      academicCore: '2. الشؤون القرآنية والأكاديمية',
+      engagement: '3. تفاعل الدارسين والأسر',
+      governance: '4. الخزينة والحوكمة'
     },
     nodes: {
       dashboard: 'لوحة التحكم والأداء',
@@ -81,64 +80,53 @@ export function EnterpriseSidebar({
   setActiveSection,
   onOpenSearch,
   onSwitchAcademy,
-  currentLang = 'ar'
+  currentLang = 'ar',
+  isOpen = false, // حالة الفتح للموبايل
+  onClose        // دالة الإغلاق للموبايل
 }) {
   const isRtl = currentLang === 'ar';
   const t = translations[currentLang] || translations.ar;
 
-  // 1. حالات الوقت والتقويم
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // فحص ما إذا كان الجهاز موبايل
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  // 2. حالات الكيانات للفروع
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
-
-  // 3. حالات اشتراك الـ SaaS
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
   const [planTier, setPlanTier] = useState(t.defaultPlan);
 
-  // تحديث الساعة فورياً
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // تنسيق الوقت بحسب اللغة
   const formattedTime = useMemo(() => {
     return currentTime.toLocaleTimeString(isRtl ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }, [currentTime, isRtl]);
 
-  // التاريخ الهجري
   const hijriDate = useMemo(() => {
     try {
       return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
+        day: 'numeric', month: 'long', year: 'numeric'
       }).format(currentTime);
     } catch {
-      try {
-        return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }).format(currentTime);
-      } catch {
-        return t.defaultHijri;
-      }
+      return t.defaultHijri;
     }
   }, [currentTime, isRtl, t.defaultHijri]);
 
-  // التاريخ الميلادي
   const gregorianDate = useMemo(() => {
     return new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+      day: 'numeric', month: 'short', year: 'numeric'
     }).format(currentTime);
   }, [currentTime, isRtl]);
 
-  // جلب الكيانات وحساب أصل الأيام المتبقية ديناميكياً
   useEffect(() => {
     let isMounted = true;
     const fetchPermittedEntities = async () => {
@@ -154,9 +142,7 @@ export function EnterpriseSidebar({
           const active = data.find(item => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
 
-          if (active.plan_tier) {
-            setPlanTier(active.plan_tier);
-          }
+          if (active.plan_tier) setPlanTier(active.plan_tier);
 
           if (active && active.subscription_end_date) {
             const endDate = new Date(active.subscription_end_date);
@@ -174,22 +160,18 @@ export function EnterpriseSidebar({
     return () => { isMounted = false; };
   }, [currentAcademyId]);
 
-  // المسمى المخصص للكيان
   const entityCustomLabel = useMemo(() => {
-    if (isRtl) {
-      return currentEntity?.metadata?.entity_label_ar || t.defaultEntityLabel;
-    }
+    if (isRtl) return currentEntity?.metadata?.entity_label_ar || t.defaultEntityLabel;
     return currentEntity?.metadata?.entity_label_en || t.defaultEntityLabel;
   }, [currentEntity, isRtl, t.defaultEntityLabel]);
 
-  // توجيه مدير الأكاديمية إلى صفحة تجديد اشتراكه في المنصة (SaaS Subscriptions)
   const handleGoToSaasSubscription = () => {
     if (setActiveSection) {
       setActiveSection('saas_subscriptions');
+      if (isMobile && onClose) onClose();
     }
   };
 
-  // تسجيل الخروج المباشر
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -201,7 +183,11 @@ export function EnterpriseSidebar({
     }
   };
 
-  // المحاور والروابط الديناميكية المتوافقة مع الترجمة
+  const handleNodeClick = (nodeId) => {
+    if (setActiveSection) setActiveSection(nodeId);
+    if (isMobile && onClose) onClose(); // إغلاق القائمة تلقائياً بعد الاختيار في الموبايل
+  };
+
   const globalNavigationPillars = useMemo(() => [
     {
       pillarTitle: t.pillars.liveOps,
@@ -244,242 +230,280 @@ export function EnterpriseSidebar({
   ], [t]);
 
   return (
-    <aside style={{
-      width: '300px',
-      height: '100vh',
-      backgroundColor: '#0f172a',
-      borderInlineEnd: '1px solid #1e293b',
-      display: 'flex',
-      flexDirection: 'column',
-      color: '#f8fafc',
-      fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
-      direction: isRtl ? 'rtl' : 'ltr',
-      position: 'sticky',
-      top: 0,
-      userSelect: 'none',
-      zIndex: 50,
-      boxSizing: 'border-box'
-    }}>
-      
-      {/* 1. رأس القائمة - ثابت الهيكل */}
-      <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
-            {entityCustomLabel} {t.entityHeader}
-          </span>
-          <button 
-            onClick={handleGoToSaasSubscription}
-            style={{ 
-              fontSize: '10px', 
-              background: '#1e293b', 
-              color: '#38bdf8', 
-              padding: '2px 8px', 
-              borderRadius: '4px', 
-              fontWeight: 'bold', 
-              border: '1px solid #334155',
-              cursor: 'pointer'
-            }}
-          >
-            {planTier}
-          </button>
-        </div>
+    <>
+      {/* 1. طبقة التظليل الخفيفة خلف القائمة عند فتحها في الموبايل (Backdrop Overlay) */}
+      {isMobile && isOpen && (
+        <div 
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 99
+          }}
+        />
+      )}
 
-        {userEntities.length > 1 ? (
-          <select
-            value={currentAcademyId || ''}
-            onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
+      {/* 2. جسم القائمة الجانبية */}
+      <aside style={{
+        width: isMobile ? '280px' : '300px',
+        height: '100dvh', // تضمن الارتفاع الصحيح على الموبايل بدون اختفاء الفوتر
+        backgroundColor: '#0f172a',
+        borderInlineEnd: '1px solid #1e293b',
+        display: 'flex',
+        flexDirection: 'column',
+        color: '#f8fafc',
+        fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
+        direction: isRtl ? 'rtl' : 'ltr',
+        position: isMobile ? 'fixed' : 'sticky',
+        top: 0,
+        right: isMobile ? (isRtl ? (isOpen ? 0 : '-100%') : 'auto') : 'auto',
+        left: isMobile ? (!isRtl ? (isOpen ? 0 : '-100%') : 'auto') : 'auto',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        userSelect: 'none',
+        zIndex: 100,
+        boxSizing: 'border-box',
+        boxShadow: isMobile && isOpen ? '0 20px 25px -5px rgba(0, 0, 0, 0.5)' : 'none'
+      }}>
+        
+        {/* الهيدر العلوي للقائمة */}
+        <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
+              {entityCustomLabel} {t.entityHeader}
+            </span>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                onClick={handleGoToSaasSubscription}
+                style={{ 
+                  fontSize: '10px', 
+                  background: '#1e293b', 
+                  color: '#38bdf8', 
+                  padding: '3px 8px', 
+                  borderRadius: '4px', 
+                  fontWeight: 'bold', 
+                  border: '1px solid #334155',
+                  cursor: 'pointer'
+                }}
+              >
+                {planTier}
+              </button>
+
+              {/* زر إغلاق للموبايل */}
+              {isMobile && (
+                <button 
+                  onClick={onClose}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                    padding: '0 4px'
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {userEntities.length > 1 ? (
+            <select
+              value={currentAcademyId || ''}
+              onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                backgroundColor: '#1e293b',
+                color: '#ffffff',
+                border: '1px solid #334155',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              {userEntities.map((entity) => (
+                <option key={entity.id} value={entity.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                  {entity.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whitespace: 'nowrap' }}>
+              {currentEntity?.name || t.loading}
+            </div>
+          )}
+
+          {/* الوقت والتقويم */}
+          <div style={{ 
+            marginTop: '10px', 
+            padding: '8px 10px', 
+            background: '#162030', 
+            borderRadius: '8px', 
+            border: '1px solid #1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b' }}>{hijriDate}</div>
+              <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '1px' }}>{gregorianDate}</div>
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: '#38bdf8', fontFamily: 'monospace' }}>
+              {formattedTime}
+            </div>
+          </div>
+
+          {/* زر البحث (بدون Ctrl K على الموبايل) */}
+          <button
+            onClick={() => {
+              if (onOpenSearch) onOpenSearch();
+              if (isMobile && onClose) onClose();
+            }}
             style={{
+              marginTop: '10px',
               width: '100%',
               padding: '8px 10px',
               borderRadius: '8px',
-              backgroundColor: '#1e293b',
-              color: '#ffffff',
+              background: '#090d16',
               border: '1px solid #334155',
-              fontSize: '13px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              outline: 'none'
+              color: '#94a3b8',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer'
             }}
           >
-            {userEntities.map((entity) => (
-              <option key={entity.id} value={entity.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                {entity.name}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whitespace: 'nowrap' }}>
-            {currentEntity?.name || t.loading}
-          </div>
-        )}
-
-        {/* 2. التقويم والساعة */}
-        <div style={{ 
-          marginTop: '12px', 
-          padding: '8px 10px', 
-          background: '#162030', 
-          borderRadius: '8px', 
-          border: '1px solid #1e293b',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div>
-            <div style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b' }}>{hijriDate}</div>
-            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '1px' }}>{gregorianDate}</div>
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: '800', color: '#38bdf8', fontFamily: 'monospace' }}>
-            {formattedTime}
-          </div>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {t.searchPlaceholder}
+            </span>
+            {!isMobile && (
+              <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
+                Ctrl K
+              </kbd>
+            )}
+          </button>
         </div>
 
-        {/* 3. زر البحث */}
-        <button
-          onClick={onOpenSearch}
-          style={{
-            marginTop: '10px',
-            width: '100%',
-            padding: '8px 10px',
-            borderRadius: '8px',
-            background: '#090d16',
-            border: '1px solid #334155',
-            color: '#94a3b8',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+        {/* مؤشر الاشتراك */}
+        <div 
+          onClick={handleGoToSaasSubscription}
+          style={{ 
+            padding: '8px 16px', 
+            background: 'rgba(30, 41, 59, 0.2)', 
+            borderBottom: '1px solid #1e293b', 
+            flexShrink: 0,
             cursor: 'pointer'
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {t.searchPlaceholder}
-          </span>
-          <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
-            Ctrl K
-          </kbd>
-        </button>
-      </div>
-
-      {/* 4. مؤشر صلاحية الاشتراك - ينقل لصفحة تجديد باقة الأكاديمية بالمنظومة saas_subscriptions */}
-      <div 
-        onClick={handleGoToSaasSubscription}
-        style={{ 
-          padding: '8px 16px', 
-          background: 'rgba(30, 41, 59, 0.2)', 
-          borderBottom: '1px solid #1e293b', 
-          flexShrink: 0,
-          cursor: 'pointer'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
-          <span style={{ color: '#94a3b8' }}>{t.subValidity}</span>
-          <span style={{ color: '#10b981', fontWeight: '800' }}>
-            {t.daysLeft.replace('{{days}}', subscriptionDaysLeft)}
-          </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+            <span style={{ color: '#94a3b8' }}>{t.subValidity}</span>
+            <span style={{ color: '#10b981', fontWeight: '800' }}>
+              {t.daysLeft.replace('{{days}}', subscriptionDaysLeft)}
+            </span>
+          </div>
+          <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%`, height: '100%', background: '#10b981' }} />
+          </div>
         </div>
-        <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{ width: `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%`, height: '100%', background: '#10b981' }} />
-        </div>
-      </div>
 
-      {/* 5. القوائم والمحاور - مرن للتمرير فقط */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
-        {globalNavigationPillars.map((pillar, pIdx) => {
-          if (!pillar.allowedRoles.includes(currentUserRole)) return null;
+        {/* القوائم الأساسية */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
+          {globalNavigationPillars.map((pillar, pIdx) => {
+            if (!pillar.allowedRoles.includes(currentUserRole)) return null;
 
-          return (
-            <div key={pIdx} style={{ marginBottom: '16px' }}>
-              <div style={{ 
-                padding: '0 8px 6px 8px', 
-                fontSize: '10px', 
-                fontWeight: '800', 
-                color: '#64748b'
-              }}>
-                {pillar.pillarTitle}
+            return (
+              <div key={pIdx} style={{ marginBottom: '14px' }}>
+                <div style={{ 
+                  padding: '0 8px 6px 8px', 
+                  fontSize: '10px', 
+                  fontWeight: '800', 
+                  color: '#64748b'
+                }}>
+                  {pillar.pillarTitle}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {pillar.nodes.map((node) => {
+                    const isActive = activeSection === node.id;
+
+                    return (
+                      <button
+                        key={node.id}
+                        onClick={() => handleNodeClick(node.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: isActive ? 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)' : 'transparent',
+                          color: isActive ? '#0f172a' : '#cbd5e1',
+                          fontWeight: isActive ? '800' : '600',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          textAlign: isRtl ? 'right' : 'left'
+                        }}
+                      >
+                        <span style={{ fontSize: '15px', minWidth: '20px', textAlign: 'center' }}>{node.icon}</span>
+                        <span style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whitespace: 'nowrap' }}>{node.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {pillar.nodes.map((node) => {
-                  const isActive = activeSection === node.id;
-
-                  return (
-                    <button
-                      key={node.id}
-                      onClick={() => setActiveSection && setActiveSection(node.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '9px 12px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: isActive ? 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)' : 'transparent',
-                        color: isActive ? '#0f172a' : '#cbd5e1',
-                        fontWeight: isActive ? '800' : '600',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        textAlign: isRtl ? 'right' : 'left'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) e.currentTarget.style.backgroundColor = '#1e293b';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <span style={{ fontSize: '15px' }}>{node.icon}</span>
-                      <span>{node.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 6. الفوتر الثابت في الأسفل */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <span style={{
-            width: '7px',
-            height: '7px',
-            borderRadius: '50%',
-            backgroundColor: '#10b981',
-            boxShadow: '0 0 6px #10b981'
-          }} />
-          <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-            {t.syncStatus}
-          </span>
+            );
+          })}
         </div>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            width: '100%',
-            padding: '8px',
-            borderRadius: '6px',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            background: 'rgba(239, 68, 68, 0.08)',
-            color: '#fca5a5',
-            fontSize: '11px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
-        >
-          {t.logoutBtn}
-        </button>
-      </div>
+        {/* الفوتر الثابت بالأسفل */}
+        <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <span style={{
+              width: '7px',
+              height: '7px',
+              borderRadius: '50%',
+              backgroundColor: '#10b981',
+              boxShadow: '0 0 6px #10b981'
+            }} />
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
+              {t.syncStatus}
+            </span>
+          </div>
 
-    </aside>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '9px',
+              borderRadius: '6px',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(239, 68, 68, 0.08)',
+              color: '#fca5a5',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            {t.logoutBtn}
+          </button>
+        </div>
+
+      </aside>
+    </>
   );
 }
 
