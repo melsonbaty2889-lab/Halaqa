@@ -182,10 +182,10 @@ export function EnterpriseSidebar({
     return currentEntity?.metadata?.entity_label_en || t.defaultEntityLabel;
   }, [currentEntity, isRtl, t.defaultEntityLabel]);
 
-  // توجيه مدير الأكاديمية إلى صفحة تجديد اشتراكه في منصتك (SaaS Subscription)
+  // توجيه مدير الأكاديمية إلى صفحة تجديد اشتراكه في المنصة (SaaS Subscriptions)
   const handleGoToSaasSubscription = () => {
     if (setActiveSection) {
-      setActiveSection('saas-subscription'); // قسم تجديد باقة الأكاديمية مع مالك المنصة
+      setActiveSection('saas_subscriptions');
     }
   };
 
@@ -360,7 +360,7 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 4. مؤشر صلاحية الاشتراك - ينقل لصفحة تجديد باقة الأكاديمية بالمنظومة */}
+      {/* 4. مؤشر صلاحية الاشتراك - ينقل لصفحة تجديد باقة الأكاديمية بالمنظومة saas_subscriptions */}
       <div 
         onClick={handleGoToSaasSubscription}
         style={{ 
