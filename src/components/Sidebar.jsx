@@ -182,6 +182,13 @@ export function EnterpriseSidebar({
     return currentEntity?.metadata?.entity_label_en || t.defaultEntityLabel;
   }, [currentEntity, isRtl, t.defaultEntityLabel]);
 
+  // توجيه مدير الأكاديمية إلى صفحة تجديد اشتراكه في منصتك (SaaS Subscription)
+  const handleGoToSaasSubscription = () => {
+    if (setActiveSection) {
+      setActiveSection('saas-subscription'); // قسم تجديد باقة الأكاديمية مع مالك المنصة
+    }
+  };
+
   // تسجيل الخروج المباشر
   const handleLogout = async () => {
     try {
@@ -260,9 +267,21 @@ export function EnterpriseSidebar({
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
             {entityCustomLabel} {t.entityHeader}
           </span>
-          <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #334155' }}>
+          <button 
+            onClick={handleGoToSaasSubscription}
+            style={{ 
+              fontSize: '10px', 
+              background: '#1e293b', 
+              color: '#38bdf8', 
+              padding: '2px 8px', 
+              borderRadius: '4px', 
+              fontWeight: 'bold', 
+              border: '1px solid #334155',
+              cursor: 'pointer'
+            }}
+          >
             {planTier}
-          </span>
+          </button>
         </div>
 
         {userEntities.length > 1 ? (
@@ -341,8 +360,17 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 4. مؤشر صلاحية الاشتراك - ثابت الهيكل */}
-      <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
+      {/* 4. مؤشر صلاحية الاشتراك - ينقل لصفحة تجديد باقة الأكاديمية بالمنظومة */}
+      <div 
+        onClick={handleGoToSaasSubscription}
+        style={{ 
+          padding: '8px 16px', 
+          background: 'rgba(30, 41, 59, 0.2)', 
+          borderBottom: '1px solid #1e293b', 
+          flexShrink: 0,
+          cursor: 'pointer'
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
           <span style={{ color: '#94a3b8' }}>{t.subValidity}</span>
           <span style={{ color: '#10b981', fontWeight: '800' }}>
