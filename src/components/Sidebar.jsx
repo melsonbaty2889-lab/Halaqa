@@ -51,9 +51,9 @@ export function EnterpriseSidebar({
         year: 'numeric'
       }).format(currentTime);
     } catch {
-      return t('calendar.hijri', 'التقويم الهجري');
+      return 'التقويم الهجري';
     }
-  }, [currentTime, isRtl, t]);
+  }, [currentTime, isRtl]);
 
   // التاريخ الميلادي
   const gregorianDate = useMemo(() => {
@@ -64,7 +64,7 @@ export function EnterpriseSidebar({
     }).format(currentTime);
   }, [currentTime, isRtl]);
 
-  // جلب الكيانات وحل مشكلة "جاري التحميل..." المعلقة
+  // جلب الأكاديميات وحساب الأيام
   useEffect(() => {
     let isMounted = true;
     const fetchPermittedEntities = async () => {
@@ -78,12 +78,13 @@ export function EnterpriseSidebar({
 
         if (isMounted && data && data.length > 0) {
           setUserEntities(data);
-          // البحث عن الكيان الحالي أو اختيار الأول كافتراضي
           const active = data.find(item => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
 
           if (active.plan_tier) {
             setPlanTier(active.plan_tier);
+          } else {
+            setPlanTier('');
           }
 
           if (active.subscription_end_date) {
@@ -104,13 +105,13 @@ export function EnterpriseSidebar({
     return () => { isMounted = false; };
   }, [currentAcademyId]);
 
-  // المسمى المخصص للكيان
+  // المسمى المخصص
   const entityCustomLabel = useMemo(() => {
     if (isRtl) {
-      return currentEntity?.metadata?.entity_label_ar || t('sidebar.academy', 'الأكاديمية');
+      return currentEntity?.metadata?.entity_label_ar || 'الأكاديمية الحالية';
     }
-    return currentEntity?.metadata?.entity_label_en || t('sidebar.academy', 'Academy');
-  }, [currentEntity, isRtl, t]);
+    return currentEntity?.metadata?.entity_label_en || 'Current Academy';
+  }, [currentEntity, isRtl]);
 
   // تسجيل الخروج
   const handleLogout = async () => {
@@ -124,44 +125,44 @@ export function EnterpriseSidebar({
     }
   };
 
-  // المحاور والأزرار باستخدام t() من ملفات json
+  // المحاور والروابط معتمدة كلياً على مفاتيح ar.json الخاصة بك
   const globalNavigationPillars = useMemo(() => [
     {
-      pillarTitle: t('sidebar.pillars.liveOps', '1. مركز القيادة الحية | Live Operations Hub'),
+      pillarTitle: '1. مركز القيادة الحية | Live Operations Hub',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'dashboard', title: t('sidebar.nodes.dashboard', 'لوحة التحكم والأداء'), icon: '📊' },
-        { id: 'realtime-audit', title: t('sidebar.nodes.realtimeAudit', 'السجل الحي للأنشطة'), icon: '⚡' }
+        { id: 'dashboard', title: t('dashboard', 'مركز التحكم والتحليلات'), icon: '📊' },
+        { id: 'realtime-audit', title: t('smart_alerts', 'التنبيهات الذكية'), icon: '⚡' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.academicCore', '2. الشؤون القرآنية والأكاديمية | Academic Core'),
+      pillarTitle: '2. الشؤون القرآنية والأكاديمية | Academic Core',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
       nodes: [
-        { id: 'learner-directory', title: t('sidebar.nodes.learnerDirectory', 'إدارة الدارسين'), icon: '🎓' },
-        { id: 'faculty-reciters', title: t('sidebar.nodes.facultyReciters', 'الكادر والمقرئين'), icon: '🕌' },
-        { id: 'halaqas-sanad', title: t('sidebar.nodes.halaqasSanad', 'المقارئ والحلقات'), icon: '👥' },
-        { id: 'daily-recitation', title: t('sidebar.nodes.dailyRecitation', 'التسميع والتحضير اليومي'), icon: '📝' },
-        { id: 'curricula-diplomas', title: t('sidebar.nodes.curriculaDiplomas', 'المناهج والشهادات'), icon: '📜' }
+        { id: 'learner-directory', title: t('student_management', 'سجل الروّاد والطلاب'), icon: '🎓' },
+        { id: 'faculty-reciters', title: t('students', 'شؤون الطلاب'), icon: '🕌' },
+        { id: 'halaqas-sanad', title: t('active_halagas', 'الحلقات النشطة اليوم'), icon: '👥' },
+        { id: 'daily-recitation', title: t('recitation_attendance', 'متابعة الجلسات والتحصيل'), icon: '📝' },
+        { id: 'curricula-diplomas', title: t('surah_juz_exams', 'نظام التقييم والجدارة'), icon: '📜' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.engagement', '3. تفاعل الدارسين والأسر | Engagement Network'),
+      pillarTitle: '3. تفاعل الدارسين والأسر | Engagement Network',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'guardian-portal', title: t('sidebar.nodes.guardianPortal', 'شبكة أسر الدارسين'), icon: '🏠' },
-        { id: 'gamification-streaks', title: t('sidebar.nodes.gamificationStreaks', 'الإنجاز والحوافز'), icon: '🏆' },
-        { id: 'omnichannel-hub', title: t('sidebar.nodes.omnichannelHub', 'مركز التنبيهات الموحد'), icon: '🔔' }
+        { id: 'guardian-portal', title: t('parent_reports', 'التقارير الذكية والمشاركة'), icon: '🏠' },
+        { id: 'gamification-streaks', title: t('action_exams', 'الاختبارات والتقييم'), icon: '🏆' },
+        { id: 'omnichannel-hub', title: t('action_reports', 'التقارير والتواصل'), icon: '🔔' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.governance', '4. الخزينة والحوكمة | Treasury & Governance'),
+      pillarTitle: '4. الخزينة والحوكمة | Treasury & Governance',
       allowedRoles: ['super_admin', 'admin', 'manager'],
       nodes: [
-        { id: 'billing-payments', title: t('sidebar.nodes.billingPayments', 'الخزينة والاشتراكات'), icon: '💳' },
-        { id: 'asset-management', title: t('sidebar.nodes.assetManagement', 'المستندات والأصول'), icon: '📁' },
-        { id: 'growth-referrals', title: t('sidebar.nodes.growthReferrals', 'برنامج النمو والإحالات'), icon: '🚀' },
-        { id: 'platform-governance', title: t('sidebar.nodes.platformGovernance', 'ضبط المنظومة'), icon: '⚙️' }
+        { id: 'billing-payments', title: t('billing_finance', 'المنظومة المالية والفوترة'), icon: '💳' },
+        { id: 'asset-management', title: t('payments', 'المالية والاشتراكات'), icon: '📁' },
+        { id: 'growth-referrals', title: t('academy_overview', 'التقرير العام للأكاديمية'), icon: '🚀' },
+        { id: 'platform-governance', title: t('general_settings', 'تهيئة النظام المتقدمة'), icon: '⚙️' }
       ]
     }
   ], [t]);
@@ -184,22 +185,25 @@ export function EnterpriseSidebar({
       boxSizing: 'border-box'
     }}>
       
-      {/* 1. الهيدر - ثابت بدون overflow */}
+      {/* 1. الهيدر */}
       <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
-            {entityCustomLabel} {t('sidebar.current', 'الحالية')}
+            {entityCustomLabel}
           </span>
-          <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #334155' }}>
-            {planTier || t('sidebar.proPlan', 'الباقة الاحترافية')}
-          </span>
+          {planTier && (
+            <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #334155' }}>
+              {planTier}
+            </span>
+          )}
         </div>
 
+        {/* محول الأكاديميات يظهر دائماً كـ select إذا وجدت بيانات */}
         {loadingEntity ? (
           <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
-            {t('common.loading', 'جاري التحميل...')}
+            {t('loading', 'جاري تحميل البيانات...')}
           </div>
-        ) : userEntities.length > 1 ? (
+        ) : (
           <select
             value={currentEntity?.id || ''}
             onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
@@ -216,16 +220,16 @@ export function EnterpriseSidebar({
               outline: 'none'
             }}
           >
-            {userEntities.map((entity) => (
-              <option key={entity.id} value={entity.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                {entity.name}
-              </option>
-            ))}
+            {userEntities.length > 0 ? (
+              userEntities.map((entity) => (
+                <option key={entity.id} value={entity.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                  {entity.name}
+                </option>
+              ))
+            ) : (
+              <option value="">{currentEntity?.name || t('welcome', 'مرحباً بك في الحلقة الذكية')}</option>
+            )}
           </select>
-        ) : (
-          <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whitespace: 'nowrap' }}>
-            {currentEntity?.name || t('sidebar.defaultEntityName', 'الأكاديمية الرقمية')}
-          </div>
         )}
 
         {/* 2. التاريخ والساعة */}
@@ -267,7 +271,7 @@ export function EnterpriseSidebar({
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {t('sidebar.searchPlaceholder', '🔍 ابحث عن طلاب، حلقات...')}
+            🔍 {t('search_placeholder', 'ابحث عن طالب بالاسم، الهاتف...')}
           </span>
           <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
             Ctrl K
@@ -275,12 +279,12 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 4. شريط أصل أيام الاشتراك */}
+      {/* 4. شريط الأيام المتبقية */}
       <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
-          <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', 'صلاحية النظام:')}</span>
+          <span style={{ color: '#94a3b8' }}>صلاحية النظام:</span>
           <span style={{ color: '#10b981', fontWeight: '800' }}>
-            {t('sidebar.daysRemaining', 'متبقي {{days}} يوم', { days: subscriptionDaysLeft })}
+            متبقي {subscriptionDaysLeft} يوم
           </span>
         </div>
         <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
@@ -288,7 +292,7 @@ export function EnterpriseSidebar({
         </div>
       </div>
 
-      {/* 5. القوائم (تتحرك بالسكرول فقط في المنتصف) */}
+      {/* 5. القوائم مع إمكانية التمرير العمودي فقط */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
         {globalNavigationPillars.map((pillar, pIdx) => {
           if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -357,7 +361,7 @@ export function EnterpriseSidebar({
             boxShadow: '0 0 6px #10b981'
           }} />
           <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-            {t('sidebar.syncStatus', 'ربط سحابي متزامن')}
+            ربط سحابي متزامن
           </span>
         </div>
 
@@ -381,7 +385,7 @@ export function EnterpriseSidebar({
           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
         >
-          {t('sidebar.logoutBtn', '🚪 إنهاء الجلسة وتسجيل الخروج')}
+          🚪 {t('logout', 'تسجيل الخروج')}
         </button>
       </div>
 
