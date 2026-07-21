@@ -1,4 +1,3 @@
-/* src/components/Sidebar.jsx */
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -87,10 +86,12 @@ export function EnterpriseSidebar({
   const isRtl = currentLang === 'ar';
   const t = translations[currentLang] || translations.ar;
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  // 1. التمييز بين الموبايل والكمبيوتر بدقة
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -223,21 +224,47 @@ export function EnterpriseSidebar({
         { id: 'billing-payments', title: t.nodes.billingPayments, icon: '💳' },
         { id: 'asset-management', title: t.nodes.assetManagement, icon: '📁' },
         { id: 'growth-referrals', title: t.nodes.growthReferrals, icon: '🚀' },
-        { id: 'platform-governance', title: t.nodes.platformGovernance, icon: '⚙️' }
+        { id: 'platformGovernance', title: t.nodes.platformGovernance, icon: '⚙️' }
       ]
     }
   ], [t]);
 
-  // حساب التحريك الدقيق للموبايل بناءً على حالة الفتح واتجاه اللغة
-  const getMobileTransform = () => {
-    if (!isMobile) return 'none';
-    if (isOpen) return 'translateX(0)';
-    return isRtl ? 'translateX(100%)' : 'translateX(-100%)';
-  };
+  // 2. حساب التموضع الديناميكي (تأكيد الظهور في الكمبيوتر والتحريك في الموبايل)
+  const computedSidebarStyle = useMemo(() => {
+    if (!isMobile) {
+      // الكمبيوتر: ثابتة دائماً
+      return {
+        width: '280px',
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        flexShrink: 0,
+        transform: 'none',
+        zIndex: 30
+      };
+    }
+
+    // الموبايل: منزلقة مع z-index مرتفع
+    return {
+      width: '280px',
+      height: '100dvh',
+      position: 'fixed',
+      top: 0,
+      bottom: 0,
+      right: isRtl ? 0 : 'auto',
+      left: !isRtl ? 0 : 'auto',
+      transform: isOpen 
+        ? 'translateX(0)' 
+        : (isRtl ? 'translateX(100%)' : 'translateX(-100%)'),
+      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      zIndex: 9999, // لضمان ظهور القائمة فوق خلفية التمويه
+      boxShadow: isOpen ? '0 0 25px rgba(0, 0, 0, 0.7)' : 'none'
+    };
+  }, [isMobile, isOpen, isRtl]);
 
   return (
     <>
-      {/* 1. الطبقة المظلمة الخلفية (Overlay) فوق كل عناصر الصفحة */}
+      {/* 3. الخلفية المعتمة للموبايل فقط عند الفتح */}
       {isMobile && isOpen && (
         <div 
           onClick={onClose}
@@ -247,15 +274,14 @@ export function EnterpriseSidebar({
             backgroundColor: 'rgba(15, 23, 42, 0.75)',
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
-            zIndex: 9998
+            zIndex: 9998 // أسفل القائمة الجانبية برقم واحد مباشرة
           }}
         />
       )}
 
-      {/* 2. القائمة الجانبية المحدثة */}
+      {/* 4. عنصر القائمة الجانبية الرئيسي */}
       <aside style={{
-        width: isMobile ? '280px' : '300px',
-        height: '100dvh',
+        ...computedSidebarStyle,
         backgroundColor: '#0f172a',
         borderInlineEnd: '1px solid #1e293b',
         display: 'flex',
@@ -263,17 +289,8 @@ export function EnterpriseSidebar({
         color: '#f8fafc',
         fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
         direction: isRtl ? 'rtl' : 'ltr',
-        position: isMobile ? 'fixed' : 'sticky',
-        top: 0,
-        bottom: 0,
-        right: isMobile ? (isRtl ? 0 : 'auto') : 'auto',
-        left: isMobile ? (!isRtl ? 0 : 'auto') : 'auto',
-        transform: getMobileTransform(),
-        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        userSelect: 'none',
-        zIndex: 9999, // لضمان ظهور القائمة أعلى الشاشة كلياً
         boxSizing: 'border-box',
-        boxShadow: isMobile && isOpen ? '0 0 25px rgba(0, 0, 0, 0.7)' : 'none'
+        userSelect: 'none'
       }}>
         
         {/* رأس القائمة */}
@@ -300,7 +317,6 @@ export function EnterpriseSidebar({
                 {planTier}
               </button>
 
-              {/* زر الإغلاق ✕ للموبايل */}
               {isMobile && (
                 <button 
                   onClick={onClose}
@@ -423,7 +439,7 @@ export function EnterpriseSidebar({
           </div>
         </div>
 
-        {/* عناصر القائمة */}
+        {/* عناصر التنقل */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
           {globalNavigationPillars.map((pillar, pIdx) => {
             if (!pillar.allowedRoles.includes(currentUserRole)) return null;
