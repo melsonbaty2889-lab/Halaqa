@@ -1,7 +1,78 @@
 /* src/components/Sidebar.jsx */
 import React, { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+
+// قاموس الترجمة المدمج داخل المكون
+const translations = {
+  ar: {
+    entityHeader: 'الحالية',
+    defaultEntityLabel: 'الأكاديمية',
+    defaultPlan: 'الباقة الاحترافية',
+    searchPlaceholder: '🔍 ابحث عن طلاب، حلقات...',
+    subValidity: 'صلاحية النظام:',
+    daysLeft: 'متبقي {{days}} يوم',
+    syncStatus: 'ربط سحابي متزامن',
+    logoutBtn: '🚪 إنهاء الجلسة وتسجيل الخروج',
+    loading: 'جاري التحميل...',
+    defaultHijri: 'التقويم الهجري',
+    pillars: {
+      liveOps: '1. مركز القيادة الحية | Live Operations Hub',
+      academicCore: '2. الشؤون القرآنية والأكاديمية | Academic Core',
+      engagement: '3. تفاعل الدارسين والأسر | Engagement Network',
+      governance: '4. الخزينة والحوكمة | Treasury & Governance'
+    },
+    nodes: {
+      dashboard: 'لوحة التحكم والأداء',
+      realtimeAudit: 'السجل الحي للأنشطة',
+      learnerDirectory: 'إدارة الدارسين',
+      facultyReciters: 'الكادر والمقرئين',
+      halaqasSanad: 'المقارئ والحلقات',
+      dailyRecitation: 'التسميع والتحضير اليومي',
+      curriculaDiplomas: 'المناهج والشهادات',
+      guardianPortal: 'شبكة أسر الدارسين',
+      gamificationStreaks: 'الإنجاز والحوافز',
+      omnichannelHub: 'مركز التنبيهات الموحد',
+      billingPayments: 'الخزينة والاشتراكات',
+      assetManagement: 'المستندات والأصول',
+      growthReferrals: 'برنامج النمو والإحالات',
+      platformGovernance: 'ضبط المنظومة'
+    }
+  },
+  en: {
+    entityHeader: 'Current',
+    defaultEntityLabel: 'Academy',
+    defaultPlan: 'Pro Plan',
+    searchPlaceholder: '🔍 Search students, halaqas...',
+    subValidity: 'Subscription:',
+    daysLeft: '{{days}} days left',
+    syncStatus: 'Cloud Synchronized',
+    logoutBtn: '🚪 Sign Out',
+    loading: 'Loading...',
+    defaultHijri: 'Hijri Calendar',
+    pillars: {
+      liveOps: '1. Live Operations Hub',
+      academicCore: '2. Academic Core',
+      engagement: '3. Engagement Network',
+      governance: '4. Treasury & Governance'
+    },
+    nodes: {
+      dashboard: 'Dashboard & Performance',
+      realtimeAudit: 'Live Activity Audit',
+      learnerDirectory: 'Student Directory',
+      facultyReciters: 'Faculty & Reciters',
+      halaqasSanad: 'Halaqas & Circles',
+      dailyRecitation: 'Daily Recitation',
+      curriculaDiplomas: 'Curricula & Certificates',
+      guardianPortal: 'Guardian Portal',
+      gamificationStreaks: 'Achievements & Streaks',
+      omnichannelHub: 'Notification Hub',
+      billingPayments: 'Treasury & Subscriptions',
+      assetManagement: 'Assets & Documents',
+      growthReferrals: 'Growth & Referrals',
+      platformGovernance: 'Platform Governance'
+    }
+  }
+};
 
 export function EnterpriseSidebar({ 
   currentAcademyId, 
@@ -9,11 +80,11 @@ export function EnterpriseSidebar({
   activeSection = 'dashboard', 
   setActiveSection,
   onOpenSearch,
-  onSwitchAcademy
+  onSwitchAcademy,
+  currentLang = 'ar'
 }) {
-  const { t, i18n } = useTranslation();
-  const currentLang = i18n.language || 'ar';
-  const isRtl = currentLang.startsWith('ar');
+  const isRtl = currentLang === 'ar';
+  const t = translations[currentLang] || translations.ar;
 
   // 1. حالات الوقت والتقويم
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -21,11 +92,10 @@ export function EnterpriseSidebar({
   // 2. حالات الكيانات للفروع
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
-  const [loadingEntity, setLoadingEntity] = useState(true);
 
   // 3. حالات اشتراك الـ SaaS
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
-  const [planTier, setPlanTier] = useState('');
+  const [planTier, setPlanTier] = useState(t.defaultPlan);
 
   // تحديث الساعة فورياً
   useEffect(() => {
@@ -33,13 +103,9 @@ export function EnterpriseSidebar({
     return () => clearInterval(timer);
   }, []);
 
-  // تنسيق الوقت بحسب اللغة الحالية
+  // تنسيق الوقت بحسب اللغة
   const formattedTime = useMemo(() => {
-    return currentTime.toLocaleTimeString(isRtl ? 'ar-EG' : 'en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
-    });
+    return currentTime.toLocaleTimeString(isRtl ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }, [currentTime, isRtl]);
 
   // التاريخ الهجري
@@ -51,9 +117,17 @@ export function EnterpriseSidebar({
         year: 'numeric'
       }).format(currentTime);
     } catch {
-      return t('calendar.hijri', 'التقويم الهجري');
+      try {
+        return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(currentTime);
+      } catch {
+        return t.defaultHijri;
+      }
     }
-  }, [currentTime, isRtl, t]);
+  }, [currentTime, isRtl, t.defaultHijri]);
 
   // التاريخ الميلادي
   const gregorianDate = useMemo(() => {
@@ -64,11 +138,10 @@ export function EnterpriseSidebar({
     }).format(currentTime);
   }, [currentTime, isRtl]);
 
-  // جلب الكيانات وحل مشكلة "جاري التحميل..." المعلقة
+  // جلب الكيانات وحساب أصل الأيام المتبقية ديناميكياً
   useEffect(() => {
     let isMounted = true;
     const fetchPermittedEntities = async () => {
-      setLoadingEntity(true);
       try {
         const { data, error } = await supabase
           .from('academies')
@@ -78,7 +151,6 @@ export function EnterpriseSidebar({
 
         if (isMounted && data && data.length > 0) {
           setUserEntities(data);
-          // البحث عن الكيان الحالي أو اختيار الأول كافتراضي
           const active = data.find(item => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
 
@@ -86,7 +158,7 @@ export function EnterpriseSidebar({
             setPlanTier(active.plan_tier);
           }
 
-          if (active.subscription_end_date) {
+          if (active && active.subscription_end_date) {
             const endDate = new Date(active.subscription_end_date);
             const diffTime = endDate.getTime() - new Date().getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -95,8 +167,6 @@ export function EnterpriseSidebar({
         }
       } catch (err) {
         console.error('Error fetching entities:', err);
-      } finally {
-        if (isMounted) setLoadingEntity(false);
       }
     };
 
@@ -107,12 +177,12 @@ export function EnterpriseSidebar({
   // المسمى المخصص للكيان
   const entityCustomLabel = useMemo(() => {
     if (isRtl) {
-      return currentEntity?.metadata?.entity_label_ar || t('sidebar.academy', 'الأكاديمية');
+      return currentEntity?.metadata?.entity_label_ar || t.defaultEntityLabel;
     }
-    return currentEntity?.metadata?.entity_label_en || t('sidebar.academy', 'Academy');
-  }, [currentEntity, isRtl, t]);
+    return currentEntity?.metadata?.entity_label_en || t.defaultEntityLabel;
+  }, [currentEntity, isRtl, t.defaultEntityLabel]);
 
-  // تسجيل الخروج
+  // تسجيل الخروج المباشر
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -124,44 +194,44 @@ export function EnterpriseSidebar({
     }
   };
 
-  // المحاور والأزرار باستخدام t() من ملفات json
+  // المحاور والروابط الديناميكية المتوافقة مع الترجمة
   const globalNavigationPillars = useMemo(() => [
     {
-      pillarTitle: t('sidebar.pillars.liveOps', '1. مركز القيادة الحية | Live Operations Hub'),
+      pillarTitle: t.pillars.liveOps,
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'dashboard', title: t('sidebar.nodes.dashboard', 'لوحة التحكم والأداء'), icon: '📊' },
-        { id: 'realtime-audit', title: t('sidebar.nodes.realtimeAudit', 'السجل الحي للأنشطة'), icon: '⚡' }
+        { id: 'dashboard', title: t.nodes.dashboard, icon: '📊' },
+        { id: 'realtime-audit', title: t.nodes.realtimeAudit, icon: '⚡' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.academicCore', '2. الشؤون القرآنية والأكاديمية | Academic Core'),
+      pillarTitle: t.pillars.academicCore,
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
       nodes: [
-        { id: 'learner-directory', title: t('sidebar.nodes.learnerDirectory', 'إدارة الدارسين'), icon: '🎓' },
-        { id: 'faculty-reciters', title: t('sidebar.nodes.facultyReciters', 'الكادر والمقرئين'), icon: '🕌' },
-        { id: 'halaqas-sanad', title: t('sidebar.nodes.halaqasSanad', 'المقارئ والحلقات'), icon: '👥' },
-        { id: 'daily-recitation', title: t('sidebar.nodes.dailyRecitation', 'التسميع والتحضير اليومي'), icon: '📝' },
-        { id: 'curricula-diplomas', title: t('sidebar.nodes.curriculaDiplomas', 'المناهج والشهادات'), icon: '📜' }
+        { id: 'learner-directory', title: t.nodes.learnerDirectory, icon: '🎓' },
+        { id: 'faculty-reciters', title: t.nodes.facultyReciters, icon: '🕌' },
+        { id: 'halaqas-sanad', title: t.nodes.halaqasSanad, icon: '👥' },
+        { id: 'daily-recitation', title: t.nodes.dailyRecitation, icon: '📝' },
+        { id: 'curricula-diplomas', title: t.nodes.curriculaDiplomas, icon: '📜' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.engagement', '3. تفاعل الدارسين والأسر | Engagement Network'),
+      pillarTitle: t.pillars.engagement,
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'guardian-portal', title: t('sidebar.nodes.guardianPortal', 'شبكة أسر الدارسين'), icon: '🏠' },
-        { id: 'gamification-streaks', title: t('sidebar.nodes.gamificationStreaks', 'الإنجاز والحوافز'), icon: '🏆' },
-        { id: 'omnichannel-hub', title: t('sidebar.nodes.omnichannelHub', 'مركز التنبيهات الموحد'), icon: '🔔' }
+        { id: 'guardian-portal', title: t.nodes.guardianPortal, icon: '🏠' },
+        { id: 'gamification-streaks', title: t.nodes.gamificationStreaks, icon: '🏆' },
+        { id: 'omnichannel-hub', title: t.nodes.omnichannelHub, icon: '🔔' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.governance', '4. الخزينة والحوكمة | Treasury & Governance'),
+      pillarTitle: t.pillars.governance,
       allowedRoles: ['super_admin', 'admin', 'manager'],
       nodes: [
-        { id: 'billing-payments', title: t('sidebar.nodes.billingPayments', 'الخزينة والاشتراكات'), icon: '💳' },
-        { id: 'asset-management', title: t('sidebar.nodes.assetManagement', 'المستندات والأصول'), icon: '📁' },
-        { id: 'growth-referrals', title: t('sidebar.nodes.growthReferrals', 'برنامج النمو والإحالات'), icon: '🚀' },
-        { id: 'platform-governance', title: t('sidebar.nodes.platformGovernance', 'ضبط المنظومة'), icon: '⚙️' }
+        { id: 'billing-payments', title: t.nodes.billingPayments, icon: '💳' },
+        { id: 'asset-management', title: t.nodes.assetManagement, icon: '📁' },
+        { id: 'growth-referrals', title: t.nodes.growthReferrals, icon: '🚀' },
+        { id: 'platform-governance', title: t.nodes.platformGovernance, icon: '⚙️' }
       ]
     }
   ], [t]);
@@ -184,24 +254,20 @@ export function EnterpriseSidebar({
       boxSizing: 'border-box'
     }}>
       
-      {/* 1. الهيدر - ثابت بدون overflow */}
+      {/* 1. رأس القائمة - ثابت الهيكل */}
       <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
-            {entityCustomLabel} {t('sidebar.current', 'الحالية')}
+            {entityCustomLabel} {t.entityHeader}
           </span>
           <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #334155' }}>
-            {planTier || t('sidebar.proPlan', 'الباقة الاحترافية')}
+            {planTier}
           </span>
         </div>
 
-        {loadingEntity ? (
-          <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
-            {t('common.loading', 'جاري التحميل...')}
-          </div>
-        ) : userEntities.length > 1 ? (
+        {userEntities.length > 1 ? (
           <select
-            value={currentEntity?.id || ''}
+            value={currentAcademyId || ''}
             onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
             style={{
               width: '100%',
@@ -224,11 +290,11 @@ export function EnterpriseSidebar({
           </select>
         ) : (
           <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whitespace: 'nowrap' }}>
-            {currentEntity?.name || t('sidebar.defaultEntityName', 'الأكاديمية الرقمية')}
+            {currentEntity?.name || t.loading}
           </div>
         )}
 
-        {/* 2. التاريخ والساعة */}
+        {/* 2. التقويم والساعة */}
         <div style={{ 
           marginTop: '12px', 
           padding: '8px 10px', 
@@ -267,7 +333,7 @@ export function EnterpriseSidebar({
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {t('sidebar.searchPlaceholder', '🔍 ابحث عن طلاب، حلقات...')}
+            {t.searchPlaceholder}
           </span>
           <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
             Ctrl K
@@ -275,12 +341,12 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 4. شريط أصل أيام الاشتراك */}
+      {/* 4. مؤشر صلاحية الاشتراك - ثابت الهيكل */}
       <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
-          <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', 'صلاحية النظام:')}</span>
+          <span style={{ color: '#94a3b8' }}>{t.subValidity}</span>
           <span style={{ color: '#10b981', fontWeight: '800' }}>
-            {t('sidebar.daysRemaining', 'متبقي {{days}} يوم', { days: subscriptionDaysLeft })}
+            {t.daysLeft.replace('{{days}}', subscriptionDaysLeft)}
           </span>
         </div>
         <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
@@ -288,7 +354,7 @@ export function EnterpriseSidebar({
         </div>
       </div>
 
-      {/* 5. القوائم (تتحرك بالسكرول فقط في المنتصف) */}
+      {/* 5. القوائم والمحاور - مرن للتمرير فقط */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
         {globalNavigationPillars.map((pillar, pIdx) => {
           if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -346,7 +412,7 @@ export function EnterpriseSidebar({
         })}
       </div>
 
-      {/* 6. الفوتر الثابت بالأسفل */}
+      {/* 6. الفوتر الثابت في الأسفل */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <span style={{
@@ -357,7 +423,7 @@ export function EnterpriseSidebar({
             boxShadow: '0 0 6px #10b981'
           }} />
           <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-            {t('sidebar.syncStatus', 'ربط سحابي متزامن')}
+            {t.syncStatus}
           </span>
         </div>
 
@@ -381,7 +447,7 @@ export function EnterpriseSidebar({
           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
         >
-          {t('sidebar.logoutBtn', '🚪 إنهاء الجلسة وتسجيل الخروج')}
+          {t.logoutBtn}
         </button>
       </div>
 
