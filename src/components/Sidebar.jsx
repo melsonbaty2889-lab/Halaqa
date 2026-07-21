@@ -81,13 +81,12 @@ export function EnterpriseSidebar({
   onOpenSearch,
   onSwitchAcademy,
   currentLang = 'ar',
-  isOpen = false, // حالة الفتح للموبايل
-  onClose        // دالة الإغلاق للموبايل
+  isOpen = false,
+  onClose        
 }) {
   const isRtl = currentLang === 'ar';
   const t = translations[currentLang] || translations.ar;
 
-  // فحص ما إذا كان الجهاز موبايل
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
@@ -185,7 +184,7 @@ export function EnterpriseSidebar({
 
   const handleNodeClick = (nodeId) => {
     if (setActiveSection) setActiveSection(nodeId);
-    if (isMobile && onClose) onClose(); // إغلاق القائمة تلقائياً بعد الاختيار في الموبايل
+    if (isMobile && onClose) onClose();
   };
 
   const globalNavigationPillars = useMemo(() => [
@@ -229,9 +228,16 @@ export function EnterpriseSidebar({
     }
   ], [t]);
 
+  // حساب التحريك الدقيق للموبايل بناءً على حالة الفتح واتجاه اللغة
+  const getMobileTransform = () => {
+    if (!isMobile) return 'none';
+    if (isOpen) return 'translateX(0)';
+    return isRtl ? 'translateX(100%)' : 'translateX(-100%)';
+  };
+
   return (
     <>
-      {/* 1. طبقة التظليل الخفيفة خلف القائمة عند فتحها في الموبايل (Backdrop Overlay) */}
+      {/* 1. الطبقة المظلمة الخلفية (Overlay) فوق كل عناصر الصفحة */}
       {isMobile && isOpen && (
         <div 
           onClick={onClose}
@@ -240,15 +246,16 @@ export function EnterpriseSidebar({
             inset: 0,
             backgroundColor: 'rgba(15, 23, 42, 0.75)',
             backdropFilter: 'blur(4px)',
-            zIndex: 99
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 9998
           }}
         />
       )}
 
-      {/* 2. جسم القائمة الجانبية */}
+      {/* 2. القائمة الجانبية المحدثة */}
       <aside style={{
         width: isMobile ? '280px' : '300px',
-        height: '100dvh', // تضمن الارتفاع الصحيح على الموبايل بدون اختفاء الفوتر
+        height: '100dvh',
         backgroundColor: '#0f172a',
         borderInlineEnd: '1px solid #1e293b',
         display: 'flex',
@@ -258,16 +265,18 @@ export function EnterpriseSidebar({
         direction: isRtl ? 'rtl' : 'ltr',
         position: isMobile ? 'fixed' : 'sticky',
         top: 0,
-        right: isMobile ? (isRtl ? (isOpen ? 0 : '-100%') : 'auto') : 'auto',
-        left: isMobile ? (!isRtl ? (isOpen ? 0 : '-100%') : 'auto') : 'auto',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        bottom: 0,
+        right: isMobile ? (isRtl ? 0 : 'auto') : 'auto',
+        left: isMobile ? (!isRtl ? 0 : 'auto') : 'auto',
+        transform: getMobileTransform(),
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         userSelect: 'none',
-        zIndex: 100,
+        zIndex: 9999, // لضمان ظهور القائمة أعلى الشاشة كلياً
         boxSizing: 'border-box',
-        boxShadow: isMobile && isOpen ? '0 20px 25px -5px rgba(0, 0, 0, 0.5)' : 'none'
+        boxShadow: isMobile && isOpen ? '0 0 25px rgba(0, 0, 0, 0.7)' : 'none'
       }}>
         
-        {/* الهيدر العلوي للقائمة */}
+        {/* رأس القائمة */}
         <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
@@ -291,7 +300,7 @@ export function EnterpriseSidebar({
                 {planTier}
               </button>
 
-              {/* زر إغلاق للموبايل */}
+              {/* زر الإغلاق ✕ للموبايل */}
               {isMobile && (
                 <button 
                   onClick={onClose}
@@ -301,7 +310,8 @@ export function EnterpriseSidebar({
                     color: '#94a3b8',
                     fontSize: '18px',
                     cursor: 'pointer',
-                    padding: '0 4px'
+                    padding: '0 4px',
+                    lineHeight: 1
                   }}
                 >
                   ✕
@@ -339,7 +349,7 @@ export function EnterpriseSidebar({
             </div>
           )}
 
-          {/* الوقت والتقويم */}
+          {/* التاريخ والوقت */}
           <div style={{ 
             marginTop: '10px', 
             padding: '8px 10px', 
@@ -359,7 +369,7 @@ export function EnterpriseSidebar({
             </div>
           </div>
 
-          {/* زر البحث (بدون Ctrl K على الموبايل) */}
+          {/* زر البحث */}
           <button
             onClick={() => {
               if (onOpenSearch) onOpenSearch();
@@ -413,7 +423,7 @@ export function EnterpriseSidebar({
           </div>
         </div>
 
-        {/* القوائم الأساسية */}
+        {/* عناصر القائمة */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
           {globalNavigationPillars.map((pillar, pIdx) => {
             if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -465,7 +475,7 @@ export function EnterpriseSidebar({
           })}
         </div>
 
-        {/* الفوتر الثابت بالأسفل */}
+        {/* الفوتر */}
         <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span style={{
