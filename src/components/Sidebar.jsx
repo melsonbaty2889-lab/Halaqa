@@ -1,5 +1,6 @@
 /* src/components/Sidebar.jsx */
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
 // ==========================================
@@ -14,6 +15,7 @@ export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcad
     );
   }
 
+  // اسم الأكاديمية حسب اللغة المختارة من قاعدة البيانات
   const getLocalizedEntityName = (entity) => {
     if (!entity) return '';
     if (!isRtl && entity.metadata?.name_en) {
@@ -47,7 +49,7 @@ export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcad
 }
 
 // ==========================================
-// 2. HOOKS 
+// 2. HOOKS (جلب البيانات الحقيقية من Supabase)
 // ==========================================
 function useLiveClock(isRtl, t) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -87,11 +89,11 @@ function useLiveClock(isRtl, t) {
   return { formattedTime, hijriDate, gregorianDate };
 }
 
-function useAcademyData() {
+function useAcademyData(currentAcademyId) {
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
   const [loadingEntity, setLoadingEntity] = useState(true);
-  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
+  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,50 +101,31 @@ function useAcademyData() {
     const fetchPermittedEntities = async () => {
       setLoadingEntity(true);
       try {
-        // جلب الأكاديميات المرتبطة أو المتاحة للمستخدم الحالي بطريقة آمنة
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        // ✨ جلب حقل trial_ends_at و subscription_end_date معاً
+        const { data, error } = await supabase
+          .from('academies')
+          .select('id, name, slug, metadata, subscription_end_date, trial_ends_at, plan_tier');
 
-        // جلب الأكاديميات التي يمتلكها أو يعمل بها كـ staff
-        const { data: staffData } = await supabase
-          .from('staff')
-          .select('academy_id, academies(*)')
-          .eq('user_id', user.id);
+        if (error) throw error;
 
-        let academiesList = [];
-        if (staffData && staffData.length > 0) {
-          academiesList = staffData.map(s => s.academies).filter(Boolean);
-        }
+        if (isMounted && data && data.length > 0) {
+          setUserEntities(data);
+          const active = data.find((item) => item.id === currentAcademyId) || data[0];
+          setCurrentEntity(active);
 
-        // إذا لم توجد عبر الـ staff، جرب جلب الأكاديميات مباشرة (في حال كان المالك)
-        if (academiesList.length === 0) {
-          const { data: directAcademies } = await supabase
-            .from('academies')
-            .select('*')
-            .eq('owner_id', user.id);
-          
-          if (directAcademies) academiesList = directAcademies;
-        }
-
-        // إذا لم يجد شيء نهائياً، جلب كل الأكاديميات المتاحة (للسوبر أدمن أو حالة التجربة)
-        if (academiesList.length === 0) {
-          const { data: allAcademies } = await supabase
-            .from('academies')
-            .select('*');
-          if (allAcademies) academiesList = allAcademies;
-        }
-
-        if (isMounted && academiesList.length > 0) {
-          setUserEntities(academiesList);
-          setCurrentEntity(academiesList[0]);
-
-          const expiryDate = academiesList[0].trial_ends_at || academiesList[0].subscription_end_date;
+          // ✨ دعم قراءة تاريخ نهاية التجربة أو نهاية الاشتراك
+          const expiryDate = active.trial_ends_at || active.subscription_end_date;
           if (expiryDate) {
             const endDate = new Date(expiryDate);
             const diffTime = endDate.getTime() - new Date().getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+          } else {
+            setSubscriptionDaysLeft(0);
           }
+        } else if (isMounted) {
+          setUserEntities([]);
+          setCurrentEntity(null);
         }
       } catch (err) {
         console.error('Supabase Fetch Error:', err);
@@ -153,7 +136,7 @@ function useAcademyData() {
 
     fetchPermittedEntities();
     return () => { isMounted = false; };
-  }, []);
+  }, [currentAcademyId]);
 
   return { userEntities, currentEntity, setCurrentEntity, loadingEntity, subscriptionDaysLeft };
 }
@@ -208,21 +191,20 @@ function useNavigationConfig(t, isRtl) {
 // 3. MAIN COMPONENT
 // ==========================================
 export function EnterpriseSidebar({
+  currentAcademyId,
   currentUserRole = 'admin',
-  activeTab = 'dashboard',
-  setActiveTab,
+  activeSection = 'dashboard',
+  setActiveSection,
   onOpenSearch,
   onSwitchAcademy,
-  sidebarOpen = true,
-  setSidebarOpen,
-  isMobile = false,
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
   const { formattedTime, hijriDate, gregorianDate } = useLiveClock(isRtl, t);
-  const { userEntities, currentEntity, setCurrentEntity, loadingEntity, subscriptionDaysLeft } = useAcademyData();
+  const { userEntities, currentEntity, setCurrentEntity, loadingEntity, subscriptionDaysLeft } =
+    useAcademyData(currentAcademyId);
   const navigationPillars = useNavigationConfig(t, isRtl);
 
   const currentEntityHeaderLabel = useMemo(() => {
@@ -246,13 +228,6 @@ export function EnterpriseSidebar({
     if (onSwitchAcademy) onSwitchAcademy(selectedEntity);
   };
 
-  // تبديل اللغة فوريّاً
-  const toggleLanguage = () => {
-    const newLang = isRtl ? 'en' : 'ar';
-    i18n.changeLanguage(newLang);
-    localStorage.setItem('i18nextLng', newLang);
-  };
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -264,23 +239,14 @@ export function EnterpriseSidebar({
     }
   };
 
-  // في حالة الموبايل إذا لم تكن القائمة مفعلة، لا يتم عرضها كعنصر ثابت بل كدرج مخفي
-  const asideStyles = {
-    ...styles.aside,
-    fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
-    direction: isRtl ? 'rtl' : 'ltr',
-    ...(isMobile ? {
-      position: 'fixed',
-      top: 0,
-      [isRtl ? 'right' : 'left']: 0,
-      transform: sidebarOpen ? 'translateX(0)' : `translateX(${isRtl ? '100%' : '-100%'})`,
-      transition: 'transform 0.3s ease-in-out',
-      boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-    } : {})
-  };
-
   return (
-    <aside style={asideStyles}>
+    <aside
+      style={{
+        ...styles.aside,
+        fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
+        direction: isRtl ? 'rtl' : 'ltr',
+      }}
+    >
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.entityMeta}>
@@ -348,14 +314,11 @@ export function EnterpriseSidebar({
               <div style={styles.pillarTitle}>{pillar.pillarTitle}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {pillar.nodes.map((node) => {
-                  const isActive = activeTab === node.id;
+                  const isActive = activeSection === node.id;
                   return (
                     <button
                       key={node.id}
-                      onClick={() => {
-                        setActiveTab && setActiveTab(node.id);
-                        if (isMobile && setSidebarOpen) setSidebarOpen(false);
-                      }}
+                      onClick={() => setActiveSection && setActiveSection(node.id)}
                       style={{
                         ...styles.navButton,
                         background: isActive
@@ -377,7 +340,7 @@ export function EnterpriseSidebar({
         })}
       </div>
 
-      {/* Footer مع زر اللغة وخروج */}
+      {/* Footer */}
       <div style={styles.footerContainer}>
         <div style={styles.syncStatus}>
           <span style={styles.statusDot} />
@@ -385,15 +348,8 @@ export function EnterpriseSidebar({
             {t('sidebar.syncStatus', isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized')}
           </span>
         </div>
-
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-          <button onClick={toggleLanguage} style={styles.langBtn}>
-            🌐 {isRtl ? 'English' : 'العربية'}
-          </button>
-        </div>
-
         <button onClick={handleLogout} style={styles.logoutBtn}>
-          {t('sidebar.logoutBtn', isRtl ? '🚪 تسجيل الخروج' : '🚪 Logout')}
+          {t('sidebar.logoutBtn', isRtl ? '🚪 إنهاء الجلسة وتسجيل الخروج' : '🚪 End Session & Logout')}
         </button>
       </div>
     </aside>
@@ -415,7 +371,7 @@ const styles = {
     position: 'sticky',
     top: 0,
     userSelect: 'none',
-    zIndex: 100,
+    zIndex: 50,
     boxSizing: 'border-box',
   },
   header: {
@@ -588,24 +544,9 @@ const styles = {
     backgroundColor: '#10b981',
     boxShadow: '0 0 6px #10b981',
   },
-  langBtn: {
-    width: '100%',
-    padding: '7px',
-    borderRadius: '6px',
-    border: '1px solid #334155',
-    background: '#1e293b',
-    color: '#38bdf8',
-    fontSize: '11px',
-    fontWeight: '700',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-  },
   logoutBtn: {
     width: '100%',
-    padding: '7px',
+    padding: '8px',
     borderRadius: '6px',
     border: '1px solid rgba(239, 68, 68, 0.3)',
     background: 'rgba(239, 68, 68, 0.08)',
