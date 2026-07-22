@@ -101,16 +101,46 @@ function useAcademyData(currentAcademyId) {
     const fetchPermittedEntities = async () => {
       setLoadingEntity(true);
       try {
-        // ✨ جلب حقل trial_ends_at و subscription_end_date معاً
-        const { data, error } = await supabase
-          .from('academies')
-          .select('id, name, slug, metadata, subscription_end_date, trial_ends_at, plan_tier');
+        const { data: { user } } = await supabase.auth.getUser();
+        let academiesList = [];
 
-        if (error) throw error;
+        // 1. محاولة جلب الأكاديميات المرتبطة بالمستخدم عبر جدول staff
+        if (user) {
+          const { data: staffData } = await supabase
+            .from('staff')
+            .select('academy_id, academies(*)')
+            .eq('user_id', user.id);
 
-        if (isMounted && data && data.length > 0) {
-          setUserEntities(data);
-          const active = data.find((item) => item.id === currentAcademyId) || data[0];
+          if (staffData && staffData.length > 0) {
+            academiesList = staffData.map(s => s.academies).filter(Boolean);
+          }
+        }
+
+        // 2. إذا لم يتم العثور عبر staff، جرب جلب الأكاديميات التي يمتلكها المستخدم (owner_id)
+        if (academiesList.length === 0 && user) {
+          const { data: ownedData } = await supabase
+            .from('academies')
+            .select('id, name, slug, metadata, subscription_end_date, trial_ends_at, plan_tier')
+            .eq('owner_id', user.id);
+
+          if (ownedData && ownedData.length > 0) {
+            academiesList = ownedData;
+          }
+        }
+
+        // 3. كحل احتياطي أخير لضمان عدم ظهور "لا توجد أكاديميات مسجلة"، جلب كافة الأكاديميات المتاحة
+        if (academiesList.length === 0) {
+          const { data: allData, error } = await supabase
+            .from('academies')
+            .select('id, name, slug, metadata, subscription_end_date, trial_ends_at, plan_tier');
+
+          if (error) throw error;
+          if (allData) academiesList = allData;
+        }
+
+        if (isMounted && academiesList.length > 0) {
+          setUserEntities(academiesList);
+          const active = academiesList.find((item) => item.id === currentAcademyId) || academiesList[0];
           setCurrentEntity(active);
 
           // ✨ دعم قراءة تاريخ نهاية التجربة أو نهاية الاشتراك
