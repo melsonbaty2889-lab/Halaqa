@@ -1,3 +1,4 @@
+/* src/context/AcademyContext.jsx */
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -6,10 +7,14 @@ const AcademyContext = createContext({});
 export const AcademyProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [academy, setAcademy] = useState(null); // ✨ إضافة حالة الأكاديمية هنا لحل الربط مع DataContext
   const [appState, setAppState] = useState('LOADING');
 
   const fetchUserStatus = async (currentUser) => {
     if (!currentUser) {
+      setUser(null);
+      setProfile(null);
+      setAcademy(null); // ✨ تصفير الأكاديمية عند الخروج
       setAppState('UNAUTHENTICATED');
       return;
     }
@@ -34,12 +39,14 @@ export const AcademyProvider = ({ children }) => {
 
       // 2. إذا كان الحساب هو السوبر أدمن العام للمنصة
       if (profData.role === 'super_admin') {
+        setAcademy(null);
         setAppState('SUPER_ADMIN');
         return;
       }
 
       // 3. الحماية المشتركة: إذا كان الحساب غير مفعل من الإدارة (لأي دور كان)
       if (profData.is_activated === false) {
+        setAcademy(null);
         setAppState('PENDING_APPROVAL');
         return;
       }
@@ -53,9 +60,11 @@ export const AcademyProvider = ({ children }) => {
           .maybeSingle(); // استخدام maybeSingle لتفادي أخطاء جلب عنصر وحيد
 
         if (acadData) {
+          setAcademy(acadData); // ✨ تخزين الأكاديمية هنا ليراها DataContext وسائر المكونات
           // إذا كانت الأكاديمية موجودة ونشطة يدخل، وإلا ينتظر التفعيل
           setAppState(acadData.is_active ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
         } else {
+          setAcademy(null);
           // أدمن مفعل ولكن لم ينشئ أكاديمية بعد
           setAppState('NO_ACADEMY');
         }
@@ -64,6 +73,7 @@ export const AcademyProvider = ({ children }) => {
 
       // 5. إذا كان الحساب مفعل ودوره (طالب، معلم، ولي أمر)
       if (['student', 'teacher', 'parent'].includes(profData.role)) {
+        // ملاحظة: إذا كان الطالب أو المعلم مرتبط بأكاديمية، يمكنك جلبها هنا إذا لزم الأمر، أو تركها FULLY_ACTIVE
         setAppState('FULLY_ACTIVE'); 
         return;
       }
@@ -91,8 +101,14 @@ export const AcademyProvider = ({ children }) => {
     <AcademyContext.Provider value={{ 
       user, 
       profile, 
+      academy, // ✨ إرسال الأكاديمية هنا لكي تعمل جميع سياقات البيانات (DataContext) بكفاءة
       appState, 
-      logout: () => supabase.auth.signOut(), 
+      logout: async () => {
+        setAcademy(null);
+        setUser(null);
+        setProfile(null);
+        await supabase.auth.signOut();
+      }, 
       refreshStatus: () => fetchUserStatus(user) 
     }}>
       {children}
