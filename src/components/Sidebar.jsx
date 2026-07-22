@@ -52,7 +52,7 @@ export function EnterpriseSidebar({
         year: 'numeric'
       }).format(currentTime);
     } catch {
-      return t('calendar.hijri', 'التقويم الهجري');
+      return t('calendar.hijri', isRtl ? 'التقويم الهجري' : 'Hijri Calendar');
     }
   }, [currentTime, isRtl, t]);
 
@@ -125,47 +125,47 @@ export function EnterpriseSidebar({
     }
   };
 
-  // المحاور والأزرار باستخدام t() من ملفات json
+  // المحاور والأزرار مع استخدام نصوص احتياطية متوافقة مع اللغة الحالية (isRtl)
   const globalNavigationPillars = useMemo(() => [
     {
-      pillarTitle: t('sidebar.pillars.liveOps', '1. مركز القيادة الحية | Live Operations Hub'),
+      pillarTitle: t('sidebar.pillars.liveOps', isRtl ? '1. مركز القيادة الحية' : '1. Live Operations Hub'),
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'dashboard', title: t('sidebar.nodes.dashboard', 'لوحة التحكم والأداء'), icon: '📊' },
-        { id: 'realtime-audit', title: t('sidebar.nodes.realtimeAudit', 'السجل الحي للأنشطة'), icon: '⚡' }
+        { id: 'dashboard', title: t('sidebar.nodes.dashboard', isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance'), icon: '📊' },
+        { id: 'realtime-audit', title: t('sidebar.nodes.realtimeAudit', isRtl ? 'السجل الحي للأنشطة' : 'Real-time Audit Log'), icon: '⚡' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.academicCore', '2. الشؤون القرآنية والأكاديمية | Academic Core'),
+      pillarTitle: t('sidebar.pillars.academicCore', isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic & Quranic Core'),
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
       nodes: [
-        { id: 'learner-directory', title: t('sidebar.nodes.learnerDirectory', 'إدارة الدارسين'), icon: '🎓' },
-        { id: 'faculty-reciters', title: t('sidebar.nodes.facultyReciters', 'الكادر والمقرئين'), icon: '🕌' },
-        { id: 'halaqas-sanad', title: t('sidebar.nodes.halaqasSanad', 'المقارئ والحلقات'), icon: '👥' },
-        { id: 'daily-recitation', title: t('sidebar.nodes.dailyRecitation', 'التسميع والتحضير اليومي'), icon: '📝' },
-        { id: 'curricula-diplomas', title: t('sidebar.nodes.curriculaDiplomas', 'المناهج والشهادات'), icon: '📜' }
+        { id: 'learner-directory', title: t('sidebar.nodes.learnerDirectory', isRtl ? 'إدارة الدارسين' : 'Learners Directory'), icon: '🎓' },
+        { id: 'faculty-reciters', title: t('sidebar.nodes.facultyReciters', isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters'), icon: '🕌' },
+        { id: 'halaqas-sanad', title: t('sidebar.nodes.halaqasSanad', isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad'), icon: '👥' },
+        { id: 'daily-recitation', title: t('sidebar.nodes.dailyRecitation', isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation Log'), icon: '📝' },
+        { id: 'curricula-diplomas', title: t('sidebar.nodes.curriculaDiplomas', isRtl ? 'المناهج والشهادات' : 'Curricula & Diplomas'), icon: '📜' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.engagement', '3. تفاعل الدارسين والأسر | Engagement Network'),
+      pillarTitle: t('sidebar.pillars.engagement', isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement Network'),
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'guardian-portal', title: t('sidebar.nodes.guardianPortal', 'شبكة أسر الدارسين'), icon: '🏠' },
-        { id: 'gamification-streaks', title: t('sidebar.nodes.gamificationStreaks', 'الإنجاز والحوافز'), icon: '🏆' },
-        { id: 'omnichannel-hub', title: t('sidebar.nodes.omnichannelHub', 'مركز التنبيهات الموحد'), icon: '🔔' }
+        { id: 'guardian-portal', title: t('sidebar.nodes.guardianPortal', isRtl ? 'شبكة أسر الدارسين' : 'Guardians Network'), icon: '🏠' },
+        { id: 'gamification-streaks', title: t('sidebar.nodes.gamificationStreaks', isRtl ? 'الإنجاز والحوافز' : 'Streaks & Rewards'), icon: '🏆' },
+        { id: 'omnichannel-hub', title: t('sidebar.nodes.omnichannelHub', isRtl ? 'مركز التنبيهات الموحد' : 'Notifications Hub'), icon: '🔔' }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.governance', '4. الخزينة والحوكمة | Treasury & Governance'),
+      pillarTitle: t('sidebar.pillars.governance', isRtl ? '4. الخزينة والحوكمة' : '4. Treasury & Governance'),
       allowedRoles: ['super_admin', 'admin', 'manager'],
       nodes: [
-        { id: 'billing-payments', title: t('sidebar.nodes.billingPayments', 'الخزينة والاشتراكات'), icon: '💳' },
-        { id: 'asset-management', title: t('sidebar.nodes.assetManagement', 'المستندات والأصول'), icon: '📁' },
-        { id: 'growth-referrals', title: t('sidebar.nodes.growthReferrals', 'برنامج النمو والإحالات'), icon: '🚀' },
-        { id: 'platform-governance', title: t('sidebar.nodes.platformGovernance', 'ضبط المنظومة'), icon: '⚙️' }
+        { id: 'billing-payments', title: t('sidebar.nodes.billingPayments', isRtl ? 'الخزينة والاشتراكات' : 'Billing & Subscriptions'), icon: '💳' },
+        { id: 'asset-management', title: t('sidebar.nodes.assetManagement', isRtl ? 'المستندات والأصول' : 'Documents & Assets'), icon: '📁' },
+        { id: 'growth-referrals', title: t('sidebar.nodes.growthReferrals', isRtl ? 'برنامج النمو والإحالات' : 'Growth & Referrals'), icon: '🚀' },
+        { id: 'platform-governance', title: t('sidebar.nodes.platformGovernance', isRtl ? 'ضبط المنظومة' : 'Platform Settings'), icon: '⚙️' }
       ]
     }
-  ], [t]);
+  ], [t, isRtl]);
 
   return (
     <aside style={{
@@ -189,12 +189,26 @@ export function EnterpriseSidebar({
       <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
-            {entityCustomLabel} {t('sidebar.current', 'الحالية')}
+            {entityCustomLabel} {t('sidebar.current', isRtl ? 'الحالية' : 'Current')}
           </span>
           <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #334155' }}>
-            {planTier || t('sidebar.proPlan', 'الباقة الاحترافية')}
+            {planTier ? t(`sidebar.plans.${planTier.toLowerCase()}`, planTier) : t('sidebar.proPlan', isRtl ? 'الباقة الاحترافية' : 'Pro Plan')}
           </span>
         </div>
+
+        {/* مكوّن محول الأكاديميات المخصص */}
+        {loadingEntity ? (
+          <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', padding: '8px 0' }}>
+            {t('common.loading', isRtl ? 'جاري التحميل...' : 'Loading...')}
+          </div>
+        ) : (
+          <AcademySwitcher
+            userEntities={userEntities}
+            currentEntity={currentEntity}
+            onSwitchAcademy={onSwitchAcademy}
+            t={t}
+          />
+        )}
 
         {/* 2. التاريخ والساعة */}
         <div style={{ 
@@ -235,7 +249,7 @@ export function EnterpriseSidebar({
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {t('sidebar.searchPlaceholder', '🔍 ابحث عن طلاب، حلقات...')}
+            {t('sidebar.searchPlaceholder', isRtl ? '🔍 ابحث عن طلاب، حلقات...' : '🔍 Search students, halaqas...')}
           </span>
           <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
             Ctrl K
@@ -243,12 +257,12 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 4. شريط أصل أيام الاشتراك */}
+      {/* 4. شريط صلاحية الاشتراك */}
       <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
-          <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', 'صلاحية النظام:')}</span>
+          <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', isRtl ? 'صلاحية النظام:' : 'System Validity:')}</span>
           <span style={{ color: '#10b981', fontWeight: '800' }}>
-            {t('sidebar.daysRemaining', 'متبقي {{days}} يوم', { days: subscriptionDaysLeft })}
+            {t('sidebar.daysRemaining', isRtl ? 'متبقي {{days}} يوم' : '{{days}} days left', { days: subscriptionDaysLeft })}
           </span>
         </div>
         <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
@@ -256,7 +270,7 @@ export function EnterpriseSidebar({
         </div>
       </div>
 
-      {/* 5. القوائم (تتحرك بالسكرول فقط في المنتصف) */}
+      {/* 5. القوائم (تتحرك بالسكرول في المنتصف) */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
         {globalNavigationPillars.map((pillar, pIdx) => {
           if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -325,7 +339,7 @@ export function EnterpriseSidebar({
             boxShadow: '0 0 6px #10b981'
           }} />
           <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-            {t('sidebar.syncStatus', 'ربط سحابي متزامن')}
+            {t('sidebar.syncStatus', isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized')}
           </span>
         </div>
 
@@ -349,7 +363,7 @@ export function EnterpriseSidebar({
           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
         >
-          {t('sidebar.logoutBtn', '🚪 إنهاء الجلسة وتسجيل الخروج')}
+          {t('sidebar.logoutBtn', isRtl ? '🚪 إنهاء الجلسة وتسجيل الخروج' : '🚪 End Session & Logout')}
         </button>
       </div>
 
