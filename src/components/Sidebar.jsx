@@ -196,39 +196,6 @@ export function EnterpriseSidebar({
           </span>
         </div>
 
-        {loadingEntity ? (
-          <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
-            {t('common.loading', 'جاري التحميل...')}
-          </div>
-        ) : userEntities.length > 1 ? (
-          <select
-            value={currentEntity?.id || ''}
-            onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px 10px',
-              borderRadius: '8px',
-              backgroundColor: '#1e293b',
-              color: '#ffffff',
-              border: '1px solid #334155',
-              fontSize: '13px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              outline: 'none'
-            }}
-          >
-            {userEntities.map((entity) => (
-              <option key={entity.id} value={entity.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                {entity.name}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whitespace: 'nowrap' }}>
-            {currentEntity?.name || t('sidebar.defaultEntityName', 'الأكاديمية الرقمية')}
-          </div>
-        )}
-
         {/* 2. التاريخ والساعة */}
         <div style={{ 
           marginTop: '12px', 
