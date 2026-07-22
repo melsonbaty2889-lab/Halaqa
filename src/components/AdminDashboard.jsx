@@ -47,9 +47,17 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
     if (processingId) return;
     setProcessingId(`activate-${id}`);
     try {
+      // 1. تحديث حالة الأكاديمية
       const { error } = await supabase.from('academies').update({ is_active: true }).eq('id', id);
       if (error) throw error;
+
       const activated = pendingAcademies.find(a => a.id === id);
+
+      // ✨ 2. تحديث بروفايل المالك (is_activated = true) ليتجاوز شاشة المراجعة تلقائياً
+      if (activated?.owner_id) {
+        await supabase.from('profiles').update({ is_activated: true }).eq('id', activated.owner_id);
+      }
+
       setPendingAcademies(prev => prev.filter(a => a.id !== id));
       if (activated) setActiveAcademies(prev => [{ ...activated, is_active: true }, ...prev]);
     } catch (e) { alert(e.message); }
@@ -60,9 +68,17 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
     if (processingId || !window.confirm(isRtl ? 'هل أنت متأكد من إيقاف تفعيل وحظر هذه الأكاديمية؟' : 'Deactivate academy?')) return;
     setProcessingId(`deactivate-${id}`);
     try {
+      // 1. إيقاف الأكاديمية
       const { error } = await supabase.from('academies').update({ is_active: false }).eq('id', id);
       if (error) throw error;
+
       const deactivated = activeAcademies.find(a => a.id === id);
+
+      // ✨ 2. إيقاف بروفايل المالك أيضاً تزامنياً
+      if (deactivated?.owner_id) {
+        await supabase.from('profiles').update({ is_activated: false }).eq('id', deactivated.owner_id);
+      }
+
       setActiveAcademies(prev => prev.filter(a => a.id !== id));
       if (deactivated) setPendingAcademies(prev => [{ ...deactivated, is_active: false }, ...prev]);
     } catch (e) { alert(e.message); }
