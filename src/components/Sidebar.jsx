@@ -2,15 +2,53 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import AcademySwitcher from './AcademySwitcher';
 
 // ==========================================
-// 1. CUSTOM HOOKS (منطق المستشعرات والبيانات)
+// 1. ACADEMY SWITCHER COMPONENT (مكوّن محوّل الأكاديميات التفاعلي)
 // ==========================================
+export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcademy, isRtl, t }) {
+  if (!userEntities || userEntities.length === 0) {
+    return (
+      <div style={styles.switcherTextFallback}>
+        {isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy'}
+      </div>
+    );
+  }
 
-/**
- * Hook لمتابعة الوقت والتاريخ (هجري / ميلادي)
- */
+  // الحصول على اسم الكيان الحالي مترجماً
+  const getLocalizedEntityName = (entity) => {
+    if (!entity) return '';
+    if (!isRtl && entity.metadata?.name_en) return entity.metadata.name_en;
+    return entity.name || entity.metadata?.name_ar || (isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy');
+  };
+
+  return (
+    <div style={styles.switcherWrapper}>
+      <select
+        value={currentEntity?.id || ''}
+        onChange={(e) => {
+          const selectedId = e.target.value;
+          const selectedEntity = userEntities.find((item) => item.id === selectedId);
+          if (selectedEntity && onSwitchAcademy) {
+            onSwitchAcademy(selectedEntity);
+          }
+        }}
+        style={styles.selectDropdown}
+      >
+        {userEntities.map((entity) => (
+          <option key={entity.id} value={entity.id} style={styles.selectOption}>
+            🏛️ {getLocalizedEntityName(entity)}
+          </option>
+        ))}
+      </select>
+      <span style={styles.dropdownArrow}>▼</span>
+    </div>
+  );
+}
+
+// ==========================================
+// 2. CUSTOM HOOKS
+// ==========================================
 function useLiveClock(isRtl, t) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -49,15 +87,11 @@ function useLiveClock(isRtl, t) {
   return { formattedTime, hijriDate, gregorianDate };
 }
 
-/**
- * Hook لجلب وتحديث بيانات الأكاديمية والاشتراكات من Supabase
- */
 function useAcademyData(currentAcademyId) {
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
   const [loadingEntity, setLoadingEntity] = useState(true);
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
-  const [planTier, setPlanTier] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -75,8 +109,6 @@ function useAcademyData(currentAcademyId) {
           setUserEntities(data);
           const active = data.find((item) => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
-
-          if (active.plan_tier) setPlanTier(active.plan_tier);
 
           if (active.subscription_end_date) {
             const endDate = new Date(active.subscription_end_date);
@@ -98,12 +130,9 @@ function useAcademyData(currentAcademyId) {
     };
   }, [currentAcademyId]);
 
-  return { userEntities, currentEntity, loadingEntity, subscriptionDaysLeft, planTier };
+  return { userEntities, currentEntity, setCurrentEntity, loadingEntity, subscriptionDaysLeft };
 }
 
-/**
- * Hook لإعداد شجرة الملاحة والمحاور
- */
 function useNavigationConfig(t, isRtl) {
   return useMemo(
     () => [
@@ -151,94 +180,8 @@ function useNavigationConfig(t, isRtl) {
 }
 
 // ==========================================
-// 2. SUB-COMPONENTS (المكونات الفرعية)
+// 3. MAIN ENTERPRISE SIDEBAR COMPONENT
 // ==========================================
-
-const ClockCard = ({ hijriDate, gregorianDate, formattedTime }) => (
-  <div style={styles.clockCard}>
-    <div>
-      <div style={styles.hijriText}>{hijriDate}</div>
-      <div style={styles.gregorianText}>{gregorianDate}</div>
-    </div>
-    <div style={styles.timeText}>{formattedTime}</div>
-  </div>
-);
-
-const SubscriptionProgress = ({ subscriptionDaysLeft, t, isRtl }) => {
-  const percentage = Math.min((subscriptionDaysLeft / 30) * 100, 100);
-  return (
-    <div style={styles.subContainer}>
-      <div style={styles.subHeader}>
-        <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', isRtl ? 'صلاحية النظام:' : 'System Validity:')}</span>
-        <span style={{ color: '#10b981', fontWeight: '800' }}>
-          {t('sidebar.daysRemaining', isRtl ? 'متبقي {{days}} يوم' : '{{days}} days left', { days: subscriptionDaysLeft })}
-        </span>
-      </div>
-      <div style={styles.subTrack}>
-        <div style={{ ...styles.subBar, width: `${percentage}%` }} />
-      </div>
-    </div>
-  );
-};
-
-const NavItemButton = ({ node, isActive, isRtl, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const buttonStyle = {
-    ...styles.navButton,
-    background: isActive
-      ? 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)'
-      : isHovered
-      ? '#1e293b'
-      : 'transparent',
-    color: isActive ? '#0f172a' : '#cbd5e1',
-    fontWeight: isActive ? '800' : '600',
-    textAlign: isRtl ? 'right' : 'left',
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      style={buttonStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <span style={{ fontSize: '15px' }}>{node.icon}</span>
-      <span>{node.title}</span>
-    </button>
-  );
-};
-
-const SidebarFooter = ({ onLogout, t, isRtl }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div style={styles.footerContainer}>
-      <div style={styles.syncStatus}>
-        <span style={styles.statusDot} />
-        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-          {t('sidebar.syncStatus', isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized')}
-        </span>
-      </div>
-      <button
-        onClick={onLogout}
-        style={{
-          ...styles.logoutBtn,
-          background: isHovered ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.08)',
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {t('sidebar.logoutBtn', isRtl ? '🚪 إنهاء الجلسة وتسجيل الخروج' : '🚪 End Session & Logout')}
-      </button>
-    </div>
-  );
-};
-
-// ==========================================
-// 3. MAIN COMPONENT (المكون الرئيسي)
-// ==========================================
-
 export function EnterpriseSidebar({
   currentAcademyId,
   currentUserRole = 'admin',
@@ -251,21 +194,34 @@ export function EnterpriseSidebar({
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
-  // Custom Hooks
   const { formattedTime, hijriDate, gregorianDate } = useLiveClock(isRtl, t);
-  const { userEntities, currentEntity, loadingEntity, subscriptionDaysLeft, planTier } =
+  const { userEntities, currentEntity, setCurrentEntity, loadingEntity, subscriptionDaysLeft } =
     useAcademyData(currentAcademyId);
   const navigationPillars = useNavigationConfig(t, isRtl);
 
-  // المسمى المخصص للكيان
-  const entityCustomLabel = useMemo(() => {
-    if (isRtl) {
-      return currentEntity?.metadata?.entity_label_ar || t('sidebar.academy', 'الأكاديمية');
-    }
-    return currentEntity?.metadata?.entity_label_en || t('sidebar.academy', 'Academy');
-  }, [currentEntity, isRtl, t]);
+  // 1. صياغة النص العُلوي "الأكاديمية الحالية" / "Current Academy" بشكل سليم لغوياً
+  const currentEntityHeaderLabel = useMemo(() => {
+    const label = currentEntity?.metadata?.entity_label
+      || (isRtl ? 'الأكاديمية' : 'Academy');
+    return isRtl ? `${label} الحالية` : `Current ${label}`;
+  }, [currentEntity, isRtl]);
 
-  // تسجيل الخروج
+  // 2. تحديد اسم الباقة ديناميكياً مع الترجمة
+  const localizedPlanTier = useMemo(() => {
+    const rawTier = (currentEntity?.plan_tier || 'pro').toLowerCase();
+    const plansMap = {
+      pro: isRtl ? 'الباقة الاحترافية' : 'Pro Plan',
+      basic: isRtl ? 'الباقة الأساسية' : 'Basic Plan',
+      enterprise: isRtl ? 'باقة المؤسسات' : 'Enterprise Plan',
+    };
+    return plansMap[rawTier] || rawTier;
+  }, [currentEntity, isRtl]);
+
+  const handleAcademySwitch = (selectedEntity) => {
+    setCurrentEntity(selectedEntity);
+    if (onSwitchAcademy) onSwitchAcademy(selectedEntity);
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -277,28 +233,22 @@ export function EnterpriseSidebar({
     }
   };
 
-  const containerStyle = {
-    ...styles.aside,
-    fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
-    direction: isRtl ? 'rtl' : 'ltr',
-  };
-
   return (
-    <aside style={containerStyle}>
-      {/* 1. Header Area */}
+    <aside
+      style={{
+        ...styles.aside,
+        fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
+        direction: isRtl ? 'rtl' : 'ltr',
+      }}
+    >
+      {/* Header */}
       <div style={styles.header}>
         <div style={styles.entityMeta}>
-          <span style={styles.entityLabel}>
-            {entityCustomLabel} {t('sidebar.current', isRtl ? 'الحالية' : 'Current')}
-          </span>
-          <span style={styles.planBadge}>
-            {planTier
-              ? t(`sidebar.plans.${planTier.toLowerCase()}`, planTier)
-              : t('sidebar.proPlan', isRtl ? 'الباقة الاحترافية' : 'Pro Plan')}
-          </span>
+          <span style={styles.entityLabel}>{currentEntityHeaderLabel}</span>
+          <span style={styles.planBadge}>{localizedPlanTier}</span>
         </div>
 
-        {/* Academy Switcher */}
+        {/* محول الأكاديميات الديناميكي */}
         {loadingEntity ? (
           <div style={styles.loadingText}>
             {t('common.loading', isRtl ? 'جاري التحميل...' : 'Loading...')}
@@ -307,19 +257,22 @@ export function EnterpriseSidebar({
           <AcademySwitcher
             userEntities={userEntities}
             currentEntity={currentEntity}
-            onSwitchAcademy={onSwitchAcademy}
+            onSwitchAcademy={handleAcademySwitch}
+            isRtl={isRtl}
             t={t}
           />
         )}
 
-        {/* DateTime Widget */}
-        <ClockCard
-          hijriDate={hijriDate}
-          gregorianDate={gregorianDate}
-          formattedTime={formattedTime}
-        />
+        {/* الساعة والتقويم */}
+        <div style={styles.clockCard}>
+          <div>
+            <div style={styles.hijriText}>{hijriDate}</div>
+            <div style={styles.gregorianText}>{gregorianDate}</div>
+          </div>
+          <div style={styles.timeText}>{formattedTime}</div>
+        </div>
 
-        {/* Search Trigger */}
+        {/* زر البحث */}
         <button onClick={onOpenSearch} style={styles.searchBtn}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {t('sidebar.searchPlaceholder', isRtl ? '🔍 ابحث عن طلاب، حلقات...' : '🔍 Search students, halaqas...')}
@@ -328,14 +281,25 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 2. Subscription Bar */}
-      <SubscriptionProgress
-        subscriptionDaysLeft={subscriptionDaysLeft}
-        t={t}
-        isRtl={isRtl}
-      />
+      {/* شريط صلاحية الاشتراك */}
+      <div style={styles.subContainer}>
+        <div style={styles.subHeader}>
+          <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', isRtl ? 'صلاحية النظام:' : 'System Validity:')}</span>
+          <span style={{ color: '#10b981', fontWeight: '800' }}>
+            {t('sidebar.daysRemaining', isRtl ? 'متبقي {{days}} يوم' : '{{days}} days left', { days: subscriptionDaysLeft })}
+          </span>
+        </div>
+        <div style={styles.subTrack}>
+          <div
+            style={{
+              ...styles.subBar,
+              width: `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%`,
+            }}
+          />
+        </div>
+      </div>
 
-      {/* 3. Navigation Links (Scrollable) */}
+      {/* قائمة التصفح */}
       <div style={styles.scrollArea}>
         {navigationPillars.map((pillar, pIdx) => {
           if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -344,31 +308,52 @@ export function EnterpriseSidebar({
             <div key={pIdx} style={{ marginBottom: '16px' }}>
               <div style={styles.pillarTitle}>{pillar.pillarTitle}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {pillar.nodes.map((node) => (
-                  <NavItemButton
-                    key={node.id}
-                    node={node}
-                    isActive={activeSection === node.id}
-                    isRtl={isRtl}
-                    onClick={() => setActiveSection && setActiveSection(node.id)}
-                  />
-                ))}
+                {pillar.nodes.map((node) => {
+                  const isActive = activeSection === node.id;
+                  return (
+                    <button
+                      key={node.id}
+                      onClick={() => setActiveSection && setActiveSection(node.id)}
+                      style={{
+                        ...styles.navButton,
+                        background: isActive
+                          ? 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)'
+                          : 'transparent',
+                        color: isActive ? '#0f172a' : '#cbd5e1',
+                        fontWeight: isActive ? '800' : '600',
+                        textAlign: isRtl ? 'right' : 'left',
+                      }}
+                    >
+                      <span style={{ fontSize: '15px' }}>{node.icon}</span>
+                      <span>{node.title}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 4. Footer Area */}
-      <SidebarFooter onLogout={handleLogout} t={t} isRtl={isRtl} />
+      {/* Footer */}
+      <div style={styles.footerContainer}>
+        <div style={styles.syncStatus}>
+          <span style={styles.statusDot} />
+          <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
+            {t('sidebar.syncStatus', isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized')}
+          </span>
+        </div>
+        <button onClick={handleLogout} style={styles.logoutBtn}>
+          {t('sidebar.logoutBtn', isRtl ? '🚪 إنهاء الجلسة وتسجيل الخروج' : '🚪 End Session & Logout')}
+        </button>
+      </div>
     </aside>
   );
 }
 
 // ==========================================
-// 4. STYLES DICTIONARY (معزولة للنظافة)
+// 4. STYLES (تنسيق الأنماط)
 // ==========================================
-
 const styles = {
   aside: {
     width: '300px',
@@ -409,6 +394,45 @@ const styles = {
     borderRadius: '4px',
     fontWeight: 'bold',
     border: '1px solid #334155',
+  },
+  switcherWrapper: {
+    position: 'relative',
+    width: '100%',
+    marginTop: '4px',
+  },
+  selectDropdown: {
+    width: '100%',
+    padding: '8px 12px',
+    backgroundColor: '#1e293b',
+    color: '#38bdf8',
+    border: '1px solid #334155',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    outline: 'none',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+  },
+  selectOption: {
+    backgroundColor: '#0f172a',
+    color: '#f8fafc',
+    padding: '8px',
+  },
+  dropdownArrow: {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    insetInlineEnd: '10px',
+    fontSize: '10px',
+    color: '#38bdf8',
+    pointerEvents: 'none',
+  },
+  switcherTextFallback: {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    color: '#38bdf8',
+    padding: '6px 0',
   },
   loadingText: {
     fontSize: '13px',
@@ -521,6 +545,7 @@ const styles = {
     padding: '8px',
     borderRadius: '6px',
     border: '1px solid rgba(239, 68, 68, 0.3)',
+    background: 'rgba(239, 68, 68, 0.08)',
     color: '#fca5a5',
     fontSize: '11px',
     fontWeight: '700',
