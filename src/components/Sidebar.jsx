@@ -15,7 +15,6 @@ export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcad
     );
   }
 
-  // اسم الأكاديمية حسب اللغة المختارة من قاعدة البيانات
   const getLocalizedEntityName = (entity) => {
     if (!entity) return '';
     if (!isRtl && entity.metadata?.name_en) {
@@ -49,7 +48,7 @@ export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcad
 }
 
 // ==========================================
-// 2. HOOKS (جلب البيانات الحقيقية من Supabase)
+// 2. HOOKS (الساعة والبيانات)
 // ==========================================
 function useLiveClock(isRtl, t) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -104,7 +103,6 @@ function useAcademyData(currentAcademyId) {
         const { data: { user } } = await supabase.auth.getUser();
         let academiesList = [];
 
-        // 1. محاولة جلب الأكاديميات المرتبطة بالمستخدم عبر جدول staff
         if (user) {
           const { data: staffData } = await supabase
             .from('staff')
@@ -116,7 +114,6 @@ function useAcademyData(currentAcademyId) {
           }
         }
 
-        // 2. إذا لم يتم العثور عبر staff، جرب جلب الأكاديميات التي يمتلكها المستخدم (owner_id)
         if (academiesList.length === 0 && user) {
           const { data: ownedData } = await supabase
             .from('academies')
@@ -128,7 +125,6 @@ function useAcademyData(currentAcademyId) {
           }
         }
 
-        // 3. كحل احتياطي أخير لضمان عدم ظهور "لا توجد أكاديميات مسجلة"، جلب كافة الأكاديميات المتاحة
         if (academiesList.length === 0) {
           const { data: allData, error } = await supabase
             .from('academies')
@@ -143,7 +139,6 @@ function useAcademyData(currentAcademyId) {
           const active = academiesList.find((item) => item.id === currentAcademyId) || academiesList[0];
           setCurrentEntity(active);
 
-          // ✨ دعم قراءة تاريخ نهاية التجربة أو نهاية الاشتراك
           const expiryDate = active.trial_ends_at || active.subscription_end_date;
           if (expiryDate) {
             const endDate = new Date(expiryDate);
@@ -179,37 +174,32 @@ function useNavigationConfig(t, isRtl) {
         allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
         nodes: [
           { id: 'dashboard', title: t('sidebar.nodes.dashboard', isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance'), icon: '📊' },
-          { id: 'realtime-audit', title: t('sidebar.nodes.realtimeAudit', isRtl ? 'السجل الحي للأنشطة' : 'Real-time Audit Log'), icon: '⚡' },
+          { id: 'reports', title: t('sidebar.nodes.reports', isRtl ? 'التقارير والإحصاءات' : 'Reports & Analytics'), icon: '📈' },
         ],
       },
       {
         pillarTitle: t('sidebar.pillars.academicCore', isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic & Quranic Core'),
         allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
         nodes: [
-          { id: 'learner-directory', title: t('sidebar.nodes.learnerDirectory', isRtl ? 'إدارة الدارسين' : 'Learners Directory'), icon: '🎓' },
-          { id: 'faculty-reciters', title: t('sidebar.nodes.facultyReciters', isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters'), icon: '🕌' },
-          { id: 'halaqas-sanad', title: t('sidebar.nodes.halaqasSanad', isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad'), icon: '👥' },
-          { id: 'daily-recitation', title: t('sidebar.nodes.dailyRecitation', isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation Log'), icon: '📝' },
-          { id: 'curricula-diplomas', title: t('sidebar.nodes.curriculaDiplomas', isRtl ? 'المناهج والشهادات' : 'Curricula & Diplomas'), icon: '📜' },
+          { id: 'students', title: t('sidebar.nodes.learnerDirectory', isRtl ? 'إدارة الدارسين' : 'Learners Directory'), icon: '🎓' },
+          { id: 'teachers', title: t('sidebar.nodes.facultyReciters', isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters'), icon: '🕌' },
+          { id: 'halaqas', title: t('sidebar.nodes.halaqasSanad', isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad'), icon: '👥' },
+          { id: 'attendance', title: t('sidebar.nodes.dailyRecitation', isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation Log'), icon: '📝' },
+          { id: 'exams', title: t('sidebar.nodes.curriculaDiplomas', isRtl ? 'الاختبارات والشهادات' : 'Exams & Diplomas'), icon: '📜' },
         ],
       },
       {
         pillarTitle: t('sidebar.pillars.engagement', isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement Network'),
         allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
         nodes: [
-          { id: 'guardian-portal', title: t('sidebar.nodes.guardianPortal', isRtl ? 'شبكة أسر الدارسين' : 'Guardians Network'), icon: '🏠' },
-          { id: 'gamification-streaks', title: t('sidebar.nodes.gamificationStreaks', isRtl ? 'الإنجاز والحوافز' : 'Streaks & Rewards'), icon: '🏆' },
-          { id: 'omnichannel-hub', title: t('sidebar.nodes.omnichannelHub', isRtl ? 'مركز التنبيهات الموحد' : 'Notifications Hub'), icon: '🔔' },
+          { id: 'payments', title: t('sidebar.nodes.billingPayments', isRtl ? 'الخزينة والاشتراكات' : 'Billing & Subscriptions'), icon: '💳' },
         ],
       },
       {
         pillarTitle: t('sidebar.pillars.governance', isRtl ? '4. الخزينة والحوكمة' : '4. Treasury & Governance'),
         allowedRoles: ['super_admin', 'admin', 'manager'],
         nodes: [
-          { id: 'billing-payments', title: t('sidebar.nodes.billingPayments', isRtl ? 'الخزينة والاشتراكات' : 'Billing & Subscriptions'), icon: '💳' },
-          { id: 'asset-management', title: t('sidebar.nodes.assetManagement', isRtl ? 'المستندات والأصول' : 'Documents & Assets'), icon: '📁' },
-          { id: 'growth-referrals', title: t('sidebar.nodes.growthReferrals', isRtl ? 'برنامج النمو والإحالات' : 'Growth & Referrals'), icon: '🚀' },
-          { id: 'platform-governance', title: t('sidebar.nodes.platformGovernance', isRtl ? 'ضبط المنظومة' : 'Platform Settings'), icon: '⚙️' },
+          { id: 'settings', title: t('sidebar.nodes.platformGovernance', isRtl ? 'ضبط المنظومة والأعدادات' : 'Platform Settings'), icon: '⚙️' },
         ],
       },
     ],
@@ -218,14 +208,14 @@ function useNavigationConfig(t, isRtl) {
 }
 
 // ==========================================
-// 3. MAIN COMPONENT
+// 3. MAIN COMPONENT (متوافق تماماً مع MainApp)
 // ==========================================
 export function EnterpriseSidebar({
   currentAcademyId,
   currentUserRole = 'admin',
-  activeSection = 'dashboard',
-  setActiveSection,
-  onOpenSearch,
+  activeTab,             // 👈 متوافق مع MainApp
+  setActiveTab,         // 👈 متوافق مع MainApp
+  onOpenSearch,         // 👈 فتح نافذة البحث
   onSwitchAcademy,
 }) {
   const { t, i18n } = useTranslation();
@@ -307,7 +297,7 @@ export function EnterpriseSidebar({
           <div style={styles.timeText}>{formattedTime}</div>
         </div>
 
-        {/* زر البحث */}
+        {/* زر البحث الفوري */}
         <button onClick={onOpenSearch} style={styles.searchBtn}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {t('sidebar.searchPlaceholder', isRtl ? '🔍 ابحث عن طلاب، حلقات...' : '🔍 Search students, halaqas...')}
@@ -344,11 +334,11 @@ export function EnterpriseSidebar({
               <div style={styles.pillarTitle}>{pillar.pillarTitle}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {pillar.nodes.map((node) => {
-                  const isActive = activeSection === node.id;
+                  const isActive = activeTab === node.id;
                   return (
                     <button
                       key={node.id}
-                      onClick={() => setActiveSection && setActiveSection(node.id)}
+                      onClick={() => setActiveTab && setActiveTab(node.id)}
                       style={{
                         ...styles.navButton,
                         background: isActive
