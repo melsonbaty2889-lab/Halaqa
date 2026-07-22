@@ -101,9 +101,10 @@ function useAcademyData(currentAcademyId) {
     const fetchPermittedEntities = async () => {
       setLoadingEntity(true);
       try {
+        // ✨ جلب حقل trial_ends_at و subscription_end_date معاً
         const { data, error } = await supabase
           .from('academies')
-          .select('id, name, slug, metadata, subscription_end_date, plan_tier');
+          .select('id, name, slug, metadata, subscription_end_date, trial_ends_at, plan_tier');
 
         if (error) throw error;
 
@@ -112,11 +113,15 @@ function useAcademyData(currentAcademyId) {
           const active = data.find((item) => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
 
-          if (active.subscription_end_date) {
-            const endDate = new Date(active.subscription_end_date);
+          // ✨ دعم قراءة تاريخ نهاية التجربة أو نهاية الاشتراك
+          const expiryDate = active.trial_ends_at || active.subscription_end_date;
+          if (expiryDate) {
+            const endDate = new Date(expiryDate);
             const diffTime = endDate.getTime() - new Date().getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+          } else {
+            setSubscriptionDaysLeft(0);
           }
         } else if (isMounted) {
           setUserEntities([]);
@@ -202,13 +207,11 @@ export function EnterpriseSidebar({
     useAcademyData(currentAcademyId);
   const navigationPillars = useNavigationConfig(t, isRtl);
 
-  // 1. إصلاح الجملة بالإنجليزية والعربية ("Current Academy" / "الأكاديمية الحالية")
   const currentEntityHeaderLabel = useMemo(() => {
     const label = currentEntity?.metadata?.entity_label || (isRtl ? 'الأكاديمية' : 'Academy');
     return isRtl ? `${label} الحالية` : `Current ${label}`;
   }, [currentEntity, isRtl]);
 
-  // 2. الباقة الديناميكية القادمة مباشرة من Supabase (plan_tier)
   const localizedPlanTier = useMemo(() => {
     if (!currentEntity?.plan_tier) return '';
     const rawTier = currentEntity.plan_tier.toLowerCase();
@@ -251,7 +254,6 @@ export function EnterpriseSidebar({
           {localizedPlanTier && <span style={styles.planBadge}>{localizedPlanTier}</span>}
         </div>
 
-        {/* محول الأكاديميات الحقيقي */}
         {loadingEntity ? (
           <div style={styles.loadingText}>
             {t('common.loading', isRtl ? 'جاري التحميل...' : 'Loading...')}
