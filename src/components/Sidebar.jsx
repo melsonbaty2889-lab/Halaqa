@@ -4,22 +4,24 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
 // ==========================================
-// 1. ACADEMY SWITCHER COMPONENT (مكوّن محوّل الأكاديميات التفاعلي)
+// 1. ACADEMY SWITCHER (محول الأكاديميات الديناميكي)
 // ==========================================
 export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcademy, isRtl, t }) {
   if (!userEntities || userEntities.length === 0) {
     return (
-      <div style={styles.switcherTextFallback}>
-        {isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy'}
+      <div style={styles.noEntitiesText}>
+        {t('sidebar.noAcademies', isRtl ? 'لا توجد أكاديميات مسجلة' : 'No Academies Found')}
       </div>
     );
   }
 
-  // الحصول على اسم الكيان الحالي مترجماً
+  // اسم الأكاديمية حسب اللغة المختارة من قاعدة البيانات
   const getLocalizedEntityName = (entity) => {
     if (!entity) return '';
-    if (!isRtl && entity.metadata?.name_en) return entity.metadata.name_en;
-    return entity.name || entity.metadata?.name_ar || (isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy');
+    if (!isRtl && entity.metadata?.name_en) {
+      return entity.metadata.name_en;
+    }
+    return entity.name || entity.metadata?.name_ar || '';
   };
 
   return (
@@ -47,7 +49,7 @@ export function AcademySwitcher({ userEntities = [], currentEntity, onSwitchAcad
 }
 
 // ==========================================
-// 2. CUSTOM HOOKS
+// 2. HOOKS (جلب البيانات الحقيقية من Supabase)
 // ==========================================
 function useLiveClock(isRtl, t) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -91,7 +93,7 @@ function useAcademyData(currentAcademyId) {
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
   const [loadingEntity, setLoadingEntity] = useState(true);
-  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
+  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,7 +107,7 @@ function useAcademyData(currentAcademyId) {
 
         if (error) throw error;
 
-        if (isMounted && data?.length > 0) {
+        if (isMounted && data && data.length > 0) {
           setUserEntities(data);
           const active = data.find((item) => item.id === currentAcademyId) || data[0];
           setCurrentEntity(active);
@@ -116,18 +118,19 @@ function useAcademyData(currentAcademyId) {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
           }
+        } else if (isMounted) {
+          setUserEntities([]);
+          setCurrentEntity(null);
         }
       } catch (err) {
-        console.error('Error fetching entities:', err);
+        console.error('Supabase Fetch Error:', err);
       } finally {
         if (isMounted) setLoadingEntity(false);
       }
     };
 
     fetchPermittedEntities();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [currentAcademyId]);
 
   return { userEntities, currentEntity, setCurrentEntity, loadingEntity, subscriptionDaysLeft };
@@ -180,7 +183,7 @@ function useNavigationConfig(t, isRtl) {
 }
 
 // ==========================================
-// 3. MAIN ENTERPRISE SIDEBAR COMPONENT
+// 3. MAIN COMPONENT
 // ==========================================
 export function EnterpriseSidebar({
   currentAcademyId,
@@ -199,22 +202,22 @@ export function EnterpriseSidebar({
     useAcademyData(currentAcademyId);
   const navigationPillars = useNavigationConfig(t, isRtl);
 
-  // 1. صياغة النص العُلوي "الأكاديمية الحالية" / "Current Academy" بشكل سليم لغوياً
+  // 1. إصلاح الجملة بالإنجليزية والعربية ("Current Academy" / "الأكاديمية الحالية")
   const currentEntityHeaderLabel = useMemo(() => {
-    const label = currentEntity?.metadata?.entity_label
-      || (isRtl ? 'الأكاديمية' : 'Academy');
+    const label = currentEntity?.metadata?.entity_label || (isRtl ? 'الأكاديمية' : 'Academy');
     return isRtl ? `${label} الحالية` : `Current ${label}`;
   }, [currentEntity, isRtl]);
 
-  // 2. تحديد اسم الباقة ديناميكياً مع الترجمة
+  // 2. الباقة الديناميكية القادمة مباشرة من Supabase (plan_tier)
   const localizedPlanTier = useMemo(() => {
-    const rawTier = (currentEntity?.plan_tier || 'pro').toLowerCase();
+    if (!currentEntity?.plan_tier) return '';
+    const rawTier = currentEntity.plan_tier.toLowerCase();
     const plansMap = {
       pro: isRtl ? 'الباقة الاحترافية' : 'Pro Plan',
       basic: isRtl ? 'الباقة الأساسية' : 'Basic Plan',
       enterprise: isRtl ? 'باقة المؤسسات' : 'Enterprise Plan',
     };
-    return plansMap[rawTier] || rawTier;
+    return plansMap[rawTier] || currentEntity.plan_tier;
   }, [currentEntity, isRtl]);
 
   const handleAcademySwitch = (selectedEntity) => {
@@ -245,10 +248,10 @@ export function EnterpriseSidebar({
       <div style={styles.header}>
         <div style={styles.entityMeta}>
           <span style={styles.entityLabel}>{currentEntityHeaderLabel}</span>
-          <span style={styles.planBadge}>{localizedPlanTier}</span>
+          {localizedPlanTier && <span style={styles.planBadge}>{localizedPlanTier}</span>}
         </div>
 
-        {/* محول الأكاديميات الديناميكي */}
+        {/* محول الأكاديميات الحقيقي */}
         {loadingEntity ? (
           <div style={styles.loadingText}>
             {t('common.loading', isRtl ? 'جاري التحميل...' : 'Loading...')}
@@ -263,7 +266,7 @@ export function EnterpriseSidebar({
           />
         )}
 
-        {/* الساعة والتقويم */}
+        {/* الوقت والتاريخ */}
         <div style={styles.clockCard}>
           <div>
             <div style={styles.hijriText}>{hijriDate}</div>
@@ -281,7 +284,7 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* شريط صلاحية الاشتراك */}
+      {/* صلاحية النظام */}
       <div style={styles.subContainer}>
         <div style={styles.subHeader}>
           <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', isRtl ? 'صلاحية النظام:' : 'System Validity:')}</span>
@@ -299,7 +302,7 @@ export function EnterpriseSidebar({
         </div>
       </div>
 
-      {/* قائمة التصفح */}
+      {/* روابط القائمة */}
       <div style={styles.scrollArea}>
         {navigationPillars.map((pillar, pIdx) => {
           if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -352,7 +355,7 @@ export function EnterpriseSidebar({
 }
 
 // ==========================================
-// 4. STYLES (تنسيق الأنماط)
+// 4. STYLES
 // ==========================================
 const styles = {
   aside: {
@@ -428,10 +431,9 @@ const styles = {
     color: '#38bdf8',
     pointerEvents: 'none',
   },
-  switcherTextFallback: {
-    fontSize: '14px',
-    fontWeight: 'bold',
-    color: '#38bdf8',
+  noEntitiesText: {
+    fontSize: '12px',
+    color: '#94a3b8',
     padding: '6px 0',
   },
   loadingText: {
