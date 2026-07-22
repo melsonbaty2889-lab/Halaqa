@@ -1,4 +1,5 @@
 /* src/components/Sidebar.jsx */
+import AcademySwitcher from './AcademySwitcher';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
