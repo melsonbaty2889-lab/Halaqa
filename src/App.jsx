@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import { useAcademy } from './context/AcademyContext';
-import { FaSpinner, FaClock, FaSignOutAlt, FaLock, FaWifi, FaExclamationTriangle } from 'react-icons/fa';
+import { FaSpinner, FaClock, FaSignOutAlt, FaLock, FaWifi, FaExclamationTriangle, FaSync } from 'react-icons/fa';
 
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
@@ -31,7 +31,7 @@ class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
   render() {
-    if (this.state.hasError) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px' }}>حدث خطأ تقني، يرجى تحديث الصفحة.</div>;
+    if (this.state.hasError) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', fontFamily: "'Cairo', sans-serif" }}>حدث خطأ تقني، يرجى تحديث الصفحة.</div>;
     return this.props.children;
   }
 }
@@ -42,6 +42,7 @@ function AppContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const goldColor = '#C9A84C';
 
@@ -65,6 +66,12 @@ function AppContent() {
     };
   }, []);
 
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    if (refreshStatus) await refreshStatus();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
   // 1. Loading
   if (appState === 'LOADING') return <SplashScreen />;
 
@@ -85,12 +92,32 @@ function AppContent() {
   // 4. Pending Approval
   if (appState === 'PENDING_APPROVAL') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl' }}>
-        <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '1px solid #1E293B' }}>
           <FaClock style={{ color: goldColor, fontSize: '40px', marginBottom: '20px' }} />
           <h2 style={{ color: '#fff', marginBottom: '15px' }}>طلبك قيد المراجعة</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '25px' }}>حسابك ({profile?.full_name}) قيد التدقيق من الإدارة العامة.</p>
-          <button onClick={logout} style={{ padding: '10px 20px', background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '8px', cursor: 'pointer' }}>تسجيل الخروج</button>
+          <p style={{ color: '#94a3b8', marginBottom: '25px', lineHeight: '1.6' }}>
+            حسابك ({profile?.full_name || 'المستخدم'}) وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              onClick={handleManualRefresh} 
+              disabled={isRefreshing}
+              style={{ padding: '10px 20px', background: goldColor, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <FaSync className={isRefreshing ? 'fa-spin' : ''} />
+              {isRefreshing ? 'جاري الفحص...' : 'تحديث حالة الطلب'}
+            </button>
+            
+            <button 
+              onClick={logout} 
+              style={{ padding: '10px 20px', background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <FaSignOutAlt />
+              تسجيل الخروج
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -98,7 +125,11 @@ function AppContent() {
 
   // 5. Super Admin
   if (appState === 'SUPER_ADMIN') {
-    return <Suspense fallback={<SplashScreen />}><AdminDashboard session={{ user }} onLogout={logout} /></Suspense>;
+    return (
+      <Suspense fallback={<SplashScreen />}>
+        <AdminDashboard session={{ user }} onLogout={logout} />
+      </Suspense>
+    );
   }
 
   // 6. No Academy
@@ -110,19 +141,23 @@ function AppContent() {
   if (appState === 'FULLY_ACTIVE') {
     return (
       <>
-        {!isOnline && <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999 }}>انقطع الاتصال بالإنترنت.</div>}
+        {!isOnline && (
+          <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold' }}>
+            <FaWifi style={{ marginLeft: '8px' }} /> انقطع الاتصال بالإنترنت.
+          </div>
+        )}
         <MainApp session={{ user }} userRole={profile?.role} />
       </>
     );
   }
 
-  // 8. Debug / Fallback Screen (هنا تظهر شاشة القفل إذا لم تكن الحالة مطابقة)
+  // 8. Debug / Fallback Screen
   return (
-    <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif" }}>
+    <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif", padding: '20px', textAlign: 'center' }}>
       <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
       <h2 style={{ marginBottom: '10px' }}>عذراً، حالة النظام غير معرفة</h2>
       <p style={{ color: '#9CA3AF', marginBottom: '5px' }}>App State: <strong style={{ color: goldColor }}>{appState || 'NULL'}</strong></p>
-      <p style={{ color: '#9CA3AF', marginBottom: '20px' }}>إذا ظهرت هذه الرسالة، فهذا يعني أن النظام لا يستطيع تصنيفك.</p>
+      <p style={{ color: '#9CA3AF', marginBottom: '20px' }}>إذا ظهرت هذه الرسالة، فهذا يعني أن النظام لا يستطيع تصنيف حسابك حالياً.</p>
       <button onClick={logout} style={{ background: goldColor, color: '#000', padding: '10px 25px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>تسجيل الخروج</button>
     </div>
   );
@@ -132,7 +167,7 @@ export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
-  if (!isAllowed) return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center' }}>🔒 نطاق غير مصرح به.</div>;
+  if (!isAllowed) return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
 
   return (
     <GlobalErrorBoundary>
