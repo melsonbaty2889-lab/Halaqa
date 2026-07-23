@@ -1,12 +1,24 @@
-import React, { Suspense } from 'react'
-import ReactDOM from 'react-dom/client'
-import './index.css'
-import './i18n'
-import App from './App.jsx'
-import { AcademyProvider } from './context/AcademyContext' 
-import { DataProvider } from './context/DataContext' // 👈 استيراد الـ Provider الجديد
+// مكتبات خارجية
+import React, { Suspense } from 'react';
+import ReactDOM from 'react-dom/client';
 
-// رادار الأعطال
+// ملفات CSS
+import './index.css';
+
+// ملفات الإعداد
+import './i18n';
+
+// Components
+import App from './App.jsx';
+
+// Providers
+import { AcademyProvider } from './context/AcademyContext';
+import { DataProvider } from './context/DataContext';
+
+// =====================================================
+// Global Error Handler
+// يعرض شاشة طوارئ عند فشل إقلاع التطبيق
+// =====================================================
 window.onerror = function (message, source, lineno, colno, error) {
   const rootEl = document.getElementById('root');
   if (rootEl) {
