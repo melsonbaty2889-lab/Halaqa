@@ -49,33 +49,43 @@ export function EnterpriseSidebar({
     return formatGregorianDate(currentTime, currentLang);
   }, [currentTime, currentLang]);
 
-  // جلب الكيانات وحل مشكلة "جاري التحميل..." المعلقة
+    // جلب الكيانات وحل مشكلة "جاري التحميل..." المعلقة
   useEffect(() => {
     let isMounted = true;
+
     const fetchPermittedEntities = async () => {
       setLoadingEntity(true);
       try {
+        // 1. جلب الأكاديميات المصرح للمستخدم بزيارتها
         const { data, error } = await supabase
           .from('academies')
           .select('id, name, slug, metadata, subscription_end_date, plan_tier');
 
         if (error) throw error;
 
-        if (isMounted && data && data.length > 0) {
-          setUserEntities(data);
-          // البحث عن الكيان الحالي أو اختيار الأول كافتراضي
-          const active = data.find(item => item.id === currentAcademyId) || data[0];
-          setCurrentEntity(active);
+        if (isMounted) {
+          const fetchedEntities = data || [];
+          setUserEntities(fetchedEntities);
 
-          if (active.plan_tier) {
-            setPlanTier(active.plan_tier);
-          }
+          if (fetchedEntities.length > 0) {
+            // البحث عن الكيان الحالي أو اختيار الأول كافتراضي
+            const active = fetchedEntities.find(item => item.id === currentAcademyId) || fetchedEntities[0];
+            setCurrentEntity(active);
 
-          if (active.subscription_end_date) {
-            const endDate = new Date(active.subscription_end_date);
-            const diffTime = endDate.getTime() - new Date().getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+            // تحديث الباقة
+            setPlanTier(active.plan_tier || '');
+
+            // حساب الأيام المتبقية للاشتراك
+            if (active.subscription_end_date) {
+              const endDate = new Date(active.subscription_end_date);
+              const diffTime = endDate.getTime() - new Date().getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+            } else {
+              setSubscriptionDaysLeft(30);
+            }
+          } else {
+            setCurrentEntity(null);
           }
         }
       } catch (err) {
@@ -96,7 +106,6 @@ export function EnterpriseSidebar({
     }
     return currentEntity?.metadata?.entity_label_en || t('sidebar.academy', 'Academy');
   }, [currentEntity, isRtl, t]);
-
   // تسجيل الخروج
   const handleLogout = async () => {
     try {
