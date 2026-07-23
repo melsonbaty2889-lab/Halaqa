@@ -126,7 +126,7 @@ function AppContent() {
   // 5. Super Admin
   if (appState === 'SUPER_ADMIN') {
     return (
-      <Suspense fallback={<SplashScreen />}>
+      <Suspense fallback={<div>Loading Admin...</div>}>
         <AdminDashboard session={{ user }} onLogout={logout} />
       </Suspense>
     );
