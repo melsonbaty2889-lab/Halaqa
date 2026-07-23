@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { formatHijriDate, formatGregorianDate, formatLiveTime } from '../utils/dateUtils';
 
 export function EnterpriseSidebar({ 
   currentAcademyId, 
@@ -33,36 +34,20 @@ export function EnterpriseSidebar({
     return () => clearInterval(timer);
   }, []);
 
-  // تنسيق الوقت بحسب اللغة الحالية
+  // تنسيق الوقت بحسب اللغة الحالية باستخدام dateUtils
   const formattedTime = useMemo(() => {
-    return currentTime.toLocaleTimeString(isRtl ? 'ar-EG' : 'en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
-    });
-  }, [currentTime, isRtl]);
+    return formatLiveTime(currentTime, currentLang);
+  }, [currentTime, currentLang]);
 
-  // التاريخ الهجري
+  // التاريخ الهجري باستخدام dateUtils
   const hijriDate = useMemo(() => {
-    try {
-      return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      }).format(currentTime);
-    } catch {
-      return t('calendar.hijri', 'التقويم الهجري');
-    }
-  }, [currentTime, isRtl, t]);
+    return formatHijriDate(currentTime, currentLang);
+  }, [currentTime, currentLang]);
 
-  // التاريخ الميلادي
+  // التاريخ الميلادي باستخدام dateUtils
   const gregorianDate = useMemo(() => {
-    return new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).format(currentTime);
-  }, [currentTime, isRtl]);
+    return formatGregorianDate(currentTime, currentLang);
+  }, [currentTime, currentLang]);
 
   // جلب الكيانات وحل مشكلة "جاري التحميل..." المعلقة
   useEffect(() => {
@@ -95,7 +80,7 @@ export function EnterpriseSidebar({
         }
       } catch (err) {
         console.error('Error fetching entities:', err);
-      } finally {
+      } fontFinally {
         if (isMounted) setLoadingEntity(false);
       }
     };
