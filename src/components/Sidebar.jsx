@@ -80,7 +80,7 @@ export function EnterpriseSidebar({
         }
       } catch (err) {
         console.error('Error fetching entities:', err);
-      } fontFinally {
+      } finally {
         if (isMounted) setLoadingEntity(false);
       }
     };
