@@ -5,21 +5,19 @@ import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { formatHijriDate, formatGregorianDate, formatLiveTime } from '../utils/dateUtils';
 import { 
-  Search, LogOut, X, Cloud, Zap, BarChart2, 
-  GraduationCap, Building2, Users, FileText, 
-  Award, Home, Trophy, Bell, CreditCard, Folder, 
-  Rocket, Settings, CheckCircle, BarChart3
+  Search, LogOut, X, Cloud, BarChart2, 
+  GraduationCap, Building2, Users, 
+  Award, CreditCard, Settings, CheckCircle, BarChart3
 } from 'lucide-react';
 
-export function EnterpriseSidebar({ 
-  // 1. دعم خصائص MainApp.jsx
+export function Sidebar({ 
   activeTab,
   setActiveTab,
   sidebarOpen,
   setSidebarOpen,
   userRole,
-  
-  // 2. دعم الخصائص الافتراضية
+  isMobile,
+  isRtl: isRtlProp,
   currentAcademyId, 
   currentUserRole, 
   activeSection, 
@@ -32,12 +30,11 @@ export function EnterpriseSidebar({
 }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
-  const isRtl = currentLang.startsWith('ar');
+  const isRtl = isRtlProp !== undefined ? isRtlProp : currentLang.startsWith('ar');
 
-  // توحيد استقبال الخصائص لتجنب التضارب بين الملفين
-  const activeKey = activeSection || activeTab || 'dashboard';
+  const activeKey = activeTab || activeSection || 'dashboard';
   const role = userRole || currentUserRole || 'admin';
-  const isMobileDrawerOpen = isOpenMobile || sidebarOpen || false;
+  const isDrawerOpen = sidebarOpen || isOpenMobile || false;
 
   const handleSelectTab = (id) => {
     if (setActiveTab) setActiveTab(id);
@@ -60,7 +57,7 @@ export function EnterpriseSidebar({
   const [planTier, setPlanTier] = useState('free');
   const [subStatus, setSubStatus] = useState('trial');
 
-  // تحديث الساعة كل ثانية
+  // تحديث الوقت مباشرة
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -70,7 +67,7 @@ export function EnterpriseSidebar({
   const hijriDate = useMemo(() => formatHijriDate(currentTime, currentLang), [currentTime, currentLang]);
   const gregorianDate = useMemo(() => formatGregorianDate(currentTime, currentLang), [currentTime, currentLang]);
 
-  // جلب معلومات الأكاديمية والاشتراك من Supabase
+  // جلب معلومات الاشتراك والأكاديمية
   useEffect(() => {
     let isMounted = true;
     const fetchAcademyAndSubscription = async () => {
@@ -135,7 +132,6 @@ export function EnterpriseSidebar({
     }
   };
 
-  // عناصر القائمة مع معرفات تطابق MainApp.jsx تماماً
   const globalNavigationPillars = useMemo(() => [
     {
       pillarTitle: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
@@ -171,27 +167,45 @@ export function EnterpriseSidebar({
     else handleSelectTab('subscription');
   };
 
+  // 🛡️ النمط الصارم الذي يضمن عدم إخفاء السايدبار في الكمبيوتر نهائياً
+  const sidebarStyle = {
+    position: isMobile ? 'fixed' : 'sticky',
+    top: 0,
+    [isRtl ? 'right' : 'left']: 0,
+    height: '100vh',
+    width: '280px',
+    flexShrink: 0,
+    zIndex: isMobile ? 9999 : 30,
+    transform: isMobile 
+      ? (isDrawerOpen ? 'translateX(0)' : (isRtl ? 'translateX(100%)' : 'translateX(-100%)')) 
+      : 'none',
+    transition: 'transform 0.3s ease-in-out',
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#0f172a',
+    borderLeft: isRtl ? '1px solid #1e293b' : 'none',
+    borderRight: !isRtl ? '1px solid #1e293b' : 'none',
+    color: '#f8fafc',
+    boxSizing: 'border-box'
+  };
+
   return (
     <>
-      {/* 1. خلفية تعتيم للموبايل */}
-      {isMobileDrawerOpen && (
+      {/* خلفية التعتيم على الهواتف */}
+      {isMobile && isDrawerOpen && (
         <div 
           onClick={handleCloseDrawer}
-          className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(2, 6, 23, 0.75)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9998
+          }}
         />
       )}
 
-            {/* 2. السايدبار الرئيسي */}
-      <aside 
-        className={cn(
-          "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none border-slate-800 transition-transform duration-300 ease-in-out",
-          isRtl ? "right-0 border-l" : "left-0 border-r",
-          "lg:relative lg:top-0 lg:z-30 lg:translate-x-0 lg:shrink-0",
-          isMobileDrawerOpen 
-            ? "translate-x-0 shadow-2xl" 
-            : (isRtl ? "max-lg:translate-x-full" : "max-lg:-translate-x-full")
-        )}
-      >
+      <aside style={sidebarStyle} className="select-none">
         {/* الهيدر العلوي */}
         <div className="p-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center justify-between mb-2">
@@ -208,12 +222,14 @@ export function EnterpriseSidebar({
                 {planTier.toUpperCase()} ({subStatus === 'active' ? (isRtl ? 'نشط' : 'Active') : subStatus === 'unpaid' ? (isRtl ? 'معلق' : 'Unpaid') : (isRtl ? 'مجاني' : 'Free')})
               </span>
 
-              <button 
-                onClick={handleCloseDrawer}
-                className="p-1 text-slate-400 hover:text-white lg:hidden"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {isMobile && (
+                <button 
+                  onClick={handleCloseDrawer}
+                  className="p-1 text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -265,7 +281,7 @@ export function EnterpriseSidebar({
           </button>
         </div>
 
-        {/* شريط حالة الاشتراك */}
+        {/* حالة الاشتراك */}
         <div className="p-3 bg-slate-800/20 border-b border-slate-800 shrink-0">
           <div className="flex justify-between items-center text-[11px] mb-1.5">
             <span className="text-slate-400">{isRtl ? 'صلاحية النظام:' : 'Validity:'}</span>
@@ -290,7 +306,7 @@ export function EnterpriseSidebar({
           </div>
         </div>
 
-        {/* القوائم والتنقّلات */}
+        {/* عناصر التنقل */}
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
           {globalNavigationPillars.map((pillar, pIdx) => {
             if (!pillar.allowedRoles.includes(role)) return null;
@@ -329,7 +345,7 @@ export function EnterpriseSidebar({
           })}
         </div>
 
-        {/* الفوتر وزر الخروج */}
+        {/* الفوتر */}
         <div className="p-3 border-t border-slate-800 bg-slate-950 shrink-0">
           <div className="flex items-center gap-2 mb-2.5">
             <span className={cn(
@@ -350,11 +366,9 @@ export function EnterpriseSidebar({
             <span>{isRtl ? 'إنهاء الجلسة وتسجيل الخروج' : 'End Session & Logout'}</span>
           </button>
         </div>
-
       </aside>
     </>
   );
 }
 
-export const Sidebar = EnterpriseSidebar;
-export default EnterpriseSidebar;
+export default Sidebar;
