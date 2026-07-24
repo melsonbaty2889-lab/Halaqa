@@ -98,49 +98,10 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 🗓️ دالة معالجة التاريخ الهجري والميلادي بدقة احترافية
-  const getFormattedDates = () => {
-    const now = new Date();
-    
-    // 1. التاريخ الميلادي
-    const gregorian = new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).format(now);
-
-    // 2. التاريخ الهجري مع ضمان عدم ظهور BC أو أخطاء المحاذاة
-    let hijri = '';
-    try {
-      if (isRtl) {
-        hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }).format(now);
-        if (!hijri.includes('هـ')) hijri += ' هـ';
-      } else {
-        // باللغة الإنجليزية
-        const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }).formatToParts(now);
-
-        const day = parts.find(p => p.type === 'day')?.value || '';
-        const month = parts.find(p => p.type === 'month')?.value || '';
-        const year = parts.find(p => p.type === 'year')?.value || '';
-        
-        hijri = `${month} ${day}, ${year} AH`;
-      }
-    } catch (e) {
-      hijri = isRtl ? 'التاريخ الهجري' : 'Hijri Date';
-    }
-
-    return { gregorian, hijri };
-  };
-
-  const { gregorian, hijri } = getFormattedDates();
+  // ✅ البديل المباشر المربوط بـ dateUtils.js
+const currentLocale = isRtl ? 'ar' : 'en';
+const gregorian = formatGregorianDate(new Date(), currentLocale);
+const hijri = formatHijriDate(new Date(), currentLocale);
 
   // جلب الأكاديميات
   useEffect(() => {
