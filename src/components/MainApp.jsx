@@ -354,23 +354,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-    return (
+      return (
     <div style={{
       display: 'flex', 
       minHeight: '100vh', 
       background: '#0f172a', 
       color: '#fff',
       fontFamily: "'Cairo', sans-serif", 
-      overflow: 'hidden', 
       position: 'relative'
-      // 👈 تم حذف flexDirection: isRtl ? 'row' : 'row-reverse' لتجنب عكس المحاور
+      /* 👈 تم حذف overflow: hidden و flexDirection المزدوج لتعتمد الصفحة على الاتجاه الأصلي dir="rtl" */
     }}>
       
+      {/* 1. خلفية التعتيم عند فتح الموبايل */}
       {isMobile && sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999, backdropFilter: 'blur(4px)' }} />
       )}
       
-      {/* 1. السايدبار مع تمرير الـ Props بالأسماء الصحيحة */}
+      {/* 2. استدعاء السايدبار */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -389,7 +389,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      {/* 2. منطقة المحتوى الرئيسي */}
+      {/* 3. حاوي المحتوى الرئيسي */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: '100vh' }}>
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} isMobile={isMobile} isRtl={isRtl} t={t} currency={currency} countryCode={countryCode} i18n={i18n} activeTab={activeTab} />
 
