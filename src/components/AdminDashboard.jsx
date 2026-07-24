@@ -1,4 +1,4 @@
-/* src/components/AdminDashboard.jsx - Production-Ready SaaS Version */
+/* src/components/AdminDashboard.jsx - World-Class SaaS Enterprise Edition */
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Dashboard.module.css';
 import { supabase } from '../lib/supabase';
@@ -15,7 +15,12 @@ import {
   FaExclamationTriangle,
   FaUser,
   FaEnvelope,
-  FaInfoCircle
+  FaInfoCircle,
+  FaFileCsv,
+  FaCopy,
+  FaPlus,
+  FaTimes,
+  FaInfinity
 } from 'react-icons/fa';
 
 export default function AdminDashboard({ isRtl = true, academyName, onLogout }) {
@@ -29,14 +34,22 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'pending' | 'active' | 'expired'
   const [selectedAcademy, setSelectedAcademy] = useState(null);
+  const [extendModalAcademy, setExtendModalAcademy] = useState(null);
 
-  // 🔄 دالة جلب البيانات مع دمج بروفايل المالك بطريقة آمنة 100%
+  // 🔔 نظام الإشعارات الداخلي (Toast System)
+  const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' | 'info' }
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // 🔄 دالة جلب البيانات الآمنة
   const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
     if (!isSilentRefresh) setLoading(true);
     else setRefreshing(true);
-    setErrorMessage(null);
 
     try {
       // 1️⃣ جلب الأكاديميات المعلقة والنشطة
@@ -62,7 +75,7 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
 
       if (countErr) throw countErr;
 
-      // 2️⃣ جلب بيانات المالكين (Profiles) لتغطية أسماء وأسرار الحسابات
+      // 2️⃣ جلب بيانات المالكين (Profiles)
       const allAcademies = [...(pendingData || []), ...(activeData || [])];
       const ownerIds = [...new Set(allAcademies.map(a => a.owner_id).filter(Boolean))];
 
@@ -93,32 +106,28 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
 
     } catch (err) {
       console.error("❌ Admin Dashboard Error:", err.message);
-      setErrorMessage(isRtl ? "حدث خطأ أثناء تحميل البيانات." : "Error loading data.");
+      showToast(isRtl ? "حدث خطأ أثناء تحميل البيانات." : "Error loading data.", "error");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [isRtl]);
 
-    // 🚀 التحديث التلقائي + الاشتراك اللحظي (Supabase Realtime)
+  // 🚀 التحديث التلقائي + الاشتراك اللحظي
   useEffect(() => {
-    // 1️⃣ جلب البيانات لأول مرة
     fetchDashboardData();
 
-    // 2️⃣ الاشتراك المباشر في التغييرات التي تحدث على جدول الأكاديميات
     const academiesChannel = supabase
       .channel('admin-academies-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'academies' },
         (payload) => {
-          console.log('📡 تم استلام تحديث لحظي:', payload);
-          fetchDashboardData(true); // جلب صامت للبيانات ليتم تحديث الشاشة فوراً
+          fetchDashboardData(true);
         }
       )
       .subscribe();
 
-    // 3️⃣ إلغاء الاشتراك عند الخروج من الشاشة لمنع استهلاك الذاكرة
     return () => {
       supabase.removeChannel(academiesChannel);
     };
@@ -153,11 +162,13 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
           .update({ is_activated: true })
           .eq('id', targetOwnerId);
       }
+
+      showToast(isRtl ? `تم اعتماد أكاديمية "${targetAcademy?.name || ''}" بنجاح 🎉` : "Academy activated successfully 🎉");
     } catch (error) {
       console.error("❌ Activate Error:", error.message);
       setPendingAcademies(previousPending);
       setActiveAcademies(previousActive);
-      setErrorMessage(isRtl ? "فشل تفعيل الحساب." : "Failed to activate account.");
+      showToast(isRtl ? "فشل تفعيل الحساب." : "Failed to activate account.", "error");
     } finally {
       setProcessingId(null);
     }
@@ -167,8 +178,11 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
   const onDeactivateClick = async (id, ownerId) => {
     if (processingId) return;
 
+    const targetAcademy = activeAcademies.find(a => a.id === id);
     const confirmed = window.confirm(
-      isRtl ? 'هل أنت متأكد من تعليق/حظر هذه الأكاديمية؟' : 'Deactivate this academy?'
+      isRtl 
+        ? `هل أنت متأكد من تعليق/حظر أكاديمية (${targetAcademy?.name || ''})؟` 
+        : 'Deactivate this academy?'
     );
     if (!confirmed) return;
 
@@ -176,7 +190,6 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
 
     const previousPending = [...pendingAcademies];
     const previousActive = [...activeAcademies];
-    const targetAcademy = activeAcademies.find(a => a.id === id);
 
     setActiveAcademies(prev => prev.filter(a => a.id !== id));
     if (targetAcademy) {
@@ -198,27 +211,33 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
           .update({ is_activated: false })
           .eq('id', targetOwnerId);
       }
+
+      showToast(isRtl ? `تم تعليق أكاديمية "${targetAcademy?.name || ''}"` : "Academy deactivated", "info");
     } catch (error) {
       console.error("❌ Deactivate Error:", error.message);
       setActiveAcademies(previousActive);
       setPendingAcademies(previousPending);
-      setErrorMessage(isRtl ? "فشل حظر الأكاديمية." : "Failed to deactivate academy.");
+      showToast(isRtl ? "فشل حظر الأكاديمية." : "Failed to deactivate academy.", "error");
     } finally {
       setProcessingId(null);
     }
   };
 
-  // ⏱️ 3. دالة تمديد الاشتراك
-  const onExtendTrialClick = async (id, currentTrialEnds, daysToAdd) => {
+  // ⏱️ 3. دالة تمديد الاشتراك بأيام مخصصة أو جعل الحساب دائماً
+  const onExtendTrialClick = async (id, daysToAdd, isLifetime = false) => {
     if (processingId) return;
-    setProcessingId(`extend-${daysToAdd}-${id}`);
+    setProcessingId(`extend-${id}`);
 
-    const now = new Date();
-    const currentEnd = currentTrialEnds ? new Date(currentTrialEnds) : now;
-    const baseDate = currentEnd > now ? currentEnd : now;
-    
-    baseDate.setDate(baseDate.getDate() + daysToAdd);
-    const newDateIso = baseDate.toISOString();
+    let newDateIso = null;
+
+    if (!isLifetime) {
+      const target = [...pendingAcademies, ...activeAcademies].find(a => a.id === id);
+      const now = new Date();
+      const currentEnd = target?.trial_ends_at ? new Date(target.trial_ends_at) : now;
+      const baseDate = currentEnd > now ? currentEnd : now;
+      baseDate.setDate(baseDate.getDate() + daysToAdd);
+      newDateIso = baseDate.toISOString();
+    }
 
     const previousActive = [...activeAcademies];
 
@@ -233,24 +252,64 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
         .eq('id', id);
 
       if (error) throw error;
+
+      showToast(
+        isLifetime 
+          ? (isRtl ? "تم تحويل الحساب إلى اشتراك دائم ♾️" : "Account upgraded to Lifetime ♾️")
+          : (isRtl ? `تم تمديد الفترة التجريبية +${daysToAdd} يوماً` : `Trial extended by +${daysToAdd} days`)
+      );
+      setExtendModalAcademy(null);
     } catch (error) {
       console.error("❌ Extend Trial Error:", error.message);
       setActiveAcademies(previousActive);
-      setErrorMessage(isRtl ? "تعذر تمديد الفترة التجريبية." : "Failed to extend trial.");
+      showToast(isRtl ? "تعذر تمديد الفترة التجريبية." : "Failed to extend trial.", "error");
     } finally {
       setProcessingId(null);
     }
   };
 
+  // 📊 4. تصدير البيانات إلى CSV
+  const exportToCSV = () => {
+    const allList = [...pendingAcademies, ...activeAcademies];
+    if (allList.length === 0) {
+      showToast(isRtl ? "لا توجد بيانات للتصدير" : "No data to export", "info");
+      return;
+    }
+
+    const headers = ["ID", "Academy Name", "Owner Name", "Owner Email", "Status", "Trial Ends At", "Created At"];
+    const rows = allList.map(a => [
+      a.id,
+      `"${a.name || ''}"`,
+      `"${a.ownerProfile?.full_name || ''}"`,
+      `"${a.ownerProfile?.email || ''}"`,
+      a.is_active ? "Active" : "Pending",
+      a.trial_ends_at ? new Date(a.trial_ends_at).toLocaleDateString() : "Lifetime",
+      new Date(a.created_at).toLocaleDateString()
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `academies_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast(isRtl ? "تم تصدير ملف CSV بنجاح 📁" : "CSV exported successfully 📁");
+  };
+
   // 📐 دالة حساب حالة الاشتراك
   const getTrialStatusBadge = (trialEndsAt) => {
-    if (!trialEndsAt) return { text: isRtl ? 'حساب دائم' : 'Lifetime Account', color: '#94a3b8' };
+    if (!trialEndsAt) return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime Account ♾️', color: '#38BDF8' };
     const diffDays = Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24));
     if (diffDays <= 0) return { text: isRtl ? 'منتهية التجربة ⚠️' : 'Trial Expired ⚠️', color: '#EF4444' };
     return { text: isRtl ? `متبقي ${diffDays} أيام تجريبية` : `${diffDays} days left`, color: '#10B981' };
   };
 
-  // 🔍 التصفية والفيض الذكي
+  // 🔍 التصفية والفيض الذكي بحسب التبويب المختار
   const filterList = (list) => list.filter(a => 
     a.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.ownerProfile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -260,9 +319,46 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
   const filteredPending = filterList(pendingAcademies);
   const filteredActive = filterList(activeAcademies);
 
+  // الفلترة للتجربة المنتهية
+  const expiredAcademies = [...pendingAcademies, ...activeAcademies].filter(a => {
+    if (!a.trial_ends_at) return false;
+    return new Date(a.trial_ends_at) <= new Date();
+  });
+  const filteredExpired = filterList(expiredAcademies);
+
+  // نسخ إلى الحافظة
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text);
+    showToast(isRtl ? `تم نسخ ${label} إلى الحافظة` : `${label} copied to clipboard`);
+  };
+
   return (
     <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr', padding: '20px' }}>
-      {/* 🔴 الهيدر الرئيسي وزر التحديث الفوري */}
+      
+      {/* 🔔 الإشعارات المنبثقة (Toast Notification) */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          background: toast.type === 'error' ? '#EF4444' : toast.type === 'info' ? '#3B82F6' : '#10B981',
+          color: '#FFF',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          {toast.message}
+        </div>
+      )}
+
+      {/* 🔴 الهيدر الرئيسي */}
       <header className={styles.adminHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <h1 className={styles.adminTitle} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.3rem', color: '#FFF' }}>
@@ -270,7 +366,16 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
             <span>{isRtl ? 'المنصة العالمية لحلقات القرآن (Super Admin)' : 'Global Super-Admin Terminal'}</span>
           </h1>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={exportToCSV}
+            style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10B981', color: '#34D399', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}
+          >
+            <FaFileCsv />
+            {isRtl ? 'تصدير CSV' : 'Export CSV'}
+          </button>
+
           <button 
             onClick={() => fetchDashboardData(true)} 
             disabled={refreshing}
@@ -279,6 +384,7 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
             <FaSync style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
             {isRtl ? 'مزامنة' : 'Sync'}
           </button>
+
           {onLogout && <button onClick={onLogout} style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem' }}>{isRtl ? 'خروج آمن' : 'Logout'}</button>}
         </div>
       </header>
@@ -292,6 +398,7 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
           </div>
           <div className={styles.statIcon}><FaBuilding /></div>
         </div>
+
         <div className={`${styles.premiumStatBox} ${styles.statBoxPayments}`}>
           <div className={styles.statBoxInfo}>
             <p className={styles.statLabel}>{isRtl ? 'طلبات انتظار المراجعة' : 'Pending Approvals'}</p>
@@ -299,6 +406,46 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
           </div>
           <div className={styles.statIcon}><FaClock /></div>
         </div>
+
+        <div className={`${styles.premiumStatBox}`} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+          <div className={styles.statBoxInfo}>
+            <p className={styles.statLabel}>{isRtl ? 'اشتراكات منتهية التجربة' : 'Expired Trials'}</p>
+            <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : expiredAcademies.length}</h2>
+          </div>
+          <div className={styles.statIcon}><FaExclamationTriangle style={{ color: '#EF4444' }} /></div>
+        </div>
+      </div>
+
+      {/* 🗂️ أزرار التبويب الذكي (Smart Tabs) */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px', overflowX: 'auto' }}>
+        {[
+          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: pendingAcademies.length + activeAcademies.length },
+          { id: 'pending', label: isRtl ? 'الطلبات المعلقة' : 'Pending', count: pendingAcademies.length, color: '#FBBF24' },
+          { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: activeAcademies.length, color: '#10B981' },
+          { id: 'expired', label: isRtl ? 'منتهية التجربة' : 'Expired', count: expiredAcademies.length, color: '#EF4444' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              background: activeTab === tab.id ? '#3B82F6' : 'rgba(30, 41, 59, 0.6)',
+              color: '#FFF',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: activeTab === tab.id ? 'bold' : 'normal',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {tab.label}
+            <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.75rem' }}>{tab.count}</span>
+          </button>
+        ))}
       </div>
 
       {/* 🔍 شريط البحث الذكي */}
@@ -311,77 +458,161 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
           onChange={(e) => setSearchQuery(e.target.value)} 
           style={{ background: 'transparent', border: 'none', outline: 'none', color: '#FFF', width: '100%', fontSize: '0.9rem' }} 
         />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}><FaTimes /></button>
+        )}
       </div>
 
-      {/* 📋 القسم الأول: الطلبات المعلقة */}
-      <section style={{ marginBottom: '40px' }}>
-        <h2 className={styles.listTitle}>📋 {isRtl ? 'طلبات التسجيل الجديدة المعلقة' : 'Pending Registrations'}</h2>
-        {filteredPending.length === 0 ? (
-          <EmptyState icon={<FaClock />} title={isRtl ? "لا توجد طلبات معلقة" : "No Pending Requests"} description={isRtl ? " جميع طلبات الانضمام لـ SaaS تمت مراجعتها واعتمادها بالكامل بنجاح." : "All onboarding requests reviewed."} />
-        ) : (
-          <div className={styles.requestsGrid}>
-            {filteredPending.map(academy => (
-              <div key={academy.id} className={styles.requestCard}>
-                <div className={styles.requestInfo}>
-                  <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
-                  {academy.ownerProfile && (
-                    <div style={{ fontSize: '0.78rem', color: '#CBD5E1', margin: '4px 0' }}>
-                      <span><FaUser style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.full_name}</span>
-                      {academy.ownerProfile.email && <span style={{ marginRight: '8px', opacity: 0.8 }}><FaEnvelope style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.email}</span>}
-                    </div>
-                  )}
-                  <span style={{ fontSize: '0.75rem', color: getTrialStatusBadge(academy.trial_ends_at).color }}>{getTrialStatusBadge(academy.trial_ends_at).text}</span>
+      {/* 📋 قائمة الطلبات المعلقة (تظهر إذا كان التبويب 'all' أو 'pending') */}
+      {(activeTab === 'all' || activeTab === 'pending') && (
+        <section style={{ marginBottom: '40px' }}>
+          <h2 className={styles.listTitle}>📋 {isRtl ? 'طلبات التسجيل الجديدة المعلقة' : 'Pending Registrations'}</h2>
+          {filteredPending.length === 0 ? (
+            <EmptyState icon={<FaClock />} title={isRtl ? "لا توجد طلبات معلقة" : "No Pending Requests"} description={isRtl ? "جميع طلبات الانضمام لـ SaaS تمت مراجعتها واعتمادها بالكامل بنجاح." : "All onboarding requests reviewed."} />
+          ) : (
+            <div className={styles.requestsGrid}>
+              {filteredPending.map(academy => (
+                <div key={academy.id} className={styles.requestCard}>
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.78rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span><FaUser style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.full_name}</span>
+                        {academy.ownerProfile.email && <span style={{ marginRight: '8px', opacity: 0.8 }}><FaEnvelope style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.email}</span>}
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.75rem', color: getTrialStatusBadge(academy.trial_ends_at).color }}>{getTrialStatusBadge(academy.trial_ends_at).text}</span>
+                  </div>
+                  <button onClick={() => onActivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} className={styles.approveBtnActive}>{isRtl ? 'اعتماد الحساب' : 'Approve'}</button>
                 </div>
-                <button onClick={() => onActivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} className={styles.approveBtnActive}>{isRtl ? 'اعتماد الحساب' : 'Approve'}</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-      {/* ✅ القسم الثاني: الأكاديميات النشطة */}
-      <section>
-        <h2 className={styles.listTitle}>✅ {isRtl ? 'قاعدة بيانات الأكاديميات النشطة' : 'Active Subscriptions'}</h2>
-        {filteredActive.length === 0 ? (
-          <EmptyState icon={<FaBuilding />} title={isRtl ? "لا توجد أكاديميات نشطة" : "No Active Academies"} description={isRtl ? "لا توجد نتائج تطابق معايير البحث الحالية." : "No active academies matching query."} />
-        ) : (
-          <div className={styles.requestsGrid}>
-            {filteredActive.map(academy => (
-              <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #10B981', borderLeft: '4px solid #10B981' }}>
-                <div className={styles.requestInfo}>
-                  <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
-                  {academy.ownerProfile && (
-                    <div style={{ fontSize: '0.78rem', color: '#CBD5E1', margin: '4px 0' }}>
-                      <span><FaUser style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.full_name}</span>
-                    </div>
-                  )}
-                  <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>⏱️ {isRtl ? 'فترة الاشتراك: ' : 'Status: '}{getTrialStatusBadge(academy.trial_ends_at).text}</span>
+      {/* ✅ قائمة الأكاديميات النشطة (تظهر إذا كان التبويب 'all' أو 'active') */}
+      {(activeTab === 'all' || activeTab === 'active') && (
+        <section style={{ marginBottom: '40px' }}>
+          <h2 className={styles.listTitle}>✅ {isRtl ? 'قاعدة بيانات الأكاديميات النشطة' : 'Active Subscriptions'}</h2>
+          {filteredActive.length === 0 ? (
+            <EmptyState icon={<FaBuilding />} title={isRtl ? "لا توجد أكاديميات نشطة" : "No Active Academies"} description={isRtl ? "لا توجد نتائج تطابق معايير البحث الحالية." : "No active academies matching query."} />
+          ) : (
+            <div className={styles.requestsGrid}>
+              {filteredActive.map(academy => (
+                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #10B981', borderLeft: '4px solid #10B981' }}>
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.78rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span><FaUser style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.full_name}</span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>⏱️ {isRtl ? 'فترة الاشتراك: ' : 'Status: '}{getTrialStatusBadge(academy.trial_ends_at).text}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button onClick={() => setExtendModalAcademy(academy)} disabled={processingId !== null} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <FaPlus style={{ fontSize: '0.65rem' }} /> {isRtl ? 'تمديد' : 'Extend'}
+                    </button>
+                    <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><FaBan /></button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <button onClick={() => onExtendTrialClick(academy.id, academy.trial_ends_at, 30)} disabled={processingId !== null} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}>{isRtl ? '+30 يوم' : '+30 Days'}</button>
-                  <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><FaBan /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-      {/* 🔍 Modal تفاصيل الأكاديمية عند الضغط عليها */}
+      {/* ⚠️ قائمة المنتهية تجريبتهم (تظهر إذا كان التبويب 'expired') */}
+      {activeTab === 'expired' && (
+        <section style={{ marginBottom: '40px' }}>
+          <h2 className={styles.listTitle} style={{ color: '#F87171' }}>⚠️ {isRtl ? 'الأكاديميات المنتهية الفترة التجريبية' : 'Expired Trial Academies'}</h2>
+          {filteredExpired.length === 0 ? (
+            <EmptyState icon={<FaCheckCircle />} title={isRtl ? "لا توجد اشتراكات منتهية" : "No Expired Subscriptions"} description={isRtl ? "جميع الأكاديميات تمتلك فترات تجريبية أو اشتراكات سارية." : "All subscriptions are healthy."} />
+          ) : (
+            <div className={styles.requestsGrid}>
+              {filteredExpired.map(academy => (
+                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', borderLeft: '4px solid #EF4444' }}>
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.78rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span><FaUser style={{ fontSize: '0.7rem' }} /> {academy.ownerProfile.full_name}</span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>⚠️ {isRtl ? 'منتهية التجربة' : 'Expired'}</span>
+                  </div>
+                  <button onClick={() => setExtendModalAcademy(academy)} style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                    {isRtl ? 'تجديد الاشتراك' : 'Renew'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 🔍 Modal تفاصيل الأكاديمية السريعة */}
       {selectedAcademy && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '16px', padding: '24px', maxWidth: '500px', width: '100%', color: '#FFF' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '16px', padding: '24px', maxWidth: '500px', width: '100%', color: '#FFF', position: 'relative' }}>
+            <button onClick={() => setSelectedAcademy(null)} style={{ position: 'absolute', top: '16px', left: isRtl ? '16px' : 'auto', right: isRtl ? 'auto' : '16px', background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '1.1rem' }}><FaTimes /></button>
+
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}><FaInfoCircle style={{ color: '#FBBF24' }} /> {selectedAcademy.name}</h3>
-            <p><strong>ID:</strong> <code style={{ fontSize: '0.8rem', background: '#1E293B', padding: '2px 6px', borderRadius: '4px' }}>{selectedAcademy.id}</code></p>
+            
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <small style={{ color: '#94A3B8' }}>Academy ID</small>
+                <p style={{ margin: 0, fontSize: '0.8rem', fontFamily: 'monospace' }}>{selectedAcademy.id}</p>
+              </div>
+              <button onClick={() => copyToClipboard(selectedAcademy.id, "ID الأكاديمية")} style={{ background: 'transparent', border: 'none', color: '#38BDF8', cursor: 'pointer' }}><FaCopy /></button>
+            </div>
+
             <p><strong>المالك:</strong> {selectedAcademy.ownerProfile?.full_name || 'غير محدد'}</p>
-            <p><strong>البريد:</strong> {selectedAcademy.ownerProfile?.email || 'غير محدد'}</p>
+            <p>
+              <strong>البريد:</strong> {selectedAcademy.ownerProfile?.email || 'غير محدد'}
+              {selectedAcademy.ownerProfile?.email && (
+                <button onClick={() => copyToClipboard(selectedAcademy.ownerProfile.email, "البريد الإلكتروني")} style={{ background: 'transparent', border: 'none', color: '#38BDF8', cursor: 'pointer', marginRight: '8px' }}><FaCopy /></button>
+              )}
+            </p>
+            <p><strong>حالة الحساب:</strong> {selectedAcademy.is_active ? '✅ نشط' : '⏳ معلق'}</p>
             <p><strong>تاريخ التسجيل:</strong> {new Date(selectedAcademy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</p>
+
             <button onClick={() => setSelectedAcademy(null)} style={{ marginTop: '20px', width: '100%', background: '#3B82F6', color: '#FFF', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
               {isRtl ? 'إغلاق' : 'Close'}
             </button>
           </div>
         </div>
       )}
+
+      {/* ⏱️ Modal تمديد الاشتراك المخصص */}
+      {extendModalAcademy && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: '#0F172A', border: '1px solid #FBBF24', borderRadius: '16px', padding: '24px', maxWidth: '450px', width: '100%', color: '#FFF', textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '10px' }}>⏱️ {isRtl ? 'تمديد اشتراك الأكاديمية' : 'Extend Subscription'}</h3>
+            <p style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '20px' }}>{extendModalAcademy.name}</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 7)} style={{ background: '#1E293B', border: '1px solid #334155', color: '#FFF', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+7 {isRtl ? 'أيام' : 'Days'}</button>
+              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 15)} style={{ background: '#1E293B', border: '1px solid #334155', color: '#FFF', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+15 {isRtl ? 'يوم' : 'Days'}</button>
+              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 30)} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FBBF24', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+30 {isRtl ? 'يوم' : 'Days'}</button>
+              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 90)} style={{ background: '#1E293B', border: '1px solid #10B981', color: '#34D399', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+90 {isRtl ? 'يوم' : 'Days'}</button>
+            </div>
+
+            <button 
+              onClick={() => onExtendTrialClick(extendModalAcademy.id, 0, true)}
+              style={{ width: '100%', background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)', color: '#FFF', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}
+            >
+              <FaInfinity /> {isRtl ? 'منح اشتراك دائم (Lifetime)' : 'Grant Lifetime Access'}
+            </button>
+
+            <button onClick={() => setExtendModalAcademy(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '0.85rem' }}>
+              {isRtl ? 'إلغاء' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
