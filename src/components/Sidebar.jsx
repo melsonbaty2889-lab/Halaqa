@@ -1,5 +1,5 @@
 /* src/components/Sidebar.jsx */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import { formatHijriDate, formatGregorianDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { 
@@ -8,7 +8,6 @@ import {
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock
 } from "react-icons/fa";
-import { useRef, useEffect } from 'react';
 
 // داخل مكون Sidebar
 const searchInputRef = useRef(null);
