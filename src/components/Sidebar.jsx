@@ -5,7 +5,8 @@ import {
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
-  FaCloud, FaSignOutAlt, FaBolt 
+  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock,
+  FaBookReader
 } from "react-icons/fa";
 
 export default function Sidebar({
@@ -19,9 +20,9 @@ export default function Sidebar({
   isRtl,
   t,
   userRole,
-  trialDaysLeft,
-  isTrial,
-  accountActivated,
+  trialDaysLeft = 0,
+  isTrial = false,
+  accountActivated = false,
   setShowEarlyUpgrade,
   numberFormatter,
   timezone,
@@ -31,7 +32,31 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // جلب قائمة الأكاديميات المتاحة للمستخدم عند فتح السايدبار
+  // 🗓️ حساب التاريخ الهجري والميلادي
+  const getFormattedDates = () => {
+    const now = new Date();
+    try {
+      const gregorian = new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }).format(now);
+
+      const hijri = new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-uma' : 'en-US-u-ca-islamic-uma', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(now);
+
+      return { gregorian, hijri };
+    } catch (e) {
+      return { gregorian: now.toLocaleDateString(), hijri: '' };
+    }
+  };
+
+  const { gregorian, hijri } = getFormattedDates();
+
+  // جلب قائمة الأكاديميات المتاحة للمستخدم
   useEffect(() => {
     async function loadAcademies() {
       try {
@@ -59,7 +84,7 @@ export default function Sidebar({
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId);
   const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
-  // 1️⃣ توحيد اتساق شارة الحالة الموحدة اللغوية
+  // نص شارة الحالة
   const getStatusBadgeText = () => {
     if (isTrial) {
       return isRtl ? 'مجاني (معلق)' : 'FREE (Pending)';
@@ -69,7 +94,6 @@ export default function Sidebar({
       : (isRtl ? 'غير مدفوع' : 'Unpaid');
   };
 
-  // قائمة عناصر التنقل الرئيسية
   const menuSections = [
     {
       title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
@@ -97,7 +121,6 @@ export default function Sidebar({
     }
   ];
 
-  // تنسيقات الهيكل العام للسايدبار
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'relative',
     top: 0,
@@ -121,7 +144,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* خلفية معتمة عند الفتح على الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -138,36 +160,70 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 🔴 رأس القائمة الجانبية ومبدل الأكاديميات */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 'bold' }}>
-                {isRtl ? 'الأكاديمية الحالية' : 'Current Academy'}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontSize: '0.72rem',
-                  fontWeight: 'bold',
-                  background: 'rgba(217, 119, 6, 0.2)',
-                  color: '#f59e0b',
-                  border: '1px solid rgba(217, 119, 6, 0.4)'
-                }}>
-                  {getStatusBadgeText()}
+          {/* 🌟 1️⃣ لوجو وشعار المنظومة: الحلقة الذكية */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            marginBottom: '18px', 
+            paddingBottom: '14px', 
+            borderBottom: '1px solid #1e293b' 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#000',
+                fontSize: '1.2rem',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
+              }}>
+                <FaBookReader />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 'bold', color: '#fff', letterSpacing: '0.3px' }}>
+                  {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
+                </h2>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                  {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
-                {isMobile && (
-                  <button 
-                    onClick={() => setSidebarOpen(false)}
-                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
-                  >
-                    <FaTimes />
-                  </button>
-                )}
               </div>
             </div>
 
-            {/* قائمة الاختيار المنسدلة للأكاديمية */}
+            {isMobile && (
+              <button 
+                onClick={() => setSidebarOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                <FaTimes />
+              </button>
+            )}
+          </div>
+
+          {/* 🔴 2️⃣ الأكاديمية الحالية وشارة "مجاني (معلق)" */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 'bold' }}>
+                {isRtl ? 'الأكاديمية الحالية' : 'Current Academy'}
+              </span>
+              <span style={{
+                padding: '3px 8px',
+                borderRadius: '4px',
+                fontSize: '0.72rem',
+                fontWeight: 'bold',
+                background: 'rgba(217, 119, 6, 0.2)',
+                color: '#f59e0b',
+                border: '1px solid rgba(217, 119, 6, 0.4)'
+              }}>
+                {getStatusBadgeText()}
+              </span>
+            </div>
+
+            {/* قائمة اختيار الأكاديميات */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -186,14 +242,12 @@ export default function Sidebar({
                   fontWeight: '600'
                 }}
               >
-                {/* 5️⃣ إضافة dir="auto" للأسماء الديناميكية */}
                 <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {currentAcademyName}
                 </span>
                 <FaChevronDown style={{ fontSize: '0.75rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
               </button>
 
-              {/* 3️⃣ نافذة اختيار الأكاديميات المنبثقة (Bottom Sheet على الموبايل) */}
               {dropdownOpen && (
                 isMobile ? (
                   <div 
@@ -306,28 +360,38 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* 🕒 توقيت المؤسسة */}
-          {academyTime && (
-            <div style={{
-              background: '#131f37',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '0.8rem',
-              color: '#38bdf8'
-            }}>
-              <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime}</span>
+          {/* 📅 3️⃣ التواريخ (الهجري والميلادي) والساعة */}
+          <div style={{
+            background: '#131f37',
+            padding: '10px 12px',
+            borderRadius: '8px',
+            marginBottom: '14px',
+            border: '1px solid #1e293b',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: '#38bdf8' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FaClock style={{ fontSize: '0.8rem' }} />
+                <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
+              </div>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:11 م'}</span>
             </div>
-          )}
 
-          {/* 🔍 شريط البحث الذكي بدون Ctrl K على الجوال */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FaCalendarAlt style={{ color: '#f59e0b', fontSize: '0.75rem' }} />
+                <span>{gregorian}</span>
+              </div>
+              {hijri && <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{hijri}</span>}
+            </div>
+          </div>
+
+          {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
             position: 'relative',
-            marginBottom: '16px',
+            marginBottom: '14px',
             background: '#131f37',
             borderRadius: '8px',
             border: '1px solid #1e293b',
@@ -351,7 +415,6 @@ export default function Sidebar({
                 fontSize: '0.8rem'
               }}
             />
-            {/* 2️⃣ إخفاء شارة Ctrl K على الموبايل */}
             {!isMobile && (
               <span style={{
                 background: '#1e293b',
@@ -366,52 +429,61 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* ⚡ 4️⃣ شريط الصلاحية وإعادة الاشتراك */}
+          {/* ⚡ 5️⃣ صلاحية النظام وأيام الاشتراك + زر الترقية والتجديد */}
           <div style={{
-            padding: '10px 12px',
-            background: '#131f37',
-            borderRadius: '8px',
+            padding: '12px',
+            background: 'linear-gradient(180deg, #131f37 0%, #0f172a 100%)',
+            borderRadius: '10px',
             border: '1px solid #1e293b',
             marginBottom: '20px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
+            flexDirection: 'column',
+            gap: '10px'
           }}>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-              {isRtl ? 'صلاحية النظام:' : 'Validity:'}
-            </span>
-            {trialDaysLeft <= 0 ? (
-              <button
-                onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
-                style={{
-                  padding: '6px 12px',
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  color: '#000',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: 'bold',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <FaBolt />
-                <span>{isRtl ? 'تجديد الاشتراك ⚡' : 'Confirm Payment ⚡'}</span>
-              </button>
-            ) : (
-              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: trialDaysLeft < 5 ? '#ef4444' : '#10b981' }}>
-                {trialDaysLeft} {isRtl ? 'أيام متبقية' : 'Days left'}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                {isRtl ? 'صلاحية النظام:' : 'Validity:'}
               </span>
-            )}
+              <span style={{ 
+                fontSize: '0.85rem', 
+                fontWeight: 'bold', 
+                color: Number(trialDaysLeft) <= 3 ? '#ef4444' : '#10b981',
+                background: 'rgba(16, 185, 129, 0.1)',
+                padding: '2px 8px',
+                borderRadius: '6px'
+              }}>
+                {`${trialDaysLeft ?? 0} ${isRtl ? 'أيام متبقية' : 'Days left'}`}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: '#000',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 10px rgba(245, 158, 11, 0.2)'
+              }}
+            >
+              <FaBolt />
+              <span>{isRtl ? 'ترقية / تجديد الاشتراك ⚡' : 'Upgrade Account ⚡'}</span>
+            </button>
           </div>
 
-          {/* 📑 قائمة التبويبات والأقسام */}
+          {/* 📑 6️⃣ عناصر القائمة والتبويبات */}
           <nav>
             {menuSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '18px' }}>
-                {/* 6️⃣ رفع تباين عناوين الأقسام الفرعية */}
                 <div style={{
                   color: '#94a3b8',
                   fontSize: '0.75rem',
@@ -462,7 +534,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* 🔒 أسفل السايدبار - حالة المزامنة وتسجيل الخروج */}
+        {/* 🔒 7️⃣ أسفل السايدبار */}
         <div style={{ padding: '16px', borderTop: '1px solid #1e293b', background: '#090f20' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '0.78rem', color: '#94a3b8' }}>
             <FaCloud style={{ color: '#10b981' }} />
