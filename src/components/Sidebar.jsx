@@ -5,9 +5,31 @@ import {
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
-  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock,
-  FaBookReader
+  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock
 } from "react-icons/fa";
+
+// 🕌 شعار الحلقة والقرآن (حلقة ذهبية بداخلها المصحف)
+const QuranHalaqaLogo = () => (
+  <div style={{
+    width: '44px',
+    height: '44px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
+    border: '1px solid rgba(254, 240, 138, 0.5)'
+  }}>
+    {/* الحلقة الخارجية المزخرفة */}
+    <svg width="44" height="44" viewBox="0 0 50 50" style={{ position: 'absolute', inset: 0 }}>
+      <circle cx="25" cy="25" r="21" fill="none" stroke="#fef08a" strokeWidth="1.5" strokeDasharray="4 2" opacity="0.7" />
+    </svg>
+    {/* أيقونة المصحف الشريف */}
+    <FaBookOpen style={{ color: '#000', fontSize: '1.25rem', zIndex: 2 }} />
+  </div>
+);
 
 export default function Sidebar({
   currentAcademyId,
@@ -32,31 +54,39 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 🗓️ حساب التاريخ الهجري والميلادي
+  // 🗓️ حساب وتنسيق التاريخ الهجري والميلادي بدقة
   const getFormattedDates = () => {
     const now = new Date();
-    try {
-      const gregorian = new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      }).format(now);
+    
+    // 1. التاريخ الميلادي
+    const gregorian = new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }).format(now);
 
-      const hijri = new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-uma' : 'en-US-u-ca-islamic-uma', {
+    // 2. التاريخ الهجري (تقويم أم القرى)
+    let hijri = '';
+    try {
+      hijri = new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
       }).format(now);
 
-      return { gregorian, hijri };
+      if (isRtl && !hijri.includes('هـ')) {
+        hijri += ' هـ';
+      }
     } catch (e) {
-      return { gregorian: now.toLocaleDateString(), hijri: '' };
+      hijri = isRtl ? 'التاريخ الهجري' : 'Hijri Date';
     }
+
+    return { gregorian, hijri };
   };
 
   const { gregorian, hijri } = getFormattedDates();
 
-  // جلب قائمة الأكاديميات المتاحة للمستخدم
+  // جلب قائمة الأكاديميات
   useEffect(() => {
     async function loadAcademies() {
       try {
@@ -84,7 +114,6 @@ export default function Sidebar({
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId);
   const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
-  // نص شارة الحالة
   const getStatusBadgeText = () => {
     if (isTrial) {
       return isRtl ? 'مجاني (معلق)' : 'FREE (Pending)';
@@ -160,7 +189,7 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 🌟 1️⃣ لوجو وشعار المنظومة: الحلقة الذكية */}
+          {/* 📖 1️⃣ شعار "الحلقة الذكية" - لوجو الحلقة والمصحف */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -170,20 +199,7 @@ export default function Sidebar({
             borderBottom: '1px solid #1e293b' 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#000',
-                fontSize: '1.2rem',
-                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
-              }}>
-                <FaBookReader />
-              </div>
+              <QuranHalaqaLogo />
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 'bold', color: '#fff', letterSpacing: '0.3px' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
@@ -204,7 +220,7 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 🔴 2️⃣ الأكاديمية الحالية وشارة "مجاني (معلق)" */}
+          {/* 🔴 2️⃣ الأكاديمية الحالية + شارة مجاني معلق */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 'bold' }}>
@@ -223,7 +239,6 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* قائمة اختيار الأكاديميات */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -376,7 +391,7 @@ export default function Sidebar({
                 <FaClock style={{ fontSize: '0.8rem' }} />
                 <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
               </div>
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:11 م'}</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:24 م'}</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
@@ -384,7 +399,7 @@ export default function Sidebar({
                 <FaCalendarAlt style={{ color: '#f59e0b', fontSize: '0.75rem' }} />
                 <span>{gregorian}</span>
               </div>
-              {hijri && <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{hijri}</span>}
+              <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{hijri}</span>
             </div>
           </div>
 
@@ -429,7 +444,7 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* ⚡ 5️⃣ صلاحية النظام وأيام الاشتراك + زر الترقية والتجديد */}
+          {/* ⚡ 5️⃣ صلاحية النظام وزر الترقية */}
           <div style={{
             padding: '12px',
             background: 'linear-gradient(180deg, #131f37 0%, #0f172a 100%)',
@@ -480,7 +495,7 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* 📑 6️⃣ عناصر القائمة والتبويبات */}
+          {/* 📑 6️⃣ عناصر القائمة */}
           <nav>
             {menuSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '18px' }}>
