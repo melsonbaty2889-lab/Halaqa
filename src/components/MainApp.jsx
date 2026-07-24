@@ -163,7 +163,51 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return () => clearInterval(interval);
   }, [timezone, currentLang]);
 
-  // 📥 نواة جلب البيانات المركزية الحصينة
+  // 🔄 2. دالة جلب وإعادة تحميل بيانات الأكاديمية ديناميكياً عند التبديل
+  const fetchAcademyData = useCallback(async (targetAcademyId) => {
+    if (!targetAcademyId) return;
+    setLoadingData(true);
+    try {
+      const { data: academyData } = await supabase
+        .from('academies')
+        .select('id, name, currency, timezone, country_code, is_active')
+        .eq('id', targetAcademyId)
+        .maybeSingle();
+
+      if (academyData) {
+        setAcademyName(academyData.name || "");
+        setAcademyIsActive(!!academyData.is_active);
+        if (academyData.currency) setCurrency(academyData.currency);
+        if (academyData.timezone) setTimezone(academyData.timezone);
+        if (academyData.country_code) setCountryCode(academyData.country_code);
+      }
+
+      const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.all([
+        supabase.from('students').select('*').eq('academy_id', targetAcademyId),
+        supabase.from('exams').select('*', { count: 'exact', head: true }).eq('academy_id', targetAcademyId),
+        supabase.from('teachers').select('*').eq('academy_id', targetAcademyId),
+        supabase.from('halaqas').select('*').eq('academy_id', targetAcademyId)
+      ]);
+
+      setStudents(studentsRes.data || []);
+      setCompletedExamsCount(examsRes.count ?? 0);
+      setTeachers(teachersRes.data || []);
+      setHalaqas(halaqasRes.data || []);
+    } catch (error) {
+      console.error("Error fetching academy data safely:", error);
+    } finally {
+      setLoadingData(false);
+    }
+  }, []);
+
+  // 🔀 3. دالة معالجة حدث اختيار أكاديمية جديدة من القائمة المنسدلة
+  const handleSwitchAcademy = useCallback((newAcademyId) => {
+    if (!newAcademyId || newAcademyId === academyId) return;
+    setAcademyId(newAcademyId);
+    fetchAcademyData(newAcademyId);
+  }, [academyId, fetchAcademyData]);
+
+  // 📥 نواة جلب البيانات المركزية المبدئية عند فتح الجلسة
   useEffect(() => {
     const currentUserId = session?.user?.id;
     if (!currentUserId) {
@@ -191,38 +235,20 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           .maybeSingle();
 
         const currentAcademyId = staff?.academies?.id || staff?.academy_id;
-        const currentAcademyName = staff?.academies?.name;
-        const currentAcademyActive = staff?.academies?.is_active;
 
         if (currentAcademyId) {
           setAcademyId(currentAcademyId);
-          if (currentAcademyName) setAcademyName(currentAcademyName); 
-          if (currentAcademyActive !== undefined) setAcademyIsActive(!!currentAcademyActive);
-
-          if (staff?.academies?.currency) setCurrency(staff.academies.currency);
-          if (staff?.academies?.timezone) setTimezone(staff.academies.timezone);
-          if (staff?.academies?.country_code) setCountryCode(staff.academies.country_code);
-
-          const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.all([
-            supabase.from('students').select('*').eq('academy_id', currentAcademyId),
-            supabase.from('exams').select('*', { count: 'exact', head: true }).eq('academy_id', currentAcademyId),
-            supabase.from('teachers').select('*').eq('academy_id', currentAcademyId),
-            supabase.from('halaqas').select('*').eq('academy_id', currentAcademyId)
-          ]);
-
-          if (studentsRes.data) setStudents(studentsRes.data);
-          if (examsRes.count !== null) setCompletedExamsCount(examsRes.count);
-          if (teachersRes.data) setTeachers(teachersRes.data);
-          if (halaqasRes.data) setHalaqas(halaqasRes.data);
+          await fetchAcademyData(currentAcademyId);
+        } else {
+          setLoadingData(false);
         }
       } catch (error) {
         console.error("Error fetching system assets safely:", error);
-      } finally {
         setLoadingData(false);
       }
     }
     loadInitialData();
-  }, [session]);
+  }, [session, fetchAcademyData]);
 
   // 🛠️ ربط وتحديث مصفوفة الحلقات لتضمين أسماء المعلمين ديناميكياً للعرض المحمي
   const enrichedHalaqas = useMemo(() => {
@@ -295,7 +321,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     (!isTrial && trialDaysLeft <= 0)
   );
 
-  // 🌟 2. سجل التبويبات المميّز (Tab Components Lookup Object Engine)
+  // 🌟 4. سجل التبويبات المميّز (Tab Components Lookup Object Engine)
   const tabComponentRegistry = {
     dashboard: <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />,
     students: <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />,
@@ -354,7 +380,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-        return (
+  return (
     <div 
       style={{
         display: 'flex', 
@@ -368,8 +394,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       
-      {/* 1. القائمة الجانبية السحابية */}
+      {/* 1. القائمة الجانبية السحابية مع التمرير المحسن لمبدل الأكاديميات */}
       <Sidebar 
+        currentAcademyId={academyId}
+        onSwitchAcademy={handleSwitchAcademy}
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         sidebarOpen={sidebarOpen} 
