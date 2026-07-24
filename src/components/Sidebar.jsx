@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from '../lib/supabase';
 import { 
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
-  FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
+  FaUserGrad, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt 
 } from "react-icons/fa";
@@ -59,7 +59,7 @@ export default function Sidebar({
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId);
   const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
-  // توحيد اتساق شارة الحالة الموحدة اللغوية
+  // 1️⃣ توحيد اتساق شارة الحالة الموحدة اللغوية
   const getStatusBadgeText = () => {
     if (isTrial) {
       return isRtl ? 'مجاني (معلق)' : 'FREE (Pending)';
@@ -81,7 +81,7 @@ export default function Sidebar({
     {
       title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
       items: [
-        { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: FaUserGraduate },
+        { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: FaUserGrad },
         { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaChalkboardTeacher },
         { id: 'attendance', label: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FaCheckCircle },
         { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaBookOpen },
@@ -138,7 +138,7 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
           
-          {/* رأس القائمة الجانبية ومبدل الأكاديميات */}
+          {/* 🔴 رأس القائمة الجانبية ومبدل الأكاديميات */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 'bold' }}>
@@ -186,13 +186,14 @@ export default function Sidebar({
                   fontWeight: '600'
                 }}
               >
+                {/* 5️⃣ إضافة dir="auto" للأسماء الديناميكية */}
                 <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {currentAcademyName}
                 </span>
                 <FaChevronDown style={{ fontSize: '0.75rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
               </button>
 
-              {/* نافذة اختيار الأكاديميات المنبثقة (Bottom Sheet على الموبايل) */}
+              {/* 3️⃣ نافذة اختيار الأكاديميات المنبثقة (Bottom Sheet على الموبايل) */}
               {dropdownOpen && (
                 isMobile ? (
                   <div 
@@ -305,7 +306,7 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* توقيت المؤسسة */}
+          {/* 🕒 توقيت المؤسسة */}
           {academyTime && (
             <div style={{
               background: '#131f37',
@@ -323,7 +324,7 @@ export default function Sidebar({
             </div>
           )}
 
-          {/* شريط البحث الذكي بدون Ctrl K على الجوال */}
+          {/* 🔍 شريط البحث الذكي بدون Ctrl K على الجوال */}
           <div style={{
             position: 'relative',
             marginBottom: '16px',
@@ -350,6 +351,7 @@ export default function Sidebar({
                 fontSize: '0.8rem'
               }}
             />
+            {/* 2️⃣ إخفاء شارة Ctrl K على الموبايل */}
             {!isMobile && (
               <span style={{
                 background: '#1e293b',
@@ -364,7 +366,7 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* شريط الصلاحية وإعادة الاشتراك */}
+          {/* ⚡ 4️⃣ شريط الصلاحية وإعادة الاشتراك */}
           <div style={{
             padding: '10px 12px',
             background: '#131f37',
@@ -405,10 +407,11 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* قائمة التبويبات والأقسام */}
+          {/* 📑 قائمة التبويبات والأقسام */}
           <nav>
             {menuSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '18px' }}>
+                {/* 6️⃣ رفع تباين عناوين الأقسام الفرعية */}
                 <div style={{
                   color: '#94a3b8',
                   fontSize: '0.75rem',
@@ -459,7 +462,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* أسفل السايدبار - حالة المزامنة وتسجيل الخروج */}
+        {/* 🔒 أسفل السايدبار - حالة المزامنة وتسجيل الخروج */}
         <div style={{ padding: '16px', borderTop: '1px solid #1e293b', background: '#090f20' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '0.78rem', color: '#94a3b8' }}>
             <FaCloud style={{ color: '#10b981' }} />
