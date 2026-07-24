@@ -100,8 +100,28 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
     }
   }, [isRtl]);
 
+    // 🚀 التحديث التلقائي + الاشتراك اللحظي (Supabase Realtime)
   useEffect(() => {
+    // 1️⃣ جلب البيانات لأول مرة
     fetchDashboardData();
+
+    // 2️⃣ الاشتراك المباشر في التغييرات التي تحدث على جدول الأكاديميات
+    const academiesChannel = supabase
+      .channel('admin-academies-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'academies' },
+        (payload) => {
+          console.log('📡 تم استلام تحديث لحظي:', payload);
+          fetchDashboardData(true); // جلب صامت للبيانات ليتم تحديث الشاشة فوراً
+        }
+      )
+      .subscribe();
+
+    // 3️⃣ إلغاء الاشتراك عند الخروج من الشاشة لمنع استهلاك الذاكرة
+    return () => {
+      supabase.removeChannel(academiesChannel);
+    };
   }, [fetchDashboardData]);
 
   // ⚡ 1. دالة اعتماد الحساب
