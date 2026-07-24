@@ -1,368 +1,493 @@
 /* src/components/Sidebar.jsx */
-import React, { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from "react";
 import { supabase } from '../lib/supabase';
-import { cn } from '../lib/utils';
-import { formatHijriDate, formatGregorianDate, formatLiveTime } from '../utils/dateUtils';
 import { 
-  Search, LogOut, X, Cloud, BarChart2, 
-  GraduationCap, Building2, Users, 
-  Award, CreditCard, Settings, CheckCircle, BarChart3
-} from 'lucide-react';
+  FaSearch, FaTimes, FaChevronDown, FaChartBar, 
+  FaUserGrad, FaChalkboardTeacher, FaCheckCircle, 
+  FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
+  FaCloud, FaSignOutAlt, FaBolt 
+} from "react-icons/fa";
 
-export function Sidebar({ 
+export default function Sidebar({
+  currentAcademyId,
+  onSwitchAcademy,
   activeTab,
   setActiveTab,
   sidebarOpen,
   setSidebarOpen,
-  userRole,
   isMobile,
-  isRtl: isRtlProp,
-  currentAcademyId, 
-  currentUserRole, 
-  activeSection, 
-  setActiveSection,
-  onOpenSearch,
-  onSwitchAcademy,
-  onNavigateToSubscription,
-  isOpenMobile,
-  onCloseMobile
+  isRtl,
+  t,
+  userRole,
+  trialDaysLeft,
+  isTrial,
+  accountActivated,
+  setShowEarlyUpgrade,
+  numberFormatter,
+  timezone,
+  academyTime
 }) {
-  const { i18n } = useTranslation();
-  const currentLang = i18n.language || 'ar';
-  const isRtl = isRtlProp !== undefined ? isRtlProp : currentLang.startsWith('ar');
+  const [academiesList, setAcademiesList] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const activeKey = activeTab || activeSection || 'dashboard';
-  const role = userRole || currentUserRole || 'admin';
-  const isDrawerOpen = sidebarOpen || isOpenMobile || false;
-
-  const handleSelectTab = (id) => {
-    if (setActiveTab) setActiveTab(id);
-    if (setActiveSection) setActiveSection(id);
-    if (setSidebarOpen) setSidebarOpen(false);
-    if (onCloseMobile) onCloseMobile();
-  };
-
-  const handleCloseDrawer = () => {
-    if (setSidebarOpen) setSidebarOpen(false);
-    if (onCloseMobile) onCloseMobile();
-  };
-
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [userEntities, setUserEntities] = useState([]);
-  const [currentEntity, setCurrentEntity] = useState(null);
-  const [loadingEntity, setLoadingEntity] = useState(true);
-
-  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
-  const [planTier, setPlanTier] = useState('free');
-  const [subStatus, setSubStatus] = useState('trial');
-
-  // تحديث الوقت مباشرة
+  // جلب قائمة الأكاديميات المتاحة للمستخدم عند فتح السايدبار
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedTime = useMemo(() => formatLiveTime(currentTime, currentLang), [currentTime, currentLang]);
-  const hijriDate = useMemo(() => formatHijriDate(currentTime, currentLang), [currentTime, currentLang]);
-  const gregorianDate = useMemo(() => formatGregorianDate(currentTime, currentLang), [currentTime, currentLang]);
-
-  // جلب معلومات الاشتراك والأكاديمية
-  useEffect(() => {
-    let isMounted = true;
-    const fetchAcademyAndSubscription = async () => {
-      setLoadingEntity(true);
+    async function loadAcademies() {
       try {
-        const { data: academies, error: acaError } = await supabase
-          .from('academies')
-          .select('id, name, slug, metadata');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-        if (acaError) throw acaError;
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('academy_id, academies(id, name)')
+          .eq('user_id', user.id);
 
-        if (isMounted && academies && academies.length > 0) {
-          setUserEntities(academies);
-          const active = academies.find(item => item.id === currentAcademyId) || academies[0];
-          setCurrentEntity(active);
-
-          if (active?.id) {
-            const { data: sub } = await supabase
-              .from('saas_subscriptions')
-              .select('*')
-              .eq('academy_id', active.id)
-              .maybeSingle();
-
-            if (sub) {
-              setPlanTier(sub.plan_tier || 'pro');
-              setSubStatus(sub.status || 'active');
-              if (sub.expires_at) {
-                const diffTime = new Date(sub.expires_at).getTime() - new Date().getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
-              }
-            } else {
-              setPlanTier('free');
-              setSubStatus('unpaid');
-              setSubscriptionDaysLeft(0);
-            }
-          }
+        if (staffData && staffData.length > 0) {
+          const list = staffData
+            .map(s => s.academies)
+            .filter(Boolean);
+          setAcademiesList(list);
         }
       } catch (err) {
-        console.error('Error fetching data:', err);
-      } finally {
-        if (isMounted) setLoadingEntity(false);
+        console.error("Error loading user academies:", err);
       }
-    };
-
-    fetchAcademyAndSubscription();
-    return () => { isMounted = false; };
-  }, [currentAcademyId]);
-
-  const entityCustomLabel = useMemo(() => {
-    if (isRtl) return currentEntity?.metadata?.entity_label_ar || 'الأكاديمية الحالية';
-    return currentEntity?.metadata?.entity_label_en || 'Current Academy';
-  }, [currentEntity, isRtl]);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.clear();
-      window.location.href = '/login';
-    } catch (err) {
-      window.location.href = '/login';
     }
+    loadAcademies();
+  }, []);
+
+  const currentAcademy = academiesList.find(a => a.id === currentAcademyId);
+  const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
+
+  // 1️⃣ توحيد اتساق شارة الحالة الموحدة اللغوية
+  const getStatusBadgeText = () => {
+    if (isTrial) {
+      return isRtl ? 'مجاني (معلق)' : 'FREE (Pending)';
+    }
+    return accountActivated 
+      ? (isRtl ? 'نشط' : 'Active') 
+      : (isRtl ? 'غير مدفوع' : 'Unpaid');
   };
 
-  const globalNavigationPillars = useMemo(() => [
+  // قائمة عناصر التنقل الرئيسية
+  const menuSections = [
     {
-      pillarTitle: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
-      allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
-      nodes: [
-        { id: 'dashboard', title: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: BarChart2 },
-        { id: 'reports', title: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: BarChart3 }
+      title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
+      items: [
+        { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
+        { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
     },
     {
-      pillarTitle: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
-      allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
-      nodes: [
-        { id: 'students', title: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: GraduationCap },
-        { id: 'halaqas', title: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: Users },
-        { id: 'attendance', title: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: CheckCircle },
-        { id: 'teachers', title: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: Building2 },
-        { id: 'exams', title: isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas', icon: Award }
+      title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
+      items: [
+        { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: FaUserGrad },
+        { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaChalkboardTeacher },
+        { id: 'attendance', label: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FaCheckCircle },
+        { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaBookOpen },
+        { id: 'exams', label: isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas', icon: FaAward }
       ]
     },
     {
-      pillarTitle: isRtl ? '3. الخزينة والحوكمة' : '3. Governance & Treasury',
-      allowedRoles: ['super_admin', 'admin', 'manager'],
-      nodes: [
-        { id: 'payments', title: isRtl ? 'الخزينة والاشتراكات' : 'Billing & Payments', icon: CreditCard },
-        { id: 'settings', title: isRtl ? 'ضبط المنظومة' : 'Platform Governance', icon: Settings }
+      title: isRtl ? '3. الحوكمة والمالية' : '3. Governance & Treasury',
+      items: [
+        { id: 'payments', label: isRtl ? 'الاشتراكات والتحصيل' : 'Billing & Payments', icon: FaCreditCard },
+        { id: 'settings', label: isRtl ? 'إعدادات المنظومة' : 'Platform Governance', icon: FaSlidersH }
       ]
     }
-  ], [isRtl]);
+  ];
 
-  const handleUpgradeClick = () => {
-    if (onNavigateToSubscription) onNavigateToSubscription();
-    else handleSelectTab('subscription');
-  };
-
-  // 🛡️ النمط الصارم الذي يضمن عدم إخفاء السايدبار في الكمبيوتر نهائياً
-  const sidebarStyle = {
-    position: isMobile ? 'fixed' : 'sticky',
+  // تنسيقات الهيكل العام للسايدبار
+  const sidebarStyles = {
+    position: isMobile ? 'fixed' : 'relative',
     top: 0,
+    bottom: 0,
     [isRtl ? 'right' : 'left']: 0,
-    height: '100vh',
-    width: '280px',
-    flexShrink: 0,
-    zIndex: isMobile ? 9999 : 30,
-    transform: isMobile 
-      ? (isDrawerOpen ? 'translateX(0)' : (isRtl ? 'translateX(100%)' : 'translateX(-100%)')) 
-      : 'none',
-    transition: 'transform 0.3s ease-in-out',
+    width: '300px',
+    backgroundColor: '#0b1329',
+    borderLeft: isRtl && !isMobile ? '1px solid #1e293b' : 'none',
+    borderRight: !isRtl && !isMobile ? '1px solid #1e293b' : 'none',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#0f172a',
-    borderLeft: isRtl ? '1px solid #1e293b' : 'none',
-    borderRight: !isRtl ? '1px solid #1e293b' : 'none',
-    color: '#f8fafc',
-    boxSizing: 'border-box'
+    zIndex: 1000,
+    transform: isMobile && !sidebarOpen 
+      ? (isRtl ? 'translateX(100%)' : 'translateX(-100%)') 
+      : 'translateX(0)',
+    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: isMobile && sidebarOpen ? '0 0 30px rgba(0,0,0,0.8)' : 'none',
+    boxSizing: 'border-box',
+    userSelect: 'none'
   };
 
   return (
     <>
-      {/* خلفية التعتيم على الهواتف */}
-      {isMobile && isDrawerOpen && (
+      {/* خلفية معتمة عند الفتح على الموبايل */}
+      {isMobile && sidebarOpen && (
         <div 
-          onClick={handleCloseDrawer}
+          onClick={() => setSidebarOpen(false)}
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(2, 6, 23, 0.75)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9998
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 999
           }}
         />
       )}
 
-      <aside style={sidebarStyle} className="select-none">
-        {/* الهيدر العلوي */}
-        <div className="p-4 border-b border-slate-800 shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-extrabold text-amber-500 tracking-wide">
-              {entityCustomLabel}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                "text-[10px] px-2 py-0.5 rounded font-bold border border-slate-700",
-                subStatus === 'active' && "bg-emerald-950 text-emerald-400 border-emerald-800",
-                subStatus === 'unpaid' && "bg-amber-950 text-amber-300 border-amber-800",
-                subStatus !== 'active' && subStatus !== 'unpaid' && "bg-slate-800 text-sky-400"
-              )}>
-                {planTier.toUpperCase()} ({subStatus === 'active' ? (isRtl ? 'نشط' : 'Active') : subStatus === 'unpaid' ? (isRtl ? 'معلق' : 'Unpaid') : (isRtl ? 'مجاني' : 'Free')})
+      <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
+          
+          {/* 🔴 رأس القائمة الجانبية ومبدل الأكاديميات */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 'bold' }}>
+                {isRtl ? 'الأكاديمية الحالية' : 'Current Academy'}
               </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '0.72rem',
+                  fontWeight: 'bold',
+                  background: 'rgba(217, 119, 6, 0.2)',
+                  color: '#f59e0b',
+                  border: '1px solid rgba(217, 119, 6, 0.4)'
+                }}>
+                  {getStatusBadgeText()}
+                </span>
+                {isMobile && (
+                  <button 
+                    onClick={() => setSidebarOpen(false)}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
+                  >
+                    <FaTimes />
+                  </button>
+                )}
+              </div>
+            </div>
 
-              {isMobile && (
-                <button 
-                  onClick={handleCloseDrawer}
-                  className="p-1 text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+            {/* قائمة الاختيار المنسدلة للأكاديمية */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  background: '#131f37',
+                  border: '1px solid #1e293b',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '600'
+                }}
+              >
+                {/* 5️⃣ إضافة dir="auto" للأسماء الديناميكية */}
+                <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {currentAcademyName}
+                </span>
+                <FaChevronDown style={{ fontSize: '0.75rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+              </button>
+
+              {/* 3️⃣ نافذة اختيار الأكاديميات المنبثقة (Bottom Sheet على الموبايل) */}
+              {dropdownOpen && (
+                isMobile ? (
+                  <div 
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 9999,
+                      background: 'rgba(0,0,0,0.65)',
+                      backdropFilter: 'blur(4px)',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center'
+                    }}
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <div 
+                      style={{
+                        width: '100%',
+                        maxWidth: '500px',
+                        background: '#1e293b',
+                        borderTopLeftRadius: '20px',
+                        borderTopRightRadius: '20px',
+                        padding: '20px',
+                        borderTop: '1px solid #334155',
+                        boxShadow: '0 -10px 25px rgba(0,0,0,0.5)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #334155' }}>
+                        <h3 style={{ margin: 0, fontSize: '1rem', color: '#f8fafc', fontWeight: 'bold' }}>
+                          {isRtl ? 'اختر الأكاديمية' : 'Select Academy'}
+                        </h3>
+                        <button 
+                          onClick={() => setDropdownOpen(false)}
+                          style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer' }}
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto' }}>
+                        {academiesList.map(acc => (
+                          <button
+                            key={acc.id}
+                            onClick={() => {
+                              if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                              setDropdownOpen(false);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '14px 16px',
+                              borderRadius: '10px',
+                              border: acc.id === currentAcademyId ? '1px solid #3b82f6' : '1px solid #334155',
+                              background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : '#0f172a',
+                              color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <span dir="auto" style={{ fontWeight: acc.id === currentAcademyId ? 'bold' : 'normal' }}>
+                              {acc.name}
+                            </span>
+                            <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '6px',
+                    background: '#131f37',
+                    borderRadius: '8px',
+                    border: '1px solid #1e293b',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    zIndex: 50,
+                    overflow: 'hidden'
+                  }}>
+                    {academiesList.map(acc => (
+                      <button
+                        key={acc.id}
+                        onClick={() => {
+                          if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                          setDropdownOpen(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          border: 'none',
+                          background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                          color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        <span dir="auto">{acc.name}</span>
+                        <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
+                      </button>
+                    ))}
+                  </div>
+                )
               )}
             </div>
           </div>
 
-          {loadingEntity ? (
-            <div className="text-xs text-slate-400 italic">
-              {isRtl ? 'جاري التحميل...' : 'Loading...'}
-            </div>
-          ) : userEntities.length > 1 ? (
-            <select
-              value={currentEntity?.id || ''}
-              onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
-              className="w-full p-2 rounded-lg bg-slate-800 text-white border border-slate-700 text-xs font-bold focus:outline-none"
-            >
-              {userEntities.map((entity) => (
-                <option key={entity.id} value={entity.id} className="bg-slate-900 text-white">
-                  {entity.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div className="text-sm font-extrabold text-white truncate">
-              {currentEntity?.name || (isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy')}
+          {/* 🕒 توقيت المؤسسة */}
+          {academyTime && (
+            <div style={{
+              background: '#131f37',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.8rem',
+              color: '#38bdf8'
+            }}>
+              <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime}</span>
             </div>
           )}
 
-          {/* التاريخ والساعة */}
-          <div className="mt-3 p-2 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-extrabold text-amber-500">{hijriDate}</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">{gregorianDate}</div>
-            </div>
-            <div className="text-xs font-extrabold text-sky-400 font-mono">
-              {formattedTime}
-            </div>
-          </div>
-
-          {/* زر البحث */}
-          <button
-            onClick={onOpenSearch}
-            className="mt-2.5 w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 text-xs flex items-center justify-between hover:border-slate-700 transition"
-          >
-            <span className="flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-slate-400" />
-              {isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...'}
-            </span>
-            <kbd className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 text-[10px] text-slate-300">
-              Ctrl K
-            </kbd>
-          </button>
-        </div>
-
-        {/* حالة الاشتراك */}
-        <div className="p-3 bg-slate-800/20 border-b border-slate-800 shrink-0">
-          <div className="flex justify-between items-center text-[11px] mb-1.5">
-            <span className="text-slate-400">{isRtl ? 'صلاحية النظام:' : 'Validity:'}</span>
-            {subStatus === 'active' || subStatus === 'trial' ? (
-              <span className={cn("font-extrabold", subscriptionDaysLeft <= 5 ? "text-red-500" : "text-emerald-400")}>
-                {isRtl ? `متبقي ${subscriptionDaysLeft} يوم` : `${subscriptionDaysLeft} Days left`}
+          {/* 🔍 شريط البحث الذكي بدون Ctrl K على الجوال */}
+          <div style={{
+            position: 'relative',
+            marginBottom: '16px',
+            background: '#131f37',
+            borderRadius: '8px',
+            border: '1px solid #1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 10px'
+          }}>
+            <FaSearch style={{ color: '#64748b', fontSize: '0.85rem' }} />
+            <input 
+              type="text"
+              placeholder={isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: '#fff',
+                fontSize: '0.8rem'
+              }}
+            />
+            {/* 2️⃣ إخفاء شارة Ctrl K على الموبايل */}
+            {!isMobile && (
+              <span style={{
+                background: '#1e293b',
+                color: '#94a3b8',
+                fontSize: '0.65rem',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid #334155'
+              }}>
+                Ctrl K
               </span>
-            ) : (
-              <button 
-                onClick={handleUpgradeClick}
-                className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-[10px] font-extrabold hover:bg-amber-400 transition"
-              >
-                {subStatus === 'unpaid' ? (isRtl ? 'تأكيد الدفع ⚡' : 'Confirm Payment ⚡') : (isRtl ? 'ترقية الآن 🚀' : 'Upgrade Now 🚀')}
-              </button>
             )}
           </div>
-          <div className="w-full h-1 bg-slate-800 rounded overflow-hidden">
-            <div 
-              className={cn("h-full transition-all duration-300", subscriptionDaysLeft <= 5 ? "bg-red-500" : "bg-emerald-500")}
-              style={{ width: subStatus === 'active' ? `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%` : '0%' }}
-            />
+
+          {/* ⚡ 4️⃣ شريط الصلاحية وإعادة الاشتراك */}
+          <div style={{
+            padding: '10px 12px',
+            background: '#131f37',
+            borderRadius: '8px',
+            border: '1px solid #1e293b',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+              {isRtl ? 'صلاحية النظام:' : 'Validity:'}
+            </span>
+            {trialDaysLeft <= 0 ? (
+              <button
+                onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
+                style={{
+                  padding: '6px 12px',
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <FaBolt />
+                <span>{isRtl ? 'تجديد الاشتراك ⚡' : 'Confirm Payment ⚡'}</span>
+              </button>
+            ) : (
+              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: trialDaysLeft < 5 ? '#ef4444' : '#10b981' }}>
+                {trialDaysLeft} {isRtl ? 'أيام متبقية' : 'Days left'}
+              </span>
+            )}
           </div>
-        </div>
 
-        {/* عناصر التنقل */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {globalNavigationPillars.map((pillar, pIdx) => {
-            if (!pillar.allowedRoles.includes(role)) return null;
-
-            return (
-              <div key={pIdx}>
-                <div className="px-2 pb-1.5 text-[10px] font-extrabold text-slate-500">
-                  {pillar.pillarTitle}
+          {/* 📑 قائمة التبويبات والأقسام */}
+          <nav>
+            {menuSections.map((section, idx) => (
+              <div key={idx} style={{ marginBottom: '18px' }}>
+                {/* 6️⃣ رفع تباين عناوين الأقسام الفرعية */}
+                <div style={{
+                  color: '#94a3b8',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  letterSpacing: '0.03em',
+                  marginBottom: '8px',
+                  paddingLeft: isRtl ? 0 : '6px',
+                  paddingRight: isRtl ? '6px' : 0
+                }}>
+                  {section.title}
                 </div>
 
-                <div className="space-y-1">
-                  {pillar.nodes.map((node) => {
-                    const isActive = activeKey === node.id;
-                    const IconComponent = node.icon;
-
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
                     return (
                       <button
-                        key={node.id}
-                        onClick={() => handleSelectTab(node.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150",
-                          isRtl ? "text-right" : "text-left",
-                          isActive 
-                            ? "bg-gradient-to-r from-amber-600 to-amber-500 text-slate-950 font-extrabold shadow-sm" 
-                            : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-                        )}
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          if (isMobile) setSidebarOpen(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: isActive ? '#f59e0b' : 'transparent',
+                          color: isActive ? '#000' : '#d1d5db',
+                          fontWeight: isActive ? 'bold' : 'normal',
+                          cursor: 'pointer',
+                          textAlign: isRtl ? 'right' : 'left',
+                          transition: 'background 0.15s ease'
+                        }}
                       >
-                        <IconComponent className={cn("w-4 h-4 shrink-0", isActive ? "text-slate-950" : "text-amber-500/80")} />
-                        <span>{node.title}</span>
+                        <Icon style={{ fontSize: '1rem', color: isActive ? '#000' : '#9ca3af' }} />
+                        <span style={{ fontSize: '0.85rem' }}>{item.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </nav>
         </div>
 
-        {/* الفوتر */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950 shrink-0">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span className={cn(
-              "w-2 h-2 rounded-full",
-              subStatus === 'active' ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-amber-500 shadow-[0_0_6px_#f59e0b]"
-            )} />
-            <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
-              <Cloud className="w-3.5 h-3.5 text-slate-400 inline" />
-              {isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}
-            </span>
+        {/* 🔒 أسفل السايدبار - حالة المزامنة وتسجيل الخروج */}
+        <div style={{ padding: '16px', borderTop: '1px solid #1e293b', background: '#090f20' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '0.78rem', color: '#94a3b8' }}>
+            <FaCloud style={{ color: '#10b981' }} />
+            <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
           </div>
 
           <button
-            onClick={handleLogout}
-            className="w-full p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition"
+            onClick={() => supabase.auth.signOut()}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '8px',
+              color: '#f87171',
+              fontWeight: 'bold',
+              fontSize: '0.82rem',
+              cursor: 'pointer'
+            }}
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <FaSignOutAlt />
             <span>{isRtl ? 'إنهاء الجلسة وتسجيل الخروج' : 'End Session & Logout'}</span>
           </button>
         </div>
@@ -370,5 +495,3 @@ export function Sidebar({
     </>
   );
 }
-
-export default Sidebar;
