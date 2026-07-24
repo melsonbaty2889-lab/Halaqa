@@ -2,7 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { cn } from '../lib/utils';
 import { formatHijriDate, formatGregorianDate, formatLiveTime } from '../utils/dateUtils';
+import { 
+  Search, LogOut, X, Cloud, Zap, BarChart2, 
+  GraduationCap, Building2, Users, FileText, 
+  Award, Home, Trophy, Bell, CreditCard, Folder, 
+  Rocket, Settings 
+} from 'lucide-react';
 
 export function EnterpriseSidebar({ 
   currentAcademyId, 
@@ -12,27 +19,23 @@ export function EnterpriseSidebar({
   onOpenSearch,
   onSwitchAcademy,
   onNavigateToSubscription,
-  isOpenMobile = false,       // حالة الفتح على الهواتف
-  onCloseMobile = () => {}    // دالة الإغلاق للموبايل
+  isOpenMobile = false,
+  onCloseMobile = () => {}
 }) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
-  // 1. حالات الوقت والتقويم
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // 2. حالات الكيانات للفروع
   const [userEntities, setUserEntities] = useState([]);
   const [currentEntity, setCurrentEntity] = useState(null);
   const [loadingEntity, setLoadingEntity] = useState(true);
 
-  // 3. حالات اشتراك الـ SaaS
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
   const [planTier, setPlanTier] = useState('free');
   const [subStatus, setSubStatus] = useState('trial');
 
-  // تحديث الساعة فورياً
+  // تحديث الساعة كل ثانية
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -42,10 +45,9 @@ export function EnterpriseSidebar({
   const hijriDate = useMemo(() => formatHijriDate(currentTime, currentLang), [currentTime, currentLang]);
   const gregorianDate = useMemo(() => formatGregorianDate(currentTime, currentLang), [currentTime, currentLang]);
 
-  // جلب الكيانات والاشتراكات
+  // جلب معلومات الأكاديمية والاشتراك من Supabase
   useEffect(() => {
     let isMounted = true;
-
     const fetchAcademyAndSubscription = async () => {
       setLoadingEntity(true);
       try {
@@ -61,19 +63,17 @@ export function EnterpriseSidebar({
           setCurrentEntity(active);
 
           if (active?.id) {
-            const { data: sub, error: subError } = await supabase
+            const { data: sub } = await supabase
               .from('saas_subscriptions')
               .select('*')
               .eq('academy_id', active.id)
               .maybeSingle();
 
-            if (!subError && sub) {
+            if (sub) {
               setPlanTier(sub.plan_tier || 'pro');
               setSubStatus(sub.status || 'active');
-
               if (sub.expires_at) {
-                const endDate = new Date(sub.expires_at);
-                const diffTime = endDate.getTime() - new Date().getTime();
+                const diffTime = new Date(sub.expires_at).getTime() - new Date().getTime();
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
               }
@@ -85,7 +85,7 @@ export function EnterpriseSidebar({
           }
         }
       } catch (err) {
-        console.error('Error fetching entities/subscription:', err);
+        console.error('Error fetching data:', err);
       } finally {
         if (isMounted) setLoadingEntity(false);
       }
@@ -95,67 +95,62 @@ export function EnterpriseSidebar({
     return () => { isMounted = false; };
   }, [currentAcademyId]);
 
-  // المسمى المخصص للكيان بدون خلط لغوي
   const entityCustomLabel = useMemo(() => {
-    if (isRtl) {
-      return currentEntity?.metadata?.entity_label_ar || 'الأكاديمية الحالية';
-    }
+    if (isRtl) return currentEntity?.metadata?.entity_label_ar || 'الأكاديمية الحالية';
     return currentEntity?.metadata?.entity_label_en || 'Current Academy';
   }, [currentEntity, isRtl]);
 
-  // تسجيل الخروج
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
       localStorage.clear();
       window.location.href = '/login';
     } catch (err) {
-      console.error('Logout error:', err);
       window.location.href = '/login';
     }
   };
 
-  // 🔄 إصلاح الترجمة: إدراج currentLang داخل قائمة الاعتماديات مع نصوص احتياطية بكلتا اللغتين
+  // عناصر القائمة مع الأيقونات والمسميات المترجمة
   const globalNavigationPillars = useMemo(() => [
     {
-      pillarTitle: t('sidebar.pillars.liveOps', isRtl ? '1. مركز القيادة الحية | Live Operations' : '1. Live Operations Hub'),
+      pillarTitle: isRtl ? '1. مركز القيادة الحية' : '1. Live Operations Hub',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'dashboard', title: t('sidebar.nodes.dashboard', isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance'), icon: '📊' },
-        { id: 'realtime-audit', title: t('sidebar.nodes.realtimeAudit', isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Log'), icon: '⚡' }
+        { id: 'dashboard', title: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: BarChart2 },
+        { id: 'realtime-audit', title: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Log', icon: Zap }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.academicCore', isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core'),
+      pillarTitle: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
       nodes: [
-        { id: 'learner-directory', title: t('sidebar.nodes.learnerDirectory', isRtl ? 'إدارة الدارسين' : 'Learner Directory'), icon: '🎓' },
-        { id: 'faculty-reciters', title: t('sidebar.nodes.facultyReciters', isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters'), icon: '🕌' },
-        { id: 'halaqas-sanad', title: t('sidebar.nodes.halaqasSanad', isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad'), icon: '👥' },
-        { id: 'daily-recitation', title: t('sidebar.nodes.dailyRecitation', isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation'), icon: '📝' },
-        { id: 'curricula-diplomas', title: t('sidebar.nodes.curriculaDiplomas', isRtl ? 'المناهج والشهادات' : 'Curricula & Diplomas'), icon: '📜' }
+        { id: 'learner-directory', title: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: GraduationCap },
+        { id: 'faculty-reciters', title: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: Building2 },
+        { id: 'halaqas-sanad', title: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: Users },
+        { id: 'daily-recitation', title: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FileText },
+        { id: 'curricula-diplomas', title: isRtl ? 'المناهج والشهادات' : 'Curricula & Diplomas', icon: Award }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.engagement', isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement Network'),
+      pillarTitle: isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement Network',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
-        { id: 'guardian-portal', title: t('sidebar.nodes.guardianPortal', isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal'), icon: '🏠' },
-        { id: 'gamification-streaks', title: t('sidebar.nodes.gamificationStreaks', isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks'), icon: '🏆' },
-        { id: 'omnichannel-hub', title: t('sidebar.nodes.omnichannelHub', isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub'), icon: '🔔' }
+        { id: 'guardian-portal', title: isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal', icon: Home },
+        { id: 'gamification-streaks', title: isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks', icon: Trophy },
+        { id: 'omnichannel-hub', title: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: Bell }
       ]
     },
     {
-      pillarTitle: t('sidebar.pillars.governance', isRtl ? '4. الخزينة والحوكمة' : '4. Treasury & Governance'),
+      pillarTitle: isRtl ? '4. الخزينة والحوكمة' : '4. Treasury & Governance',
       allowedRoles: ['super_admin', 'admin', 'manager'],
       nodes: [
-        { id: 'billing-payments', title: t('sidebar.nodes.billingPayments', isRtl ? 'الخزينة والاشتراكات' : 'Billing & Payments'), icon: '💳' },
-        { id: 'asset-management', title: t('sidebar.nodes.assetManagement', isRtl ? 'المستندات والأصول' : 'Asset Management'), icon: '📁' },
-        { id: 'growth-referrals', title: t('sidebar.nodes.growthReferrals', isRtl ? 'برنامج النمو والإحالات' : 'Growth & Referrals'), icon: '🚀' },
-        { id: 'platform-governance', title: t('sidebar.nodes.platformGovernance', isRtl ? 'ضبط المنظومة' : 'Platform Governance'), icon: '⚙️' }
+        { id: 'billing-payments', title: isRtl ? 'الخزينة والاشتراكات' : 'Billing & Payments', icon: CreditCard },
+        { id: 'asset-management', title: isRtl ? 'المستندات والأصول' : 'Asset Management', icon: Folder },
+        { id: 'growth-referrals', title: isRtl ? 'برنامج النمو والإحالات' : 'Growth & Referrals', icon: Rocket },
+        { id: 'platform-governance', title: isRtl ? 'ضبط المنظومة' : 'Platform Governance', icon: Settings }
       ]
     }
-  ], [t, currentLang, isRtl]);
+  ], [isRtl]);
 
   const handleUpgradeClick = () => {
     if (onNavigateToSubscription) onNavigateToSubscription();
@@ -164,235 +159,154 @@ export function EnterpriseSidebar({
 
   return (
     <>
-      {/* خلفية معتمة للهواتف لتسهيل الإغلاق عند الضغط خارج السايدبار */}
+      {/* 1. خلفية تعتيم عند فتح السايدبار في الموبايل */}
       {isOpenMobile && (
         <div 
           onClick={onCloseMobile}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 99,
-            display: 'block'
-          }}
+          className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
         />
       )}
 
-      <aside style={{
-        width: '280px',
-        height: '100vh',
-        backgroundColor: '#0f172a',
-        borderInlineEnd: '1px solid #1e293b',
-        display: 'flex',
-        flexDirection: 'column',
-        color: '#f8fafc',
-        fontFamily: isRtl ? "'Cairo', sans-serif" : "system-ui, -apple-system, sans-serif",
-        direction: isRtl ? 'rtl' : 'ltr',
-        position: 'fixed',
-        top: 0,
-        [isRtl ? 'right' : 'left']: 0,
-        transform: isOpenMobile || window.innerWidth >= 1024 ? 'translateX(0)' : isRtl ? 'translateX(100%)' : 'translateX(-100%)',
-        transition: 'transform 0.3s ease-in-out',
-        userSelect: 'none',
-        zIndex: 100,
-        boxSizing: 'border-box'
-      }}>
-        
-        {/* 1. الهيدر */}
-        <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
+      {/* 2. السايدبار الرئيسي */}
+      <aside 
+        className={cn(
+          "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none",
+          "transition-transform duration-300 ease-in-out border-slate-800",
+          "rtl:right-0 ltr:left-0 rtl:border-l ltr:border-r",
+          "lg:sticky lg:translate-x-0",
+          isOpenMobile ? "translate-x-0" : "rtl:translate-x-full ltr:-translate-x-full"
+        )}
+      >
+        {/* الهيدر العلوي */}
+        <div className="p-4 border-b border-slate-800 shrink-0">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-extrabold text-amber-500 tracking-wide">
               {entityCustomLabel}
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ 
-                fontSize: '10px', 
-                background: subStatus === 'active' ? '#065f46' : subStatus === 'unpaid' ? '#854d0e' : '#1e293b', 
-                color: subStatus === 'active' ? '#34d399' : subStatus === 'unpaid' ? '#fde047' : '#38bdf8', 
-                padding: '2px 8px', 
-                borderRadius: '4px', 
-                fontWeight: 'bold', 
-                border: '1px solid #334155' 
-              }}>
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "text-[10px] px-2 py-0.5 rounded font-bold border border-slate-700",
+                subStatus === 'active' && "bg-emerald-950 text-emerald-400 border-emerald-800",
+                subStatus === 'unpaid' && "bg-amber-950 text-amber-300 border-amber-800",
+                subStatus !== 'active' && subStatus !== 'unpaid' && "bg-slate-800 text-sky-400"
+              )}>
                 {planTier.toUpperCase()} ({subStatus === 'active' ? (isRtl ? 'نشط' : 'Active') : subStatus === 'unpaid' ? (isRtl ? 'معلق' : 'Unpaid') : (isRtl ? 'مجاني' : 'Free')})
               </span>
 
-              {/* زر إغلاق للموبايل */}
               <button 
                 onClick={onCloseMobile}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#94a3b8',
-                  fontSize: '18px',
-                  cursor: 'pointer',
-                  display: 'inline-flex'
-                }}
+                className="p-1 text-slate-400 hover:text-white lg:hidden"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
           {loadingEntity ? (
-            <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
-              {t('common.loading', isRtl ? 'جاري التحميل...' : 'Loading...')}
+            <div className="text-xs text-slate-400 italic">
+              {isRtl ? 'جاري التحميل...' : 'Loading...'}
             </div>
           ) : userEntities.length > 1 ? (
             <select
               value={currentEntity?.id || ''}
               onChange={(e) => onSwitchAcademy && onSwitchAcademy(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                borderRadius: '8px',
-                backgroundColor: '#1e293b',
-                color: '#ffffff',
-                border: '1px solid #334155',
-                fontSize: '13px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
+              className="w-full p-2 rounded-lg bg-slate-800 text-white border border-slate-700 text-xs font-bold focus:outline-none"
             >
               {userEntities.map((entity) => (
-                <option key={entity.id} value={entity.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                <option key={entity.id} value={entity.id} className="bg-slate-900 text-white">
                   {entity.name}
                 </option>
               ))}
             </select>
           ) : (
-            <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whitespace: 'nowrap' }}>
+            <div className="text-sm font-extrabold text-white truncate">
               {currentEntity?.name || (isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy')}
             </div>
           )}
 
-          {/* 2. التاريخ والساعة */}
-          <div style={{ 
-            marginTop: '12px', 
-            padding: '8px 10px', 
-            background: '#162030', 
-            borderRadius: '8px', 
-            border: '1px solid #1e293b',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
+          {/* التاريخ والساعة */}
+          <div className="mt-3 p-2 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between">
             <div>
-              <div style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b' }}>{hijriDate}</div>
-              <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '1px' }}>{gregorianDate}</div>
+              <div className="text-[11px] font-extrabold text-amber-500">{hijriDate}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">{gregorianDate}</div>
             </div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#38bdf8', fontFamily: 'monospace' }}>
+            <div className="text-xs font-extrabold text-sky-400 font-mono">
               {formattedTime}
             </div>
           </div>
 
-          {/* 3. زر البحث */}
+          {/* زر البحث */}
           <button
             onClick={onOpenSearch}
-            style={{
-              marginTop: '10px',
-              width: '100%',
-              padding: '8px 10px',
-              borderRadius: '8px',
-              background: '#090d16',
-              border: '1px solid #334155',
-              color: '#94a3b8',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer'
-            }}
+            className="mt-2.5 w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 text-xs flex items-center justify-between hover:border-slate-700 transition"
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🔍 {t('sidebar.searchPlaceholder', isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...')}
+            <span className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              {isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...'}
             </span>
-            <kbd style={{ background: '#1e293b', padding: '1px 5px', borderRadius: '4px', border: '1px solid #475569', fontSize: '10px', color: '#cbd5e1' }}>
+            <kbd className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 text-[10px] text-slate-300">
               Ctrl K
             </kbd>
           </button>
         </div>
 
-        {/* 4. شريط حالة وأيام الاشتراك */}
-        <div style={{ padding: '10px 16px', background: 'rgba(30, 41, 59, 0.3)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginBottom: '6px' }}>
-            <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', isRtl ? 'صلاحية النظام:' : 'Validity:')}</span>
+        {/* شريط حالة الاشتراك */}
+        <div className="p-3 bg-slate-800/20 border-b border-slate-800 shrink-0">
+          <div className="flex justify-between items-center text-[11px] mb-1.5">
+            <span className="text-slate-400">{isRtl ? 'صلاحية النظام:' : 'Validity:'}</span>
             {subStatus === 'active' || subStatus === 'trial' ? (
-              <span style={{ color: subscriptionDaysLeft <= 5 ? '#ef4444' : '#10b981', fontWeight: '800' }}>
+              <span className={cn("font-extrabold", subscriptionDaysLeft <= 5 ? "text-red-500" : "text-emerald-400")}>
                 {isRtl ? `متبقي ${subscriptionDaysLeft} يوم` : `${subscriptionDaysLeft} Days left`}
               </span>
             ) : (
               <button 
                 onClick={handleUpgradeClick}
-                style={{ background: '#f59e0b', color: '#0f172a', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', cursor: 'pointer' }}
+                className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-[10px] font-extrabold hover:bg-amber-400 transition"
               >
                 {subStatus === 'unpaid' ? (isRtl ? 'تأكيد الدفع ⚡' : 'Confirm Payment ⚡') : (isRtl ? 'ترقية الآن 🚀' : 'Upgrade Now 🚀')}
               </button>
             )}
           </div>
-          <div style={{ width: '100%', height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ 
-              width: subStatus === 'active' ? `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%` : '0%', 
-              height: '100%', 
-              background: subscriptionDaysLeft <= 5 ? '#ef4444' : '#10b981',
-              transition: 'width 0.3s ease'
-            }} />
+          <div className="w-full h-1 bg-slate-800 rounded overflow-hidden">
+            <div 
+              className={cn("h-full transition-all duration-300", subscriptionDaysLeft <= 5 ? "bg-red-500" : "bg-emerald-500")}
+              style={{ width: subStatus === 'active' ? `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%` : '0%' }}
+            />
           </div>
         </div>
 
-        {/* 5. القوائم */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
+        {/* القوائم والتنقّلات */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
           {globalNavigationPillars.map((pillar, pIdx) => {
             if (!pillar.allowedRoles.includes(currentUserRole)) return null;
 
             return (
-              <div key={pIdx} style={{ marginBottom: '16px' }}>
-                <div style={{ 
-                  padding: '0 8px 6px 8px', 
-                  fontSize: '10px', 
-                  fontWeight: '800', 
-                  color: '#64748b'
-                }}>
+              <div key={pIdx}>
+                <div className="px-2 pb-1.5 text-[10px] font-extrabold text-slate-500">
                   {pillar.pillarTitle}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div className="space-y-1">
                   {pillar.nodes.map((node) => {
                     const isActive = activeSection === node.id;
+                    const IconComponent = node.icon;
 
                     return (
                       <button
                         key={node.id}
                         onClick={() => {
                           if (setActiveSection) setActiveSection(node.id);
-                          onCloseMobile(); // إغلاق تلقائي عند التحديد من الموبايل
+                          onCloseMobile();
                         }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          width: '100%',
-                          padding: '9px 12px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: isActive ? 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)' : 'transparent',
-                          color: isActive ? '#0f172a' : '#cbd5e1',
-                          fontWeight: isActive ? '800' : '600',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          textAlign: isRtl ? 'right' : 'left'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActive) e.currentTarget.style.backgroundColor = '#1e293b';
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150",
+                          isRtl ? "text-right" : "text-left",
+                          isActive 
+                            ? "bg-gradient-to-r from-amber-600 to-amber-500 text-slate-950 font-extrabold shadow-sm" 
+                            : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                        )}
                       >
-                        <span style={{ fontSize: '15px' }}>{node.icon}</span>
+                        <IconComponent className={cn("w-4 h-4 shrink-0", isActive ? "text-slate-950" : "text-amber-500/80")} />
                         <span>{node.title}</span>
                       </button>
                     );
@@ -403,40 +317,25 @@ export function EnterpriseSidebar({
           })}
         </div>
 
-        {/* 6. الفوتر */}
-        <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              backgroundColor: subStatus === 'active' ? '#10b981' : '#f59e0b',
-              boxShadow: subStatus === 'active' ? '0 0 6px #10b981' : '0 0 6px #f59e0b'
-            }} />
-            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-              {t('sidebar.syncStatus', isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized')}
+        {/* الفوتر وزر الخروج */}
+        <div className="p-3 border-t border-slate-800 bg-slate-950 shrink-0">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className={cn(
+              "w-2 h-2 rounded-full",
+              subStatus === 'active' ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-amber-500 shadow-[0_0_6px_#f59e0b]"
+            )} />
+            <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
+              <Cloud className="w-3.5 h-3.5 text-slate-400 inline" />
+              {isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}
             </span>
           </div>
 
           <button
             onClick={handleLogout}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '6px',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              background: 'rgba(239, 68, 68, 0.08)',
-              color: '#fca5a5',
-              fontSize: '11px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
+            className="w-full p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition"
           >
-            {t('sidebar.logoutBtn', isRtl ? '🚪 إنهاء الجلسة وتسجيل الخروج' : '🚪 End Session & Logout')}
+            <LogOut className="w-3.5 h-3.5" />
+            <span>{isRtl ? 'إنهاء الجلسة وتسجيل الخروج' : 'End Session & Logout'}</span>
           </button>
         </div>
 
