@@ -181,12 +181,12 @@ export function EnterpriseSidebar({
         />
       )}
 
-      {/* 2. السايدبار الرئيسي */}
+            {/* 2. السايدبار الرئيسي */}
       <aside 
         className={cn(
-          "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none border-slate-800 transition-all duration-300 ease-in-out",
+          "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none border-slate-800 transition-transform duration-300 ease-in-out",
           isRtl ? "right-0 border-l" : "left-0 border-r",
-          "lg:sticky lg:top-0 lg:z-30 lg:translate-x-0",
+          "lg:relative lg:top-0 lg:z-30 lg:translate-x-0 lg:shrink-0",
           isMobileDrawerOpen 
             ? "translate-x-0 shadow-2xl" 
             : (isRtl ? "max-lg:translate-x-full" : "max-lg:-translate-x-full")
