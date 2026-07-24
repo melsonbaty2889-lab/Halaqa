@@ -354,23 +354,42 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-  return (
+    return (
     <div style={{
-      display: 'flex', minHeight: '100vh', background: '#0f172a', color: '#fff',
-      fontFamily: "'Cairo', sans-serif", overflow: 'hidden', position: 'relative', flexDirection: isRtl ? 'row' : 'row-reverse'
+      display: 'flex', 
+      minHeight: '100vh', 
+      background: '#0f172a', 
+      color: '#fff',
+      fontFamily: "'Cairo', sans-serif", 
+      overflow: 'hidden', 
+      position: 'relative'
+      // 👈 تم حذف flexDirection: isRtl ? 'row' : 'row-reverse' لتجنب عكس المحاور
     }}>
       
       {isMobile && sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999, backdropFilter: 'blur(4px)' }} />
       )}
       
+      {/* 1. السايدبار مع تمرير الـ Props بالأسماء الصحيحة */}
       <Sidebar 
-        activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
-        isMobile={isMobile} isRtl={isRtl} t={t} userRole={userRole} trialDaysLeft={trialDaysLeft} isTrial={isTrial}
-        accountActivated={currentActivationState} setShowEarlyUpgrade={setShowEarlyUpgrade} numberFormatter={numberFormatter}
-        timezone={timezone} academyTime={academyTime}
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+        isMobile={isMobile} 
+        isRtl={isRtl} 
+        t={t} 
+        userRole={userRole} 
+        trialDaysLeft={trialDaysLeft} 
+        isTrial={isTrial}
+        accountActivated={currentActivationState} 
+        setShowEarlyUpgrade={setShowEarlyUpgrade} 
+        numberFormatter={numberFormatter}
+        timezone={timezone} 
+        academyTime={academyTime}
       />
 
+      {/* 2. منطقة المحتوى الرئيسي */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: '100vh' }}>
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} isMobile={isMobile} isRtl={isRtl} t={t} currency={currency} countryCode={countryCode} i18n={i18n} activeTab={activeTab} />
 
