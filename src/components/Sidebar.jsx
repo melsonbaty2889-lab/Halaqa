@@ -1,5 +1,6 @@
 /* src/components/Sidebar.jsx */
 import React, { useState, useEffect } from "react";
+import { formatHijriDate, formatGregorianDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { 
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
