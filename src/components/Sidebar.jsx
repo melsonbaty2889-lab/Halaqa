@@ -432,34 +432,101 @@ const hijri = formatHijriDate(new Date(), currentLocale);
   </div>
 </div>
 
-          {/* 🔍 1️⃣ شريط البحث السريع */}
+          {/* 🔍 1️⃣ شريط البحث السريع المتطور والتفاعلي */}
 <div style={{ position: 'relative', marginBottom: '14px' }}>
-  <FaSearch style={{
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    [isRtl ? 'right' : 'left']: '12px',
-    color: '#64748b',
-    fontSize: '0.85rem'
-  }} />
+  {/* أيقونة البحث قابلة للنقر لعمل Focus */}
+  <FaSearch 
+    onClick={() => searchInputRef.current && searchInputRef.current.focus()}
+    style={{
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      [isRtl ? 'right' : 'left']: '12px',
+      color: '#64748b',
+      fontSize: '0.85rem',
+      cursor: 'pointer',
+      zIndex: 2
+    }} 
+  />
+  
   <input
+    ref={searchInputRef}
     type="text"
     placeholder={isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...'}
     value={searchQuery || ''}
     onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+    onKeyDown={(e) => {
+      // عند الضغط على Enter يتم تنفيذ دالة البحث إذا كانت ممررة
+      if (e.key === 'Enter' && onSearchSubmit) {
+        onSearchSubmit(searchQuery);
+      }
+    }}
     style={{
       width: '100%',
-      padding: '9px 12px',
-      paddingRight: isRtl ? '36px' : '12px',
-      paddingLeft: isRtl ? '12px' : '36px',
+      padding: '9px 36px',
+      paddingRight: isRtl ? '36px' : '36px',
+      paddingLeft: isRtl ? '36px' : '36px',
       background: '#131f37',
       border: '1px solid #1e293b',
       borderRadius: '8px',
       color: '#fff',
       fontSize: '0.82rem',
-      outline: 'none'
+      outline: 'none',
+      transition: 'border-color 0.2s, box-shadow 0.2s'
     }}
   />
+
+  {/* زر المسح عند وجود نص / أو شارة الاختصار عند الخلو */}
+  {searchQuery ? (
+    <button
+      type="button"
+      onClick={() => {
+        if (setSearchQuery) setSearchQuery('');
+        if (searchInputRef.current) searchInputRef.current.focus();
+      }}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        [isRtl ? 'left' : 'right']: '10px',
+        background: 'none',
+        border: 'none',
+        color: '#64748b',
+        cursor: 'pointer',
+        fontSize: '0.8rem',
+        padding: '2px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 2
+      }}
+    >
+      <FaTimes />
+    </button>
+  ) : (
+    <span 
+      onClick={() => searchInputRef.current && searchInputRef.current.focus()}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        [isRtl ? 'left' : 'right']: '10px',
+        background: '#1e293b',
+        border: '1px solid #334155',
+        color: '#64748b',
+        borderRadius: '4px',
+        padding: '1px 5px',
+        fontSize: '0.65rem',
+        fontWeight: 'bold',
+        fontFamily: 'monospace',
+        cursor: 'pointer',
+        userSelect: 'none',
+        zIndex: 2
+      }}
+    >
+      ⌘K
+    </span>
+  )}
 </div>
 
 {/* ⚡ 2️⃣ كارت صلاحية النظام وترقية الاشتراك */}
