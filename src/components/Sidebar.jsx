@@ -10,7 +10,8 @@ export function EnterpriseSidebar({
   activeSection = 'dashboard', 
   setActiveSection,
   onOpenSearch,
-  onSwitchAcademy
+  onSwitchAcademy,
+  onNavigateToSubscription
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
@@ -24,9 +25,11 @@ export function EnterpriseSidebar({
   const [currentEntity, setCurrentEntity] = useState(null);
   const [loadingEntity, setLoadingEntity] = useState(true);
 
-  // 3. حالات اشتراك الـ SaaS
-  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(30);
-  const [planTier, setPlanTier] = useState('');
+  // 3. حالات اشتراك الـ SaaS المربوطة بالجدول الجديد
+  const [subscriptionData, setSubscriptionData] = useState(null);
+  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
+  const [planTier, setPlanTier] = useState('free');
+  const [subStatus, setSubStatus] = useState('trial');
 
   // تحديث الساعة فورياً
   useEffect(() => {
@@ -34,58 +37,75 @@ export function EnterpriseSidebar({
     return () => clearInterval(timer);
   }, []);
 
-  // تنسيق الوقت بحسب اللغة الحالية باستخدام dateUtils
+  // تنسيق الوقت بحسب اللغة الحالية
   const formattedTime = useMemo(() => {
     return formatLiveTime(currentTime, currentLang);
   }, [currentTime, currentLang]);
 
-  // التاريخ الهجري باستخدام dateUtils
+  // التاريخ الهجري
   const hijriDate = useMemo(() => {
     return formatHijriDate(currentTime, currentLang);
   }, [currentTime, currentLang]);
 
-  // التاريخ الميلادي باستخدام dateUtils
+  // التاريخ الميلادي
   const gregorianDate = useMemo(() => {
     return formatGregorianDate(currentTime, currentLang);
   }, [currentTime, currentLang]);
 
-  // جلب الكيانات وحل مشكلة "جاري التحميل..." المعلقة
+  // جلب الكيانات والاشتراك المربوط بها
   useEffect(() => {
     let isMounted = true;
-    const fetchPermittedEntities = async () => {
+
+    const fetchAcademyAndSubscription = async () => {
       setLoadingEntity(true);
       try {
-        const { data, error } = await supabase
+        // أ) جلب الأكاديميات المصرح بها
+        const { data: academies, error: acaError } = await supabase
           .from('academies')
-          .select('id, name, slug, metadata, subscription_end_date, plan_tier');
+          .select('id, name, slug, metadata');
 
-        if (error) throw error;
+        if (acaError) throw acaError;
 
-        if (isMounted && data && data.length > 0) {
-          setUserEntities(data);
-          // البحث عن الكيان الحالي أو اختيار الأول كافتراضي
-          const active = data.find(item => item.id === currentAcademyId) || data[0];
+        if (isMounted && academies && academies.length > 0) {
+          setUserEntities(academies);
+          const active = academies.find(item => item.id === currentAcademyId) || academies[0];
           setCurrentEntity(active);
 
-          if (active.plan_tier) {
-            setPlanTier(active.plan_tier);
-          }
+          // ب) جلب بيانات الاشتراك الفعلية من جدول saas_subscriptions
+          if (active?.id) {
+            const { data: sub, error: subError } = await supabase
+              .from('saas_subscriptions')
+              .select('*')
+              .eq('academy_id', active.id)
+              .maybeSingle();
 
-          if (active.subscription_end_date) {
-            const endDate = new Date(active.subscription_end_date);
-            const diffTime = endDate.getTime() - new Date().getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+            if (!subError && sub) {
+              setSubscriptionData(sub);
+              setPlanTier(sub.plan_tier || 'pro');
+              setSubStatus(sub.status || 'active');
+
+              if (sub.expires_at) {
+                const endDate = new Date(sub.expires_at);
+                const diffTime = endDate.getTime() - new Date().getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                setSubscriptionDaysLeft(diffDays > 0 ? diffDays : 0);
+              }
+            } else {
+              // إذا لم يوجد اشتراك مسجل بعد
+              setPlanTier('free');
+              setSubStatus('unpaid');
+              setSubscriptionDaysLeft(0);
+            }
           }
         }
       } catch (err) {
-        console.error('Error fetching entities:', err);
+        console.error('Error fetching entities/subscription:', err);
       } finally {
         if (isMounted) setLoadingEntity(false);
       }
     };
 
-    fetchPermittedEntities();
+    fetchAcademyAndSubscription();
     return () => { isMounted = false; };
   }, [currentAcademyId]);
 
@@ -109,7 +129,7 @@ export function EnterpriseSidebar({
     }
   };
 
-  // المحاور والأزرار باستخدام t() من ملفات json
+  // المحاور والأزرار
   const globalNavigationPillars = useMemo(() => [
     {
       pillarTitle: t('sidebar.pillars.liveOps', '1. مركز القيادة الحية | Live Operations Hub'),
@@ -151,6 +171,15 @@ export function EnterpriseSidebar({
     }
   ], [t]);
 
+  // دالة توجيه سريعة لصفحة الاشتراك
+  const handleUpgradeClick = () => {
+    if (onNavigateToSubscription) {
+      onNavigateToSubscription();
+    } else if (setActiveSection) {
+      setActiveSection('subscription');
+    }
+  };
+
   return (
     <aside style={{
       width: '300px',
@@ -169,14 +198,22 @@ export function EnterpriseSidebar({
       boxSizing: 'border-box'
     }}>
       
-      {/* 1. الهيدر - ثابت بدون overflow */}
+      {/* 1. الهيدر */}
       <div style={{ padding: '16px 16px 12px 16px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#f59e0b', letterSpacing: '0.5px' }}>
             {entityCustomLabel} {t('sidebar.current', 'الحالية')}
           </span>
-          <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #334155' }}>
-            {planTier || t('sidebar.proPlan', 'الباقة الاحترافية')}
+          <span style={{ 
+            fontSize: '10px', 
+            background: subStatus === 'active' ? '#065f46' : subStatus === 'unpaid' ? '#854d0e' : '#1e293b', 
+            color: subStatus === 'active' ? '#34d399' : subStatus === 'unpaid' ? '#fde047' : '#38bdf8', 
+            padding: '2px 8px', 
+            borderRadius: '4px', 
+            fontWeight: 'bold', 
+            border: '1px solid #334155' 
+          }}>
+            {planTier.toUpperCase()} ({subStatus === 'active' ? 'نشط' : subStatus === 'unpaid' ? 'معلق' : 'مجاني'})
           </span>
         </div>
 
@@ -260,20 +297,34 @@ export function EnterpriseSidebar({
         </button>
       </div>
 
-      {/* 4. شريط أصل أيام الاشتراك */}
-      <div style={{ padding: '8px 16px', background: 'rgba(30, 41, 59, 0.2)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+      {/* 4. شريط حالة وأيام الاشتراك السحابي (ديناميكي) */}
+      <div style={{ padding: '10px 16px', background: 'rgba(30, 41, 59, 0.3)', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginBottom: '6px' }}>
           <span style={{ color: '#94a3b8' }}>{t('sidebar.subValidity', 'صلاحية النظام:')}</span>
-          <span style={{ color: '#10b981', fontWeight: '800' }}>
-            {t('sidebar.daysRemaining', 'متبقي {{days}} يوم', { days: subscriptionDaysLeft })}
-          </span>
+          {subStatus === 'active' || subStatus === 'trial' ? (
+            <span style={{ color: subscriptionDaysLeft <= 5 ? '#ef4444' : '#10b981', fontWeight: '800' }}>
+              {t('sidebar.daysRemaining', 'متبقي {{days}} يوم', { days: subscriptionDaysLeft })}
+            </span>
+          ) : (
+            <button 
+              onClick={handleUpgradeClick}
+              style={{ background: '#f59e0b', color: '#0f172a', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', cursor: 'pointer' }}
+            >
+              {subStatus === 'unpaid' ? 'تأكيد الدفع ⚡' : 'ترقية الآن 🚀'}
+            </button>
+          )}
         </div>
-        <div style={{ width: '100%', height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{ width: `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%`, height: '100%', background: '#10b981' }} />
+        <div style={{ width: '100%', height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ 
+            width: subStatus === 'active' ? `${Math.min((subscriptionDaysLeft / 30) * 100, 100)}%` : '0%', 
+            height: '100%', 
+            background: subscriptionDaysLeft <= 5 ? '#ef4444' : '#10b981',
+            transition: 'width 0.3s ease'
+          }} />
         </div>
       </div>
 
-      {/* 5. القوائم (تتحرك بالسكرول فقط في المنتصف) */}
+      {/* 5. القوائم */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
         {globalNavigationPillars.map((pillar, pIdx) => {
           if (!pillar.allowedRoles.includes(currentUserRole)) return null;
@@ -331,15 +382,15 @@ export function EnterpriseSidebar({
         })}
       </div>
 
-      {/* 6. الفوتر الثابت بالأسفل */}
+      {/* 6. الفوتر */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <span style={{
             width: '7px',
             height: '7px',
             borderRadius: '50%',
-            backgroundColor: '#10b981',
-            boxShadow: '0 0 6px #10b981'
+            backgroundColor: subStatus === 'active' ? '#10b981' : '#f59e0b',
+            boxShadow: subStatus === 'active' ? '0 0 6px #10b981' : '0 0 6px #f59e0b'
           }} />
           <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
             {t('sidebar.syncStatus', 'ربط سحابي متزامن')}
