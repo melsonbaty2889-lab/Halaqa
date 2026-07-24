@@ -8,6 +8,25 @@ import {
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock
 } from "react-icons/fa";
+import { useRef, useEffect } from 'react';
+
+// داخل مكون Sidebar
+const searchInputRef = useRef(null);
+
+// ⌨️ تفعيل اختصار الكيبورد العالمي (Ctrl + K / Cmd + K)
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, []);
 
 // 🌟 شعار عالمي وفائق الاحترافية لمنظومة الحلقة الذكية
 const SmartHalaqaProLogo = () => (
