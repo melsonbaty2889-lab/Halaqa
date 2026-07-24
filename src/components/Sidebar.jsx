@@ -432,84 +432,85 @@ const hijri = formatHijriDate(new Date(), currentLocale);
   </div>
 </div>
 
-          {/* 🔍 1️⃣ شريط البحث السريع */}
-<div style={{ position: 'relative', marginBottom: '14px' }}>
-  <FaSearch style={{
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    [isRtl ? 'right' : 'left']: '12px',
-    color: '#64748b',
-    fontSize: '0.85rem'
-  }} />
-  <input
-    type="text"
-    placeholder={isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...'}
-    value={searchQuery || ''}
-    onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
-    style={{
-      width: '100%',
-      padding: '9px 12px',
-      paddingRight: isRtl ? '36px' : '12px',
-      paddingLeft: isRtl ? '12px' : '36px',
-      background: '#131f37',
-      border: '1px solid #1e293b',
-      borderRadius: '8px',
-      color: '#fff',
-      fontSize: '0.82rem',
-      outline: 'none'
-    }}
-  />
-</div>
+          {/* 🔍 4️⃣ شريط البحث */}
+          <div style={{
+            position: 'relative',
+            marginBottom: '14px',
+            background: '#131f37',
+            borderRadius: '8px',
+            border: '1px solid #1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 10px'
+          }}>
+            <FaSearch style={{ color: '#64748b', fontSize: '0.85rem' }} />
+            <input 
+              type="text"
+              placeholder={isRtl ? 'ابحث عن طلاب، حلقات...' : 'Search students, halaqas...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: '#fff',
+                fontSize: '0.8rem'
+              }}
+            />
+          </div>
 
-{/* ⚡ 2️⃣ كارت صلاحية النظام وترقية الاشتراك */}
-<div style={{
-  background: '#131f37',
-  padding: '12px',
-  borderRadius: '10px',
-  border: '1px solid #1e293b',
-  marginBottom: '18px'
-}}>
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-    <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: '600' }}>
-      {isRtl ? 'صلاحية النظام:' : 'Validity:'}
-    </span>
-    <span style={{
-      background: 'rgba(239, 68, 68, 0.15)',
-      color: '#f87171',
-      padding: '2px 8px',
-      borderRadius: '6px',
-      fontSize: '0.72rem',
-      fontWeight: 'bold'
-    }}>
-      {isRtl ? `${daysLeft || 0} أيّام متبقية` : `${daysLeft || 0} Days left`}
-    </span>
-  </div>
+          {/* ⚡ 5️⃣ صلاحية النظام وترقية الاشتراك */}
+          <div style={{
+            padding: '12px',
+            background: 'linear-gradient(180deg, #131f37 0%, #0f172a 100%)',
+            borderRadius: '10px',
+            border: '1px solid #1e293b',
+            marginBottom: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                {isRtl ? 'صلاحية النظام:' : 'Validity:'}
+              </span>
+              <span style={{ 
+                fontSize: '0.82rem', 
+                fontWeight: 'bold', 
+                color: Number(trialDaysLeft) <= 3 ? '#ef4444' : '#10b981',
+                background: 'rgba(16, 185, 129, 0.1)',
+                padding: '2px 8px',
+                borderRadius: '6px'
+              }}>
+                {`${trialDaysLeft ?? 0} ${isRtl ? 'أيام متبقية' : 'Days left'}`}
+              </span>
+            </div>
 
-  <button
-    onClick={onUpgradeClick}
-    style={{
-      width: '100%',
-      padding: '10px',
-      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-      color: '#0f172a',
-      border: 'none',
-      borderRadius: '8px',
-      fontWeight: 'bold',
-      fontSize: '0.85rem',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '6px',
-      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
-    }}
-  >
-    <FaBolt />
-    <span>{isRtl ? 'ترقية / تجديد الاشتراك' : 'Upgrade Account'}</span>
-    <FaBolt />
-  </button>
-</div>
+            <button
+              onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: '#000',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 10px rgba(245, 158, 11, 0.2)'
+              }}
+            >
+              <FaBolt />
+              <span>{isRtl ? 'ترقية / تجديد الاشتراك ⚡' : 'Upgrade Account ⚡'}</span>
+            </button>
+          </div>
 
           {/* 📑 6️⃣ القوائم والتبويبات */}
           <nav>
