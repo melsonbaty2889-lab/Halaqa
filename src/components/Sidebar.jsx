@@ -8,26 +8,35 @@ import {
   FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock
 } from "react-icons/fa";
 
-// 🕌 شعار الحلقة والقرآن (حلقة ذهبية بداخلها المصحف)
-const QuranHalaqaLogo = () => (
+// 🌟 شعار عالمي واحترافي لمنظومة الحلقة الذكية
+const SmartHalaqaProLogo = () => (
   <div style={{
-    width: '44px',
-    height: '44px',
+    width: '42px',
+    height: '42px',
     borderRadius: '12px',
-    background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+    background: 'linear-gradient(135deg, #0f766e 0%, #042f2e 100%)',
+    border: '1px solid rgba(45, 212, 191, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
-    border: '1px solid rgba(254, 240, 138, 0.5)'
+    boxShadow: '0 4px 16px rgba(15, 118, 110, 0.35)',
+    flexShrink: 0
   }}>
-    {/* الحلقة الخارجية المزخرفة */}
-    <svg width="44" height="44" viewBox="0 0 50 50" style={{ position: 'absolute', inset: 0 }}>
-      <circle cx="25" cy="25" r="21" fill="none" stroke="#fef08a" strokeWidth="1.5" strokeDasharray="4 2" opacity="0.7" />
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* هالة الحلقة الخارجية */}
+      <circle cx="12" cy="12" r="10" stroke="#2dd4bf" strokeWidth="1.2" strokeDasharray="3 2" opacity="0.6" />
+      {/* كتاب المصحف الشريف - تصميم هندسي عصري */}
+      <path d="M12 6.2C10.5 5.1 8.2 5 5.5 5.8V17.5C8.2 16.7 10.5 16.8 12 17.8C13.5 16.8 15.8 16.7 18.5 17.5V5.8C15.8 5 13.5 5.1 12 6.2Z" 
+            fill="url(#logoGlow)" stroke="#fef08a" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M12 6.2V17.8" stroke="#fef08a" strokeWidth="1.2" strokeLinecap="round" />
+      <defs>
+        <linearGradient id="logoGlow" x1="5.5" y1="5" x2="18.5" y2="17.8" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f59e0b" />
+          <stop offset="1" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
     </svg>
-    {/* أيقونة المصحف الشريف */}
-    <FaBookOpen style={{ color: '#000', fontSize: '1.25rem', zIndex: 2 }} />
   </div>
 );
 
@@ -54,28 +63,40 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 🗓️ حساب وتنسيق التاريخ الهجري والميلادي بدقة
+  // 🗓️ دالة معالجة التاريخ الهجري والميلادي بدقة احترافية
   const getFormattedDates = () => {
     const now = new Date();
     
     // 1. التاريخ الميلادي
     const gregorian = new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric'
     }).format(now);
 
-    // 2. التاريخ الهجري (تقويم أم القرى)
+    // 2. التاريخ الهجري مع ضمان عدم ظهور BC أو أخطاء المحاذاة
     let hijri = '';
     try {
-      hijri = new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      }).format(now);
+      if (isRtl) {
+        hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(now);
+        if (!hijri.includes('هـ')) hijri += ' هـ';
+      } else {
+        // باللغة الإنجليزية
+        const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        }).formatToParts(now);
 
-      if (isRtl && !hijri.includes('هـ')) {
-        hijri += ' هـ';
+        const day = parts.find(p => p.type === 'day')?.value || '';
+        const month = parts.find(p => p.type === 'month')?.value || '';
+        const year = parts.find(p => p.type === 'year')?.value || '';
+        
+        hijri = `${month} ${day}, ${year} AH`;
       }
     } catch (e) {
       hijri = isRtl ? 'التاريخ الهجري' : 'Hijri Date';
@@ -86,7 +107,7 @@ export default function Sidebar({
 
   const { gregorian, hijri } = getFormattedDates();
 
-  // جلب قائمة الأكاديميات
+  // جلب الأكاديميات
   useEffect(() => {
     async function loadAcademies() {
       try {
@@ -99,9 +120,7 @@ export default function Sidebar({
           .eq('user_id', user.id);
 
         if (staffData && staffData.length > 0) {
-          const list = staffData
-            .map(s => s.academies)
-            .filter(Boolean);
+          const list = staffData.map(s => s.academies).filter(Boolean);
           setAcademiesList(list);
         }
       } catch (err) {
@@ -114,14 +133,27 @@ export default function Sidebar({
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId);
   const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
-  const getStatusBadgeText = () => {
+  // نص وتنسيق الحالة الاحترافي
+  const getStatusBadge = () => {
     if (isTrial) {
-      return isRtl ? 'مجاني (معلق)' : 'FREE (Pending)';
+      return {
+        text: isRtl ? 'فترة تجريبية' : 'Free Trial',
+        style: { background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
+      };
     }
-    return accountActivated 
-      ? (isRtl ? 'نشط' : 'Active') 
-      : (isRtl ? 'غير مدفوع' : 'Unpaid');
+    if (accountActivated) {
+      return {
+        text: isRtl ? 'اشتراك نشط' : 'Active Plan',
+        style: { background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
+      };
+    }
+    return {
+      text: isRtl ? 'قيد التفعيل' : 'Pending',
+      style: { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
+    };
   };
+
+  const statusBadge = getStatusBadge();
 
   const menuSections = [
     {
@@ -179,7 +211,7 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
             backdropFilter: 'blur(3px)',
             zIndex: 999
           }}
@@ -189,7 +221,7 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 📖 1️⃣ شعار "الحلقة الذكية" - لوجو الحلقة والمصحف */}
+          {/* 🌟 1️⃣ اللوجو الفاخر + رأس المنظومة */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -199,12 +231,12 @@ export default function Sidebar({
             borderBottom: '1px solid #1e293b' 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <QuranHalaqaLogo />
+              <SmartHalaqaProLogo />
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 'bold', color: '#fff', letterSpacing: '0.3px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: '#fff', letterSpacing: '0.2px' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '500' }}>
                   {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
               </div>
@@ -220,25 +252,25 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 🔴 2️⃣ الأكاديمية الحالية + شارة مجاني معلق */}
+          {/* 🔴 2️⃣ الأكاديمية الحالية وشارة الحالة الاحترافية */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 'bold' }}>
+              <span style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: '600' }}>
                 {isRtl ? 'الأكاديمية الحالية' : 'Current Academy'}
               </span>
               <span style={{
-                padding: '3px 8px',
-                borderRadius: '4px',
-                fontSize: '0.72rem',
-                fontWeight: 'bold',
-                background: 'rgba(217, 119, 6, 0.2)',
-                color: '#f59e0b',
-                border: '1px solid rgba(217, 119, 6, 0.4)'
+                padding: '3px 9px',
+                borderRadius: '6px',
+                fontSize: '0.7rem',
+                fontWeight: '700',
+                letterSpacing: '0.2px',
+                ...statusBadge.style
               }}>
-                {getStatusBadgeText()}
+                {statusBadge.text}
               </span>
             </div>
 
+            {/* القائمة المنسدلة للأكاديميات */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -253,7 +285,7 @@ export default function Sidebar({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  fontSize: '0.9rem',
+                  fontSize: '0.88rem',
                   fontWeight: '600'
                 }}
               >
@@ -375,7 +407,7 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* 📅 3️⃣ التواريخ (الهجري والميلادي) والساعة */}
+          {/* 📅 3️⃣ الساعة والتواريخ المنسقة بوضوح */}
           <div style={{
             background: '#131f37',
             padding: '10px 12px',
@@ -391,7 +423,7 @@ export default function Sidebar({
                 <FaClock style={{ fontSize: '0.8rem' }} />
                 <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
               </div>
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:24 م'}</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:33 PM'}</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
@@ -430,21 +462,9 @@ export default function Sidebar({
                 fontSize: '0.8rem'
               }}
             />
-            {!isMobile && (
-              <span style={{
-                background: '#1e293b',
-                color: '#94a3b8',
-                fontSize: '0.65rem',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                border: '1px solid #334155'
-              }}>
-                Ctrl K
-              </span>
-            )}
           </div>
 
-          {/* ⚡ 5️⃣ صلاحية النظام وزر الترقية */}
+          {/* ⚡ 5️⃣ صلاحية النظام وترقية الاشتراك */}
           <div style={{
             padding: '12px',
             background: 'linear-gradient(180deg, #131f37 0%, #0f172a 100%)',
@@ -456,11 +476,11 @@ export default function Sidebar({
             gap: '10px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
                 {isRtl ? 'صلاحية النظام:' : 'Validity:'}
               </span>
               <span style={{ 
-                fontSize: '0.85rem', 
+                fontSize: '0.82rem', 
                 fontWeight: 'bold', 
                 color: Number(trialDaysLeft) <= 3 ? '#ef4444' : '#10b981',
                 background: 'rgba(16, 185, 129, 0.1)',
@@ -495,7 +515,7 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* 📑 6️⃣ عناصر القائمة */}
+          {/* 📑 6️⃣ القوائم والتبويبات */}
           <nav>
             {menuSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '18px' }}>
@@ -549,7 +569,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* 🔒 7️⃣ أسفل السايدبار */}
+        {/* 🔒 7️⃣ تسجيل الخروج */}
         <div style={{ padding: '16px', borderTop: '1px solid #1e293b', background: '#090f20' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '0.78rem', color: '#94a3b8' }}>
             <FaCloud style={{ color: '#10b981' }} />
