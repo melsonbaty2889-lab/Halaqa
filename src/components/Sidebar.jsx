@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from '../lib/supabase';
 import { 
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
-  FaUserGrad, FaChalkboardTeacher, FaCheckCircle, 
+  FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt 
 } from "react-icons/fa";
