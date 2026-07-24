@@ -286,188 +286,189 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 🔴 2️⃣ الأكاديمية الحالية وشارة الحالة الاحترافية */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: '600' }}>
-                {isRtl ? 'الأكاديمية الحالية' : 'Current Academy'}
-              </span>
-              <span style={{
-                padding: '3px 9px',
-                borderRadius: '6px',
-                fontSize: '0.7rem',
-                fontWeight: '700',
-                letterSpacing: '0.2px',
-                ...statusBadge.style
-              }}>
-                {statusBadge.text}
-              </span>
-            </div>
+  
+                    {/* 🔴 2️⃣ الأكاديمية الحالية وشارة الحالة الاحترافية */}
+<div style={{ marginBottom: '16px' }}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+    <span style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: '600' }}>
+      {isRtl ? 'الأكاديمية الحالية' : 'Current Academy'}
+    </span>
+    <span style={{
+      padding: '3px 9px',
+      borderRadius: '6px',
+      fontSize: '0.7rem',
+      fontWeight: '700',
+      letterSpacing: '0.2px',
+      ...statusBadge.style
+    }}>
+      {statusBadge.text}
+    </span>
+  </div>
 
-            {/* القائمة المنسدلة للأكاديميات */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: '#131f37',
-                  border: '1px solid #1e293b',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  fontSize: '0.88rem',
-                  fontWeight: '600'
-                }}
-              >
-                <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {currentAcademyName}
-                </span>
-                <FaChevronDown style={{ fontSize: '0.75rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
-              </button>
+  {/* القائمة المنسدلة للأكاديميات */}
+  <div style={{ position: 'relative' }}>
+    <button
+      onClick={() => setDropdownOpen(!dropdownOpen)}
+      style={{
+        width: '100%',
+        padding: '10px 14px',
+        background: '#131f37',
+        border: '1px solid #1e293b',
+        borderRadius: '8px',
+        color: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        cursor: 'pointer',
+        fontSize: '0.88rem',
+        fontWeight: '600'
+      }}
+    >
+      <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {currentAcademyName}
+      </span>
+      <FaChevronDown style={{ fontSize: '0.75rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+    </button>
 
-              {dropdownOpen && (
-                isMobile ? (
-                  <div 
-                    style={{
-                      position: 'fixed',
-                      inset: 0,
-                      zIndex: 9999,
-                      background: 'rgba(0,0,0,0.65)',
-                      backdropFilter: 'blur(4px)',
-                      display: 'flex',
-                      alignItems: 'flex-end',
-                      justifyContent: 'center'
-                    }}
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <div 
-                      style={{
-                        width: '100%',
-                        maxWidth: '500px',
-                        background: '#1e293b',
-                        borderTopLeftRadius: '20px',
-                        borderTopRightRadius: '20px',
-                        padding: '20px',
-                        borderTop: '1px solid #334155',
-                        boxShadow: '0 -10px 25px rgba(0,0,0,0.5)'
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #334155' }}>
-                        <h3 style={{ margin: 0, fontSize: '1rem', color: '#f8fafc', fontWeight: 'bold' }}>
-                          {isRtl ? 'اختر الأكاديمية' : 'Select Academy'}
-                        </h3>
-                        <button 
-                          onClick={() => setDropdownOpen(false)}
-                          style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer' }}
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto' }}>
-                        {academiesList.map(acc => (
-                          <button
-                            key={acc.id}
-                            onClick={() => {
-                              if (onSwitchAcademy) onSwitchAcademy(acc.id);
-                              setDropdownOpen(false);
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '14px 16px',
-                              borderRadius: '10px',
-                              border: acc.id === currentAcademyId ? '1px solid #3b82f6' : '1px solid #334155',
-                              background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : '#0f172a',
-                              color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <span dir="auto" style={{ fontWeight: acc.id === currentAcademyId ? 'bold' : 'normal' }}>
-                              {acc.name}
-                            </span>
-                            <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: '6px',
-                    background: '#131f37',
-                    borderRadius: '8px',
-                    border: '1px solid #1e293b',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-                    zIndex: 50,
-                    overflow: 'hidden'
-                  }}>
-                    {academiesList.map(acc => (
-                      <button
-                        key={acc.id}
-                        onClick={() => {
-                          if (onSwitchAcademy) onSwitchAcademy(acc.id);
-                          setDropdownOpen(false);
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '10px 14px',
-                          border: 'none',
-                          background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                          color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
-                          cursor: 'pointer',
-                          fontSize: '0.85rem'
-                        }}
-                      >
-                        <span dir="auto">{acc.name}</span>
-                        <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
-                      </button>
-                    ))}
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* 📅 3️⃣ الساعة والتواريخ المنسقة بوضوح */}
-          <div style={{
-            background: '#131f37',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            marginBottom: '14px',
-            border: '1px solid #1e293b',
+    {dropdownOpen && (
+      isMobile ? (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(4px)',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '6px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: '#38bdf8' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaClock style={{ fontSize: '0.8rem' }} />
-                <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
-              </div>
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:33 PM'}</span>
+            alignItems: 'flex-end',
+            justifyContent: 'center'
+          }}
+          onClick={() => setDropdownOpen(false)}
+        >
+          <div 
+            style={{
+              width: '100%',
+              maxWidth: '500px',
+              background: '#1e293b',
+              borderTopLeftRadius: '20px',
+              borderTopRightRadius: '20px',
+              padding: '20px',
+              borderTop: '1px solid #334155',
+              boxShadow: '0 -10px 25px rgba(0,0,0,0.5)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #334155' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: '#f8fafc', fontWeight: 'bold' }}>
+                {isRtl ? 'اختر الأكاديمية' : 'Select Academy'}
+              </h3>
+              <button 
+                onClick={() => setDropdownOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer' }}
+              >
+                <FaTimes />
+              </button>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaCalendarAlt style={{ color: '#f59e0b', fontSize: '0.75rem' }} />
-                <span>{gregorian}</span>
-              </div>
-              <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{hijri}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto' }}>
+              {academiesList.map(acc => (
+                <button
+                  key={acc.id}
+                  onClick={() => {
+                    if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                    setDropdownOpen(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px',
+                    borderRadius: '10px',
+                    border: acc.id === currentAcademyId ? '1px solid #3b82f6' : '1px solid #334155',
+                    background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : '#0f172a',
+                    color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span dir="auto" style={{ fontWeight: acc.id === currentAcademyId ? 'bold' : 'normal' }}>
+                    {acc.name}
+                  </span>
+                  <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
+                </button>
+              ))}
             </div>
           </div>
+        </div>
+      ) : (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '6px',
+          background: '#131f37',
+          borderRadius: '8px',
+          border: '1px solid #1e293b',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+          zIndex: 50,
+          overflow: 'hidden'
+        }}>
+          {academiesList.map(acc => (
+            <button
+              key={acc.id}
+              onClick={() => {
+                if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                setDropdownOpen(false);
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                border: 'none',
+                background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
+                cursor: 'pointer',
+                fontSize: '0.85rem'
+              }}
+            >
+              <span dir="auto">{acc.name}</span>
+              <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
+            </button>
+          ))}
+        </div>
+      )
+    )}
+  </div>
+</div>
+
+{/* 📅 3️⃣ الساعة والتواريخ المنسقة بوضوح (مرتبطة بـ dateUtils.js) */}
+<div style={{
+  background: '#131f37',
+  padding: '10px 12px',
+  borderRadius: '8px',
+  marginBottom: '14px',
+  border: '1px solid #1e293b',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px'
+}}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: '#38bdf8' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <FaClock style={{ fontSize: '0.8rem' }} />
+      <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
+    </div>
+    <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:33 PM'}</span>
+  </div>
+
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <FaCalendarAlt style={{ color: '#f59e0b', fontSize: '0.75rem' }} />
+      <span>{gregorian}</span>
+    </div>
+    <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{hijri}</span>
+  </div>
+</div>
 
           {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
