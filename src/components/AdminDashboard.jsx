@@ -1,5 +1,5 @@
-/* src/components/AdminDashboard.jsx */
-import React, { useState, useEffect } from 'react';
+/* src/components/AdminDashboard.jsx - Part 1: Architecture & Data Fetching */
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Dashboard.module.css';
 import { supabase } from '../lib/supabase';
 import EmptyState from './EmptyState'; 
@@ -12,36 +12,76 @@ import {
   FaBan,
   FaHourglassHalf,
   FaSearch,
-  FaTimes
+  FaTimes,
+  FaSync,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 
 export default function AdminDashboard({ isRtl = true, academyName, onLogout }) {
+  // 📋 الحالات الأساسية (States)
   const [pendingAcademies, setPendingAcademies] = useState([]);
   const [activeAcademies, setActiveAcademies] = useState([]); 
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
+  
+  // ⚙️ حالات التحكم والأداء
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
+  // 🔄 دالة جلب البيانات مع دعم الربط المزدوج وإدارة الأخطاء الاحترافية
+  const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
+    if (!isSilentRefresh) setLoading(true);
+    else setRefreshing(true);
+    setErrorMessage(null);
+
     try {
-      const { data: pendingData } = await supabase.from('academies').select('*').eq('is_active', false).order('created_at', { ascending: false });
+      // 1️⃣ جلب الطلبات المعلقة (الأكاديمية أو البروفايل غير مفعل)
+      const { data: pendingData, error: pendingErr } = await supabase
+        .from('academies')
+        .select('*, profiles:owner_id(id, full_name, email, is_activated)')
+        .or('is_active.eq.false, profiles.is_activated.eq.false')
+        .order('created_at', { ascending: false });
+
+      if (pendingErr) throw pendingErr;
+
+      // 2️⃣ جلب الأكاديميات النشطة
+      const { data: activeData, error: activeErr } = await supabase
+        .from('academies')
+        .select('*, profiles:owner_id(id, full_name, email, is_activated)')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (activeErr) throw activeErr;
+
+      // 3️⃣ جلب إجمالي الأكاديميات المسجلة
+      const { count, error: countErr } = await supabase
+        .from('academies')
+        .select('*', { count: 'exact', head: true });
+
+      if (countErr) throw countErr;
+
+      // 🎯 تحديث الحالات دفعة واحدة
       setPendingAcademies(pendingData || []);
-
-      const { data: activeData } = await supabase.from('academies').select('*').eq('is_active', true).order('created_at', { ascending: false });
       setActiveAcademies(activeData || []);
-
-      const { count } = await supabase.from('academies').select('*', { count: 'exact', head: true });
       if (count !== null) setTotalAcademiesCount(count);
-    } catch (error) {
-      console.error("Error fetching admin data:", error.message);
+
+    } catch (err) {
+      console.error("❌ Admin Dashboard Error:", err.message);
+      setErrorMessage(isRtl ? "تعذر جلب البيانات. تحقق من الاتصال بشبكة الإنترنت." : "Failed to load dashboard data.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [isRtl]);
 
-  useEffect(() => { fetchDashboardData(); }, []);
+  // 🚀 التحديث التلقائي عند فتح الشاشة
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // ... (سوف ننتقل لباقي الدوال والتصميم بعد موافقتك)
 
   const onActivateClick = async (id) => {
     if (processingId) return;
