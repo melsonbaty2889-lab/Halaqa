@@ -83,63 +83,140 @@ const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
 
   // ... (سوف ننتقل لباقي الدوال والتصميم بعد موافقتك)
 
-  const onActivateClick = async (id) => {
-    if (processingId) return;
-    setProcessingId(`activate-${id}`);
-    try {
-      // 1. تحديث حالة الأكاديمية
-      const { error } = await supabase.from('academies').update({ is_active: true }).eq('id', id);
-      if (error) throw error;
+  /* src/components/AdminDashboard.jsx - Part 2: High-Performance Actions */
 
-      const activated = pendingAcademies.find(a => a.id === id);
+// ⚡ 1. دالة اعتماد الحساب (تفعيل الأكاديمية ومالكها تزامنياً)
+const onActivateClick = async (id, ownerId) => {
+  if (processingId) return;
+  setProcessingId(`activate-${id}`);
 
-      // ✨ 2. تحديث بروفايل المالك (is_activated = true) ليتجاوز شاشة المراجعة تلقائياً
-      if (activated?.owner_id) {
-        await supabase.from('profiles').update({ is_activated: true }).eq('id', activated.owner_id);
-      }
+  // الاحتفاظ بنسخة من البيانات لإلغاء التغيير في حال حدوث خطأ (Rollback)
+  const previousPending = [...pendingAcademies];
+  const previousActive = [...activeAcademies];
+  const targetAcademy = pendingAcademies.find(a => a.id === id);
 
-      setPendingAcademies(prev => prev.filter(a => a.id !== id));
-      if (activated) setActiveAcademies(prev => [{ ...activated, is_active: true }, ...prev]);
-    } catch (e) { alert(e.message); }
+  // 🎯 Optimistic UI: التحديث الفوري في الواجهة قبل استجابة السيرفر
+  setPendingAcademies(prev => prev.filter(a => a.id !== id));
+  if (targetAcademy) {
+    setActiveAcademies(prev => [{ ...targetAcademy, is_active: true }, ...prev]);
+  }
+
+  try {
+    // أ) تفعيل الأكاديمية
+    const { error: acadErr } = await supabase
+      .from('academies')
+      .update({ is_active: true })
+      .eq('id', id);
+
+    if (acadErr) throw acadErr;
+
+    // ب) تفعيل حساب المالك فوراً ليتجاوز شاشة الانتظار
+    const targetOwnerId = ownerId || targetAcademy?.owner_id;
+    if (targetOwnerId) {
+      await supabase
+        .from('profiles')
+        .update({ is_activated: true })
+        .eq('id', targetOwnerId);
+    }
+
+  } catch (error) {
+    console.error("❌ Activate Error:", error.message);
+    // 🔄 التراجع عن التغيير في الواجهة في حال الفشل
+    setPendingAcademies(previousPending);
+    setActiveAcademies(previousActive);
+    setErrorMessage(isRtl ? "فشل تفعيل الحساب. حاول مرة أخرى." : "Failed to activate account.");
+  } finally {
     setProcessingId(null);
-  };
+  }
+};
 
-  const onDeactivateClick = async (id) => {
-    if (processingId || !window.confirm(isRtl ? 'هل أنت متأكد من إيقاف تفعيل وحظر هذه الأكاديمية؟' : 'Deactivate academy?')) return;
-    setProcessingId(`deactivate-${id}`);
-    try {
-      // 1. إيقاف الأكاديمية
-      const { error } = await supabase.from('academies').update({ is_active: false }).eq('id', id);
-      if (error) throw error;
+// 🚫 2. دالة إيقاف/حظر الأكاديمية
+const onDeactivateClick = async (id, ownerId) => {
+  if (processingId) return;
 
-      const deactivated = activeAcademies.find(a => a.id === id);
+  const confirmed = window.confirm(
+    isRtl ? 'هل أنت متأكد من تعليق/حظر هذه الأكاديمية؟' : 'Deactivate this academy?'
+  );
+  if (!confirmed) return;
 
-      // ✨ 2. إيقاف بروفايل المالك أيضاً تزامنياً
-      if (deactivated?.owner_id) {
-        await supabase.from('profiles').update({ is_activated: false }).eq('id', deactivated.owner_id);
-      }
+  setProcessingId(`deactivate-${id}`);
 
-      setActiveAcademies(prev => prev.filter(a => a.id !== id));
-      if (deactivated) setPendingAcademies(prev => [{ ...deactivated, is_active: false }, ...prev]);
-    } catch (e) { alert(e.message); }
+  const previousPending = [...pendingAcademies];
+  const previousActive = [...activeAcademies];
+  const targetAcademy = activeAcademies.find(a => a.id === id);
+
+  // 🎯 Optimistic UI
+  setActiveAcademies(prev => prev.filter(a => a.id !== id));
+  if (targetAcademy) {
+    setPendingAcademies(prev => [{ ...targetAcademy, is_active: false }, ...prev]);
+  }
+
+  try {
+    // أ) إيقاف الأكاديمية
+    const { error: acadErr } = await supabase
+      .from('academies')
+      .update({ is_active: false })
+      .eq('id', id);
+
+    if (acadErr) throw acadErr;
+
+    // ب) تعليق بروفايل المالك
+    const targetOwnerId = ownerId || targetAcademy?.owner_id;
+    if (targetOwnerId) {
+      await supabase
+        .from('profiles')
+        .update({ is_activated: false })
+        .eq('id', targetOwnerId);
+    }
+
+  } catch (error) {
+    console.error("❌ Deactivate Error:", error.message);
+    // 🔄 التراجع
+    setActiveAcademies(previousActive);
+    setPendingAcademies(previousPending);
+    setErrorMessage(isRtl ? "فشل حظر الأكاديمية." : "Failed to deactivate academy.");
+  } finally {
     setProcessingId(null);
-  };
+  }
+};
 
-  const onExtendTrialClick = async (id, currentTrialEnds, daysToAdd) => {
-    if (processingId) return;
-    setProcessingId(`extend-${daysToAdd}-${id}`);
-    try {
-      const current = currentTrialEnds ? new Date(currentTrialEnds) : new Date();
-      const baseDate = current > new Date() ? current : new Date();
-      baseDate.setDate(baseDate.getDate() + daysToAdd);
-      const newDate = baseDate.toISOString();
+// ⏱️ 3. دالة تمديد الاشتراك التجريبي بمرونة وحساب دقيق للأيام
+const onExtendTrialClick = async (id, currentTrialEnds, daysToAdd) => {
+  if (processingId) return;
+  setProcessingId(`extend-${daysToAdd}-${id}`);
 
-      const { error } = await supabase.from('academies').update({ trial_ends_at: newDate }).eq('id', id);
-      if (error) throw error;
-      setActiveAcademies(prev => prev.map(a => a.id === id ? { ...a, trial_ends_at: newDate } : a));
-    } catch (e) { alert(e.message); }
+  // حساب التاريخ الجديد بدقة
+  const now = new Date();
+  const currentEnd = currentTrialEnds ? new Date(currentTrialEnds) : now;
+  // إذا كانت فترة التجربة منتهية بالفعل، يبدأ التمديد من اليوم الحالي
+  const baseDate = currentEnd > now ? currentEnd : now;
+  
+  baseDate.setDate(baseDate.getDate() + daysToAdd);
+  const newDateIso = baseDate.toISOString();
+
+  // حفظ الحالة القديمة
+  const previousActive = [...activeAcademies];
+
+  // 🎯 Optimistic UI
+  setActiveAcademies(prev =>
+    prev.map(a => (a.id === id ? { ...a, trial_ends_at: newDateIso } : a))
+  );
+
+  try {
+    const { error } = await supabase
+      .from('academies')
+      .update({ trial_ends_at: newDateIso })
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("❌ Extend Trial Error:", error.message);
+    setActiveAcademies(previousActive);
+    setErrorMessage(isRtl ? "تعذر تمديد الفترة التجريبية." : "Failed to extend trial.");
+  } finally {
     setProcessingId(null);
-  };
+  }
+};
 
   const getTrialStatusBadge = (trialEndsAt) => {
     if (!trialEndsAt) return { text: isRtl ? 'حساب دائم' : 'Lifetime Account', color: '#94a3b8' };
