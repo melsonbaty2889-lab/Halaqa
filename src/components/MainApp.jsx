@@ -354,23 +354,21 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-      return (
-    <div style={{
-      display: 'flex', 
-      minHeight: '100vh', 
-      background: '#0f172a', 
-      color: '#fff',
-      fontFamily: "'Cairo', sans-serif", 
-      position: 'relative'
-      /* 👈 تم حذف overflow: hidden و flexDirection المزدوج لتعتمد الصفحة على الاتجاه الأصلي dir="rtl" */
-    }}>
+        return (
+    <div 
+      style={{
+        display: 'flex', 
+        minHeight: '100vh', 
+        width: '100%',
+        background: '#0f172a', 
+        color: '#fff',
+        fontFamily: "'Cairo', sans-serif", 
+        position: 'relative'
+      }}
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       
-      {/* 1. خلفية التعتيم عند فتح الموبايل */}
-      {isMobile && sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 999, backdropFilter: 'blur(4px)' }} />
-      )}
-      
-      {/* 2. استدعاء السايدبار */}
+      {/* 1. القائمة الجانبية السحابية */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -389,9 +387,19 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      {/* 3. حاوي المحتوى الرئيسي */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: '100vh' }}>
-        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} isMobile={isMobile} isRtl={isRtl} t={t} currency={currency} countryCode={countryCode} i18n={i18n} activeTab={activeTab} />
+      {/* 2. منطقة عرض التطبيق والمحتوى الرئيسي */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh' }}>
+        <Header 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen} 
+          isMobile={isMobile} 
+          isRtl={isRtl} 
+          t={t} 
+          currency={currency} 
+          countryCode={countryCode} 
+          i18n={i18n} 
+          activeTab={activeTab} 
+        />
 
         {!isOnline && (
           <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
