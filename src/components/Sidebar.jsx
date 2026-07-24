@@ -167,14 +167,19 @@ export function EnterpriseSidebar({
         />
       )}
 
-            {/* 2. السايدبار الرئيسي */}
+                  {/* 2. السايدبار الرئيسي */}
       <aside 
         className={cn(
-          "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none",
-          "transition-transform duration-300 ease-in-out border-slate-800",
+          // التنسيقات الأساسية
+          "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none border-slate-800 transition-all duration-300 ease-in-out",
+          // تحديد موقعه حسب اتجاه اللغة
           "rtl:right-0 ltr:left-0 rtl:border-l ltr:border-r",
-          "lg:sticky lg:translate-x-0",
-          isOpenMobile ? "translate-x-0" : "max-lg:rtl:translate-x-full max-lg:ltr:-translate-x-full"
+          // على الشاشات الكبيرة (الكمبيوتر)
+          "lg:sticky lg:top-0 lg:z-30 lg:translate-x-0",
+          // على الشاشات الصغيرة (الموبايل): افتح عند فتح الموبايل وإلا اخرج خارج الشاشة
+          isOpenMobile 
+            ? "translate-x-0 shadow-2xl" 
+            : "rtl:translate-x-full ltr:-translate-x-full lg:rtl:translate-x-0 lg:ltr:translate-x-0"
         )}
       >
         {/* الهيدر العلوي */}
