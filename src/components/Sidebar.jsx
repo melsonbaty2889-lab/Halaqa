@@ -8,34 +8,68 @@ import {
   FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock
 } from "react-icons/fa";
 
-// 🌟 شعار عالمي واحترافي لمنظومة الحلقة الذكية
+// 🌟 شعار عالمي وفائق الاحترافية لمنظومة الحلقة الذكية
 const SmartHalaqaProLogo = () => (
   <div style={{
-    width: '42px',
-    height: '42px',
-    borderRadius: '12px',
-    background: 'linear-gradient(135deg, #0f766e 0%, #042f2e 100%)',
-    border: '1px solid rgba(45, 212, 191, 0.3)',
+    width: '48px',
+    height: '48px',
+    borderRadius: '14px',
+    background: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
+    border: '1px solid rgba(45, 212, 191, 0.35)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    boxShadow: '0 4px 16px rgba(15, 118, 110, 0.35)',
+    boxShadow: '0 8px 24px -4px rgba(15, 118, 110, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
     flexShrink: 0
   }}>
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* هالة الحلقة الخارجية */}
-      <circle cx="12" cy="12" r="10" stroke="#2dd4bf" strokeWidth="1.2" strokeDasharray="3 2" opacity="0.6" />
-      {/* كتاب المصحف الشريف - تصميم هندسي عصري */}
-      <path d="M12 6.2C10.5 5.1 8.2 5 5.5 5.8V17.5C8.2 16.7 10.5 16.8 12 17.8C13.5 16.8 15.8 16.7 18.5 17.5V5.8C15.8 5 13.5 5.1 12 6.2Z" 
-            fill="url(#logoGlow)" stroke="#fef08a" strokeWidth="1.2" strokeLinejoin="round" />
-      <path d="M12 6.2V17.8" stroke="#fef08a" strokeWidth="1.2" strokeLinecap="round" />
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="logoGlow" x1="5.5" y1="5" x2="18.5" y2="17.8" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f59e0b" />
-          <stop offset="1" stopColor="#d97706" />
+        {/* تدرج الذهب الملكي */}
+        <linearGradient id="goldGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="50%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
         </linearGradient>
+
+        {/* تدرج التكنولوجيا والذكاء */}
+        <linearGradient id="cyanGrad" x1="0" y1="0" x2="32" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#34d399" />
+        </linearGradient>
+
+        {/* تدرج الزمرد القرآني */}
+        <linearGradient id="emeraldGrad" x1="8" y1="12" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#047857" />
+        </linearGradient>
+
+        {/* فلتر التوهج المضيء */}
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
       </defs>
+
+      {/* 1. هالة الربط السحابي والذكاء */}
+      <circle cx="16" cy="16" r="13" stroke="url(#cyanGrad)" strokeWidth="0.9" strokeDasharray="4 2.5" opacity="0.45" />
+
+      {/* 2. حلقة العلم والترابط الذهبية */}
+      <circle cx="16" cy="16" r="11" stroke="url(#goldGrad)" strokeWidth="2" strokeLinecap="round" strokeDasharray="46 14" />
+
+      {/* 3. المصحف الهندسي العائم */}
+      <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" 
+            fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" strokeLinejoin="round" />
+      
+      <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" 
+            fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" strokeLinejoin="round" />
+
+      {/* عمود المصحف المضيء */}
+      <line x1="16" y1="12" x2="16" y2="21.5" stroke="#fef08a" strokeWidth="1" strokeLinecap="round" />
+
+      {/* 4. نجمة الذكاء والابتكار التكنولوجي (Smart Sparkle) */}
+      <path d="M16 3.2 L16.8 5 L18.6 5.8 L16.8 6.6 L16 8.4 L15.2 6.6 L13.4 5.8 L15.2 5 Z" 
+            fill="#38bdf8" filter="url(#glow)" />
     </svg>
   </div>
 );
