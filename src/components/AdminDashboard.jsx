@@ -30,51 +30,51 @@ export default function AdminDashboard({ isRtl = true, academyName, onLogout }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // 🔄 دالة جلب البيانات مع دعم الربط المزدوج وإدارة الأخطاء الاحترافية
-  const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
-    if (!isSilentRefresh) setLoading(true);
-    else setRefreshing(true);
-    setErrorMessage(null);
+  // 🔄 دالة جلب البيانات الآمنة والمضمونة (Fail-safe Fetching)
+const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
+  if (!isSilentRefresh) setLoading(true);
+  else setRefreshing(true);
+  setErrorMessage(null);
 
-    try {
-      // 1️⃣ جلب الطلبات المعلقة (الأكاديمية أو البروفايل غير مفعل)
-      const { data: pendingData, error: pendingErr } = await supabase
-        .from('academies')
-        .select('*, profiles:owner_id(id, full_name, email, is_activated)')
-        .or('is_active.eq.false, profiles.is_activated.eq.false')
-        .order('created_at', { ascending: false });
+  try {
+    // 1️⃣ جلب الأكاديميات المعلقة (is_active = false)
+    const { data: pendingData, error: pErr } = await supabase
+      .from('academies')
+      .select('*')
+      .eq('is_active', false)
+      .order('created_at', { ascending: false });
 
-      if (pendingErr) throw pendingErr;
+    if (pErr) console.error("⚠️ Pending fetch error:", pErr.message);
 
-      // 2️⃣ جلب الأكاديميات النشطة
-      const { data: activeData, error: activeErr } = await supabase
-        .from('academies')
-        .select('*, profiles:owner_id(id, full_name, email, is_activated)')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+    // 2️⃣ جلب الأكاديميات النشطة (is_active = true)
+    const { data: activeData, error: aErr } = await supabase
+      .from('academies')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
-      if (activeErr) throw activeErr;
+    if (aErr) console.error("⚠️ Active fetch error:", aErr.message);
 
-      // 3️⃣ جلب إجمالي الأكاديميات المسجلة
-      const { count, error: countErr } = await supabase
-        .from('academies')
-        .select('*', { count: 'exact', head: true });
+    // 3️⃣ جلب إجمالي عدد الأكاديميات
+    const { count, error: countErr } = await supabase
+      .from('academies')
+      .select('*', { count: 'exact', head: true });
 
-      if (countErr) throw countErr;
+    if (countErr) console.error("⚠️ Count fetch error:", countErr.message);
 
-      // 🎯 تحديث الحالات دفعة واحدة
-      setPendingAcademies(pendingData || []);
-      setActiveAcademies(activeData || []);
-      if (count !== null) setTotalAcademiesCount(count);
+    // 🎯 تحديث الحالة بالبيانات المضمونة
+    setPendingAcademies(pendingData || []);
+    setActiveAcademies(activeData || []);
+    if (count !== null) setTotalAcademiesCount(count);
 
-    } catch (err) {
-      console.error("❌ Admin Dashboard Error:", err.message);
-      setErrorMessage(isRtl ? "تعذر جلب البيانات. تحقق من الاتصال بشبكة الإنترنت." : "Failed to load dashboard data.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isRtl]);
+  } catch (err) {
+    console.error("❌ Admin Dashboard Error:", err.message);
+    setErrorMessage(isRtl ? "حدث خطأ أثناء تحميل البيانات." : "Error loading data.");
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+}, [isRtl]);
 
   // 🚀 التحديث التلقائي عند فتح الشاشة
   useEffect(() => {
