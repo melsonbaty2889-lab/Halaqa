@@ -8,23 +8,48 @@ import {
   Search, LogOut, X, Cloud, Zap, BarChart2, 
   GraduationCap, Building2, Users, FileText, 
   Award, Home, Trophy, Bell, CreditCard, Folder, 
-  Rocket, Settings 
+  Rocket, Settings, CheckCircle, BarChart3
 } from 'lucide-react';
 
 export function EnterpriseSidebar({ 
+  // 1. دعم خصائص MainApp.jsx
+  activeTab,
+  setActiveTab,
+  sidebarOpen,
+  setSidebarOpen,
+  userRole,
+  
+  // 2. دعم الخصائص الافتراضية
   currentAcademyId, 
-  currentUserRole = 'admin', 
-  activeSection = 'dashboard', 
+  currentUserRole, 
+  activeSection, 
   setActiveSection,
   onOpenSearch,
   onSwitchAcademy,
   onNavigateToSubscription,
-  isOpenMobile = false,
-  onCloseMobile = () => {}
+  isOpenMobile,
+  onCloseMobile
 }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
+
+  // توحيد استقبال الخصائص لتجنب التضارب بين الملفين
+  const activeKey = activeSection || activeTab || 'dashboard';
+  const role = userRole || currentUserRole || 'admin';
+  const isMobileDrawerOpen = isOpenMobile || sidebarOpen || false;
+
+  const handleSelectTab = (id) => {
+    if (setActiveTab) setActiveTab(id);
+    if (setActiveSection) setActiveSection(id);
+    if (setSidebarOpen) setSidebarOpen(false);
+    if (onCloseMobile) onCloseMobile();
+  };
+
+  const handleCloseDrawer = () => {
+    if (setSidebarOpen) setSidebarOpen(false);
+    if (onCloseMobile) onCloseMobile();
+  };
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [userEntities, setUserEntities] = useState([]);
@@ -110,76 +135,61 @@ export function EnterpriseSidebar({
     }
   };
 
-  // عناصر القائمة مع الأيقونات والمسميات المترجمة
+  // عناصر القائمة مع معرفات تطابق MainApp.jsx تماماً
   const globalNavigationPillars = useMemo(() => [
     {
-      pillarTitle: isRtl ? '1. مركز القيادة الحية' : '1. Live Operations Hub',
+      pillarTitle: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
       nodes: [
         { id: 'dashboard', title: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: BarChart2 },
-        { id: 'realtime-audit', title: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Log', icon: Zap }
+        { id: 'reports', title: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: BarChart3 }
       ]
     },
     {
       pillarTitle: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
       allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
       nodes: [
-        { id: 'learner-directory', title: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: GraduationCap },
-        { id: 'faculty-reciters', title: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: Building2 },
-        { id: 'halaqas-sanad', title: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: Users },
-        { id: 'daily-recitation', title: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FileText },
-        { id: 'curricula-diplomas', title: isRtl ? 'المناهج والشهادات' : 'Curricula & Diplomas', icon: Award }
+        { id: 'students', title: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: GraduationCap },
+        { id: 'halaqas', title: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: Users },
+        { id: 'attendance', title: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: CheckCircle },
+        { id: 'teachers', title: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: Building2 },
+        { id: 'exams', title: isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas', icon: Award }
       ]
     },
     {
-      pillarTitle: isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement Network',
-      allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
-      nodes: [
-        { id: 'guardian-portal', title: isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal', icon: Home },
-        { id: 'gamification-streaks', title: isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks', icon: Trophy },
-        { id: 'omnichannel-hub', title: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: Bell }
-      ]
-    },
-    {
-      pillarTitle: isRtl ? '4. الخزينة والحوكمة' : '4. Treasury & Governance',
+      pillarTitle: isRtl ? '3. الخزينة والحوكمة' : '3. Governance & Treasury',
       allowedRoles: ['super_admin', 'admin', 'manager'],
       nodes: [
-        { id: 'billing-payments', title: isRtl ? 'الخزينة والاشتراكات' : 'Billing & Payments', icon: CreditCard },
-        { id: 'asset-management', title: isRtl ? 'المستندات والأصول' : 'Asset Management', icon: Folder },
-        { id: 'growth-referrals', title: isRtl ? 'برنامج النمو والإحالات' : 'Growth & Referrals', icon: Rocket },
-        { id: 'platform-governance', title: isRtl ? 'ضبط المنظومة' : 'Platform Governance', icon: Settings }
+        { id: 'payments', title: isRtl ? 'الخزينة والاشتراكات' : 'Billing & Payments', icon: CreditCard },
+        { id: 'settings', title: isRtl ? 'ضبط المنظومة' : 'Platform Governance', icon: Settings }
       ]
     }
   ], [isRtl]);
 
   const handleUpgradeClick = () => {
     if (onNavigateToSubscription) onNavigateToSubscription();
-    else if (setActiveSection) setActiveSection('subscription');
+    else handleSelectTab('subscription');
   };
 
   return (
     <>
-      {/* 1. خلفية تعتيم عند فتح السايدبار في الموبايل */}
-      {isOpenMobile && (
+      {/* 1. خلفية تعتيم للموبايل */}
+      {isMobileDrawerOpen && (
         <div 
-          onClick={onCloseMobile}
+          onClick={handleCloseDrawer}
           className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
         />
       )}
 
-                  {/* 2. السايدبار الرئيسي */}
+      {/* 2. السايدبار الرئيسي */}
       <aside 
         className={cn(
-          // التنسيقات الأساسية
           "fixed top-0 bottom-0 z-50 h-screen w-72 bg-slate-900 text-slate-100 flex flex-col select-none border-slate-800 transition-all duration-300 ease-in-out",
-          // تحديد موقعه حسب اتجاه اللغة
-          "rtl:right-0 ltr:left-0 rtl:border-l ltr:border-r",
-          // على الشاشات الكبيرة (الكمبيوتر)
+          isRtl ? "right-0 border-l" : "left-0 border-r",
           "lg:sticky lg:top-0 lg:z-30 lg:translate-x-0",
-          // على الشاشات الصغيرة (الموبايل): افتح عند فتح الموبايل وإلا اخرج خارج الشاشة
-          isOpenMobile 
+          isMobileDrawerOpen 
             ? "translate-x-0 shadow-2xl" 
-            : "rtl:translate-x-full ltr:-translate-x-full lg:rtl:translate-x-0 lg:ltr:translate-x-0"
+            : (isRtl ? "max-lg:translate-x-full" : "max-lg:-translate-x-full")
         )}
       >
         {/* الهيدر العلوي */}
@@ -199,7 +209,7 @@ export function EnterpriseSidebar({
               </span>
 
               <button 
-                onClick={onCloseMobile}
+                onClick={handleCloseDrawer}
                 className="p-1 text-slate-400 hover:text-white lg:hidden"
               >
                 <X className="w-5 h-5" />
@@ -283,7 +293,7 @@ export function EnterpriseSidebar({
         {/* القوائم والتنقّلات */}
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
           {globalNavigationPillars.map((pillar, pIdx) => {
-            if (!pillar.allowedRoles.includes(currentUserRole)) return null;
+            if (!pillar.allowedRoles.includes(role)) return null;
 
             return (
               <div key={pIdx}>
@@ -293,16 +303,13 @@ export function EnterpriseSidebar({
 
                 <div className="space-y-1">
                   {pillar.nodes.map((node) => {
-                    const isActive = activeSection === node.id;
+                    const isActive = activeKey === node.id;
                     const IconComponent = node.icon;
 
                     return (
                       <button
                         key={node.id}
-                        onClick={() => {
-                          if (setActiveSection) setActiveSection(node.id);
-                          onCloseMobile();
-                        }}
+                        onClick={() => handleSelectTab(node.id)}
                         className={cn(
                           "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150",
                           isRtl ? "text-right" : "text-left",
