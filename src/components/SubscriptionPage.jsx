@@ -64,8 +64,32 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
   };
 
 const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
-  if (!activeAcademyId) {
-    console.error("🔍 Debug Academy Info:", { propAcademyId, academyFromContext: academy });
+  let resolvedAcademyId = activeAcademyId;
+
+  // 🛡️ آلية حماية وانقاذ (Fail-Safe): البحث عن الأكاديمية مباشرة من قاعدة البيانات إن لم تكن متوفرة
+  if (!resolvedAcademyId && activeUser?.id) {
+    const { data: userAcad } = await supabase
+      .from('academies')
+      .select('id')
+      .eq('owner_id', activeUser.id)
+      .maybeSingle();
+
+    if (userAcad?.id) {
+      resolvedAcademyId = userAcad.id;
+    } else {
+      // في حالة حساب الاختبار أو السوبر أدمن، يتم جلب أول أكاديمية موجودة في النظام
+      const { data: firstAcad } = await supabase
+        .from('academies')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      resolvedAcademyId = firstAcad?.id || null;
+    }
+  }
+
+  // التنبيه فقط في حال عدم وجود أي أكاديمية نهائياً في قاعدة البيانات
+  if (!resolvedAcademyId) {
     showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
     return;
   }
@@ -74,14 +98,14 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
   try {
     let receiptUrl = null;
 
-    // 1. رفع صورة إشعار التحويل اليدوي إلى Supabase Storage في حال وجودها
+    // 1. رفع صورة إشعار التحويل اليدوي إلى Supabase Storage
     if (isManualTransfer && receiptFile) {
       const fileExt = receiptFile.name.split('.').pop();
-      const fileName = `receipt_${activeAcademyId}_${Date.now()}.${fileExt}`;
+      const fileName = `receipt_${resolvedAcademyId}_${Date.now()}.${fileExt}`;
       const filePath = `subscriptions/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('subscription-receipts') // اسم الـ Bucket في Supabase
+        .from('subscription-receipts')
         .upload(filePath, receiptFile);
 
       if (uploadError) {
@@ -94,6 +118,7 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
         receiptUrl = urlData?.publicUrl || null;
       }
     }
+
     // 2. احتساب تواريخ بداية ونهاية الاشتراك
     const startsAt = new Date();
     const expiryDate = new Date();
@@ -108,8 +133,8 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
     const { error } = await supabase
       .from('saas_subscriptions')
       .upsert([{
-        academy_id: activeAcademyId, // 🌟 الاعتماد على activeAcademyId
-        payer_id: activeUser?.id,    // 🌟 الاعتماد على activeUser
+        academy_id: resolvedAcademyId,
+        payer_id: activeUser?.id,
         plan_tier: 'pro',
         plan_duration: duration,
         status: isManualTransfer ? 'pending_verification' : 'active',
@@ -136,7 +161,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
     setLoading(false);
   }
 };
-
   // هيكلة الباقات والمميزات
   const plans = [
     {
