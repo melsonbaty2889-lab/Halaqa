@@ -7,14 +7,14 @@ const AcademyContext = createContext({});
 export const AcademyProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [academy, setAcademy] = useState(null); // ✨ إضافة حالة الأكاديمية هنا لحل الربط مع DataContext
+  const [academy, setAcademy] = useState(null);
   const [appState, setAppState] = useState('LOADING');
 
   const fetchUserStatus = async (currentUser) => {
     if (!currentUser) {
       setUser(null);
       setProfile(null);
-      setAcademy(null); // ✨ تصفير الأكاديمية عند الخروج
+      setAcademy(null);
       setAppState('UNAUTHENTICATED');
       return;
     }
@@ -44,7 +44,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 3. الحماية المشتركة: إذا كان الحساب غير مفعل من الإدارة (لأي دور كان)
+      // 3. الحماية المشتركة: إذا كان الحساب غير مفعل من الإدارة
       if (profData.is_activated === false) {
         setAcademy(null);
         setAppState('PENDING_APPROVAL');
@@ -57,15 +57,13 @@ export const AcademyProvider = ({ children }) => {
           .from('academies')
           .select('*')
           .eq('owner_id', currentUser.id)
-          .maybeSingle(); // استخدام maybeSingle لتفادي أخطاء جلب عنصر وحيد
+          .maybeSingle();
 
         if (acadData) {
-          setAcademy(acadData); // ✨ تخزين الأكاديمية هنا ليراها DataContext وسائر المكونات
-          // إذا كانت الأكاديمية موجودة ونشطة يدخل، وإلا ينتظر التفعيل
+          setAcademy(acadData);
           setAppState(acadData.is_active ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
         } else {
           setAcademy(null);
-          // أدمن مفعل ولكن لم ينشئ أكاديمية بعد
           setAppState('NO_ACADEMY');
         }
         return;
@@ -73,12 +71,10 @@ export const AcademyProvider = ({ children }) => {
 
       // 5. إذا كان الحساب مفعل ودوره (طالب، معلم، ولي أمر)
       if (['student', 'teacher', 'parent'].includes(profData.role)) {
-        // ملاحظة: إذا كان الطالب أو المعلم مرتبط بأكاديمية، يمكنك جلبها هنا إذا لزم الأمر، أو تركها FULLY_ACTIVE
         setAppState('FULLY_ACTIVE'); 
         return;
       }
 
-      // حالة احتياطية إذا وجد دور غير معرف بالمنظومة
       setAppState('UNAUTHENTICATED');
 
     } catch (e) {
@@ -88,11 +84,10 @@ export const AcademyProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // الفحص الفوري عند إقلاع التطبيق
-    supabase.auth.getSession().then(({ data: { session } }) => fetchUserStatus(session?.user));
-    
-    // مراقبة تغير حالة الدخول والخروج في الوقت الفعلي
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => fetchUserStatus(session?.user));
+    // 🌟 الاعتماد المباشر على onAuthStateChange فقط لمنع تكرار استدعاء البيانات
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      fetchUserStatus(session?.user);
+    });
     
     return () => subscription.unsubscribe();
   }, []);
@@ -101,7 +96,7 @@ export const AcademyProvider = ({ children }) => {
     <AcademyContext.Provider value={{ 
       user, 
       profile, 
-      academy, // ✨ إرسال الأكاديمية هنا لكي تعمل جميع سياقات البيانات (DataContext) بكفاءة
+      academy, 
       appState, 
       logout: async () => {
         setAcademy(null);
