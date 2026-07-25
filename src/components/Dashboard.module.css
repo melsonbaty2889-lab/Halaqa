@@ -7,11 +7,13 @@
 }
 
 .dashboardContainer {
+  width: 100% !important;
   max-width: 1240px;
   margin: 0 auto;
   padding: 16px;
   box-sizing: border-box;
   direction: rtl;
+  overflow-x: hidden; /* يمنع التمدد الأفقي نهائياً */
   animation: fadeIn 0.3s ease-out forwards;
 }
 
@@ -98,10 +100,10 @@
   to { transform: rotate(360deg); }
 }
 
-/* 📊 كروت الإحصائيات (تجاوب 100% بدون اقتطاع) */
+/* 📊 كروت الإحصائيات (حل مشكلة تمدد الـ Grid بالكامل) */
 .statsGrid, .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* يمنع الكروت من التمدد خارج العرض */
   gap: 10px;
   margin-bottom: 20px;
   width: 100%;
@@ -111,14 +113,15 @@
 .summaryCard, .premiumStatBox {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 12px 10px;
+  padding: 12px 8px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
-  min-width: 0;
+  min-width: 0; /* منع خروج النصوص من الحدود */
+  text-align: center;
 }
 
 .summaryCardLabel, .statLabel {
@@ -149,6 +152,7 @@
   overflow-x: auto;
   white-space: nowrap;
   padding-bottom: 4px;
+  width: 100%;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -157,9 +161,9 @@
   display: none;
 }
 
-/* 🔍 مربع البحث والقائمة */
+/* 🔍 مربع البحث والقائمة المنسدلة */
 .searchWrapper {
-  position: relative;
+  position: relative !important;
   width: 100%;
   margin-bottom: 20px;
   box-sizing: border-box;
@@ -179,8 +183,8 @@
 }
 
 .searchDropdown {
-  position: absolute;
-  top: calc(100% + 4px);
+  position: absolute !important;
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
   background: #0F172A;
@@ -188,11 +192,11 @@
   border-radius: 10px;
   max-height: 220px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 1000 !important; /* لرفع القائمة فوق باقي البطاقات */
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
 }
 
-/* 🏫 بطاقات الأكاديميات (إصلاح المحاذاة والأزرار) */
+/* 🏫 بطاقات الأكاديميات */
 .requestsGrid {
   display: flex;
   flex-direction: column;
@@ -218,7 +222,7 @@
   font-weight: 700;
   color: #ffffff;
   margin: 0 0 4px 0;
-  text-decoration: none !important; /* إلغاء الخط المزعج أسفل العنوان */
+  text-decoration: none !important;
 }
 
 .requestEmail, .academyOwner {
@@ -229,10 +233,11 @@
 
 /* 🟢 صف أزرار التفاعل داخل البطاقة (تمديد + حظر) */
 .cardActionsRow {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
   width: 100%;
   margin-top: 4px;
 }
@@ -266,7 +271,35 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
+  box-sizing: border-box;
+}
+
+/* 🪟 النافذة المنبثقة للتمديد (Modal Popup) */
+.modalOverlay {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999 !important;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modalContent {
+  width: 100% !important;
+  max-width: 420px;
+  background: #151d2a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
 }
 
@@ -283,24 +316,24 @@
 
   .refreshBtn, .exportBtn, .logoutBtn {
     flex: 1;
-    padding: 7px 8px;
-    font-size: 0.78rem;
+    padding: 7px 6px;
+    font-size: 0.75rem;
   }
 
   .statsGrid, .summaryGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
 
   .summaryCard, .premiumStatBox {
-    padding: 8px 6px;
+    padding: 8px 4px;
   }
 
   .summaryCardValue, .statNumber {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
 
   .summaryCardLabel, .statLabel {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
   }
 }
