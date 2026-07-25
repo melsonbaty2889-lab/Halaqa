@@ -178,10 +178,21 @@ export default function Sidebar({
     }
   ];
 
-  // 🔍 منطق تصفية أقسام وعناصر القائمة بناءً على البحث
+  // 🔍 دالة معالجة وتوحيد النصوص العربية للبحث المرن (تجاهل الهمزات والتشكيل)
+  const normalizeArabic = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/[\u064B-\u0652]/g, '') // إزالة التشكيل
+      .replace(/[أإآ]/g, 'ا')         // توحيد الهمزات والألف
+      .replace(/ة/g, 'ه')             // توحيد التاء المربوطة
+      .replace(/ى/g, 'ي')             // توحيد الألف المقصورة
+      .toLowerCase();
+  };
+
+  // 🔍 منطق تصفية القائمة بناءً على البحث العربي والإنكليزي المرن
   const filteredMenuSections = menuSections.map(section => {
     const filteredItems = section.items.filter(item =>
-      item.label.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
     );
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
@@ -519,7 +530,7 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* 📑 6️⃣ القوائم والتبويبات (مفلترة بواسطة البحث) */}
+          {/* 📑 6️⃣ القوائم والتبويبات (مفلترة بواسطة البحث المرن) */}
           <nav>
             {filteredMenuSections.length > 0 ? (
               filteredMenuSections.map((section, idx) => (
@@ -579,7 +590,7 @@ export default function Sidebar({
                 fontSize: '0.82rem',
                 background: 'rgba(255,255,255,0.02)',
                 borderRadius: '8px',
-                border: '1px stroke #1e293b'
+                border: '1px solid #1e293b'
               }}>
                 {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results found'}
               </div>
