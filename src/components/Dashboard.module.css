@@ -11,6 +11,7 @@
   margin: 0 auto;
   padding: 24px 16px 40px 16px;
   animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-sizing: border-box;
 }
 
 /* 👑 واجهة السوبر أدمن (Super Admin View) */
@@ -41,7 +42,7 @@
 }
 
 .adminTitle svg {
-  color: var(--gold);
+  color: var(--gold, #FBBF24);
 }
 
 .adminSubtitle {
@@ -49,6 +50,14 @@
   font-size: 0.95rem;
   margin: 8px 0 0 0;
   font-weight: 500;
+}
+
+/* 🔘 حاوية أزرار الإجراءات في الهيدر (CSV، مزامنة، خروج) */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* 🔄 زر المزامنة السحابية الحية وتأثيرات الدوران الاحترافية */
@@ -65,6 +74,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .refreshBtn:hover {
@@ -83,10 +93,31 @@
   to { transform: rotate(360deg); }
 }
 
+/* 🗂️ شريط التبويبات والتصفية (تمنع تكسر الأزرار وتحولها لسلسلة تمرير أفقي) */
+.tabsContainer,
+.tabsBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.tabsContainer::-webkit-scrollbar,
+.tabsBar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* 🔍 خانة البحث والقائمة المنسدلة للتلميحات المباشرة */
 .searchWrapper {
   position: relative; /* لضبط موقع القائمة المنسدلة بالأسفل تماماً */
   margin-bottom: 24px;
+  width: 100%;
 }
 
 .searchInputBox {
@@ -112,10 +143,11 @@
   background: #0F172A;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  max-height: 220px;
+  max-height: 240px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
   scrollbar-width: thin;
 }
 
@@ -153,7 +185,7 @@
 }
 
 .summaryCard {
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%);
+  background: linear-gradient(135deg, var(--surface, #1e293b) 0%, rgba(20, 32, 48, 0.6) 100%);
   border: 1px solid rgba(255, 255, 255, 0.04);
   padding: 24px;
   border-radius: 14px;
@@ -173,7 +205,7 @@
 .summaryCardValue {
   font-size: 38px;
   font-weight: 800;
-  color: var(--gold);
+  color: var(--gold, #c9a84c);
   margin-top: 8px;
   font-family: system-ui;
 }
@@ -194,7 +226,7 @@
 
 .emptyState {
   padding: 50px 20px;
-  background: var(--surface);
+  background: var(--surface, #1e293b);
   border-radius: 14px;
   text-align: center;
   border: 1px dashed rgba(255, 255, 255, 0.06);
@@ -213,11 +245,11 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 15px;
-  background: var(--surface);
+  background: var(--surface, #1e293b);
   border: 1px solid rgba(255, 255, 255, 0.03);
   padding: 20px;
   border-radius: 14px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.2));
 }
 
 .requestInfo {
@@ -275,7 +307,7 @@
 }
 
 .academyNameText {
-  color: var(--gold);
+  color: var(--gold, #c9a84c);
   font-size: 1.05rem;
   margin: 8px 0 0 0;
   font-weight: 600;
@@ -290,7 +322,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  backdropFilter: blur(8px);
+  backdrop-filter: blur(8px);
   min-width: 160px;
 }
 
@@ -332,7 +364,7 @@
   justify-content: space-between;
   padding: 18px 24px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
+  background: linear-gradient(135deg, var(--surface, #1e293b) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.04) !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -465,7 +497,7 @@
 }
 
 .premiumStatBox {
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
+  background: linear-gradient(135deg, var(--surface, #1e293b) 0%, rgba(20, 32, 48, 0.6) 100%) !important;
   padding: 24px 20px !important;
   border-radius: 14px;
   display: flex;
@@ -481,9 +513,9 @@
 }
 
 /* توحيد وثبات الحواف العلوية مع توهج ناعم يعكس قيمة الكرت */
-.statBoxStudents { border-top: 3px solid var(--gold) !important; }
-.statBoxStudents:hover { border-color: var(--gold) !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 168, 76, 0.1) !important; }
-.statBoxStudents .statIcon { color: var(--gold); }
+.statBoxStudents { border-top: 3px solid var(--gold, #c9a84c) !important; }
+.statBoxStudents:hover { border-color: var(--gold, #c9a84c) !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 168, 76, 0.1) !important; }
+.statBoxStudents .statIcon { color: var(--gold, #c9a84c); }
 
 .statBoxPayments { border-top: 3px solid #ef4444 !important; }
 .statBoxPayments:hover { border-color: #ef4444 !important; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(239, 68, 68, 0.1) !important; }
@@ -566,11 +598,17 @@
   .adminHeader {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
   }
   
   .refreshBtn {
-    width: 100%;
+    flex: 1;
     justify-content: center;
   }
   
@@ -584,7 +622,7 @@
   }
   
   .statsGrid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
   
@@ -593,10 +631,27 @@
   }
   
   .statNumber {
-    font-size: 1.7rem;
+    font-size: 1.6rem;
   }
   
   .academyGreeting {
     font-size: 1.4rem;
+    white-space: normal;
+  }
+
+  .requestCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .approveBtn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
   }
 }
