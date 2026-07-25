@@ -6,7 +6,7 @@ import {
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
-  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock
+  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock, FaInfinity
 } from "react-icons/fa";
 
 // 🌟 شعار عالمي وفائق الاحترافية لمنظومة الحلقة الذكية
@@ -127,15 +127,31 @@ export default function Sidebar({
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academiesList[0];
   const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
-  // 📊 حساب الأيام المتبقية ديناميكياً مباشرة من قاعدة البيانات
+  // 📊 حساب الأيام المتبقية ديناميكياً (تدعم الحساب الدائم Infinity)
   const calculateEffectiveDaysLeft = () => {
-    if (currentAcademy && currentAcademy.trial_ends_at) {
+    if (!currentAcademy) return trialDaysLeft ?? 0;
+
+    // إذا كانت الأكاديمية مفعلة وبدون تاريخ انتهاء -> حساب دائم
+    if (currentAcademy.is_active && !currentAcademy.trial_ends_at) {
+      return Infinity;
+    }
+
+    if (currentAcademy.trial_ends_at) {
       const endDate = new Date(currentAcademy.trial_ends_at);
+      if (isNaN(endDate.getTime())) return trialDaysLeft ?? 0;
+
       const now = new Date();
       const diffTime = endDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // إذا كان التمديد لأكثر من 10 سنوات -> يعتبر حساب دائم
+      if (diffDays > 3650) {
+        return Infinity;
+      }
+
       return diffDays > 0 ? diffDays : 0;
     }
+
     return trialDaysLeft ?? 0;
   };
 
@@ -144,21 +160,37 @@ export default function Sidebar({
   // 🏷️ تحديد الشارة وحالة الاشتراك تلقائياً
   const getStatusBadge = () => {
     if (currentAcademy) {
-      if (!currentAcademy.is_active || effectiveDaysLeft <= 0) {
+      if (currentAcademy.is_active === false) {
         return {
           text: isRtl ? 'قيد التفعيل / منتهي' : 'Expired / Pending',
           style: { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
         };
       }
+
+      if (effectiveDaysLeft === Infinity) {
+        return {
+          text: isRtl ? 'حساب دائم ∞' : 'Lifetime Plan ∞',
+          style: { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)' }
+        };
+      }
+
       if (effectiveDaysLeft > 14) {
         return {
           text: isRtl ? 'اشتراك نشط' : 'Active Plan',
           style: { background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
         };
       }
+
+      if (effectiveDaysLeft > 0) {
+        return {
+          text: isRtl ? 'فترة تجريبية' : 'Free Trial',
+          style: { background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
+        };
+      }
+
       return {
-        text: isRtl ? 'فترة تجريبية' : 'Free Trial',
-        style: { background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
+        text: isRtl ? 'منتهي الصلاحية' : 'Expired',
+        style: { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
       };
     }
 
@@ -265,7 +297,7 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 🌟 1️⃣ اللوجو الفاخر */}
+          {/* 🌟 1️⃣ اللوجو */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -296,7 +328,7 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 🔴 2️⃣ الأكاديمية الحالية وشارة الحالة الاحترافية */}
+          {/* 🔴 2️⃣ الأكاديمية الحالية وشارة الحالة */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: '600' }}>
@@ -466,7 +498,7 @@ export default function Sidebar({
                 <FaClock style={{ fontSize: '0.8rem' }} />
                 <span>{isRtl ? 'ساعة الأكاديمية:' : 'Academy Clock:'}</span>
               </div>
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '06:33 PM'}</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '01:50 AM'}</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
@@ -525,12 +557,17 @@ export default function Sidebar({
               <span style={{ 
                 fontSize: '0.82rem', 
                 fontWeight: 'bold', 
-                color: effectiveDaysLeft <= 3 ? '#ef4444' : '#10b981',
-                background: effectiveDaysLeft <= 3 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                color: effectiveDaysLeft === Infinity ? '#c084fc' : (effectiveDaysLeft <= 3 ? '#ef4444' : '#10b981'),
+                background: effectiveDaysLeft === Infinity ? 'rgba(168, 85, 247, 0.15)' : (effectiveDaysLeft <= 3 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'),
                 padding: '2px 8px',
-                borderRadius: '6px'
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
               }}>
-                {`${effectiveDaysLeft} ${isRtl ? 'أيام متبقية' : 'Days left'}`}
+                {effectiveDaysLeft === Infinity 
+                  ? (isRtl ? 'حساب دائم ∞' : 'Lifetime ∞')
+                  : `${effectiveDaysLeft} ${isRtl ? 'أيام متبقية' : 'Days left'}`}
               </span>
             </div>
 
