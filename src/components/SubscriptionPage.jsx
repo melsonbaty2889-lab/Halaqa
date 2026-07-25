@@ -150,10 +150,10 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           </div>
         </div>
 
-                {/* Plans Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', marginBottom: '50px' }}>
+                         {/* Plans Grid - الباقات الأصلية المباشرة */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px', marginBottom: '50px' }}>
           
-          {/* Monthly Plan */}
+          {/* 1. Monthly Plan */}
           <div 
             onClick={() => setDuration('monthly')} 
             style={{ 
@@ -166,12 +166,11 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
               boxShadow: duration === 'monthly' ? '0 0 20px rgba(245, 158, 11, 0.15)' : 'none'
             }}
           >
-            <h3 style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: '700', margin: '0 0 6px 0' }}>{t('subscription.monthly')}</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 15px 0' }}>
-              {isRTL ? 'مناسب للأكاديميات الناشئة (حتى 100 طالب)' : 'Suitable for starter academies (Up to 100 students)'}
-            </p>
+            <h3 style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: '700', margin: '0 0 10px 0' }}>
+              {t('subscription.monthly')}
+            </h3>
 
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f59e0b', margin: '15px 0' }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f59e0b', margin: '20px 0' }}>
               {calculateFinalPrice(basePrices[region].monthly)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
             </div>
 
@@ -180,7 +179,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
             </button>
           </div>
 
-          {/* Yearly Plan (Best Value) */}
+          {/* 2. Yearly Plan (إظهار الخصم بصرياً) */}
           <div 
             onClick={() => setDuration('yearly')} 
             style={{ 
@@ -194,22 +193,21 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
               boxShadow: duration === 'yearly' ? '0 0 20px rgba(16, 185, 129, 0.15)' : 'none'
             }}
           >
-            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              {isRTL ? '🌟 خيار الاستدامة (توفير شهرين)' : '🌟 Best Value (Save 2 Months)'}
+            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
+              {isRTL ? 'توفير شهرين كاملين مجاناً 🔥' : 'Save 2 Months Automatically 🔥'}
             </span>
-            
-            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px', margin: '10px 0 6px 0' }}>{t('subscription.yearly')}</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 15px 0' }}>
-              {isRTL ? 'سعة موسعة للأكاديميات النشطة (حتى 500 طالب)' : 'Extended capacity for active academies (Up to 500 students)'}
-            </p>
 
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981', margin: '15px 0', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>
+              {t('subscription.yearly')}
+            </h3>
+
+            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981', margin: '20px 0', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
               <span>{calculateFinalPrice(basePrices[region].yearly)}</span>
               <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
               
-              {/* السعر السنوي الأصلي مشطوباً لإبراز الخصم */}
+              {/* السعر بدون خصم مشطوباً */}
               {discountPercent === 0 && (
-                <span style={{ textDecoration: 'line-through', color: '#64748b', fontSize: '1.2rem', fontWeight: '500', marginRight: 'auto' }}>
+                <span style={{ textDecoration: 'line-through', color: '#64748b', fontSize: '1.1rem', fontWeight: '500', marginRight: 'auto' }}>
                   {parseFloat(basePrices[region].monthly) * 12}
                 </span>
               )}
@@ -220,7 +218,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
             </button>
           </div>
 
-          {/* Lifetime Plan */}
+          {/* 3. Lifetime Plan */}
           <div 
             onClick={() => setDuration('lifetime')} 
             style={{ 
@@ -234,16 +232,15 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
               boxShadow: duration === 'lifetime' ? '0 0 20px rgba(239, 68, 68, 0.15)' : 'none'
             }}
           >
-            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              {isRTL ? '🔥 ترخيص المؤسسين (عرض محدود)' : '🔥 Founder Deal (Limited)'}
+            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
+              {isRTL ? 'فرصة حصرية للمؤسسين الأوائل ⚡' : 'Exclusive Founder Deal ⚡'}
             </span>
 
-            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', margin: '10px 0 6px 0' }}>{t('subscription.lifetime')}</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 15px 0' }}>
-              {isRTL ? 'وصول مفتوح بدون تجديد سنوي (استخدام عادل حتى 1,000 طالب)' : 'Unlimited access, no renewal fees (Fair use up to 1,000 students)'}
-            </p>
+            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>
+              {t('subscription.lifetime')}
+            </h3>
 
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#ef4444', margin: '15px 0' }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#ef4444', margin: '20px 0' }}>
               {calculateFinalPrice(basePrices[region].lifetime)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
             </div>
 
@@ -253,7 +250,6 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           </div>
 
         </div>
-
         <PaymentSection 
           region={region}
           duration={duration}
