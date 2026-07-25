@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 
-// حاوية قياسية موحدة الحجم لجميع الشعارات لمنع أي اختلال في المحاذاة
+// حاوية قياسية موحدة الحجم لجميع الشعارات لمنع أي اختلال
 const LogoSlot = ({ children }) => (
   <div style={{ 
-    width: '52px', 
+    width: '48px', 
     height: '32px', 
     display: 'flex', 
     alignItems: 'center', 
-    justify: 'center', 
+    justifyContent: 'center', 
     borderRadius: '6px',
-    background: 'rgba(255, 255, 255, 0.04)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     flexShrink: 0 
   }}>
     {children}
   </div>
 );
 
-// شعارات متناسقة بدقة رسمية
+// الشعارات المحدثة
 const PaymentLogos = {
   applePay: (
     <LogoSlot>
-      <svg width="36" height="20" viewBox="0 0 50 30" fill="none">
+      <svg width="34" height="18" viewBox="0 0 50 30" fill="none">
         <path d="M12.5 14.1c0-2.8 2.2-4.2 2.3-4.3-1.3-1.9-3.3-2.1-4-2.2-1.7-0.2-3.4 1-4.3 1-.9 0-2.2-0.9-3.6-0.9-1.9 0-3.6 1.1-4.6 2.8-2 3.5-0.5 8.7 1.4 11.5 0.9 1.4 2 2.9 3.5 2.8 1.4-0.1 2-0.9 3.7-0.9 1.7 0 2.2 0.9 3.6 0.9 1.5 0 2.5-1.3 3.4-2.7 1.1-1.6 1.5-3.1 1.6-3.2-0.1 0-3-1.1-3-4.5z" fill="#FFF"/>
         <path d="M9.8 5.6c0.8-1 1.3-2.3 1.1-3.6-1.1 0-2.5 0.7-3.3 1.7-0.7 0.8-1.3 2.2-1.1 3.5 1.3 0.1 2.5-0.6 3.3-1.6z" fill="#FFF"/>
         <text x="18" y="20" fill="#FFF" fontSize="14" fontWeight="bold" fontFamily="sans-serif">Pay</text>
@@ -65,7 +65,7 @@ const PaymentLogos = {
   ),
   paypal: (
     <LogoSlot>
-      <svg width="24" height="18" viewBox="0 0 24 24" fill="none">
+      <svg width="22" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.762.762 0 0 1 .752-.644h6.78c2.62 0 4.606.58 5.488 1.62.83 1.02.936 2.45.312 4.28-.795 2.33-2.316 3.66-4.52 3.96h-1.53c-.382 0-.712.277-.773.655l-.946 5.96a.64.64 0 0 1-.631.543z" fill="#003087"/>
         <path d="M8.88 15.347l.95-6.02a.778.778 0 0 1 .77-.65h3.04c2.203 0 3.724-1.33 4.52-3.96.287-.84.38-1.63.28-2.34a7.84 7.84 0 0 1 1.77.21c.882 1.04.988 2.47.364 4.3-.795 2.33-2.316 3.66-4.52 3.96h-1.53a.778.778 0 0 0-.77.655l-.946 5.96a.64.64 0 0 1-.63.543H8.88z" fill="#0079C1"/>
       </svg>
@@ -73,7 +73,7 @@ const PaymentLogos = {
   ),
   card: (
     <LogoSlot>
-      <svg width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="#f8fafc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="16" viewBox="0 0 24 24" fill="none" stroke="#f8fafc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
         <line x1="1" y1="10" x2="23" y2="10"></line>
       </svg>
@@ -81,7 +81,7 @@ const PaymentLogos = {
   ),
   bank: (
     <LogoSlot>
-      <svg width="22" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+      <svg width="20" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
         <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
       </svg>
     </LogoSlot>
@@ -110,7 +110,6 @@ export default function PaymentSection({
   const [copied, setCopied] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
 
-  // هيكلة وسائل الدفع وترجمة الشارات ديناميكياً
   const paymentMethods = {
     egypt: [
       { id: 'instapay', name: isRTL ? 'InstaPay (تحويل بنكي فوري)' : 'InstaPay Direct Transfer', isManual: true, number: 'username@instapay', logo: PaymentLogos.instapay },
@@ -161,7 +160,7 @@ export default function PaymentSection({
         color: '#f59e0b', 
         marginTop: '0', 
         marginBottom: '16px', 
-        fontSize: '1rem', 
+        fontSize: '0.98rem', 
         fontWeight: '700', 
         borderBottom: '1px solid #1e293b', 
         paddingBottom: '12px', 
@@ -172,7 +171,7 @@ export default function PaymentSection({
         <span>💳</span> {isRTL ? "اختر وسيلة الدفع المناسبة لك:" : "Select Payment Method:"}
       </h4>
 
-      {/* قائمة وسائط الدفع */}
+      {/* قائمة وسائط الدفع - معالجة كاملة لعدم قص النص */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {activeMethods.map((item) => {
           const isSelected = selectedMethod === item.id;
@@ -190,18 +189,18 @@ export default function PaymentSection({
                 border: isSelected ? '2px solid #f59e0b' : '1px solid #243147',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                gap: '10px'
+                gap: '12px'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
                 {item.logo}
                 <span style={{ 
                   color: '#f8fafc', 
                   fontWeight: '600', 
-                  fontSize: '0.88rem', 
-                  whiteSpace: 'nowrap', 
-                  overflow: 'hidden', 
-                  textOverflow: 'ellipsis' 
+                  fontSize: '0.84rem', 
+                  lineHeight: '1.35',
+                  wordBreak: 'break-word', // السماح بالنص الكامل دون قص
+                  whiteSpace: 'normal'
                 }}>
                   {item.name}
                 </span>
@@ -212,10 +211,11 @@ export default function PaymentSection({
                   <span style={{ 
                     background: '#f59e0b22', 
                     color: '#f59e0b', 
-                    fontSize: '0.7rem', 
+                    fontSize: '0.68rem', 
                     padding: '2px 8px', 
                     borderRadius: '12px', 
-                    fontWeight: '700' 
+                    fontWeight: '700',
+                    whiteSpace: 'nowrap'
                   }}>
                     {item.badge}
                   </span>
@@ -225,7 +225,8 @@ export default function PaymentSection({
                   height: '18px',
                   borderRadius: '50%',
                   border: isSelected ? '5px solid #f59e0b' : '2px solid #475569',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  flexShrink: 0
                 }} />
               </div>
             </div>
@@ -233,14 +234,13 @@ export default function PaymentSection({
         })}
       </div>
 
-      {/* تفاصيل التحويل اليدوي - معالجة طفح النصوص بالكامل */}
+      {/* تفاصيل التحويل اليدوي */}
       {currentMethodObj.isManual && (
         <div style={{ marginTop: '16px', background: '#162032', border: '1px dashed #f59e0b', borderRadius: '16px', padding: '16px' }}>
           <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 10px 0', fontWeight: '600' }}>
             {isRTL ? 'يرجى تحويل المبلغ إلى الرقم/الحساب التالي:' : 'Please transfer to the following details:'}
           </p>
           
-          {/* إطار الحساب مع حل طفح النصوص وزر النسخ */}
           <div style={{ 
             display: 'flex', 
             flexDirection: 'column',
@@ -282,7 +282,6 @@ export default function PaymentSection({
             </button>
           </div>
 
-          {/* حقل رقم المعاملة */}
           <div style={{ marginTop: '12px' }}>
             <input 
               type="text" 
@@ -303,7 +302,6 @@ export default function PaymentSection({
             />
           </div>
 
-          {/* حقل رفع الإشعار المخصص والأنيق */}
           <div style={{ marginTop: '12px' }}>
             <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.78rem', marginBottom: '6px', fontWeight: '600' }}>
               {isRTL ? "📎 إرفاق صورة إشعار التحويل (لتسريع التفعيل):" : "📎 Attach Transfer Receipt (For instant check):"}
@@ -340,7 +338,6 @@ export default function PaymentSection({
         </div>
       )}
 
-      {/* تنبيه الدفع التلقائي */}
       {!currentMethodObj.isManual && (
         <div style={{ marginTop: '16px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
           <p style={{ color: '#10b981', margin: '0', fontSize: '0.82rem', fontWeight: '700' }}>
@@ -349,7 +346,6 @@ export default function PaymentSection({
         </div>
       )}
 
-      {/* زر إتمام الطلب */}
       {isSubmitted ? (
         <div style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '14px', borderRadius: '12px', marginTop: '20px', textAlign: 'center', fontWeight: '700', border: '1px solid #10b981' }}>
           🎉 {isRTL ? 'تم استلام الطلب وستتم المراجعة فوراً!' : 'Order Processed Successfully!'}
@@ -378,7 +374,6 @@ export default function PaymentSection({
         </button>
       )}
 
-      {/* شارات الأمان المنسقة والمنظمة */}
       <div style={{ 
         display: 'flex', 
         justify: 'center', 
