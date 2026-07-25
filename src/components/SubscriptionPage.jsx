@@ -11,8 +11,13 @@ import {
 } from '../constants/subscriptionData';
 import PaymentSection from './PaymentSection';
 
-export default function SubscriptionPage({ session, academyId, onBack }) {
+export default function SubscriptionPage({ session: propSession, academyId: propAcademyId, onBack }) {
   const { t, i18n } = useTranslation();
+  const { academy, user } = useAcademy(); // 🌟 جلب الأكاديمية تلقائياً من Context
+
+  // استخدام الـ prop إن وجد، أو جلب القيمة من Context كخيار آمن
+  const activeAcademyId = propAcademyId || academy?.id;
+  const activeUser = propSession?.user || user;
   const [region, setRegion] = useState('egypt');
   const [duration, setDuration] = useState('yearly'); // جعل الخطة السنوية افتراضية لزيادة المبيعات
   const [txId, setTxId] = useState('');
@@ -59,7 +64,8 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
   };
 
 const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
-  if (!academyId) {
+  if (!activeAcademyId) {
+    console.error("🔍 Debug Academy Info:", { propAcademyId, academyFromContext: academy });
     showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
     return;
   }
@@ -71,7 +77,7 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
     // 1. رفع صورة إشعار التحويل اليدوي إلى Supabase Storage في حال وجودها
     if (isManualTransfer && receiptFile) {
       const fileExt = receiptFile.name.split('.').pop();
-      const fileName = `receipt_${academyId}_${Date.now()}.${fileExt}`;
+      const fileName = `receipt_${activeAcademyId}_${Date.now()}.${fileExt}`;
       const filePath = `subscriptions/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -88,7 +94,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
         receiptUrl = urlData?.publicUrl || null;
       }
     }
-
     // 2. احتساب تواريخ بداية ونهاية الاشتراك
     const startsAt = new Date();
     const expiryDate = new Date();
@@ -99,12 +104,12 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
     const rawAmount = basePrices[region][duration];
     const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
 
-        // 3. إدراج أو تحديث بيانات الاشتراك في الجدول (Upsert)
+    // 3. إدراج أو تحديث بيانات الاشتراك في الجدول (Upsert)
     const { error } = await supabase
       .from('saas_subscriptions')
       .upsert([{
-        academy_id: academyId,
-        payer_id: session?.user?.id,
+        academy_id: activeAcademyId, // 🌟 الاعتماد على activeAcademyId
+        payer_id: activeUser?.id,    // 🌟 الاعتماد على activeUser
         plan_tier: 'pro',
         plan_duration: duration,
         status: isManualTransfer ? 'pending_verification' : 'active',
@@ -118,9 +123,9 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
           region: region,
           discount_applied: discountPercent,
           coupon_code: appliedCoupon || null,
-          receipt_url: receiptUrl // 🌟 تم إضافة رابط الإشعار هنا بنجاح
+          receipt_url: receiptUrl
         }
-      }], { onConflict: 'academy_id' }); // 🌟 يضمن تحديث الاشتراك القائم للأكاديمية بدلاً من رفضه
+      }], { onConflict: 'academy_id' });
 
     if (error) throw error;
     setIsSubmitted(true);
