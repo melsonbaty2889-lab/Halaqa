@@ -149,6 +149,15 @@ const hijri = formatHijriDate(new Date(), currentLocale);
     };
   };
 
+  const filteredMenuSections = menuSections.map(section => {
+    const filteredItems = section.items.filter(item =>
+      item.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return { ...section, items: filteredItems };
+  }).filter(section => section.items.length > 0);
+
+  return (
+
   const statusBadge = getStatusBadge();
 
   const menuSections = [
