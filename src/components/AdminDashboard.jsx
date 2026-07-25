@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './Dashboard.module.css';
 import { supabase } from '../lib/supabase';
 import EmptyState from './EmptyState'; 
@@ -29,9 +29,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
+  
+  // 🔍 حالات البحث والتحكم بالقائمة المنسدلة
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef(null);                               
+
   const [activeTab, setActiveTab] = useState('all'); 
   const [selectedAcademy, setSelectedAcademy] = useState(null);
   const [extendModalAcademy, setExtendModalAcademy] = useState(null);
@@ -116,6 +119,17 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       supabase.removeChannel(academiesChannel);
     };
   }, [fetchDashboardData]);
+
+  // 🖱️ إغلاق قائمة الاقتراحات عند النقر في أي مكان خارج منطقة البحث
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const onActivateClick = async (id, ownerId) => {
     if (processingId) return;
@@ -235,6 +249,19 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     a.ownerProfile?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // 💡 تجميع الاقتراحات المباشرة بناءً على كتابة المستخدم (أول 5 نتائج)
+  const allAcademiesList = [...pendingAcademies, ...activeAcademies];
+  const suggestions = searchQuery.trim() === '' ? [] : allAcademiesList.filter(a =>
+    a.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.ownerProfile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.ownerProfile?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  ).slice(0, 5);
+
+  const handleSelectSuggestion = (academy) => {
+    setSearchQuery(academy.name);
+    setShowSuggestions(false);
+  };
+
   const filteredPending = filterList(pendingAcademies);
   const filteredActive = filterList(activeAcademies);
   const expiredAcademies = [...pendingAcademies, ...activeAcademies].filter(a => a.trial_ends_at && new Date(a.trial_ends_at) <= new Date());
@@ -325,17 +352,64 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ))}
       </div>
 
-      {/* 🔍 Search Input */}
-      <div style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '10px 14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <FaSearch style={{ color: '#94A3B8', flexShrink: 0 }} />
-        <input 
-          type="text" 
-          placeholder={isRtl ? "ابحث بالاسم أو البريد..." : "Search by name or email..."} 
-          value={searchQuery} 
-          onChange={(e) => setSearchQuery(e.target.value)} 
-          style={{ background: 'transparent', border: 'none', outline: 'none', color: '#FFF', width: '100%', fontSize: '0.85rem' }} 
-        />
-        {searchQuery && <button onClick={() => setSearchQuery('')} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}><FaTimes /></button>}
+      {/* 🔍 Search Input & Dynamic Dropdown */}
+      <div className={styles.searchWrapper} ref={searchRef}>
+        <div className={styles.searchInputBox}>
+          <FaSearch style={{ color: '#94A3B8', flexShrink: 0 }} />
+          <input 
+            type="text" 
+            placeholder={isRtl ? "ابحث باسم الأكاديمية أو المالك..." : "Search academy or owner..."} 
+            value={searchQuery} 
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }} 
+            onFocus={() => setShowSuggestions(true)}
+            style={{ background: 'transparent', border: 'none', outline: 'none', color: '#FFF', width: '100%', fontSize: '0.85rem' }} 
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => {
+                setSearchQuery('');
+                setShowSuggestions(false);
+              }} 
+              style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
+
+        {/* 📜 القائمة المنسدلة للنتائج المباشرة */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className={styles.searchDropdown}>
+            {suggestions.map((academy) => (
+              <div 
+                key={academy.id} 
+                className={styles.suggestionItem}
+                onClick={() => handleSelectSuggestion(academy)}
+              >
+                <div>
+                  <div className={styles.suggestionName}>{academy.name}</div>
+                  {academy.ownerProfile && (
+                    <div className={styles.suggestionMeta}>
+                      <FaUser style={{ fontSize: '0.65rem' }} /> {academy.ownerProfile.full_name}
+                    </div>
+                  )}
+                </div>
+                <span style={{ 
+                  fontSize: '0.7rem', 
+                  padding: '2px 8px', 
+                  borderRadius: '10px', 
+                  background: academy.is_active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: academy.is_active ? '#34D399' : '#F87171' 
+                }}>
+                  {academy.is_active ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'معلق' : 'Pending')}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 📋 Pending Section */}
