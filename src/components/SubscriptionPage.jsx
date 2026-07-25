@@ -154,9 +154,11 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
 
     if (error) throw error;
     setIsSubmitted(true);
-  } catch (err) {
-    console.error("🚨 Subscription Error:", err);
-    showNotification(isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
+    } catch (err) {
+    console.error("🚨 Subscription Error Details:", err);
+    // 🌟 إظهار نص الخطأ الفعلي بدلاً من الرسالة العامة
+    const errorMessage = err?.message || err?.error_description || (isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
+    showNotification(`❌ ${errorMessage}`);
   } finally {
     setLoading(false);
   }
