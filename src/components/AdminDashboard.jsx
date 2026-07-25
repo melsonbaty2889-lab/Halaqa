@@ -20,12 +20,14 @@ import {
   FaInfinity,
   FaReceipt,
   FaEye,
-  FaMoneyBillWave
+  FaMoneyBillWave,
+  FaUnlock
 } from 'react-icons/fa';
 
 export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
   const [activeAcademies, setActiveAcademies] = useState([]); 
+  const [blockedAcademies, setBlockedAcademies] = useState([]); // 🚫 الأكاديميات المحظورة/المعطلة
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
   
   const [loading, setLoading] = useState(true);
@@ -76,13 +78,23 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (aErr) throw aErr;
 
-      // 3️⃣ إجمالي عدد الأكاديميات
+      // 3️⃣ جلب الأكاديميات المحظورة / غير النشطة 🚫
+      const { data: blockedData, error: bErr } = await supabase
+        .from('academies')
+        .select('*')
+        .eq('is_active', false)
+        .order('created_at', { ascending: false });
+
+      if (bErr) throw bErr;
+
+      // 4️⃣ إجمالي عدد الأكاديميات
       const { count } = await supabase
         .from('academies')
         .select('*', { count: 'exact', head: true });
 
-      // إثراء تفاصيل المالك للأكاديميات النشطة
-      const ownerIds = [...new Set((activeData || []).map(a => a.owner_id).filter(Boolean))];
+      // إثراء تفاصيل المالك لكافة الأكاديميات
+      const allAcademies = [...(activeData || []), ...(blockedData || [])];
+      const ownerIds = [...new Set(allAcademies.map(a => a.owner_id).filter(Boolean))];
       let profilesMap = {};
       if (ownerIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -103,8 +115,14 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ownerProfile: profilesMap[acad.owner_id] || null
       }));
 
+      const enrichedBlockedData = (blockedData || []).map(acad => ({
+        ...acad,
+        ownerProfile: profilesMap[acad.owner_id] || null
+      }));
+
       setPendingSubscriptions(subData || []);
       setActiveAcademies(enrichedActiveData);
+      setBlockedAcademies(enrichedBlockedData);
       if (count !== null) setTotalAcademiesCount(count);
 
     } catch (err) {
@@ -119,7 +137,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   useEffect(() => {
     fetchDashboardData();
 
-    // الاستماع للتغيرات في جدول الاشتلاكات والأكاديميات فورياً
+    // الاستماع للتغيرات في جدول الاشتراكات والأكاديميات فورياً
     const realTimeChannel = supabase
       .channel('admin-dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saas_subscriptions' }, () => {
@@ -251,6 +269,30 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
+  // 🔓 إلغاء حظر وإعادة تفعيل أكاديمية معطلة
+  const onActivateClick = async (id, ownerId) => {
+    if (processingId) return;
+    const targetAcademy = blockedAcademies.find(a => a.id === id);
+    if (!window.confirm(isRtl ? `إلغاء حظر وتفعيل (${targetAcademy?.name || ''})؟` : 'Activate this academy?')) return;
+
+    setProcessingId(`activate-${id}`);
+
+    try {
+      const { error: acadErr } = await supabase.from('academies').update({ is_active: true }).eq('id', id);
+      if (acadErr) throw acadErr;
+
+      const targetOwnerId = ownerId || targetAcademy?.owner_id;
+      if (targetOwnerId) await supabase.from('profiles').update({ is_activated: true }).eq('id', targetOwnerId);
+
+      showToast(isRtl ? `تم إلغاء حظر "${targetAcademy?.name || ''}" بنجاح! 🎉` : "Activated", "success");
+      fetchDashboardData(true);
+    } catch (error) {
+      showToast(isRtl ? "فشل تفعيل الأكاديمية." : "Failed to activate.", "error");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   // ⏱️ تمديد اشتراك أكاديمية نشطة
   const onExtendTrialClick = async (id, daysToAdd, isLifetime = false) => {
     if (processingId) return;
@@ -258,7 +300,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
     let newDateIso = null;
     if (!isLifetime) {
-      const target = activeAcademies.find(a => a.id === id);
+      const target = activeAcademies.find(a => a.id === id) || blockedAcademies.find(a => a.id === id);
       const now = new Date();
       const currentEnd = target?.trial_ends_at ? new Date(target.trial_ends_at) : now;
       const baseDate = currentEnd > now ? currentEnd : now;
@@ -281,13 +323,13 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   };
 
   const exportToCSV = () => {
-    const allList = activeAcademies;
+    const allList = [...activeAcademies, ...blockedAcademies];
     if (allList.length === 0) return;
 
     const headers = ["ID", "Academy Name", "Owner", "Email", "Status", "Trial Ends At"];
     const rows = allList.map(a => [
       a.id, `"${a.name || ''}"`, `"${a.ownerProfile?.full_name || ''}"`, `"${a.ownerProfile?.email || ''}"`,
-      a.is_active ? "Active" : "Pending", a.trial_ends_at ? new Date(a.trial_ends_at).toLocaleDateString() : "Lifetime"
+      a.is_active ? "Active" : "Blocked", a.trial_ends_at ? new Date(a.trial_ends_at).toLocaleDateString() : "Lifetime"
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -353,15 +395,15 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         <div className={styles.premiumStatBox}>
           <div>
             <p className={styles.statLabel}>{isRtl ? 'انتظار المراجعة' : 'Pending Verification'}</p>
-            <h2 className={styles.statNumber} style={{ color: pendingSubscriptions.length > 0 ? '#F87171' : 'inherit' }}>{loading ? '...' : pendingSubscriptions.length}</h2>
+            <h2 className={styles.statNumber} style={{ color: pendingSubscriptions.length > 0 ? '#FBBF24' : 'inherit' }}>{loading ? '...' : pendingSubscriptions.length}</h2>
           </div>
           <div className={styles.statIcon}><FaClock /></div>
         </div>
 
         <div className={styles.premiumStatBox} style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
           <div>
-            <p className={styles.statLabel}>{isRtl ? 'اشتراكات منتهية' : 'Expired'}</p>
-            <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : expiredAcademies.length}</h2>
+            <p className={styles.statLabel}>{isRtl ? 'أكاديميات محظورة / منتهية' : 'Blocked / Expired'}</p>
+            <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : blockedAcademies.length + expiredAcademies.length}</h2>
           </div>
           <div className={styles.statIcon}><FaExclamationTriangle style={{ color: '#EF4444' }} /></div>
         </div>
@@ -370,9 +412,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       {/* 🗂️ Scrollable Tabs Bar */}
       <div className={styles.tabsBar}>
         {[
-          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: pendingSubscriptions.length + activeAcademies.length },
+          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: pendingSubscriptions.length + activeAcademies.length + blockedAcademies.length },
           { id: 'pending', label: isRtl ? 'طلبات الاشتراكات المعلقة' : 'Pending Subscriptions', count: pendingSubscriptions.length },
           { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: activeAcademies.length },
+          { id: 'blocked', label: isRtl ? 'المحظورة / المعطلة 🚫' : 'Blocked', count: blockedAcademies.length },
           { id: 'expired', label: isRtl ? 'منتهية التجربة' : 'Expired', count: expiredAcademies.length },
         ].map(tab => (
           <button
@@ -391,7 +434,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ))}
       </div>
 
-      {/* 📋 Pending Subscriptions Section (الطلبات المعلقة للمراجعة) */}
+      {/* 📋 Pending Subscriptions Section */}
       {(activeTab === 'all' || activeTab === 'pending') && (
         <section className={styles.sectionPending} style={{ marginBottom: '32px' }}>
           <h2 className={styles.sectionTitle} style={{ fontSize: '1.1rem', color: '#FFF', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -503,7 +546,45 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     <button onClick={() => setExtendModalAcademy(academy)} disabled={processingId !== null} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <FaPlus style={{ fontSize: '0.65rem' }} /> {isRtl ? 'تمديد' : 'Extend'}
                     </button>
-                    <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><FaBan /></button>
+                    <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }} title={isRtl ? "حظر الأكاديمية" : "Block Academy"}><FaBan /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 🚫 Blocked / Deactivated Section (الأكاديميات المحظورة) */}
+      {(activeTab === 'all' || activeTab === 'blocked') && (
+        <section style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaBan />
+            <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
+          </h2>
+          {blockedAcademies.length === 0 ? (
+            <EmptyState icon={<FaShieldAlt style={{ color: '#10B981' }} />} title={isRtl ? "لا توجد أكاديميات محظورة" : "No Blocked Academies"} description={isRtl ? "جميع الأكاديميات تعمل بشكل ممتاز." : "All academies active."} />
+          ) : (
+            <div className={styles.requestsGrid}>
+              {blockedAcademies.map(academy => (
+                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{academy.name}</h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {academy.ownerProfile.full_name}</span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
+                  </div>
+                  <div className={styles.cardActions}>
+                    <button 
+                      onClick={() => onActivateClick(academy.id, academy.owner_id)} 
+                      disabled={processingId !== null} 
+                      style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <FaUnlock /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
+                    </button>
                   </div>
                 </div>
               ))}
