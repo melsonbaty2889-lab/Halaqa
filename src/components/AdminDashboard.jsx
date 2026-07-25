@@ -413,33 +413,63 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       </div>
 
       {/* 📋 Pending Section */}
-      {(activeTab === 'all' || activeTab === 'pending') && (
-        <section style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>📋 {isRtl ? 'طلبات التسجيل المعلقة' : 'Pending Registrations'}</h2>
-          {filteredPending.length === 0 ? (
-            <EmptyState icon={<FaClock />} title={isRtl ? "لا توجد طلبات معلقة" : "No Pending Requests"} description={isRtl ? "جميع الطلبات تم البت فيها." : "All caught up."} />
-          ) : (
-            <div className={styles.requestsGrid}>
-              {filteredPending.map(academy => (
-                <div key={academy.id} className={styles.requestCard}>
-                  <div className={styles.requestInfo}>
-                    <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
-                    {academy.ownerProfile && (
-                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {academy.ownerProfile.full_name}</span>
-                      </div>
-                    )}
-                    <span style={{ fontSize: '0.72rem', color: getTrialStatusBadge(academy.trial_ends_at).color }}>{getTrialStatusBadge(academy.trial_ends_at).text}</span>
+{(activeTab === 'all' || activeTab === 'pending') && (
+  <section className={styles.sectionPending}>
+    <h2 className={styles.sectionTitle}>
+      <span>📋</span>
+      <span>{isRtl ? 'طلبات التسجيل المعلقة' : 'Pending Registrations'}</span>
+    </h2>
+
+    {filteredPending.length === 0 ? (
+      <EmptyState 
+        icon={<FaClock />} 
+        title={isRtl ? "لا توجد طلبات معلقة" : "No Pending Requests"} 
+        description={isRtl ? "جميع الطلبات تم البت فيها." : "All caught up."} 
+      />
+    ) : (
+      <div className={styles.requestsGrid}>
+        {filteredPending.map(academy => {
+          const trialBadge = getTrialStatusBadge(academy.trial_ends_at);
+          return (
+            <div key={academy.id} className={styles.requestCard}>
+              <div className={styles.requestInfo}>
+                <h3 
+                  className={styles.requestName} 
+                  onClick={() => setSelectedAcademy(academy)}
+                >
+                  {academy.name}
+                </h3>
+
+                {academy.ownerProfile && (
+                  <div className={styles.ownerInfo}>
+                    <FaUser className={styles.ownerIcon} />
+                    <span>{academy.ownerProfile.full_name}</span>
                   </div>
-                  <div className={styles.cardActions}>
-                    <button onClick={() => onActivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.78rem' }}>{isRtl ? 'اعتماد' : 'Approve'}</button>
-                  </div>
-                </div>
-              ))}
+                )}
+
+                <span className={styles.trialBadge} style={{ color: trialBadge.color }}>
+                  {trialBadge.text}
+                </span>
+              </div>
+
+              <div className={styles.cardActionsRow}>
+                <button 
+                  className={styles.approveBtn} 
+                  onClick={() => onActivateClick(academy.id, academy.owner_id)} 
+                  disabled={processingId !== null}
+                >
+                  {processingId === academy.id 
+                    ? (isRtl ? 'جاري الاعتماد...' : 'Approving...') 
+                    : (isRtl ? 'اعتماد' : 'Approve')}
+                </button>
+              </div>
             </div>
-          )}
-        </section>
-      )}
+          );
+        })}
+      </div>
+    )}
+  </section>
+)}
 
       {/* ✅ Active Section */}
       {(activeTab === 'all' || activeTab === 'active') && (
