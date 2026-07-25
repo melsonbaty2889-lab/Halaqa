@@ -52,23 +52,14 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
     return basePrice;
   };
 
-  const toggleLanguage = () => {
-    i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
-  };
-
   const showNotification = (msg) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleSubmitPayment = async (selectedPaymentMethod) => {
+  const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer) => {
     if (!academyId) {
       showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
-      return;
-    }
-
-    if ((duration === 'lifetime' || region === 'global' || region === 'gcc') && !txId.trim()) {
-      showNotification(isRTL ? "⚠️ يرجى توفير الرقم المرجعي أو معرف المعاملة لتأكيد الاستحقاق." : "⚠️ Transaction Reference ID is required.");
       return;
     }
 
@@ -90,14 +81,14 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           payer_id: session?.user?.id,
           plan_tier: 'pro',
           plan_duration: duration,
-          status: 'unpaid',
-          payment_gateway: selectedPaymentMethod || (region === 'egypt' ? 'instapay_vodafone' : 'crypto_gcc'),
+          status: isManualTransfer ? 'pending_verification' : 'active',
+          payment_gateway: selectedPaymentMethod,
           price: finalAmount,
           currency: basePrices[region].curr,
           starts_at: startsAt.toISOString(),
           expires_at: expiryDate.toISOString(),
           metadata: {
-            transaction_id: txId || 'AUTOMATED_GATEWAY_HANDSHAKE',
+            transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
             region: region,
             discount_applied: discountPercent,
             coupon_code: appliedCoupon || null
@@ -108,7 +99,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
       setIsSubmitted(true);
     } catch (err) {
       console.error("🚨 Subscription Error:", err);
-      showNotification(isRTL ? "❌ فشل بروتوكول الاتصال أثناء معالجة الطلب." : "❌ Network error occurred.");
+      showNotification(isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
     } finally {
       setLoading(false);
     }
@@ -125,7 +116,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 30px auto', borderBottom: '1px solid #1e293b', paddingBottom: '20px' }}>
-        <button onClick={toggleLanguage} style={{ background: '#1e293b', color: '#f59e0b', border: '1px solid #334155', padding: '10px 22px', borderRadius: '12px', cursor: 'pointer', fontWeight: '700' }}>
+        <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ background: '#1e293b', color: '#f59e0b', border: '1px solid #334155', padding: '10px 22px', borderRadius: '12px', cursor: 'pointer', fontWeight: '700' }}>
           🌐 {t('subscription.switchLang')}
         </button>
         {onBack && (
@@ -187,7 +178,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px', marginBottom: '50px' }}>
           
           {/* Monthly */}
-          <div onClick={() => setDuration('monthly')} style={{ background: '#111827', border: duration === 'monthly' ? '2px solid #f59e0b' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: duration === 'monthly' ? '0 0 20px rgba(245, 158, 11, 0.15)' : 'none' }}>
+          <div onClick={() => setDuration('monthly')} style={{ background: '#111827', border: duration === 'monthly' ? '2px solid #f59e0b' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', transition: 'all 0.3s ease' }}>
             <h3 style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: '700', margin: '0 0 10px 0' }}>{t('subscription.monthly')}</h3>
             <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f59e0b', margin: '20px 0' }}>
               {calculateFinalPrice(basePrices[region].monthly)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
@@ -198,19 +189,13 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           </div>
 
           {/* Yearly */}
-          <div onClick={() => setDuration('yearly')} style={{ background: '#111827', border: duration === 'yearly' ? '2px solid #10b981' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease', boxShadow: duration === 'yearly' ? '0 0 20px rgba(16, 185, 129, 0.15)' : 'none' }}>
+          <div onClick={() => setDuration('yearly')} style={{ background: '#111827', border: duration === 'yearly' ? '2px solid #10b981' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease' }}>
             <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700' }}>
               {isRTL ? 'توفير شهرين مجاناً 🔥' : 'Save 2 Months Automatically 🔥'}
             </span>
             <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>{t('subscription.yearly')}</h3>
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981', margin: '20px 0', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-              <span>{calculateFinalPrice(basePrices[region].yearly)}</span>
-              <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
-              {discountPercent === 0 && (
-                <span style={{ textDecoration: 'line-through', color: '#64748b', fontSize: '1.1rem', fontWeight: '500', marginRight: 'auto' }}>
-                  {parseFloat(basePrices[region].monthly) * 12}
-                </span>
-              )}
+            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981', margin: '20px 0' }}>
+              {calculateFinalPrice(basePrices[region].yearly)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
             </div>
             <button style={{ width: '100%', padding: '14px', borderRadius: '12px', background: duration === 'yearly' ? '#10b981' : '#1e293b', color: duration === 'yearly' ? '#fff' : '#94a3b8', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
               {duration === 'yearly' ? t('subscription.selectedPlan') : t('subscription.choosePlan')}
@@ -218,7 +203,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           </div>
 
           {/* Lifetime */}
-          <div onClick={() => setDuration('lifetime')} style={{ background: '#111827', border: duration === 'lifetime' ? '2px solid #ef4444' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease', boxShadow: duration === 'lifetime' ? '0 0 20px rgba(239, 68, 68, 0.15)' : 'none' }}>
+          <div onClick={() => setDuration('lifetime')} style={{ background: '#111827', border: duration === 'lifetime' ? '2px solid #ef4444' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease' }}>
             <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700' }}>
               {isRTL ? 'فرصة حصرية للمؤسسين ⚡' : 'Exclusive Founder Deal ⚡'}
             </span>
@@ -233,7 +218,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
 
         </div>
 
-        {/* مكون الدفع التفاعلي */}
+        {/* مكون الدفع المتطور والمبسط */}
         <PaymentSection 
           region={region}
           duration={duration}
