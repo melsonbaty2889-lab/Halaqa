@@ -98,10 +98,10 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
     const rawAmount = basePrices[region][duration];
     const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
 
-    // 3. إدراج بيانات الاشتراك في الجدول
+        // 3. إدراج أو تحديث بيانات الاشتراك في الجدول (Upsert)
     const { error } = await supabase
       .from('saas_subscriptions')
-      .insert([{
+      .upsert([{
         academy_id: academyId,
         payer_id: session?.user?.id,
         plan_tier: 'pro',
@@ -119,7 +119,7 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
           coupon_code: appliedCoupon || null,
           receipt_url: receiptUrl // 🌟 تم إضافة رابط الإشعار هنا بنجاح
         }
-      }]);
+      }], { onConflict: 'academy_id' }); // 🌟 يضمن تحديث الاشتراك القائم للأكاديمية بدلاً من رفضه
 
     if (error) throw error;
     setIsSubmitted(true);
