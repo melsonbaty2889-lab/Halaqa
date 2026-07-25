@@ -10,208 +10,117 @@ export default function PaymentSection({
   loading, 
   onSubmit, 
   t, 
-  isRTL,
-  discountPercent,
-  onApplyCoupon
+  isRTL 
 }) {
-  const [couponInput, setCouponInput] = useState('');
-  const [couponMessage, setCouponMessage] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState('');
+  const [copied, setCopied] = useState(false);
 
-  const shouldShowTxInput = duration === 'lifetime' || region === 'global' || region === 'gcc';
-
-  const handleCouponCheck = () => {
-    if (!couponInput.trim()) return;
-    const success = onApplyCoupon(couponInput.trim());
-    if (success) {
-      setCouponMessage({ type: 'success', text: isRTL ? 'تم تطبيق الخصم بنجاح! 🎉' : 'Coupon applied successfully!' });
-    } else {
-      setCouponMessage({ type: 'error', text: isRTL ? 'كود الخصم غير صالح أو منتهي الصلاحية.' : 'Invalid or expired coupon code.' });
+  // 📌 بيانات التحويل المباشرة (يمكنك وضع أرقامك الرسمية هنا في ملفك المحلي)
+  const paymentDetails = {
+    egypt: {
+      vodafone: { name: t('subscription.vodafoneCash') || 'فودافون كاش / المحافظ الإلكترونية', number: '01012345678', icon: '📱' },
+      instapay: { name: t('subscription.instapay') || 'حساب InstaPay المباشر', number: 'username@instapay', icon: '⚡' },
+      fawry: { name: t('subscription.fawry') || 'كود دفع فوري (Fawry Pay)', number: '987654321', icon: '🏪' },
+    },
+    gcc: {
+      apple: { name: t('subscription.applePay') || 'Apple Pay / Mada', number: 'متاح عبر البوابة المباشرة', icon: '💳' },
+      instapay_gcc: { name: 'تحويل بنكي مباشر (IBAN)', number: 'SA8200000012345678901234', icon: '🏦' },
+    },
+    global: {
+      crypto: { name: t('subscription.usdt') || 'USDT (TRC20 Wallet)', number: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq', icon: '🪙' },
+      card: { name: t('subscription.creditCard') || 'Visa / MasterCard Gateway', number: 'دفع إلكتروني آمن 100%', icon: '💳' },
     }
   };
 
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const activeGroup = paymentDetails[region] || paymentDetails.egypt;
+
   return (
-    <div style={{ 
-      background: '#111827', 
-      border: '1px solid #1e293b', 
-      borderRadius: '24px', 
-      padding: '35px', 
-      maxWidth: '650px', 
-      margin: '0 auto', 
-      boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' 
-    }}>
+    <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: '24px', padding: '35px', maxWidth: '650px', margin: '0 auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
       
-      {/* 🎟️ قسم كود الخصم */}
-      <div style={{ marginBottom: '28px', background: '#1e293b', padding: '18px', borderRadius: '16px', border: '1px dashed #334155' }}>
-        <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.9rem', fontWeight: '700', marginBottom: '10px' }}>
-          🏷️ {isRTL ? "هل لديك كود خصم؟" : "Have a promo code?"}
-        </label>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <input 
-            type="text" 
-            value={couponInput}
-            onChange={(e) => setCouponInput(e.target.value)}
-            placeholder={isRTL ? "أدخل الكود هنا..." : "Enter code here..."}
-            style={{ 
-              flex: 1, 
-              padding: '12px 14px', 
-              borderRadius: '10px', 
-              border: '1px solid #475569', 
-              background: '#0a0f1d', 
-              color: '#fff', 
-              outline: 'none', 
-              fontSize: '0.95rem' 
-            }}
-          />
-          <button 
-            type="button"
-            onClick={handleCouponCheck}
-            style={{ 
-              padding: '12px 20px', 
-              background: '#334155', 
-              color: '#f8fafc', 
-              border: 'none', 
-              borderRadius: '10px', 
-              fontWeight: '700', 
-              cursor: 'pointer' 
+      <h4 style={{ color: '#f59e0b', marginTop: '0', marginBottom: '20px', fontSize: '1.15rem', fontWeight: '700', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
+        💳 {isRTL ? "اختر طريقة الدفع المعتمدة لنطاقك:" : "Select Verified Payment Gateway:"}
+      </h4>
+
+      {/* قائمة طرق الدفع */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {Object.entries(activeGroup).map(([key, item]) => (
+          <div 
+            key={key}
+            onClick={() => setSelectedMethod(key)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '15px',
+              padding: '16px 20px',
+              borderRadius: '14px',
+              background: selectedMethod === key ? '#1e293b' : '#0a0f1d',
+              border: selectedMethod === key ? '2px solid #f59e0b' : '1px solid #1f293d',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
-            {isRTL ? "تطبيق" : "Apply"}
-          </button>
-        </div>
-        {couponMessage && (
-          <p style={{ margin: '10px 0 0 0', fontSize: '0.85rem', color: couponMessage.type === 'success' ? '#10b981' : '#ef4444', fontWeight: '600' }}>
-            {couponMessage.text}
-          </p>
-        )}
+            <span style={{ fontSize: '1.4rem' }}>{item.icon}</span>
+            <span style={{ color: '#f8fafc', fontWeight: '600', fontSize: '0.95rem' }}>{item.name}</span>
+          </div>
+        ))}
       </div>
 
-      <h4 style={{ 
-        color: '#f59e0b', 
-        marginTop: '0', 
-        marginBottom: '20px', 
-        fontSize: '1.15rem', 
-        fontWeight: '700', 
-        borderBottom: '1px solid #1e293b', 
-        paddingBottom: '12px' 
-      }}>
-        {t('subscription.paymentMethodsTitle')}
-      </h4>
-      
-      {/* وسائل دفع مصر */}
-      {region === 'egypt' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <img src="https://img.icons8.com/color/48/vodafone.png" alt="Vodafone" style={{ width: '30px', height: '30px' }} />
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.vodafoneCash')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <span style={{ fontSize: '1.6rem', lineHeight: '1' }}>⚡</span>
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.instapay')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <img src="https://img.icons8.com/external-tal-revivo-color-tal-revivo/24/external-fawry-is-the-first-and-largest-electronic-payment-network-in-egypt-logos-color-tal-revivo.png" alt="Fawry" style={{ width: '30px', height: '30px' }} />
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.fawry')}</span>
-          </div>
-        </div>
-      )}
-
-      {/* وسائل دفع الخليج */}
-      {region === 'gcc' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <img src="https://img.icons8.com/color/48/apple-pay.png" alt="Apple Pay" style={{ width: '36px', height: '36px' }} />
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.applePay')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <span style={{ background: '#005C53', color: '#fff', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800' }}>mada</span>
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.mada')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" style={{ width: '30px', height: '30px' }} />
-            <img src="https://img.icons8.com/color/48/mastercard.png" alt="MasterCard" style={{ width: '30px', height: '30px' }} />
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.creditCard')}</span>
-          </div>
-        </div>
-      )}
-
-      {/* وسائل دفع النطاق الدولي */}
-      {region === 'global' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <img src="https://img.icons8.com/color/48/tether.png" alt="USDT" style={{ width: '30px', height: '30px' }} />
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.usdt')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1e293b', padding: '14px 18px', borderRadius: '14px', border: '1px solid #334155' }}>
-            <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" style={{ width: '30px', height: '30px' }} />
-            <img src="https://img.icons8.com/color/48/mastercard.png" alt="MasterCard" style={{ width: '30px', height: '30px' }} />
-            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{t('subscription.creditCard')}</span>
-          </div>
-        </div>
-      )}
-
-      {/* حقل إدخال رقم المعاملة المرجعي */}
-      {shouldShowTxInput && (
-        <div style={{ 
-          background: '#1e293b', 
-          padding: '20px', 
-          borderRadius: '16px', 
-          marginTop: '20px', 
-          borderRight: isRTL ? '4px solid #ef4444' : 'none', 
-          borderLeft: isRTL ? 'none' : '4px solid #ef4444' 
-        }}>
-          <p style={{ margin: '0 0 12px 0', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.9rem' }}>
-            {region === 'global' ? t('subscription.usdtInstructions') : t('subscription.instapayInstructions')}
+      {/* صندوق عرض رقم الحساب وزر النسخ السريع */}
+      {selectedMethod && activeGroup[selectedMethod]?.number && (
+        <div style={{ marginTop: '22px', background: '#0a0f1d', border: '1px dashed #f59e0b', borderRadius: '16px', padding: '20px' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0 0 10px 0', fontWeight: '600' }}>
+            {isRTL ? 'حوّل المبلغ للرقم/الحساب التالي ثم أدخل رقم المعاملة للتحقق:' : 'Transfer amount to the following account then enter TxID:'}
           </p>
-          <input 
-            type="text"
-            value={txId}
-            onChange={(e) => setTxId(e.target.value)}
-            placeholder={t('subscription.placeholderTx')}
-            style={{ 
-              width: '100%', 
-              padding: '14px', 
-              borderRadius: '10px', 
-              border: '1px solid #334155', 
-              background: '#0a0f1d', 
-              color: '#fff', 
-              outline: 'none', 
-              textAlign: 'center', 
-              fontSize: '0.95rem', 
-              fontWeight: '600' 
-            }}
-          />
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#111827', padding: '12px 18px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+            <span style={{ color: '#f59e0b', fontFamily: 'monospace', fontSize: '1.05rem', fontWeight: '700', direction: 'ltr' }}>
+              {activeGroup[selectedMethod].number}
+            </span>
+            <button 
+              type="button"
+              onClick={() => handleCopy(activeGroup[selectedMethod].number)}
+              style={{ background: copied ? '#10b981' : '#334155', border: 'none', color: '#fff', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', transition: 'all 0.2s ease' }}
+            >
+              {copied ? (isRTL ? 'تم النسخ! 📋' : 'Copied! 📋') : (isRTL ? 'نسخ' : 'Copy')}
+            </button>
+          </div>
+
+          {/* مدخل رقم المعاملة المرجعي */}
+          <div style={{ marginTop: '16px' }}>
+            <input 
+              type="text" 
+              value={txId}
+              onChange={(e) => setTxId(e.target.value)}
+              placeholder={t('subscription.placeholderTx') || (isRTL ? "أدخل رقم المعاملة أو المعرف المرجعي للتحويل" : "Enter Transaction ID / Reference Key")}
+              style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid #334155', background: '#111827', color: '#fff', outline: 'none', textAlign: 'center', fontSize: '0.95rem', fontWeight: '600' }}
+            />
+          </div>
         </div>
       )}
 
       {/* زر التأكيد أو رسالة النجاح */}
       {isSubmitted ? (
-        <div style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981', padding: '18px', borderRadius: '14px', marginTop: '25px', textAlign: 'center', fontWeight: '700', border: '1px solid #10b981' }}>
-          🎉 {t('subscription.successMsg')}
+        <div style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '20px', borderRadius: '16px', marginTop: '25px', textAlign: 'center', fontWeight: '700', border: '1px solid #10b981' }}>
+          🎉 {t('subscription.successMsg') || (isRTL ? 'تم استلام طلبك بنجاح! جاري التفعيل والتحقق...' : 'Request received successfully!')}
         </div>
       ) : (
         <button 
-          onClick={onSubmit}
+          onClick={() => onSubmit(selectedMethod)}
           disabled={loading}
-          style={{ 
-            width: '100%', 
-            marginTop: '25px', 
-            padding: '16px', 
-            borderRadius: '14px', 
-            background: loading ? '#475569' : '#f59e0b', 
-            color: '#0a0f1d', 
-            border: 'none', 
-            fontSize: '1.05rem', 
-            fontWeight: '800', 
-            cursor: 'pointer', 
-            opacity: loading ? 0.6 : 1 
-          }}
+          style={{ width: '100%', marginTop: '25px', padding: '16px', borderRadius: '14px', background: loading ? '#475569' : 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#0a0f1d', border: 'none', fontSize: '1.05rem', fontWeight: '800', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 4px 20px rgba(245, 158, 11, 0.25)' }}
         >
-          {loading ? (isRTL ? "جاري الاتصال الآمن..." : "Processing...") : t('subscription.btnConfirm')}
+          {loading ? (isRTL ? "جاري الاتصال الآمن وتأكيد المعاملة..." : "Processing...") : (t('subscription.btnConfirm') || (isRTL ? 'اعتماد المعاملة وتفعيل ترخيص الأكاديمية الفوري 🚀' : 'Authorize & Grant License 🚀'))}
         </button>
       )}
 
-      {/* 🛡️ شارات الثقة والأمان */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '25px', pt: '15px', borderTop: '1px solid #1e293b', color: '#64748b', fontSize: '0.8rem', flexWrap: 'wrap' }}>
+      {/* 🛡️ شارات الأمان */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '25px', paddingTop: '15px', borderTop: '1px solid #1e293b', color: '#64748b', fontSize: '0.8rem', flexWrap: 'wrap' }}>
         <span>🔒 {isRTL ? "تشفير آمن 256-bit" : "256-Bit SSL Encrypted"}</span>
         <span>⚡ {isRTL ? "تفعيل تلقائي فور التأكيد" : "Instant Activation"}</span>
         <span>🛡️ {isRTL ? "ضمان استرجاع 14 يوم" : "14-Day Refund Policy"}</span>
