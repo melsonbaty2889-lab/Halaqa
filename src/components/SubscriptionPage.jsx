@@ -13,6 +13,9 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [couponInput, setCouponInput] = useState('');
+  const [couponMessage, setCouponMessage] = useState(null);
   const [notification, setNotification] = useState(null);
 
   const isRTL = i18n.language === 'ar';
@@ -23,16 +26,21 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
     setRegion(detectUserRegion(userLoc, i18n.language));
   }, [i18n.language]);
 
-  const handleApplyCoupon = (code) => {
-    if (code.toUpperCase() === 'HALAQA10' || code.toUpperCase() === 'SAVE10') {
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+
+    if (code === 'HALAQA10' || code === 'SAVE10') {
       setDiscountPercent(10);
-      return true;
-    }
-    if (code.toUpperCase() === 'FOUNDERS20') {
+      setAppliedCoupon(code);
+      setCouponMessage({ type: 'success', text: isRTL ? 'تم تطبيق خصم 10% بنجاح! 🎉' : '10% Discount applied!' });
+    } else if (code === 'FOUNDERS20') {
       setDiscountPercent(20);
-      return true;
+      setAppliedCoupon(code);
+      setCouponMessage({ type: 'success', text: isRTL ? 'تم تطبيق خصم 20% للمؤسسين! 🔥' : '20% Founder discount applied!' });
+    } else {
+      setCouponMessage({ type: 'error', text: isRTL ? 'كود الخصم غير صالح أو منتهي.' : 'Invalid coupon code.' });
     }
-    return false;
   };
 
   const calculateFinalPrice = (basePrice) => {
@@ -53,17 +61,12 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleSubmitPayment = async () => {
+  const handleSubmitPayment = async (selectedPaymentMethod) => {
     if (!academyId) {
       showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
       return;
     }
 
-    if (region === 'egypt' && (duration === 'monthly' || duration === 'yearly')) {
-      showNotification(isRTL ? "جاري تهيئة الاتصال الآمن وتوجيهك إلى بوابة الدفع..." : "Redirecting to Payment Gateway...");
-      return;
-    }
-    
     if ((duration === 'lifetime' || region === 'global' || region === 'gcc') && !txId.trim()) {
       showNotification(isRTL ? "⚠️ يرجى توفير الرقم المرجعي أو معرف المعاملة لتأكيد الاستحقاق." : "⚠️ Transaction Reference ID is required.");
       return;
@@ -80,24 +83,24 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
       const rawAmount = parseFloat(basePrices[region][duration]);
       const finalAmount = discountPercent > 0 ? rawAmount * (1 - discountPercent / 100) : rawAmount;
 
-      // إدراج البيانات متوافقة 100% مع الجدول الجديد
       const { error } = await supabase
         .from('saas_subscriptions')
         .insert([{
           academy_id: academyId,
           payer_id: session?.user?.id,
           plan_tier: 'pro',
-          plan_duration: duration, // monthly, yearly, lifetime
-          status: 'unpaid',         // مسموحة في الـ check constraint (trial, active, past_due, canceled, unpaid)
-          payment_gateway: region === 'egypt' ? 'instapay_vodafone' : (region === 'global' ? 'usdt_crypto' : 'gcc_local_methods'),
+          plan_duration: duration,
+          status: 'unpaid',
+          payment_gateway: selectedPaymentMethod || (region === 'egypt' ? 'instapay_vodafone' : 'crypto_gcc'),
           price: finalAmount,
-          currency: region === 'egypt' ? 'EGP' : (region === 'gcc' ? 'SAR' : 'USD'),
+          currency: basePrices[region].curr,
           starts_at: startsAt.toISOString(),
           expires_at: expiryDate.toISOString(),
           metadata: {
             transaction_id: txId || 'AUTOMATED_GATEWAY_HANDSHAKE',
             region: region,
-            discount_applied: discountPercent
+            discount_applied: discountPercent,
+            coupon_code: appliedCoupon || null
           }
         }]);
 
@@ -121,7 +124,7 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 40px auto', borderBottom: '1px solid #1e293b', paddingBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 30px auto', borderBottom: '1px solid #1e293b', paddingBottom: '20px' }}>
         <button onClick={toggleLanguage} style={{ background: '#1e293b', color: '#f59e0b', border: '1px solid #334155', padding: '10px 22px', borderRadius: '12px', cursor: 'pointer', fontWeight: '700' }}>
           🌐 {t('subscription.switchLang')}
         </button>
@@ -133,123 +136,104 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '45px' }}>
+        
+        {/* Title */}
+        <div style={{ textAlign: 'center', marginBottom: '35px' }}>
           <h1 style={{ color: '#f59e0b', fontSize: '2.5rem', fontWeight: '800', marginBottom: '14px' }}>{t('subscription.title')}</h1>
           <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>{t('subscription.subtitle')}</p>
         </div>
 
+        {/* 🎟️ قسم كود الخصم العلوي */}
+        <div style={{ maxWidth: '550px', margin: '0 auto 35px auto', background: '#111827', padding: '18px 24px', borderRadius: '18px', border: '1px dashed #f59e0b' }}>
+          <label style={{ display: 'block', color: '#f8fafc', fontSize: '0.9rem', fontWeight: '700', marginBottom: '10px', textAlign: 'center' }}>
+            🏷️ {isRTL ? "هل لديك كود خصم مخصص؟" : "Have a special promo code?"}
+          </label>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input 
+              type="text" 
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              placeholder={isRTL ? "أدخل الكود (مثل: FOUNDERS20)" : "Enter code (e.g. FOUNDERS20)"}
+              style={{ flex: 1, padding: '12px 16px', borderRadius: '10px', border: '1px solid #334155', background: '#0a0f1d', color: '#fff', outline: 'none', fontSize: '0.95rem', fontWeight: '600' }}
+            />
+            <button 
+              type="button"
+              onClick={handleApplyCoupon}
+              style={{ padding: '12px 24px', background: '#f59e0b', color: '#0a0f1d', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}
+            >
+              {isRTL ? "تطبيق" : "Apply"}
+            </button>
+          </div>
+          {couponMessage && (
+            <p style={{ margin: '10px 0 0 0', textAlign: 'center', fontSize: '0.85rem', color: couponMessage.type === 'success' ? '#10b981' : '#ef4444', fontWeight: '700' }}>
+              {couponMessage.text}
+            </p>
+          )}
+        </div>
+
         {/* Region Selector */}
-        <div style={{ marginBottom: '40px', background: '#111827', padding: '24px', borderRadius: '20px', border: '1px solid #1e293b' }}>
-          <label style={{ display: 'block', color: '#94a3b8', marginBottom: '16px', fontWeight: '700' }}>{t('subscription.regionLabel')}</label>
+        <div style={{ marginBottom: '40px', background: '#111827', padding: '20px', borderRadius: '20px', border: '1px solid #1e293b' }}>
+          <label style={{ display: 'block', color: '#94a3b8', marginBottom: '14px', fontWeight: '700', textAlign: 'center' }}>{t('subscription.regionLabel')}</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
             {['egypt', 'gcc', 'global'].map((r) => (
-              <button key={r} onClick={() => setRegion(r)} style={{ padding: '14px 24px', borderRadius: '12px', border: region === r ? '2px solid #f59e0b' : '1px solid #334155', background: region === r ? 'rgba(245,158,11,0.08)' : '#1e293b', color: region === r ? '#f59e0b' : '#f8fafc', cursor: 'pointer', fontWeight: '700' }}>
+              <button key={r} onClick={() => setRegion(r)} style={{ padding: '12px 22px', borderRadius: '12px', border: region === r ? '2px solid #f59e0b' : '1px solid #334155', background: region === r ? 'rgba(245,158,11,0.08)' : '#1e293b', color: region === r ? '#f59e0b' : '#f8fafc', cursor: 'pointer', fontWeight: '700' }}>
                 {t(`subscription.${r}`)}
               </button>
             ))}
           </div>
         </div>
 
-                         {/* Plans Grid - الباقات الأصلية المباشرة */}
+        {/* Plans Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px', marginBottom: '50px' }}>
           
-          {/* 1. Monthly Plan */}
-          <div 
-            onClick={() => setDuration('monthly')} 
-            style={{ 
-              background: '#111827', 
-              border: duration === 'monthly' ? '2px solid #f59e0b' : '1px solid #1e293b', 
-              padding: '35px 24px', 
-              borderRadius: '24px', 
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: duration === 'monthly' ? '0 0 20px rgba(245, 158, 11, 0.15)' : 'none'
-            }}
-          >
-            <h3 style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: '700', margin: '0 0 10px 0' }}>
-              {t('subscription.monthly')}
-            </h3>
-
+          {/* Monthly */}
+          <div onClick={() => setDuration('monthly')} style={{ background: '#111827', border: duration === 'monthly' ? '2px solid #f59e0b' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: duration === 'monthly' ? '0 0 20px rgba(245, 158, 11, 0.15)' : 'none' }}>
+            <h3 style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: '700', margin: '0 0 10px 0' }}>{t('subscription.monthly')}</h3>
             <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f59e0b', margin: '20px 0' }}>
               {calculateFinalPrice(basePrices[region].monthly)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
             </div>
-
             <button style={{ width: '100%', padding: '14px', borderRadius: '12px', background: duration === 'monthly' ? '#f59e0b' : '#1e293b', color: duration === 'monthly' ? '#0a0f1d' : '#94a3b8', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
               {duration === 'monthly' ? t('subscription.selectedPlan') : t('subscription.choosePlan')}
             </button>
           </div>
 
-          {/* 2. Yearly Plan (إظهار الخصم بصرياً) */}
-          <div 
-            onClick={() => setDuration('yearly')} 
-            style={{ 
-              background: '#111827', 
-              border: duration === 'yearly' ? '2px solid #10b981' : '1px solid #1e293b', 
-              padding: '35px 24px', 
-              borderRadius: '24px', 
-              cursor: 'pointer', 
-              position: 'relative',
-              transition: 'all 0.3s ease',
-              boxShadow: duration === 'yearly' ? '0 0 20px rgba(16, 185, 129, 0.15)' : 'none'
-            }}
-          >
-            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              {isRTL ? 'توفير شهرين كاملين مجاناً 🔥' : 'Save 2 Months Automatically 🔥'}
+          {/* Yearly */}
+          <div onClick={() => setDuration('yearly')} style={{ background: '#111827', border: duration === 'yearly' ? '2px solid #10b981' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease', boxShadow: duration === 'yearly' ? '0 0 20px rgba(16, 185, 129, 0.15)' : 'none' }}>
+            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700' }}>
+              {isRTL ? 'توفير شهرين مجاناً 🔥' : 'Save 2 Months Automatically 🔥'}
             </span>
-
-            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>
-              {t('subscription.yearly')}
-            </h3>
-
+            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>{t('subscription.yearly')}</h3>
             <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981', margin: '20px 0', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
               <span>{calculateFinalPrice(basePrices[region].yearly)}</span>
               <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
-              
-              {/* السعر بدون خصم مشطوباً */}
               {discountPercent === 0 && (
                 <span style={{ textDecoration: 'line-through', color: '#64748b', fontSize: '1.1rem', fontWeight: '500', marginRight: 'auto' }}>
                   {parseFloat(basePrices[region].monthly) * 12}
                 </span>
               )}
             </div>
-
             <button style={{ width: '100%', padding: '14px', borderRadius: '12px', background: duration === 'yearly' ? '#10b981' : '#1e293b', color: duration === 'yearly' ? '#fff' : '#94a3b8', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
               {duration === 'yearly' ? t('subscription.selectedPlan') : t('subscription.choosePlan')}
             </button>
           </div>
 
-          {/* 3. Lifetime Plan */}
-          <div 
-            onClick={() => setDuration('lifetime')} 
-            style={{ 
-              background: '#111827', 
-              border: duration === 'lifetime' ? '2px solid #ef4444' : '1px solid #1e293b', 
-              padding: '35px 24px', 
-              borderRadius: '24px', 
-              cursor: 'pointer', 
-              position: 'relative',
-              transition: 'all 0.3s ease',
-              boxShadow: duration === 'lifetime' ? '0 0 20px rgba(239, 68, 68, 0.15)' : 'none'
-            }}
-          >
-            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              {isRTL ? 'فرصة حصرية للمؤسسين الأوائل ⚡' : 'Exclusive Founder Deal ⚡'}
+          {/* Lifetime */}
+          <div onClick={() => setDuration('lifetime')} style={{ background: '#111827', border: duration === 'lifetime' ? '2px solid #ef4444' : '1px solid #1e293b', padding: '35px 24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease', boxShadow: duration === 'lifetime' ? '0 0 20px rgba(239, 68, 68, 0.15)' : 'none' }}>
+            <span style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: '#fff', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700' }}>
+              {isRTL ? 'فرصة حصرية للمؤسسين ⚡' : 'Exclusive Founder Deal ⚡'}
             </span>
-
-            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>
-              {t('subscription.lifetime')}
-            </h3>
-
+            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '700', marginTop: '10px' }}>{t('subscription.lifetime')}</h3>
             <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#ef4444', margin: '20px 0' }}>
               {calculateFinalPrice(basePrices[region].lifetime)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {basePrices[region].curr}</span>
             </div>
-
             <button style={{ width: '100%', padding: '14px', borderRadius: '12px', background: duration === 'lifetime' ? '#ef4444' : '#1e293b', color: duration === 'lifetime' ? '#fff' : '#94a3b8', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
               {duration === 'lifetime' ? t('subscription.selectedPlan') : t('subscription.choosePlan')}
             </button>
           </div>
 
         </div>
+
+        {/* مكون الدفع التفاعلي */}
         <PaymentSection 
           region={region}
           duration={duration}
@@ -260,8 +244,6 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           onSubmit={handleSubmitPayment}
           t={t}
           isRTL={isRTL}
-          discountPercent={discountPercent}
-          onApplyCoupon={handleApplyCoupon}
         />
 
       </div>
