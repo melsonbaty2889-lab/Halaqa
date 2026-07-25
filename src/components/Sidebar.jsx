@@ -26,49 +26,35 @@ const SmartHalaqaProLogo = () => (
   }}>
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        {/* تدرج الذهب الملكي */}
         <linearGradient id="goldGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#fef08a" />
           <stop offset="50%" stopColor="#f59e0b" />
           <stop offset="100%" stopColor="#b45309" />
         </linearGradient>
 
-        {/* تدرج التكنولوجيا والذكاء */}
         <linearGradient id="cyanGrad" x1="0" y1="0" x2="32" y2="0" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#38bdf8" />
           <stop offset="100%" stopColor="#34d399" />
         </linearGradient>
 
-        {/* تدرج الزمرد القرآني */}
         <linearGradient id="emeraldGrad" x1="8" y1="12" x2="24" y2="24" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#10b981" />
           <stop offset="100%" stopColor="#047857" />
         </linearGradient>
 
-        {/* فلتر التوهج المضيء */}
         <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="1" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
 
-      {/* 1. هالة الربط السحابي والذكاء */}
       <circle cx="16" cy="16" r="13" stroke="url(#cyanGrad)" strokeWidth="0.9" strokeDasharray="4 2.5" opacity="0.45" />
-
-      {/* 2. حلقة العلم والترابط الذهبية */}
       <circle cx="16" cy="16" r="11" stroke="url(#goldGrad)" strokeWidth="2" strokeLinecap="round" strokeDasharray="46 14" />
-
-      {/* 3. المصحف الهندسي العائم */}
       <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" 
             fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" strokeLinejoin="round" />
-      
       <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" 
             fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" strokeLinejoin="round" />
-
-      {/* عمود المصحف المضيء */}
       <line x1="16" y1="12" x2="16" y2="21.5" stroke="#fef08a" strokeWidth="1" strokeLinecap="round" />
-
-      {/* 4. نجمة الذكاء والابتكار التكنولوجي (Smart Sparkle) */}
       <path d="M16 3.2 L16.8 5 L18.6 5.8 L16.8 6.6 L16 8.4 L15.2 6.6 L13.4 5.8 L15.2 5 Z" 
             fill="#38bdf8" filter="url(#glow)" />
     </svg>
@@ -98,39 +84,84 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ البديل المباشر المربوط بـ dateUtils.js
   const currentLocale = isRtl ? 'ar' : 'en';
   const gregorian = formatGregorianDate(new Date(), currentLocale);
   const hijri = formatHijriDate(new Date(), currentLocale);
 
-  // جلب الأكاديميات
-  useEffect(() => {
-    async function loadAcademies() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  // 🔄 جلب الأكاديميات بالتفاصيل الكاملة للاشتراك
+  const loadAcademies = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        const { data: staffData } = await supabase
-          .from('staff')
-          .select('academy_id, academies(id, name)')
-          .eq('user_id', user.id);
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('academy_id, academies(id, name, trial_ends_at, is_active)')
+        .eq('user_id', user.id);
 
-        if (staffData && staffData.length > 0) {
-          const list = staffData.map(s => s.academies).filter(Boolean);
-          setAcademiesList(list);
-        }
-      } catch (err) {
-        console.error("Error loading user academies:", err);
+      if (staffData && staffData.length > 0) {
+        const list = staffData.map(s => s.academies).filter(Boolean);
+        setAcademiesList(list);
       }
+    } catch (err) {
+      console.error("Error loading user academies:", err);
     }
-    loadAcademies();
-  }, []);
+  };
 
-  const currentAcademy = academiesList.find(a => a.id === currentAcademyId);
+  useEffect(() => {
+    loadAcademies();
+
+    // مزامنة فورية عند تحديث بيانات الأكاديمية
+    const channel = supabase
+      .channel('sidebar-academy-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
+        loadAcademies();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentAcademyId]);
+
+  const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academiesList[0];
   const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
-  // نص وتنسيق الحالة الاحترافي
+  // 📊 حساب الأيام المتبقية ديناميكياً مباشرة من قاعدة البيانات
+  const calculateEffectiveDaysLeft = () => {
+    if (currentAcademy && currentAcademy.trial_ends_at) {
+      const endDate = new Date(currentAcademy.trial_ends_at);
+      const now = new Date();
+      const diffTime = endDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : 0;
+    }
+    return trialDaysLeft ?? 0;
+  };
+
+  const effectiveDaysLeft = calculateEffectiveDaysLeft();
+
+  // 🏷️ تحديد الشارة وحالة الاشتراك تلقائياً
   const getStatusBadge = () => {
+    if (currentAcademy) {
+      if (!currentAcademy.is_active || effectiveDaysLeft <= 0) {
+        return {
+          text: isRtl ? 'قيد التفعيل / منتهي' : 'Expired / Pending',
+          style: { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
+        };
+      }
+      if (effectiveDaysLeft > 14) {
+        return {
+          text: isRtl ? 'اشتراك نشط' : 'Active Plan',
+          style: { background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
+        };
+      }
+      return {
+        text: isRtl ? 'فترة تجريبية' : 'Free Trial',
+        style: { background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
+      };
+    }
+
     if (isTrial) {
       return {
         text: isRtl ? 'فترة تجريبية' : 'Free Trial',
@@ -178,18 +209,16 @@ export default function Sidebar({
     }
   ];
 
-  // 🔍 دالة معالجة وتوحيد النصوص العربية للبحث المرن (تجاهل الهمزات والتشكيل)
   const normalizeArabic = (text) => {
     if (!text) return '';
     return text
-      .replace(/[\u064B-\u0652]/g, '') // إزالة التشكيل
-      .replace(/[أإآ]/g, 'ا')         // توحيد الهمزات والألف
-      .replace(/ة/g, 'ه')             // توحيد التاء المربوطة
-      .replace(/ى/g, 'ي')             // توحيد الألف المقصورة
+      .replace(/[\u064B-\u0652]/g, '')
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
       .toLowerCase();
   };
 
-  // 🔍 منطق تصفية القائمة بناءً على البحث العربي والإنكليزي المرن
   const filteredMenuSections = menuSections.map(section => {
     const filteredItems = section.items.filter(item =>
       normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
@@ -236,7 +265,7 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 🌟 1️⃣ اللوجو الفاخر + رأس المنظومة */}
+          {/* 🌟 1️⃣ اللوجو الفاخر */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -285,7 +314,6 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* القائمة المنسدلة للأكاديميات */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -422,7 +450,7 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* 📅 3️⃣ الساعة والتواريخ المنسقة بوضوح */}
+          {/* 📅 3️⃣ الساعة والتواريخ */}
           <div style={{
             background: '#131f37',
             padding: '10px 12px',
@@ -497,12 +525,12 @@ export default function Sidebar({
               <span style={{ 
                 fontSize: '0.82rem', 
                 fontWeight: 'bold', 
-                color: Number(trialDaysLeft) <= 3 ? '#ef4444' : '#10b981',
-                background: 'rgba(16, 185, 129, 0.1)',
+                color: effectiveDaysLeft <= 3 ? '#ef4444' : '#10b981',
+                background: effectiveDaysLeft <= 3 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
                 padding: '2px 8px',
                 borderRadius: '6px'
               }}>
-                {`${trialDaysLeft ?? 0} ${isRtl ? 'أيام متبقية' : 'Days left'}`}
+                {`${effectiveDaysLeft} ${isRtl ? 'أيام متبقية' : 'Days left'}`}
               </span>
             </div>
 
@@ -530,7 +558,7 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* 📑 6️⃣ القوائم والتبويبات (مفلترة بواسطة البحث المرن) */}
+          {/* 📑 6️⃣ القوائم والتبويبات */}
           <nav>
             {filteredMenuSections.length > 0 ? (
               filteredMenuSections.map((section, idx) => (
