@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // حاوية قياسية موحدة الحجم لجميع الشعارات لمنع أي اختلال
 const LogoSlot = ({ children }) => (
@@ -106,7 +106,6 @@ export default function PaymentSection({
   t, 
   isRTL 
 }) {
-  const [selectedMethod, setSelectedMethod] = useState('card');
   const [copied, setCopied] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
 
@@ -130,13 +129,37 @@ export default function PaymentSection({
     ]
   };
 
+  const activeMethods = paymentMethods[region] || paymentMethods.egypt;
+
+  // 🌟 ضبط الخيار الافتراضي تلقائياً عند تغيير المنطقة
+  const [selectedMethod, setSelectedMethod] = useState(activeMethods[0]?.id || 'card_eg');
+
+  useEffect(() => {
+    if (activeMethods.length > 0) {
+      setSelectedMethod(activeMethods[0].id);
+    }
+  }, [region]);
+
   const handleCopy = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        // طريقة احتياطية للمتصفحات القديمة
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
   };
 
-  const activeMethods = paymentMethods[region] || paymentMethods.egypt;
   const currentMethodObj = activeMethods.find(m => m.id === selectedMethod) || activeMethods[0];
 
   return (
@@ -171,7 +194,7 @@ export default function PaymentSection({
         <span>💳</span> {isRTL ? "اختر وسيلة الدفع المناسبة لك:" : "Select Payment Method:"}
       </h4>
 
-      {/* قائمة وسائط الدفع - معالجة كاملة لعدم قص النص */}
+      {/* قائمة وسائط الدفع */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {activeMethods.map((item) => {
           const isSelected = selectedMethod === item.id;
@@ -199,7 +222,7 @@ export default function PaymentSection({
                   fontWeight: '600', 
                   fontSize: '0.84rem', 
                   lineHeight: '1.35',
-                  wordBreak: 'break-word', // السماح بالنص الكامل دون قص
+                  wordBreak: 'break-word',
                   whiteSpace: 'normal'
                 }}>
                   {item.name}
@@ -325,11 +348,12 @@ export default function PaymentSection({
               <span>
                 {receiptFile 
                   ? `📄 ${receiptFile.name}` 
-                  : (isRTL ? '📁 اضغط هنا لاختيار صورة الإشعار' : '📁 Click here to select receipt image')}
+                  : (isRTL ? '📷 التقاط صورة أو اختيار ملف الإشعار' : '📷 Take photo or select receipt file')}
               </span>
               <input 
                 type="file" 
                 accept="image/*,.pdf" 
+                onClick={(e) => { e.target.value = null; }}
                 onChange={(e) => setReceiptFile(e.target.files[0])} 
                 style={{ display: 'none' }} 
               />
