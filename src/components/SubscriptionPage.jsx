@@ -134,33 +134,71 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
           <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>{t('subscription.subtitle')}</p>
         </div>
 
-        {/* 🎟️ قسم كود الخصم العلوي */}
-        <div style={{ maxWidth: '550px', margin: '0 auto 35px auto', background: '#111827', padding: '18px 24px', borderRadius: '18px', border: '1px dashed #f59e0b' }}>
-          <label style={{ display: 'block', color: '#f8fafc', fontSize: '0.9rem', fontWeight: '700', marginBottom: '10px', textAlign: 'center' }}>
-            🏷️ {isRTL ? "هل لديك كود خصم مخصص؟" : "Have a special promo code?"}
-          </label>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <input 
-              type="text" 
-              value={couponInput}
-              onChange={(e) => setCouponInput(e.target.value)}
-              placeholder={isRTL ? "أدخل الكود (مثل: FOUNDERS20)" : "Enter code (e.g. FOUNDERS20)"}
-              style={{ flex: 1, padding: '12px 16px', borderRadius: '10px', border: '1px solid #334155', background: '#0a0f1d', color: '#fff', outline: 'none', fontSize: '0.95rem', fontWeight: '600' }}
-            />
-            <button 
-              type="button"
-              onClick={handleApplyCoupon}
-              style={{ padding: '12px 24px', background: '#f59e0b', color: '#0a0f1d', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}
-            >
-              {isRTL ? "تطبيق" : "Apply"}
-            </button>
-          </div>
-          {couponMessage && (
-            <p style={{ margin: '10px 0 0 0', textAlign: 'center', fontSize: '0.85rem', color: couponMessage.type === 'success' ? '#10b981' : '#ef4444', fontWeight: '700' }}>
-              {couponMessage.text}
-            </p>
-          )}
-        </div>
+        {/* قسم كود الخصم المتجاوب والمضمون 100% */}
+<div style={{
+  maxWidth: '500px',
+  width: '100%',
+  margin: '0 auto 30px auto',
+  background: '#111827',
+  padding: '16px 20px',
+  borderRadius: '16px',
+  border: '1px dashed #f59e0b',
+  boxSizing: 'border-box'
+}}>
+  <label style={{ 
+    display: 'block', 
+    color: '#f8fafc', 
+    fontSize: '0.9rem', 
+    fontWeight: '700', 
+    marginBottom: '12px', 
+    textAlign: 'center' 
+  }}>
+    🏷️ {isRTL ? "هل لديك كود خصم مخصص؟" : "Have a special promo code?"}
+  </label>
+
+  <div style={{ 
+    display: 'flex', 
+    gap: '8px', 
+    alignItems: 'center',
+    width: '100%' 
+  }}>
+    <input 
+      type="text" 
+      value={couponInput}
+      onChange={(e) => setCouponInput(e.target.value)}
+      placeholder={isRTL ? "أدخل الكود (مثل: FOUNDERS20)" : "Enter code (e.g. FOUNDER)"}
+      style={{ 
+        flex: 1, 
+        minWidth: '0', // يمنع انكسار الإدخال
+        padding: '10px 14px', 
+        borderRadius: '10px', 
+        border: '1px solid #334155', 
+        background: '#0a0f1d', 
+        color: '#fff', 
+        outline: 'none', 
+        fontSize: '0.85rem', 
+        fontWeight: '600' 
+      }}
+    />
+    <button 
+      type="button"
+      onClick={handleApplyCoupon}
+      style={{ 
+        padding: '10px 18px', 
+        background: '#f59e0b', 
+        color: '#0a0f1d', 
+        border: 'none', 
+        borderRadius: '10px', 
+        fontWeight: '800', 
+        cursor: 'pointer',
+        whiteSpace: 'nowrap', // يمنع انكسار النص داخل الزر
+        flexShrink: 0 
+      }}
+    >
+      {isRTL ? "تطبيق" : "Apply"}
+    </button>
+  </div>
+</div>
 
         {/* Region Selector */}
         <div style={{ marginBottom: '40px', background: '#111827', padding: '20px', borderRadius: '20px', border: '1px solid #1e293b' }}>
