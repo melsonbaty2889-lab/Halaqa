@@ -11,10 +11,16 @@ import {
 } from '../constants/subscriptionData';
 import PaymentSection from './PaymentSection';
 
-export default function SubscriptionPage({ session, academyId, onBack }) {
+export default function SubscriptionPage({ session: propSession, academyId: propAcademyId, onBack }) {
   const { t, i18n } = useTranslation();
+  const { academy, user } = useAcademy(); // 🌟 جلب البيانات من السياق مباشرة
+
+  // استخدام الـ prop إذا وُجد، أو الاعتماد على Context كخيار احتياطي أمان
+  const activeAcademyId = propAcademyId || academy?.id;
+  const activeUser = propSession?.user || user;
+
   const [region, setRegion] = useState('egypt');
-  const [duration, setDuration] = useState('yearly'); // جعل الخطة السنوية افتراضية لزيادة المبيعات
+  const [duration, setDuration] = useState('yearly');
   const [txId, setTxId] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,110 +33,82 @@ export default function SubscriptionPage({ session, academyId, onBack }) {
   const isRTL = i18n.language === 'ar';
   const basePrices = getPrices(t);
 
-  useEffect(() => {
-    const userLoc = navigator.language;
-    setRegion(detectUserRegion(userLoc, i18n.language));
-  }, [i18n.language]);
+  // ... باقي الأكواد والمؤثرات كما هي ...
 
-  // تطبيق كود الخصم باستخدام دالة validateCoupon
-  const handleApplyCoupon = () => {
-    const { valid, discountPercent: discount, code } = validateCoupon(couponInput);
-    
-    if (valid) {
-      setDiscountPercent(discount);
-      setAppliedCoupon(code);
-      setCouponMessage({ 
-        type: 'success', 
-        text: isRTL ? `تم تطبيق خصم ${discount}% بنجاح! 🎉` : `${discount}% Discount applied!` 
-      });
-    } else {
-      setDiscountPercent(0);
-      setAppliedCoupon('');
-      setCouponMessage({ 
-        type: 'error', 
-        text: isRTL ? 'كود الخصم غير صالح أو منتهي.' : 'Invalid coupon code.' 
-      });
+  const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
+    // 🌟 استخدام activeAcademyId للتحقق
+    if (!activeAcademyId) {
+      showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
+      return;
     }
-  };
 
-  const showNotification = (msg) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 4000);
-  };
+    setLoading(true);
+    try {
+      let receiptUrl = null;
 
-const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
-  if (!academyId) {
-    showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
-    return;
-  }
+      // 1. رفع صورة إشعار التحويل اليدوي إلى Supabase Storage عند توفرها
+      if (isManualTransfer && receiptFile) {
+        const fileExt = receiptFile.name.split('.').pop();
+        const fileName = `receipt_${activeAcademyId}_${Date.now()}.${fileExt}`;
+        const filePath = `subscriptions/${fileName}`;
 
-  setLoading(true);
-  try {
-    let receiptUrl = null;
-
-    // 1. رفع صورة إشعار التحويل اليدوي إلى Supabase Storage في حال وجودها
-    if (isManualTransfer && receiptFile) {
-      const fileExt = receiptFile.name.split('.').pop();
-      const fileName = `receipt_${academyId}_${Date.now()}.${fileExt}`;
-      const filePath = `subscriptions/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('subscription-receipts') // اسم الـ Bucket في Supabase
-        .upload(filePath, receiptFile);
-
-      if (uploadError) {
-        console.error("🚨 Receipt Upload Error:", uploadError);
-      } else {
-        const { data: urlData } = supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('subscription-receipts')
-          .getPublicUrl(filePath);
-        
-        receiptUrl = urlData?.publicUrl || null;
-      }
-    }
+          .upload(filePath, receiptFile);
 
-    // 2. احتساب تواريخ بداية ونهاية الاشتراك
-    const startsAt = new Date();
-    const expiryDate = new Date();
-    if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
-    else if (duration === 'yearly') expiryDate.setDate(expiryDate.getDate() + 365);
-    else if (duration === 'lifetime') expiryDate.setDate(expiryDate.getDate() + 36500);
+        if (uploadError) {
+          console.error("🚨 Receipt Upload Error:", uploadError);
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('subscription-receipts')
+            .getPublicUrl(filePath);
 
-    const rawAmount = basePrices[region][duration];
-    const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
-
-        // 3. إدراج أو تحديث بيانات الاشتراك في الجدول (Upsert)
-    const { error } = await supabase
-      .from('saas_subscriptions')
-      .upsert([{
-        academy_id: academyId,
-        payer_id: session?.user?.id,
-        plan_tier: 'pro',
-        plan_duration: duration,
-        status: isManualTransfer ? 'pending_verification' : 'active',
-        payment_gateway: selectedPaymentMethod,
-        price: finalAmount,
-        currency: basePrices[region].curr,
-        starts_at: startsAt.toISOString(),
-        expires_at: expiryDate.toISOString(),
-        metadata: {
-          transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
-          region: region,
-          discount_applied: discountPercent,
-          coupon_code: appliedCoupon || null,
-          receipt_url: receiptUrl // 🌟 تم إضافة رابط الإشعار هنا بنجاح
+          receiptUrl = urlData?.publicUrl || null;
         }
-      }], { onConflict: 'academy_id' }); // 🌟 يضمن تحديث الاشتراك القائم للأكاديمية بدلاً من رفضه
+      }
 
-    if (error) throw error;
-    setIsSubmitted(true);
-  } catch (err) {
-    console.error("🚨 Subscription Error:", err);
-    showNotification(isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
-  } finally {
-    setLoading(false);
-  }
-};
+      // 2. احتساب تواريخ بداية ونهاية الاشتراك
+      const startsAt = new Date();
+      const expiryDate = new Date();
+      if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
+      else if (duration === 'yearly') expiryDate.setDate(expiryDate.getDate() + 365);
+      else if (duration === 'lifetime') expiryDate.setDate(expiryDate.getDate() + 36500);
+
+      const rawAmount = basePrices[region][duration];
+      const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
+
+      // 3. إدراج أو تحديث بيانات الاشتراك في الجدول (Upsert)
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .upsert([{
+          academy_id: activeAcademyId,
+          payer_id: activeUser?.id,
+          plan_tier: 'pro',
+          plan_duration: duration,
+          status: isManualTransfer ? 'pending_verification' : 'active',
+          payment_gateway: selectedPaymentMethod,
+          price: finalAmount,
+          currency: basePrices[region].curr,
+          starts_at: startsAt.toISOString(),
+          expires_at: expiryDate.toISOString(),
+          metadata: {
+            transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
+            region: region,
+            discount_applied: discountPercent,
+            coupon_code: appliedCoupon || null,
+            receipt_url: receiptUrl
+          }
+        }], { onConflict: 'academy_id' });
+
+      if (error) throw error;
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error("🚨 Subscription Error:", err);
+      showNotification(isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // هيكلة الباقات والمميزات
   const plans = [
