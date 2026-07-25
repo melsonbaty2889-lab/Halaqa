@@ -2,46 +2,40 @@
 
 /* 🌌 تأثير الظهور الانسيابي */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .dashboardContainer {
-  max-width: 1280px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 16px 12px 40px 12px;
-  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 16px;
   box-sizing: border-box;
+  direction: rtl;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* 👑 واجهة السوبر أدمن (Super Admin View) */
-.superAdminView {
-  text-align: start;
-}
-
+/* 👑 واجهة السوبر أدمن (Header Section) */
 .adminHeader {
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* إصلاح عدم خروج عنوان Super Admin عن الشاشة */
 .adminTitle {
-  color: #fff;
-  font-size: clamp(1.1rem, 4vw, 1.6rem);
+  color: #ffffff;
+  font-size: clamp(1.1rem, 3.5vw, 1.5rem);
   font-weight: 800;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  letter-spacing: -0.3px;
-  max-width: 100%;
-  word-break: break-word;
+  line-height: 1.2;
 }
 
 .adminTitle svg {
@@ -51,36 +45,47 @@
 
 .adminSubtitle {
   color: #8A99A8;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   margin: 4px 0 0 0;
-  font-weight: 500;
 }
 
-/* 🔘 أزرار الإجراءات في الهيدر (CSV، مزامنة، خروج) */
+/* 🔘 شريط أزرار الهيدر (CSV / مزامنة / خروج) */
 .headerActions {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  width: auto;
 }
 
 .refreshBtn, .exportBtn, .logoutBtn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  box-sizing: border-box;
 }
 
 .refreshBtn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+.exportBtn {
+  background: #059669;
+  color: #ffffff;
+}
+
+.logoutBtn {
+  background: #ef4444;
+  color: #ffffff;
 }
 
 .spinning svg {
@@ -93,46 +98,53 @@
   to { transform: rotate(360deg); }
 }
 
-/* 📊 شبكة كروت الإحصائيات (مضغوطة للموبايل) */
+/* 📊 كروت الإحصائيات (تجاوب 100% بدون اقتطاع) */
 .statsGrid, .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .summaryCard, .premiumStatBox {
-  background: linear-gradient(135deg, var(--surface, #1e293b) 0%, rgba(20, 32, 48, 0.6) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 10px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .summaryCardLabel, .statLabel {
-  color: #8A99A8;
+  color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 600;
-  margin: 0;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .summaryCardValue, .statNumber {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: var(--gold, #FBBF24);
-  margin-top: 4px;
+  margin: 0;
   line-height: 1;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* 🗂️ شريط التبويبات للتصفية والتمرير */
+/* 🗂️ التبويبات للتصفية السريعة */
 .tabsContainer, .tabsBar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 16px;
   overflow-x: auto;
   white-space: nowrap;
@@ -145,21 +157,25 @@
   display: none;
 }
 
-/* 🔍 مربع البحث والقائمة المنسدلة */
+/* 🔍 مربع البحث والقائمة */
 .searchWrapper {
   position: relative;
-  margin-bottom: 20px;
   width: 100%;
+  margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
 .searchInputBox {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   padding: 10px 14px;
+  color: #fff;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .searchDropdown {
@@ -170,53 +186,54 @@
   background: #0F172A;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
   z-index: 1000;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
 }
 
-/* 🏫 بطاقات الأكاديميات (معالجة الأزرار والخط السفلي) */
+/* 🏫 بطاقات الأكاديميات (إصلاح المحاذاة والأزرار) */
 .requestsGrid {
-  display: grid;
-  gap: 12px;
-}
-
-.requestCard, .academyCard {
-  background: var(--surface, #1e293b);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 16px;
-  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-inline-start: 4px solid #10b981;
+  width: 100%;
 }
 
-.requestInfo {
-  text-align: start;
+.requestCard, .academyCard {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-inline-start: 4px solid #10b981;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
 }
 
 .requestName, .academyTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: #ffffff;
   margin: 0 0 4px 0;
-  text-decoration: none !important; /* إزالة الخط السفلي */
+  text-decoration: none !important; /* إلغاء الخط المزعج أسفل العنوان */
 }
 
 .requestEmail, .academyOwner {
-  color: #8A99A8;
+  color: #94a3b8;
   font-size: 0.82rem;
   margin: 0;
 }
 
-/* 🔘 أزرار العمليات داخل بطاقة الأكاديمية (تمديد + حظر) */
+/* 🟢 صف أزرار التفاعل داخل البطاقة (تمديد + حظر) */
 .cardActionsRow {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  width: 100%;
   margin-top: 4px;
 }
 
@@ -224,43 +241,65 @@
   background: transparent;
   border: 1px solid var(--gold, #FBBF24);
   color: var(--gold, #FBBF24);
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  padding: 0 14px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .blockBtn {
   background: #ef4444;
-  color: #fff;
+  color: #ffffff;
   border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
-/* 📱 الشاشات الصغيرة للموبايل */
-@media (max-width: 600px) {
-  .adminHeader {
-    flex-direction: row;
+/* 📱 شاشات الهواتف الشديدة الضيق (أقل من 480px) */
+@media (max-width: 480px) {
+  .dashboardContainer {
+    padding: 12px 10px;
+  }
+
+  .headerActions {
+    width: 100%;
     justify-content: space-between;
   }
-  
+
+  .refreshBtn, .exportBtn, .logoutBtn {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 0.78rem;
+  }
+
   .statsGrid, .summaryGrid {
-    grid-template-columns: repeat(3, 1fr); /* 3 كروت بجانب بعضها لتوفير المساحة */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .summaryCard, .premiumStatBox {
+    padding: 8px 6px;
   }
 
   .summaryCardValue, .statNumber {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
   }
-  
+
   .summaryCardLabel, .statLabel {
     font-size: 0.68rem;
   }
