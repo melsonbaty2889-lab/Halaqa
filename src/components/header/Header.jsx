@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaBars, FaBell, FaGlobe, FaUserCheck, FaCoins, FaCheck } from 'react-icons/fa';
+import { FaBars, FaBell, FaGlobe, FaUserCheck, FaCoins, FaCheck, FaCheckDouble, FaTrashAlt } from 'react-icons/fa';
 
 import arTranslation from '../../locales/ar.json';
 import enTranslation from '../../locales/en.json';
@@ -18,10 +18,18 @@ export default function Header({
   
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false); // 👤 حالة قائمة البروفايل
+
+  // 🔔 بيانات إشعارات تفاعلية
+  const [notifications, setNotifications] = useState([
+    { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created', time: currentLanguage === 'ar' ? 'منذ 10 دقائق' : '10m ago', read: false },
+    { id: 2, titleAr: 'تم تسجيل طالب جديد بالنظام', titleEn: 'New Student Registered', time: currentLanguage === 'ar' ? 'منذ ساعة' : '1h ago', read: false }
+  ]);
 
   // إغلاق القوائم عند النقر خارجها
   const currencyRef = useRef(null);
   const notifRef = useRef(null);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -30,6 +38,9 @@ export default function Header({
       }
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setShowNotifMenu(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -65,9 +76,21 @@ export default function Header({
     localStorage.setItem('i18nextLng', nextLng);
   };
 
+  // 💰 تفعيل تغيير العملة وحفظها
   const handleSelectCurrency = (code) => {
     if (onCurrencyChange) onCurrencyChange(code);
+    localStorage.setItem('app_currency', code);
     setShowCurrencyMenu(false);
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
   };
 
   return (
@@ -88,7 +111,7 @@ export default function Header({
       gap: '8px',
       flexWrap: 'nowrap'
     }}>
-      {/* 1️⃣ زر القائمة وعنوان الصفحة (مع دعم الالتفاف التلقائي لمنع الانقطاع) */}
+      {/* 1️⃣ زر القائمة وعنوان الصفحة */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
         <button
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
@@ -135,6 +158,7 @@ export default function Header({
             onClick={() => {
               setShowCurrencyMenu(!showCurrencyMenu);
               setShowNotifMenu(false);
+              setShowProfileMenu(false);
             }}
             style={{
               display: 'flex',
@@ -215,12 +239,13 @@ export default function Header({
           <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* زر الإشعارات والقائمة المنسدلة */}
+        {/* زر الإشعارات والقائمة المنسدلة (تم تفعيلها بالكامل) */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
               setShowNotifMenu(!showNotifMenu);
               setShowCurrencyMenu(false);
+              setShowProfileMenu(false);
             }}
             style={{ 
               background: '#131f37', 
@@ -235,15 +260,17 @@ export default function Header({
             }}
           >
             <FaBell style={{ fontSize: '0.8rem', color: '#fbbf24' }} />
-            <span style={{ 
-              position: 'absolute', 
-              top: '3px', 
-              right: '3px', 
-              width: '6px', 
-              height: '6px', 
-              borderRadius: '50%', 
-              backgroundColor: '#10b981' 
-            }}></span>
+            {unreadCount > 0 && (
+              <span style={{ 
+                position: 'absolute', 
+                top: '3px', 
+                right: '3px', 
+                width: '6px', 
+                height: '6px', 
+                borderRadius: '50%', 
+                backgroundColor: '#10b981' 
+              }}></span>
+            )}
           </button>
 
           {showNotifMenu && (
@@ -258,43 +285,119 @@ export default function Header({
               padding: '10px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
               zIndex: 150,
-              width: '200px',
+              width: '220px',
+              color: '#cbd5e1',
+              fontSize: '0.72rem',
+              textAlign: isRtl ? 'right' : 'left'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
+                <span style={{ fontWeight: 'bold', color: '#fff' }}>
+                  {currentLanguage === 'ar' ? 'التنبيهات' : 'Notifications'}
+                </span>
+                {notifications.length > 0 && (
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={markAllAsRead} title={currentLanguage === 'ar' ? 'تحديد الكل كمقروء' : 'Mark all read'} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.7rem' }}>
+                      <FaCheckDouble />
+                    </button>
+                    <button onClick={clearAll} title={currentLanguage === 'ar' ? 'مسح الكل' : 'Clear all'} style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', fontSize: '0.7rem' }}>
+                      <FaTrashAlt />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {notifications.length === 0 ? (
+                <div style={{ padding: '8px 0', color: '#94a3b8', textAlign: 'center' }}>
+                  {currentLanguage === 'ar' ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
+                </div>
+              ) : (
+                notifications.map((item) => (
+                  <div key={item.id} style={{ padding: '6px 0', borderBottom: '1px solid #1e293b55' }}>
+                    <div style={{ color: item.read ? '#94a3b8' : '#fff', fontWeight: item.read ? 'normal' : 'bold' }}>
+                      {currentLanguage === 'ar' ? item.titleAr : item.titleEn}
+                    </div>
+                    <div style={{ color: '#64748b', fontSize: '0.65rem', marginTop: '2px' }}>{item.time}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 👤 البروفايل (تم تفعيله وإعطاؤه قائمة منسدلة تفاعلية) */}
+        <div style={{ position: 'relative' }} ref={profileRef}>
+          <button
+            onClick={() => {
+              setShowProfileMenu(!showProfileMenu);
+              setShowCurrencyMenu(false);
+              setShowNotifMenu(false);
+            }}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              background: '#131f37', 
+              padding: '4px', 
+              borderRadius: '6px', 
+              border: '1px solid #1e293b',
+              cursor: 'pointer'
+            }}
+            title="الملف الشخصي"
+          >
+            <div style={{ 
+              width: '22px', 
+              height: '22px', 
+              borderRadius: '50%', 
+              background: 'rgba(16, 185, 129, 0.2)', 
+              color: '#34d399', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              fontSize: '0.7rem'
+            }}>
+              <FaUserCheck />
+            </div>
+          </button>
+
+          {showProfileMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '36px',
+              right: isRtl ? '0' : 'auto',
+              left: isRtl ? 'auto' : '0',
+              backgroundColor: '#131f37',
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '10px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              zIndex: 150,
+              width: '160px',
               color: '#cbd5e1',
               fontSize: '0.72rem',
               textAlign: isRtl ? 'right' : 'left'
             }}>
               <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '6px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
-                {currentLanguage === 'ar' ? 'التنبيهات' : 'Notifications'}
+                {currentLanguage === 'ar' ? 'حساب المعلم' : 'Teacher Account'}
               </div>
-              <div style={{ padding: '4px 0', color: '#94a3b8', fontSize: '0.7rem' }}>
-                {currentLanguage === 'ar' ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
-              </div>
+              <button 
+                onClick={() => {
+                  alert(currentLanguage === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
+                  setShowProfileMenu(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '5px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: '#f43f5e',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {currentLanguage === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+              </button>
             </div>
           )}
-        </div>
-
-        {/* البروفايل */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          background: '#131f37', 
-          padding: '4px', 
-          borderRadius: '6px', 
-          border: '1px solid #1e293b' 
-        }}>
-          <div style={{ 
-            width: '22px', 
-            height: '22px', 
-            borderRadius: '50%', 
-            background: 'rgba(16, 185, 129, 0.2)', 
-            color: '#34d399', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            fontSize: '0.7rem'
-          }}>
-            <FaUserCheck />
-          </div>
         </div>
 
       </div>
