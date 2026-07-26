@@ -395,73 +395,73 @@ export default function Sidebar({
             )}
           </div>
 
-                    {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة بدقة للشاشات الصغيرة) */}
+                    
+                        {/* 📅 3️⃣ الوقت والتقويم والترقية (تصميم متناسق ومريح للعين) */}
           <div style={{
             background: '#131f37',
-            padding: '5px 7px',
+            padding: '7px 10px',
             borderRadius: '6px',
-            marginBottom: '8px',
+            marginBottom: '10px',
             border: '1px solid #1e293b',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '4px'
+            gap: '8px'
           }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '3px', 
-              fontSize: '0.61rem', 
-              color: '#38bdf8',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              flex: 1,
-              minWidth: 0
-            }}>
-              <FaClock style={{ fontSize: '0.65rem', flexShrink: 0 }} />
-              
-              {/* الوقت */}
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace', flexShrink: 0 }}>
-                {academyTime || '10:00 AM'}
-              </span>
-              <span style={{ color: '#475569', flexShrink: 0 }}>|</span>
-              
-              {/* التاريخ الميلادي شامل السنة (2026) */}
-              <span style={{ color: '#e2e8f0', flexShrink: 0 }}>
-                {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
-              <span style={{ color: '#475569', flexShrink: 0 }}>•</span>
-              
-              {/* التاريخ الهجري */}
-              <span style={{ 
-                color: '#cbd5e1', 
-                overflow: 'hidden', 
-                textOverflow: 'ellipsis',
+            {/* قسم الوقت والتواريخ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+              {/* السطر الأول: الوقت + التاريخ الميلادي */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '0.68rem',
+                color: '#e2e8f0',
+                fontWeight: '600',
                 whiteSpace: 'nowrap'
               }}>
+                <FaClock style={{ fontSize: '0.7rem', color: '#38bdf8', flexShrink: 0 }} />
+                <span style={{ fontFamily: 'monospace' }}>{academyTime || '11:59 AM'}</span>
+                <span style={{ color: '#475569' }}>•</span>
+                <span style={{ color: '#38bdf8' }}>
+                  {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+
+              {/* السطر الثاني: التاريخ الهجري */}
+              <div style={{
+                fontSize: '0.62rem',
+                color: '#94a3b8',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                paddingRight: isRtl ? '16px' : 0,
+                paddingLeft: isRtl ? 0 : '16px'
+              }}>
                 {hijri}
-              </span>
+              </div>
             </div>
 
             {/* زر الترقية */}
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
               style={{
-                padding: '3px 6px',
+                padding: '5px 8px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#000',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '5px',
                 fontWeight: 'bold',
-                fontSize: '0.62rem',
+                fontSize: '0.65rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '2px',
-                flexShrink: 0
+                gap: '3px',
+                flexShrink: 0,
+                boxShadow: '0 2px 4px rgba(245, 158, 11, 0.15)'
               }}
             >
-              <FaBolt style={{ fontSize: '0.6rem' }} />
+              <FaBolt style={{ fontSize: '0.65rem' }} />
               <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
             </button>
           </div>
