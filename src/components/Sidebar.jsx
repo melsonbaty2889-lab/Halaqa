@@ -6,7 +6,8 @@ import {
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
-  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock, FaInfinity
+  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock, FaInfinity,
+  FaHistory, FaBell, FaHome, FaTrophy, FaFolder
 } from "react-icons/fa";
 
 // 🌟 شعار عالمي وفائق الاحترافية لمنظومة الحلقة الذكية
@@ -219,6 +220,8 @@ export default function Sidebar({
       title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       items: [
         { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
+        { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
+        { id: 'omnichannel-hub', label: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: FaBell },
         { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
     },
@@ -226,16 +229,25 @@ export default function Sidebar({
       title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
       items: [
         { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: FaUserGraduate },
-        { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaChalkboardTeacher },
+        { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaChalkboardTeacher },
+        { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaBookOpen },
         { id: 'attendance', label: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FaCheckCircle },
-        { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaBookOpen },
         { id: 'exams', label: isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas', icon: FaAward }
       ]
     },
     {
-      title: isRtl ? '3. الحوكمة والمالية' : '3. Governance & Treasury',
+      title: isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement & Community',
+      items: [
+        { id: 'guardian-portal', label: isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal', icon: FaHome },
+        { id: 'gamification-streaks', label: isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks', icon: FaTrophy }
+      ]
+    },
+    {
+      title: isRtl ? '4. الحوكمة والمالية' : '4. Governance & Treasury',
       items: [
         { id: 'payments', label: isRtl ? 'الاشتراكات والتحصيل' : 'Billing & Payments', icon: FaCreditCard },
+        { id: 'asset-management', label: isRtl ? 'المستندات والأصول' : 'Asset Management', icon: FaFolder },
+        { id: 'referrals', label: isRtl ? 'برنامج الإحالة والأرباح' : 'Affiliate & Rewards', icon: FaBolt },
         { id: 'settings', label: isRtl ? 'إعدادات المنظومة' : 'Platform Governance', icon: FaSlidersH }
       ]
     }
