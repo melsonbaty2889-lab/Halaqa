@@ -6,7 +6,7 @@ import styles from './MainApp.module.css';
 import { FaClock, FaWifi } from "react-icons/fa";
 
 import Sidebar from './Sidebar.jsx';
-import Header from './Header.jsx';
+import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 
 // 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء البناء القديم تلقائياً
