@@ -1,13 +1,12 @@
 /* src/components/Sidebar.jsx */
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { formatHijriDate, formatGregorianDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { 
   FaSearch, FaTimes, FaChevronDown, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
-  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock,
-  FaHistory, FaHome, FaTrophy, FaBell, FaFolder, FaShieldAlt
+  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock, FaInfinity
 } from "react-icons/fa";
 
 // 🌟 شعار عالمي وفائق الاحترافية لمنظومة الحلقة الذكية
@@ -71,8 +70,8 @@ export default function Sidebar({
   setSidebarOpen,
   isMobile,
   isRtl,
-  t = (key, fallback) => fallback,
-  userRole = 'super_admin',
+  t,
+  userRole,
   trialDaysLeft = 0,
   isTrial = false,
   accountActivated = false,
@@ -132,6 +131,7 @@ export default function Sidebar({
   const calculateEffectiveDaysLeft = () => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
+    // إذا كانت الأكاديمية مفعلة وبدون تاريخ انتهاء -> حساب دائم
     if (currentAcademy.is_active && !currentAcademy.trial_ends_at) {
       return Infinity;
     }
@@ -144,6 +144,7 @@ export default function Sidebar({
       const diffTime = endDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+      // إذا كان التمديد لأكثر من 10 سنوات -> يعتبر حساب دائم
       if (diffDays > 3650) {
         return Infinity;
       }
@@ -213,48 +214,32 @@ export default function Sidebar({
 
   const statusBadge = getStatusBadge();
 
-  // 🏛️ المحاور الأربعة الشاملة مع أيقونات React Icons الاحترافية
-  const menuSections = useMemo(() => [
+  const menuSections = [
     {
-      title: isRtl ? '1. مركز القيادة والعمليات الحية' : '1. Operations Hub',
-      allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
+      title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       items: [
         { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
-        { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
         { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
     },
     {
       title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
-      allowedRoles: ['super_admin', 'admin', 'manager', 'teacher'],
       items: [
         { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: FaUserGraduate },
-        { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaChalkboardTeacher },
-        { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaUsers },
+        { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaChalkboardTeacher },
         { id: 'attendance', label: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FaCheckCircle },
+        { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaBookOpen },
         { id: 'exams', label: isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas', icon: FaAward }
       ]
     },
     {
-      title: isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement Network',
-      allowedRoles: ['super_admin', 'admin', 'manager', 'teacher', 'student', 'parent'],
-      items: [
-        { id: 'guardian-portal', label: isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal', icon: FaHome },
-        { id: 'gamification-streaks', label: isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks', icon: FaTrophy },
-        { id: 'omnichannel-hub', label: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: FaBell }
-      ]
-    },
-    {
-      title: isRtl ? '4. الخزينة والحوكمة' : '4. Treasury & Governance',
-      allowedRoles: ['super_admin', 'admin', 'manager'],
+      title: isRtl ? '3. الحوكمة والمالية' : '3. Governance & Treasury',
       items: [
         { id: 'payments', label: isRtl ? 'الاشتراكات والتحصيل' : 'Billing & Payments', icon: FaCreditCard },
-        { id: 'asset-management', label: isRtl ? 'المستندات والأصول' : 'Asset Management', icon: FaFolder },
-        { id: 'referrals', label: isRtl ? 'برنامج الإحالة والأرباح' : 'Affiliate & Rewards', icon: FaBolt },
         { id: 'settings', label: isRtl ? 'إعدادات المنظومة' : 'Platform Governance', icon: FaSlidersH }
       ]
     }
-  ], [isRtl]);
+  ];
 
   const normalizeArabic = (text) => {
     if (!text) return '';
@@ -266,23 +251,12 @@ export default function Sidebar({
       .toLowerCase();
   };
 
-  // 🔍 تصفية الأقسام بناءً على الصلاحيات والبحث
-  const filteredMenuSections = useMemo(() => {
-    return menuSections
-      .filter(section => {
-        if (section.allowedRoles && userRole && !section.allowedRoles.includes(userRole)) {
-          return false;
-        }
-        return true;
-      })
-      .map(section => {
-        const filteredItems = section.items.filter(item =>
-          normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
-        );
-        return { ...section, items: filteredItems };
-      })
-      .filter(section => section.items.length > 0);
-  }, [menuSections, userRole, searchQuery]);
+  const filteredMenuSections = menuSections.map(section => {
+    const filteredItems = section.items.filter(item =>
+      normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
+    );
+    return { ...section, items: filteredItems };
+  }).filter(section => section.items.length > 0);
 
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'relative',
@@ -621,7 +595,7 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* 📑 6️⃣ القوائم والمحاور الشاملة بأيقونات React Icons */}
+          {/* 📑 6️⃣ القوائم والتبويبات */}
           <nav>
             {filteredMenuSections.length > 0 ? (
               filteredMenuSections.map((section, idx) => (
@@ -665,7 +639,7 @@ export default function Sidebar({
                             transition: 'background 0.15s ease'
                           }}
                         >
-                          <Icon style={{ fontSize: '1rem', color: isActive ? '#000' : '#9ca3af', minWidth: '16px' }} />
+                          <Icon style={{ fontSize: '1rem', color: isActive ? '#000' : '#9ca3af' }} />
                           <span style={{ fontSize: '0.85rem' }}>{item.label}</span>
                         </button>
                       );
