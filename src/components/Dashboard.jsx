@@ -1,4 +1,4 @@
-/* src/components/Dashboard.jsx - Step 1 Complete Fix: Contrast, Localization & Punctuation Direction */
+/* src/components/Dashboard.jsx - Step 1: Complete UI/i18n Localization & Contrast Fix */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -15,7 +15,7 @@ export default function Dashboard({
 }) {
   const { t, i18n } = useTranslation();
   
-  // 🌟 تحديد اتجاه اللغة بدقة
+  // 🌐 تحديد اللغة والاتجاه بدقة
   const isArabic = !i18n.language || i18n.language.startsWith('ar');
   const isRtl = i18n.dir() === 'rtl' || isArabic;
   const currentLang = i18n.language || 'ar';
@@ -33,7 +33,7 @@ export default function Dashboard({
   const academyName = preloadedDashboardData?.academyName || "";
   const rawUserName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
   
-  // 🌐 تعريب صارم ومباشر للترويسة واسم الحساب
+  // 🌐 تعريب وإنجلة اسم المستخدم والترويسة بحسب لغة الواجهة
   const displayName = useMemo(() => {
     if (academyName) return academyName;
     if (!rawUserName || rawUserName === 'Global Platform Admin' || rawUserName.toLowerCase().includes('admin')) {
@@ -53,7 +53,7 @@ export default function Dashboard({
     }
   }, [currentLang, currency]);
 
-  // 📊 أيام الأسبوع
+  // 📊 أيام الأسبوع ديناميكياً بحسب اللغة
   const weeklyData = useMemo(() => [
     { day: isArabic ? 'السبت' : 'Sat', pages: 42 },
     { day: isArabic ? 'الأحد' : 'Sun', pages: 68 },
@@ -170,7 +170,7 @@ export default function Dashboard({
   return (
     <div style={{ width: '100%', minHeight: '100vh', paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1️⃣ الشريط العلوي: ترويسة معربة بالكامل وشارة مزامنة خضراء واضحة */}
+      {/* 1️⃣ الشريط العلوي */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 6px 0' }}>
@@ -196,39 +196,45 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* 2️⃣ بطاقات المؤشرات بتباين قوي جداً */}
+      {/* 2️⃣ بطاقات المؤشرات الرئيسية مترجمة بالكامل */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '600', marginBottom: '10px' }}>
-            <span>إجمالي الدارسين</span>
+            <span>{isArabic ? 'إجمالي الدارسين' : 'Total Students'}</span>
             <span style={{ fontSize: '1.2rem' }}>👨‍🎓</span>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FFFFFF' }}>{stats.students}</div>
-          <div style={{ fontSize: '0.82rem', color: '#34D399', marginTop: '6px', fontWeight: '600' }}>↑ مسجلون في الحلقات</div>
+          <div style={{ fontSize: '0.82rem', color: '#34D399', marginTop: '6px', fontWeight: '600' }}>
+            {isArabic ? '↑ مسجلون في الحلقات' : '↑ Enrolled in Halagas'}
+          </div>
         </div>
 
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '600', marginBottom: '10px' }}>
-            <span>نسبة الحضور اليومي</span>
+            <span>{isArabic ? 'نسبة الحضور اليومي' : 'Daily Attendance Rate'}</span>
             <span style={{ fontSize: '1.2rem' }}>📈</span>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#38BDF8' }}>{stats.attendanceRate}%</div>
-          <div style={{ fontSize: '0.82rem', color: '#7DD3FC', marginTop: '6px', fontWeight: '600' }}>أداء مستقر</div>
+          <div style={{ fontSize: '0.82rem', color: '#7DD3FC', marginTop: '6px', fontWeight: '600' }}>
+            {isArabic ? 'أداء مستقر' : 'Stable Performance'}
+          </div>
         </div>
 
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '600', marginBottom: '10px' }}>
-            <span>الصفحات المسموعة</span>
+            <span>{isArabic ? 'الصفحات المسموعة' : 'Pages Recited'}</span>
             <span style={{ fontSize: '1.2rem' }}>📖</span>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FBBF24' }}>{stats.totalPagesMuted}</div>
-          <div style={{ fontSize: '0.82rem', color: '#FDE047', marginTop: '6px', fontWeight: '600' }}>خلال هذا الشهر</div>
+          <div style={{ fontSize: '0.82rem', color: '#FDE047', marginTop: '6px', fontWeight: '600' }}>
+            {isArabic ? 'خلال هذا الشهر' : 'This Month'}
+          </div>
         </div>
 
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '600', marginBottom: '10px' }}>
-            <span>مؤشر الصحة التشغيلية</span>
+            <span>{isArabic ? 'مؤشر الصحة التشغيلية' : 'Operational Health Index'}</span>
             <span style={{ fontSize: '1.2rem' }}>🏥</span>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: '800', color: healthScore > 80 ? '#34D399' : '#F59E0B' }}>{healthScore}%</div>
@@ -239,12 +245,12 @@ export default function Dashboard({
 
       </div>
 
-      {/* 3️⃣ الرسوم البيانية والماليات */}
+      {/* 3️⃣ الرسوم البيانية والماليات مترجمة */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         
         <div style={{ background: '#1E293B', padding: '24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
           <h3 style={{ fontSize: '1rem', color: '#FFFFFF', marginBottom: '20px', fontWeight: '700' }}>
-            📊 مؤشر نشاط التسميع والحضور الأسبوعي
+            {isArabic ? '📊 مؤشر نشاط التسميع والحضور الأسبوعي' : '📊 Weekly Recitation & Attendance'}
           </h3>
           <div style={{ height: '180px', display: 'flex', alignItems: 'flex-end', gap: '10px', paddingBottom: '20px', borderBottom: '1px solid #334155' }}>
             {weeklyData.map((item, idx) => (
@@ -262,37 +268,41 @@ export default function Dashboard({
 
         <div style={{ background: '#1E293B', padding: '24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
           <h3 style={{ fontSize: '1rem', color: '#FFFFFF', marginBottom: '16px', fontWeight: '700' }}>
-            💳 ملخص التدفقات والاشتراكات
+            {isArabic ? '💳 ملخص التدفقات والاشتراكات' : '💳 Cash Flow & Subscriptions'}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#0F172A', borderRadius: '12px' }}>
-              <span style={{ color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '500' }}>المبالغ المحصلة هذا الشهر</span>
+              <span style={{ color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '500' }}>
+                {isArabic ? 'المبالغ المحصلة هذا الشهر' : 'Collected This Month'}
+              </span>
               <span style={{ color: '#34D399', fontWeight: 'bold', fontSize: '1.1rem' }}>{formatCurrency(14500)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#0F172A', borderRadius: '12px' }}>
-              <span style={{ color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '500' }}>المتأخرات المعلقة ({stats.pending})</span>
+              <span style={{ color: '#E2E8F0', fontSize: '0.9rem', fontWeight: '500' }}>
+                {isArabic ? `المتأخرات المعلقة (${stats.pending})` : `Pending Overdues (${stats.pending})`}
+              </span>
               <span style={{ color: '#F87171', fontWeight: 'bold', fontSize: '1.1rem' }}>{formatCurrency(stats.pending * 150)}</span>
             </div>
             <button 
               onClick={() => setActiveTab('payments')}
               style={{ width: '100%', padding: '12px', background: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.88rem' }}>
-              مراجعة كافة السجلات المالية ⚡
+              {isArabic ? 'مراجعة كافة السجلات المالية ⚡' : 'Review Financial Records ⚡'}
             </button>
           </div>
         </div>
 
       </div>
 
-      {/* 4️⃣ التنبيهات والمتصدرين مع ضبط اتجاه النصوص والنقاط بأسلوب صريح */}
+      {/* 4️⃣ التنبيهات والمتصدرين مترجمة بالكامل */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         
         <div style={{ background: '#1E293B', padding: '24px', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
           <h3 style={{ fontSize: '1rem', color: '#F87171', marginBottom: '16px', fontWeight: '700' }}>
-            ⚠️ تنبيه التدخل المبكر (عرضة للانقطاع)
+            {isArabic ? '⚠️ تنبيه التدخل المبكر (عرضة للانقطاع)' : '⚠️ Early Intervention Alert (At-Risk)'}
           </h3>
           {atRiskStudents.length === 0 ? (
             <p style={{ color: '#F1F5F9', fontSize: '0.92rem', lineHeight: '1.7', margin: 0, direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
-              ممتاز! لا يوجد طلاب يواجهون تعثراً أو غياباً ملحوظاً حالياً
+              {isArabic ? 'ممتاز! لا يوجد طلاب يواجهون تعثراً أو غياباً ملحوظاً حالياً.' : 'Great! No students are currently facing noticeable struggle or absence.'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -300,10 +310,10 @@ export default function Dashboard({
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#0F172A', borderRadius: '10px' }}>
                   <div>
                     <div style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: '0.9rem' }}>{student.name || student.student_name}</div>
-                    <div style={{ color: '#F87171', fontSize: '0.8rem' }}>تراجع الحضور والتسميع</div>
+                    <div style={{ color: '#F87171', fontSize: '0.8rem' }}>{isArabic ? 'تراجع الحضور والتسميع' : 'Attendance & Recitation decline'}</div>
                   </div>
                   <button onClick={() => setActiveTab('students')} style={{ padding: '6px 12px', background: '#EF4444', color: '#FFF', border: 'none', borderRadius: '6px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 'bold' }}>
-                    متابعة
+                    {isArabic ? 'متابعة' : 'Track'}
                   </button>
                 </div>
               ))}
@@ -313,30 +323,38 @@ export default function Dashboard({
 
         <div style={{ background: '#1E293B', padding: '24px', borderRadius: '20px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
           <h3 style={{ fontSize: '1rem', color: '#FBBF24', marginBottom: '16px', fontWeight: '700' }}>
-            🏆 صفوة الحفاظ والمتميزات
+            {isArabic ? '🏆 صفوة الحفاظ والمتميزات' : '🏆 Top Achievers'}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#0F172A', borderRadius: '10px' }}>
-              <span style={{ color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '600' }}>🥇 أحمد محمد العبدالله</span>
-              <span style={{ color: '#FBBF24', fontWeight: 'bold', fontSize: '0.88rem' }}>25 صفحة/أسبوع</span>
+              <span style={{ color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '600' }}>
+                🥇 {isArabic ? 'أحمد محمد العبدالله' : 'Ahmad Mohammad'}
+              </span>
+              <span style={{ color: '#FBBF24', fontWeight: 'bold', fontSize: '0.88rem' }}>
+                {isArabic ? '25 صفحة/أسبوع' : '25 pages/week'}
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#0F172A', borderRadius: '10px' }}>
-              <span style={{ color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '600' }}>🥈 سارة يوسف إبراهيم</span>
-              <span style={{ color: '#FBBF24', fontWeight: 'bold', fontSize: '0.88rem' }}>20 صفحة/أسبوع</span>
+              <span style={{ color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '600' }}>
+                🥈 {isArabic ? 'سارة يوسف إبراهيم' : 'Sarah Youssef'}
+              </span>
+              <span style={{ color: '#FBBF24', fontWeight: 'bold', fontSize: '0.88rem' }}>
+                {isArabic ? '20 صفحة/أسبوع' : '20 pages/week'}
+              </span>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* 5️⃣ سجل الأنشطة */}
+      {/* 5️⃣ سجل الأنشطة مترجم بالكامل */}
       <div style={{ background: '#1E293B', padding: '24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
         <h3 style={{ fontSize: '1rem', color: '#FFFFFF', marginBottom: '16px', fontWeight: '700' }}>
-          📜 سجل العمليات والأنشطة اللحظية بالمؤسسة
+          {isArabic ? '📜 سجل العمليات والأنشطة اللحظية بالمؤسسة' : '📜 Real-time Activity Logs'}
         </h3>
         {activityLogs.length === 0 ? (
           <p style={{ color: '#F1F5F9', fontSize: '0.92rem', margin: 0, direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
-            النظام متزامن وجاهز لتسجيل أحدث الأنشطة
+            {isArabic ? 'النظام متزامن وجاهز لتسجيل أحدث الأنشطة.' : 'System synced and ready to log latest activities.'}
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
