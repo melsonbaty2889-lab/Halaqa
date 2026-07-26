@@ -110,6 +110,60 @@
   "active_halagas": "Active Halagas Today",
   "completed_exams": "Exams Passed (Month)",
 
+  "brand": {
+    "title": "Smart Halaqa",
+    "subtitle": "Quranic Academy Platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard & Performance",
+    "realtime-audit": "Realtime Audit Trail",
+    "omnichannel-hub": "Omnichannel Hub",
+    "reports": "Reports & Analytics",
+    "students": "Learner Directory",
+    "teachers": "Faculty & Reciters",
+    "halaqas": "Halaqas & Sanad",
+    "attendance": "Daily Recitation",
+    "exams": "Exams & Diplomas",
+    "guardian-portal": "Guardian Portal",
+    "gamification-streaks": "Gamification & Streaks",
+    "payments": "Billing & Payments",
+    "asset-management": "Asset Management",
+    "referrals": "Affiliate & Rewards",
+    "settings": "Platform Governance",
+    "profile": "User Profile"
+  },
+  "sidebar": {
+    "sections": {
+      "ops": "1. Operations Hub",
+      "academic": "2. Academic Core",
+      "community": "3. Engagement & Community",
+      "governance": "4. Governance & Treasury"
+    },
+    "academy": "Academy",
+    "primaryAcademy": "Primary Academy",
+    "cloudSync": "Cloud Synchronized"
+  },
+  "status": {
+    "pending": "Pending",
+    "lifetime": "Lifetime ∞",
+    "active": "Active Plan",
+    "trial": "Free Trial",
+    "expired": "Expired"
+  },
+  "common": {
+    "upgrade": "Upgrade",
+    "searchPlaceholder": "Quick search...",
+    "noResults": "No matching results",
+    "logout": "Logout"
+  },
+  "header": {
+    "admin": "Admin"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "new": "new"
+  },
+
   "subscription": {
     "title": "Acquire System License - Smart Halaqa",
     "subtitle": "Select your corporate academic investment plan and join leading global institutions and academies.",
