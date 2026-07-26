@@ -1,12 +1,13 @@
 // مكتبات خارجية
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom'; // 👈 إضافة BrowserRouter
 
 // ملفات CSS
 import './index.css';
 
 // ملفات الإعداد
-import './locales/i18n'; // 👈 تم تصحيح المسار ليتوافق مع هيكل المجلدات لديك
+import './locales/i18n';
 
 // Components
 import App from './App.jsx';
@@ -17,7 +18,6 @@ import { DataProvider } from './context/DataContext';
 
 // =====================================================
 // Global Error Handler
-// يعرض شاشة طوارئ عند فشل إقلاع التطبيق
 // =====================================================
 window.onerror = function (message, source, lineno, colno, error) {
   const rootEl = document.getElementById('root');
@@ -35,12 +35,14 @@ const InitialLoader = () => (
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AcademyProvider>
-      <DataProvider>
-        <Suspense fallback={<InitialLoader />}>
-          <App />
-        </Suspense>
-      </DataProvider>
-    </AcademyProvider>
+    <BrowserRouter> {/* 👈 تغليف التطبيق هنا يحل المشكلة جذرياً */}
+      <AcademyProvider>
+        <DataProvider>
+          <Suspense fallback={<InitialLoader />}>
+            <App />
+          </Suspense>
+        </DataProvider>
+      </AcademyProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 );
