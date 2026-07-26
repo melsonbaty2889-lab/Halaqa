@@ -395,7 +395,6 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة في شريط واحد) */}
                     {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة بدقة للشاشات الصغيرة) */}
           <div style={{
             background: '#131f37',
@@ -412,7 +411,7 @@ export default function Sidebar({
               display: 'flex', 
               alignItems: 'center', 
               gap: '3px', 
-              fontSize: '0.63rem', 
+              fontSize: '0.61rem', 
               color: '#38bdf8',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -427,9 +426,9 @@ export default function Sidebar({
               </span>
               <span style={{ color: '#475569', flexShrink: 0 }}>|</span>
               
-              {/* التاريخ الميلادي */}
+              {/* التاريخ الميلادي شامل السنة (2026) */}
               <span style={{ color: '#e2e8f0', flexShrink: 0 }}>
-                {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short' })}
+                {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
               <span style={{ color: '#475569', flexShrink: 0 }}>•</span>
               
@@ -444,7 +443,7 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* زر الترقية مضغوط الحجم */}
+            {/* زر الترقية */}
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
               style={{
