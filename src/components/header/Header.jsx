@@ -1,30 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaBars, FaBell, FaGlobe, FaUserCheck, FaCoins } from 'react-icons/fa';
+import { FaBars, FaBell, FaGlobe, FaUserCheck, FaCoins, FaCheck } from 'react-icons/fa';
 
-// 🌐 استيراد ملفات الترجمة كاملة
+// 🌐 استيراد ملفات الترجمة
 import arTranslation from '../../locales/ar.json';
 import enTranslation from '../../locales/en.json';
 
 export default function Header({ 
   activeTab, 
+  setActiveTab,
   sidebarOpen, 
   setSidebarOpen, 
   isRtl, 
-  userRole, 
-  profile,
-  currentCurrency,
-  onCurrencyChange,
-  onNotificationClick
+  currentCurrency = 'USD',
+  onCurrencyChange
 }) {
   const { t, i18n } = useTranslation();
-  
-  // تحديد اللغة الحالية
+
+  // 1. حالات القوائم المنسدلة (Dropdown States)
+  const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+
+  // قائمة العملات المتاحة
+  const currencies = [
+    { code: 'USD', symbol: '$', name: 'USD' },
+    { code: 'EGP', symbol: 'ج.م', name: 'EGP' },
+    { code: 'SAR', symbol: 'ر.س', name: 'SAR' },
+    { code: 'EUR', symbol: '€', name: 'EUR' },
+    { code: 'AED', symbol: 'د.إ', name: 'AED' },
+  ];
+
+  // تحديد اللغة والملف المقابل
   const currentLanguage = i18n.language || 'ar';
   const currentTranslations = currentLanguage === 'ar' ? arTranslation : enTranslation;
 
-  // جلب المسار الحالي
+  // مسار الصفحة
   let pathname = '';
   try {
     const location = useLocation();
@@ -33,10 +44,7 @@ export default function Header({
     pathname = '';
   }
 
-  // تنظيف اسم التبويب المقروء (سواء من الرابط أو من activeTab)
   const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
-
-  // 🎯 جلب العنوان المترجم ديناميكياً
   const pageTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`) || activeKey;
 
   // دالة تبديل اللغة
@@ -45,12 +53,18 @@ export default function Header({
     i18n.changeLanguage(nextLng);
   };
 
+  // تغيير العملة
+  const handleSelectCurrency = (code) => {
+    if (onCurrencyChange) onCurrencyChange(code);
+    setShowCurrencyMenu(false);
+  };
+
   return (
     <header style={{
       height: '60px',
       backgroundColor: '#0b1329',
       borderBottom: '1px solid #1e293b',
-      padding: '0 16px',
+      padding: '0 12px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -61,8 +75,8 @@ export default function Header({
       color: '#fff',
       direction: isRtl ? 'rtl' : 'ltr'
     }}>
-      {/* 1️⃣ زر القائمة للجوال والعنوان المترجم الديناميكي */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* 1️⃣ الجزء الأيسر/الأيمن: زر القائمة + العنوان (مقاوم للتداخل) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
         <button
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
           style={{
@@ -75,117 +89,200 @@ export default function Header({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.1rem'
+            fontSize: '1rem',
+            flexShrink: 0
           }}
-          title="فتح القائمة"
+          title="القائمة"
         >
           <FaBars />
         </button>
 
         <h1 style={{
           margin: 0,
-          fontSize: '1rem',
+          fontSize: '0.85rem',
           fontWeight: '700',
-          color: '#ffffff'
+          color: '#ffffff',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '130px'
         }}>
           {pageTitle}
         </h1>
       </div>
 
-      {/* 2️⃣ الأدوات: العملات + اللغة + الإشعارات + البروفايل */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* 2️⃣ أدوات التحكم والعملات والأزرار */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
         
-        {/* 🪙 زر تغير العملة (تم إعادته) */}
-        <button
-          onClick={onCurrencyChange}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            padding: '6px 10px',
-            background: '#131f37',
-            border: '1px solid #1e293b',
-            borderRadius: '8px',
-            color: '#fbbf24',
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}
-          title="تغيير العملة"
-        >
-          <FaCoins style={{ fontSize: '0.85rem' }} />
-          <span>{currentCurrency || 'USD'}</span>
-        </button>
+        {/* 🪙 زر تغير العملة والقائمة المنسدلة */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => {
+              setShowCurrencyMenu(!showCurrencyMenu);
+              setShowNotifMenu(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 8px',
+              background: '#131f37',
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              color: '#fbbf24',
+              fontSize: '0.7rem',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            <FaCoins style={{ fontSize: '0.8rem' }} />
+            <span>{currentCurrency}</span>
+          </button>
 
-        {/* 🌐 زر تبديل اللغة */}
+          {/* قائمة العملات */}
+          {showCurrencyMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '40px',
+              left: isRtl ? 'auto' : '0',
+              right: isRtl ? '0' : 'auto',
+              backgroundColor: '#131f37',
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '6px 0',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              zIndex: 110,
+              minWidth: '100px'
+            }}>
+              {currencies.map((curr) => (
+                <button
+                  key={curr.code}
+                  onClick={() => handleSelectCurrency(curr.code)}
+                  style={{
+                    width: '100%',
+                    padding: '6px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'transparent',
+                    border: 'none',
+                    color: currentCurrency === curr.code ? '#10b981' : '#cbd5e1',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    textAlign: 'start'
+                  }}
+                >
+                  <span>{curr.name}</span>
+                  {currentCurrency === curr.code && <FaCheck style={{ fontSize: '0.65rem' }} />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 🌐 زر اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
-            padding: '6px 10px',
+            gap: '4px',
+            padding: '6px 8px',
             background: '#131f37',
             border: '1px solid #1e293b',
             borderRadius: '8px',
             color: '#cbd5e1',
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             fontWeight: '600',
             cursor: 'pointer'
           }}
         >
-          <FaGlobe style={{ color: '#38bdf8', fontSize: '0.85rem' }} />
-          <span>{currentLanguage === 'ar' ? 'English' : 'العربية'}</span>
+          <FaGlobe style={{ color: '#38bdf8', fontSize: '0.8rem' }} />
+          <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* 🔔 زر الإشعارات (تفعيل النقر) */}
-        <button 
-          onClick={onNotificationClick}
-          style={{ 
-            background: '#131f37', 
-            border: '1px solid #1e293b', 
-            color: '#cbd5e1', 
-            padding: '8px', 
-            borderRadius: '8px', 
-            cursor: 'pointer', 
-            position: 'relative' 
-          }}
-          title="الإشعارات"
-        >
-          <FaBell style={{ fontSize: '0.9rem', color: '#fbbf24' }} />
-          <span style={{ 
-            position: 'absolute', 
-            top: '4px', 
-            right: '4px', 
-            width: '6px', 
-            height: '6px', 
-            borderRadius: '50%', 
-            backgroundColor: '#10b981' 
-          }}></span>
-        </button>
+        {/* 🔔 زر الإشعارات وقائمة التنبيهات */}
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => {
+              setShowNotifMenu(!showNotifMenu);
+              setShowCurrencyMenu(false);
+            }}
+            style={{ 
+              background: '#131f37', 
+              border: '1px solid #1e293b', 
+              color: '#cbd5e1', 
+              padding: '7px 9px', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <FaBell style={{ fontSize: '0.85rem', color: '#fbbf24' }} />
+            <span style={{ 
+              position: 'absolute', 
+              top: '4px', 
+              right: '4px', 
+              width: '6px', 
+              height: '6px', 
+              borderRadius: '50%', 
+              backgroundColor: '#10b981' 
+            }}></span>
+          </button>
 
-        {/* 👤 بروفايل المستخدم */}
+          {/* نافذة الإشعارات المنسدلة */}
+          {showNotifMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '40px',
+              left: isRtl ? '0' : 'auto',
+              right: isRtl ? 'auto' : '0',
+              backgroundColor: '#131f37',
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '12px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              zIndex: 110,
+              width: '220px',
+              color: '#cbd5e1',
+              fontSize: '0.75rem'
+            }}>
+              <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '8px', borderBottom: '1px solid #1e293b', pb: '4px' }}>
+                {currentLanguage === 'ar' ? 'التنبيهات الإدارية' : 'Notifications'}
+              </div>
+              <div style={{ padding: '6px 0', color: '#94a3b8' }}>
+                {currentLanguage === 'ar' ? 'لا توجد إشعارات جديدة حالياً.' : 'No new notifications.'}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 👤 أيقونة المستخدم */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
           background: '#131f37', 
-          padding: '4px 8px', 
+          padding: '4px 6px', 
           borderRadius: '8px', 
           border: '1px solid #1e293b' 
         }}>
           <div style={{ 
-            width: '28px', 
-            height: '28px', 
+            width: '24px', 
+            height: '24px', 
             borderRadius: '50%', 
             background: 'rgba(16, 185, 129, 0.2)', 
             color: '#34d399', 
             display: 'flex', 
             alignItems: 'center', 
-            justifyContent: 'center' 
+            justifyContent: 'center',
+            fontSize: '0.75rem'
           }}>
             <FaUserCheck />
           </div>
         </div>
+
       </div>
     </header>
   );
