@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 // ملفات الإعداد
-import './i18n';
+import './locales/i18n'; // 👈 تم تصحيح المسار ليتوافق مع هيكل المجلدات لديك
 
 // Components
 import App from './App.jsx';
@@ -36,11 +36,11 @@ const InitialLoader = () => (
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AcademyProvider>
-      <DataProvider> {/* 👈 تغليف التطبيق بالـ DataProvider ليكون تحت الـ AcademyProvider مباشرة */}
+      <DataProvider>
         <Suspense fallback={<InitialLoader />}>
           <App />
         </Suspense>
       </DataProvider>
     </AcademyProvider>
   </React.StrictMode>,
-)
+);
