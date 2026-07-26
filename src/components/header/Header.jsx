@@ -1,90 +1,94 @@
 import React from 'react';
-import { FaBars, FaUserCircle } from 'react-icons/fa';
-import NotificationMenu from './NotificationMenu';
-import LanguageSwitcher from './LanguageSwitcher';
-import CurrencySelector from './CurrencySelector';
+import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Search, Bell, Globe, User } from 'lucide-react';
 
-export default function Header({
-  isRtl,
-  isMobile,
-  toggleSidebar,
-  activeTab, // 👈 تم إضافة activeTab للـ props لعرض اسم الصفحة ديناميكياً
-  setActiveTab,
-  i18n,
-  currency,
-  setCurrency,
-  userData
-}) {
+export default function Header() {
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+
+  // خريطة الربط بين المسار ومفتاح الترجمات
+  const pathToTranslationKey = {
+    '/dashboard': 'nav.dashboard',
+    '/realtime-audit': 'nav.realtime-audit',
+    '/omnichannel-hub': 'nav.omnichannel-hub',
+    '/reports': 'nav.reports',
+    '/students': 'nav.students',
+    '/teachers': 'nav.teachers',
+    '/halaqas': 'nav.halaqas',
+    '/attendance': 'nav.attendance',
+    '/exams': 'nav.exams',
+    '/guardian-portal': 'nav.guardian-portal',
+    '/gamification-streaks': 'nav.gamification-streaks',
+    '/payments': 'nav.payments',
+    '/asset-management': 'nav.asset-management',
+    '/referrals': 'nav.referrals',
+    '/settings': 'nav.settings',
+    '/profile': 'nav.profile',
+  };
+
+  // إيجاد المفتاح المترجم مع احتياطي افتراضي
+  const currentKey = pathToTranslationKey[location.pathname] || 'nav.dashboard';
+  const pageTitle = t(currentKey);
+
+  // دالة التبديل بين اللغات
+  const toggleLanguage = () => {
+    const nextLng = i18n.language === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(nextLng);
+  };
+
   return (
-    <header className="sticky top-0 z-30 bg-[#0b1329]/80 backdrop-blur-md border-b border-slate-800 px-3 sm:px-4 lg:px-8 py-3 flex items-center justify-between transition-all">
-      
-      {/* القسم الرئيسي: زر القائمة الجانبية + اسم الصفحة الحالية فقط */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        {isMobile && (
-          <button
-            onClick={toggleSidebar}
-            className="p-2 text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg transition-colors"
-            aria-label="Toggle Sidebar"
-          >
-            <FaBars className="text-lg" />
-          </button>
-        )}
-
-        {/* 🟢 التعديل الرئيسي: تبسيط العنوان وتوجيهه لنوع الصفحة لتقليل التزاحم */}
-        <div className="flex flex-col justify-center">
-          <h1 className="text-xs sm:text-sm lg:text-base font-bold text-slate-100 truncate max-w-[110px] sm:max-w-none">
-            {isRtl ? 'لوحة التحكم' : 'Dashboard'}
-          </h1>
-        </div>
+    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+      {/* 1. Page Title */}
+      <div className="flex items-center gap-4">
+        <h2 className="text-xl font-bold text-slate-800">
+          {pageTitle}
+        </h2>
       </div>
 
-      {/* القسم الفرعي: أدوات الهيدر (العملة، اللغة، التنبيهات، والبروفايل) */}
-      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
-        
-        {/* محول العملات */}
-        <CurrencySelector 
-          isRtl={isRtl} 
-          currency={currency} 
-          setCurrency={setCurrency} 
-        />
-
-        {/* محول اللغة */}
-        <LanguageSwitcher 
-          isRtl={isRtl} 
-          isMobile={isMobile} 
-          i18n={i18n} 
-        />
-
-        {/* قائمة التنبيهات */}
-        <NotificationMenu 
-          isRtl={isRtl} 
-          isMobile={isMobile} 
-          setActiveTab={setActiveTab} 
-        />
-
-        <div className="h-5 w-[1px] bg-slate-800 mx-0.5 hidden sm:block"></div>
-
-        {/* بروفايل المستخدم المختصر */}
-        <div 
-          onClick={() => setActiveTab && setActiveTab('profile')}
-          className="flex items-center gap-2 cursor-pointer p-1 sm:p-1.5 hover:bg-slate-800/50 rounded-lg transition-colors"
-        >
-          {userData?.avatar ? (
-            <img 
-              src={userData.avatar} 
-              alt="User" 
-              className="w-7 h-7 rounded-full object-cover border border-slate-700" 
-            />
-          ) : (
-            <FaUserCircle className="text-xl sm:text-2xl text-slate-400" />
-          )}
-          <div className="hidden md:flex flex-col text-left">
-            <span className="text-xs font-semibold text-slate-200">
-              {userData?.name || (isRtl ? 'المشرف العام' : 'Admin')}
-            </span>
-          </div>
+      {/* 2. Controls & Actions */}
+      <div className="flex items-center gap-3">
+        {/* Search Bar - استخدام الخصائص المنطقية للاتجاهات تلقائياً */}
+        <div className="relative hidden md:block w-64">
+          <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder={t('common.searchPlaceholder')}
+            className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-700 text-xs rounded-lg py-2 ps-9 pe-3 border border-transparent focus:border-emerald-500 focus:outline-none transition-all"
+          />
         </div>
 
+        {/* Language Switcher */}
+        <button
+          onClick={toggleLanguage}
+          className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
+          title="Switch Language / تغيير اللغة"
+        >
+          <Globe className="w-4 h-4 text-emerald-600" />
+          <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
+        </button>
+
+        {/* Notifications */}
+        <button
+          className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+          title={t('notifications.title')}
+        >
+          <Bell className="w-5 h-5" />
+          <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
+        </button>
+
+        <div className="h-6 w-px bg-slate-200 mx-1"></div>
+
+        {/* User Profile */}
+        <div className="flex items-center gap-2.5 cursor-pointer p-1 rounded-lg hover:bg-slate-50 transition-colors">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+            <User className="w-4 h-4" />
+          </div>
+          <div className="hidden sm:block text-start">
+            <div className="text-xs font-bold text-slate-800">د. محمد</div>
+            <div className="text-[10px] text-slate-400">{t('header.admin')}</div>
+          </div>
+        </div>
       </div>
     </header>
   );
