@@ -396,10 +396,10 @@ export default function Sidebar({
           </div>
 
                     
-                        {/* 📅 3️⃣ الوقت والتقويم والترقية (تصميم متناسق ومريح للعين) */}
+                                  {/* 📅 3️⃣ الوقت والتقويم والترقية (محاذاة وألوان متناسقة 100%) */}
           <div style={{
             background: '#131f37',
-            padding: '7px 10px',
+            padding: '8px 10px',
             borderRadius: '6px',
             marginBottom: '10px',
             border: '1px solid #1e293b',
@@ -408,37 +408,48 @@ export default function Sidebar({
             justifyContent: 'space-between',
             gap: '8px'
           }}>
-            {/* قسم الوقت والتواريخ */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-              {/* السطر الأول: الوقت + التاريخ الميلادي */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: '0.68rem',
-                color: '#e2e8f0',
-                fontWeight: '600',
-                whiteSpace: 'nowrap'
-              }}>
-                <FaClock style={{ fontSize: '0.7rem', color: '#38bdf8', flexShrink: 0 }} />
-                <span style={{ fontFamily: 'monospace' }}>{academyTime || '11:59 AM'}</span>
-                <span style={{ color: '#475569' }}>•</span>
-                <span style={{ color: '#38bdf8' }}>
-                  {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>
-              </div>
+            {/* حاوي الأيقونة + السطرين (محاذاة مستقيمة تلقائياً) */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              minWidth: 0,
+              flex: 1
+            }}>
+              {/* أيقونة الساعة محاذية للسطرين معاً */}
+              <FaClock style={{ fontSize: '0.85rem', color: '#38bdf8', flexShrink: 0 }} />
 
-              {/* السطر الثاني: التاريخ الهجري */}
-              <div style={{
-                fontSize: '0.62rem',
-                color: '#94a3b8',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                paddingRight: isRtl ? '16px' : 0,
-                paddingLeft: isRtl ? 0 : '16px'
-              }}>
-                {hijri}
+              {/* مجموعة النصوص تحت بعضها بنفس المحاذاة */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                {/* السطر الأول: الوقت + التاريخ الميلادي */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.68rem',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <span style={{ color: '#ffffff', fontFamily: 'monospace' }}>
+                    {academyTime || '12:04 PM'}
+                  </span>
+                  <span style={{ color: '#334155' }}>•</span>
+                  <span style={{ color: '#38bdf8' }}>
+                    {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+
+                {/* السطر الثاني: التاريخ الهجري (محاذٍ تماماً للسطر الأول) */}
+                <div style={{
+                  fontSize: '0.63rem',
+                  color: '#cbd5e1',
+                  fontWeight: '500',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {hijri}
+                </div>
               </div>
             </div>
 
@@ -446,7 +457,7 @@ export default function Sidebar({
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
               style={{
-                padding: '5px 8px',
+                padding: '5px 9px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#000',
                 border: 'none',
@@ -465,7 +476,6 @@ export default function Sidebar({
               <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
             </button>
           </div>
-
                     {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
             position: 'relative',
