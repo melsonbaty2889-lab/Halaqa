@@ -1,12 +1,27 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Bell, Globe, User } from 'lucide-react';
+import { FaBars, FaBell, FaGlobe, FaUserCheck } from 'react-icons/fa';
 
-export default function Header({ activeTab }) {
+// 🌐 استيراد ملفات الترجمة كاملة
+import arTranslation from '../../locales/ar.json';
+import enTranslation from '../../locales/en.json';
+
+export default function Header({ 
+  activeTab, 
+  sidebarOpen, 
+  setSidebarOpen, 
+  isRtl, 
+  userRole, 
+  profile 
+}) {
   const { t, i18n } = useTranslation();
   
-  // الحصول على المسار بأمان
+  // تحديد اللغة الحالية وملف الترجمة المقابل لها بالكامل
+  const currentLanguage = i18n.language || 'ar';
+  const currentTranslations = currentLanguage === 'ar' ? arTranslation : enTranslation;
+
+  // الحصول على المسار الحالي للراوتر
   let pathname = '';
   try {
     const location = useLocation();
@@ -15,79 +30,150 @@ export default function Header({ activeTab }) {
     pathname = activeTab ? `/${activeTab}` : '/dashboard';
   }
 
-  // خريطة العناوين
-  const pathToTranslationKey = {
-    '/dashboard': 'nav.dashboard',
-    '/realtime-audit': 'nav.realtime-audit',
-    '/omnichannel-hub': 'nav.omnichannel-hub',
-    '/reports': 'nav.reports',
-    '/students': 'nav.students',
-    '/teachers': 'nav.teachers',
-    '/halaqas': 'nav.halaqas',
-    '/attendance': 'nav.attendance',
-    '/exams': 'nav.exams',
-    '/guardian-portal': 'nav.guardian-portal',
-    '/gamification-streaks': 'nav.gamification-streaks',
-    '/payments': 'nav.payments',
-    '/asset-management': 'nav.asset-management',
-    '/referrals': 'nav.referrals',
-    '/settings': 'nav.settings',
+  // خريطة ربط المسارات بمفاتيح القائمة
+  const pathToKey = {
+    '/dashboard': 'dashboard',
+    '/realtime-audit': 'realtime-audit',
+    '/omnichannel-hub': 'omnichannel-hub',
+    '/reports': 'reports',
+    '/students': 'students',
+    '/teachers': 'teachers',
+    '/halaqas': 'halaqas',
+    '/attendance': 'attendance',
+    '/exams': 'exams',
+    '/guardian-portal': 'guardian-portal',
+    '/gamification-streaks': 'gamification-streaks',
+    '/payments': 'payments',
+    '/asset-management': 'asset-management',
+    '/referrals': 'referrals',
+    '/settings': 'settings',
   };
 
-  const currentKey = pathToTranslationKey[pathname] || 'nav.dashboard';
-  const pageTitle = t(currentKey);
+  const currentTabKey = pathToKey[pathname] || 'dashboard';
 
+  // 🎯 جلب النص المترجم مباشرة من شجرة ملف الـ JSON المستورد
+  const pageTitle = currentTranslations?.nav?.[currentTabKey] || t(`nav.${currentTabKey}`);
+
+  // دالة تبديل اللغة
   const toggleLanguage = () => {
-    const nextLng = i18n.language === 'ar' ? 'en' : 'ar';
+    const nextLng = currentLanguage === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-      {/* 1. عنوان الصفحة */}
-      <div className="flex items-center gap-4">
-        <h2 className="text-xl font-bold text-slate-800">
+    <header style={{
+      height: '60px',
+      backgroundColor: '#0b1329',
+      borderBottom: '1px solid #1e293b',
+      padding: '0 16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      color: '#fff',
+      direction: isRtl ? 'rtl' : 'ltr'
+    }}>
+      {/* 1️⃣ زر القائمة للجوال والعنوان */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
+          style={{
+            background: '#131f37',
+            border: '1px solid #1e293b',
+            color: '#fbbf24',
+            padding: '8px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.1rem'
+          }}
+          title="فتح القائمة"
+        >
+          <FaBars />
+        </button>
+
+        <h1 style={{
+          margin: 0,
+          fontSize: '1rem',
+          fontWeight: '700',
+          color: '#ffffff'
+        }}>
           {pageTitle}
-        </h2>
+        </h1>
       </div>
 
-      {/* 2. أدوات الهيدر */}
-      <div className="flex items-center gap-3">
-        {/* شريط البحث */}
-        <div className="relative hidden md:block w-64">
-          <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder={t('common.searchPlaceholder', 'بحث...')}
-            className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-700 text-xs rounded-lg py-2 ps-9 pe-3 border border-transparent focus:border-emerald-500 focus:outline-none transition-all"
-          />
-        </div>
-
+      {/* 2️⃣ الأدوات وزر تبديل اللغة */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* زر تبديل اللغة */}
         <button
           onClick={toggleLanguage}
-          className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 10px',
+            background: '#131f37',
+            border: '1px solid #1e293b',
+            borderRadius: '8px',
+            color: '#cbd5e1',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
         >
-          <Globe className="w-4 h-4 text-emerald-600" />
-          <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
+          <FaGlobe style={{ color: '#38bdf8', fontSize: '0.85rem' }} />
+          <span>{currentLanguage === 'ar' ? 'English' : 'العربية'}</span>
         </button>
 
-        {/* التنبيهات */}
-        <button className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
+        {/* زر التنبيهات */}
+        <button 
+          style={{ 
+            background: '#131f37', 
+            border: '1px solid #1e293b', 
+            color: '#cbd5e1', 
+            padding: '8px', 
+            borderRadius: '8px', 
+            cursor: 'pointer', 
+            position: 'relative' 
+          }}
+        >
+          <FaBell style={{ fontSize: '0.9rem', color: '#fbbf24' }} />
+          <span style={{ 
+            position: 'absolute', 
+            top: '4px', 
+            right: '4px', 
+            width: '6px', 
+            height: '6px', 
+            borderRadius: '50%', 
+            backgroundColor: '#10b981' 
+          }}></span>
         </button>
 
-        <div className="h-6 w-px bg-slate-200 mx-1"></div>
-
-        {/* ملف المستخدم */}
-        <div className="flex items-center gap-2.5 cursor-pointer p-1 rounded-lg hover:bg-slate-50 transition-colors">
-          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-            <User className="w-4 h-4" />
-          </div>
-          <div className="hidden sm:block text-start">
-            <div className="text-xs font-bold text-slate-800">د. محمد</div>
-            <div className="text-[10px] text-slate-400">{t('header.admin', 'مشرف المنظومة')}</div>
+        {/* بروفايل المستخدم */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          background: '#131f37', 
+          padding: '4px 8px', 
+          borderRadius: '8px', 
+          border: '1px solid #1e293b' 
+        }}>
+          <div style={{ 
+            width: '28px', 
+            height: '28px', 
+            borderRadius: '50%', 
+            background: 'rgba(16, 185, 129, 0.2)', 
+            color: '#34d399', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}>
+            <FaUserCheck />
           </div>
         </div>
       </div>
