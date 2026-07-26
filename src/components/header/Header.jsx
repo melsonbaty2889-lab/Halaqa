@@ -16,14 +16,16 @@ export default function Header({
 }) {
   const { t, i18n } = useTranslation();
   
+  const currentLanguage = i18n.language || 'ar';
+  
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false); // 👤 حالة قائمة البروفايل
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // 🔔 بيانات إشعارات تفاعلية
+  // 🔔 إشعارات تفاعلية مع تحديد الوقت تلقائياً حسب اللغة
   const [notifications, setNotifications] = useState([
-    { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created', time: currentLanguage === 'ar' ? 'منذ 10 دقائق' : '10m ago', read: false },
-    { id: 2, titleAr: 'تم تسجيل طالب جديد بالنظام', titleEn: 'New Student Registered', time: currentLanguage === 'ar' ? 'منذ ساعة' : '1h ago', read: false }
+    { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created', timeAr: 'منذ 10 دقائق', timeEn: '10m ago', read: false },
+    { id: 2, titleAr: 'تم تسجيل طالب جديد بالنظام', titleEn: 'New Student Registered', timeAr: 'منذ ساعة', timeEn: '1h ago', read: false }
   ]);
 
   // إغلاق القوائم عند النقر خارجها
@@ -55,7 +57,6 @@ export default function Header({
     { code: 'AED', name: 'AED' },
   ];
 
-  const currentLanguage = i18n.language || 'ar';
   const currentTranslations = currentLanguage === 'ar' ? arTranslation : enTranslation;
 
   let pathname = '';
@@ -69,14 +70,14 @@ export default function Header({
   const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
   const pageTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`) || activeKey;
 
-  // 🌐 تفعيل تغيير اللغة بشكل فوري ومباشر
+  // 🌐 تغيير اللغة
   const toggleLanguage = () => {
     const nextLng = currentLanguage === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
     localStorage.setItem('i18nextLng', nextLng);
   };
 
-  // 💰 تفعيل تغيير العملة وحفظها
+  // 💰 اختيار العملة وحفظها
   const handleSelectCurrency = (code) => {
     if (onCurrencyChange) onCurrencyChange(code);
     localStorage.setItem('app_currency', code);
@@ -218,7 +219,7 @@ export default function Header({
           )}
         </div>
 
-        {/* زر تغيير اللغة المباشر */}
+        {/* زر تغيير اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
@@ -239,7 +240,7 @@ export default function Header({
           <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* زر الإشعارات والقائمة المنسدلة (تم تفعيلها بالكامل) */}
+        {/* زر الإشعارات */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
@@ -316,7 +317,9 @@ export default function Header({
                     <div style={{ color: item.read ? '#94a3b8' : '#fff', fontWeight: item.read ? 'normal' : 'bold' }}>
                       {currentLanguage === 'ar' ? item.titleAr : item.titleEn}
                     </div>
-                    <div style={{ color: '#64748b', fontSize: '0.65rem', marginTop: '2px' }}>{item.time}</div>
+                    <div style={{ color: '#64748b', fontSize: '0.65rem', marginTop: '2px' }}>
+                      {currentLanguage === 'ar' ? item.timeAr : item.timeEn}
+                    </div>
                   </div>
                 ))
               )}
@@ -324,7 +327,7 @@ export default function Header({
           )}
         </div>
 
-        {/* 👤 البروفايل (تم تفعيله وإعطاؤه قائمة منسدلة تفاعلية) */}
+        {/* البروفايل */}
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button
             onClick={() => {
