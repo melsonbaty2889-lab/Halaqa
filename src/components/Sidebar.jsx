@@ -395,70 +395,70 @@ export default function Sidebar({
             )}
           </div>
 
-                    {/* 📅 3️⃣ الوقت والتقويم والترقية (ألوان موحدة ومظهر متناسق) */}
+                              {/* 📅 3️⃣ الوقت والتقويم والترقية (توزيع متوازن: الوقت - التواريخ الرأسية - الترقية) */}
           <div style={{
             background: '#131f37',
-            padding: '8px 10px',
+            padding: '7px 10px',
             borderRadius: '6px',
             marginBottom: '10px',
             border: '1px solid #1e293b',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '8px'
+            gap: '6px'
           }}>
-            {/* حاوي الأيقونة + السطرين محاذيان تلقائياً */}
+            {/* 1️⃣ جهة البداية: أيقونة الساعة + الوقت */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              minWidth: 0,
-              flex: 1
+              gap: '4px',
+              color: '#ffffff',
+              fontSize: '0.7rem',
+              fontWeight: 'bold',
+              fontFamily: 'monospace',
+              flexShrink: 0
             }}>
-              {/* أيقونة الساعة */}
-              <FaClock style={{ fontSize: '0.85rem', color: '#38bdf8', flexShrink: 0 }} />
-
-              {/* مجموعة النصوص بمحاذاة واحدة ولون تواريخ موحد */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                {/* السطر الأول: الوقت + التاريخ الميلادي */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.68rem',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap'
-                }}>
-                  <span style={{ color: '#ffffff', fontFamily: 'monospace' }}>
-                    {academyTime || '12:04 PM'}
-                  </span>
-                  <span style={{ color: '#475569' }}>•</span>
-                  
-                  {/* التاريخ الميلادي (لون موحد) */}
-                  <span style={{ color: '#38bdf8' }}>
-                    {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </span>
-                </div>
-
-                {/* السطر الثاني: التاريخ الهجري (نفس لون التاريخ الميلادي) */}
-                <div style={{
-                  fontSize: '0.65rem',
-                  color: '#38bdf8',
-                  fontWeight: '500',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {hijri}
-                </div>
-              </div>
+              <FaClock style={{ fontSize: '0.8rem', color: '#38bdf8' }} />
+              <span>{academyTime || '12:24 PM'}</span>
             </div>
 
-            {/* زر الترقية */}
+            {/* 2️⃣ المنتصف: التاريخ الميلادي والتاريخ الهجري أسفل بعضهما مباشرة */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2px',
+              minWidth: 0
+            }}>
+              {/* التاريخ الميلادي */}
+              <span style={{
+                fontSize: '0.64rem',
+                color: '#38bdf8',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                lineHeight: '1.2'
+              }}>
+                {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+
+              {/* التاريخ الهجري */}
+              <span style={{
+                fontSize: '0.62rem',
+                color: '#38bdf8',
+                fontWeight: '500',
+                whiteSpace: 'nowrap',
+                lineHeight: '1.2'
+              }}>
+                {hijri}
+              </span>
+            </div>
+
+            {/* 3️⃣ جهة النهاية: زر الترقية */}
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
               style={{
-                padding: '5px 9px',
+                padding: '5px 8px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#000',
                 border: 'none',
