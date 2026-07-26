@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaBars, FaBell, FaGlobe, FaUserCheck } from 'react-icons/fa';
+import { FaBars, FaBell, FaGlobe, FaUserCheck, FaCoins } from 'react-icons/fa';
 
 // 🌐 استيراد ملفات الترجمة كاملة
 import arTranslation from '../../locales/ar.json';
@@ -13,46 +13,31 @@ export default function Header({
   setSidebarOpen, 
   isRtl, 
   userRole, 
-  profile 
+  profile,
+  currentCurrency,
+  onCurrencyChange,
+  onNotificationClick
 }) {
   const { t, i18n } = useTranslation();
   
-  // تحديد اللغة الحالية وملف الترجمة المقابل لها بالكامل
+  // تحديد اللغة الحالية
   const currentLanguage = i18n.language || 'ar';
   const currentTranslations = currentLanguage === 'ar' ? arTranslation : enTranslation;
 
-  // الحصول على المسار الحالي للراوتر
+  // جلب المسار الحالي
   let pathname = '';
   try {
     const location = useLocation();
     pathname = location.pathname;
   } catch (e) {
-    pathname = activeTab ? `/${activeTab}` : '/dashboard';
+    pathname = '';
   }
 
-  // خريطة ربط المسارات بمفاتيح القائمة
-  const pathToKey = {
-    '/dashboard': 'dashboard',
-    '/realtime-audit': 'realtime-audit',
-    '/omnichannel-hub': 'omnichannel-hub',
-    '/reports': 'reports',
-    '/students': 'students',
-    '/teachers': 'teachers',
-    '/halaqas': 'halaqas',
-    '/attendance': 'attendance',
-    '/exams': 'exams',
-    '/guardian-portal': 'guardian-portal',
-    '/gamification-streaks': 'gamification-streaks',
-    '/payments': 'payments',
-    '/asset-management': 'asset-management',
-    '/referrals': 'referrals',
-    '/settings': 'settings',
-  };
+  // تنظيف اسم التبويب المقروء (سواء من الرابط أو من activeTab)
+  const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
 
-  const currentTabKey = pathToKey[pathname] || 'dashboard';
-
-  // 🎯 جلب النص المترجم مباشرة من شجرة ملف الـ JSON المستورد
-  const pageTitle = currentTranslations?.nav?.[currentTabKey] || t(`nav.${currentTabKey}`);
+  // 🎯 جلب العنوان المترجم ديناميكياً
+  const pageTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`) || activeKey;
 
   // دالة تبديل اللغة
   const toggleLanguage = () => {
@@ -76,7 +61,7 @@ export default function Header({
       color: '#fff',
       direction: isRtl ? 'rtl' : 'ltr'
     }}>
-      {/* 1️⃣ زر القائمة للجوال والعنوان */}
+      {/* 1️⃣ زر القائمة للجوال والعنوان المترجم الديناميكي */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
@@ -107,15 +92,38 @@ export default function Header({
         </h1>
       </div>
 
-      {/* 2️⃣ الأدوات وزر تبديل اللغة */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {/* زر تبديل اللغة */}
+      {/* 2️⃣ الأدوات: العملات + اللغة + الإشعارات + البروفايل */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        
+        {/* 🪙 زر تغير العملة (تم إعادته) */}
+        <button
+          onClick={onCurrencyChange}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '6px 10px',
+            background: '#131f37',
+            border: '1px solid #1e293b',
+            borderRadius: '8px',
+            color: '#fbbf24',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
+          title="تغيير العملة"
+        >
+          <FaCoins style={{ fontSize: '0.85rem' }} />
+          <span>{currentCurrency || 'USD'}</span>
+        </button>
+
+        {/* 🌐 زر تبديل اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
             padding: '6px 10px',
             background: '#131f37',
             border: '1px solid #1e293b',
@@ -130,8 +138,9 @@ export default function Header({
           <span>{currentLanguage === 'ar' ? 'English' : 'العربية'}</span>
         </button>
 
-        {/* زر التنبيهات */}
+        {/* 🔔 زر الإشعارات (تفعيل النقر) */}
         <button 
+          onClick={onNotificationClick}
           style={{ 
             background: '#131f37', 
             border: '1px solid #1e293b', 
@@ -141,6 +150,7 @@ export default function Header({
             cursor: 'pointer', 
             position: 'relative' 
           }}
+          title="الإشعارات"
         >
           <FaBell style={{ fontSize: '0.9rem', color: '#fbbf24' }} />
           <span style={{ 
@@ -154,7 +164,7 @@ export default function Header({
           }}></span>
         </button>
 
-        {/* بروفايل المستخدم */}
+        {/* 👤 بروفايل المستخدم */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
