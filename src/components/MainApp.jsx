@@ -380,7 +380,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-  return (
+    return (
     <div 
       style={{
         display: 'flex', 
@@ -394,7 +394,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       
-      {/* 1. القائمة الجانبية السحابية مع التمرير المحسن لمبدل الأكاديميات */}
+      {/* 1. القائمة الجانبية */}
       <Sidebar 
         currentAcademyId={academyId}
         onSwitchAcademy={handleSwitchAcademy}
@@ -415,7 +415,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-            {/* 2. منطقة عرض التطبيق والمحتوى الرئيسي */}
+      {/* 2. منطقة عرض التطبيق والمحتوى الرئيسي */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh' }}>
         <Header 
           sidebarOpen={sidebarOpen} 
@@ -437,7 +437,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         />
 
         {!isOnline && (
-          <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', items: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
+          <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
             <FaWifi style={{ animation: 'pulse 1s infinite' }} />
             <span>{isRtl ? 'تم قطع الاتصال بالبنية التحتية السحابية. يعمل النظام حالياً في وضع الحفظ المؤقت المحلي.' : 'Disconnected from cloud core. Running on local cache mode.'}</span>
           </div>
@@ -450,5 +450,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             </Suspense>
           </ErrorBoundaryInner>
         </div>
-      </div> );
-}
+      </div>
+    </div>
+  );
+                                                 }
