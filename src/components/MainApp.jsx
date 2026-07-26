@@ -415,22 +415,29 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      {/* 2. منطقة عرض التطبيق والمحتوى الرئيسي */}
+            {/* 2. منطقة عرض التطبيق والمحتوى الرئيسي */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh' }}>
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           isMobile={isMobile} 
           isRtl={isRtl} 
           t={t} 
           currency={currency} 
+          setCurrency={setCurrency} 
           countryCode={countryCode} 
           i18n={i18n} 
           activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          userData={{
+            name: session?.user?.user_metadata?.full_name || session?.user?.email,
+            avatar: session?.user?.user_metadata?.avatar_url
+          }}
         />
 
         {!isOnline && (
-          <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
+          <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', items: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
             <FaWifi style={{ animation: 'pulse 1s infinite' }} />
             <span>{isRtl ? 'تم قطع الاتصال بالبنية التحتية السحابية. يعمل النظام حالياً في وضع الحفظ المؤقت المحلي.' : 'Disconnected from cloud core. Running on local cache mode.'}</span>
           </div>
@@ -443,7 +450,5 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             </Suspense>
           </ErrorBoundaryInner>
         </div>
-      </div>
-    </div>
-  );
+      </div> );
 }
