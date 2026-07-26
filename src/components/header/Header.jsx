@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -13,7 +13,8 @@ import {
   FaSignOutAlt
 } from 'react-icons/fa';
 
-import { supabase } from '../../supabaseClient';
+// 🎯 استدعاء Supabase من مساره الصحيح الدقيق (src/lib/supabase.js)
+import { supabase } from '../../lib/supabase';
 
 import arTranslation from '../../locales/ar.json';
 import enTranslation from '../../locales/en.json';
@@ -37,7 +38,6 @@ export default function Header({
     return localStorage.getItem('app_currency') || currentCurrency || 'USD';
   });
 
-  // 🔔 إدارة الإشعارات الحقيقية
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(true);
 
@@ -45,7 +45,24 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  // 📡 جلب الإشعارات فور تحميل الصفحة + الاستماع اللحظي (Realtime)
+  const fetchNotifications = useCallback(async () => {
+    setLoadingNotifs(true);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(15);
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchNotifications();
 
@@ -63,25 +80,7 @@ export default function Header({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
-
-  const fetchNotifications = async () => {
-    setLoadingNotifs(true);
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(15);
-
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-    } finally {
-      setLoadingNotifs(false);
-    }
-  };
+  }, [fetchNotifications]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -127,10 +126,8 @@ export default function Header({
     setShowCurrencyMenu(false);
   };
 
-  // ✉️ حساب عدد الإشعارات غير المقروءة
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // ✍️ تحديد جميع الإشعارات كمقروءة في Supabase
   const markAllAsRead = async () => {
     setNotifications(notifications.map(n => ({ ...n, is_read: true })));
     try {
@@ -143,12 +140,10 @@ export default function Header({
     }
   };
 
-  // 🗑️ مسح القائمة من الشاشة
   const clearAll = () => {
     setNotifications([]);
   };
 
-  // ⏱️ تنسيق وقت الإشعار
   const formatTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -180,7 +175,6 @@ export default function Header({
       gap: '8px',
       flexWrap: 'nowrap'
     }}>
-      {/* 1️⃣ زر القائمة وعنوان الصفحة */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
         <button
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
@@ -218,10 +212,7 @@ export default function Header({
         </h1>
       </div>
 
-      {/* 2️⃣ أدوات التحكم */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-        
-        {/* 💰 زر العملة */}
         <div style={{ position: 'relative' }} ref={currencyRef}>
           <button
             onClick={() => {
@@ -287,7 +278,6 @@ export default function Header({
           )}
         </div>
 
-        {/* 🌐 زر تغيير اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
@@ -308,7 +298,6 @@ export default function Header({
           <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* 🔔 زر الإشعارات الحقيقي */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
@@ -425,7 +414,6 @@ export default function Header({
           )}
         </div>
 
-        {/* 👤 زر البروفايل */}
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button
             onClick={() => {
@@ -517,4 +505,4 @@ export default function Header({
       </div>
     </header>
   );
-}
+        }
