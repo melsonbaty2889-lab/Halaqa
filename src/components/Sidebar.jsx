@@ -396,6 +396,7 @@ export default function Sidebar({
           </div>
 
           {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة في شريط واحد) */}
+                    {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة في شريط واحد) */}
           <div style={{
             background: '#131f37',
             padding: '6px 8px',
@@ -406,10 +407,28 @@ export default function Sidebar({
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', color: '#38bdf8' }}>
-              <FaClock style={{ fontSize: '0.7rem' }} />
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '4px', 
+              fontSize: '0.68rem', 
+              color: '#38bdf8',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden'
+            }}>
+              <FaClock style={{ fontSize: '0.7rem', flexShrink: 0 }} />
+              
+              {/* الوقت */}
               <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '10:00 AM'}</span>
               <span style={{ color: '#475569' }}>|</span>
+              
+              {/* التاريخ الميلادي (يولَّد تلقائياً وبأمان حسب اللغة) */}
+              <span style={{ color: '#e2e8f0' }}>
+                {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short' })}
+              </span>
+              <span style={{ color: '#475569' }}>•</span>
+              
+              {/* التاريخ الهجري */}
               <span style={{ color: '#cbd5e1' }}>{hijri}</span>
             </div>
 
@@ -426,7 +445,8 @@ export default function Sidebar({
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px'
+                gap: '3px',
+                flexShrink: 0
               }}
             >
               <FaBolt />
