@@ -3,11 +3,19 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Bell, Globe, User } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ activeTab }) {
   const { t, i18n } = useTranslation();
-  const location = useLocation();
+  
+  // الحصول على المسار بأمان
+  let pathname = '';
+  try {
+    const location = useLocation();
+    pathname = location.pathname;
+  } catch (e) {
+    pathname = activeTab ? `/${activeTab}` : '/dashboard';
+  }
 
-  // خريطة الربط بين مسار الصفحة ومفتاح الترجمة لإظهار العنوان ديناميكياً
+  // خريطة العناوين
   const pathToTranslationKey = {
     '/dashboard': 'nav.dashboard',
     '/realtime-audit': 'nav.realtime-audit',
@@ -24,14 +32,11 @@ export default function Header() {
     '/asset-management': 'nav.asset-management',
     '/referrals': 'nav.referrals',
     '/settings': 'nav.settings',
-    '/profile': 'nav.profile',
   };
 
-  // تحديد عنوان الصفحة الحالية
-  const currentKey = pathToTranslationKey[location.pathname] || 'nav.dashboard';
+  const currentKey = pathToTranslationKey[pathname] || 'nav.dashboard';
   const pageTitle = t(currentKey);
 
-  // دالة تبديل اللغة
   const toggleLanguage = () => {
     const nextLng = i18n.language === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
@@ -39,21 +44,21 @@ export default function Header() {
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-      {/* 1. عنوان الصفحة الديناميكي */}
+      {/* 1. عنوان الصفحة */}
       <div className="flex items-center gap-4">
         <h2 className="text-xl font-bold text-slate-800">
           {pageTitle}
         </h2>
       </div>
 
-      {/* 2. أدوات الهيدر والإجراءات */}
+      {/* 2. أدوات الهيدر */}
       <div className="flex items-center gap-3">
-        {/* شريط البحث (يستخدم خصائص الاتجاه المنطقية start/ps) */}
+        {/* شريط البحث */}
         <div className="relative hidden md:block w-64">
           <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder={t('common.searchPlaceholder')}
+            placeholder={t('common.searchPlaceholder', 'بحث...')}
             className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-700 text-xs rounded-lg py-2 ps-9 pe-3 border border-transparent focus:border-emerald-500 focus:outline-none transition-all"
           />
         </div>
@@ -62,17 +67,13 @@ export default function Header() {
         <button
           onClick={toggleLanguage}
           className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
-          title="Switch Language / تغيير اللغة"
         >
           <Globe className="w-4 h-4 text-emerald-600" />
           <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
         </button>
 
         {/* التنبيهات */}
-        <button
-          className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-          title={t('notifications.title')}
-        >
+        <button className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
         </button>
@@ -86,7 +87,7 @@ export default function Header() {
           </div>
           <div className="hidden sm:block text-start">
             <div className="text-xs font-bold text-slate-800">د. محمد</div>
-            <div className="text-[10px] text-slate-400">{t('header.admin')}</div>
+            <div className="text-[10px] text-slate-400">{t('header.admin', 'مشرف المنظومة')}</div>
           </div>
         </div>
       </div>
