@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   FaBars, 
   FaMoneyBillWave, 
-  FaWhatsapp, 
   FaGlobe, 
-  FaSearch, 
   FaBell, 
   FaChevronLeft, 
   FaChevronRight 
@@ -16,11 +14,9 @@ export default function Header({
   isMobile, 
   isRtl, 
   currency, 
-  countryCode, 
   i18n,
   activeTab,
-  onOpenSearchModal, // اختياري: لفتح نافذة البحث الشامل
-  unreadNotificationsCount = 3 // عدد التنبيهات غير المقروءة
+  unreadNotificationsCount = 3
 }) {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
@@ -30,9 +26,9 @@ export default function Header({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isExtraSmall = windowWidth < 480;
+  const isExtraSmall = windowWidth < 380; // للهواتف الصغرى جداً
 
-  // 🎯 شجرة المسارات والعناوين المطابقة للأقسام الأربعة في القائمة الجانبية
+  // 🎯 خريطة المسارات المطابقة لأقسام الشريط الجانبي الأربعة
   const menuHierarchy = {
     // 1️⃣ مركز القيادة والعمليات
     dashboard: { section: { ar: 'العمليات', en: 'Ops' }, title: { ar: 'لوحة التحكم والأداء', en: 'Dashboard & Performance' } },
@@ -71,7 +67,8 @@ export default function Header({
         top: 0,
         zIndex: 90,
         width: '100%',
-        backgroundColor: '#0b1329',
+        backgroundColor: 'rgba(11, 19, 41, 0.92)',
+        backdropFilter: 'blur(10px)',
         borderBottom: '1px solid #1e293b',
         padding: isMobile ? '0 10px' : '0 20px',
         display: 'flex',
@@ -83,8 +80,8 @@ export default function Header({
       }}
     >
       
-      {/* 📑 1️⃣ الجانب الأيمن (أو الأيسر حسب اللغة): المسار الذكي والعنوان */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+      {/* 📑 القسم الأول: القائمة الجانبية ومسار الصفحة */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1, paddingEnd: '8px' }}>
         
         {/* زر Hamburger للموبايل */}
         {isMobile && (
@@ -94,23 +91,22 @@ export default function Header({
               background: 'rgba(245, 158, 11, 0.12)',
               border: '1px solid rgba(245, 158, 11, 0.3)',
               color: '#f59e0b',
-              width: '36px',
-              height: '36px',
+              width: '35px',
+              height: '35px',
               borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              flexShrink: 0,
-              transition: '0.15s ease'
+              flexShrink: 0
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars style={{ fontSize: '0.9rem' }} />
+            <FaBars style={{ fontSize: '0.85rem' }} />
           </button>
         )}
 
-        {/* المسار الهيكلي (Breadcrumbs) - مرن ومحمي من القواطع */}
+        {/* المسار الهيكلي (Breadcrumbs) */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -118,8 +114,7 @@ export default function Header({
           minWidth: 0, 
           overflow: 'hidden' 
         }}>
-          {/* اسم القسم الرئيسي (يختفي في الشاشات الصغيرة جداً لتوفير المساحة) */}
-          {!isExtraSmall && (
+          {!isMobile && (
             <>
               <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500', whiteSpace: 'nowrap' }}>
                 {isRtl ? currentRoute.section.ar : currentRoute.section.en}
@@ -130,7 +125,7 @@ export default function Header({
             </>
           )}
 
-          {/* اسم الصفحة الحالية - بارز وعالي التباين */}
+          {/* اسم الصفحة الحالية */}
           <span style={{ 
             color: '#38bdf8', 
             fontWeight: '700', 
@@ -144,46 +139,8 @@ export default function Header({
         </div>
       </div>
 
-      {/* 🔍 2️⃣ المنتصف: مشغل أمر البحث السريع (Ctrl + K) - للشاشات المتوسطة والكبيرة */}
-      {!isMobile && (
-        <button
-          onClick={onOpenSearchModal}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#131f37',
-            border: '1px solid #1e293b',
-            borderRadius: '6px',
-            padding: '5px 12px',
-            color: '#64748b',
-            fontSize: '0.75rem',
-            cursor: 'pointer',
-            transition: '0.15s ease',
-            width: '200px',
-            justifyContent: 'space-between'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaSearch style={{ fontSize: '0.7rem' }} />
-            <span>{isRtl ? 'بحث سريع...' : 'Search...'}</span>
-          </div>
-          <kbd style={{
-            background: '#0f172a',
-            border: '1px solid #334155',
-            borderRadius: '3px',
-            padding: '1px 5px',
-            fontSize: '0.62rem',
-            color: '#94a3b8',
-            fontFamily: 'monospace'
-          }}>
-            Ctrl K
-          </kbd>
-        </button>
-      )}
-
-      {/* 🌐 3️⃣ الجانب الأيسر: الأدوات والبادجات الحية */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: isExtraSmall ? '4px' : '8px', flexShrink: 0 }}>
+      {/* 🌐 القسم الثاني: أدوات التفاعل وتحديث التفضيلات */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: isExtraSmall ? '4px' : '6px', flexShrink: 0 }}>
         
         {/* جرس التنبيهات الحي */}
         <button 
@@ -206,8 +163,8 @@ export default function Header({
           {unreadNotificationsCount > 0 && (
             <span style={{
               position: 'absolute',
-              top: '4px',
-              right: '4px',
+              top: '5px',
+              right: '5px',
               width: '6px',
               height: '6px',
               backgroundColor: '#ef4444',
@@ -222,12 +179,12 @@ export default function Header({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
+            justifyContent: 'center',
             background: '#131f37',
             border: '1px solid #1e293b',
             color: '#e2e8f0',
             height: '32px',
-            padding: isExtraSmall ? '0 6px' : '0 10px',
+            padding: isExtraSmall ? '0 6px' : '0 8px',
             borderRadius: '6px',
             fontSize: '0.72rem',
             fontWeight: '600',
@@ -236,30 +193,10 @@ export default function Header({
           }}
         >
           <FaGlobe style={{ color: '#38bdf8', fontSize: '0.8rem' }} />
-          {!isExtraSmall && <span>{isRtl ? 'English' : 'العربية'}</span>}
+          {!isMobile && <span style={{ marginStart: '4px' }}>{isRtl ? 'English' : 'العربية'}</span>}
         </button>
 
-        {/* بادج الواتساب الدولي (يختفي في الشاشات الصغرى جداً لحماية المساحة) */}
-        {!isExtraSmall && countryCode && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            background: 'rgba(16, 185, 129, 0.08)',
-            color: '#34d399',
-            height: '32px',
-            padding: '0 8px',
-            borderRadius: '6px',
-            fontSize: '0.7rem',
-            fontWeight: '600',
-            border: '1px solid rgba(16, 185, 129, 0.2)'
-          }}>
-            <FaWhatsapp style={{ color: '#10b981', fontSize: '0.8rem' }} />
-            <span style={{ direction: 'ltr' }}>+{countryCode}</span>
-          </div>
-        )}
-
-        {/* بادج العملة النشطة */}
+        {/* بادج العملة */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -267,7 +204,7 @@ export default function Header({
           background: 'rgba(56, 189, 248, 0.08)',
           color: '#38bdf8',
           height: '32px',
-          padding: isExtraSmall ? '0 6px' : '0 8px',
+          padding: '0 7px',
           borderRadius: '6px',
           fontSize: '0.7rem',
           fontWeight: '700',
