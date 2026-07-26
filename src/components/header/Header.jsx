@@ -13,6 +13,8 @@ import {
   FaSignOutAlt
 } from 'react-icons/fa';
 
+import { supabase } from '../../supabaseClient';
+
 import arTranslation from '../../locales/ar.json';
 import enTranslation from '../../locales/en.json';
 
@@ -31,33 +33,61 @@ export default function Header({
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // 💰 إدارة حالة العملة
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return localStorage.getItem('app_currency') || currentCurrency || 'USD';
   });
 
-  // 🔔 إشعارات تفاعلية
-  const [notifications, setNotifications] = useState([
-    { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created Successfully', timeAr: 'منذ 10 دقائق', timeEn: '10m ago', read: false },
-    { id: 2, titleAr: 'تم تسجيل طالب جديد بالنظام', titleEn: 'New Student Registered', timeAr: 'منذ ساعة', timeEn: '1h ago', read: false }
-  ]);
+  // 🔔 إدارة الإشعارات الحقيقية
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(true);
 
-  // إغلاق القوائم عند النقر خارجها
   const currencyRef = useRef(null);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+  // 📡 جلب الإشعارات فور تحميل الصفحة + الاستماع اللحظي (Realtime)
+  useEffect(() => {
+    fetchNotifications();
+
+    const channel = supabase
+      .channel('public_notifications_channel')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications' },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchNotifications = async () => {
+    setLoadingNotifs(true);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(15);
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (currencyRef.current && !currencyRef.current.contains(event.target)) {
-        setShowCurrencyMenu(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
-        setShowNotifMenu(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfileMenu(false);
-      }
+      if (currencyRef.current && !currencyRef.current.contains(event.target)) setShowCurrencyMenu(false);
+      if (notifRef.current && !notifRef.current.contains(event.target)) setShowNotifMenu(false);
+      if (profileRef.current && !profileRef.current.contains(event.target)) setShowProfileMenu(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -84,14 +114,12 @@ export default function Header({
   const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
   const pageTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`) || activeKey;
 
-  // 🌐 تغيير اللغة
   const toggleLanguage = () => {
     const nextLng = currentLanguage === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
     localStorage.setItem('i18nextLng', nextLng);
   };
 
-  // 💰 اختيار العملة
   const handleSelectCurrency = (code) => {
     setSelectedCurrency(code);
     localStorage.setItem('app_currency', code);
@@ -99,20 +127,40 @@ export default function Header({
     setShowCurrencyMenu(false);
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // ✉️ حساب عدد الإشعارات غير المقروءة
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  // ✍️ تحديد جميع الإشعارات كمقروءة في Supabase
+  const markAllAsRead = async () => {
+    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+    try {
+      await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('is_read', false);
+    } catch (err) {
+      console.error('Error marking notifications as read:', err);
+    }
   };
 
+  // 🗑️ مسح القائمة من الشاشة
   const clearAll = () => {
     setNotifications([]);
   };
 
-  // 🎯 تحديد موضع القوائم المنسدلة تلقائياً حسب لغة الصفحة (RTL / LTR)
+  // ⏱️ تنسيق وقت الإشعار
+  const formatTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString(currentLanguage === 'ar' ? 'ar-EG' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const dropdownPositionStyle = isRtl
-    ? { left: 0, right: 'auto' }   // في العربية: تفتح القائمة جهة اليمين
-    : { right: 0, left: 'auto' };  // في الإنجليزية: تفتح القائمة جهة اليسار
+    ? { left: 0, right: 'auto' }
+    : { right: 0, left: 'auto' };
 
   return (
     <header style={{
@@ -170,7 +218,7 @@ export default function Header({
         </h1>
       </div>
 
-      {/* 2️⃣ أدوات التحكم (العملة، اللغة، الإشعارات، البروفايل) */}
+      {/* 2️⃣ أدوات التحكم */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
         
         {/* 💰 زر العملة */}
@@ -260,7 +308,7 @@ export default function Header({
           <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* 🔔 زر الإشعارات */}
+        {/* 🔔 زر الإشعارات الحقيقي */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
@@ -305,7 +353,7 @@ export default function Header({
               padding: '12px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              width: '240px',
+              width: '250px',
               maxWidth: 'calc(100vw - 24px)',
               color: '#cbd5e1',
               fontSize: '0.75rem',
@@ -333,7 +381,7 @@ export default function Header({
                     </button>
                     <button 
                       onClick={clearAll} 
-                      title={currentLanguage === 'ar' ? 'مسح الكل' : 'Clear all'} 
+                      title={currentLanguage === 'ar' ? 'مسح القائمة' : 'Clear list'} 
                       style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', fontSize: '0.75rem' }}
                     >
                       <FaTrashAlt />
@@ -342,18 +390,33 @@ export default function Header({
                 )}
               </div>
 
-              {notifications.length === 0 ? (
+              {loadingNotifs ? (
+                <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
+                  {currentLanguage === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                </div>
+              ) : notifications.length === 0 ? (
                 <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
                   {currentLanguage === 'ar' ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
                 </div>
               ) : (
                 notifications.map((item) => (
                   <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
-                    <div style={{ color: item.read ? '#94a3b8' : '#fff', fontWeight: item.read ? 'normal' : '600', lineHeight: '1.3' }}>
-                      {currentLanguage === 'ar' ? item.titleAr : item.titleEn}
+                    <div style={{ 
+                      color: item.is_read ? '#94a3b8' : '#ffffff', 
+                      fontWeight: item.is_read ? 'normal' : '600', 
+                      lineHeight: '1.3' 
+                    }}>
+                      {item.title}
                     </div>
-                    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '3px' }}>
-                      {currentLanguage === 'ar' ? item.timeAr : item.timeEn}
+
+                    {item.message && (
+                      <div style={{ color: '#cbd5e1', fontSize: '0.7rem', marginTop: '3px' }}>
+                        {item.message}
+                      </div>
+                    )}
+
+                    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '4px' }}>
+                      {formatTime(item.created_at)}
                     </div>
                   </div>
                 ))
@@ -362,7 +425,7 @@ export default function Header({
           )}
         </div>
 
-        {/* 👤 زر البروفايل وقائمة الحساب */}
+        {/* 👤 زر البروفايل */}
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button
             onClick={() => {
