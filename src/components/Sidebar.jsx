@@ -6,51 +6,39 @@ import {
   FaSearch, FaTimes, FaChevronDown, FaChevronUp, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
-  FaCloud, FaSignOutAlt, FaBolt, FaCalendarAlt, FaClock, FaInfinity,
+  FaCloud, FaSignOutAlt, FaBolt, FaClock,
   FaHistory, FaBell, FaHome, FaTrophy, FaFolder
 } from "react-icons/fa";
 
-// 🌟 شعار عالمي وفائق الاحترافية لمنظومة الحلقة الذكية
+// 🌟 شعار المنظومة الاحترافي
 const SmartHalaqaProLogo = () => (
   <div style={{
-    width: '40px',
-    height: '40px',
-    borderRadius: '12px',
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
     background: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
     border: '1px solid rgba(45, 212, 191, 0.35)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-    boxShadow: '0 4px 16px -2px rgba(15, 118, 110, 0.4)',
+    boxShadow: '0 4px 12px rgba(15, 118, 110, 0.3)',
     flexShrink: 0
   }}>
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="goldGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#fef08a" />
           <stop offset="50%" stopColor="#f59e0b" />
           <stop offset="100%" stopColor="#b45309" />
         </linearGradient>
-
-        <linearGradient id="cyanGrad" x1="0" y1="0" x2="32" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#34d399" />
-        </linearGradient>
-
         <linearGradient id="emeraldGrad" x1="8" y1="12" x2="24" y2="24" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#10b981" />
           <stop offset="100%" stopColor="#047857" />
         </linearGradient>
       </defs>
-
-      <circle cx="16" cy="16" r="13" stroke="url(#cyanGrad)" strokeWidth="0.9" strokeDasharray="4 2.5" opacity="0.45" />
-      <circle cx="16" cy="16" r="11" stroke="url(#goldGrad)" strokeWidth="2" strokeLinecap="round" strokeDasharray="46 14" />
-      <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" 
-            fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" strokeLinejoin="round" />
-      <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" 
-            fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" strokeLinejoin="round" />
-      <line x1="16" y1="12" x2="16" y2="21.5" stroke="#fef08a" strokeWidth="1" strokeLinecap="round" />
+      <circle cx="16" cy="16" r="12" stroke="url(#goldGrad)" strokeWidth="1.8" strokeDasharray="40 12" />
+      <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
+      <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
     </svg>
   </div>
 );
@@ -120,31 +108,26 @@ export default function Sidebar({
     }
   ];
 
-  // 🔽 حالة الأكورديون (تحديد أي قسم مفتوح)
-  const [openSections, setOpenSections] = useState({});
+  // 🎯 الأكورديون الأحادي: يسمح بقسم واحد مفتوح فقط في نفس الوقت
+  const [openSectionId, setOpenSectionId] = useState(null);
 
-  // 🔄 تفعيل القسم الذي يحتوي التبويب النشط تلقائياً
+  // 🔄 فتح القسم المتعلق بالتبويب النشط تلقائياً
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items.some(item => item.id === activeTab));
     if (activeSection) {
-      setOpenSections(prev => ({ ...prev, [activeSection.id]: true }));
+      setOpenSectionId(activeSection.id);
     } else {
-      setOpenSections({ ops: true, academic: true });
+      setOpenSectionId('ops');
     }
   }, [activeTab]);
 
   const toggleSection = (sectionId) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
+    setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   };
 
   const currentLocale = isRtl ? 'ar' : 'en';
-  const gregorian = formatGregorianDate(new Date(), currentLocale);
   const hijri = formatHijriDate(new Date(), currentLocale);
 
-  // 🔄 جلب الأكاديميات
   const loadAcademies = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -208,35 +191,35 @@ export default function Sidebar({
       if (currentAcademy.is_active === false) {
         return {
           text: isRtl ? 'قيد التفعيل' : 'Pending',
-          style: { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
+          style: { background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
         };
       }
       if (effectiveDaysLeft === Infinity) {
         return {
           text: isRtl ? 'حساب دائم ∞' : 'Lifetime ∞',
-          style: { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)' }
+          style: { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.35)' }
         };
       }
       if (effectiveDaysLeft > 14) {
         return {
           text: isRtl ? 'اشتراك نشط' : 'Active Plan',
-          style: { background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
+          style: { background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
         };
       }
       if (effectiveDaysLeft > 0) {
         return {
           text: isRtl ? 'فترة تجريبية' : 'Free Trial',
-          style: { background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
+          style: { background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
         };
       }
       return {
         text: isRtl ? 'منتهي الصلاحية' : 'Expired',
-        style: { background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
+        style: { background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
       };
     }
     return {
       text: isRtl ? 'اشتراك نشط' : 'Active Plan',
-      style: { background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
+      style: { background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
     };
   };
 
@@ -264,7 +247,7 @@ export default function Sidebar({
     top: 0,
     bottom: 0,
     [isRtl ? 'right' : 'left']: 0,
-    width: '290px',
+    width: isMobile ? 'min(300px, 84vw)' : '280px',
     backgroundColor: '#0b1329',
     borderLeft: isRtl && !isMobile ? '1px solid #1e293b' : 'none',
     borderRight: !isRtl && !isMobile ? '1px solid #1e293b' : 'none',
@@ -274,8 +257,8 @@ export default function Sidebar({
     transform: isMobile && !sidebarOpen 
       ? (isRtl ? 'translateX(100%)' : 'translateX(-100%)') 
       : 'translateX(0)',
-    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: isMobile && sidebarOpen ? '0 0 30px rgba(0,0,0,0.8)' : 'none',
+    transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: isMobile && sidebarOpen ? '0 0 35px rgba(0,0,0,0.85)' : 'none',
     boxSizing: 'border-box',
     userSelect: 'none'
   };
@@ -288,32 +271,32 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(3px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
             zIndex: 999
           }}
         />
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        <div style={{ padding: '14px', flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '12px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 🌟 1️⃣ اللوجو (مضغوط وعصري) */}
+          {/* 🌟 1️⃣ اللوجو مع اسم المنظومة */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between', 
-            marginBottom: '12px', 
-            paddingBottom: '10px', 
+            marginBottom: '10px', 
+            paddingBottom: '8px', 
             borderBottom: '1px solid #1e293b' 
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <SmartHalaqaProLogo />
               <div>
-                <h2 style={{ margin: 0, fontSize: '0.98rem', fontWeight: '700', color: '#fff' }}>
+                <h2 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: '#fff', lineHeight: '1.2' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
-                <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: '500' }}>
+                <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: '500' }}>
                   {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
               </div>
@@ -322,23 +305,23 @@ export default function Sidebar({
             {isMobile && (
               <button 
                 onClick={() => setSidebarOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1rem', cursor: 'pointer', padding: '4px' }}
               >
                 <FaTimes />
               </button>
             )}
           </div>
 
-          {/* 🔴 2️⃣ الأكاديمية الحالية + زر الترقية المضغوط */}
-          <div style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '0.73rem', color: '#cbd5e1', fontWeight: '600' }}>
+          {/* 🔴 2️⃣ اختيار الأكاديمية مع شارة الحساب */}
+          <div style={{ marginBottom: '8px', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.7rem', color: '#cbd5e1', fontWeight: '600' }}>
                 {isRtl ? 'الأكاديمية' : 'Academy'}
               </span>
               <span style={{
-                padding: '2px 7px',
-                borderRadius: '5px',
-                fontSize: '0.65rem',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '0.62rem',
                 fontWeight: '700',
                 ...statusBadge.style
               }}>
@@ -346,102 +329,100 @@ export default function Sidebar({
               </span>
             </div>
 
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  background: '#131f37',
-                  border: '1px solid #1e293b',
-                  borderRadius: '7px',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  fontSize: '0.82rem',
-                  fontWeight: '600'
-                }}
-              >
-                <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {currentAcademyName}
-                </span>
-                <FaChevronDown style={{ fontSize: '0.7rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
-              </button>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              style={{
+                width: '100%',
+                padding: '7px 10px',
+                background: '#131f37',
+                border: '1px solid #1e293b',
+                borderRadius: '6px',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: '600'
+              }}
+            >
+              <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {currentAcademyName}
+              </span>
+              <FaChevronDown style={{ fontSize: '0.65rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+            </button>
 
-              {dropdownOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  marginTop: '4px',
-                  background: '#131f37',
-                  borderRadius: '8px',
-                  border: '1px solid #1e293b',
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-                  zIndex: 50,
-                  overflow: 'hidden'
-                }}>
-                  {academiesList.map(acc => (
-                    <button
-                      key={acc.id}
-                      onClick={() => {
-                        if (onSwitchAcademy) onSwitchAcademy(acc.id);
-                        setDropdownOpen(false);
-                      }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '9px 12px',
-                        border: 'none',
-                        background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                        color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem'
-                      }}
-                    >
-                      <span dir="auto">{acc.name}</span>
-                      <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* القائمة المنسدلة بظلال وحدود واضحة لحل مشكلة التداخل */}
+            {dropdownOpen && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '4px',
+                background: '#0f172a',
+                borderRadius: '7px',
+                border: '1px solid #334155',
+                boxShadow: '0 12px 28px rgba(0, 0, 0, 0.75)',
+                zIndex: 100,
+                overflow: 'hidden'
+              }}>
+                {academiesList.map(acc => (
+                  <button
+                    key={acc.id}
+                    onClick={() => {
+                      if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                      setDropdownOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      border: 'none',
+                      background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                      color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
+                      cursor: 'pointer',
+                      fontSize: '0.78rem'
+                    }}
+                  >
+                    <span dir="auto">{acc.name}</span>
+                    <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* 📅 3️⃣ الشريط الزمني المضغوط + زر الترقية السريع */}
+          {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة في شريط واحد) */}
           <div style={{
             background: '#131f37',
-            padding: '8px 10px',
-            borderRadius: '7px',
-            marginBottom: '10px',
+            padding: '6px 8px',
+            borderRadius: '6px',
+            marginBottom: '8px',
             border: '1px solid #1e293b',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#38bdf8' }}>
-              <FaClock style={{ fontSize: '0.75rem' }} />
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '01:50 AM'}</span>
-              <span style={{ color: '#64748b' }}>|</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', color: '#38bdf8' }}>
+              <FaClock style={{ fontSize: '0.7rem' }} />
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '10:00 AM'}</span>
+              <span style={{ color: '#475569' }}>|</span>
               <span style={{ color: '#cbd5e1' }}>{hijri}</span>
             </div>
 
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
-              title={isRtl ? 'ترقية الاشتراك' : 'Upgrade'}
               style={{
-                padding: '3px 8px',
+                padding: '3px 7px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#000',
                 border: 'none',
-                borderRadius: '5px',
+                borderRadius: '4px',
                 fontWeight: 'bold',
-                fontSize: '0.68rem',
+                fontSize: '0.65rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -456,15 +437,15 @@ export default function Sidebar({
           {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
             position: 'relative',
-            marginBottom: '12px',
+            marginBottom: '10px',
             background: '#131f37',
-            borderRadius: '7px',
+            borderRadius: '6px',
             border: '1px solid #1e293b',
             display: 'flex',
             alignItems: 'center',
             padding: '0 8px'
           }}>
-            <FaSearch style={{ color: '#64748b', fontSize: '0.75rem' }} />
+            <FaSearch style={{ color: '#64748b', fontSize: '0.7rem' }} />
             <input 
               type="text"
               placeholder={isRtl ? 'بحث سريع...' : 'Quick search...'}
@@ -472,24 +453,24 @@ export default function Sidebar({
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '6px 8px',
+                padding: '5px 6px',
                 background: 'transparent',
                 border: 'none',
                 outline: 'none',
                 color: '#fff',
-                fontSize: '0.78rem'
+                fontSize: '0.75rem'
               }}
             />
           </div>
 
-          {/* 📑 5️⃣ القوائم والتبويبات بنظام الأكورديون (Accordion) */}
+          {/* 📑 5️⃣ القوائم بنظام الأكورديون الأحادي (Single Accordion) */}
           <nav>
             {filteredMenuSections.length > 0 ? (
               filteredMenuSections.map((section) => {
-                const isExpanded = openSections[section.id] || searchQuery.trim().length > 0;
+                const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
 
                 return (
-                  <div key={section.id} style={{ marginBottom: '8px' }}>
+                  <div key={section.id} style={{ marginBottom: '6px' }}>
                     {/* رأس القسم القابل للطي */}
                     <button
                       onClick={() => toggleSection(section.id)}
@@ -499,27 +480,34 @@ export default function Sidebar({
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '6px 8px',
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        borderRadius: '6px',
+                        background: isExpanded ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '5px',
                         border: 'none',
-                        color: '#94a3b8',
+                        color: isExpanded ? '#38bdf8' : '#94a3b8',
                         fontSize: '0.72rem',
                         fontWeight: '700',
                         cursor: 'pointer',
-                        marginBottom: '4px'
+                        transition: '0.15s ease'
                       }}
                     >
                       <span>{section.title}</span>
                       {isExpanded ? (
-                        <FaChevronUp style={{ fontSize: '0.65rem' }} />
+                        <FaChevronUp style={{ fontSize: '0.6rem' }} />
                       ) : (
-                        <FaChevronDown style={{ fontSize: '0.65rem' }} />
+                        <FaChevronDown style={{ fontSize: '0.6rem' }} />
                       )}
                     </button>
 
                     {/* عناصر القسم */}
                     {isExpanded && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', paddingRight: isRtl ? '4px' : 0, paddingLeft: !isRtl ? '4px' : 0 }}>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px',
+                        marginTop: '3px',
+                        paddingRight: isRtl ? '6px' : 0,
+                        paddingLeft: !isRtl ? '6px' : 0
+                      }}>
                         {section.items.map((item) => {
                           const Icon = item.icon;
                           const isActive = activeTab === item.id;
@@ -534,20 +522,25 @@ export default function Sidebar({
                                 width: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '10px',
-                                padding: '8px 12px',
-                                borderRadius: '7px',
+                                gap: '8px',
+                                padding: '7px 10px',
+                                borderRadius: '5px',
                                 border: 'none',
-                                background: isActive ? '#f59e0b' : 'transparent',
-                                color: isActive ? '#000' : '#d1d5db',
-                                fontWeight: isActive ? 'bold' : 'normal',
+                                // تصميم الخيار النشط الحديث الأنيق (SaaS Style)
+                                background: isActive 
+                                  ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.08) 100%)' 
+                                  : 'transparent',
+                                borderRight: isActive && isRtl ? '3px solid #f59e0b' : 'none',
+                                borderLeft: isActive && !isRtl ? '3px solid #f59e0b' : 'none',
+                                color: isActive ? '#fbbf24' : '#cbd5e1',
+                                fontWeight: isActive ? '700' : 'normal',
                                 cursor: 'pointer',
                                 textAlign: isRtl ? 'right' : 'left',
                                 transition: 'all 0.15s ease'
                               }}
                             >
-                              <Icon style={{ fontSize: '0.9rem', color: isActive ? '#000' : '#9ca3af' }} />
-                              <span style={{ fontSize: '0.82rem' }}>{item.label}</span>
+                              <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} />
+                              <span style={{ fontSize: '0.78rem' }}>{item.label}</span>
                             </button>
                           );
                         })}
@@ -559,11 +552,11 @@ export default function Sidebar({
             ) : (
               <div style={{
                 textAlign: 'center',
-                padding: '16px 10px',
+                padding: '12px 8px',
                 color: '#64748b',
-                fontSize: '0.78rem',
+                fontSize: '0.75rem',
                 background: 'rgba(255,255,255,0.02)',
-                borderRadius: '6px',
+                borderRadius: '5px',
                 border: '1px solid #1e293b'
               }}>
                 {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
@@ -572,9 +565,9 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* 🔒 6️⃣ تسجيل الخروج */}
-        <div style={{ padding: '12px', borderTop: '1px solid #1e293b', background: '#090f20' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.72rem', color: '#94a3b8' }}>
+        {/* 🔒 6️⃣ إنهاء الجلسة وتأكيد الخروج */}
+        <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', background: '#080d1a' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px', fontSize: '0.68rem', color: '#64748b' }}>
             <FaCloud style={{ color: '#10b981' }} />
             <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
           </div>
@@ -587,13 +580,13 @@ export default function Sidebar({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              padding: '8px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
-              borderRadius: '7px',
+              padding: '7px',
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '6px',
               color: '#f87171',
               fontWeight: 'bold',
-              fontSize: '0.78rem',
+              fontSize: '0.75rem',
               cursor: 'pointer'
             }}
           >
