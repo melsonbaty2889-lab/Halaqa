@@ -22,7 +22,12 @@ export default function Header({
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // 🔔 إشعارات تفاعلية مع تحديد الوقت تلقائياً حسب اللغة
+  // 💰 إدارة حالة العملة محلياً لضمان التغيير الفوري والحفظ
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return localStorage.getItem('app_currency') || currentCurrency || 'USD';
+  });
+
+  // 🔔 إشعارات تفاعلية
   const [notifications, setNotifications] = useState([
     { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created', timeAr: 'منذ 10 دقائق', timeEn: '10m ago', read: false },
     { id: 2, titleAr: 'تم تسجيل طالب جديد بالنظام', titleEn: 'New Student Registered', timeAr: 'منذ ساعة', timeEn: '1h ago', read: false }
@@ -77,10 +82,11 @@ export default function Header({
     localStorage.setItem('i18nextLng', nextLng);
   };
 
-  // 💰 اختيار العملة وحفظها
+  // 💰 اختيار العملة وتحديثها فوراً
   const handleSelectCurrency = (code) => {
-    if (onCurrencyChange) onCurrencyChange(code);
+    setSelectedCurrency(code);
     localStorage.setItem('app_currency', code);
+    if (onCurrencyChange) onCurrencyChange(code);
     setShowCurrencyMenu(false);
   };
 
@@ -176,22 +182,22 @@ export default function Header({
             }}
           >
             <FaCoins style={{ fontSize: '0.75rem' }} />
-            <span>{currentCurrency}</span>
+            <span>{selectedCurrency}</span>
           </button>
 
           {showCurrencyMenu && (
             <div style={{
               position: 'absolute',
               top: '36px',
-              right: isRtl ? '0' : 'auto',
-              left: isRtl ? 'auto' : '0',
+              left: '0',
+              right: 'auto',
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
               padding: '6px 0',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              minWidth: '90px'
+              minWidth: '95px'
             }}>
               {currencies.map((curr) => (
                 <button
@@ -205,14 +211,14 @@ export default function Header({
                     justifyContent: 'space-between',
                     background: 'transparent',
                     border: 'none',
-                    color: currentCurrency === curr.code ? '#10b981' : '#cbd5e1',
+                    color: selectedCurrency === curr.code ? '#10b981' : '#cbd5e1',
                     fontSize: '0.72rem',
                     cursor: 'pointer',
-                    textAlign: isRtl ? 'right' : 'left'
+                    textAlign: 'left'
                   }}
                 >
                   <span>{curr.name}</span>
-                  {currentCurrency === curr.code && <FaCheck style={{ fontSize: '0.6rem' }} />}
+                  {selectedCurrency === curr.code && <FaCheck style={{ fontSize: '0.6rem' }} />}
                 </button>
               ))}
             </div>
@@ -278,15 +284,15 @@ export default function Header({
             <div style={{
               position: 'absolute',
               top: '36px',
-              right: isRtl ? '0' : 'auto',
-              left: isRtl ? 'auto' : '0',
+              left: '0',
+              right: 'auto',
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
               padding: '10px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              width: '220px',
+              width: '210px',
               color: '#cbd5e1',
               fontSize: '0.72rem',
               textAlign: isRtl ? 'right' : 'left'
@@ -365,15 +371,15 @@ export default function Header({
             <div style={{
               position: 'absolute',
               top: '36px',
-              right: isRtl ? '0' : 'auto',
-              left: isRtl ? 'auto' : '0',
+              left: '0',
+              right: 'auto',
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
               padding: '10px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              width: '160px',
+              width: '150px',
               color: '#cbd5e1',
               fontSize: '0.72rem',
               textAlign: isRtl ? 'right' : 'left'
