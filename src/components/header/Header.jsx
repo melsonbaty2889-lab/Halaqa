@@ -389,26 +389,33 @@ export default function Header({
                 </div>
               ) : (
                 notifications.map((item) => (
-                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
-                    <div style={{ 
-                      color: item.is_read ? '#94a3b8' : '#ffffff', 
-                      fontWeight: item.is_read ? 'normal' : '600', 
-                      lineHeight: '1.3' 
-                    }}>
-                      {item.title}
-                    </div>
+  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
+    <div 
+      dir="auto" 
+      style={{ 
+        color: item.is_read ? '#94a3b8' : '#ffffff', 
+        fontWeight: item.is_read ? 'normal' : '600', 
+        lineHeight: '1.3',
+        textAlign: 'start'
+      }}
+    >
+      {item.title}
+    </div>
 
-                    {item.message && (
-                      <div style={{ color: '#cbd5e1', fontSize: '0.7rem', marginTop: '3px' }}>
-                        {item.message}
-                      </div>
-                    )}
+    {item.message && (
+      <div 
+        dir="auto" 
+        style={{ color: '#cbd5e1', fontSize: '0.7rem', marginTop: '3px', textAlign: 'start' }}
+      >
+        {item.message}
+      </div>
+    )}
 
-                    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '4px' }}>
-                      {formatTime(item.created_at)}
-                    </div>
-                  </div>
-                ))
+    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '4px' }}>
+      {formatTime(item.created_at)}
+    </div>
+  </div>
+))
               )}
             </div>
           )}
