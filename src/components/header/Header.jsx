@@ -1,7 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaBars, FaBell, FaGlobe, FaUserCheck, FaCoins, FaCheck, FaCheckDouble, FaTrashAlt } from 'react-icons/fa';
+import { 
+  FaBars, 
+  FaBell, 
+  FaGlobe, 
+  FaUserCheck, 
+  FaCoins, 
+  FaCheck, 
+  FaCheckDouble, 
+  FaTrashAlt,
+  FaSignOutAlt
+} from 'react-icons/fa';
 
 import arTranslation from '../../locales/ar.json';
 import enTranslation from '../../locales/en.json';
@@ -15,21 +25,20 @@ export default function Header({
   onCurrencyChange
 }) {
   const { t, i18n } = useTranslation();
-  
   const currentLanguage = i18n.language || 'ar';
   
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // 💰 إدارة حالة العملة محلياً لضمان التغيير الفوري والحفظ
+  // 💰 إدارة حالة العملة
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return localStorage.getItem('app_currency') || currentCurrency || 'USD';
   });
 
   // 🔔 إشعارات تفاعلية
   const [notifications, setNotifications] = useState([
-    { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created', timeAr: 'منذ 10 دقائق', timeEn: '10m ago', read: false },
+    { id: 1, titleAr: 'تم إنشاء الحلقة بنجاح', titleEn: 'Halaqa Created Successfully', timeAr: 'منذ 10 دقائق', timeEn: '10m ago', read: false },
     { id: 2, titleAr: 'تم تسجيل طالب جديد بالنظام', titleEn: 'New Student Registered', timeAr: 'منذ ساعة', timeEn: '1h ago', read: false }
   ]);
 
@@ -82,7 +91,7 @@ export default function Header({
     localStorage.setItem('i18nextLng', nextLng);
   };
 
-  // 💰 اختيار العملة وتحديثها فوراً
+  // 💰 اختيار العملة
   const handleSelectCurrency = (code) => {
     setSelectedCurrency(code);
     localStorage.setItem('app_currency', code);
@@ -99,6 +108,11 @@ export default function Header({
   const clearAll = () => {
     setNotifications([]);
   };
+
+  // 🎯 تحديد موضع القوائم المنسدلة تلقائياً حسب لغة الصفحة (RTL / LTR)
+  const dropdownPositionStyle = isRtl
+    ? { left: 0, right: 'auto' }   // في العربية: تفتح القائمة جهة اليمين
+    : { right: 0, left: 'auto' };  // في الإنجليزية: تفتح القائمة جهة اليسار
 
   return (
     <header style={{
@@ -135,14 +149,14 @@ export default function Header({
             fontSize: '0.95rem',
             flexShrink: 0
           }}
-          title="القائمة"
+          title={isRtl ? "القائمة" : "Menu"}
         >
           <FaBars />
         </button>
 
         <h1 style={{
           margin: 0,
-          fontSize: '0.78rem',
+          fontSize: '0.8rem',
           fontWeight: '700',
           color: '#ffffff',
           display: '-webkit-box',
@@ -157,9 +171,9 @@ export default function Header({
       </div>
 
       {/* 2️⃣ أدوات التحكم (العملة، اللغة، الإشعارات، البروفايل) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
         
-        {/* زر العملة والقائمة */}
+        {/* 💰 زر العملة */}
         <div style={{ position: 'relative' }} ref={currencyRef}>
           <button
             onClick={() => {
@@ -170,13 +184,13 @@ export default function Header({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '3px',
-              padding: '5px 6px',
+              gap: '4px',
+              padding: '6px 8px',
               background: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '6px',
               color: '#fbbf24',
-              fontSize: '0.68rem',
+              fontSize: '0.72rem',
               fontWeight: '600',
               cursor: 'pointer'
             }}
@@ -188,16 +202,16 @@ export default function Header({
           {showCurrencyMenu && (
             <div style={{
               position: 'absolute',
-              top: '36px',
-              left: '0',
-              right: 'auto',
+              top: '40px',
+              ...dropdownPositionStyle,
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
               padding: '6px 0',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              minWidth: '95px'
+              minWidth: '100px',
+              maxWidth: 'calc(100vw - 24px)'
             }}>
               {currencies.map((curr) => (
                 <button
@@ -205,39 +219,39 @@ export default function Header({
                   onClick={() => handleSelectCurrency(curr.code)}
                   style={{
                     width: '100%',
-                    padding: '6px 10px',
+                    padding: '8px 12px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     background: 'transparent',
                     border: 'none',
                     color: selectedCurrency === curr.code ? '#10b981' : '#cbd5e1',
-                    fontSize: '0.72rem',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
-                    textAlign: 'left'
+                    textAlign: isRtl ? 'right' : 'left'
                   }}
                 >
                   <span>{curr.name}</span>
-                  {selectedCurrency === curr.code && <FaCheck style={{ fontSize: '0.6rem' }} />}
+                  {selectedCurrency === curr.code && <FaCheck style={{ fontSize: '0.65rem' }} />}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* زر تغيير اللغة */}
+        {/* 🌐 زر تغيير اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '3px',
-            padding: '5px 6px',
+            gap: '4px',
+            padding: '6px 8px',
             background: '#131f37',
             border: '1px solid #1e293b',
             borderRadius: '6px',
             color: '#cbd5e1',
-            fontSize: '0.68rem',
+            fontSize: '0.72rem',
             fontWeight: '600',
             cursor: 'pointer'
           }}
@@ -246,7 +260,7 @@ export default function Header({
           <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* زر الإشعارات */}
+        {/* 🔔 زر الإشعارات */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
@@ -258,7 +272,7 @@ export default function Header({
               background: '#131f37', 
               border: '1px solid #1e293b', 
               color: '#cbd5e1', 
-              padding: '6px 8px', 
+              padding: '7px 9px', 
               borderRadius: '6px', 
               cursor: 'pointer', 
               position: 'relative',
@@ -266,14 +280,14 @@ export default function Header({
               alignItems: 'center'
             }}
           >
-            <FaBell style={{ fontSize: '0.8rem', color: '#fbbf24' }} />
+            <FaBell style={{ fontSize: '0.85rem', color: '#fbbf24' }} />
             {unreadCount > 0 && (
               <span style={{ 
                 position: 'absolute', 
-                top: '3px', 
-                right: '3px', 
-                width: '6px', 
-                height: '6px', 
+                top: '4px', 
+                right: '4px', 
+                width: '7px', 
+                height: '7px', 
                 borderRadius: '50%', 
                 backgroundColor: '#10b981' 
               }}></span>
@@ -283,30 +297,45 @@ export default function Header({
           {showNotifMenu && (
             <div style={{
               position: 'absolute',
-              top: '36px',
-              left: '0',
-              right: 'auto',
+              top: '40px',
+              ...dropdownPositionStyle,
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
-              padding: '10px',
+              padding: '12px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              width: '210px',
+              width: '240px',
+              maxWidth: 'calc(100vw - 24px)',
               color: '#cbd5e1',
-              fontSize: '0.72rem',
+              fontSize: '0.75rem',
               textAlign: isRtl ? 'right' : 'left'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
+              <div style={{ 
+                display: 'flex', 
+                justify: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '10px', 
+                borderBottom: '1px solid #1e293b', 
+                paddingBottom: '6px' 
+              }}>
                 <span style={{ fontWeight: 'bold', color: '#fff' }}>
                   {currentLanguage === 'ar' ? 'التنبيهات' : 'Notifications'}
                 </span>
                 {notifications.length > 0 && (
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={markAllAsRead} title={currentLanguage === 'ar' ? 'تحديد الكل كمقروء' : 'Mark all read'} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.7rem' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={markAllAsRead} 
+                      title={currentLanguage === 'ar' ? 'تحديد الكل كمقروء' : 'Mark all read'} 
+                      style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
                       <FaCheckDouble />
                     </button>
-                    <button onClick={clearAll} title={currentLanguage === 'ar' ? 'مسح الكل' : 'Clear all'} style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', fontSize: '0.7rem' }}>
+                    <button 
+                      onClick={clearAll} 
+                      title={currentLanguage === 'ar' ? 'مسح الكل' : 'Clear all'} 
+                      style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
                       <FaTrashAlt />
                     </button>
                   </div>
@@ -314,16 +343,16 @@ export default function Header({
               </div>
 
               {notifications.length === 0 ? (
-                <div style={{ padding: '8px 0', color: '#94a3b8', textAlign: 'center' }}>
+                <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
                   {currentLanguage === 'ar' ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
                 </div>
               ) : (
                 notifications.map((item) => (
-                  <div key={item.id} style={{ padding: '6px 0', borderBottom: '1px solid #1e293b55' }}>
-                    <div style={{ color: item.read ? '#94a3b8' : '#fff', fontWeight: item.read ? 'normal' : 'bold' }}>
+                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
+                    <div style={{ color: item.read ? '#94a3b8' : '#fff', fontWeight: item.read ? 'normal' : '600', lineHeight: '1.3' }}>
                       {currentLanguage === 'ar' ? item.titleAr : item.titleEn}
                     </div>
-                    <div style={{ color: '#64748b', fontSize: '0.65rem', marginTop: '2px' }}>
+                    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '3px' }}>
                       {currentLanguage === 'ar' ? item.timeAr : item.timeEn}
                     </div>
                   </div>
@@ -333,7 +362,7 @@ export default function Header({
           )}
         </div>
 
-        {/* البروفايل */}
+        {/* 👤 زر البروفايل وقائمة الحساب */}
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button
             onClick={() => {
@@ -345,12 +374,12 @@ export default function Header({
               display: 'flex', 
               alignItems: 'center', 
               background: '#131f37', 
-              padding: '4px', 
+              padding: '5px', 
               borderRadius: '6px', 
               border: '1px solid #1e293b',
               cursor: 'pointer'
             }}
-            title="الملف الشخصي"
+            title={isRtl ? "الملف الشخصي" : "Profile"}
           >
             <div style={{ 
               width: '22px', 
@@ -361,7 +390,7 @@ export default function Header({
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              fontSize: '0.7rem'
+              fontSize: '0.75rem'
             }}>
               <FaUserCheck />
             </div>
@@ -370,40 +399,53 @@ export default function Header({
           {showProfileMenu && (
             <div style={{
               position: 'absolute',
-              top: '36px',
-              left: '0',
-              right: 'auto',
+              top: '40px',
+              ...dropdownPositionStyle,
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
               padding: '10px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              width: '150px',
+              width: '160px',
+              maxWidth: 'calc(100vw - 24px)',
               color: '#cbd5e1',
-              fontSize: '0.72rem',
+              fontSize: '0.75rem',
               textAlign: isRtl ? 'right' : 'left'
             }}>
-              <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '6px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
+              <div style={{ 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                marginBottom: '8px', 
+                borderBottom: '1px solid #1e293b', 
+                paddingBottom: '6px' 
+              }}>
                 {currentLanguage === 'ar' ? 'حساب المعلم' : 'Teacher Account'}
               </div>
+
               <button 
                 onClick={() => {
-                  alert(currentLanguage === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
+                  alert(currentLanguage === 'ar' ? 'تم تسجيل الخروج' : 'Logged out successfully');
                   setShowProfileMenu(false);
                 }}
                 style={{
                   width: '100%',
-                  padding: '5px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  padding: '7px 10px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
                   color: '#f43f5e',
-                  borderRadius: '4px',
+                  borderRadius: '6px',
                   cursor: 'pointer',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontSize: '0.72rem'
                 }}
               >
-                {currentLanguage === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+                <FaSignOutAlt />
+                <span>{currentLanguage === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
               </button>
             </div>
           )}
