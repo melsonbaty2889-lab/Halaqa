@@ -395,8 +395,7 @@ export default function Sidebar({
             )}
           </div>
 
-                    
-                                  {/* 📅 3️⃣ الوقت والتقويم والترقية (محاذاة وألوان متناسقة 100%) */}
+                    {/* 📅 3️⃣ الوقت والتقويم والترقية (ألوان موحدة ومظهر متناسق) */}
           <div style={{
             background: '#131f37',
             padding: '8px 10px',
@@ -408,7 +407,7 @@ export default function Sidebar({
             justifyContent: 'space-between',
             gap: '8px'
           }}>
-            {/* حاوي الأيقونة + السطرين (محاذاة مستقيمة تلقائياً) */}
+            {/* حاوي الأيقونة + السطرين محاذيان تلقائياً */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -416,10 +415,10 @@ export default function Sidebar({
               minWidth: 0,
               flex: 1
             }}>
-              {/* أيقونة الساعة محاذية للسطرين معاً */}
+              {/* أيقونة الساعة */}
               <FaClock style={{ fontSize: '0.85rem', color: '#38bdf8', flexShrink: 0 }} />
 
-              {/* مجموعة النصوص تحت بعضها بنفس المحاذاة */}
+              {/* مجموعة النصوص بمحاذاة واحدة ولون تواريخ موحد */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
                 {/* السطر الأول: الوقت + التاريخ الميلادي */}
                 <div style={{
@@ -433,16 +432,18 @@ export default function Sidebar({
                   <span style={{ color: '#ffffff', fontFamily: 'monospace' }}>
                     {academyTime || '12:04 PM'}
                   </span>
-                  <span style={{ color: '#334155' }}>•</span>
+                  <span style={{ color: '#475569' }}>•</span>
+                  
+                  {/* التاريخ الميلادي (لون موحد) */}
                   <span style={{ color: '#38bdf8' }}>
                     {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
 
-                {/* السطر الثاني: التاريخ الهجري (محاذٍ تماماً للسطر الأول) */}
+                {/* السطر الثاني: التاريخ الهجري (نفس لون التاريخ الميلادي) */}
                 <div style={{
-                  fontSize: '0.63rem',
-                  color: '#cbd5e1',
+                  fontSize: '0.65rem',
+                  color: '#38bdf8',
                   fontWeight: '500',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -476,6 +477,7 @@ export default function Sidebar({
               <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
             </button>
           </div>
+          
                     {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
             position: 'relative',
