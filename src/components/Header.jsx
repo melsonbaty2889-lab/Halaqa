@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaBars, FaMoneyBillWave, FaWhatsapp, FaGlobe } from "react-icons/fa";
+import { FaBars, FaMoneyBillWave, FaWhatsapp, FaGlobe, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function Header({ 
   sidebarOpen, 
@@ -13,72 +13,186 @@ export default function Header({
   activeTab
 }) {
 
+  // 🎯 قاموس شامل لجميع عناوين التبويبات المطابقة للـ Sidebar
   const menuTitles = {
-    dashboard: { en: 'Dashboard', ar: 'لوحة التحكم' },
-    students: { en: 'Faculty & Students', ar: 'الهيئة التعليمية والطلاب' },
-    attendance: { en: 'Recitation & Attendance', ar: 'الحلقات والتسميع' },
-    exams: { en: 'Assessments & Certificates', ar: 'التقييمات والشهادات' },
-    reports: { en: 'Performance Insights', ar: 'تقارير الأداء والمشاركة' },
-    payments: { en: 'Tuition & Billing', ar: 'الرسوم والفوترة' },
-    settings: { en: 'System Configuration', ar: 'إعدادات النظام' }
+    // 1️⃣ مركز القيادة والعمليات
+    dashboard: { en: 'Dashboard & Performance', ar: 'لوحة التحكم والأداء' },
+    'realtime-audit': { en: 'Realtime Audit Trail', ar: 'السجل الحي للأنشطة' },
+    'omnichannel-hub': { en: 'Omnichannel Hub', ar: 'مركز التنبيهات الموحد' },
+    reports: { en: 'Reports & Analytics', ar: 'التقارير والتحليلات' },
+
+    // 2️⃣ الشؤون القرآنية والأكاديمية
+    students: { en: 'Learner Directory', ar: 'إدارة الدارسين' },
+    teachers: { en: 'Faculty & Reciters', ar: 'الكادر والمقرئين' },
+    halaqas: { en: 'Halaqas & Sanad', ar: 'المقارئ والحلقات' },
+    attendance: { en: 'Daily Recitation', ar: 'التسميع والتحضير اليومي' },
+    exams: { en: 'Exams & Diplomas', ar: 'الاختبارات والتقييم' },
+
+    // 3️⃣ تفاعل الدارسين والأسر
+    'guardian-portal': { en: 'Guardian Portal', ar: 'شبكة أسر الدارسين' },
+    'gamification-streaks': { en: 'Gamification & Streaks', ar: 'الإنجاز والحوافز' },
+
+    // 4️⃣ الحوكمة والمالية
+    payments: { en: 'Billing & Payments', ar: 'الاشتراكات والتحصيل' },
+    'asset-management': { en: 'Asset Management', ar: 'المستندات والأصول' },
+    referrals: { en: 'Affiliate & Rewards', ar: 'برنامج الإحالة والأرباح' },
+    settings: { en: 'Platform Governance', ar: 'إعدادات المنظومة' }
   };
 
   const currentTitle = menuTitles[activeTab] || { en: 'Management Portal', ar: 'بوابة الإدارة' };
 
   return (
     <header 
-      className="h-[65px] sticky top-0 z-[999] w-full border-b border-white/5 backdrop-blur-md bg-[var(--surface)] px-4 md:px-6 flex items-center justify-between transition-all duration-300"
-      style={{ direction: isRtl ? 'rtl' : 'ltr' }}
+      style={{
+        height: '62px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 99,
+        width: '100%',
+        backgroundColor: 'rgba(11, 19, 41, 0.85)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #1e293b',
+        padding: isMobile ? '0 12px' : '0 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        direction: isRtl ? 'rtl' : 'ltr',
+        boxSizing: 'border-box',
+        transition: 'all 0.2s ease'
+      }}
     >
       
-      {/* 📑 القسم الأول: المسار الذكي والعناوين (يأتي أولاً دائماً لضمان القيادية البصرية) */}
-      <div className="flex items-center gap-3 min-w-0">
+      {/* 📑 القسم الأول: المسار الذكي وعنوان الصفحة */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        
+        {/* زر فتح القائمة الجانبية (للموبايل فقط) */}
         {isMobile && (
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)} 
-            className="bg-white/5 hover:bg-white/10 active:scale-90 text-[var(--gold)] border-none w-9 h-9 rounded-xl cursor-pointer flex items-center justify-center transition-all flex-shrink-0"
+            style={{
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.25)',
+              color: '#f59e0b',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'all 0.15s ease'
+            }}
             aria-label="Toggle Sidebar Menu"
           >
-            <FaBars size={15} />
+            <FaBars style={{ fontSize: '0.9rem' }} />
           </button>
         )}
 
-        <div className="text-xs md:text-sm font-medium tracking-wide min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-          <span className="text-slate-400 hidden md:inline">
-            {isRtl ? 'الأكاديمية الرقمية' : 'Digital Academy'}
+        {/* المسار الفرعي (Breadcrumb) */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '6px', 
+          fontSize: '0.8rem', 
+          fontWeight: '500', 
+          minWidth: 0, 
+          overflow: 'hidden' 
+        }}>
+          <span style={{ color: '#64748b', display: isMobile ? 'none' : 'inline', whitespace: 'nowrap' }}>
+            {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
           </span> 
-          <span className="mx-2 text-slate-600 hidden md:inline">/</span>
-          <span className="text-white font-bold bg-white/[0.02] md:bg-transparent px-2.5 py-1 md:p-0 rounded-lg border border-white/5 md:border-none">
+          
+          <span style={{ color: '#334155', display: isMobile ? 'none' : 'inline' }}>
+            {isRtl ? <FaChevronLeft style={{ fontSize: '0.65rem' }} /> : <FaChevronRight style={{ fontSize: '0.65rem' }} />}
+          </span>
+
+          <span style={{ 
+            color: '#f8fafc', 
+            fontWeight: '700', 
+            background: 'rgba(255, 255, 255, 0.04)', 
+            padding: '4px 10px', 
+            borderRadius: '6px', 
+            border: '1px solid #1e293b',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: isMobile ? '0.78rem' : '0.82rem'
+          }}>
             {isRtl ? currentTitle.ar : currentTitle.en}
           </span>
         </div>
       </div>
 
-      {/* 🌐 القسم الثاني: أدوات التحكم والبادجات (تتمحور تلقائياً في الطرف المقابل للغة) */}
-      <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+      {/* 🌐 القسم الثاني: أدوات التحكم والبادجات */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px', flexShrink: 0 }}>
         
-        {/* زر تبديل اللغة */}
+        {/* 1️⃣ زر تبديل اللغة */}
         <button 
           onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')} 
-          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 active:scale-95 text-white border-none h-8 px-2.5 md:px-3 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap select-none"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: '#131f37',
+            border: '1px solid #1e293b',
+            color: '#e2e8f0',
+            height: '32px',
+            padding: isMobile ? '0 8px' : '0 12px',
+            borderRadius: '6px',
+            fontSize: '0.72rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            whiteSpace: 'nowrap',
+            userSelect: 'none'
+          }}
         >
-          <FaGlobe className="text-blue-400 text-xs md:text-sm" />
-          <span className="hidden sm:inline">{isRtl ? 'English' : 'العربية'}</span>
+          <FaGlobe style={{ color: '#38bdf8', fontSize: '0.8rem' }} />
+          <span style={{ display: isMobile ? 'none' : 'inline' }}>{isRtl ? 'English' : 'العربية'}</span>
         </button>
 
-        {/* بادج الواتساب الدولي */}
-        <div className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 h-8 px-2 md:px-2.5 rounded-xl text-xs font-semibold border border-blue-500/15">
-          <FaWhatsapp size={14} className="text-emerald-400" />
-          <span className="hidden sm:inline" style={{ direction: 'ltr' }}>+{countryCode}</span>
-        </div>
+        {/* 2️⃣ بادج الواتساب الدولي */}
+        {countryCode && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            background: 'rgba(16, 185, 129, 0.08)',
+            color: '#34d399',
+            height: '32px',
+            padding: '0 8px',
+            borderRadius: '6px',
+            fontSize: '0.72rem',
+            fontWeight: '600',
+            border: '1px solid rgba(16, 185, 129, 0.2)'
+          }}>
+            <FaWhatsapp style={{ color: '#10b981', fontSize: '0.85rem' }} />
+            <span style={{ direction: 'ltr', fontSize: '0.7rem' }}>+{countryCode}</span>
+          </div>
+        )}
 
-        {/* بادج العملة النشطة */}
-        <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 h-8 px-2 md:px-2.5 rounded-xl text-xs font-bold border border-emerald-500/15 select-none">
-          <FaMoneyBillWave size={13} className="opacity-80" />
-          <span className="tracking-wide">
+        {/* 3️⃣ بادج العملة النشطة */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px',
+          background: 'rgba(56, 189, 248, 0.08)',
+          color: '#38bdf8',
+          height: '32px',
+          padding: '0 9px',
+          borderRadius: '6px',
+          fontSize: '0.72rem',
+          fontWeight: '700',
+          border: '1px solid rgba(56, 189, 248, 0.2)',
+          userSelect: 'none'
+        }}>
+          <FaMoneyBillWave style={{ fontSize: '0.78rem', opacity: 0.9 }} />
+          <span>
             {currency === 'EGP' ? (isRtl ? 'ج.م' : 'EGP') : currency}
           </span>
         </div>
+
       </div>
 
     </header>
