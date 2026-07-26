@@ -7,7 +7,7 @@ export default function Header() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
 
-  // خريطة الربط بين المسار ومفتاح الترجمات
+  // خريطة الربط بين مسار الصفحة ومفتاح الترجمة لإظهار العنوان ديناميكياً
   const pathToTranslationKey = {
     '/dashboard': 'nav.dashboard',
     '/realtime-audit': 'nav.realtime-audit',
@@ -27,11 +27,11 @@ export default function Header() {
     '/profile': 'nav.profile',
   };
 
-  // إيجاد المفتاح المترجم مع احتياطي افتراضي
+  // تحديد عنوان الصفحة الحالية
   const currentKey = pathToTranslationKey[location.pathname] || 'nav.dashboard';
   const pageTitle = t(currentKey);
 
-  // دالة التبديل بين اللغات
+  // دالة تبديل اللغة
   const toggleLanguage = () => {
     const nextLng = i18n.language === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
@@ -39,16 +39,16 @@ export default function Header() {
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-      {/* 1. Page Title */}
+      {/* 1. عنوان الصفحة الديناميكي */}
       <div className="flex items-center gap-4">
         <h2 className="text-xl font-bold text-slate-800">
           {pageTitle}
         </h2>
       </div>
 
-      {/* 2. Controls & Actions */}
+      {/* 2. أدوات الهيدر والإجراءات */}
       <div className="flex items-center gap-3">
-        {/* Search Bar - استخدام الخصائص المنطقية للاتجاهات تلقائياً */}
+        {/* شريط البحث (يستخدم خصائص الاتجاه المنطقية start/ps) */}
         <div className="relative hidden md:block w-64">
           <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
           <input
@@ -58,7 +58,7 @@ export default function Header() {
           />
         </div>
 
-        {/* Language Switcher */}
+        {/* زر تبديل اللغة */}
         <button
           onClick={toggleLanguage}
           className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
@@ -68,7 +68,7 @@ export default function Header() {
           <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
         </button>
 
-        {/* Notifications */}
+        {/* التنبيهات */}
         <button
           className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
           title={t('notifications.title')}
@@ -79,7 +79,7 @@ export default function Header() {
 
         <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
-        {/* User Profile */}
+        {/* ملف المستخدم */}
         <div className="flex items-center gap-2.5 cursor-pointer p-1 rounded-lg hover:bg-slate-50 transition-colors">
           <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
             <User className="w-4 h-4" />
