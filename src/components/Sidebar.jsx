@@ -396,60 +396,73 @@ export default function Sidebar({
           </div>
 
           {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة في شريط واحد) */}
-                    {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة في شريط واحد) */}
+                    {/* 📅 3️⃣ الوقت والتقويم والترقية (مضغوطة بدقة للشاشات الصغيرة) */}
           <div style={{
             background: '#131f37',
-            padding: '6px 8px',
+            padding: '5px 7px',
             borderRadius: '6px',
             marginBottom: '8px',
             border: '1px solid #1e293b',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            gap: '4px'
           }}>
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: '4px', 
-              fontSize: '0.68rem', 
+              gap: '3px', 
+              fontSize: '0.63rem', 
               color: '#38bdf8',
               whiteSpace: 'nowrap',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              flex: 1,
+              minWidth: 0
             }}>
-              <FaClock style={{ fontSize: '0.7rem', flexShrink: 0 }} />
+              <FaClock style={{ fontSize: '0.65rem', flexShrink: 0 }} />
               
               {/* الوقت */}
-              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{academyTime || '10:00 AM'}</span>
-              <span style={{ color: '#475569' }}>|</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace', flexShrink: 0 }}>
+                {academyTime || '10:00 AM'}
+              </span>
+              <span style={{ color: '#475569', flexShrink: 0 }}>|</span>
               
-              {/* التاريخ الميلادي (يولَّد تلقائياً وبأمان حسب اللغة) */}
-              <span style={{ color: '#e2e8f0' }}>
+              {/* التاريخ الميلادي */}
+              <span style={{ color: '#e2e8f0', flexShrink: 0 }}>
                 {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short' })}
               </span>
-              <span style={{ color: '#475569' }}>•</span>
+              <span style={{ color: '#475569', flexShrink: 0 }}>•</span>
               
               {/* التاريخ الهجري */}
-              <span style={{ color: '#cbd5e1' }}>{hijri}</span>
+              <span style={{ 
+                color: '#cbd5e1', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {hijri}
+              </span>
             </div>
 
+            {/* زر الترقية مضغوط الحجم */}
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
               style={{
-                padding: '3px 7px',
+                padding: '3px 6px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#000',
                 border: 'none',
                 borderRadius: '4px',
                 fontWeight: 'bold',
-                fontSize: '0.65rem',
+                fontSize: '0.62rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '2px',
                 flexShrink: 0
               }}
             >
-              <FaBolt />
+              <FaBolt style={{ fontSize: '0.6rem' }} />
               <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
             </button>
           </div>
