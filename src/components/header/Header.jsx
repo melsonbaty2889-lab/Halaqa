@@ -462,49 +462,32 @@ export default function Header({
               backgroundColor: '#131f37',
               border: '1px solid #1e293b',
               borderRadius: '8px',
-              padding: '10px',
+              padding: '12px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
-              width: '160px',
+              width: '170px',
               maxWidth: 'calc(100vw - 24px)',
               color: '#cbd5e1',
               fontSize: '0.75rem',
               textAlign: isRtl ? 'right' : 'left'
             }}>
-              <div style={{ 
-                fontWeight: 'bold', 
-                color: '#fff', 
-                marginBottom: '8px', 
-                borderBottom: '1px solid #1e293b', 
-                paddingBottom: '6px' 
-              }}>
-                {currentLanguage === 'ar' ? 'حساب المعلم' : 'Teacher Account'}
+              {/* المسمى الصحيح للمستخدم */}
+              <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '0.82rem' }}>
+                {currentLanguage === 'ar' ? 'صاحب الأكاديمية' : 'Academy Owner'}
               </div>
 
-              <button 
-                onClick={() => {
-                  alert(currentLanguage === 'ar' ? 'تم تسجيل الخروج' : 'Logged out successfully');
-                  setShowProfileMenu(false);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '7px 10px',
-                  background: 'rgba(239, 68, 68, 0.12)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#f43f5e',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  fontSize: '0.72rem'
-                }}
-              >
-                <FaSignOutAlt />
-                <span>{currentLanguage === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
-              </button>
+              {/* مؤشر حالة الجلسة */}
+              <div style={{ 
+                color: '#10b981', 
+                fontSize: '0.68rem', 
+                marginTop: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                <span>{currentLanguage === 'ar' ? 'الجلسة نشطة' : 'Active Session'}</span>
+              </div>
             </div>
           )}
         </div>
@@ -512,4 +495,4 @@ export default function Header({
       </div>
     </header>
   );
-        }
+}
