@@ -434,7 +434,7 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* 🔍 4️⃣ شريط البحث */}
+                    {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
             position: 'relative',
             marginBottom: '10px',
@@ -464,7 +464,12 @@ export default function Sidebar({
           </div>
 
           {/* 📑 5️⃣ القوائم بنظام الأكورديون الأحادي (Single Accordion) */}
-          <nav>
+          <nav style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            flex: 1
+          }}>
             {filteredMenuSections.length > 0 ? (
               filteredMenuSections.map((section) => {
                 const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
