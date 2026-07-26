@@ -8,6 +8,7 @@ export default function Header({
   isRtl,
   isMobile,
   toggleSidebar,
+  activeTab, // 👈 تم إضافة activeTab للـ props لعرض اسم الصفحة ديناميكياً
   setActiveTab,
   i18n,
   currency,
@@ -15,10 +16,10 @@ export default function Header({
   userData
 }) {
   return (
-    <header className="sticky top-0 z-30 bg-[#0b1329]/80 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3 flex items-center justify-between transition-all">
+    <header className="sticky top-0 z-30 bg-[#0b1329]/80 backdrop-blur-md border-b border-slate-800 px-3 sm:px-4 lg:px-8 py-3 flex items-center justify-between transition-all">
       
-      {/* القسم الأيمن: زر القائمة الجانبية (للصوّر والجوال) + العنوان أو شعار المصغّر */}
-      <div className="flex items-center gap-3">
+      {/* القسم الرئيسي: زر القائمة الجانبية + اسم الصفحة الحالية فقط */}
+      <div className="flex items-center gap-2.5 shrink-0">
         {isMobile && (
           <button
             onClick={toggleSidebar}
@@ -28,18 +29,17 @@ export default function Header({
             <FaBars className="text-lg" />
           </button>
         )}
-        <div className="flex flex-col">
-          <h1 className="text-sm lg:text-base font-bold text-slate-100">
-            {isRtl ? 'منصة إدارة الحلقات' : 'Halaqa Management'}
+
+        {/* 🟢 التعديل الرئيسي: تبسيط العنوان وتوجيهه لنوع الصفحة لتقليل التزاحم */}
+        <div className="flex flex-col justify-center">
+          <h1 className="text-xs sm:text-sm lg:text-base font-bold text-slate-100 truncate max-w-[110px] sm:max-w-none">
+            {isRtl ? 'لوحة التحكم' : 'Dashboard'}
           </h1>
-          <span className="text-[10px] text-slate-400">
-            {isRtl ? 'لوحة التحكم الرئيسية' : 'Dashboard Overview'}
-          </span>
         </div>
       </div>
 
-      {/* القسم الأيسر: أدوات الهيدر (اللغة، العملة، التنبيهات، وحساب المستخدم) */}
-      <div className="flex items-center gap-2 lg:gap-3">
+      {/* القسم الفرعي: أدوات الهيدر (العملة، اللغة، التنبيهات، والبروفايل) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
         
         {/* محول العملات */}
         <CurrencySelector 
@@ -62,12 +62,12 @@ export default function Header({
           setActiveTab={setActiveTab} 
         />
 
-        <div className="h-5 w-[1px] bg-slate-800 mx-0.5"></div>
+        <div className="h-5 w-[1px] bg-slate-800 mx-0.5 hidden sm:block"></div>
 
-        {/* بروفایل المستخدم المختصر */}
+        {/* بروفايل المستخدم المختصر */}
         <div 
           onClick={() => setActiveTab && setActiveTab('profile')}
-          className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800/50 rounded-lg transition-colors"
+          className="flex items-center gap-2 cursor-pointer p-1 sm:p-1.5 hover:bg-slate-800/50 rounded-lg transition-colors"
         >
           {userData?.avatar ? (
             <img 
@@ -76,7 +76,7 @@ export default function Header({
               className="w-7 h-7 rounded-full object-cover border border-slate-700" 
             />
           ) : (
-            <FaUserCircle className="text-2xl text-slate-400" />
+            <FaUserCircle className="text-xl sm:text-2xl text-slate-400" />
           )}
           <div className="hidden md:flex flex-col text-left">
             <span className="text-xs font-semibold text-slate-200">
@@ -88,4 +88,4 @@ export default function Header({
       </div>
     </header>
   );
-        }
+}
