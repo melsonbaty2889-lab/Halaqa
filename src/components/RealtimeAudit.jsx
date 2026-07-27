@@ -19,6 +19,15 @@ export default function RealtimeAudit({ session, userRole }) {
   const isArabic = !i18n.language || i18n.language.startsWith('ar');
   const isRtl = i18n.dir() === 'rtl' || isArabic;
 
+  // 🏷️ أسماء الجداول مترجمة للغتين
+  const tableLabels = {
+    attendance: isArabic ? 'الحضور والتسميع' : 'Attendance',
+    payments: isArabic ? 'الاشتراكات والمالية' : 'Payments',
+    halaqas: isArabic ? 'الحلقات والمقارئ' : 'Halaqas',
+    students: isArabic ? 'شؤون الطلاب' : 'Students',
+    daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
+  };
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState('all');
@@ -78,9 +87,10 @@ export default function RealtimeAudit({ session, userRole }) {
     }
   };
 
-  // تصفية السجلات للبحث
+  // تصفية السجلات للبحث (يشمل البحث بالاسم البرمجي أو المترجم)
   const filteredLogs = logs.filter((log) => {
-    const text = `${log.table_name || ''} ${log.operation || ''} ${log.changed_by || ''}`.toLowerCase();
+    const tableLabel = tableLabels[log.table_name] || log.table_name || '';
+    const text = `${log.table_name || ''} ${tableLabel} ${log.operation || ''} ${log.changed_by || ''}`.toLowerCase();
     return text.includes(searchQuery.toLowerCase());
   });
 
@@ -120,17 +130,15 @@ export default function RealtimeAudit({ session, userRole }) {
           />
         </div>
 
-        {/* فلترة حسب الجدول */}
+        {/* فلترة حسب الجدول بالأسماء المترجمة */}
         <select
           value={selectedTable}
           onChange={(e) => setSelectedTable(e.target.value)}
           style={{ background: '#1E293B', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '12px', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}>
           <option value="all">{isArabic ? 'جميع الجداول' : 'All Tables'}</option>
-          <option value="attendance">attendance</option>
-          <option value="payments">payments</option>
-          <option value="halaqas">halaqas</option>
-          <option value="students">students</option>
-          <option value="daily_progress">daily_progress</option>
+          {Object.entries(tableLabels).map(([key, label]) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
         </select>
       </div>
 
@@ -164,8 +172,8 @@ export default function RealtimeAudit({ session, userRole }) {
                   <div>
                     <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.85rem', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>{badge.label}</span>
-                      <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px', color: '#38BDF8', fontFamily: 'monospace' }}>
-                        {log.table_name}
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px', color: '#38BDF8' }}>
+                        {tableLabels[log.table_name] || log.table_name}
                       </span>
                     </div>
                     
@@ -194,4 +202,4 @@ export default function RealtimeAudit({ session, userRole }) {
 
     </div>
   );
-}
+                     }
