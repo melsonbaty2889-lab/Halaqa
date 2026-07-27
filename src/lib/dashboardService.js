@@ -1,13 +1,14 @@
 /**
- * هذا الملف يحتوي على وظائف جلب البيانات (Services)
- * لضمان نظافة كود الواجهة (UI)
+ * Src/lib/dashboardService.js
+ * خدمات جلب البيانات للوحة التحكم مع معالجة دقيقة لتوقيت القاهرة
  */
 
 export async function getDashboardStats(supabase, profile) {
   try {
-    const today = new Date().toISOString().split('T')[0]; // جلب تاريخ اليوم الحالي بدقة
+    // 1️⃣ جلب تاريخ اليوم الفعلي بتوقيت القاهرة بصيغة YYYY-MM-DD
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Africa/Cairo' });
 
-    // 1. صلاحية 'super_admin'
+    // 🔴 صلاحية 'super_admin'
     if (profile?.role === 'super_admin') {
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
@@ -29,7 +30,7 @@ export async function getDashboardStats(supabase, profile) {
       };
     } 
     
-    // 2. صلاحية مدير أكاديمية أو معلم (بيانات الأكاديمية الحية)
+    // 🟢 صلاحية مدير أكاديمية أو معلم
     else if (profile?.academy_id) {
       const academyId = profile.academy_id;
 
@@ -44,7 +45,7 @@ export async function getDashboardStats(supabase, profile) {
       // ب) حساب نسبة الحضور اليومي الإجمالية لطلاب هذه الأكاديمية
       const { data: attendanceData, error: attError } = await supabase
         .from('attendance')
-        .select('status')
+        .select('status, halaqa_id')
         .eq('academy_id', academyId)
         .eq('date', today);
 
@@ -56,7 +57,7 @@ export async function getDashboardStats(supabase, profile) {
 
       // ج) حساب إجمالي الصفحات المسمّعة اليوم
       const { data: quranData, error: quranError } = await supabase
-        .from('daily_progress') // تعديل اسم الجدول ليتطابق مع الـ Schema المرفقة بالصورة daily_progress
+        .from('daily_progress')
         .select('pages_count')
         .eq('academy_id', academyId)
         .eq('date', today);
@@ -65,12 +66,12 @@ export async function getDashboardStats(supabase, profile) {
 
       // د) رصد الاشتراكات المتأخرة
       const { count: overdueCount } = await supabase
-        .from('payments') // الاعتماد على جدول المدفوعات من صورتك لرصد الحالات المعلقة
+        .from('payments')
         .select('*', { count: 'exact', head: true })
         .eq('academy_id', academyId)
         .eq('status', 'overdue');
 
-      // هـ) ⚡ جلب حلقات اليوم النشطة الحقيقية مع بيانات المعلم المرتبط بها
+      // هـ) جلب حلقات اليوم النشطة الحقيقية
       const { data: halaqasData, error: halaqasError } = await supabase
         .from('halaqas')
         .select(`
@@ -88,13 +89,16 @@ export async function getDashboardStats(supabase, profile) {
       let activeHalaqasData = [];
 
       if (!halaqasError && halaqasData) {
-        // جلب الوقت الحالي الفوري متوافقاً مع توقيت القاهرة المعتمد بالمنظومة لمنع فارق التوقيت العالمي
+        // 2️⃣ جلب الوقت الحالي بتوقيت القاهرة مع إجبار الخانات المزدوجة (مثال: "09:05:00")
         const currentCairoTime = new Date().toLocaleTimeString('en-US', { 
           timeZone: 'Africa/Cairo', 
-          hour12: false 
-        }); // مخرجات بصيغة: "14:30:00"
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
 
-        // دالة مساعدة مطورة لتحويل صيغة الوقت من السيرفر (16:00:00) إلى واجهة العرض (04:00 م)
+        // دالة تحويل صيغة الوقت لعرَضها بالواجهة (16:00:00 -> 04:00 م)
         const formatTimeDisplay = (timeStr) => {
           if (!timeStr) return { ar: '', en: '' };
           const [hourStr, minuteStr] = timeStr.split(':');
@@ -110,7 +114,7 @@ export async function getDashboardStats(supabase, profile) {
         };
 
         activeHalaqasData = halaqasData.map(halaqa => {
-          // 1. حساب الحالة اللحظية للحلقة تلقائياً بناءً على ساعة السيرفر الحالية
+          // حساب حالة الحلقة المباشرة
           let status = 'upcoming';
           if (currentCairoTime >= halaqa.start_time && currentCairoTime <= halaqa.end_time) {
             status = 'live';
@@ -121,7 +125,7 @@ export async function getDashboardStats(supabase, profile) {
           const startFormatted = formatTimeDisplay(halaqa.start_time);
           const endFormatted = formatTimeDisplay(halaqa.end_time);
 
-          // 2. حساب نسبة الحضور الحقيقية المخصصة لهذه الحلقة تحديداً اليوم
+          // حساب نسبة الحضور المخصصة لهذه الحلقة
           const halaqaAttendance = attendanceData?.filter(a => a.halaqa_id === halaqa.id) || [];
           let attendance_rate = null;
           if (halaqaAttendance.length > 0) {
@@ -144,12 +148,12 @@ export async function getDashboardStats(supabase, profile) {
       }
 
       return { 
-        studentsCount, 
+        studentsCount: studentsCount || 0, 
         academiesCount: null,
         attendanceRate,
         totalPagesMuted: `${totalPages} صفحة`,
         overdueCount: overdueCount || 0,
-        activeHalaqasData // إرسال مصفوفة الحلقات الحية للـ UI
+        activeHalaqasData
       }; 
     }
 
