@@ -72,7 +72,7 @@ export default function Sidebar({
       title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       items: [
         { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
-        { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
+        { id: 'audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
         { id: 'omnichannel-hub', label: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: FaBell },
         { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
@@ -395,7 +395,7 @@ export default function Sidebar({
             )}
           </div>
 
-                              {/* 📅 3️⃣ الوقت والتقويم والترقية (توزيع متوازن: الوقت - التواريخ الرأسية - الترقية) */}
+          {/* 📅 3️⃣ الوقت والتقويم والترقية */}
           <div style={{
             background: '#131f37',
             padding: '7px 10px',
@@ -478,7 +478,7 @@ export default function Sidebar({
             </button>
           </div>
           
-                    {/* 🔍 4️⃣ شريط البحث */}
+          {/* 🔍 4️⃣ شريط البحث */}
           <div style={{
             position: 'relative',
             marginBottom: '10px',
@@ -575,7 +575,6 @@ export default function Sidebar({
                                 padding: '7px 10px',
                                 borderRadius: '5px',
                                 border: 'none',
-                                // تصميم الخيار النشط الحديث الأنيق (SaaS Style)
                                 background: isActive 
                                   ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.08) 100%)' 
                                   : 'transparent',
