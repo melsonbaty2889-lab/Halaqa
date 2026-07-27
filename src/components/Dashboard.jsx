@@ -241,74 +241,104 @@ export default function Dashboard({
         </div>
 
         {(!stats.activeHalaqasData || stats.activeHalaqasData.length === 0) ? (
-  <div style={{ textAlign: 'center', padding: '28px 16px', background: '#0F172A', borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.12)' }}>
-    <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>🌱</div>
-    <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.9rem', marginBottom: '4px' }}>
-      {isArabic ? 'لا توجد حلقات مجدولة لهذا اليوم' : 'No Halaqas Scheduled Today'}
+  /* قائمة المهام اليومية الذكية عند عدم وجود حلقات */
+  <div style={{ background: '#0F172A', padding: '16px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#F8FAFC', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <span>📌</span>
+      <span>{isArabic ? 'مهام المقرأة المقترحة لليوم' : 'Recommended Daily Actions'}</span>
     </div>
-    <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: '0 0 14px 0' }}>
-      {isArabic ? 'قم بجدولة حلقاتك لتتمكن من متابعة الحضور والتسميع المباشر' : 'Schedule halaqas to track live attendance and recitation'}
-    </p>
-    {setActiveTab && (
-      <button 
-        onClick={() => setActiveTab('halaqas')} 
-        style={{ background: '#2563EB', color: '#FFF', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-        <FaPlus size={11} />
-        <span>{isArabic ? 'إضافة حلقة الآن' : 'Schedule New Halaqa'}</span>
-      </button>
-    )}
-  </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-            {stats.activeHalaqasData.map((halaqa) => {
-              const isLive = halaqa.status === 'live';
-              const isFinished = halaqa.status === 'finished';
-              
-              const statusBg = isLive ? 'rgba(239, 68, 68, 0.18)' : isFinished ? 'rgba(16, 185, 129, 0.18)' : 'rgba(56, 189, 248, 0.18)';
-              const statusColor = isLive ? '#EF4444' : isFinished ? '#10B981' : '#38BDF8';
-              const statusLabel = isLive 
-                ? (isArabic ? 'قائمة الآن' : 'Live Now') 
-                : isFinished 
-                ? (isArabic ? 'انتهت' : 'Finished') 
-                : (isArabic ? 'قادمة' : 'Upcoming');
 
-              const StatusIcon = isLive ? FaSyncAlt : isFinished ? FaCheckCircle : FaHourglassHalf;
-
-              return (
-                <div key={halaqa.id} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h4 style={{ margin: 0, color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '700' }}>
-                      {isArabic ? halaqa.name_ar : halaqa.name_en}
-                    </h4>
-                    <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <StatusIcon size={10} className={isLive ? styles.spinning : ''} />
-                      <span>{statusLabel}</span>
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaUser style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
-                    <span>{isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}</span>
-                  </div>
-
-                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaClock style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
-                    <span>{isArabic ? halaqa.time_display_ar : halaqa.time_display_en}</span>
-                  </div>
-
-                  {halaqa.attendance_rate !== null && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#38BDF8' }}>
-                      <span>{isArabic ? 'نسبة حضور الحلقة:' : 'Attendance:'}</span>
-                      <span style={{ fontWeight: 'bold' }}>{halaqa.attendance_rate}%</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* مهمة 1: تسجيل الحضور */}
+      <div 
+        onClick={() => setActiveTab && setActiveTab('attendance')}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#1E293B', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#CBD5E1' }}>
+          <FaClipboardCheck style={{ color: '#38BDF8' }} />
+          <span>{isArabic ? 'متابعة سجل حضور وغياب الطلاب' : 'Review Student Attendance'}</span>
+        </div>
+        <span style={{ fontSize: '0.75rem', color: '#38BDF8', fontWeight: 'bold' }}>{isArabic ? '←' : '→'}</span>
       </div>
 
+      {/* مهمة 2: المتابعة المالية */}
+      <div 
+        onClick={() => setActiveTab && setActiveTab('payments')}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#1E293B', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#CBD5E1' }}>
+          <FaExclamationTriangle style={{ color: stats.overdueCount > 0 ? '#F87171' : '#34D399' }} />
+          <span>
+            {stats.overdueCount > 0 
+              ? (isArabic ? `تحصيل الاشتراكات المتأخرة (${stats.overdueCount})` : `Collect Overdue Fees (${stats.overdueCount})`)
+              : (isArabic ? 'مراجعة حالة الاشتراكات المالية' : 'Check Subscription Status')}
+          </span>
+        </div>
+        <span style={{ fontSize: '0.75rem', color: '#34D399', fontWeight: 'bold' }}>{isArabic ? '←' : '→'}</span>
+      </div>
+
+      {/* مهمة 3: جدولة حلقة جديدة */}
+      <div 
+        onClick={() => setActiveTab && setActiveTab('halaqas')}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#1E293B', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#CBD5E1' }}>
+          <FaPlus style={{ color: '#FBBF24' }} />
+          <span>{isArabic ? 'إعداد وجدولة حلقات تحفيظ جديدة' : 'Setup New Teaching Halaqas'}</span>
+        </div>
+        <span style={{ fontSize: '0.75rem', color: '#FBBF24', fontWeight: 'bold' }}>{isArabic ? '←' : '→'}</span>
+      </div>
     </div>
-  );
-}
+  </div>
+) : (
+  /* عرض الحلقات القائمة عند وجودها */
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+    {stats.activeHalaqasData.map((halaqa) => {
+      const isLive = halaqa.status === 'live';
+      const isFinished = halaqa.status === 'finished';
+      
+      const statusBg = isLive ? 'rgba(239, 68, 68, 0.18)' : isFinished ? 'rgba(16, 185, 129, 0.18)' : 'rgba(56, 189, 248, 0.18)';
+      const statusColor = isLive ? '#EF4444' : isFinished ? '#10B981' : '#38BDF8';
+      const statusLabel = isLive 
+        ? (isArabic ? 'قائمة الآن' : 'Live Now') 
+        : isFinished 
+        ? (isArabic ? 'انتهت' : 'Finished') 
+        : (isArabic ? 'قادمة' : 'Upcoming');
+
+      const StatusIcon = isLive ? FaSyncAlt : isFinished ? FaCheckCircle : FaHourglassHalf;
+
+      return (
+        <div key={halaqa.id} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h4 style={{ margin: 0, color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '700' }}>
+              {isArabic ? halaqa.name_ar : halaqa.name_en}
+            </h4>
+            <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <StatusIcon size={10} className={isLive ? styles.spinning : ''} />
+              <span>{statusLabel}</span>
+            </span>
+          </div>
+
+          <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaUser style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
+            <span>{isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}</span>
+          </div>
+
+          <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaClock style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
+            <span>{isArabic ? halaqa.time_display_ar : halaqa.time_display_en}</span>
+          </div>
+
+          {halaqa.attendance_rate !== null && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#38BDF8' }}>
+              <span>{isArabic ? 'نسبة حضور الحلقة:' : 'Attendance:'}</span>
+              <span style={{ fontWeight: 'bold' }}>{halaqa.attendance_rate}%</span>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
+</div>
+
+</div>
+);
+        }
