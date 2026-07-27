@@ -10,15 +10,13 @@ import {
   FaSave, 
   FaBookOpen, 
   FaBook, 
-  FaHistory, 
   FaSpinner, 
   FaGraduationCap,
   FaWhatsapp,
   FaSearch,
   FaCheckDouble,
-  FaChartPie,
   FaMagic,
-  FaLightbulb
+  FaChartLine
 } from 'react-icons/fa';
 
 export default function Attendance({ students = [], academyId, halaqas = [] }) {
@@ -31,7 +29,6 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
   const [selectedHalaqaId, setSelectedHalaqaId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [attendanceData, setAttendanceData] = useState({});
-  const [lastSessionData, setLastSessionData] = useState({});
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -41,16 +38,17 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     return isRtl ? arText : enText;
   };
 
-  // 🔍 فلترة الطلاب بناءً على الحلقة المختارة وكلمة البحث
+  // 🔍 فلترة الطلاب (مع تحويل الـ ID لـ String لمنع مشاكل عدم التطابق)
   const filteredStudents = useMemo(() => {
+    if (!Array.isArray(students)) return [];
     return students.filter(student => {
-      const matchHalaqa = !selectedHalaqaId || student.halaqa_id === selectedHalaqaId;
-      const matchSearch = !searchQuery.trim() || student.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
+      const matchHalaqa = !selectedHalaqaId || String(student.halaqa_id) === String(selectedHalaqaId);
+      const matchSearch = !searchQuery.trim() || (student.name && student.name.toLowerCase().includes(searchQuery.toLowerCase().trim()));
       return matchHalaqa && matchSearch;
     });
   }, [students, selectedHalaqaId, searchQuery]);
 
-  // 📊 حساب إحصائيات الحضور والإنتاجية التفاعلية لليوم
+  // 📊 حساب إحصائيات الحضور والإنتاجية التفاعلية
   const stats = useMemo(() => {
     const total = filteredStudents.length;
     if (total === 0) return { total: 0, present: 0, absent: 0, late: 0, excused: 0, rate: 0 };
@@ -68,10 +66,10 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     return { total, present, absent, late, excused, rate };
   }, [filteredStudents, attendanceData]);
 
-  // 🔄 جلب بيانات الحضور لليوم المحدد + استدعاء الذاكرة السريعة لآخر جلسة
+  // 🔄 جلب البيانات لليوم المحدد
   useEffect(() => {
-    async function fetchAttendanceAndHistory() {
-      if (!academyId || !selectedDate || students.length === 0) return;
+    async function fetchAttendance() {
+      if (!academyId || !selectedDate) return;
       setLoadingFetch(true);
       setMessage({ text: '', type: '' });
 
@@ -99,8 +97,8 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
       }
     }
 
-    fetchAttendanceAndHistory();
-  }, [selectedDate, academyId, students]);
+    fetchAttendance();
+  }, [selectedDate, academyId]);
 
   // ⚡ تحديث حقل معين لطالب
   const updateStudentField = (studentId, field, value) => {
@@ -122,6 +120,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
 
   // 🚀 تحضير جميع الطلاب المفلترين دفعة واحدة "حضور"
   const handleMarkAllPresent = () => {
+    if (filteredStudents.length === 0) return;
     const updated = { ...attendanceData };
     filteredStudents.forEach(st => {
       updated[st.id] = {
@@ -136,7 +135,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     });
   };
 
-  // 🔥 دالة الحفظ المجمع الشاملة والمطابقة مع Supabase
+  // 🔥 الحفظ المجمع الشامل
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'حدث خطأ في معرف الأكاديمية', 'Error in academy ID'), type: 'error' });
@@ -151,7 +150,6 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
         const currentRecord = attendanceData[student.id];
         const isPresent = !currentRecord?.status || currentRecord.status === 'present' || currentRecord.status === 'late';
         
-        // حساب تفاصيل الربع والجزء
         const qIndex = currentRecord?.quarter_index || student.current_quarter_index || 1;
         const juzNum = Math.ceil(qIndex / 8);
         const qInHizb = ((qIndex - 1) % 4) + 1;
@@ -189,8 +187,8 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
   return (
     <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* 1️⃣ الهيدر الرئيسي وأدوات التجميع للتاريخ والحلقة */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-5">
+      {/* 1️⃣ الهيدر والتحكم بالتاريخ والحلقة (تصميم متجاوب دون أي قطع) */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-2 m-0">
             <FaGraduationCap /> {translateText('recitation_attendance', 'رصد الحضور والإنتاجية القرآنية اليومية', 'Recitation & Attendance')}
@@ -200,16 +198,16 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
           </p>
         </div>
         
-        {/* أزرار اختيار الحلقة والتاريخ والبحث السريع */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
+        {/* حقول القوائم المنسدلة والتاريخ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full md:w-auto">
           
-          {/* اختيار الحلقة */}
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 px-3 rounded-xl flex-1 sm:flex-none">
-            <FaBookOpen className="text-amber-500 text-xs" />
+          {/* اختيارات الحلقة */}
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 px-3 rounded-xl min-w-[170px]">
+            <FaBookOpen className="text-amber-500 text-xs shrink-0" />
             <select
               value={selectedHalaqaId}
               onChange={(e) => setSelectedHalaqaId(e.target.value)}
-              className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full text-slate-100"
+              className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full text-slate-100 truncate"
               style={{ backgroundColor: '#0f172a' }}
             >
               <option value="" className="bg-slate-950 text-white">
@@ -217,71 +215,80 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
               </option>
               {halaqas.map(halaqa => (
                 <option key={halaqa.id} value={halaqa.id} className="bg-slate-950 text-white">
-                  {isRtl ? (halaqa.name_ar || halaqa.name_en) : (halaqa.name_en || halaqa.name_ar)}
+                  {isRtl ? (halaqa.name_ar || halaqa.name_en || halaqa.name) : (halaqa.name_en || halaqa.name_ar || halaqa.name)}
                 </option>
               ))}
             </select>
           </div>
 
           {/* اختيار التاريخ */}
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 px-3 rounded-xl flex-1 sm:flex-none">
-            <FaCalendarAlt className="text-amber-500 text-xs" />
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 px-3 rounded-xl min-w-[150px]">
+            <FaCalendarAlt className="text-amber-500 text-xs shrink-0" />
             <input 
               type="date" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer"
+              className="bg-transparent border-none text-white text-xs font-bold outline-none cursor-pointer w-full"
             />
           </div>
         </div>
       </div>
 
-      {/* 2️⃣ شريط الإحصائيات التفاعلي والتحضير السريع */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
-        <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex flex-col items-center justify-center">
-          <span className="text-[10px] text-slate-400 font-bold">{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</span>
-          <span className="text-base font-extrabold text-white mt-0.5">{stats.total}</span>
+      {/* 2️⃣ شريط الإحصائيات التفاعلي (موزع بدقة على الموبايل والتابلت والشاشات الكبيرة) */}
+      <div className="flex flex-col gap-2.5 mb-5">
+        {/* الأرقام الأربعة الرئيسية */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl flex flex-col items-center justify-center">
+            <span className="text-[10px] text-slate-400 font-bold">{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</span>
+            <span className="text-base font-extrabold text-white mt-0.5">{stats.total}</span>
+          </div>
+          <div className="bg-emerald-950/30 border border-emerald-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
+            <span className="text-[10px] text-emerald-400 font-bold">{isRtl ? 'الحاضرون' : 'Present'}</span>
+            <span className="text-base font-extrabold text-emerald-400 mt-0.5">{stats.present}</span>
+          </div>
+          <div className="bg-red-950/30 border border-red-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
+            <span className="text-[10px] text-red-400 font-bold">{isRtl ? 'الغائبون' : 'Absent'}</span>
+            <span className="text-base font-extrabold text-red-400 mt-0.5">{stats.absent}</span>
+          </div>
+          <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
+            <span className="text-[10px] text-amber-400 font-bold">{isRtl ? 'المتأخرون' : 'Late'}</span>
+            <span className="text-base font-extrabold text-amber-400 mt-0.5">{stats.late}</span>
+          </div>
         </div>
-        <div className="bg-emerald-950/30 border border-emerald-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
-          <span className="text-[10px] text-emerald-400 font-bold">{isRtl ? 'الحاضرون' : 'Present'}</span>
-          <span className="text-base font-extrabold text-emerald-400 mt-0.5">{stats.present}</span>
+
+        {/* سطر نسبة الحضور + زر تحضير الكل (متطابق متوازٍ) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="sm:col-span-1 bg-blue-950/30 border border-blue-800/40 p-2.5 rounded-xl flex items-center justify-between px-4">
+            <span className="text-xs text-blue-400 font-bold flex items-center gap-1.5">
+              <FaChartLine /> {isRtl ? 'نسبة الحضور:' : 'Attendance Rate:'}
+            </span>
+            <span className="text-base font-extrabold text-blue-400">{stats.rate}%</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleMarkAllPresent}
+            disabled={filteredStudents.length === 0}
+            className="sm:col-span-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white p-2.5 rounded-xl border border-emerald-500/30 flex items-center justify-center gap-2 text-xs font-extrabold transition-all active:scale-[0.98] shadow-md cursor-pointer"
+          >
+            <FaCheckDouble size={13} /> {isRtl ? 'تحضير جميع طلاب القائمة حضور' : 'Mark All Displayed Present'}
+          </button>
         </div>
-        <div className="bg-red-950/30 border border-red-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
-          <span className="text-[10px] text-red-400 font-bold">{isRtl ? 'الغائبون' : 'Absent'}</span>
-          <span className="text-base font-extrabold text-red-400 mt-0.5">{stats.absent}</span>
-        </div>
-        <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
-          <span className="text-[10px] text-amber-400 font-bold">{isRtl ? 'المتأخرون' : 'Late'}</span>
-          <span className="text-base font-extrabold text-amber-400 mt-0.5">{stats.late}</span>
-        </div>
-        <div className="bg-blue-950/30 border border-blue-800/40 p-3 rounded-xl flex flex-col items-center justify-center">
-          <span className="text-[10px] text-blue-400 font-bold">{isRtl ? 'نسبة الحضور' : 'Attendance Rate'}</span>
-          <span className="text-base font-extrabold text-blue-400 mt-0.5">{stats.rate}%</span>
-        </div>
-        
-        {/* زر التحضير السريع للجميع */}
-        <button
-          type="button"
-          onClick={handleMarkAllPresent}
-          className="col-span-2 md:col-span-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white p-2.5 rounded-xl border border-emerald-500/30 flex items-center justify-center gap-1.5 text-xs font-extrabold transition-all active:scale-95 shadow-md"
-        >
-          <FaCheckDouble size={12} /> {isRtl ? 'تحضير الكل' : 'Mark All'}
-        </button>
       </div>
 
       {/* 3️⃣ شريط البحث السريع عن طالب */}
       <div className="mb-4 relative">
-        <FaSearch className="absolute right-3.5 top-3.5 text-slate-500 text-xs" />
+        <FaSearch className={`absolute top-3.5 text-slate-500 text-xs ${isRtl ? 'right-3.5' : 'left-3.5'}`} />
         <input 
           type="text"
           placeholder={isRtl ? "ابحث باسم الطالب لسرعة الوصول..." : "Search student by name..."}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-2.5 pr-9 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/50 box-border"
+          className={`w-full p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/50 box-border ${isRtl ? 'pr-9' : 'pl-9'}`}
         />
       </div>
 
-      {/* رسائل التنبيه والنجاح */}
+      {/* تنبيه الرسائل */}
       {message.text && (
         <div className={`p-3.5 rounded-xl mb-4 text-xs font-bold border ${
           message.type === 'success' 
@@ -301,9 +308,11 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
       ) : (
         <div className="flex flex-col gap-3.5 mb-6">
           {filteredStudents.length === 0 ? (
-            <p className="text-center text-xs text-slate-500 py-10">
-              {isRtl ? 'لا يوجد طلاب مسجلون بحسب الفلتر المختار.' : 'No students found matching current filter.'}
-            </p>
+            <div className="bg-slate-900/30 border border-slate-800/60 rounded-2xl p-8 text-center">
+              <p className="text-xs text-slate-400 font-bold m-0">
+                {isRtl ? 'لا يوجد طلاب مسجلون بحسب الفلتر المختار.' : 'No students found matching current filter.'}
+              </p>
+            </div>
           ) : (
             filteredStudents.map(student => (
               <StudentCard 
@@ -320,7 +329,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
         </div>
       )}
 
-      {/* 5️⃣ زر الحفظ النهائي المجمع للدفتر */}
+      {/* 5️⃣ زر الحفظ النهائي المجمع */}
       {!loadingFetch && filteredStudents.length > 0 && (
         <button 
           onClick={handleSaveAttendance}
@@ -335,13 +344,12 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
 }
 
 /* ------------------------------------------------------------- */
-/* 💎 المكون المطور لكارت كل طالب StudentCard مع تقرير الواتساب */
+/* 💎 المكون الفرعي StudentCard */
 /* ------------------------------------------------------------- */
 const StudentCard = memo(({ student, record, updateStudentField, selectedDate, isRtl, t }) => {
   const currentStatus = record.status || 'present';
   const isPresent = currentStatus === 'present' || currentStatus === 'late';
 
-  // دالة تشكيل وإرسال تقرير الواتساب لولي الأمر
   const handleSendWhatsAppReport = () => {
     const parentPhone = student.parent_phone || student.phone;
     if (!parentPhone) {
@@ -350,18 +358,8 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
     }
 
     const cleanPhone = parentPhone.replace(/\D/g, '');
-    const statusMap = {
-      present: 'حاضر 🟢',
-      absent: 'غائب 🔴',
-      late: 'متأخر 🟡',
-      excused: 'معتذر 🔵'
-    };
-
-    const gradeMap = {
-      10: 'ممتاز 🌟',
-      8: 'جيد جداً 👍',
-      6: 'يحتاج تحسين ⚠️'
-    };
+    const statusMap = { present: 'حاضر 🟢', absent: 'غائب 🔴', late: 'متأخر 🟡', excused: 'معتذر 🔵' };
+    const gradeMap = { 10: 'ممتاز 🌟', 8: 'جيد جداً 👍', 6: 'يحتاج تحسين ⚠️' };
 
     const text = `السلام عليكم ورحمة الله وبركاته 🌸
 تقرير أداء الطالب/ة: *${student.name}*
@@ -375,31 +373,22 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
 
 شاكرين ومقدرين حسن متابعتكم معنا 🌿`;
 
-    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  // شرائح الملاحظات السريعة بنقرة واحدة
-  const quickNotes = [
-    'ممتاز ومرتل ✨',
-    'تثبيت المتشابهات 🔁',
-    'مراجعة الورد جيداً 📖',
-    'تركيز في الأحكام 🎯'
-  ];
+  const quickNotes = ['ممتاز ومرتل ✨', 'تثبيت المتشابهات 🔁', 'مراجعة الورد جيداً 📖', 'تركيز في الأحكام 🎯'];
 
   return (
     <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-800/80 p-4 rounded-2xl flex flex-col gap-3.5 transition-all hover:border-slate-700/60 box-border shadow-sm">
       
-      {/* السطر العلوي: اسم الطالب، وأزرار الحضور المباشرة، وزر الواتساب */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
         <div className={isRtl ? 'text-right' : 'text-left'}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-extrabold text-white tracking-wide">{student.name}</span>
-            {student.parent_phone && (
+            {(student.parent_phone || student.phone) && (
               <button
                 type="button"
                 onClick={handleSendWhatsAppReport}
-                title={isRtl ? "إرسال تقرير التسميع عبر الواتساب لولي الأمر" : "Send WhatsApp Report"}
                 className="p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
               >
                 <FaWhatsapp className="text-emerald-400 text-xs" /> {isRtl ? "تقرير الواتساب" : "WhatsApp"}
@@ -411,7 +400,6 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
           </span>
         </div>
         
-        {/* أزرار الحضور التفاعلية السريعة */}
         <div className="grid grid-cols-2 sm:flex gap-1.5 w-full lg:w-auto justify-center lg:justify-end">
           <button 
             type="button"
@@ -463,28 +451,22 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
         </div>
       </div>
 
-      {/* لوحة رصد التسميع والإنتاجية (تفتح في حال حضور الطالب أو تأخره) */}
       {isPresent && (
         <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/50 flex flex-col gap-3.5 transition-all">
-          
-          {/* مدخلات الحفظ والتسميع اليومي */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            
-            {/* مدخل الحفظ الجديد */}
             <div className="flex flex-col gap-1">
               <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
                 <FaBookOpen className="text-amber-500 text-xs" /> {isRtl ? "ورد الحفظ الجديد" : "New Memorization"}
               </label>
               <input 
                 type="text" 
-                placeholder={isRtl ? "مثال: البقرة ١-١٥ (أو الربع 12)" : "e.g., Al-Baqarah 1-15"}
+                placeholder={isRtl ? "مثال: البقرة ١-١٥" : "e.g., Al-Baqarah 1-15"}
                 value={record.new_memorization || ''}
                 onChange={(e) => updateStudentField(student.id, 'new_memorization', e.target.value)}
                 className={`w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40 ${isRtl ? 'text-right' : 'text-left'}`}
               />
             </div>
 
-            {/* مدخل المراجعة والربط */}
             <div className="flex flex-col gap-1">
               <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
                 <FaBook className="text-emerald-400 text-xs" /> {isRtl ? "ورد المراجعة والربط" : "Retention & Revision"}
@@ -499,10 +481,7 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
             </div>
           </div>
 
-          {/* التقييم السريع والملاحظات الشرائحية */}
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-            
-            {/* أزرار التقييم الرقمية المتوافقة مع DB (10 / 8 / 6) */}
             <div className="flex flex-col gap-1 flex-1">
               <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1">
                 <FaGraduationCap className="text-amber-500" /> {isRtl ? "التقييم اليومي" : "Daily Grade"}
@@ -532,22 +511,18 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
               </div>
             </div>
 
-            {/* الملاحظات السريعة (Quick Chips) + إدخال الملاحظة */}
             <div className="flex flex-col gap-1 flex-1">
               <span className="text-[11px] text-slate-400 font-bold">{isRtl ? "الملاحظات والتوجيه" : "Teacher Notes"}</span>
-              <div className="flex items-center gap-1.5">
-                <input 
-                  type="text" 
-                  placeholder={isRtl ? "اكتب ملاحظة أو اختر من الأزرار..." : "Write a note..."}
-                  value={record.notes || ''}
-                  onChange={(e) => updateStudentField(student.id, 'notes', e.target.value)}
-                  className={`w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-slate-700 ${isRtl ? 'text-right' : 'text-left'}`}
-                />
-              </div>
+              <input 
+                type="text" 
+                placeholder={isRtl ? "اكتب ملاحظة..." : "Write a note..."}
+                value={record.notes || ''}
+                onChange={(e) => updateStudentField(student.id, 'notes', e.target.value)}
+                className={`w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-slate-700 ${isRtl ? 'text-right' : 'text-left'}`}
+              />
             </div>
           </div>
 
-          {/* أزرار التوجيه السريعة (Chips) */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-900">
             <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1">
               <FaMagic className="text-amber-500/70" /> {isRtl ? "ملاحظات سريعة:" : "Quick Notes:"}
@@ -563,7 +538,6 @@ const StudentCard = memo(({ student, record, updateStudentField, selectedDate, i
               </button>
             ))}
           </div>
-
         </div>
       )}
     </div>
