@@ -1,4 +1,4 @@
-/* src/components/RealtimeAudit.jsx - متوافق 100% مع Supabase ومعالجة الشاملة للبحث */
+/* src/components/RealtimeAudit.jsx - نسق الميزات المتقدمة للتوسع وزيادة الاشتراكات */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -12,7 +12,10 @@ import {
   FaEdit, 
   FaTrashAlt, 
   FaUserCheck,
-  FaTimes
+  FaTimes,
+  FaFileDownload,
+  FaChevronDown,
+  FaChevronUp
 } from 'react-icons/fa';
 
 export default function RealtimeAudit({ session, userRole }) {
@@ -20,7 +23,6 @@ export default function RealtimeAudit({ session, userRole }) {
   const isArabic = !i18n.language || i18n.language.startsWith('ar');
   const isRtl = i18n.dir() === 'rtl' || isArabic;
 
-  // 🏷️ أسماء الجداول للعرض حسب اللغة الحالية
   const tableDisplayNames = {
     attendance: isArabic ? 'الحضور والتسميع' : 'Attendance',
     payments: isArabic ? 'الاشتراكات والمالية' : 'Payments',
@@ -29,7 +31,6 @@ export default function RealtimeAudit({ session, userRole }) {
     daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
   };
 
-  // 🧠 قاموس الكلمات المفتاحية الشامل للبحث باللغتين معاً
   const searchKeywordsMap = {
     attendance: 'attendance الحضور والتسميع حضور تسميع',
     payments: 'payments الاشتراكات والمالية دفع مالية اشتراكات',
@@ -42,8 +43,9 @@ export default function RealtimeAudit({ session, userRole }) {
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedLogId, setExpandedLogId] = useState(null);
 
-  // جلب السجلات من Supabase
+  // جلب البيانات
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -51,7 +53,7 @@ export default function RealtimeAudit({ session, userRole }) {
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (selectedTable !== 'all') {
         query = query.eq('table_name', selectedTable);
@@ -70,11 +72,10 @@ export default function RealtimeAudit({ session, userRole }) {
   useEffect(() => {
     fetchAuditLogs();
 
-    // اشتراك لحظي في جدول audit_logs
     const channel = supabase
       .channel('realtime-audit-logs')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, (payload) => {
-        setLogs((prev) => [payload.new, ...prev.slice(0, 49)]);
+        setLogs((prev) => [payload.new, ...prev.slice(0, 99)]);
       })
       .subscribe();
 
@@ -83,7 +84,31 @@ export default function RealtimeAudit({ session, userRole }) {
     };
   }, [fetchAuditLogs]);
 
-  // ترجمة وتنسيق نوع العملية
+  // تصدير السجلات لملف CSV
+  const exportToCSV = () => {
+    if (filteredLogs.length === 0) return;
+    
+    const headers = ["ID", "Table", "Operation", "Changed By", "Date"];
+    const rows = filteredLogs.map(log => [
+      log.id,
+      log.table_name,
+      log.operation,
+      log.changed_by || 'System',
+      new Date(log.created_at).toLocaleString()
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Audit_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getOperationBadge = (operation) => {
     switch (operation?.toUpperCase()) {
       case 'INSERT':
@@ -97,7 +122,6 @@ export default function RealtimeAudit({ session, userRole }) {
     }
   };
 
-  // 🔍 خوارزمية البحث الفائقة (تبحث في كل شيء باللغتين)
   const filteredLogs = logs.filter((log) => {
     if (!searchQuery.trim()) return true;
 
@@ -108,36 +132,44 @@ export default function RealtimeAudit({ session, userRole }) {
     const opArabic = operation === 'insert' ? 'إضافة' : operation === 'update' ? 'تعديل' : operation === 'delete' ? 'حذف' : '';
     const changedBy = (log.changed_by || '').toLowerCase();
 
-    const searchableText = `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${changedBy}`;
-    return searchableText.includes(query);
+    return `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${changedBy}`.includes(query);
   });
 
   return (
     <div style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1️⃣ الترويسة الموحدة الواضحة */}
+      {/* 1️⃣ الترويسة الرئيسية + زر التصدير والإنعاش */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-  <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <FaHistory style={{ color: '#38BDF8' }} />
-    <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
-  </h2>
-  <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
-    {isArabic 
-      ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' 
-      : 'Real-time tracking of all updates and changes across the system'}
-  </p>
-</div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaHistory style={{ color: '#38BDF8' }} />
+            <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
+          </h2>
+          <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
+            {isArabic 
+              ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' 
+              : 'Real-time tracking of all updates and changes across the system'}
+          </p>
+        </div>
 
-        <button 
-          onClick={fetchAuditLogs}
-          style={{ background: '#1E293B', color: '#CBD5E1', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <FaSyncAlt size={12} className={loading ? 'spinning' : ''} />
-          <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={exportToCSV}
+            style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaFileDownload size={12} />
+            <span>{isArabic ? 'تصدير Tsv/CSV' : 'Export Report'}</span>
+          </button>
+
+          <button 
+            onClick={fetchAuditLogs}
+            style={{ background: '#1E293B', color: '#CBD5E1', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaSyncAlt size={12} className={loading ? 'spinning' : ''} />
+            <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* 2️⃣ حقل البحث وتصفية الجداول */}
+      {/* 2️⃣ حقل البحث والفلترة */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
         <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
           <FaSearch style={{ position: 'absolute', [isRtl ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B', fontSize: '0.85rem' }} />
@@ -146,7 +178,7 @@ export default function RealtimeAudit({ session, userRole }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isArabic ? 'ابحث باسم الجدول أو العملية (مثال: الطلاب، تعديل)...' : 'Search table or operation (e.g. Students, Update)...'}
+            placeholder={isArabic ? 'ابحث باسم الجدول أو العملية (مثال: الطلاب، تعديل)...' : 'Search table or operation...'}
             style={{ 
               width: '100%', 
               padding: '10px 32px', 
@@ -161,7 +193,6 @@ export default function RealtimeAudit({ session, userRole }) {
             }}
           />
 
-          {/* زر مسح النص */}
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
@@ -171,7 +202,6 @@ export default function RealtimeAudit({ session, userRole }) {
           )}
         </div>
 
-        {/* القائمة المنسدلة للجداول */}
         <select
           value={selectedTable}
           onChange={(e) => setSelectedTable(e.target.value)}
@@ -183,64 +213,84 @@ export default function RealtimeAudit({ session, userRole }) {
         </select>
       </div>
 
-      {/* 3️⃣ عرض السجلات والحالات الفارغة */}
+      {/* 3️⃣ قائمة السجلات التفاعلية */}
       {loading ? (
         <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
           {isArabic ? 'جاري تحميل سجل التغييرات...' : 'Loading audit logs...'}
         </div>
       ) : logs.length === 0 ? (
-        /* حالة عدم وجود بيانات في قاعدة البيانات أساساً */
         <div style={{ background: '#1E293B', padding: '30px', borderRadius: '16px', textAlign: 'center', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.05)' }}>
           {isArabic ? 'لا توجد أنشطة مسجلة في قاعدة البيانات بعد' : 'No activities recorded in database yet'}
         </div>
       ) : filteredLogs.length === 0 ? (
-        /* حالة عدم وجود نتائج تطابق البحث */
         <div style={{ background: '#1E293B', padding: '30px', borderRadius: '16px', textAlign: 'center', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.05)' }}>
           {isArabic ? `لا توجد نتائج تطابق "${searchQuery}"` : `No results matching "${searchQuery}"`}
         </div>
       ) : (
-        /* عرض بطاقات السجلات */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filteredLogs.map((log) => {
             const badge = getOperationBadge(log.operation);
             const Icon = badge.icon;
-            const timeFormatted = new Date(log.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const isExpanded = expandedLogId === log.id;
+            const timeFormatted = new Date(log.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
             const dateFormatted = new Date(log.created_at).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
 
             return (
               <div 
                 key={log.id} 
-                style={{ background: '#1E293B', padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                style={{ background: '#1E293B', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon style={{ color: badge.color, fontSize: '1.1rem' }} />
+                {/* الجزء الظاهر للبطاقة */}
+                <div 
+                  onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                  style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', cursor: 'pointer' }}>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon style={{ color: badge.color, fontSize: '1.1rem' }} />
+                    </div>
+
+                    <div>
+                      <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.85rem', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{badge.label}</span>
+                        <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px', color: '#38BDF8' }}>
+                          {tableDisplayNames[log.table_name] || log.table_name}
+                        </span>
+                      </div>
+                      
+                      <div style={{ color: '#94A3B8', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FaUserCheck size={11} style={{ color: '#64748B' }} />
+                        <span>{isArabic ? 'المعرّف:' : 'ID:'} {log.changed_by ? log.changed_by.substring(0, 8) + '...' : (isArabic ? 'النظام' : 'System')}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.85rem', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>{badge.label}</span>
-                      <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px', color: '#38BDF8' }}>
-                        {tableDisplayNames[log.table_name] || log.table_name}
-                      </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ textAlign: isRtl ? 'left' : 'right' }}>
+                      <div style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FaClock size={10} />
+                        <span>{timeFormatted}</span>
+                      </div>
+                      <div style={{ color: '#64748B', fontSize: '0.7rem', marginTop: '2px' }}>
+                        {dateFormatted}
+                      </div>
                     </div>
-                    
-                    <div style={{ color: '#94A3B8', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <FaUserCheck size={11} style={{ color: '#64748B' }} />
-                      <span>{isArabic ? 'بواسطة المعرّف:' : 'By ID:'} {log.changed_by ? log.changed_by.substring(0, 8) + '...' : (isArabic ? 'النظام' : 'System')}</span>
-                    </div>
+
+                    {isExpanded ? <FaChevronUp size={12} color="#94A3B8" /> : <FaChevronDown size={12} color="#94A3B8" />}
                   </div>
                 </div>
 
-                <div style={{ textAlign: isRtl ? 'left' : 'right', flexShrink: 0 }}>
-                  <div style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FaClock size={10} />
-                    <span>{timeFormatted}</span>
+                {/* التفاصيل عند النقر (Diff Viewer) */}
+                {isExpanded && (
+                  <div style={{ padding: '12px 14px', background: 'rgba(15, 23, 42, 0.6)', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem' }}>
+                    <div style={{ color: '#94A3B8', marginBottom: '6px', fontWeight: '600' }}>
+                      {isArabic ? 'بيانات العملية المسجلة:' : 'Payload Details:'}
+                    </div>
+                    <pre style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', color: '#34D399', overflowX: 'auto', margin: 0, fontSize: '0.7rem', fontFamily: 'monospace' }}>
+                      {JSON.stringify(log.record_data || log.new_data || { id: log.id, action: log.operation }, null, 2)}
+                    </pre>
                   </div>
-                  <div style={{ color: '#64748B', fontSize: '0.7rem', marginTop: '2px' }}>
-                    {dateFormatted}
-                  </div>
-                </div>
+                )}
 
               </div>
             );
@@ -250,4 +300,4 @@ export default function RealtimeAudit({ session, userRole }) {
 
     </div>
   );
-  }
+            }
