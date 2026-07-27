@@ -72,7 +72,7 @@ export default function Sidebar({
       title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       items: [
         { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
-        { id: 'audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
+        { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
         { id: 'omnichannel-hub', label: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: FaBell },
         { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
