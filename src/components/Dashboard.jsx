@@ -165,7 +165,7 @@ export default function Dashboard({
             <span>{isArabic ? 'إجمالي الدارسين' : 'Total Students'}</span>
             <FaUserGraduate style={{ color: '#38BDF8', fontSize: '1.2rem' }} />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FFFFFF' }}>{stats.studentsCount ?? 0}</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FFFFFF' }}>{stats?.studentsCount ?? 0}</div>
           <div style={{ fontSize: '0.75rem', color: '#34D399', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? '↑ مسجلون بالحلقات' : '↑ Enrolled'}
           </div>
@@ -182,7 +182,7 @@ export default function Dashboard({
             <span>{isArabic ? 'نسبة الحضور اليومي' : 'Daily Attendance'}</span>
             <FaChartLine style={{ color: '#38BDF8', fontSize: '1.2rem' }} />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#38BDF8' }}>{stats.attendanceRate || '0%'}</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#38BDF8' }}>{stats?.attendanceRate || '0%'}</div>
           <div style={{ fontSize: '0.75rem', color: '#7DD3FC', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? 'مؤشر أداء اليوم' : 'Today Performance'}
           </div>
@@ -200,7 +200,7 @@ export default function Dashboard({
             <FaBookOpen style={{ color: '#FBBF24', fontSize: '1.2rem' }} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FBBF24' }}>
-            {stats.totalSessions ?? 0} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#CBD5E1' }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
+            {stats?.totalSessions ?? 0} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#CBD5E1' }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: '#FDE047', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? 'إجمالي المسموع اليوم' : 'Completed Today'}
@@ -216,129 +216,104 @@ export default function Dashboard({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'المتأخرات المعلقة' : 'Pending Overdues'}</span>
-            <FaExclamationTriangle style={{ color: stats.overdueCount > 0 ? '#F87171' : '#34D399', fontSize: '1.2rem' }} />
+            <FaExclamationTriangle style={{ color: (stats?.overdueCount || 0) > 0 ? '#F87171' : '#34D399', fontSize: '1.2rem' }} />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: stats.overdueCount > 0 ? '#F87171' : '#34D399' }}>
-            {stats.overdueCount ?? 0}
+          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: (stats?.overdueCount || 0) > 0 ? '#F87171' : '#34D399' }}>
+            {stats?.overdueCount ?? 0}
           </div>
-          <div style={{ fontSize: '0.75rem', color: stats.overdueCount > 0 ? '#FCA5A5' : '#A7F3D0', marginTop: '4px', fontWeight: '600' }}>
+          <div style={{ fontSize: '0.75rem', color: (stats?.overdueCount || 0) > 0 ? '#FCA5A5' : '#A7F3D0', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? 'اشتراكات تحتاج متابعة' : 'Requires Follow-up'}
           </div>
         </div>
 
       </div>
 
-      {/* 4️⃣ قسم حلقات اليوم المباشرة وتجربة Empty State التفاعلية */}
-      <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaMosque style={{ color: '#38BDF8' }} />
-            <span>{isArabic ? 'حلقات اليوم المباشرة' : 'Today Active Halaqas'}</span>
-          </h3>
-          <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
-            {stats.activeHalaqasData?.length || 0} {isArabic ? 'حلقة مسجلة' : 'halaqas'}
-          </span>
-        </div>
-
-        {(!stats.activeHalaqasData || stats.activeHalaqasData.length === 0) ? (
-  /* قائمة المهام اليومية الذكية عند عدم وجود حلقات */
-  <div style={{ background: '#0F172A', padding: '16px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#F8FAFC', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <span>📌</span>
-      <span>{isArabic ? 'مهام المقرأة المقترحة لليوم' : 'Recommended Daily Actions'}</span>
-    </div>
-
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {/* مهمة 1: تسجيل الحضور */}
-      <div 
-        onClick={() => setActiveTab && setActiveTab('attendance')}
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#1E293B', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#CBD5E1' }}>
-          <FaClipboardCheck style={{ color: '#38BDF8' }} />
-          <span>{isArabic ? 'متابعة سجل حضور وغياب الطلاب' : 'Review Student Attendance'}</span>
-        </div>
-        <span style={{ fontSize: '0.75rem', color: '#38BDF8', fontWeight: 'bold' }}>{isArabic ? '←' : '→'}</span>
-      </div>
-
-      {/* مهمة 2: المتابعة المالية */}
-      <div 
-        onClick={() => setActiveTab && setActiveTab('payments')}
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#1E293B', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#CBD5E1' }}>
-          <FaExclamationTriangle style={{ color: stats.overdueCount > 0 ? '#F87171' : '#34D399' }} />
-          <span>
-            {stats.overdueCount > 0 
-              ? (isArabic ? `تحصيل الاشتراكات المتأخرة (${stats.overdueCount})` : `Collect Overdue Fees (${stats.overdueCount})`)
-              : (isArabic ? 'مراجعة حالة الاشتراكات المالية' : 'Check Subscription Status')}
-          </span>
-        </div>
-        <span style={{ fontSize: '0.75rem', color: '#34D399', fontWeight: 'bold' }}>{isArabic ? '←' : '→'}</span>
-      </div>
-
-      {/* مهمة 3: جدولة حلقة جديدة */}
-      <div 
-        onClick={() => setActiveTab && setActiveTab('halaqas')}
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#1E293B', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#CBD5E1' }}>
-          <FaPlus style={{ color: '#FBBF24' }} />
-          <span>{isArabic ? 'إعداد وجدولة حلقات تحفيظ جديدة' : 'Setup New Teaching Halaqas'}</span>
-        </div>
-        <span style={{ fontSize: '0.75rem', color: '#FBBF24', fontWeight: 'bold' }}>{isArabic ? '←' : '→'}</span>
-      </div>
-    </div>
-  </div>
-) : (
-  /* عرض الحلقات القائمة عند وجودها */
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-    {stats.activeHalaqasData.map((halaqa) => {
-      const isLive = halaqa.status === 'live';
-      const isFinished = halaqa.status === 'finished';
-      
-      const statusBg = isLive ? 'rgba(239, 68, 68, 0.18)' : isFinished ? 'rgba(16, 185, 129, 0.18)' : 'rgba(56, 189, 248, 0.18)';
-      const statusColor = isLive ? '#EF4444' : isFinished ? '#10B981' : '#38BDF8';
-      const statusLabel = isLive 
-        ? (isArabic ? 'قائمة الآن' : 'Live Now') 
-        : isFinished 
-        ? (isArabic ? 'انتهت' : 'Finished') 
-        : (isArabic ? 'قادمة' : 'Upcoming');
-
-      const StatusIcon = isLive ? FaSyncAlt : isFinished ? FaCheckCircle : FaHourglassHalf;
-
-      return (
-        <div key={halaqa.id} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h4 style={{ margin: 0, color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '700' }}>
-              {isArabic ? halaqa.name_ar : halaqa.name_en}
-            </h4>
-            <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <StatusIcon size={10} className={isLive ? styles.spinning : ''} />
-              <span>{statusLabel}</span>
+      {/* 4️⃣ النظام الذكي الهجين: حلقات اليوم المباشرة / التنبيهات العاجلة / إخفاء تلقائي */}
+      {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
+        /* 1. عرض الحلقات القائمة عند وجودها اليوم */
+        <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaMosque style={{ color: '#38BDF8' }} />
+              <span>{isArabic ? 'حلقات اليوم المباشرة' : 'Today Active Halaqas'}</span>
+            </h3>
+            <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
+              {stats.activeHalaqasData.length} {isArabic ? 'حلقة مسجلة' : 'halaqas'}
             </span>
           </div>
 
-          <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaUser style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
-            <span>{isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}</span>
-          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+            {stats.activeHalaqasData.map((halaqa) => {
+              const isLive = halaqa.status === 'live';
+              const isFinished = halaqa.status === 'finished';
+              
+              const statusBg = isLive ? 'rgba(239, 68, 68, 0.18)' : isFinished ? 'rgba(16, 185, 129, 0.18)' : 'rgba(56, 189, 248, 0.18)';
+              const statusColor = isLive ? '#EF4444' : isFinished ? '#10B981' : '#38BDF8';
+              const statusLabel = isLive 
+                ? (isArabic ? 'قائمة الآن' : 'Live Now') 
+                : isFinished 
+                ? (isArabic ? 'انتهت' : 'Finished') 
+                : (isArabic ? 'قادمة' : 'Upcoming');
 
-          <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaClock style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
-            <span>{isArabic ? halaqa.time_display_ar : halaqa.time_display_en}</span>
-          </div>
+              const StatusIcon = isLive ? FaSyncAlt : isFinished ? FaCheckCircle : FaHourglassHalf;
 
-          {halaqa.attendance_rate !== null && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#38BDF8' }}>
-              <span>{isArabic ? 'نسبة حضور الحلقة:' : 'Attendance:'}</span>
-              <span style={{ fontWeight: 'bold' }}>{halaqa.attendance_rate}%</span>
-            </div>
-          )}
+              return (
+                <div key={halaqa.id} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ margin: 0, color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '700' }}>
+                      {isArabic ? halaqa.name_ar : halaqa.name_en}
+                    </h4>
+                    <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <StatusIcon size={10} className={isLive ? styles?.spinning || '' : ''} />
+                      <span>{statusLabel}</span>
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaUser style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
+                    <span>{isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}</span>
+                  </div>
+
+                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaClock style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
+                    <span>{isArabic ? halaqa.time_display_ar : halaqa.time_display_en}</span>
+                  </div>
+
+                  {halaqa.attendance_rate !== null && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#38BDF8' }}>
+                      <span>{isArabic ? 'نسبة حضور الحلقة:' : 'Attendance:'}</span>
+                      <span style={{ fontWeight: 'bold' }}>{halaqa.attendance_rate}%</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      );
-    })}
-  </div>
-)}
-</div>
+      ) : (stats?.overdueCount || 0) > 0 ? (
+        /* 2. تنبيه عاجل ينشأ فقط عند وجود متأخرات مالية وبدون حلقات اليوم */
+        <div style={{ background: '#1E293B', padding: '14px 16px', borderRadius: '14px', border: '1px solid rgba(248, 113, 113, 0.3)', marginBottom: '20px' }}>
+          <div 
+            onClick={() => setActiveTab && setActiveTab('payments')}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <FaExclamationTriangle style={{ color: '#F87171', fontSize: '1.1rem' }} />
+              <div>
+                <div style={{ color: '#FFFFFF', fontWeight: '700', fontSize: '0.85rem' }}>
+                  {isArabic ? 'تنبيه: اشتراكات مستحقة التحصيل' : 'Alert: Pending Overdue Payments'}
+                </div>
+                <div style={{ color: '#94A3B8', fontSize: '0.75rem', marginTop: '2px' }}>
+                  {isArabic ? `يوجد ${stats.overdueCount} اشتراكات تحتاج المتابعة اليوم` : `There are ${stats.overdueCount} payments requiring follow up`}
+                </div>
+              </div>
+            </div>
+            <span style={{ color: '#F87171', fontWeight: 'bold', fontSize: '0.8rem' }}>
+              {isArabic ? 'متابعة ←' : 'Review →'}
+            </span>
+          </div>
+        </div>
+      ) : null /* 3. في حالة استقرار كل الأمور؛ يختفي المربع تماماً لإلغاء التكرار وإتاحة مساحة رؤية مريحة */}
 
-</div>
-);
-        }
+    </div>
+  );
+}
