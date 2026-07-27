@@ -122,7 +122,6 @@ export default function RealtimeAudit({ session, userRole }) {
     <FaHistory style={{ color: '#38BDF8' }} />
     <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
   </h2>
-  :
   <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
     {isArabic 
       ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' 
