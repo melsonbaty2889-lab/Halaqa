@@ -118,17 +118,17 @@ export default function RealtimeAudit({ session, userRole }) {
       {/* 1️⃣ الترويسة الموحدة الواضحة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaHistory style={{ color: '#38BDF8' }} />
-            <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
-          </h2>
-          :
-<p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
-  {isArabic 
-    ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' 
-    : 'Real-time tracking of all updates and changes across the system'}
-</p>
-        </div>
+  <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <FaHistory style={{ color: '#38BDF8' }} />
+    <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
+  </h2>
+  :
+  <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
+    {isArabic 
+      ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' 
+      : 'Real-time tracking of all updates and changes across the system'}
+  </p>
+</div>
 
         <button 
           onClick={fetchAuditLogs}
