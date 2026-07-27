@@ -1,9 +1,24 @@
-/* src/components/Dashboard.jsx - النسخة العالمية التفاعلية */
+/* src/components/Dashboard.jsx - النسخة المحدثة والمتكاملة 100% */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { getDashboardStats } from '../lib/dashboardService';
 import AdminDashboard from './AdminDashboard';
+import styles from './Dashboard.module.css';
+import { 
+  FaUserGraduate, 
+  FaChartLine, 
+  FaBookOpen, 
+  FaExclamationTriangle, 
+  FaPlus, 
+  FaClipboardCheck, 
+  FaClock, 
+  FaUser, 
+  FaCheckCircle, 
+  FaHourglassHalf, 
+  FaSyncAlt, 
+  FaMosque 
+} from 'react-icons/fa';
 
 export default function Dashboard({ 
   session, 
@@ -78,11 +93,11 @@ export default function Dashboard({
 
   if (loading) {
     return (
-      <div style={{ padding: '20px' }} className="animate-pulse">
-        <div style={{ height: '36px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', width: '40%' }}></div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '20px' }}>
+      <div className={styles.dashboardContainer} style={{ padding: '20px' }}>
+        <div style={{ height: '36px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', width: '40%', marginBottom: '20px' }}></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
           {[1, 2, 3, 4].map(i => (
-            <div key={i} style={{ height: '100px', background: 'rgba(255,255,255,0.06)', borderRadius: '16px' }}></div>
+            <div key={i} style={{ height: '110px', background: 'rgba(255,255,255,0.06)', borderRadius: '16px' }}></div>
           ))}
         </div>
       </div>
@@ -94,7 +109,7 @@ export default function Dashboard({
   }
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
+    <div className={styles.dashboardContainer} style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
       {/* 1️⃣ الترويسة الأنيقة والمزدوجة للتجاوب */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
@@ -114,33 +129,41 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* 2️⃣ شريط الوصول السريع (Quick Actions) لربط المستخدم بالواجهة */}
+      {/* 2️⃣ شريط الوصول السريع (Quick Actions) */}
       <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px', scrollbarWidth: 'none' }}>
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
-          style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', color: '#FFF', border: 'none', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)' }}>
-          ➕ {isArabic ? 'جدولة حلقة' : 'Add Halaqa'}
+          style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', color: '#FFF', border: 'none', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)' }}>
+          <FaPlus size={13} />
+          <span>{isArabic ? 'جدولة حلقة' : 'Add Halaqa'}</span>
         </button>
         <button 
           onClick={() => setActiveTab && setActiveTab('attendance')} 
-          style={{ background: '#1E293B', color: '#F8FAFC', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          📝 {isArabic ? 'تسجيل حضور' : 'Take Attendance'}
+          style={{ background: '#1E293B', color: '#F8FAFC', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaClipboardCheck size={14} style={{ color: '#38BDF8' }} />
+          <span>{isArabic ? 'تسجيل حضور' : 'Take Attendance'}</span>
         </button>
         <button 
           onClick={() => setActiveTab && setActiveTab('students')} 
-          style={{ background: '#1E293B', color: '#F8FAFC', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          📖 {isArabic ? 'رصد التسميع' : 'Record Recitation'}
+          style={{ background: '#1E293B', color: '#F8FAFC', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaBookOpen size={14} style={{ color: '#FBBF24' }} />
+          <span>{isArabic ? 'رصد التسميع' : 'Record Recitation'}</span>
         </button>
       </div>
 
-      {/* 3️⃣ البطاقات الرئيسية */}
+      {/* 3️⃣ البطاقات الرئيسية التفاعلية */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
         
         {/* إجمالي الدارسين */}
-        <div style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
+        <div 
+          onClick={() => setActiveTab && setActiveTab('students')}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'إجمالي الدارسين' : 'Total Students'}</span>
-            <span style={{ fontSize: '1.1rem' }}>👨‍🎓</span>
+            <FaUserGraduate style={{ color: '#38BDF8', fontSize: '1.2rem' }} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FFFFFF' }}>{stats.studentsCount ?? 0}</div>
           <div style={{ fontSize: '0.75rem', color: '#34D399', marginTop: '4px', fontWeight: '600' }}>
@@ -149,10 +172,15 @@ export default function Dashboard({
         </div>
 
         {/* نسبة الحضور اليومي */}
-        <div style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
+        <div 
+          onClick={() => setActiveTab && setActiveTab('attendance')}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'نسبة الحضور اليومي' : 'Daily Attendance'}</span>
-            <span style={{ fontSize: '1.1rem' }}>📈</span>
+            <FaChartLine style={{ color: '#38BDF8', fontSize: '1.2rem' }} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#38BDF8' }}>{stats.attendanceRate || '0%'}</div>
           <div style={{ fontSize: '0.75rem', color: '#7DD3FC', marginTop: '4px', fontWeight: '600' }}>
@@ -160,11 +188,16 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* جلسات التسميع اليوم (مترجمة بدقة) */}
-        <div style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
+        {/* جلسات التسميع اليوم */}
+        <div 
+          onClick={() => setActiveTab && setActiveTab('halaqas')}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)'}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'جلسات التسميع اليوم' : 'Recitation Sessions'}</span>
-            <span style={{ fontSize: '1.1rem' }}>📖</span>
+            <FaBookOpen style={{ color: '#FBBF24', fontSize: '1.2rem' }} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FBBF24' }}>
             {stats.totalSessions ?? 0} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#CBD5E1' }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
@@ -175,10 +208,15 @@ export default function Dashboard({
         </div>
 
         {/* المتأخرات المعلقة */}
-        <div style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
+        <div 
+          onClick={() => setActiveTab && setActiveTab('payments')}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.4)'}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'المتأخرات المعلقة' : 'Pending Overdues'}</span>
-            <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+            <FaExclamationTriangle style={{ color: stats.overdueCount > 0 ? '#F87171' : '#34D399', fontSize: '1.2rem' }} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: stats.overdueCount > 0 ? '#F87171' : '#34D399' }}>
             {stats.overdueCount ?? 0}
@@ -193,8 +231,9 @@ export default function Dashboard({
       {/* 4️⃣ قسم حلقات اليوم المباشرة وتجربة Empty State التفاعلية */}
       <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: 0, fontWeight: '700' }}>
-            {isArabic ? '🕌 حلقات اليوم المباشرة' : '🕌 Today Active Halaqas'}
+          <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaMosque style={{ color: '#38BDF8' }} />
+            <span>{isArabic ? 'حلقات اليوم المباشرة' : 'Today Active Halaqas'}</span>
           </h3>
           <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
             {stats.activeHalaqasData?.length || 0} {isArabic ? 'حلقة مسجلة' : 'halaqas'}
@@ -213,8 +252,9 @@ export default function Dashboard({
             {setActiveTab && (
               <button 
                 onClick={() => setActiveTab('halaqas')} 
-                style={{ background: '#2563EB', color: '#FFF', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer' }}>
-                {isArabic ? '+ إضافة حلقة الآن' : '+ Schedule New Halaqa'}
+                style={{ background: '#2563EB', color: '#FFF', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <FaPlus size={11} />
+                <span>{isArabic ? 'إضافة حلقة الآن' : 'Schedule New Halaqa'}</span>
               </button>
             )}
           </div>
@@ -227,10 +267,12 @@ export default function Dashboard({
               const statusBg = isLive ? 'rgba(239, 68, 68, 0.18)' : isFinished ? 'rgba(16, 185, 129, 0.18)' : 'rgba(56, 189, 248, 0.18)';
               const statusColor = isLive ? '#EF4444' : isFinished ? '#10B981' : '#38BDF8';
               const statusLabel = isLive 
-                ? (isArabic ? '🔴 قائمة الآن' : '🔴 Live Now') 
+                ? (isArabic ? 'قائمة الآن' : 'Live Now') 
                 : isFinished 
-                ? (isArabic ? '✅ انتهت' : '✅ Finished') 
-                : (isArabic ? '⏳ قادمة' : '⏳ Upcoming');
+                ? (isArabic ? 'انتهت' : 'Finished') 
+                : (isArabic ? 'قادمة' : 'Upcoming');
+
+              const StatusIcon = isLive ? FaSyncAlt : isFinished ? FaCheckCircle : FaHourglassHalf;
 
               return (
                 <div key={halaqa.id} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -238,17 +280,20 @@ export default function Dashboard({
                     <h4 style={{ margin: 0, color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '700' }}>
                       {isArabic ? halaqa.name_ar : halaqa.name_en}
                     </h4>
-                    <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold' }}>
-                      {statusLabel}
+                    <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <StatusIcon size={10} className={isLive ? styles.spinning : ''} />
+                      <span>{statusLabel}</span>
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px' }}>
-                    👤 {isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}
+                  <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaUser style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
+                    <span>{isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}</span>
                   </div>
 
-                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px' }}>
-                    ⏰ {isArabic ? halaqa.time_display_ar : halaqa.time_display_en}
+                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaClock style={{ color: '#94A3B8', fontSize: '0.75rem' }} />
+                    <span>{isArabic ? halaqa.time_display_ar : halaqa.time_display_en}</span>
                   </div>
 
                   {halaqa.attendance_rate !== null && (
