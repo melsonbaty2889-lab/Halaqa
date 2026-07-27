@@ -1,6 +1,6 @@
 /**
  * src/lib/dashboardService.js
- * تم التحديث والتوافق الكامل مع Structure قاعدة البيانات الفعلية (attendance, daily_progress, halaqas)
+ * تم التحديث للتوافق مع الترجمة متعددة اللغات وأداء اللوحة الاحترافي
  */
 
 export async function getDashboardStats(supabase, profile) {
@@ -23,9 +23,9 @@ export async function getDashboardStats(supabase, profile) {
       return { 
         studentsCount: studentsCount || 0, 
         academiesCount: academiesCount || 0,
-        attendanceRate: null,
-        totalPagesMuted: null,
-        overdueCount: null,
+        attendanceRate: '0%',
+        totalSessions: 0,
+        overdueCount: 0,
         activeHalaqasData: []
       };
     } 
@@ -55,7 +55,7 @@ export async function getDashboardStats(supabase, profile) {
         attendanceRate = `${((presentCount / attendanceData.length) * 100).toFixed(1)}%`;
       }
 
-      // ج) إجمالي جلسات/عمليات التسميع اليومية المنجزة اليوم
+      // ج) إجمالي جلسات/عمليات التسميع اليومية المنجزة اليوم (إرجاع الرقم صريحاً للترجمة)
       const { count: progressCount, error: progressError } = await supabase
         .from('daily_progress')
         .select('*', { count: 'exact', head: true })
@@ -91,7 +91,6 @@ export async function getDashboardStats(supabase, profile) {
       let activeHalaqasData = [];
 
       if (!halaqasError && halaqasData) {
-        // توقيت القاهرة الحالي بصيغة HH:MM:SS
         const currentCairoTime = new Date().toLocaleTimeString('en-US', { 
           timeZone: 'Africa/Cairo', 
           hour12: false,
@@ -100,7 +99,6 @@ export async function getDashboardStats(supabase, profile) {
           second: '2-digit'
         });
 
-        // دالة تنسيق الوقت للعرض (مثال: 16:00:00 -> 04:00 م)
         const formatTimeDisplay = (timeStr) => {
           if (!timeStr) return { ar: '', en: '' };
           const [hourStr, minuteStr] = timeStr.split(':');
@@ -126,7 +124,6 @@ export async function getDashboardStats(supabase, profile) {
           const startFormatted = formatTimeDisplay(halaqa.start_time);
           const endFormatted = formatTimeDisplay(halaqa.end_time);
 
-          // نسبة حضور الحلقة المحددة
           const halaqaAttendance = attendanceData?.filter(a => a.halaqa_id === halaqa.id) || [];
           let attendance_rate = null;
           if (halaqaAttendance.length > 0) {
@@ -152,7 +149,7 @@ export async function getDashboardStats(supabase, profile) {
         studentsCount: studentsCount || 0, 
         academiesCount: null,
         attendanceRate,
-        totalPagesMuted: `${progressCount || 0} جلسة تسميع`,
+        totalSessions: progressCount || 0, // 👈 رقم مجرد
         overdueCount: overdueCount || 0,
         activeHalaqasData
       }; 
@@ -162,7 +159,7 @@ export async function getDashboardStats(supabase, profile) {
       studentsCount: 0, 
       academiesCount: 0, 
       attendanceRate: '0%', 
-      totalPagesMuted: '0 جلسة تسميع', 
+      totalSessions: 0, 
       overdueCount: 0, 
       activeHalaqasData: [] 
     };
@@ -173,7 +170,7 @@ export async function getDashboardStats(supabase, profile) {
       studentsCount: 0, 
       academiesCount: 0, 
       attendanceRate: '0%', 
-      totalPagesMuted: '0 جلسة تسميع', 
+      totalSessions: 0, 
       overdueCount: 0, 
       activeHalaqasData: [] 
     };
