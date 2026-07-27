@@ -1,4 +1,4 @@
-/* src/components/RealtimeAudit.jsx - متوافق 100% مع جدول audit_logs في Supabase */
+/* src/components/RealtimeAudit.jsx - متوافق 100% مع Supabase ومعالجة الشاملة للبحث */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -11,7 +11,8 @@ import {
   FaPlusCircle, 
   FaEdit, 
   FaTrashAlt, 
-  FaUserCheck 
+  FaUserCheck,
+  FaTimes
 } from 'react-icons/fa';
 
 export default function RealtimeAudit({ session, userRole }) {
@@ -19,8 +20,8 @@ export default function RealtimeAudit({ session, userRole }) {
   const isArabic = !i18n.language || i18n.language.startsWith('ar');
   const isRtl = i18n.dir() === 'rtl' || isArabic;
 
-  // 🏷️ أسماء الجداول مترجمة للغتين
-  const tableLabels = {
+  // 🏷️ أسماء الجداول للعرض حسب اللغة الحالية
+  const tableDisplayNames = {
     attendance: isArabic ? 'الحضور والتسميع' : 'Attendance',
     payments: isArabic ? 'الاشتراكات والمالية' : 'Payments',
     halaqas: isArabic ? 'الحلقات والمقارئ' : 'Halaqas',
@@ -28,12 +29,21 @@ export default function RealtimeAudit({ session, userRole }) {
     daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
   };
 
+  // 🧠 قاموس الكلمات المفتاحية الشامل للبحث باللغتين معاً
+  const searchKeywordsMap = {
+    attendance: 'attendance الحضور والتسميع حضور تسميع',
+    payments: 'payments الاشتراكات والمالية دفع مالية اشتراكات',
+    halaqas: 'halaqas الحلقات والمقارئ حلقة مقارئ',
+    students: 'students شؤون الطلاب الطلاب طالب طالبة',
+    daily_progress: 'daily_progress الإنجاز اليومي انجاز إنجاز'
+  };
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // جلب السجلات المتوافقة مع أعمدة audit_logs الحقيقية
+  // جلب السجلات من Supabase
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -73,7 +83,7 @@ export default function RealtimeAudit({ session, userRole }) {
     };
   }, [fetchAuditLogs]);
 
-  // ترجمة أنواع العمليات (INSERT / UPDATE / DELETE)
+  // ترجمة وتنسيق نوع العملية
   const getOperationBadge = (operation) => {
     switch (operation?.toUpperCase()) {
       case 'INSERT':
@@ -87,26 +97,37 @@ export default function RealtimeAudit({ session, userRole }) {
     }
   };
 
-  // تصفية السجلات للبحث (يشمل البحث بالاسم البرمجي أو المترجم)
+  // 🔍 خوارزمية البحث الفائقة (تبحث في كل شيء باللغتين)
   const filteredLogs = logs.filter((log) => {
-    const tableLabel = tableLabels[log.table_name] || log.table_name || '';
-    const text = `${log.table_name || ''} ${tableLabel} ${log.operation || ''} ${log.changed_by || ''}`.toLowerCase();
-    return text.includes(searchQuery.toLowerCase());
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase().trim();
+    const rawTable = (log.table_name || '').toLowerCase();
+    const tableKeywords = (searchKeywordsMap[log.table_name] || rawTable).toLowerCase();
+    const operation = (log.operation || '').toLowerCase();
+    const opArabic = operation === 'insert' ? 'إضافة' : operation === 'update' ? 'تعديل' : operation === 'delete' ? 'حذف' : '';
+    const changedBy = (log.changed_by || '').toLowerCase();
+
+    const searchableText = `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${changedBy}`;
+    return searchableText.includes(query);
   });
 
   return (
     <div style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1️⃣ الترويسة */}
+      {/* 1️⃣ الترويسة الموحدة الواضحة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FaHistory style={{ color: '#38BDF8' }} />
             <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
           </h2>
-          <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
-            {isArabic ? 'متابعة لحظية للتغيرات في قواعد البيانات (audit_logs)' : 'Real-time tracking of all updates and changes across the system'}
-          </p>
+          :
+<p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
+  {isArabic 
+    ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' 
+    : 'Real-time tracking of all updates and changes across the system'}
+</p>
         </div>
 
         <button 
@@ -117,41 +138,69 @@ export default function RealtimeAudit({ session, userRole }) {
         </button>
       </div>
 
-      {/* 2️⃣ عناصر الفلترة والبحث */}
+      {/* 2️⃣ حقل البحث وتصفية الجداول */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
         <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
           <FaSearch style={{ position: 'absolute', [isRtl ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B', fontSize: '0.85rem' }} />
+          
           <input 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isArabic ? 'ابحث عن اسم الجدول أو العملية...' : 'Search table or operation...'}
-            style={{ width: '100%', padding: '10px 12px', paddingRight: isRtl ? '36px' : '12px', paddingLeft: isRtl ? '12px' : '36px', background: '#1E293B', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#FFF', fontSize: '0.82rem', outline: 'none' }}
+            placeholder={isArabic ? 'ابحث باسم الجدول أو العملية (مثال: الطلاب، تعديل)...' : 'Search table or operation (e.g. Students, Update)...'}
+            style={{ 
+              width: '100%', 
+              padding: '10px 32px', 
+              paddingRight: isRtl ? '36px' : '32px', 
+              paddingLeft: isRtl ? '32px' : '36px', 
+              background: '#1E293B', 
+              border: '1px solid rgba(255,255,255,0.08)', 
+              borderRadius: '12px', 
+              color: '#FFF', 
+              fontSize: '0.82rem', 
+              outline: 'none' 
+            }}
           />
+
+          {/* زر مسح النص */}
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', [isRtl ? 'left' : 'right']: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}>
+              <FaTimes size={12} />
+            </button>
+          )}
         </div>
 
-        {/* فلترة حسب الجدول بالأسماء المترجمة */}
+        {/* القائمة المنسدلة للجداول */}
         <select
           value={selectedTable}
           onChange={(e) => setSelectedTable(e.target.value)}
           style={{ background: '#1E293B', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '12px', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}>
           <option value="all">{isArabic ? 'جميع الجداول' : 'All Tables'}</option>
-          {Object.entries(tableLabels).map(([key, label]) => (
+          {Object.entries(tableDisplayNames).map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
           ))}
         </select>
       </div>
 
-      {/* 3️⃣ عرض السجلات */}
+      {/* 3️⃣ عرض السجلات والحالات الفارغة */}
       {loading ? (
         <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
           {isArabic ? 'جاري تحميل سجل التغييرات...' : 'Loading audit logs...'}
         </div>
-      ) : filteredLogs.length === 0 ? (
+      ) : logs.length === 0 ? (
+        /* حالة عدم وجود بيانات في قاعدة البيانات أساساً */
         <div style={{ background: '#1E293B', padding: '30px', borderRadius: '16px', textAlign: 'center', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.05)' }}>
-          {isArabic ? 'لا توجد سجلات مطابقة حالياً' : 'No audit logs found'}
+          {isArabic ? 'لا توجد أنشطة مسجلة في قاعدة البيانات بعد' : 'No activities recorded in database yet'}
+        </div>
+      ) : filteredLogs.length === 0 ? (
+        /* حالة عدم وجود نتائج تطابق البحث */
+        <div style={{ background: '#1E293B', padding: '30px', borderRadius: '16px', textAlign: 'center', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.05)' }}>
+          {isArabic ? `لا توجد نتائج تطابق "${searchQuery}"` : `No results matching "${searchQuery}"`}
         </div>
       ) : (
+        /* عرض بطاقات السجلات */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filteredLogs.map((log) => {
             const badge = getOperationBadge(log.operation);
@@ -173,7 +222,7 @@ export default function RealtimeAudit({ session, userRole }) {
                     <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.85rem', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>{badge.label}</span>
                       <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px', color: '#38BDF8' }}>
-                        {tableLabels[log.table_name] || log.table_name}
+                        {tableDisplayNames[log.table_name] || log.table_name}
                       </span>
                     </div>
                     
@@ -202,4 +251,4 @@ export default function RealtimeAudit({ session, userRole }) {
 
     </div>
   );
-                     }
+  }
