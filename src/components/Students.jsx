@@ -4,6 +4,8 @@ import { C } from '../constants/colors';
 import { Card, Badge, Btn, TH, TD } from './UI';
 import { useTranslation } from 'react-i18next';
 import { COUNTRIES_LIST } from '../constants/countries';
+import QuranProgressSelector from './QuranProgressSelector';
+import { getQuranProgress } from '../utils/quranUtils';
 
 // دالة حساب التاريخ المزدوج المستقلة
 const getDualDateString = (lang, isRtl) => {
@@ -61,7 +63,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
         </p>
       </div>
 
-      {/* شريط الإشعارات والتحذيرات الاحترافي */}
+      {/* شريط الإشعارات والتحذيرات */}
       {errorMessage && (
         <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>⚠️ {errorMessage}</span>
@@ -95,7 +97,7 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
         </button>
       </div>
 
-      {/* استدعاء المكونات الفرعية بناءً على التبويب النشط */}
+      {/* التبويب النشط */}
       {mainTab === 'students' ? (
         <StudentsSection 
           academyId={academyId} 
@@ -132,8 +134,15 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
   const [studentSearch, setStudentSearch] = useState('');
   const [studentLoading, setStudentLoading] = useState(false);
   const [studentFormData, setStudentFormData] = useState({
-    name: '', gender: 'male', parent_name: '', country_code: 'EG',
-    parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: '', halaqa_id: ''
+    name: '', 
+    gender: 'male', 
+    parent_name: '', 
+    country_code: 'EG',
+    parent_phone: '', 
+    subscription_type: 'monthly', 
+    quarter_index: 1, 
+    notes: '', 
+    halaqa_id: ''
   });
 
   useEffect(() => {
@@ -169,6 +178,9 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
     const cleanPhone = studentFormData.parent_phone.trim().replace(/^0+/, '').replace(/\D/g, '');
     const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
 
+    // حساب التفاصيل القرآنية بناءً على الربع المختار
+    const qProgress = getQuranProgress(studentFormData.quarter_index);
+
     const payload = {
       academy_id: academyId,
       name: studentFormData.name.trim(),
@@ -177,8 +189,9 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
       country: studentFormData.country_code,
       parent_phone: fullPhone,
       subscription_system: studentFormData.subscription_type,
-      current_juz: parseInt(studentFormData.juz_start),
-      current_quarter: parseInt(studentFormData.quarter_start),
+      current_juz: qProgress.juz,
+      current_quarter: qProgress.quarterInHizb,
+      current_quarter_index: studentFormData.quarter_index,
       notes: studentFormData.notes.trim(),
       halaqa_id: studentFormData.halaqa_id || null,
       is_archived: false
@@ -192,7 +205,7 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
       setShowStudentForm(false);
       setStudentFormData({
         name: '', gender: 'male', parent_name: '', country_code: 'EG',
-        parent_phone: '', subscription_type: 'monthly', juz_start: '1', quarter_start: '1', notes: '', halaqa_id: ''
+        parent_phone: '', subscription_type: 'monthly', quarter_index: 1, notes: '', halaqa_id: ''
       });
     }
   };
@@ -236,6 +249,14 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
                 <option value="">{trans('unassignedHalaqaOption', '🚫 بدون حلقة حالياً', 'No Halaqa')}</option>
                 {halaqas.map(h => <option key={h.id} value={h.id}>🔹 {isRtl ? h.name_ar : h.name_en}</option>)}
               </select>
+            </div>
+
+            {/* محدد مستوى القرآن الجديد */}
+            <div style={{ background: '#162030', padding: '14px', borderRadius: '10px', border: '1px solid #334155' }}>
+              <QuranProgressSelector 
+                initialIndex={studentFormData.quarter_index}
+                onIndexChange={(newIndex) => setStudentFormData({ ...studentFormData, quarter_index: newIndex })}
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
@@ -284,6 +305,7 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
               <tr style={{ borderBottom: '2px solid #334155' }}>
                 <TH>{trans('thStudentName', 'الاسم / الحلقة', 'Name / Halaqa')}</TH>
                 <TH>{trans('thGender', 'الجنس', 'Gender')}</TH>
+
                 <TH>{trans('thParentContact', 'ولي الأمر', 'Guardian')}</TH>
                 <TH>{trans('thSubscription', 'الاشتراك', 'Subscription')}</TH>
                 <TH>{trans('thActions', 'الإجراءات', 'Actions')}</TH>
