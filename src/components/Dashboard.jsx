@@ -1,4 +1,4 @@
-/* src/components/Dashboard.jsx - متوافق مع dashboardService.js */
+/* src/components/Dashboard.jsx - متوافق تماماً مع dashboardService.js وقاعدة البيانات */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -23,7 +23,7 @@ export default function Dashboard({
     studentsCount: 0,
     academiesCount: 0,
     attendanceRate: '0%',
-    totalPagesMuted: '0 صفحة',
+    totalPagesMuted: '0 جلسة تسميع',
     overdueCount: 0,
     activeHalaqasData: []
   });
@@ -143,15 +143,15 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* الصفحات المسموعة اليوم */}
+        {/* جلسات التسميع اليوم */}
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.88rem', fontWeight: '600', marginBottom: '8px' }}>
-            <span>{isArabic ? 'الصفحات المسموعة اليوم' : 'Pages Recited Today'}</span>
+            <span>{isArabic ? 'جلسات التسميع اليوم' : 'Recitation Sessions Today'}</span>
             <span style={{ fontSize: '1.2rem' }}>📖</span>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FBBF24' }}>{stats.totalPagesMuted || '0 صفحة'}</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FBBF24' }}>{stats.totalPagesMuted || '0 جلسة تسميع'}</div>
           <div style={{ fontSize: '0.8rem', color: '#FDE047', marginTop: '6px', fontWeight: '600' }}>
-            {isArabic ? 'إجمالي تسميع اليوم' : 'Total Today'}
+            {isArabic ? 'إجمالي الجلسات اليوم' : 'Total Sessions Today'}
           </div>
         </div>
 
