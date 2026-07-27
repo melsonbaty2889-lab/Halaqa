@@ -241,23 +241,23 @@ export default function Dashboard({
         </div>
 
         {(!stats.activeHalaqasData || stats.activeHalaqasData.length === 0) ? (
-          <div style={{ textAlign: 'center', padding: '28px 16px', background: '#0F172A', borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.12)' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>🌱</div>
-            <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.9rem', marginBottom: '4px' }}>
-              {isArabic ? 'لا توجد حلقات مجدولة لهذا اليوم' : 'No Halaqas Scheduled Today'}
-            </div>
-            <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: '0 0 14px 0' }}>
-              {isArabic ? 'قم بجدولة حلقاتك لتتمكن من متابعة الحضور والتسميع المباشر' : 'Schedule halaqas to track live attendance and recitation'}
-            </p>
-            {setActiveTab && (
-              <button 
-                onClick={() => setActiveTab('halaqas')} 
-                style={{ background: '#2563EB', color: '#FFF', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <FaPlus size={11} />
-                <span>{isArabic ? 'إضافة حلقة الآن' : 'Schedule New Halaqa'}</span>
-              </button>
-            )}
-          </div>
+  <div style={{ textAlign: 'center', padding: '28px 16px', background: '#0F172A', borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.12)' }}>
+    <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>🌱</div>
+    <div style={{ color: '#F8FAFC', fontWeight: '700', fontSize: '0.9rem', marginBottom: '4px' }}>
+      {isArabic ? 'لا توجد حلقات مجدولة لهذا اليوم' : 'No Halaqas Scheduled Today'}
+    </div>
+    <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: '0 0 14px 0' }}>
+      {isArabic ? 'قم بجدولة حلقاتك لتتمكن من متابعة الحضور والتسميع المباشر' : 'Schedule halaqas to track live attendance and recitation'}
+    </p>
+    {setActiveTab && (
+      <button 
+        onClick={() => setActiveTab('halaqas')} 
+        style={{ background: '#2563EB', color: '#FFF', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <FaPlus size={11} />
+        <span>{isArabic ? 'إضافة حلقة الآن' : 'Schedule New Halaqa'}</span>
+      </button>
+    )}
+  </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             {stats.activeHalaqasData.map((halaqa) => {
