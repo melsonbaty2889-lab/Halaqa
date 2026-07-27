@@ -333,7 +333,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     reports: <Reports students={students} academyId={academyId} countryCode={countryCode} />,
     
     // 👈 تم إضافة تبويب سجل التدقيق هنا
-    audit: <RealtimeAudit session={session} userRole={userRole} />,
+    'realtime-audit': <RealtimeAudit session={session} userRole={userRole} />,
 
     halaqas: (
       <ActiveHalaqas 
