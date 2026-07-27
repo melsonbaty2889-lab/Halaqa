@@ -1,4 +1,4 @@
-/* src/components/RealtimeAudit.jsx - النسخة المتقدمة المحسنة */
+/* src/components/RealtimeAudit.jsx - النسخة النهائية المكتملة والمحمية */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -45,15 +45,16 @@ export default function RealtimeAudit({ session, userRole }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
 
-  // 1️⃣ جلب البيانات مع ربط جدول profiles لجلب الاسم الحقيقي
+  // 1️⃣ جلب البيانات مع خطة طوارئ مدمجة لمنع الاختفاء
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
+      // المحاولة الأولى: جلب البيانات مع أسماء المستخدمين
       let query = supabase
         .from('audit_logs')
         .select(`
           *,
-          performer:profiles!changed_by (
+          performer:profiles(
             full_name,
             name,
             email
@@ -66,8 +67,25 @@ export default function RealtimeAudit({ session, userRole }) {
         query = query.eq('table_name', selectedTable);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      let { data, error } = await query;
+
+      // خطة الطوارئ: إذا حدث أي تعارض في جلب الأسماء، يتم جلب السجلات مباشرة
+      if (error) {
+        console.warn('Audit logs join notice:', error.message);
+        let fallbackQuery = supabase
+          .from('audit_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (selectedTable !== 'all') {
+          fallbackQuery = fallbackQuery.eq('table_name', selectedTable);
+        }
+
+        const fallbackResult = await fallbackQuery;
+        data = fallbackResult.data;
+      }
+
       setLogs(data || []);
     } catch (err) {
       console.error('Error fetching audit logs:', err);
@@ -79,11 +97,10 @@ export default function RealtimeAudit({ session, userRole }) {
   useEffect(() => {
     fetchAuditLogs();
 
-    // الاستماع للبث المباشر (Realtime)
+    // الاستماع للبث المباشر
     const channel = supabase
       .channel('realtime-audit-logs')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, () => {
-        // إعادة التنشيط الخفيف عند ورود سجل جديد لجلب تفاصيل المستخدم المربوطة
         fetchAuditLogs();
       })
       .subscribe();
@@ -93,16 +110,16 @@ export default function RealtimeAudit({ session, userRole }) {
     };
   }, [fetchAuditLogs]);
 
-  // 2️⃣ دالة استخراج اسم المستخدم الظاهر
+  // 2️⃣ استخراج اسم المستخدم
   const getUserDisplayName = (log) => {
     if (log.performer?.full_name) return log.performer.full_name;
     if (log.performer?.name) return log.performer.name;
     if (log.performer?.email) return log.performer.email;
-    if (log.changed_by) return `${isArabic ? 'المستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}...`;
+    if (log.changed_by) return `${isArabic ? 'مستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}...`;
     return isArabic ? 'النظام التلقائي' : 'System Automated';
   };
 
-  // 3️⃣ تصدير السجلات لملف CSV يدعم الحروف العربية بامتياز (UTF-8 BOM)
+  // 3️⃣ تصدير السجلات لملف CSV متوافق مع اللغة العربية
   const exportToCSV = () => {
     if (filteredLogs.length === 0) return;
     
@@ -122,7 +139,6 @@ export default function RealtimeAudit({ session, userRole }) {
       `"${new Date(log.created_at).toLocaleString(isArabic ? 'ar-EG' : 'en-US')}"`
     ]);
 
-    // إضافة \uFEFF لضمان فتح الملف في Excel بالحروف العربية الصحيحة
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -148,7 +164,7 @@ export default function RealtimeAudit({ session, userRole }) {
     }
   };
 
-  // 4️⃣ الفلترة الذكية بالاسم والعملية والجدول
+  // 4️⃣ الفلترة الذكية
   const filteredLogs = logs.filter((log) => {
     if (!searchQuery.trim()) return true;
 
@@ -165,7 +181,7 @@ export default function RealtimeAudit({ session, userRole }) {
   return (
     <div style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1️⃣ الترويسة الرئيسية + زر التصدير والإنعاش */}
+      {/* 1️⃣ الترويسة الرئيسية */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -240,7 +256,7 @@ export default function RealtimeAudit({ session, userRole }) {
         </select>
       </div>
 
-      {/* 3️⃣ قائمة السجلات التفاعلية */}
+      {/* 3️⃣ عرض البيانات */}
       {loading ? (
         <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
           {isArabic ? 'جاري تحميل سجل التغييرات...' : 'Loading audit logs...'}
@@ -268,7 +284,6 @@ export default function RealtimeAudit({ session, userRole }) {
                 key={log.id} 
                 style={{ background: '#1E293B', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 
-                {/* الجزء الظاهر للبطاقة */}
                 <div 
                   onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
                   style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', cursor: 'pointer' }}>
@@ -308,7 +323,6 @@ export default function RealtimeAudit({ session, userRole }) {
                   </div>
                 </div>
 
-                {/* التفاصيل عند النقر (Diff Viewer) */}
                 {isExpanded && (
                   <div style={{ padding: '12px 14px', background: 'rgba(15, 23, 42, 0.6)', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem' }}>
                     <div style={{ color: '#94A3B8', marginBottom: '6px', fontWeight: '600' }}>
@@ -328,4 +342,4 @@ export default function RealtimeAudit({ session, userRole }) {
 
     </div>
   );
-  }
+}
