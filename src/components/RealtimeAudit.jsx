@@ -1,4 +1,4 @@
-/* src/components/RealtimeAudit.jsx - نسق الميزات المتقدمة للتوسع وزيادة الاشتراكات */
+/* src/components/RealtimeAudit.jsx - النسخة المتقدمة المحسنة */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -45,13 +45,20 @@ export default function RealtimeAudit({ session, userRole }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
 
-  // جلب البيانات
+  // 1️⃣ جلب البيانات مع ربط جدول profiles لجلب الاسم الحقيقي
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase
         .from('audit_logs')
-        .select('*')
+        .select(`
+          *,
+          performer:profiles!changed_by (
+            full_name,
+            name,
+            email
+          )
+        `)
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -72,10 +79,12 @@ export default function RealtimeAudit({ session, userRole }) {
   useEffect(() => {
     fetchAuditLogs();
 
+    // الاستماع للبث المباشر (Realtime)
     const channel = supabase
       .channel('realtime-audit-logs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, (payload) => {
-        setLogs((prev) => [payload.new, ...prev.slice(0, 99)]);
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, () => {
+        // إعادة التنشيط الخفيف عند ورود سجل جديد لجلب تفاصيل المستخدم المربوطة
+        fetchAuditLogs();
       })
       .subscribe();
 
@@ -84,25 +93,42 @@ export default function RealtimeAudit({ session, userRole }) {
     };
   }, [fetchAuditLogs]);
 
-  // تصدير السجلات لملف CSV
+  // 2️⃣ دالة استخراج اسم المستخدم الظاهر
+  const getUserDisplayName = (log) => {
+    if (log.performer?.full_name) return log.performer.full_name;
+    if (log.performer?.name) return log.performer.name;
+    if (log.performer?.email) return log.performer.email;
+    if (log.changed_by) return `${isArabic ? 'المستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}...`;
+    return isArabic ? 'النظام التلقائي' : 'System Automated';
+  };
+
+  // 3️⃣ تصدير السجلات لملف CSV يدعم الحروف العربية بامتياز (UTF-8 BOM)
   const exportToCSV = () => {
     if (filteredLogs.length === 0) return;
     
-    const headers = ["ID", "Table", "Operation", "Changed By", "Date"];
+    const headers = [
+      isArabic ? "المعرف" : "ID", 
+      isArabic ? "الجدول" : "Table", 
+      isArabic ? "العملية" : "Operation", 
+      isArabic ? "بواسطة" : "Changed By", 
+      isArabic ? "التاريخ والتوقيت" : "Date & Time"
+    ];
+
     const rows = filteredLogs.map(log => [
-      log.id,
-      log.table_name,
-      log.operation,
-      log.changed_by || 'System',
-      new Date(log.created_at).toLocaleString()
+      `"${log.id}"`,
+      `"${tableDisplayNames[log.table_name] || log.table_name}"`,
+      `"${log.operation}"`,
+      `"${getUserDisplayName(log)}"`,
+      `"${new Date(log.created_at).toLocaleString(isArabic ? 'ar-EG' : 'en-US')}"`
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
+    // إضافة \uFEFF لضمان فتح الملف في Excel بالحروف العربية الصحيحة
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `Audit_Report_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
@@ -122,6 +148,7 @@ export default function RealtimeAudit({ session, userRole }) {
     }
   };
 
+  // 4️⃣ الفلترة الذكية بالاسم والعملية والجدول
   const filteredLogs = logs.filter((log) => {
     if (!searchQuery.trim()) return true;
 
@@ -130,9 +157,9 @@ export default function RealtimeAudit({ session, userRole }) {
     const tableKeywords = (searchKeywordsMap[log.table_name] || rawTable).toLowerCase();
     const operation = (log.operation || '').toLowerCase();
     const opArabic = operation === 'insert' ? 'إضافة' : operation === 'update' ? 'تعديل' : operation === 'delete' ? 'حذف' : '';
-    const changedBy = (log.changed_by || '').toLowerCase();
+    const userName = getUserDisplayName(log).toLowerCase();
 
-    return `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${changedBy}`.includes(query);
+    return `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${userName}`.includes(query);
   });
 
   return (
@@ -178,7 +205,7 @@ export default function RealtimeAudit({ session, userRole }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isArabic ? 'ابحث باسم الجدول أو العملية (مثال: الطلاب، تعديل)...' : 'Search table or operation...'}
+            placeholder={isArabic ? 'ابحث باسم الطالب، المشرف، أو العملية...' : 'Search table, user, or operation...'}
             style={{ 
               width: '100%', 
               padding: '10px 32px', 
@@ -232,6 +259,7 @@ export default function RealtimeAudit({ session, userRole }) {
             const badge = getOperationBadge(log.operation);
             const Icon = badge.icon;
             const isExpanded = expandedLogId === log.id;
+            const userName = getUserDisplayName(log);
             const timeFormatted = new Date(log.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
             const dateFormatted = new Date(log.created_at).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
 
@@ -259,8 +287,8 @@ export default function RealtimeAudit({ session, userRole }) {
                       </div>
                       
                       <div style={{ color: '#94A3B8', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FaUserCheck size={11} style={{ color: '#64748B' }} />
-                        <span>{isArabic ? 'المعرّف:' : 'ID:'} {log.changed_by ? log.changed_by.substring(0, 8) + '...' : (isArabic ? 'النظام' : 'System')}</span>
+                        <FaUserCheck size={11} style={{ color: '#38BDF8' }} />
+                        <span>{isArabic ? 'بواسطة:' : 'By:'} <strong style={{ color: '#CBD5E1' }}>{userName}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -287,7 +315,7 @@ export default function RealtimeAudit({ session, userRole }) {
                       {isArabic ? 'بيانات العملية المسجلة:' : 'Payload Details:'}
                     </div>
                     <pre style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', color: '#34D399', overflowX: 'auto', margin: 0, fontSize: '0.7rem', fontFamily: 'monospace' }}>
-                      {JSON.stringify(log.record_data || log.new_data || { id: log.id, action: log.operation }, null, 2)}
+                      {JSON.stringify(log.new_data || log.old_data || log.record_data || { id: log.id, action: log.operation }, null, 2)}
                     </pre>
                   </div>
                 )}
@@ -300,4 +328,4 @@ export default function RealtimeAudit({ session, userRole }) {
 
     </div>
   );
-            }
+  }
