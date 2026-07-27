@@ -7,7 +7,7 @@ import {
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt, FaClock,
-  FaHistory, FaBell, FaHome, FaTrophy, FaFolder
+  FaHistory, FaBell, FaHome, FaTrophy, FaFolder, FaPaperPlane
 } from "react-icons/fa";
 
 // 🌟 شعار المنظومة الاحترافي
@@ -66,17 +66,17 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const menuSections = [
+    const menuSections = [
     {
       id: 'ops',
       title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       items: [
         { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
         { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
-        { id: 'omnichannel-hub', label: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: FaBell },
+        { id: 'communication-hub', label: isRtl ? 'مركز التواصل والمراسلات' : 'Communication Hub', icon: FaPaperPlane },
         { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
-    },
+    },   
     {
       id: 'academic',
       title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
@@ -352,7 +352,7 @@ export default function Sidebar({
               <FaChevronDown style={{ fontSize: '0.65rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
             </button>
 
-            {/* القائمة المنسدلة بظلال وحدود واضحة لحل مشكلة التداخل */}
+            {/* القائمة المنسدلة بظلال وحدود واضحة */}
             {dropdownOpen && (
               <div style={{
                 position: 'absolute',
@@ -407,7 +407,6 @@ export default function Sidebar({
             justifyContent: 'space-between',
             gap: '6px'
           }}>
-            {/* 1️⃣ جهة البداية: أيقونة الساعة + الوقت */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -422,7 +421,6 @@ export default function Sidebar({
               <span>{academyTime || '12:24 PM'}</span>
             </div>
 
-            {/* 2️⃣ المنتصف: التاريخ الميلادي والتاريخ الهجري أسفل بعضهما مباشرة */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -431,7 +429,6 @@ export default function Sidebar({
               gap: '2px',
               minWidth: 0
             }}>
-              {/* التاريخ الميلادي */}
               <span style={{
                 fontSize: '0.64rem',
                 color: '#38bdf8',
@@ -442,7 +439,6 @@ export default function Sidebar({
                 {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
 
-              {/* التاريخ الهجري */}
               <span style={{
                 fontSize: '0.62rem',
                 color: '#38bdf8',
@@ -454,7 +450,6 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* 3️⃣ جهة النهاية: زر الترقية */}
             <button
               onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
               style={{
@@ -536,27 +531,16 @@ export default function Sidebar({
                         fontSize: '0.72rem',
                         fontWeight: '700',
                         cursor: 'pointer',
-                        transition: '0.15s ease'
+                        transition: 'all 0.2s'
                       }}
                     >
                       <span>{section.title}</span>
-                      {isExpanded ? (
-                        <FaChevronUp style={{ fontSize: '0.6rem' }} />
-                      ) : (
-                        <FaChevronDown style={{ fontSize: '0.6rem' }} />
-                      )}
+                      {isExpanded ? <FaChevronUp style={{ fontSize: '0.65rem' }} /> : <FaChevronDown style={{ fontSize: '0.65rem' }} />}
                     </button>
 
-                    {/* عناصر القسم */}
+                    {/* العناصر التابعة للقسم */}
                     {isExpanded && (
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '2px',
-                        marginTop: '3px',
-                        paddingRight: isRtl ? '6px' : 0,
-                        paddingLeft: !isRtl ? '6px' : 0
-                      }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px', paddingRight: isRtl ? '6px' : '0', paddingLeft: !isRtl ? '6px' : '0' }}>
                         {section.items.map((item) => {
                           const Icon = item.icon;
                           const isActive = activeTab === item.id;
@@ -573,22 +557,21 @@ export default function Sidebar({
                                 alignItems: 'center',
                                 gap: '8px',
                                 padding: '7px 10px',
-                                borderRadius: '5px',
+                                borderRadius: '6px',
                                 border: 'none',
-                                background: isActive 
-                                  ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.08) 100%)' 
-                                  : 'transparent',
-                                borderRight: isActive && isRtl ? '3px solid #f59e0b' : 'none',
-                                borderLeft: isActive && !isRtl ? '3px solid #f59e0b' : 'none',
-                                color: isActive ? '#fbbf24' : '#cbd5e1',
-                                fontWeight: isActive ? '700' : 'normal',
+                                background: isActive ? 'linear-gradient(90deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.05) 100%)' : 'transparent',
+                                color: isActive ? '#38bdf8' : '#cbd5e1',
+                                borderRight: isRtl && isActive ? '3px solid #38bdf8' : 'none',
+                                borderLeft: !isRtl && isActive ? '3px solid #38bdf8' : 'none',
                                 cursor: 'pointer',
+                                fontSize: '0.78rem',
+                                fontWeight: isActive ? '600' : '400',
                                 textAlign: isRtl ? 'right' : 'left',
-                                transition: 'all 0.15s ease'
+                                transition: '0.15s'
                               }}
                             >
-                              <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} />
-                              <span style={{ fontSize: '0.78rem' }}>{item.label}</span>
+                              <Icon style={{ fontSize: '0.85rem', color: isActive ? '#38bdf8' : '#64748b', flexShrink: 0 }} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
                             </button>
                           );
                         })}
@@ -598,49 +581,12 @@ export default function Sidebar({
                 );
               })
             ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '12px 8px',
-                color: '#64748b',
-                fontSize: '0.75rem',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: '5px',
-                border: '1px solid #1e293b'
-              }}>
-                {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
+              <div style={{ color: '#64748b', fontSize: '0.75rem', textAlign: 'center', padding: '10px' }}>
+                {isRtl ? 'لا توجد نتائج' : 'No items found'}
               </div>
             )}
           </nav>
-        </div>
 
-        {/* 🔒 6️⃣ إنهاء الجلسة وتأكيد الخروج */}
-        <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', background: '#080d1a' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px', fontSize: '0.68rem', color: '#64748b' }}>
-            <FaCloud style={{ color: '#10b981' }} />
-            <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
-          </div>
-
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              padding: '7px',
-              background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              borderRadius: '6px',
-              color: '#f87171',
-              fontWeight: 'bold',
-              fontSize: '0.75rem',
-              cursor: 'pointer'
-            }}
-          >
-            <FaSignOutAlt />
-            <span>{isRtl ? 'إنهاء الجلسة وتأكيد الخروج' : 'Logout'}</span>
-          </button>
         </div>
       </aside>
     </>
