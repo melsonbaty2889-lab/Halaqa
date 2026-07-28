@@ -66,47 +66,44 @@ export default function Sidebar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // دالة أمان للترجمة لضمان عدم حدوث أخطاء إذا لم تُمرر t
-  const translate = (key, fallback) => (t ? t(key, fallback) : fallback);
-
   const menuSections = [
     {
       id: 'ops',
-      title: translate('sidebar.sections.ops', isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub'),
+      title: isRtl ? '1. مركز القيادة والعمليات' : '1. Operations Hub',
       items: [
-        { id: 'dashboard', label: translate('nav.dashboard', isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance'), icon: FaChartBar },
-        { id: 'realtime-audit', label: translate('nav.realtime-audit', isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail'), icon: FaHistory },
-        { id: 'communication-hub', label: translate('nav.communication-hub', isRtl ? 'مركز التواصل والمراسلات' : 'Communication Hub'), icon: FaPaperPlane },
-        { id: 'reports', label: translate('nav.reports', isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics'), icon: FaChartBar }
+        { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
+        { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
+        { id: 'communication-hub', label: isRtl ? 'مركز التواصل والمراسلات' : 'Communication Hub', icon: FaPaperPlane },
+        { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
     },
     {
       id: 'academic',
-      title: translate('sidebar.sections.academic', isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core'),
+      title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
       items: [
-        { id: 'students', label: translate('nav.students', isRtl ? 'إدارة الدارسين' : 'Learner Directory'), icon: FaUserGraduate },
-        { id: 'teachers', label: translate('nav.teachers', isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters'), icon: FaChalkboardTeacher },
-        { id: 'halaqas', label: translate('nav.halaqas', isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad'), icon: FaBookOpen },
-        { id: 'attendance', label: translate('nav.attendance', isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation'), icon: FaCheckCircle },
-        { id: 'exams', label: translate('nav.exams', isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas'), icon: FaAward }
+        { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: FaUserGraduate },
+        { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: FaChalkboardTeacher },
+        { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: FaBookOpen },
+        { id: 'attendance', label: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation', icon: FaCheckCircle },
+        { id: 'exams', label: isRtl ? 'الاختبارات والتقييم' : 'Exams & Diplomas', icon: FaAward }
       ]
     },
     {
       id: 'community',
-      title: translate('sidebar.sections.community', isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement & Community'),
+      title: isRtl ? '3. تفاعل الدارسين والأسر' : '3. Engagement & Community',
       items: [
-        { id: 'guardian-portal', label: translate('nav.guardian-portal', isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal'), icon: FaHome },
-        { id: 'gamification-streaks', label: translate('nav.gamification-streaks', isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks'), icon: FaTrophy }
+        { id: 'guardian-portal', label: isRtl ? 'شبكة أسر الدارسين' : 'Guardian Portal', icon: FaHome },
+        { id: 'gamification-streaks', label: isRtl ? 'الإنجاز والحوافز' : 'Gamification & Streaks', icon: FaTrophy }
       ]
     },
     {
       id: 'governance',
-      title: translate('sidebar.sections.governance', isRtl ? '4. الحوكمة والمالية' : '4. Governance & Treasury'),
+      title: isRtl ? '4. الحوكمة والمالية' : '4. Governance & Treasury',
       items: [
-        { id: 'payments', label: translate('nav.payments', isRtl ? 'الاشتراكات والتحصيل' : 'Billing & Payments'), icon: FaCreditCard },
-        { id: 'asset-management', label: translate('nav.asset-management', isRtl ? 'المستندات والأصول' : 'Asset Management'), icon: FaFolder },
-        { id: 'referrals', label: translate('nav.referrals', isRtl ? 'برنامج الإحالة والأرباح' : 'Affiliate & Rewards'), icon: FaBolt },
-        { id: 'settings', label: translate('nav.settings', isRtl ? 'إعدادات المنظومة' : 'Platform Governance'), icon: FaSlidersH }
+        { id: 'payments', label: isRtl ? 'الاشتراكات والتحصيل' : 'Billing & Payments', icon: FaCreditCard },
+        { id: 'asset-management', label: isRtl ? 'المستندات والأصول' : 'Asset Management', icon: FaFolder },
+        { id: 'referrals', label: isRtl ? 'برنامج الإحالة والأرباح' : 'Affiliate & Rewards', icon: FaBolt },
+        { id: 'settings', label: isRtl ? 'إعدادات المنظومة' : 'Platform Governance', icon: FaSlidersH }
       ]
     }
   ];
@@ -297,10 +294,10 @@ export default function Sidebar({
               <SmartHalaqaProLogo />
               <div>
                 <h2 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: '#fff', lineHeight: '1.2' }}>
-                  {translate('brand.title', isRtl ? 'الحلقة الذكية' : 'Smart Halaqa')}
+                  {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
                 <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: '500' }}>
-                  {translate('brand.subtitle', isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform')}
+                  {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
               </div>
             </div>
@@ -620,7 +617,7 @@ export default function Sidebar({
         <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', background: '#080d1a' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px', fontSize: '0.68rem', color: '#64748b' }}>
             <FaCloud style={{ color: '#10b981' }} />
-            <span>{translate('sidebar.cloudSync', isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized')}</span>
+            <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
           </div>
 
           <button
