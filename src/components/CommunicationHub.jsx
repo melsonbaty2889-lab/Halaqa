@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { 
   FaPaperPlane, FaBullhorn, FaWhatsapp, FaEnvelope, 
-  FaSms, FaBell, FaCheckCircle, FaSpinner, FaHistory 
+  FaSms, FaBell, FaCheckCircle, FaSpinner, FaHistory,
+  FaChartLine, FaUsers, FaCheckDouble, FaMagic
 } from 'react-icons/fa';
 
 export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl }) {
@@ -24,6 +25,22 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
     recipient: 'all_students',
     priority: 'normal'
   });
+
+  // 🪄 قوالب سريعة جاهزة
+  const templates = [
+    {
+      titleAr: 'تذكير بموعد الاختبار',
+      titleEn: 'Exam Schedule Reminder',
+      contentAr: 'السلام عليكم، نود تذكيركم بموعد الاختبار القادم يوم [اليوم] في تمام الساعة [الوقت]. بالتوفيق للجميع.',
+      contentEn: 'Dear students, this is a reminder for your upcoming exam on [Date] at [Time]. Good luck!'
+    },
+    {
+      titleAr: 'تنبيه إجازة رسمية',
+      titleEn: 'Official Holiday Announcement',
+      contentAr: 'نفيدكم علماً بأنه تقرر إيقاف الحلقات والدروس اعتباراً من [التاريخ] بمناسبة الإجازة الرسمية.',
+      contentEn: 'Please note that classes will be suspended starting [Date] due to the official holiday.'
+    }
+  ];
 
   const fetchNotifications = useCallback(async () => {
     setFetching(true);
@@ -71,7 +88,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
 
       if (error) throw error;
 
-      setSuccessMsg(isAr ? 'تم إرسال الرسالة بنجاح!' : 'Broadcast sent successfully!');
+      setSuccessMsg(isAr ? 'تم إرسال التعميم بنجاح!' : 'Broadcast sent successfully!');
       setFormData({
         title: '',
         content: '',
@@ -89,22 +106,27 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
     }
   };
 
-  // 🌐 مصفوفة القنوات مترجمة
   const channels = [
-    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: FaBell },
-    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: FaWhatsapp },
-    { id: 'sms', label: 'SMS', icon: FaSms },
-    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: FaEnvelope }
+    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: FaBell, color: '#38bdf8' },
+    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: FaWhatsapp, color: '#22c55e' },
+    { id: 'sms', label: 'SMS', icon: FaSms, color: '#f59e0b' },
+    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: FaEnvelope, color: '#a855f7' }
   ];
 
-  // 🎯 مصفوفة المستهدفين مترجمة
   const recipientOptions = [
     { id: 'all_students', label: isAr ? 'جميع الطلاب والدارسين' : 'All Students' },
     { id: 'parents', label: isAr ? 'أولياء الأمور' : 'Parents' },
     { id: 'teachers', label: isAr ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff' }
   ];
 
-  // 🛠️ دالة تحويل القناة والمستهدف إلى نص مترجم في السجل
+  const applyTemplate = (tpl) => {
+    setFormData({
+      ...formData,
+      title: isAr ? tpl.titleAr : tpl.titleEn,
+      content: isAr ? tpl.contentAr : tpl.contentEn
+    });
+  };
+
   const getRecipientLabel = (key) => {
     const found = recipientOptions.find(r => r.id === key);
     if (found) return found.label;
@@ -119,19 +141,72 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
   };
 
   return (
-    <div style={{ padding: '20px', color: '#fff', background: '#0b1329', minHeight: '100vh' }} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* 🌟 الهيدر */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-        <div style={{ background: 'rgba(56, 189, 248, 0.15)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-          <FaPaperPlane style={{ fontSize: '1.5rem', color: '#38bdf8' }} />
+    <div style={{ padding: '16px', color: '#fff', background: '#0b1329', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }} dir={isRtl ? 'rtl' : 'ltr'}>
+      
+      {/* 🌟 الهيدر الترحيبي العريض */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8))',
+        padding: '20px',
+        borderRadius: '16px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        marginBottom: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #0284c7, #0369a1)', 
+            padding: '14px', 
+            borderRadius: '14px',
+            boxShadow: '0 8px 20px rgba(2, 132, 199, 0.3)'
+          }}>
+            <FaPaperPlane style={{ fontSize: '1.4rem', color: '#fff' }} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800' }}>
+              {isAr ? 'مركز التواصل والمراسلات الذكي' : 'Smart Communication Hub'}
+            </h1>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+              {isAr ? 'إدارة المراسلات والتعاميم الفورية لجميع أطراف الأكاديمية' : 'Broadcast notifications and announcements seamlessly'}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700' }}>
-            {isAr ? 'مركز التواصل والمراسلات الجماعية' : 'Communication & Broadcast Hub'}
-          </h1>
-          <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8' }}>
-            {isAr ? 'إرسال التنبيهات والتعاميم للطلاب والأولياء والكادر التعليمي' : 'Broadcast notifications and announcements to students, parents, and teachers'}
-          </p>
+      </div>
+
+      {/* 📊 كروت الإحصائيات الفاخرة */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+        gap: '12px', 
+        marginBottom: '20px' 
+      }}>
+        <div style={{ background: '#131f37', padding: '14px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <div style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaChartLine style={{ color: '#38bdf8' }} />
+            <span>{isAr ? 'إجمالي المراسلات' : 'Total Sent'}</span>
+          </div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginTop: '6px' }}>{history.length}</div>
+        </div>
+
+        <div style={{ background: '#131f37', padding: '14px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <div style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaUsers style={{ color: '#22c55e' }} />
+            <span>{isAr ? 'القنوات الفعالة' : 'Active Channels'}</span>
+          </div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginTop: '6px' }}>4</div>
+        </div>
+
+        <div style={{ background: '#131f37', padding: '14px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <div style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FaCheckDouble style={{ color: '#a855f7' }} />
+            <span>{isAr ? 'حالة النظام' : 'System Status'}</span>
+          </div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#22c55e', marginTop: '8px' }}>
+            {isAr ? 'نشط ومباشر' : 'Live & Active'}
+          </div>
         </div>
       </div>
 
@@ -139,13 +214,40 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
         
         {/* 1️⃣ نموذج الإرسال */}
-        <div style={{ background: '#131f37', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
-          <h2 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
-            <FaBullhorn /> {isAr ? 'إرسال تعميم جديد' : 'New Broadcast'}
+        <div style={{ background: '#131f37', padding: '20px', borderRadius: '16px', border: '1px solid #1e293b' }}>
+          <h2 style={{ fontSize: '0.95rem', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
+            <FaBullhorn /> {isAr ? 'إنشاء تعميم جديد' : 'New Broadcast'}
           </h2>
 
+          {/* 🪄 القوالب السريعة */}
+          <div style={{ marginBottom: '16px' }}>
+            <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
+              <FaMagic style={{ color: '#fbbf24' }} /> {isAr ? 'قوالب سريعة جاهزة:' : 'Quick Templates:'}
+            </span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {templates.map((tpl, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => applyTemplate(tpl)}
+                  style={{
+                    padding: '4px 8px',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    border: '1px solid rgba(56, 189, 248, 0.2)',
+                    borderRadius: '6px',
+                    color: '#38bdf8',
+                    fontSize: '0.68rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isAr ? tpl.titleAr : tpl.titleEn}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {successMsg && (
-            <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FaCheckCircle /> {successMsg}
             </div>
           )}
@@ -154,7 +256,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
             
             {/* قناة الإرسال */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px' }}>
                 {isAr ? 'قناة الإرسال' : 'Channel'}
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
@@ -167,11 +269,11 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
                       key={ch.id}
                       onClick={() => setFormData({ ...formData, channel: ch.id })}
                       style={{
-                        padding: '8px 4px',
-                        background: active ? 'rgba(56, 189, 248, 0.2)' : '#0f172a',
-                        border: active ? '1px solid #38bdf8' : '1px solid #334155',
-                        borderRadius: '6px',
-                        color: active ? '#38bdf8' : '#94a3b8',
+                        padding: '10px 4px',
+                        background: active ? `${ch.color}22` : '#0f172a',
+                        border: active ? `1px solid ${ch.color}` : '1px solid #334155',
+                        borderRadius: '8px',
+                        color: active ? ch.color : '#94a3b8',
                         cursor: 'pointer',
                         fontSize: '0.7rem',
                         display: 'flex',
@@ -180,8 +282,8 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
                         gap: '4px'
                       }}
                     >
-                      <Icon style={{ fontSize: '0.9rem' }} />
-                      <span>{ch.label}</span>
+                      <Icon style={{ fontSize: '1rem' }} />
+                      <span style={{ fontWeight: active ? 'bold' : 'normal' }}>{ch.label}</span>
                     </button>
                   );
                 })}
@@ -190,13 +292,13 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
 
             {/* المستهدفون */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px' }}>
                 {isAr ? 'المستهدفون' : 'Recipients'}
               </label>
               <select
                 value={formData.recipient}
                 onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
-                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
+                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '0.8rem' }}
               >
                 {recipientOptions.map(opt => (
                   <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -206,31 +308,31 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
 
             {/* العنوان */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                {isAr ? 'عنوان التعميم / الموضوع' : 'Title'}
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px' }}>
+                {isAr ? 'عنوان الموضوع' : 'Title'}
               </label>
               <input
                 type="text"
                 required
-                placeholder={isAr ? 'مثال: موعد اختبارات نهاية الفصل' : 'e.g., Final Exam Schedule'}
+                placeholder={isAr ? 'أدخل عنوان الرسالة...' : 'Enter title...'}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '0.8rem', boxSizing: 'border-box' }}
               />
             </div>
 
             {/* المحتوى */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px' }}>
                 {isAr ? 'محتوى الرسالة' : 'Content'}
               </label>
               <textarea
                 rows="4"
                 required
-                placeholder={isAr ? 'اكتب تفاصيل الرسالة هنا...' : 'Write notification details here...'}
+                placeholder={isAr ? 'اكتب الرسالة التفصيلية هنا...' : 'Write message details...'}
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', resize: 'vertical', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '0.8rem', resize: 'vertical', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -239,7 +341,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '10px',
+                padding: '11px',
                 background: 'linear-gradient(135deg, #0284c7, #0369a1)',
                 color: '#fff',
                 border: 'none',
@@ -251,7 +353,8 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                marginTop: '6px'
+                marginTop: '4px',
+                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)'
               }}
             >
               {loading ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaPaperPlane />}
@@ -261,9 +364,9 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
         </div>
 
         {/* 2️⃣ سجل المراسلات */}
-        <div style={{ background: '#131f37', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
-          <h2 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
-            <FaHistory /> {isAr ? 'سجل المراسلات السابقة' : 'Recent History'}
+        <div style={{ background: '#131f37', padding: '20px', borderRadius: '16px', border: '1px solid #1e293b' }}>
+          <h2 style={{ fontSize: '0.95rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
+            <FaHistory /> {isAr ? 'سجل المراسلات' : 'Recent History'}
           </h2>
 
           {fetching ? (
@@ -272,17 +375,17 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
             </div>
           ) : history.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#64748b', padding: '30px 10px', fontSize: '0.8rem' }}>
-              {isAr ? 'لا توجد مراسلات أُرسلت بعد' : 'No notification history found'}
+              {isAr ? 'لا توجد مراسلات سابقة' : 'No notification history'}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '460px', overflowY: 'auto' }}>
               {history.map((item) => (
-                <div key={item.id} style={{ background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                <div key={item.id} style={{ background: '#0f172a', padding: '12px', borderRadius: '10px', border: '1px solid #1e293b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span dir="auto" style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#e2e8f0', textAlign: 'start' }}>
+                    <span dir="auto" style={{ fontWeight: 'bold', fontSize: '0.82rem', color: '#e2e8f0', textAlign: 'start' }}>
                       {item.title}
                     </span>
-                    <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(56,189,248,0.2)' }}>
                       {getChannelLabel(item.channel)}
                     </span>
                   </div>
