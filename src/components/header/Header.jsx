@@ -14,9 +14,6 @@ import {
 
 import { supabase } from '../../lib/supabase';
 
-import arTranslation from '../../locales/ar.json';
-import enTranslation from '../../locales/en.json';
-
 export default function Header({ 
   activeTab, 
   sidebarOpen, 
@@ -27,7 +24,7 @@ export default function Header({
 }) {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language || 'ar';
-  const isAr = currentLanguage === 'ar';
+  const isAr = currentLanguage.startsWith('ar');
 
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -107,32 +104,13 @@ export default function Header({
     pathname = '';
   }
 
-  const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
+  // تنظيف مفتاح الصفحة لاستخراجه بدقة
+  const rawKey = activeTab || pathname.replace(/^\//, '') || 'dashboard';
+  const activeKey = rawKey.split('/')[0].trim();
 
-  // 🌐 جدول عناوين الصفحات الكامل والمترجم باللغتين (المسميات الفخمة والاحترافية)
-  const pageTitlesMap = {
-    'dashboard': { ar: 'لوحة التحكم والتحليلات', en: 'Dashboard & Analytics' },
-    'realtime-audit': { ar: 'السجل الحي للأنشطة', en: 'Realtime Audit Trail' },
-    'communication-hub': { ar: 'مركز التواصل والمراسلات', en: 'Communication & Broadcast Hub' },
-    'reports': { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' },
-    'students': { ar: 'إدارة الدارسين', en: 'Learner Directory' },
-    'teachers': { ar: 'الكادر والمقرئين', en: 'Faculty & Reciters' },
-    'halaqas': { ar: 'المقارئ والحلقات', en: 'Halaqas & Sanad' },
-    'attendance': { ar: 'التسميع والتحضير اليومي', en: 'Daily Recitation' },
-    'exams': { ar: 'الاختبارات والتقييم', en: 'Exams & Assessment' },
-    'guardian-portal': { ar: 'شبكة أسر الدارسين', en: 'Guardian Portal' },
-    'gamification-streaks': { ar: 'الإنجاز والحوافز', en: 'Gamification & Streaks' },
-    'payments': { ar: 'الاشتراكات والتحصيل', en: 'Billing & Payments' },
-    'asset-management': { ar: 'المستندات والأصول', en: 'Asset Management' },
-    'referrals': { ar: 'برنامج الإحالة والأرباح', en: 'Affiliate & Rewards' },
-    'settings': { ar: 'إعدادات المنظومة', en: 'Platform Governance' },
-    'profile': { ar: 'الملف الشخصي', en: 'User Profile' }
-  };
-
-  // 🎯 تحديد عنوان الصفحة بالاعتماد على الـ JSON أو الـ Map الافتراضي
-  const currentTranslations = isAr ? arTranslation : enTranslation;
-  const jsonTitle = currentTranslations?.nav?.[activeKey];
-  const pageTitle = jsonTitle || pageTitlesMap[activeKey]?.[isAr ? 'ar' : 'en'] || activeKey;
+  // 🎯 استخراج عنوان الصفحة مباشرة وديناميكياً عبر i18next القياسي
+  // سيبحث عن nav.asset-management مثلاً، وإن لم يجدها سيأخذ النص الافتراضي
+  const pageTitle = t(`nav.${activeKey}`, t(`nav.dashboard`, 'Smart Halaqa'));
 
   const toggleLanguage = () => {
     const nextLng = isAr ? 'en' : 'ar';
@@ -174,7 +152,8 @@ export default function Header({
     });
   };
 
-  const dropdownPositionStyle = (isRtl !== undefined ? isRtl : isAr)
+  const activeRtl = isRtl !== undefined ? isRtl : isAr;
+  const dropdownPositionStyle = activeRtl
     ? { left: 0, right: 'auto' }
     : { right: 0, left: 'auto' };
 
@@ -192,7 +171,7 @@ export default function Header({
       zIndex: 100,
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       color: '#fff',
-      direction: (isRtl !== undefined ? isRtl : isAr) ? 'rtl' : 'ltr',
+      direction: activeRtl ? 'rtl' : 'ltr',
       gap: '8px',
       flexWrap: 'nowrap'
     }}>
@@ -218,10 +197,10 @@ export default function Header({
           <FaBars />
         </button>
 
-        {/* عنوان الصفحة المتجاوب ذو المظهر الأنيق بدون تخريب الهيدر */}
+        {/* عنوان الصفحة المترجم تلقائياً وبأقصى مرونة بدون اقتطاع متصلب */}
         <h1 style={{
           margin: 0,
-          fontSize: '0.85rem',
+          fontSize: '0.88rem',
           fontWeight: '700',
           color: '#ffffff',
           whiteSpace: 'nowrap',
@@ -382,7 +361,7 @@ export default function Header({
                 paddingBottom: '6px' 
               }}>
                 <span style={{ fontWeight: 'bold', color: '#fff' }}>
-                  {isAr ? 'التنبيهات' : 'Notifications'}
+                  {t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
                 </span>
                 {notifications.length > 0 && (
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -406,7 +385,7 @@ export default function Header({
 
               {loadingNotifs ? (
                 <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
-                  {isAr ? 'جاري التحميل...' : 'Loading...'}
+                  {t('common.loading', isAr ? 'جاري التحميل...' : 'Loading...')}
                 </div>
               ) : notifications.length === 0 ? (
                 <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
@@ -463,7 +442,7 @@ export default function Header({
               border: '1px solid #1e293b',
               cursor: 'pointer'
             }}
-            title={isAr ? "الملف الشخصي" : "Profile"}
+            title={t('nav.profile', isAr ? "الملف الشخصي" : "Profile")}
           >
             <div style={{ 
               width: '22px', 
@@ -498,7 +477,7 @@ export default function Header({
               textAlign: isAr ? 'right' : 'left'
             }}>
               <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '0.82rem' }}>
-                {isAr ? 'صاحب الأكاديمية' : 'Academy Owner'}
+                {t('header.admin', isAr ? 'صاحب الأكاديمية' : 'Academy Owner')}
               </div>
 
               <div style={{ 
