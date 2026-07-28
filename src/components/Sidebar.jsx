@@ -95,7 +95,8 @@ export default function Sidebar({
       id: 'governance',
       title: isRtl ? '4. الحوكمة والمالية' : '4. Governance & Treasury',
       items: [
-        { id: 'payments', label: isRtl ? 'الاشتراكات والتحصيل' : 'Billing & Payments', icon: FaCreditCard },
+        { id: 'subscriptions', label: isRtl ? 'الاشتراكات والترقية' : 'Subscriptions & Upgrades', icon: FaBolt },
+        { id: 'payments', label: isRtl ? 'التحصيل والمعاملات' : 'Billing & Payments', icon: FaCreditCard },
         { id: 'asset-management', label: isRtl ? 'المستندات والأصول' : 'Asset Management', icon: FaFolder },
         { id: 'referrals', label: isRtl ? 'برنامج الإحالة والأرباح' : 'Affiliate & Rewards', icon: FaBolt },
         { id: 'settings', label: isRtl ? 'إعدادات المنظومة' : 'Platform Governance', icon: FaSlidersH }
@@ -442,12 +443,12 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* ⚡ زر الترقية (تم ربطه بأمان) */}
+            {/* ⚡ زر الترقية - تحويل فوري لصفحة الاشتراكات */}
             <button
               onClick={() => {
-                if (typeof setShowEarlyUpgrade === 'function') {
-                  setShowEarlyUpgrade(true);
-                }
+                setActiveTab('subscriptions');
+                if (typeof setShowEarlyUpgrade === 'function') setShowEarlyUpgrade(false);
+                if (isMobile) setSidebarOpen(false);
               }}
               style={{
                 padding: '5px 8px',
