@@ -73,7 +73,7 @@ export default function Sidebar({
       items: [
         { id: 'dashboard', label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Performance', icon: FaChartBar },
         { id: 'realtime-audit', label: isRtl ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail', icon: FaHistory },
-        { id: 'omnichannel-hub', label: isRtl ? 'مركز التنبيهات الموحد' : 'Omnichannel Hub', icon: FaBell },
+        { id: 'communication-hub', label: isRtl ? 'مركز التواصل والمراسلات' : 'Communication Hub', icon: FaPaperPlane },
         { id: 'reports', label: isRtl ? 'التقارير والتحليلات' : 'Reports & Analytics', icon: FaChartBar }
       ]
     },
