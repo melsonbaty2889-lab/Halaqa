@@ -255,31 +255,79 @@ setTopAchievers(studentsData || []);
 )}
 
       {/* 🔥 السلسلة المتتالية - Streaks */}
-      {activeTab === 'streaks' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
-          <h2 style={{ fontSize: '1rem', color: '#EF4444', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaFire /> {isRtl ? 'سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}
-          </h2>
+{activeTab === 'streaks' && (
+  <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
+    <h2 style={{ fontSize: '1rem', color: '#EF4444', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <FaFire style={{ filter: 'drop-shadow(0 0 4px #EF4444)' }} /> {isRtl ? 'سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}
+    </h2>
 
-          {streaks.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
-              {isRtl ? 'لا توجد سجلات مواظبة حتي الآن' : 'No streak records found'}
-            </p>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {streaks.map((st, i) => (
-                <div key={st.id || i} style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', border: '1px solid #334155', textAlign: 'center' }}>
-                  <FaFire style={{ color: '#EF4444', fontSize: '24px', marginBottom: '4px' }} />
-                  <h3 style={{ color: '#FFF', fontSize: '0.85rem', margin: '0 0 4px 0' }}>{st.students?.name || 'طالب'}</h3>
-                  <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '1rem' }}>
-                    {st.current_streak || 0} يوم
+    {streaks.length === 0 ? (
+      <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+        {isRtl ? 'لا توجد سجلات مواظبة حتى الآن' : 'No streak records found'}
+      </p>
+    ) : (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+        {streaks.map((st, i) => {
+          const currentStreak = st.current_streak || 0;
+          const longestStreak = st.longest_streak || currentStreak;
+
+          return (
+            <div key={st.id || i} style={{ 
+              background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)', 
+              padding: '12px 14px', 
+              borderRadius: '12px', 
+              border: '1px solid #334155',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              {/* القسم الأيمن: أيقونة الشعلة واسم الطالب */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ 
+                  background: 'rgba(239, 68, 68, 0.15)', 
+                  width: '42px', 
+                  height: '42px', 
+                  borderRadius: '10px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  border: '1px solid rgba(239, 68, 68, 0.3)'
+                }}>
+                  <FaFire style={{ color: '#EF4444', fontSize: '22px', filter: 'drop-shadow(0 0 6px #EF4444)' }} />
+                </div>
+
+                <div>
+                  <h3 style={{ color: '#FFF', fontSize: '0.9rem', fontWeight: '700', margin: '0 0 2px 0' }}>
+                    {st.students?.name || st.student_name || 'طالب'}
+                  </h3>
+                  <div style={{ color: '#64748B', fontSize: '0.72rem' }}>
+                    {isRtl ? `أفضل رقم: ${longestStreak} يوم` : `Best: ${longestStreak} days`}
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* القسم الأيسر: عدد الأيام الحالية */}
+              <div style={{ 
+                background: '#090D16', 
+                padding: '6px 12px', 
+                borderRadius: '8px', 
+                border: '1px solid #1E293B',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '0.95rem' }}>
+                  {currentStreak} {isRtl ? 'يوم' : 'Days'}
+                </div>
+                <div style={{ color: '#10B981', fontSize: '0.65rem', fontWeight: '600' }}>
+                  ⚡ {isRtl ? 'مستمر' : 'Active'}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          );
+        })}
+      </div>
+    )}
+  </div>
+)}
 
       {/* 🎖️ الأوسمة - Badges */}
       {activeTab === 'badges' && (
