@@ -111,7 +111,26 @@ export default function Header({
   }
 
   const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
-  const pageTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`) || activeKey;
+
+  // 🗺️ خريطة حماية للترجمة الفورية في حال كان ملف JSON يفتقد للمفتاح
+  const fallbackTitles = {
+    'dashboard': currentLanguage === 'ar' ? 'لوحة التحكم والتحليلات' : 'Dashboard & Analytics',
+    'realtime-audit': currentLanguage === 'ar' ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail',
+    'communication-hub': currentLanguage === 'ar' ? 'مركز التواصل والمراسلات' : 'Communication Hub',
+    'reports': currentLanguage === 'ar' ? 'التقارير والتحليلات' : 'Reports & Analytics',
+    'students': currentLanguage === 'ar' ? 'شؤون الطلاب' : 'Students Directory',
+    'teachers': currentLanguage === 'ar' ? 'الكادر التعليمي' : 'Faculty & Reciters',
+    'halaqas': currentLanguage === 'ar' ? 'الحلقات القرأنية' : 'Quranic Halaqas',
+    'attendance': currentLanguage === 'ar' ? 'متابعة الحضور' : 'Attendance Tracking',
+    'exams': currentLanguage === 'ar' ? 'الاختبارات والتعديل' : 'Exams & Assessment',
+    'payments': currentLanguage === 'ar' ? 'المالية والاشتراكات' : 'Payments & Treasury',
+    'settings': currentLanguage === 'ar' ? 'إعدادات الأكاديمية' : 'Academy Settings',
+  };
+
+  const rawTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`);
+  const pageTitle = (rawTitle && !rawTitle.startsWith('nav.')) 
+    ? rawTitle 
+    : (fallbackTitles[activeKey] || activeKey);
 
   const toggleLanguage = () => {
     const nextLng = currentLanguage === 'ar' ? 'en' : 'ar';
@@ -198,7 +217,7 @@ export default function Header({
 
         <h1 style={{
           margin: 0,
-          fontSize: '0.8rem',
+          fontSize: '0.85rem',
           fontWeight: '700',
           color: '#ffffff',
           display: '-webkit-box',
@@ -389,33 +408,33 @@ export default function Header({
                 </div>
               ) : (
                 notifications.map((item) => (
-  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
-    <div 
-      dir="auto" 
-      style={{ 
-        color: item.is_read ? '#94a3b8' : '#ffffff', 
-        fontWeight: item.is_read ? 'normal' : '600', 
-        lineHeight: '1.3',
-        textAlign: 'start'
-      }}
-    >
-      {item.title}
-    </div>
+                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
+                    <div 
+                      dir="auto" 
+                      style={{ 
+                        color: item.is_read ? '#94a3b8' : '#ffffff', 
+                        fontWeight: item.is_read ? 'normal' : '600', 
+                        lineHeight: '1.3',
+                        textAlign: 'start'
+                      }}
+                    >
+                      {item.title}
+                    </div>
 
-    {item.message && (
-      <div 
-        dir="auto" 
-        style={{ color: '#cbd5e1', fontSize: '0.7rem', marginTop: '3px', textAlign: 'start' }}
-      >
-        {item.message}
-      </div>
-    )}
+                    {item.message && (
+                      <div 
+                        dir="auto" 
+                        style={{ color: '#cbd5e1', fontSize: '0.7rem', marginTop: '3px', textAlign: 'start' }}
+                      >
+                        {item.message}
+                      </div>
+                    )}
 
-    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '4px' }}>
-      {formatTime(item.created_at)}
-    </div>
-  </div>
-))
+                    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '4px' }}>
+                      {formatTime(item.created_at)}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           )}
@@ -471,12 +490,10 @@ export default function Header({
               fontSize: '0.75rem',
               textAlign: isRtl ? 'right' : 'left'
             }}>
-              {/* المسمى الصحيح للمستخدم */}
               <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '0.82rem' }}>
                 {currentLanguage === 'ar' ? 'صاحب الأكاديمية' : 'Academy Owner'}
               </div>
 
-              {/* مؤشر حالة الجلسة */}
               <div style={{ 
                 color: '#10b981', 
                 fontSize: '0.68rem', 
