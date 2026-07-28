@@ -2,20 +2,17 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import styles from './MainApp.module.css'; 
-import { FaClock, FaWifi } from "react-icons/fa";
-
 import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 
-// 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء البناء القديم تلقائياً
+// 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء التحديث والبناء
 const safeLazy = (importFn) => {
   return lazy(() =>
     importFn().catch((error) => {
       const errorMsg = error?.message || error?.toString() || '';
       if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-        console.warn("🚨 تم رصد نسخة بناء قديمة في كاش المتصفح، جاري إعادة تحميل المنظومة لجلب التحديثات...");
+        console.warn("🚨 تم رصد تحديث في الملفات، جاري إعادة التحميل تلقائياً...");
         window.location.reload();
         return new Promise(() => {}); 
       }
@@ -24,17 +21,16 @@ const safeLazy = (importFn) => {
   );
 };
 
-// 🌐 استيراد الأقسام ديناميكياً عبر درع الصيانة safeLazy
+// 🌐 استيراد الأقسام ديناميكياً
 const Students = safeLazy(() => import('./Students.jsx'));
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
 const Exams = safeLazy(() => import('./Exams.jsx')); 
 const Payments = safeLazy(() => import('./Payments.jsx'));
 const Settings = safeLazy(() => import('./Settings.jsx')); 
 const Reports = safeLazy(() => import('./Reports.jsx'));
-const SubscriptionPage = safeLazy(() => import('./SubscriptionPage.jsx'));
 const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
-const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx')); // 👈 إضافة استيراد مركز التواصل
+const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -45,22 +41,25 @@ class ErrorBoundaryInner extends React.Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("🚨 Centralized Module Error Logged:", error, errorInfo);
+    console.error("🚨 Catch Error in Component:", error, errorInfo);
   }
   render() {
     const { t } = this.props;
     if (this.state.hasError) {
-      const errorMsg = this.state.error?.message || this.state.error?.toString() || '';
-      if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-        window.location.reload();
-        return null;
-      }
       return (
-        <div className={styles.errorInnerWrapper} style={{ padding: '20px', background: '#1e293b', borderRadius: '12px', textAlign: 'center', color: '#EF4444' }}>
-          <h3>⚠️ {t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم')}</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{this.state.error?.message || "Internal Context Error"}</p>
-          <button onClick={() => this.setState({ hasError: false, error: null })} style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-            {t('retry', 'إعادة المحاولة')}
+        <div style={{ padding: '30px', background: '#1e293b', borderRadius: '12px', textAlign: 'center', color: '#EF4444', margin: '20px' }}>
+          <h3>⚠️ {t ? t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم') : 'حدث خطأ غير متوقع في تشغيل هذا القسم'}</h3>
+          <p style={{ color: '#F87171', fontSize: '0.9rem', background: '#0f172a', padding: '10px', borderRadius: '6px', fontFamily: 'monospace', direction: 'ltr' }}>
+            {this.state.error?.toString()}
+          </p>
+          <button 
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }} 
+            style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}
+          >
+            إعادة تحميل التطبيق
           </button>
         </div>
       );
@@ -71,22 +70,18 @@ class ErrorBoundaryInner extends React.Component {
 
 export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated }) {
   const { t, i18n } = useTranslation(); 
-  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
-  const currentLang = i18n.language || 'ar';
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
+  const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
-  // 🌟 إدارة التبويبات مع الذاكرة المحلية بقيم افتراضية محمية
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('smart_halaqa_tab') || 'dashboard');
   useEffect(() => {
     localStorage.setItem('smart_halaqa_tab', activeTab);
   }, [activeTab]); 
 
-  // 🌟 حالات الشاشة والشبكة
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(false);
-  const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true); 
   
-  // 🌟 مستودعات البيانات الأساسية المحمية بمصفوفات افتراضية
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [halaqas, setHalaqas] = useState([]);
@@ -95,11 +90,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
   
-  const [accountActivated, setAccountActivated] = useState(() => isActivated ?? true);
-  const [academyIsActive, setAcademyIsActive] = useState(false); 
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // 🌟 إعدادات التوطين والعملات للمنصة الدولية
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
   const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
@@ -108,30 +100,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
 
-  // 🔒 1. مراقبة انتهاء الصلاحية وتسجيل الخروج المفاجئ لجلسة السحابة
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') {
-        console.warn("🔐 تم إنهاء الجلسة الأمنية، جاري التوجيه لبوابة تسجيل الدخول...");
-        window.location.reload();
-      }
-    });
-    return () => subscription?.unsubscribe();
-  }, []);
-
-  // 📡 مراقبة حالة اتصال الإنترنت
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // 📱 مراقبة استجابة الأبعاد للهواتف الذكية
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize(); 
@@ -139,21 +107,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 🌍 تطبيق خصائص اتجاهات اللغات بشكل فوري وموحد
-  useEffect(() => {
-    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-    document.documentElement.lang = currentLang;
-  }, [isRtl, currentLang]);
-
-  // ⏰ ساعة المنصة الذكية المزامنة مع النطاق الزمني للمؤسسة
   useEffect(() => {
     const updateTime = () => {
       try {
         const formatter = new Intl.DateTimeFormat(currentLang, {
-          timeZone: timezone,
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
+          timeZone: timezone || 'UTC', hour: '2-digit', minute: '2-digit', hour12: true
         });
         setAcademyTime(formatter.format(new Date()));
       } catch (e) {
@@ -165,12 +123,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return () => clearInterval(interval);
   }, [timezone, currentLang]);
 
-  // 🔄 2. دالة جلب وإعادة تحميل بيانات الأكاديمية ديناميكياً عند التبديل
   const fetchAcademyData = useCallback(async (targetAcademyId) => {
-    if (!targetAcademyId) return;
+    if (!targetAcademyId) {
+      setLoadingData(false);
+      return;
+    }
     setLoadingData(true);
     try {
-      const { data: academyData } = await supabase
+      const { data: academyData, error: acErr } = await supabase
         .from('academies')
         .select('id, name, currency, timezone, country_code, is_active')
         .eq('id', targetAcademyId)
@@ -178,7 +138,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
       if (academyData) {
         setAcademyName(academyData.name || "");
-        setAcademyIsActive(!!academyData.is_active);
         if (academyData.currency) setCurrency(academyData.currency);
         if (academyData.timezone) setTimezone(academyData.timezone);
         if (academyData.country_code) setCountryCode(academyData.country_code);
@@ -196,66 +155,52 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setTeachers(teachersRes.data || []);
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
-      console.error("Error fetching academy data safely:", error);
+      console.error("Error fetching academy data:", error);
     } finally {
       setLoadingData(false);
     }
   }, []);
 
-  // 🔀 3. دالة معالجة حدث اختيار أكاديمية جديدة من القائمة المنسدلة
   const handleSwitchAcademy = useCallback((newAcademyId) => {
     if (!newAcademyId || newAcademyId === academyId) return;
     setAcademyId(newAcademyId);
     fetchAcademyData(newAcademyId);
   }, [academyId, fetchAcademyData]);
 
-  // 📥 نواة جلب البيانات المركزية المبدئية عند فتح الجلسة
   useEffect(() => {
     const currentUserId = session?.user?.id;
-    if (!currentUserId) {
-      setLoadingData(false);
-      return;
-    }
-
-    if (lastFetchedUserId.current === currentUserId) return;
+    if (!currentUserId || lastFetchedUserId.current === currentUserId) return;
     lastFetchedUserId.current = currentUserId;
 
     async function loadInitialData() {
       try {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('is_activated')
-          .eq('id', currentUserId)
-          .maybeSingle();
-        
-        if (profileData) setAccountActivated(profileData.is_activated ?? false);
-
-        const { data: staff } = await supabase
+        setLoadingData(true);
+        const { data: staff, error: staffErr } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, currency, timezone, country_code, is_active)')
           .eq('user_id', currentUserId)
           .maybeSingle();
 
         const currentAcademyId = staff?.academies?.id || staff?.academy_id;
-
         if (currentAcademyId) {
           setAcademyId(currentAcademyId);
           await fetchAcademyData(currentAcademyId);
         } else {
+          console.warn("⚠️ لم يتم العثور على أية أكاديمية مرتبطة بهذا الحساب");
           setLoadingData(false);
         }
       } catch (error) {
-        console.error("Error fetching system assets safely:", error);
+        console.error("🚨 Error loading user initial data:", error);
         setLoadingData(false);
       }
     }
     loadInitialData();
   }, [session, fetchAcademyData]);
 
-  // 🛠️ ربط وتحديث مصفوفة الحلقات لتضمين أسماء المعلمين ديناميكياً للعرض المحمي
   const enrichedHalaqas = useMemo(() => {
+    if (!Array.isArray(halaqas)) return [];
     return halaqas.map(h => {
-      const teacher = teachers.find(t => t.id === h.teacher_id);
+      const teacher = Array.isArray(teachers) ? teachers.find(t => t.id === h.teacher_id) : null;
       return {
         ...h,
         teacher_name: teacher ? teacher.name : (h.teacher_name || (isRtl ? 'غير معين' : 'Unassigned'))
@@ -263,124 +208,63 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     });
   }, [halaqas, teachers, isRtl]);
 
-  // 💾 دالة إنشاء حلقة جديدة وإرسالها لـ Supabase فوريّاً مع تثبيت مرجعي
-  const handleCreateHalaqa = useCallback(async (formData) => {
-    try {
-      const { data, error } = await supabase
-        .from('halaqas')
-        .insert([{ 
-          name_ar: formData.name_ar,
-          name_en: formData.name_en,
-          teacher_id: formData.teacher_id,
-          start_time: formData.start_time || null,
-          end_time: formData.end_time || null,
-          status: formData.status,
-          academy_id: academyId,
-          is_archived: false
-        }])
-        .select();
-
-      if (error) throw error;
-      if (data) setHalaqas(prev => [data[0], ...prev]);
-    } catch (err) {
-      console.error("Error creating new halaqa row:", err);
-      alert(isRtl ? "حدث خطأ أثناء حفظ الحلقة، يرجى التحقق من بنية الجدول" : "Failed to create halaqa");
-    }
-  }, [academyId, isRtl]);
-
-  // 📦 دالة أرشفة أو تنشيط الحلقة داخل Supabase فوريّاً مع تثبيت مرجعي
-  const handleToggleArchiveHalaqa = useCallback(async (id, currentArchivedStatus) => {
-    try {
-      const { error } = await supabase
-        .from('halaqas')
-        .update({ is_archived: !currentArchivedStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-      setHalaqas(prev => prev.map(h => h.id === id ? { ...h, is_archived: !currentArchivedStatus } : h));
-    } catch (err) {
-      console.error("Error changing archive status:", err);
-    }
-  }, []);
-
-  const currentActivationState = true; 
-
   const preloadedDashboardData = useMemo(() => ({
-    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : academyName,
-    role: userRole, 
-    is_activated: currentActivationState,
-    status: currentActivationState ? 'active' : 'pending',
+    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || "الأكاديمية"),
+    role: userRole || 'staff', 
+    is_activated: true,
     stats: {
-      students: students.length,
-      pending: students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length || 0,
-      activeHalagas: halaqas.filter(h => !h.is_archived).length, 
-      completedExams: completedExamsCount 
+      students: Array.isArray(students) ? students.length : 0,
+      pending: Array.isArray(students) ? students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length : 0,
+      activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h.is_archived).length : 0, 
+      completedExams: completedExamsCount || 0
     }
-  }), [isPlatformAdmin, isRtl, academyName, userRole, currentActivationState, students, halaqas, completedExamsCount]);
+  }), [isPlatformAdmin, isRtl, academyName, userRole, students, halaqas, completedExamsCount]);
 
-  const isBlockActive = userRole !== 'admin' && userRole !== 'super_admin' && (
-    (isTrial && trialDaysLeft <= 0 && !currentActivationState) || 
-    (!isTrial && trialDaysLeft <= 0)
-  );
-
-  // 🌟 4. سجل التبويبات المميّز (Tab Components Lookup Object Engine)
   const tabComponentRegistry = {
-    dashboard: <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />,
-    students: <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />,
-    attendance: <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} />,
-    exams: <Exams students={students} academyId={academyId} />,
-    payments: <Payments students={students} academyId={academyId} currency={currency} />,
-    settings: <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />,
-    reports: <Reports students={students} academyId={academyId} countryCode={countryCode} />,
-    
-    // 👈 سجل التدقيق
+    'dashboard': <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />,
     'realtime-audit': <RealtimeAudit session={session} userRole={userRole} />,
-
-    // 👈 مركز التواصل والمراسلات
     'communication-hub': <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />,
-
-    halaqas: (
-      <ActiveHalaqas 
-        halaqas={enrichedHalaqas} teachers={teachers} students={students} isLoading={loadingData}
-        error={null} isRtl={isRtl} isMobile={isMobile} onCreateHalaqa={handleCreateHalaqa} onToggleArchiveHalaqa={handleToggleArchiveHalaqa}
-      />
-    ),
-    teachers: (
+    'reports': <Reports students={students} academyId={academyId} countryCode={countryCode} />,
+    
+    'students': <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />,
+    'teachers': (
       <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
-        <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>{isRtl ? '👨‍🏫 الكادر التعليمي والتربوي' : '👨‍🏫 Faculty & Instructors'}</h2>
-        <p style={{ color: '#9CA3AF' }}>{isRtl ? 'إجمالي الكفاءات التعليمية النشطة بالمؤسسة:' : 'Total active educational faculty:'} <strong style={{ color: '#FFF', margin: '0 4px' }}>{teachers.length}</strong></p>
+        <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>{isRtl ? '👨‍🏫 الكادر التعليمي والمقرئين' : '👨‍🏫 Faculty & Reciters'}</h2>
+        <p style={{ color: '#9CA3AF' }}>{isRtl ? 'إجمالي المقرئين النشطين:' : 'Total active teachers:'} <strong style={{ color: '#FFF' }}>{teachers.length}</strong></p>
       </div>
-    )
+    ),
+    'halaqas': <ActiveHalaqas halaqas={enrichedHalaqas} teachers={teachers} students={students} isLoading={loadingData} error={null} isRtl={isRtl} isMobile={isMobile} />,
+    'attendance': <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} />,
+    'exams': <Exams students={students} academyId={academyId} />,
+
+    'guardian-portal': (
+      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+        <h2 style={{ color: '#38BDF8' }}>{isRtl ? '🏠 شبكة أسر الدارسين' : 'Guardian Portal'}</h2>
+      </div>
+    ),
+    'gamification-streaks': (
+      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+        <h2 style={{ color: '#F59E0B' }}>{isRtl ? '🏆 الإنجاز والحوافز' : 'Gamification & Streaks'}</h2>
+      </div>
+    ),
+
+    'payments': <Payments students={students} academyId={academyId} currency={currency} />,
+    'asset-management': (
+      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+        <h2 style={{ color: '#10B981' }}>{isRtl ? '📁 المستندات والأصول' : 'Asset Management'}</h2>
+      </div>
+    ),
+    'referrals': (
+      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+        <h2 style={{ color: '#3B82F6' }}>{isRtl ? '⚡ برنامج الإحالة والأرباح' : 'Affiliate & Rewards'}</h2>
+      </div>
+    ),
+    'settings': <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />
   };
 
-  if (showEarlyUpgrade) {
-    return (
-      <Suspense fallback={<div style={{ padding: '40px', color: '#FBBF24' }}>Loading Infrastructure Module...</div>}>
-        <SubscriptionPage session={session} onBack={() => setShowEarlyUpgrade(false)} currentLang={currentLang} />
-      </Suspense>
-    );
-  }
-
-  if (isBlockActive) {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#090F17', padding: '20px', direction: isRtl ? 'rtl' : 'ltr' }}>
-        <div style={{ maxWidth: '500px', background: '#111827', padding: '40px', borderRadius: '16px', border: '1px solid #1f2937', textAlign: 'center' }}>
-          <FaClock size={44} style={{ color: '#EF4444', marginBottom: '20px' }} />
-          <h2 style={{ color: '#FFF', fontSize: '1.5rem', marginBottom: '15px' }}>{isTrial ? t('pending_payments_alert', '⚠️ Trial Period Concluded') : '⚠️ Institutional License Expired'}</h2>
-          <p style={{ color: '#9CA3AF', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '30px' }}>
-            {isTrial 
-              ? (isRtl ? 'انتهت الصلاحية التجريبية للنظام. يرجى ترقية الحساب لتجنب تعليق البنية التحتية والخدمات السحابية للأكاديمية.' : 'Trial period concluded. Please upgrade your account to prevent service suspension.')
-              : (isRtl ? 'يرجى تجديد الترخيص المؤسسي لتفادي إيقاف الأنظمة التشغيلية للحلقات والأكاديمية.' : 'Please renew your institutional license to prevent operational downtime.')}
-          </p>
-          <button onClick={() => supabase.auth.signOut()} style={{ width: '100%', padding: '12px', background: '#EF4444', color: '#FFF', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>{t('logout', 'تسجيل الخروج من النظام')}</button>
-        </div>
-      </div>
-    );
-  }
-
   const skeletonLoader = (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', opacity: 0.5 }}>
-      <div style={{ height: '35px', width: '25%', backgroundColor: '#334155', borderRadius: '6px' }}></div>
+    <div style={{ padding: '24px', opacity: 0.5 }}>
+      <div style={{ height: '35px', width: '25%', backgroundColor: '#334155', borderRadius: '6px', marginBottom: '20px' }}></div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '20px' }}>
         <div style={{ height: '110px', backgroundColor: '#1e293b', borderRadius: '10px' }}></div>
         <div style={{ height: '110px', backgroundColor: '#1e293b', borderRadius: '10px' }}></div>
@@ -390,20 +274,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   );
 
   return (
-    <div 
-      style={{
-        display: 'flex', 
-        minHeight: '100vh', 
-        width: '100%',
-        background: '#0f172a', 
-        color: '#fff',
-        fontFamily: "'Cairo', sans-serif", 
-        position: 'relative'
-      }}
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      
-      {/* 1. القائمة الجانبية */}
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#0f172a', color: '#fff', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
       <Sidebar 
         currentAcademyId={academyId}
         onSwitchAcademy={handleSwitchAcademy}
@@ -417,14 +288,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         userRole={userRole} 
         trialDaysLeft={trialDaysLeft} 
         isTrial={isTrial}
-        accountActivated={currentActivationState} 
+        accountActivated={true} 
         setShowEarlyUpgrade={setShowEarlyUpgrade} 
         numberFormatter={numberFormatter}
         timezone={timezone} 
         academyTime={academyTime}
       />
 
-      {/* 2. منطقة عرض التطبيق والمحتوى الرئيسي */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh' }}>
         <Header 
           sidebarOpen={sidebarOpen} 
@@ -440,19 +310,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
           userData={{
-            name: session?.user?.user_metadata?.full_name || session?.user?.email,
-            avatar: session?.user?.user_metadata?.avatar_url
+            name: session?.user?.user_metadata?.full_name || session?.user?.email || "",
+            avatar: session?.user?.user_metadata?.avatar_url || ""
           }}
         />
 
-        {!isOnline && (
-          <div style={{ background: '#7f1d1d', color: '#fca5a5', padding: '6px 24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #991b1b' }}>
-            <FaWifi style={{ animation: 'pulse 1s infinite' }} />
-            <span>{isRtl ? 'تم قطع الاتصال بالبنية التحتية السحابية. يعمل النظام حالياً في وضع الحفظ المؤقت المحلي.' : 'Disconnected from cloud core. Running on local cache mode.'}</span>
-          </div>
-        )}
-
-        <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto', boxSizing: 'border-box' }}>
+        <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto' }}>
           <ErrorBoundaryInner key={activeTab} t={t}>
             <Suspense fallback={skeletonLoader}>
               {loadingData ? skeletonLoader : (tabComponentRegistry[activeTab] || tabComponentRegistry.dashboard)}
