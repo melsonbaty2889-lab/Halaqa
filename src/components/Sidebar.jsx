@@ -1,13 +1,13 @@
 /* src/components/Sidebar.jsx */
 import React, { useState, useEffect } from "react";
-import { formatHijriDate, formatGregorianDate } from '../utils/dateUtils';
+import { formatHijriDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { 
   FaSearch, FaTimes, FaChevronDown, FaChevronUp, FaChartBar, 
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt, FaClock,
-  FaHistory, FaBell, FaPaperPlane, FaHome, FaTrophy, FaFolder
+  FaHistory, FaPaperPlane, FaHome, FaTrophy, FaFolder
 } from "react-icons/fa";
 
 // 🌟 شعار المنظومة الاحترافي
@@ -53,13 +53,8 @@ export default function Sidebar({
   isMobile,
   isRtl,
   t,
-  userRole,
   trialDaysLeft = 0,
-  isTrial = false,
-  accountActivated = false,
   setShowEarlyUpgrade,
-  numberFormatter,
-  timezone,
   academyTime
 }) {
   const [academiesList, setAcademiesList] = useState([]);
@@ -108,10 +103,8 @@ export default function Sidebar({
     }
   ];
 
-  // 🎯 الأكورديون الأحادي: يسمح بقسم واحد مفتوح فقط في نفس الوقت
   const [openSectionId, setOpenSectionId] = useState(null);
 
-  // 🔄 فتح القسم المتعلق بالتبويب النشط تلقائياً
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items.some(item => item.id === activeTab));
     if (activeSection) {
@@ -352,7 +345,6 @@ export default function Sidebar({
               <FaChevronDown style={{ fontSize: '0.65rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
             </button>
 
-            {/* القائمة المنسدلة بظلال وحدود واضحة لحل مشكلة التداخل */}
             {dropdownOpen && (
               <div style={{
                 position: 'absolute',
@@ -407,7 +399,6 @@ export default function Sidebar({
             justifyContent: 'space-between',
             gap: '6px'
           }}>
-            {/* 1️⃣ جهة البداية: أيقونة الساعة + الوقت */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -422,7 +413,6 @@ export default function Sidebar({
               <span>{academyTime || '12:24 PM'}</span>
             </div>
 
-            {/* 2️⃣ المنتصف: التاريخ الميلادي والتاريخ الهجري أسفل بعضهما مباشرة */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -431,7 +421,6 @@ export default function Sidebar({
               gap: '2px',
               minWidth: 0
             }}>
-              {/* التاريخ الميلادي */}
               <span style={{
                 fontSize: '0.64rem',
                 color: '#38bdf8',
@@ -442,7 +431,6 @@ export default function Sidebar({
                 {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
 
-              {/* التاريخ الهجري */}
               <span style={{
                 fontSize: '0.62rem',
                 color: '#38bdf8',
@@ -454,9 +442,13 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* 3️⃣ جهة النهاية: زر الترقية */}
+            {/* ⚡ زر الترقية (تم ربطه بأمان) */}
             <button
-              onClick={() => setShowEarlyUpgrade && setShowEarlyUpgrade(true)}
+              onClick={() => {
+                if (typeof setShowEarlyUpgrade === 'function') {
+                  setShowEarlyUpgrade(true);
+                }
+              }}
               style={{
                 padding: '5px 8px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
@@ -507,7 +499,7 @@ export default function Sidebar({
             />
           </div>
 
-          {/* 📑 5️⃣ القوائم بنظام الأكورديون الأحادي (Single Accordion) */}
+          {/* 📑 5️⃣ القوائم بنظام الأكورديون الأحادي */}
           <nav style={{
             display: 'flex',
             flexDirection: 'column',
@@ -520,7 +512,6 @@ export default function Sidebar({
 
                 return (
                   <div key={section.id} style={{ marginBottom: '6px' }}>
-                    {/* رأس القسم القابل للطي */}
                     <button
                       onClick={() => toggleSection(section.id)}
                       style={{
@@ -547,7 +538,6 @@ export default function Sidebar({
                       )}
                     </button>
 
-                    {/* عناصر القسم */}
                     {isExpanded && (
                       <div style={{
                         display: 'flex',
@@ -613,7 +603,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* 🔒 6️⃣ إنهاء الجلسة وتأكيد الخروج */}
+        {/* 🔒 6️⃣ إنهاء الجلسة */}
         <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', background: '#080d1a' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px', fontSize: '0.68rem', color: '#64748b' }}>
             <FaCloud style={{ color: '#10b981' }} />
