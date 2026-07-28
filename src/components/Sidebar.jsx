@@ -7,7 +7,7 @@ import {
   FaUserGraduate, FaChalkboardTeacher, FaCheckCircle, 
   FaBookOpen, FaAward, FaCreditCard, FaSlidersH, 
   FaCloud, FaSignOutAlt, FaBolt, FaClock,
-  FaHistory, FaBell, FaHome, FaTrophy, FaFolder
+  FaHistory, FaBell, FaPaperPlane, FaHome, FaTrophy, FaFolder
 } from "react-icons/fa";
 
 // 🌟 شعار المنظومة الاحترافي
