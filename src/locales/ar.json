@@ -115,23 +115,23 @@
     "subtitle": "إدارة المقارئ والأكاديميات"
   },
   "nav": {
-    "dashboard": "لوحة التحكم والأداء",
-    "realtime-audit": "السجل الحي للأنشطة",
-    "communication-hub": "مركز التواصل والمراسلات",
-    "reports": "التقارير والتحليلات",
-    "students": "إدارة الدارسين",
-    "teachers": "الكادر والمقرئين",
-    "halaqas": "المقارئ والحلقات",
-    "attendance": "التسميع والتحضير اليومي",
-    "exams": "الاختبارات والتقييم",
-    "guardian-portal": "شبكة أسر الدارسين",
-    "gamification-streaks": "الإنجاز والحوافز",
-    "payments": "الاشتراكات والتحصيل",
-    "asset-management": "المستندات والأصول",
-    "referrals": "برنامج الإحالة والأرباح",
-    "settings": "إعدادات المنظومة",
-    "profile": "الملف الشخصي"
-  },
+  "dashboard": "لوحة التحكم",
+  "realtime-audit": "السجل الحي",
+  "communication-hub": "مركز التواصل",
+  "reports": "التقارير",
+  "students": "إدارة الدارسين",
+  "teachers": "الكادر التعليمي",
+  "halaqas": "الحلقات والمقارئ",
+  "attendance": "التسميع والتحضير",
+  "exams": "الاختبارات",
+  "guardian-portal": "أولياء الأمور",
+  "gamification-streaks": "الإنجاز والحوافز",
+  "payments": "الاشتراكات والمالية",
+  "asset-management": "الأصول والمستندات",
+  "referrals": "برنامج الإحالة",
+  "settings": "الإعدادات",
+  "profile": "الملف الشخصي"
+  }
   "sidebar": {
     "sections": {
       "ops": "1. مركز القيادة والعمليات",
