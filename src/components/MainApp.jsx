@@ -46,7 +46,6 @@ class ErrorBoundaryInner extends React.Component {
     this.setState({ errorInfo });
   }
   render() {
-    const { t } = this.props;
     if (this.state.hasError) {
       return (
         <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', color: '#EF4444', margin: '20px', direction: 'ltr', textAlign: 'left' }}>
@@ -226,11 +225,20 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }), [isPlatformAdmin, isRtl, academyName, userRole, students, halaqas, completedExamsCount]);
 
-  // 🎯 بناء التبويب النشط فقط لمنع تهيئة كافة المكونات في الخلفية
+  // 🎯 بناء التبويب النشط
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />;
+      case 'subscriptions':
+      case 'upgrade':
+        return (
+          <SubscriptionPage 
+            session={session} 
+            academyId={academyId} 
+            onBack={() => setActiveTab('dashboard')} 
+          />
+        );
       case 'realtime-audit':
         return <RealtimeAudit session={session} userRole={userRole} />;
       case 'communication-hub':
