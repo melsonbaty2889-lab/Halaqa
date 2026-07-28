@@ -2,20 +2,17 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import styles from './MainApp.module.css'; 
-import { FaClock, FaWifi } from "react-icons/fa";
-
 import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 
-// 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء البناء تلقائياً
+// 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء البناء والتحميل المتأخر
 const safeLazy = (importFn) => {
   return lazy(() =>
     importFn().catch((error) => {
       const errorMsg = error?.message || error?.toString() || '';
       if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-        console.warn("🚨 تم رصد نسخة بناء قديمة، جاري إعادة التحميل...");
+        console.warn("🚨 تم رصد تحديث في الملفات، جاري إعادة التحميل تلقائياً...");
         window.location.reload();
         return new Promise(() => {}); 
       }
@@ -31,7 +28,6 @@ const Exams = safeLazy(() => import('./Exams.jsx'));
 const Payments = safeLazy(() => import('./Payments.jsx'));
 const Settings = safeLazy(() => import('./Settings.jsx')); 
 const Reports = safeLazy(() => import('./Reports.jsx'));
-const SubscriptionPage = safeLazy(() => import('./SubscriptionPage.jsx'));
 const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
 const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx'));
@@ -52,10 +48,10 @@ class ErrorBoundaryInner extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: '30px', background: '#1e293b', borderRadius: '12px', textAlign: 'center', color: '#EF4444' }}>
-          <h3>⚠️ {t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم')}</h3>
+          <h3>⚠️ {t ? t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم') : 'حدث خطأ غير متوقع في تشغيل هذا القسم'}</h3>
           <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{this.state.error?.message}</p>
           <button onClick={() => this.setState({ hasError: false, error: null })} style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-            {t('retry', 'إعادة المحاولة')}
+            {t ? t('retry', 'إعادة المحاولة') : 'إعادة المحاولة'}
           </button>
         </div>
       );
@@ -77,7 +73,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const [isMobile, setIsMobile] = useState(false);
-  const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true); 
   
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -210,7 +205,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }), [isPlatformAdmin, isRtl, academyName, userRole, students, halaqas, completedExamsCount]);
 
-  // 🌟 سجل التبويبات الشامل المصمم ليتوافق 100% مع معرفات القائمة الجانبية المحدثة
+  // 🌟 سجل التبويبات المطابق 100% لمعرفات القائمة الجانبية
   const tabComponentRegistry = {
     'dashboard': <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />,
     'realtime-audit': <RealtimeAudit session={session} userRole={userRole} />,
