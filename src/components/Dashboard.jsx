@@ -1,4 +1,4 @@
-/* src/components/Dashboard.jsx - النسخة المحدثة والمتكاملة 100% */
+/* src/components/Dashboard.jsx */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -24,10 +24,9 @@ export default function Dashboard({
   session, 
   userRole,
   setActiveTab, 
-  preloadedDashboardData, 
-  currency = 'EGP'
+  preloadedDashboardData
 }) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   
   const isArabic = !i18n.language || i18n.language.startsWith('ar');
   const isRtl = i18n.dir() === 'rtl' || isArabic;
@@ -228,9 +227,8 @@ export default function Dashboard({
 
       </div>
 
-      {/* 4️⃣ النظام الذكي الهجين: حلقات اليوم المباشرة / التنبيهات العاجلة / إخفاء تلقائي */}
+      {/* 4️⃣ حلقات اليوم المباشرة والتنبيهات */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
-        /* 1. عرض الحلقات القائمة عند وجودها اليوم */
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -291,7 +289,6 @@ export default function Dashboard({
           </div>
         </div>
       ) : (stats?.overdueCount || 0) > 0 ? (
-        /* 2. تنبيه عاجل ينشأ فقط عند وجود متأخرات مالية وبدون حلقات اليوم */
         <div style={{ background: '#1E293B', padding: '14px 16px', borderRadius: '14px', border: '1px solid rgba(248, 113, 113, 0.3)', marginBottom: '20px' }}>
           <div 
             onClick={() => setActiveTab && setActiveTab('payments')}
@@ -312,7 +309,7 @@ export default function Dashboard({
             </span>
           </div>
         </div>
-      ) : null /* 3. في حالة استقرار كل الأمور؛ يختفي المربع تماماً لإلغاء التكرار وإتاحة مساحة رؤية مريحة */}
+      ) : null}
 
     </div>
   );
