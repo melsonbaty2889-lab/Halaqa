@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   FaTrophy, FaFire, FaMedal, FaStar, FaCrown, 
-  FaUserGraduate, FaSpinner, FaAward 
+  FaUserGraduate, FaSpinner, FaAward, FaExclamationTriangle 
 } from 'react-icons/fa';
 
 export default function GamificationStreaks({ academyId: propAcademyId, isRtl = true }) {
@@ -10,144 +10,128 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
   const [topAchievers, setTopAchievers] = useState([]);
   const [badges, setBadges] = useState([]);
   const [streaks, setStreaks] = useState([]);
-  const [activeTab, setActiveTab] = useState('leaderboard'); // 'leaderboard' | 'badges' | 'streaks'
+  const [activeTab, setActiveTab] = useState('leaderboard'); 
+  const [debugInfo, setDebugInfo] = useState({ currentAcademyId: null, error: null });
 
   useEffect(() => {
     async function fetchGamificationData() {
       setLoading(true);
+      let errMsg = '';
       try {
-        // 0️⃣ تحديد ID الأكاديمية (إذا لم يتم تمريره نجلب أول أكاديمية مجهزة)
+        // 1️⃣ البحث عن ID الأكاديمية
         let targetAcademyId = propAcademyId;
 
         if (!targetAcademyId) {
-          const { data: academyData } = await supabase
+          const { data: academyData, error: acadErr } = await supabase
             .from('academies')
             .select('id')
             .limit(1)
             .maybeSingle();
 
+          if (acadErr) errMsg += `خطأ الأكاديمية: ${acadErr.message} | `;
           if (academyData?.id) {
             targetAcademyId = academyData.id;
           }
         }
 
-        // 1️⃣ جلب قائمة المتصدرين والأوائل
-        let achieversQuery = supabase
-          .from('vw_top_achievers')
-          .select('*')
-          .limit(10);
+        setDebugInfo({ currentAcademyId: targetAcademyId || 'غير محدد', error: null });
 
-        if (targetAcademyId) {
-          achieversQuery = achieversQuery.eq('academy_id', targetAcademyId);
-        }
-
-        const { data: achieversData, error: achieversErr } = await achieversQuery;
-
-        if (!achieversErr && achieversData && achieversData.length > 0) {
-          setTopAchievers(achieversData);
-        } else {
-          // جلب بديل مباشر من جدول الطلاب النشطين
-          let studentsQuery = supabase
-            .from('students')
-            .select('id, name, avatar_url, status')
-            .eq('status', 'active')
-            .limit(10);
-
-          if (targetAcademyId) {
-            studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
-          }
-
-          const { data: studentsData } = await studentsQuery;
-          setTopAchievers(studentsData || []);
-        }
-
-        // 2️⃣ جلب الأوسمة النشطة التابعة للأكاديمية
-        let badgesQuery = supabase
-          .from('badges')
-          .select('*')
-          .eq('is_active', true);
-
-        if (targetAcademyId) {
-          badgesQuery = badgesQuery.eq('academy_id', targetAcademyId);
-        }
+        // 2️⃣ جلب الأوسمة النشطة
+        let badgesQuery = supabase.from('badges').select('*');
+        if (targetAcademyId) badgesQuery = badgesQuery.eq('academy_id', targetAcademyId);
 
         const { data: badgesData, error: badgesErr } = await badgesQuery;
-        if (badgesErr) console.error("خطأ جلب الأوسمة:", badgesErr);
+        if (badgesErr) errMsg += `خطأ الأوسمة: ${badgesErr.message} | `;
         setBadges(badgesData || []);
 
-        // 3️⃣ جلب بيانات التتابع والالتزام اليومي
-        let streaksQuery = supabase
-          .from('student_streaks')
-          .select('*, students(name)')
-          .order('current_streak', { ascending: false })
-          .limit(10);
-
-        if (targetAcademyId) {
-          streaksQuery = streaksQuery.eq('academy_id', targetAcademyId);
-        }
+        // 3️⃣ جلب بيانات التتابع (Streaks)
+        let streaksQuery = supabase.from('student_streaks').select('*, students(name)').limit(10);
+        if (targetAcademyId) streaksQuery = streaksQuery.eq('academy_id', targetAcademyId);
 
         const { data: streaksData, error: streaksErr } = await streaksQuery;
-        if (streaksErr) console.error("خطأ جلب السلاسل:", streaksErr);
+        if (streaksErr) errMsg += `خطأ السلاسل: ${streaksErr.message} | `;
         setStreaks(streaksData || []);
 
+        // 4️⃣ جلب المتصدرين
+        let studentsQuery = supabase
+          .from('students')
+          .select('id, name, avatar_url, points, total_points')
+          .limit(10);
+
+        if (targetAcademyId) studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
+
+        const { data: studentsData, error: studErr } = await studentsQuery;
+        if (studErr) errMsg += `خطأ الطلاب: ${studErr.message} | `;
+        setTopAchievers(studentsData || []);
+
+        if (errMsg) {
+          setDebugInfo(prev => ({ ...prev, error: errMsg }));
+        }
+
       } catch (err) {
-        console.error("Error fetching gamification data:", err);
+        setDebugInfo(prev => ({ ...prev, error: err.message || 'حدث خطأ غير متوقع' }));
       } finally {
         setLoading(false);
       }
     }
 
-    // تشغيل الجلب دائماً سواء كان propAcademyId موجوداً أم لا
     fetchGamificationData();
   }, [propAcademyId]);
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', color: '#F59E0B' }}>
-        <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px', color: '#F59E0B' }}>
+        <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
+        <span style={{ marginRight: '10px', color: '#94A3B8' }}>جاري جلب البيانات...</span>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', direction: isRtl ? 'rtl' : 'ltr', padding: '8px' }}>
       
+      {/* ⚠️ شريط التشخيص لمعرفة السبب فوراً على الموبايل */}
+      {debugInfo.error && (
+        <div style={{ background: '#451A1A', border: '1px solid #EF4444', color: '#FCA5A5', padding: '12px', borderRadius: '10px', fontSize: '0.85rem' }}>
+          <FaExclamationTriangle style={{ marginLeft: '6px', color: '#EF4444' }} />
+          <strong>تنبيه التشخيص:</strong> {debugInfo.error}
+        </div>
+      )}
+
       {/* 👑 الهيدر والرأس الرئيسي */}
       <div style={{ 
         background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)', 
-        padding: '24px', 
+        padding: '16px', 
         borderRadius: '16px', 
         border: '1px solid #334155',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '16px'
+        flexDirection: 'column',
+        gap: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
-            width: '56px', height: '56px', borderRadius: '16px', 
+            width: '44px', height: '44px', borderRadius: '12px', 
             background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', shrink: 0
           }}>
             <FaTrophy />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#FFF', margin: '0 0 4px 0' }}>
+            <h1 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFF', margin: 0 }}>
               {isRtl ? 'لوحة الإنجازات والتحديات' : 'Gamification & Streaks'}
             </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.9rem', margin: 0 }}>
-              {isRtl ? 'تحفيز الطلاب وتتبع السلسلة اليومية والأوسمة المكتسبة' : 'Track student streaks, leaderboards and achievements'}
+            <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
+              {isRtl ? 'تحفيز الطلاب وتتبع الأوسمة والسلسلة اليومية' : 'Track student streaks & achievements'}
             </p>
           </div>
         </div>
 
         {/* أزرار التنقل السريع */}
-        <div style={{ display: 'flex', background: '#090F17', padding: '4px', borderRadius: '10px', border: '1px solid #1E293B' }}>
+        <div style={{ display: 'flex', background: '#090F17', padding: '4px', borderRadius: '10px', border: '1px solid #1E293B', width: '100%' }}>
           <button 
             onClick={() => setActiveTab('leaderboard')}
             style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem',
+              flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
               background: activeTab === 'leaderboard' ? '#F59E0B' : 'transparent',
               color: activeTab === 'leaderboard' ? '#000' : '#94A3B8'
             }}
@@ -157,59 +141,61 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
           <button 
             onClick={() => setActiveTab('streaks')}
             style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem',
+              flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
               background: activeTab === 'streaks' ? '#F59E0B' : 'transparent',
               color: activeTab === 'streaks' ? '#000' : '#94A3B8'
             }}
           >
-            🔥 {isRtl ? 'السلسلة اليومية' : 'Streaks'}
+            🔥 {isRtl ? 'السلسلة' : 'Streaks'}
           </button>
           <button 
             onClick={() => setActiveTab('badges')}
             style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem',
+              flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
               background: activeTab === 'badges' ? '#F59E0B' : 'transparent',
               color: activeTab === 'badges' ? '#000' : '#94A3B8'
             }}
           >
-            🎖️ {isRtl ? 'الأوسمة' : 'Badges'}
+            🎖️ {isRtl ? 'الأوسمة' : 'Badges'} ({badges.length})
           </button>
         </div>
       </div>
 
-      {/* 🥇 لوحة الصدارة والأوائل */}
+      {/* 🥇 المتصدرين */}
       {activeTab === 'leaderboard' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '20px' }}>
-          <h2 style={{ fontSize: '1.1rem', color: '#F59E0B', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
+          <h2 style={{ fontSize: '1rem', color: '#F59E0B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FaCrown /> {isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}
           </h2>
 
           {topAchievers.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '20px' }}>{isRtl ? 'لا توجد بيانات متاحة حالياً' : 'No top achievers data found'}</p>
+            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+              {isRtl ? 'لا توجد بيانات طلاب حالياً' : 'No top achievers data found'}
+            </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {topAchievers.map((item, index) => (
                 <div key={item.id || index} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   background: index === 0 ? 'rgba(245, 158, 11, 0.1)' : '#1E293B',
                   border: index === 0 ? '1px solid #F59E0B' : '1px solid #334155',
-                  padding: '12px 16px', borderRadius: '12px'
+                  padding: '10px 12px', borderRadius: '10px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ 
-                      fontWeight: 'bold', fontSize: '1.1rem', width: '28px', height: '28px', 
+                      fontWeight: 'bold', fontSize: '0.9rem', width: '24px', height: '24px', 
                       borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: index === 0 ? '#F59E0B' : index === 1 ? '#94A3B8' : index === 2 ? '#B45309' : '#334155',
                       color: index < 3 ? '#000' : '#FFF'
                     }}>
                       {index + 1}
                     </span>
-                    <FaUserGraduate style={{ color: '#38BDF8', fontSize: '18px' }} />
-                    <span style={{ color: '#FFF', fontWeight: '600' }}>{item.name || item.student_name || 'طالب'}</span>
+                    <FaUserGraduate style={{ color: '#38BDF8', fontSize: '16px' }} />
+                    <span style={{ color: '#FFF', fontWeight: '600', fontSize: '0.9rem' }}>{item.name || 'طالب'}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#F59E0B', fontWeight: 'bold' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#F59E0B', fontWeight: 'bold', fontSize: '0.85rem' }}>
                     <FaStar />
-                    <span>{item.points || item.total_points || 0} {isRtl ? 'نقطة' : 'Pts'}</span>
+                    <span>{item.points || item.total_points || 0}</span>
                   </div>
                 </div>
               ))}
@@ -220,21 +206,23 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
       {/* 🔥 السلسلة المتتالية - Streaks */}
       {activeTab === 'streaks' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '20px' }}>
-          <h2 style={{ fontSize: '1.1rem', color: '#EF4444', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaFire /> {isRtl ? 'أبرز سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}
+        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
+          <h2 style={{ fontSize: '1rem', color: '#EF4444', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaFire /> {isRtl ? 'سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}
           </h2>
 
           {streaks.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '20px' }}>{isRtl ? 'لا توجد بيانات مواظبة حالية' : 'No streak records found'}</p>
+            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+              {isRtl ? 'لا توجد سجلات مواظبة حتي الآن' : 'No streak records found'}
+            </p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {streaks.map((st, i) => (
-                <div key={st.id || i} style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
-                  <FaFire style={{ color: '#EF4444', fontSize: '32px', marginBottom: '8px' }} />
-                  <h3 style={{ color: '#FFF', fontSize: '1rem', margin: '0 0 6px 0' }}>{st.students?.name || 'طالب'}</h3>
-                  <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    {st.current_streak || 0} {isRtl ? 'يوم متتالي' : 'Days'}
+                <div key={st.id || i} style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', border: '1px solid #334155', textAlign: 'center' }}>
+                  <FaFire style={{ color: '#EF4444', fontSize: '24px', marginBottom: '4px' }} />
+                  <h3 style={{ color: '#FFF', fontSize: '0.85rem', margin: '0 0 4px 0' }}>{st.students?.name || 'طالب'}</h3>
+                  <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '1rem' }}>
+                    {st.current_streak || 0} يوم
                   </div>
                 </div>
               ))}
@@ -243,25 +231,27 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
         </div>
       )}
 
-      {/* 🎖️ قائمة الأوسمة - Badges */}
+      {/* 🎖️ الأوسمة - Badges */}
       {activeTab === 'badges' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '20px' }}>
-          <h2 style={{ fontSize: '1.1rem', color: '#10B981', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaMedal /> {isRtl ? 'دليل الأوسمة والتحفيز' : 'Available Badges'}
+        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
+          <h2 style={{ fontSize: '1rem', color: '#10B981', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaMedal /> {isRtl ? 'دليل الأوسمة' : 'Available Badges'}
           </h2>
 
           {badges.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '20px' }}>{isRtl ? 'لا توجد أوسمة مضافة' : 'No badges configured'}</p>
+            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+              {isRtl ? 'لا توجد أوسمة مضافة' : 'No badges configured'}
+            </p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {badges.map((badge, i) => (
-                <div key={badge.id || i} style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
-                  <FaAward style={{ color: '#10B981', fontSize: '36px', marginBottom: '8px' }} />
-                  <h3 style={{ color: '#FFF', fontSize: '1rem', margin: '0 0 4px 0' }}>{badge.title}</h3>
-                  <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>{badge.description || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}</p>
+                <div key={badge.id || i} style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', border: '1px solid #334155', textAlign: 'center' }}>
+                  <FaAward style={{ color: '#10B981', fontSize: '28px', marginBottom: '4px' }} />
+                  <h3 style={{ color: '#FFF', fontSize: '0.85rem', margin: '0 0 4px 0' }}>{badge.title}</h3>
+                  <p style={{ color: '#94A3B8', fontSize: '0.75rem', margin: 0 }}>{badge.description || 'وسام تفوق'}</p>
                   {badge.points_rewarded && (
-                    <span style={{ display: 'inline-block', marginTop: '8px', color: '#F59E0B', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                      +{badge.points_rewarded} {isRtl ? 'نقطة' : 'Pts'}
+                    <span style={{ display: 'block', marginTop: '6px', color: '#F59E0B', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      +{badge.points_rewarded} نقطة
                     </span>
                   )}
                 </div>
@@ -273,4 +263,4 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
     </div>
   );
-}
+        }
