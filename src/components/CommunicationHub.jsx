@@ -279,12 +279,16 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
               {history.map((item) => (
                 <div key={item.id} style={{ background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#e2e8f0' }}>{item.title}</span>
+                    <span dir="auto" style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#e2e8f0', textAlign: 'start' }}>
+                      {item.title}
+                    </span>
                     <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                       {getChannelLabel(item.channel)}
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>{item.content || item.message}</p>
+                  <p dir="auto" style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4', textAlign: 'start' }}>
+                    {item.content || item.message}
+                  </p>
                   <div style={{ fontSize: '0.65rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{isAr ? 'المستهدفون:' : 'Recipients:'} {getRecipientLabel(item.recipient)}</span>
                     <span>{new Date(item.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</span>
