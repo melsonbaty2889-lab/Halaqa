@@ -1,434 +1,268 @@
-/* src/components/CommunicationHub.jsx - مركز التواصل */
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+/* src/components/CommunicationHub.jsx */
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
-  FaComments, 
-  FaWhatsapp, 
-  FaSms, 
-  FaEnvelope, 
-  FaBell,
-  FaPaperPlane, 
-  FaSearch, 
-  FaSyncAlt, 
-  FaCheckDouble, 
-  FaFilter,
-  FaTimes,
-  FaUserFriends,
-  FaCheckCircle
+  FaPaperPlane, FaBullhorn, FaWhatsapp, FaEnvelope, 
+  FaSms, FaBell, FaCheckCircle, FaSpinner, FaHistory 
 } from 'react-icons/fa';
 
-export default function CommunicationHub({ session, userRole }) {
-  const { i18n } = useTranslation();
-  const isArabic = !i18n.language || i18n.language.startsWith('ar');
-  const isRtl = i18n.dir() === 'rtl' || isArabic;
+export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [history, setHistory] = useState([]);
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeChannel, setActiveChannel] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [sending, setSending] = useState(false);
-
-  // نموذج إرسال رسالة/تنبيه جديد
-  const [newMessage, setNewMessage] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     content: '',
-    channel: 'whatsapp', // whatsapp, sms, in_app, email
-    targetGroup: 'all_students', // all_students, halaqas, teachers, parents
-    priority: 'normal' // low, normal, high, urgent
+    channel: 'in_app',
+    recipient: 'all_students',
+    priority: 'normal'
   });
 
-  // 1️⃣ جلب البيانات من قاعدة البيانات مع خطة طوارئ (Fallback)
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true);
+  const fetchNotifications = async () => {
+    setFetching(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(20);
 
-      if (activeChannel !== 'all') {
-        query = query.eq('channel', activeChannel);
-      }
-
-      let { data, error } = await query;
-
-      if (error || !data) {
-        console.warn('Notifications fetch notice, using fallback state:', error?.message);
-        data = [
-          {
-            id: '1',
-            title: isArabic ? 'تذكير بالحلقة القرأنية' : 'Halaqa Class Reminder',
-            content: isArabic ? 'تذكير بموعد حلقة الفرقان اليوم الساعة 5:00 مساءً.' : 'Reminder for Al-Furqan Halaqa today at 5:00 PM.',
-            channel: 'whatsapp',
-            recipient: isArabic ? 'حلقة الفرقان' : 'Al-Furqan Group',
-            status: 'sent',
-            priority: 'normal',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            title: isArabic ? 'تنبيه دفع الاشتراك الشهرى' : 'Monthly Fee Alert',
-            content: isArabic ? 'نود تذكيركم بموعد سداد اشتراك الشهر الحالي.' : 'Kindly remember to clear this month\'s subscription.',
-            channel: 'sms',
-            recipient: isArabic ? 'أولياء الأمور' : 'Parents',
-            status: 'delivered',
-            priority: 'high',
-            created_at: new Date(Date.now() - 3600000).toISOString()
-          },
-          {
-            id: '3',
-            title: isArabic ? 'تحديث مهم للنظام' : 'Important System Update',
-            content: isArabic ? 'تم إضافة خاصية السجل الحي للأنشطة بنجاح.' : 'Realtime Audit Trail module has been successfully integrated.',
-            channel: 'in_app',
-            recipient: isArabic ? 'جميع المستخدمين' : 'All Users',
-            status: 'read',
-            priority: 'urgent',
-            created_at: new Date(Date.now() - 86400000).toISOString()
-          }
-        ];
-      }
-
-      setNotifications(data);
+      if (error) throw error;
+      setHistory(data || []);
     } catch (err) {
-      console.error('Error fetching communication logs:', err);
+      console.error('Error fetching notifications:', err);
     } finally {
-      setLoading(false);
+      setFetching(false);
     }
-  }, [activeChannel, isArabic]);
+  };
 
   useEffect(() => {
     fetchNotifications();
+  }, []);
 
-    const channel = supabase
-      .channel('realtime-communication')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
-        fetchNotifications();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchNotifications]);
-
-  // 2️⃣ إرسال رسالة جديدة
-  const handleSendNotification = async (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (!newMessage.title || !newMessage.content) return;
+    if (!formData.title.trim() || !formData.content.trim()) return;
 
-    setSending(true);
+    setLoading(true);
+    setSuccessMsg('');
+
     try {
-      const payload = {
-        title: newMessage.title,
-        content: newMessage.content,
-        channel: newMessage.channel,
-        recipient: newMessage.targetGroup,
-        priority: newMessage.priority,
-        status: 'sent',
-        created_at: new Date().toISOString()
-      };
+      const { error } = await supabase
+        .from('notifications')
+        .insert([
+          {
+            title: formData.title,
+            content: formData.content,
+            channel: formData.channel,
+            recipient: formData.recipient,
+            priority: formData.priority,
+            academy_id: currentAcademyId,
+            status: 'sent'
+          }
+        ]);
 
-      const { error } = await supabase.from('notifications').insert([payload]);
+      if (error) throw error;
 
-      if (error) {
-        setNotifications(prev => [payload, ...prev]);
-      } else {
-        fetchNotifications();
-      }
+      setSuccessMsg(isRtl ? 'تم إرسال الرسالة بنجاح!' : 'Message sent successfully!');
+      setFormData({
+        title: '',
+        content: '',
+        channel: 'in_app',
+        recipient: 'all_students',
+        priority: 'normal'
+      });
 
-      setShowSendModal(false);
-      setNewMessage({ title: '', content: '', channel: 'whatsapp', targetGroup: 'all_students', priority: 'normal' });
+      fetchNotifications();
     } catch (err) {
       console.error('Error sending message:', err);
+      alert(isRtl ? 'حدث خطأ أثناء الإرسال' : 'Error sending message');
     } finally {
-      setSending(false);
+      setLoading(false);
     }
   };
-
-  const getChannelBadge = (channel) => {
-    switch (channel) {
-      case 'whatsapp':
-        return { icon: FaWhatsapp, color: '#25D366', bg: 'rgba(37, 211, 102, 0.15)', label: 'WhatsApp' };
-      case 'sms':
-        return { icon: FaSms, color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)', label: 'SMS' };
-      case 'email':
-        return { icon: FaEnvelope, color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', label: isArabic ? 'بريد' : 'Email' };
-      default:
-        return { icon: FaBell, color: '#A855F7', bg: 'rgba(168, 85, 247, 0.15)', label: isArabic ? 'تطبيق' : 'In-App' };
-    }
-  };
-
-  const getPriorityBadge = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return { color: '#EF4444', label: isArabic ? 'عاجل' : 'Urgent' };
-      case 'high':
-        return { color: '#F97316', label: isArabic ? 'هام' : 'High' };
-      default:
-        return { color: '#64748B', label: isArabic ? 'عادي' : 'Normal' };
-    }
-  };
-
-  const filteredNotifications = notifications.filter((item) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      (item.title || '').toLowerCase().includes(q) ||
-      (item.content || '').toLowerCase().includes(q) ||
-      (item.recipient || '').toLowerCase().includes(q)
-    );
-  });
 
   return (
-    <div style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
-      
-      {/* 1️⃣ الترويسة الأزرار الرئيسية */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+    <div style={{ padding: '20px', color: '#fff', background: '#0b1329', minHeight: '100vh' }} dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* 🌟 الهيدر */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ background: 'rgba(56, 189, 248, 0.15)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+          <FaPaperPlane style={{ fontSize: '1.5rem', color: '#38bdf8' }} />
+        </div>
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaComments style={{ color: '#38BDF8' }} />
-            <span>{isArabic ? 'مركز التواصل' : 'Communication Hub'}</span>
-          </h2>
-          <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
-            {isArabic 
-              ? 'إدارة التواصل الفوري وإرسال التنبيهات والرسائل لكافة الفئات' 
-              : 'Manage messages and broadcast updates across all channels'}
+          <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700' }}>
+            {isRtl ? 'مركز التواصل والمراسلات الجماعية' : 'Communication & Broadcast Hub'}
+          </h1>
+          <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8' }}>
+            {isRtl ? 'إرسال التنبيهات والتعاميم للطلاب والأولياء والكادر التعليمي' : 'Broadcast notifications & announcements'}
           </p>
         </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            onClick={() => setShowSendModal(true)}
-            style={{ background: '#38BDF8', color: '#0F172A', fontWeight: '700', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaPaperPlane size={12} />
-            <span>{isArabic ? 'إرسال رسالة جديدة' : 'New Message'}</span>
-          </button>
-
-          <button 
-            onClick={fetchNotifications}
-            style={{ background: '#1E293B', color: '#CBD5E1', border: '1px solid rgba(255,255,255,0.1)', padding: '9px 14px', borderRadius: '10px', fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaSyncAlt size={12} className={loading ? 'spinning' : ''} />
-            <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
-          </button>
-        </div>
       </div>
 
-      {/* 2️⃣ الفلاتر وقنوات الاتصال */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-        {[
-          { id: 'all', label: isArabic ? 'جميع القنوات' : 'All Channels', icon: FaFilter },
-          { id: 'whatsapp', label: 'WhatsApp', icon: FaWhatsapp, color: '#25D366' },
-          { id: 'sms', label: 'SMS', icon: FaSms, color: '#38BDF8' },
-          { id: 'in_app', label: isArabic ? 'التطبيق' : 'In-App', icon: FaBell, color: '#A855F7' },
-          { id: 'email', label: isArabic ? 'البريد' : 'Email', icon: FaEnvelope, color: '#F59E0B' }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeChannel === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveChannel(tab.id)}
-              style={{
-                background: isActive ? '#38BDF8' : '#1E293B',
-                color: isActive ? '#0F172A' : '#94A3B8',
-                fontWeight: isActive ? '700' : '500',
-                border: '1px solid rgba(255,255,255,0.08)',
-                padding: '8px 14px',
-                borderRadius: '10px',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap'
-              }}>
-              <Icon style={{ color: isActive ? '#0F172A' : (tab.color || '#94A3B8') }} size={13} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* 📥 نموذج الإرسال + السجل */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        
+        {/* 1️⃣ نموذج الإرسال */}
+        <div style={{ background: '#131f37', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <h2 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
+            <FaBullhorn /> {isRtl ? 'إرسال تعميم جديد' : 'New Broadcast'}
+          </h2>
 
-      {/* 3️⃣ البحث */}
-      <div style={{ marginBottom: '16px', position: 'relative' }}>
-        <FaSearch style={{ position: 'absolute', [isRtl ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B', fontSize: '0.85rem' }} />
-        <input 
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={isArabic ? 'ابحث في محتوى الرسالة، العنوان، أو المستقبل...' : 'Search message content, title, or recipient...'}
-          style={{ 
-            width: '100%', 
-            padding: '10px 32px', 
-            paddingRight: isRtl ? '36px' : '32px', 
-            paddingLeft: isRtl ? '32px' : '36px', 
-            background: '#1E293B', 
-            border: '1px solid rgba(255,255,255,0.08)', 
-            borderRadius: '12px', 
-            color: '#FFF', 
-            fontSize: '0.82rem', 
-            outline: 'none' 
-          }}
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            style={{ position: 'absolute', [isRtl ? 'left' : 'right']: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
-            <FaTimes size={12} />
-          </button>
-        )}
-      </div>
+          {successMsg && (
+            <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaCheckCircle /> {successMsg}
+            </div>
+          )}
 
-      {/* 4️⃣ قائمة الرسائل والتنبيهات */}
-      {loading ? (
-        <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
-          {isArabic ? 'جاري تحميل الرسائل...' : 'Loading messages...'}
-        </div>
-      ) : filteredNotifications.length === 0 ? (
-        <div style={{ background: '#1E293B', padding: '30px', borderRadius: '16px', textAlign: 'center', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.05)' }}>
-          {isArabic ? 'لا توجد رسائل مسجلة حالياً' : 'No messages found'}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {filteredNotifications.map((item) => {
-            const badge = getChannelBadge(item.channel);
-            const priority = getPriorityBadge(item.priority);
-            const Icon = badge.icon;
-
-            return (
-              <div 
-                key={item.id || Math.random()} 
-                style={{ background: '#1E293B', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', padding: '14px' }}>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Icon style={{ color: badge.color, fontSize: '1.1rem' }} />
-                    </div>
-                    <div>
-                      <h4 style={{ margin: 0, color: '#FFF', fontSize: '0.88rem', fontWeight: '700' }}>{item.title}</h4>
-                      <div style={{ fontSize: '0.73rem', color: '#94A3B8', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FaUserFriends size={10} style={{ color: '#38BDF8' }} />
-                        <span>{item.recipient}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <span style={{ fontSize: '0.7rem', color: priority.color, background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px', fontWeight: '600' }}>
-                    {priority.label}
-                  </span>
-                </div>
-
-                <p style={{ color: '#CBD5E1', fontSize: '0.8rem', margin: '8px 0 10px 0', lineHeight: '1.4' }}>
-                  {item.content}
-                </p>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.72rem', color: '#64748B' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FaCheckCircle style={{ color: '#34D399' }} size={10} />
-                    <span>{isArabic ? 'تم الإرسال' : 'Sent'}</span>
-                  </span>
-                  <span>{new Date(item.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 5️⃣ نافذة إرسال رسالة جديدة */}
-      {showSendModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
-          <div style={{ background: '#1E293B', width: '100%', maxWidth: '450px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
+          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ color: '#FFF', margin: 0, fontSize: '1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaPaperPlane style={{ color: '#38BDF8' }} size={14} />
-                <span>{isArabic ? 'إرسال رسالة جديدة' : 'Send New Message'}</span>
-              </h3>
-              <button onClick={() => setShowSendModal(false)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
-                <FaTimes size={14} />
-              </button>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+                {isRtl ? 'قناة الإرسال' : 'Channel'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                {[
+                  { id: 'in_app', label: isRtl ? 'التطبيق' : 'In-App', icon: FaBell },
+                  { id: 'whatsapp', label: 'واتساب', icon: FaWhatsapp },
+                  { id: 'sms', label: 'SMS', icon: FaSms },
+                  { id: 'email', label: 'إيميل', icon: FaEnvelope }
+                ].map(ch => {
+                  const Icon = ch.icon;
+                  const active = formData.channel === ch.id;
+                  return (
+                    <button
+                      type="button"
+                      key={ch.id}
+                      onClick={() => setFormData({ ...formData, channel: ch.id })}
+                      style={{
+                        padding: '8px 4px',
+                        background: active ? 'rgba(56, 189, 248, 0.2)' : '#0f172a',
+                        border: active ? '1px solid #38bdf8' : '1px solid #334155',
+                        borderRadius: '6px',
+                        color: active ? '#38bdf8' : '#94a3b8',
+                        cursor: 'pointer',
+                        fontSize: '0.7rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Icon style={{ fontSize: '0.9rem' }} />
+                      <span>{ch.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <form onSubmit={handleSendNotification} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              
-              <div>
-                <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.75rem', marginBottom: '4px' }}>
-                  {isArabic ? 'قناة الاتصال:' : 'Channel:'}
-                </label>
-                <select 
-                  value={newMessage.channel}
-                  onChange={(e) => setNewMessage({...newMessage, channel: e.target.value})}
-                  style={{ width: '100%', background: '#0F172A', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', outline: 'none' }}>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="sms">SMS</option>
-                  <option value="in_app">{isArabic ? 'إشعار داخل التطبيق' : 'In-App Notification'}</option>
-                  <option value="email">{isArabic ? 'بريد إلكتروني' : 'Email'}</option>
-                </select>
-              </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+                {isRtl ? 'المستهدفون' : 'Recipients'}
+              </label>
+              <select
+                value={formData.recipient}
+                onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
+                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
+              >
+                <option value="all_students">{isRtl ? 'جميع الطلاب والدارسين' : 'All Students'}</option>
+                <option value="parents">{isRtl ? 'أولياء الأمور' : 'Parents'}</option>
+                <option value="teachers">{isRtl ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff'}</option>
+              </select>
+            </div>
 
-              <div>
-                <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.75rem', marginBottom: '4px' }}>
-                  {isArabic ? 'المجموعة المستهدفة:' : 'Target Group:'}
-                </label>
-                <select 
-                  value={newMessage.targetGroup}
-                  onChange={(e) => setNewMessage({...newMessage, targetGroup: e.target.value})}
-                  style={{ width: '100%', background: '#0F172A', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', outline: 'none' }}>
-                  <option value="all_students">{isArabic ? 'جميع الطلاب' : 'All Students'}</option>
-                  <option value="parents">{isArabic ? 'أولياء الأمور' : 'Parents'}</option>
-                  <option value="teachers">{isArabic ? 'المعلمون والمحفظون' : 'Teachers'}</option>
-                </select>
-              </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+                {isRtl ? 'عنوان التعميم / الموضوع' : 'Title'}
+              </label>
+              <input
+                type="text"
+                required
+                placeholder={isRtl ? 'مثال: موعد اختبارات نهاية الفصل' : 'e.g., Final Exam Schedule'}
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', boxSizing: 'border-box' }}
+              />
+            </div>
 
-              <div>
-                <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.75rem', marginBottom: '4px' }}>
-                  {isArabic ? 'عنوان الرسالة:' : 'Subject:'}
-                </label>
-                <input 
-                  type="text" 
-                  required
-                  value={newMessage.title}
-                  onChange={(e) => setNewMessage({...newMessage, title: e.target.value})}
-                  placeholder={isArabic ? 'مثال: تذكير بموعد الحلقة' : 'e.g., Class Reminder'}
-                  style={{ width: '100%', background: '#0F172A', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', outline: 'none' }}
-                />
-              </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+                {isRtl ? 'محتوى الرسالة' : 'Content'}
+              </label>
+              <textarea
+                rows="4"
+                required
+                placeholder={isRtl ? 'اكتب تفاصيل الرسالة هنا...' : 'Write notification details here...'}
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+            </div>
 
-              <div>
-                <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.75rem', marginBottom: '4px' }}>
-                  {isArabic ? 'نص الرسالة:' : 'Message:'}
-                </label>
-                <textarea 
-                  rows={3}
-                  required
-                  value={newMessage.content}
-                  onChange={(e) => setNewMessage({...newMessage, content: e.target.value})}
-                  placeholder={isArabic ? 'اكتب الرسالة هنا...' : 'Type message here...'}
-                  style={{ width: '100%', background: '#0F172A', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', outline: 'none', resize: 'none' }}
-                />
-              </div>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                marginTop: '6px'
+              }}
+            >
+              {loading ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaPaperPlane />}
+              <span>{isRtl ? 'إرسال التعميم الآن' : 'Send Broadcast'}</span>
+            </button>
+          </form>
+        </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <button 
-                  type="submit" 
-                  disabled={sending}
-                  style={{ flex: 1, background: '#38BDF8', color: '#0F172A', fontWeight: '700', border: 'none', padding: '10px', borderRadius: '8px', fontSize: '0.82rem', cursor: 'pointer' }}>
-                  {sending ? (isArabic ? 'جاري الإرسال...' : 'Sending...') : (isArabic ? 'إرسال' : 'Send')}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setShowSendModal(false)}
-                  style={{ background: '#0F172A', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', fontSize: '0.82rem', cursor: 'pointer' }}>
-                  {isArabic ? 'إلغاء' : 'Cancel'}
-                </button>
-              </div>
+        {/* 2️⃣ سجل المراسلات */}
+        <div style={{ background: '#131f37', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <h2 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
+            <FaHistory /> {isRtl ? 'سجل المراسلات السابقة' : 'Recent History'}
+          </h2>
 
-            </form>
+          {fetching ? (
+            <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
+              {isRtl ? 'جاري التحميل...' : 'Loading...'}
+            </div>
+          ) : history.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#64748b', padding: '30px 10px', fontSize: '0.8rem' }}>
+              {isRtl ? 'لا توجد مراسلات أُرسلت بعد' : 'No notification history found'}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+              {history.map((item) => (
+                <div key={item.id} style={{ background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#e2e8f0' }}>{item.title}</span>
+                    <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                      {item.channel}
+                    </span>
+                  </div>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>{item.content}</p>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>المستهدفون: {item.recipient}</span>
+                    <span>{new Date(item.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-            
+      </div>
+    </div>
+  );
+            }
