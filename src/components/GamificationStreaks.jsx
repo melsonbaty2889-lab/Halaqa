@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   FaTrophy, FaFire, FaMedal, FaStar, FaCrown, 
-  FaUserGrad, FaSpinner, FaAward, FaCalendarCheck 
+  FaUserGraduate, FaSpinner, FaAward, FaCalendarCheck 
 } from 'react-icons/fa';
 
 export default function GamificationStreaks({ academyId, isRtl = true }) {
