@@ -160,48 +160,99 @@ setTopAchievers(studentsData || []);
         </div>
       </div>
 
-      {/* 🥇 المتصدرين */}
-      {activeTab === 'leaderboard' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
-          <h2 style={{ fontSize: '1rem', color: '#F59E0B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaCrown /> {isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}
-          </h2>
+      {/* 🥇 المتصدرين (تصميم بطل المراكز وشريط التقدم) */}
+{activeTab === 'leaderboard' && (
+  <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
+    <h2 style={{ fontSize: '1rem', color: '#F59E0B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <FaCrown /> {isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}
+    </h2>
 
-          {topAchievers.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
-              {isRtl ? 'لا توجد بيانات طلاب حالياً' : 'No top achievers data found'}
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {topAchievers.map((item, index) => (
-                <div key={item.id || index} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: index === 0 ? 'rgba(245, 158, 11, 0.1)' : '#1E293B',
-                  border: index === 0 ? '1px solid #F59E0B' : '1px solid #334155',
-                  padding: '10px 12px', borderRadius: '10px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ 
-                      fontWeight: 'bold', fontSize: '0.9rem', width: '24px', height: '24px', 
-                      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: index === 0 ? '#F59E0B' : index === 1 ? '#94A3B8' : index === 2 ? '#B45309' : '#334155',
-                      color: index < 3 ? '#000' : '#FFF'
-                    }}>
-                      {index + 1}
+    {topAchievers.length === 0 ? (
+      <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+        {isRtl ? 'لا توجد بيانات طلاب حالياً' : 'No top achievers data found'}
+      </p>
+    ) : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {topAchievers.map((item, index) => {
+          // نقاط الطالب وحساب المستوى
+          const pts = item.points || item.total_points || 0;
+          const level = Math.floor(pts / 100) + 1;
+          const progressInLevel = pts % 100; // نسبة التقدم للمستوى التالي
+
+          // أوسمة المراكز الثلاثة الأولى
+          const rankBadges = ['🥇', '🥈', '🥉'];
+
+          return (
+            <div key={item.id || index} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              background: index === 0 
+                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(30, 41, 59, 1) 100%)' 
+                : '#1E293B',
+              border: index === 0 ? '1px solid #F59E0B' : '1px solid #334155',
+              padding: '12px',
+              borderRadius: '12px',
+              boxShadow: index === 0 ? '0 4px 12px rgba(245, 158, 11, 0.12)' : 'none'
+            }}>
+              {/* الصف العلوي: المركز والاسم والنقاط */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {/* شارة المركز */}
+                  <span style={{ 
+                    fontWeight: 'bold', 
+                    fontSize: index < 3 ? '1.2rem' : '0.8rem', 
+                    width: '28px', 
+                    height: '28px', 
+                    borderRadius: '50%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    background: index < 3 ? 'transparent' : '#334155',
+                    color: index < 3 ? 'inherit' : '#94A3B8'
+                  }}>
+                    {index < 3 ? rankBadges[index] : index + 1}
+                  </span>
+
+                  <FaUserGraduate style={{ color: index === 0 ? '#F59E0B' : '#38BDF8', fontSize: '18px' }} />
+
+                  <div>
+                    <span style={{ color: '#FFF', fontWeight: '700', fontSize: '0.92rem', display: 'block' }}>
+                      {item.name || 'طالب'}
                     </span>
-                    <FaUserGraduate style={{ color: '#38BDF8', fontSize: '16px' }} />
-                    <span style={{ color: '#FFF', fontWeight: '600', fontSize: '0.9rem' }}>{item.name || 'طالب'}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#F59E0B', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                    <FaStar />
-                    <span>{item.points || item.total_points || 0}</span>
+                    <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>
+                      {isRtl ? `المستوى ${level}` : `Level ${level}`}
+                    </span>
                   </div>
                 </div>
-              ))}
+
+                {/* شارة النقاط */}
+                <div style={{ 
+                  display: 'flex', alignItems: 'center', gap: '4px', 
+                  background: 'rgba(245, 158, 11, 0.12)', padding: '4px 8px', borderRadius: '8px',
+                  color: '#F59E0B', fontWeight: 'bold', fontSize: '0.85rem', border: '1px solid rgba(245, 158, 11, 0.25)'
+                }}>
+                  <FaStar />
+                  <span>{pts}</span>
+                </div>
+              </div>
+
+              {/* شريط التقدم الدقيق نحو المستوى التالي */}
+              <div style={{ width: '100%', background: '#0F172A', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
+                <div style={{ 
+                  width: `${Math.min(progressInLevel, 100)}%`, 
+                  background: 'linear-gradient(90deg, #F59E0B, #10B981)', 
+                  height: '100%',
+                  transition: 'width 0.4s ease'
+                }} />
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          );
+        })}
+      </div>
+    )}
+  </div>
+)}
 
       {/* 🔥 السلسلة المتتالية - Streaks */}
       {activeTab === 'streaks' && (
