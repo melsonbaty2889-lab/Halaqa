@@ -75,7 +75,7 @@ class ErrorBoundaryInner extends React.Component {
   }
 }
 
-export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated }) {
+export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated, setShowEarlyUpgrade }) {
   const { t, i18n } = useTranslation(); 
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
   const currentLang = i18n?.language || 'ar';
@@ -97,8 +97,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
   
-  const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
-
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
   const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
