@@ -109,22 +109,27 @@ export default function Header({
 
   const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
 
-  // 🌐 جدول عناوين الصفحات المترجم بالكامل للغتين
+  // 🌐 جدول عناوين الصفحات الكامل والمترجم باللغتين (المسميات الفخمة والاحترافية)
   const pageTitlesMap = {
-    'dashboard': {ar: 'لوحة التحكم', en: 'Dashboard' },
+    'dashboard': { ar: 'لوحة التحكم والتحليلات', en: 'Dashboard & Analytics' },
     'realtime-audit': { ar: 'السجل الحي للأنشطة', en: 'Realtime Audit Trail' },
-    'communication-hub': { ar: 'مركز التواصل', en: 'Communication Hub' },
+    'communication-hub': { ar: 'مركز التواصل والمراسلات', en: 'Communication & Broadcast Hub' },
     'reports': { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' },
-    'students': { ar: 'شؤون الطلاب', en: 'Students Directory' },
-    'teachers': { ar: 'الكادر التعليمي', en: 'Faculty & Reciters' },
-    'halaqas': { ar: 'الحلقات القرآنية', en: 'Quranic Halaqas' },
-    'attendance': { ar: 'متابعة الحضور', en: 'Attendance Tracking' },
-    'exams': { ar: 'الاختبارات والتعديل', en: 'Exams & Assessment' },
-    'payments': { ar: 'المالية والاشتراكات', en: 'Payments & Treasury' },
-    'settings': { ar: 'إعدادات الأكاديمية', en: 'Academy Settings' },
+    'students': { ar: 'إدارة الدارسين', en: 'Learner Directory' },
+    'teachers': { ar: 'الكادر والمقرئين', en: 'Faculty & Reciters' },
+    'halaqas': { ar: 'المقارئ والحلقات', en: 'Halaqas & Sanad' },
+    'attendance': { ar: 'التسميع والتحضير اليومي', en: 'Daily Recitation' },
+    'exams': { ar: 'الاختبارات والتقييم', en: 'Exams & Assessment' },
+    'guardian-portal': { ar: 'شبكة أسر الدارسين', en: 'Guardian Portal' },
+    'gamification-streaks': { ar: 'الإنجاز والحوافز', en: 'Gamification & Streaks' },
+    'payments': { ar: 'الاشتراكات والتحصيل', en: 'Billing & Payments' },
+    'asset-management': { ar: 'المستندات والأصول', en: 'Asset Management' },
+    'referrals': { ar: 'برنامج الإحالة والأرباح', en: 'Affiliate & Rewards' },
+    'settings': { ar: 'إعدادات المنظومة', en: 'Platform Governance' },
+    'profile': { ar: 'الملف الشخصي', en: 'User Profile' }
   };
 
-  // 🎯 تحديد عنوان الصفحة حسب اللغة الحالية بشكل مضمون
+  // 🎯 تحديد عنوان الصفحة بالاعتماد على الـ JSON أو الـ Map الافتراضي
   const currentTranslations = isAr ? arTranslation : enTranslation;
   const jsonTitle = currentTranslations?.nav?.[activeKey];
   const pageTitle = jsonTitle || pageTitlesMap[activeKey]?.[isAr ? 'ar' : 'en'] || activeKey;
@@ -191,6 +196,7 @@ export default function Header({
       gap: '8px',
       flexWrap: 'nowrap'
     }}>
+      {/* القسم الأيسر: زر السايدبار والعنوان المتجاوب */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
         <button
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
@@ -212,14 +218,13 @@ export default function Header({
           <FaBars />
         </button>
 
+        {/* عنوان الصفحة المتجاوب ذو المظهر الأنيق بدون تخريب الهيدر */}
         <h1 style={{
           margin: 0,
           fontSize: '0.85rem',
           fontWeight: '700',
           color: '#ffffff',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
+          whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           lineHeight: '1.2'
@@ -228,7 +233,9 @@ export default function Header({
         </h1>
       </div>
 
+      {/* القسم الأيمن: أدوات التحكم والإشعارات */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+        {/* قائمة العملات */}
         <div style={{ position: 'relative' }} ref={currencyRef}>
           <button
             onClick={() => {
@@ -294,6 +301,7 @@ export default function Header({
           )}
         </div>
 
+        {/* زر تبديل اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
@@ -314,6 +322,7 @@ export default function Header({
           <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
+        {/* زر الإشعارات */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
@@ -437,6 +446,7 @@ export default function Header({
           )}
         </div>
 
+        {/* ملف المستخدم */}
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button
             onClick={() => {
