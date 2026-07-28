@@ -34,7 +34,6 @@ const Reports = safeLazy(() => import('./Reports.jsx'));
 const SubscriptionPage = safeLazy(() => import('./SubscriptionPage.jsx'));
 const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
-const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx')); // 👈 إضافة استيراد مركز التواصل
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -323,7 +322,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     (!isTrial && trialDaysLeft <= 0)
   );
 
-  // 🌟 4. سجل التبويبات المميّز (Tab Components Lookup Object Engine)
+    // 🌟 4. سجل التبويبات المميّز (Tab Components Lookup Object Engine)
   const tabComponentRegistry = {
     dashboard: <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />,
     students: <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />,
@@ -333,11 +332,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     settings: <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />,
     reports: <Reports students={students} academyId={academyId} countryCode={countryCode} />,
     
-    // 👈 سجل التدقيق
+    // 👈 تم إضافة تبويب سجل التدقيق هنا
     'realtime-audit': <RealtimeAudit session={session} userRole={userRole} />,
-
-    // 👈 مركز التواصل والمراسلات
-    'communication-hub': <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />,
 
     halaqas: (
       <ActiveHalaqas 
@@ -352,7 +348,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       </div>
     )
   };
-
   if (showEarlyUpgrade) {
     return (
       <Suspense fallback={<div style={{ padding: '40px', color: '#FBBF24' }}>Loading Infrastructure Module...</div>}>
@@ -389,7 +384,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-  return (
+    return (
     <div 
       style={{
         display: 'flex', 
@@ -462,4 +457,4 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       </div>
     </div>
   );
-}
+                                                 }
