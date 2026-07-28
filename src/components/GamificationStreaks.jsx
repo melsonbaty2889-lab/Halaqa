@@ -329,82 +329,84 @@ setTopAchievers(studentsData || []);
   </div>
 )}
 
-      {/* 🎖️ الأوسمة والإنجازات - Badges */}
-{activeTab === 'badges' && (
-  <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
-    <h2 style={{ fontSize: '1rem', color: '#38BDF8', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <FaMedal /> {isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges & Achievements'}
-    </h2>
+            {/* 🎖️ الأوسمة والإنجازات - Badges */}
+      {activeTab === 'badges' && (
+        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
+          <h2 style={{ fontSize: '1rem', color: '#38BDF8', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaMedal /> {isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges & Achievements'}
+          </h2>
 
-    {badges.length === 0 ? (
-      <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
-        {isRtl ? 'لا توجد أوسمة مضافة لهذه الأكاديمية حالياً' : 'No badges available for this academy'}
-      </p>
-    ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
-        {badges.map((badge, index) => {
-          // يمكن تحديد أيقونة مميزة بناءً على العنوان أو نوع الوسام
-          const isStarred = index === 0;
+          {badges.length === 0 ? (
+            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+              {isRtl ? 'لا توجد أوسمة مضافة لهذه الأكاديمية حالياً' : 'No badges available for this academy'}
+            </p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+              {badges.map((badge, index) => {
+                const isStarred = index === 0;
 
-          return (
-            <div key={badge.id || index} style={{
-              background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
-              border: '1px solid #334155',
-              borderRadius: '12px',
-              padding: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '10px'
-            }}>
-              {/* الجهة اليمنى: الأيقونة والتفاصيل */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  background: isStarred ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                  border: isStarred ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '22px'
-                }}>
-                  {isStarred ? '🏅' : '🎖️'}
-                </div>
+                return (
+                  <div key={badge.id || index} style={{
+                    background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+                    border: '1px solid #334155',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        background: isStarred ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                        border: isStarred ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '22px'
+                      }}>
+                        {isStarred ? '🏅' : '🎖️'}
+                      </div>
 
-                <div>
-                  <h3 style={{ color: '#FFF', fontSize: '0.88rem', fontWeight: '700', margin: '0 0 2px 0' }}>
-                    {badge.title || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}
-                  </h3>
-                  <p style={{ color: '#94A3B8', fontSize: '0.72rem', margin: 0, lineHeight: '1.2' }}>
-                    {badge.description || (isRtl ? 'وسام تقديري للمواظبة والتفوق' : 'Reward for diligence and progress')}
-                  </p>
-                </div>
-              </div>
+                      <div>
+                        <h3 style={{ color: '#FFF', fontSize: '0.88rem', fontWeight: '700', margin: '0 0 2px 0' }}>
+                          {badge.title || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}
+                        </h3>
+                        <p style={{ color: '#94A3B8', fontSize: '0.72rem', margin: 0, lineHeight: '1.2' }}>
+                          {badge.description || (isRtl ? 'وسام تقديري للمواظبة والتفوق' : 'Reward for diligence and progress')}
+                        </p>
+                      </div>
+                    </div>
 
-              {/* الجهة اليسرى: مكافأة النقاط */}
-              <div style={{
-                background: '#090D16',
-                padding: '6px 10px',
-                borderRadius: '8px',
-                border: '1px solid #1E293B',
-                textAlign: 'center',
-                whiteSpace: 'nowrap'
-              }}>
-                <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <FaStar style={{ fontSize: '12px' }} />
-                  <span>+{badge.points_rewarded || 50}</span>
-                </div>
-                <div style={{ color: '#64748B', fontSize: '0.65rem' }}>
-                  {isRtl ? 'جائزة' : 'Reward'}
-                </div>
-              </div>
+                    <div style={{
+                      background: '#090D16',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #1E293B',
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FaStar style={{ fontSize: '12px' }} />
+                        <span>+{badge.points_rewarded || 50}</span>
+                      </div>
+                      <div style={{ color: '#64748B', fontSize: '0.65rem' }}>
+                        {isRtl ? 'جائزة' : 'Reward'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-)}
-        }
+          )}
+        </div>
+      )}
+
+    </div> // 👈 إغلاق الحاوية الرئيسية للمكون (Main Container Div)
+  );
+};
+
+export default GamificationStreaks;
