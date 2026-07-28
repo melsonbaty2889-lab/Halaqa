@@ -166,7 +166,7 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
                     }}>
                       {index + 1}
                     </span>
-                    <FaUserGrad style={{ color: '#38BDF8', fontSize: '18px' }} />
+                    <FaUserGraduate style={{ color: '#38BDF8', fontSize: '18px' }} />
                     <span style={{ color: '#FFF', fontWeight: '600' }}>{item.name || item.student_name || 'طالب'}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#F59E0B', fontWeight: 'bold' }}>
