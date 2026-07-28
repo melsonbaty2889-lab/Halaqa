@@ -6,7 +6,7 @@ import {
   FaHistory,
   FaComments,
   FaChartBar,
-  FaUserGrad,
+  FaUserGraduate,
   FaChalkboardTeacher,
   FaQuran,
   FaClipboardCheck,
