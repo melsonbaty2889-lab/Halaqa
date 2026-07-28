@@ -35,32 +35,38 @@ const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx'));
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("🚨 Error Logged:", error, errorInfo);
+    console.error("🚨 Error Logged in Boundary:", error, errorInfo);
+    this.setState({ errorInfo });
   }
   render() {
     const { t } = this.props;
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', color: '#EF4444', margin: '20px' }}>
-          <h3 style={{ marginBottom: '8px' }}>⚠️ حدث خطأ في تحميل هذا القسم</h3>
-          {/* إظهار كود الخطأ الدقيق لتشخيصه */}
-          <pre style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', color: '#f87171', fontSize: '0.8rem', overflowX: 'auto', direction: 'ltr', textAlign: 'left' }}>
+        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', color: '#EF4444', margin: '20px', direction: 'ltr', textAlign: 'left' }}>
+          <h3 style={{ marginBottom: '8px', color: '#F87171' }}>⚠️ Component Render Error</h3>
+          <pre style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
             {this.state.error?.toString()}
           </pre>
+          {this.state.errorInfo && (
+            <details style={{ marginTop: '10px', color: '#94a3b8', fontSize: '0.75rem' }}>
+              <summary style={{ cursor: 'pointer', color: '#FBBF24' }}>Stack Details</summary>
+              <pre style={{ marginTop: '5px' }}>{this.state.errorInfo.componentStack}</pre>
+            </details>
+          )}
           <button 
             onClick={() => {
-              this.setState({ hasError: false, error: null });
+              this.setState({ hasError: false, error: null, errorInfo: null });
               window.location.reload();
             }} 
             style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}
           >
-            إعادة تحميل الصفحة
+            Reload Page
           </button>
         </div>
       );
@@ -131,7 +137,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
     setLoadingData(true);
     try {
-      const { data: academyData, error: acErr } = await supabase
+      const { data: academyData } = await supabase
         .from('academies')
         .select('id, name, currency, timezone, country_code, is_active')
         .eq('id', targetAcademyId)
@@ -176,7 +182,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     async function loadInitialData() {
       try {
         setLoadingData(true);
-        const { data: staff, error: staffErr } = await supabase
+        const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, currency, timezone, country_code, is_active)')
           .eq('user_id', currentUserId)
@@ -215,52 +221,69 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     is_activated: true,
     stats: {
       students: Array.isArray(students) ? students.length : 0,
-      pending: Array.isArray(students) ? students.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length : 0,
-      activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h.is_archived).length : 0, 
+      pending: Array.isArray(students) ? students.filter(s => s?.payment_status === 'unpaid' || s?.payment_status === 'pending').length : 0,
+      activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h?.is_archived).length : 0, 
       completedExams: completedExamsCount || 0
     }
   }), [isPlatformAdmin, isRtl, academyName, userRole, students, halaqas, completedExamsCount]);
 
-  const tabComponentRegistry = {
-    'dashboard': <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />,
-    'realtime-audit': <RealtimeAudit session={session} userRole={userRole} />,
-    'communication-hub': <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />,
-    'reports': <Reports students={students} academyId={academyId} countryCode={countryCode} />,
-    
-    'students': <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />,
-    'teachers': (
-      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
-        <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>{isRtl ? '👨‍🏫 الكادر التعليمي والمقرئين' : '👨‍🏫 Faculty & Reciters'}</h2>
-        <p style={{ color: '#9CA3AF' }}>{isRtl ? 'إجمالي المقرئين النشطين:' : 'Total active teachers:'} <strong style={{ color: '#FFF' }}>{teachers.length}</strong></p>
-      </div>
-    ),
-    'halaqas': <ActiveHalaqas halaqas={enrichedHalaqas} teachers={teachers} students={students} isLoading={loadingData} error={null} isRtl={isRtl} isMobile={isMobile} />,
-    'attendance': <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} />,
-    'exams': <Exams students={students} academyId={academyId} />,
-
-    'guardian-portal': (
-      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
-        <h2 style={{ color: '#38BDF8' }}>{isRtl ? '🏠 شبكة أسر الدارسين' : 'Guardian Portal'}</h2>
-      </div>
-    ),
-    'gamification-streaks': (
-      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
-        <h2 style={{ color: '#F59E0B' }}>{isRtl ? '🏆 الإنجاز والحوافز' : 'Gamification & Streaks'}</h2>
-      </div>
-    ),
-
-    'payments': <Payments students={students} academyId={academyId} currency={currency} />,
-    'asset-management': (
-      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
-        <h2 style={{ color: '#10B981' }}>{isRtl ? '📁 المستندات والأصول' : 'Asset Management'}</h2>
-      </div>
-    ),
-    'referrals': (
-      <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
-        <h2 style={{ color: '#3B82F6' }}>{isRtl ? '⚡ برنامج الإحالة والأرباح' : 'Affiliate & Rewards'}</h2>
-      </div>
-    ),
-    'settings': <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />
+  // 🎯 بناء التبويب النشط فقط لمنع تهيئة كافة المكونات في الخلفية
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />;
+      case 'realtime-audit':
+        return <RealtimeAudit session={session} userRole={userRole} />;
+      case 'communication-hub':
+        return <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />;
+      case 'reports':
+        return <Reports students={students} academyId={academyId} countryCode={countryCode} />;
+      case 'students':
+        return <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />;
+      case 'teachers':
+        return (
+          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
+            <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>{isRtl ? '👨‍🏫 الكادر التعليمي والمقرئين' : '👨‍🏫 Faculty & Reciters'}</h2>
+            <p style={{ color: '#9CA3AF' }}>{isRtl ? 'إجمالي المقرئين النشطين:' : 'Total active teachers:'} <strong style={{ color: '#FFF' }}>{teachers.length}</strong></p>
+          </div>
+        );
+      case 'halaqas':
+        return <ActiveHalaqas halaqas={enrichedHalaqas} teachers={teachers} students={students} isLoading={loadingData} error={null} isRtl={isRtl} isMobile={isMobile} />;
+      case 'attendance':
+        return <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} />;
+      case 'exams':
+        return <Exams students={students} academyId={academyId} />;
+      case 'guardian-portal':
+        return (
+          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+            <h2 style={{ color: '#38BDF8' }}>{isRtl ? '🏠 شبكة أسر الدارسين' : 'Guardian Portal'}</h2>
+          </div>
+        );
+      case 'gamification-streaks':
+        return (
+          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+            <h2 style={{ color: '#F59E0B' }}>{isRtl ? '🏆 الإنجاز والحوافز' : 'Gamification & Streaks'}</h2>
+          </div>
+        );
+      case 'payments':
+        return <Payments students={students} academyId={academyId} currency={currency} />;
+      case 'asset-management':
+        return (
+          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+            <h2 style={{ color: '#10B981' }}>{isRtl ? '📁 المستندات والأصول' : 'Asset Management'}</h2>
+          </div>
+        );
+      case 'referrals':
+        return (
+          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
+            <h2 style={{ color: '#3B82F6' }}>{isRtl ? '⚡ برنامج الإحالة والأرباح' : 'Affiliate & Rewards'}</h2>
+          </div>
+        );
+      case 'settings':
+        return <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />;
+      default:
+        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />;
+    }
   };
 
   const skeletonLoader = (
@@ -319,7 +342,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto' }}>
           <ErrorBoundaryInner key={activeTab} t={t}>
             <Suspense fallback={skeletonLoader}>
-              {loadingData ? skeletonLoader : (tabComponentRegistry[activeTab] || tabComponentRegistry.dashboard)}
+              {loadingData ? skeletonLoader : renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
         </div>
