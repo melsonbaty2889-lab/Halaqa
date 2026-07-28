@@ -32,6 +32,7 @@ const Reports = safeLazy(() => import('./Reports.jsx'));
 const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
 const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx'));
+const GamificationStreaks = safeLazy(() => import('./GamificationStreaks.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -267,6 +268,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           </div>
         );
       case 'gamification-streaks':
+  return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
         return (
           <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
             <h2 style={{ color: '#F59E0B' }}>{isRtl ? '🏆 الإنجاز والحوافز' : 'Gamification & Streaks'}</h2>
