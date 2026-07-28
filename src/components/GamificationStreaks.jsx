@@ -52,18 +52,17 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
         if (streaksErr) errMsg += `خطأ السلاسل: ${streaksErr.message} | `;
         setStreaks(streaksData || []);
 
-        // 4️⃣ جلب المتصدرين
-        let studentsQuery = supabase
-          .from('students')
-          .select('id, name, avatar_url, points, total_points')
-          .limit(10);
+        // 4️⃣ جلب المتصدرين (بدون طلب أعمدة غير موجودة)
+let studentsQuery = supabase
+  .from('students')
+  .select('id, name, avatar_url')
+  .limit(10);
 
-        if (targetAcademyId) studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
+if (targetAcademyId) studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
 
-        const { data: studentsData, error: studErr } = await studentsQuery;
-        if (studErr) errMsg += `خطأ الطلاب: ${studErr.message} | `;
-        setTopAchievers(studentsData || []);
-
+const { data: studentsData, error: studErr } = await studentsQuery;
+if (studErr) errMsg += `خطأ الطلاب: ${studErr.message} | `;
+setTopAchievers(studentsData || []);
         if (errMsg) {
           setDebugInfo(prev => ({ ...prev, error: errMsg }));
         }
