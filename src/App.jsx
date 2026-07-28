@@ -26,17 +26,36 @@ if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
 }
 
-// حارس المكونات
+// 🛡️ حارس المكونات المطور للتشخيص المباشر
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, errorInfo) {
+    console.error("🚨 Global App Crash:", error, errorInfo);
+  }
   render() {
-    if (this.state.hasError) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', fontFamily: "'Cairo', sans-serif" }}>حدث خطأ تقني، يرجى تحديث الصفحة.</div>;
+    if (this.state.hasError) {
+      return (
+        <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+          <FaExclamationTriangle style={{ color: '#EF4444', fontSize: '48px', marginBottom: '15px' }} />
+          <h2 style={{ color: '#EF4444', marginBottom: '10px' }}>حدث خطأ تقني في النظام</h2>
+          <div style={{ background: '#1E293B', padding: '15px', borderRadius: '8px', border: '1px solid #334155', maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: '#F87171', overflowX: 'auto' }}>
+            {this.state.error?.toString()}
+          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ padding: '10px 20px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            إعادة تحميل الصفحة
+          </button>
+        </div>
+      );
+    }
     return this.props.children;
   }
 }
 
-const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
+const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
 
 function AppContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
@@ -47,7 +66,7 @@ function AppContent() {
   const goldColor = '#C9A84C';
 
   // 🛠️ تتبع الحالة للتشخيص
-  console.log("🛠️ Current App State:", appState);
+  console.log("🛠️ Current App State:", appState, { user, profile, academy });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -139,6 +158,7 @@ function AppContent() {
 
   // 7. Fully Active
   if (appState === 'FULLY_ACTIVE') {
+    const formattedSession = user ? { user } : null;
     return (
       <>
         {!isOnline && (
@@ -146,7 +166,7 @@ function AppContent() {
             <FaWifi style={{ marginLeft: '8px' }} /> انقطع الاتصال بالإنترنت.
           </div>
         )}
-        <MainApp session={{ user }} userRole={profile?.role} />
+        <MainApp session={formattedSession} userRole={profile?.role || 'staff'} />
       </>
     );
   }
