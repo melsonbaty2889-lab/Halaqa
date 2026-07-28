@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
+import SubscriptionPage from './SubscriptionPage';
 
 // 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء التحديث والبناء
 const safeLazy = (importFn) => {
