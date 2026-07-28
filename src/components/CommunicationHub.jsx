@@ -50,7 +50,6 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
     setSuccessMsg('');
 
     try {
-      // 1. حفظ الإشعار في قاعدة البيانات
       const { error } = await supabase
         .from('notifications')
         .insert([
@@ -67,13 +66,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
 
       if (error) throw error;
 
-      // 2. إذا كانت القناة "واتساب"، فتح رابط مشاركة واتساب الفوري
-      if (formData.channel === 'whatsapp') {
-        const messageText = encodeURIComponent(`*${formData.title}*\n\n${formData.content}`);
-        window.open(`https://api.whatsapp.com/send?text=${messageText}`, '_blank');
-      }
-
-      setSuccessMsg(isRtl ? 'تم تسجيل وتمرير الرسالة بنجاح!' : 'Message logged and broadcasted successfully!');
+      setSuccessMsg(isRtl ? 'تم إرسال الرسالة بنجاح!' : 'Message sent successfully!');
       setFormData({
         title: '',
         content: '',
@@ -89,20 +82,6 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ترجمة المسميات
-  const channels = [
-    { id: 'in_app', label: isRtl ? 'التطبيق' : 'In-App', icon: FaBell },
-    { id: 'whatsapp', label: isRtl ? 'واتساب' : 'WhatsApp', icon: FaWhatsapp },
-    { id: 'sms', label: isRtl ? 'SMS' : 'SMS', icon: FaSms },
-    { id: 'email', label: isRtl ? 'إيميل' : 'Email', icon: FaEnvelope }
-  ];
-
-  const recipientLabels = {
-    all_students: isRtl ? 'جميع الطلاب والدارسين' : 'All Students',
-    parents: isRtl ? 'أولياء الأمور' : 'Parents',
-    teachers: isRtl ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff'
   };
 
   return (
@@ -139,13 +118,17 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
 
           <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
-            {/* أزرار قنوات الإرسال */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
                 {isRtl ? 'قناة الإرسال' : 'Channel'}
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                {channels.map(ch => {
+                {[
+                  { id: 'in_app', label: isRtl ? 'التطبيق' : 'In-App', icon: FaBell },
+                  { id: 'whatsapp', label: 'واتساب', icon: FaWhatsapp },
+                  { id: 'sms', label: 'SMS', icon: FaSms },
+                  { id: 'email', label: 'إيميل', icon: FaEnvelope }
+                ].map(ch => {
                   const Icon = ch.icon;
                   const active = formData.channel === ch.id;
                   return (
@@ -160,14 +143,14 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
                         borderRadius: '6px',
                         color: active ? '#38bdf8' : '#94a3b8',
                         cursor: 'pointer',
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         gap: '4px'
                       }}
                     >
-                      <Icon style={{ fontSize: '0.95rem' }} />
+                      <Icon style={{ fontSize: '0.9rem' }} />
                       <span>{ch.label}</span>
                     </button>
                   );
@@ -175,7 +158,6 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
               </div>
             </div>
 
-            {/* المستهدفون */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
                 {isRtl ? 'المستهدفون' : 'Recipients'}
@@ -185,13 +167,12 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
                 onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
                 style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
               >
-                <option value="all_students">{recipientLabels.all_students}</option>
-                <option value="parents">{recipientLabels.parents}</option>
-                <option value="teachers">{recipientLabels.teachers}</option>
+                <option value="all_students">{isRtl ? 'جميع الطلاب والدارسين' : 'All Students'}</option>
+                <option value="parents">{isRtl ? 'أولياء الأمور' : 'Parents'}</option>
+                <option value="teachers">{isRtl ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff'}</option>
               </select>
             </div>
 
-            {/* العنوان */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
                 {isRtl ? 'عنوان التعميم / الموضوع' : 'Title'}
@@ -206,18 +187,10 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
               />
             </div>
 
-            {/* محتوى الرسالة + عداد الحروف */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-                  {isRtl ? 'محتوى الرسالة' : 'Content'}
-                </label>
-                {formData.channel === 'sms' && (
-                  <span style={{ fontSize: '0.7rem', color: formData.content.length > 160 ? '#ef4444' : '#38bdf8' }}>
-                    {formData.content.length} / 160 {isRtl ? 'حرف' : 'chars'}
-                  </span>
-                )}
-              </div>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
+                {isRtl ? 'محتوى الرسالة' : 'Content'}
+              </label>
               <textarea
                 rows="4"
                 required
@@ -228,7 +201,6 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
               />
             </div>
 
-            {/* زر الإرسال */}
             <button
               type="submit"
               disabled={loading}
@@ -274,14 +246,14 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
               {history.map((item) => (
                 <div key={item.id} style={{ background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #1e293b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#f8fafc' }}>{item.title}</span>
-                    <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.15)', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#e2e8f0' }}>{item.title}</span>
+                    <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                       {item.channel}
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#cbd5e1', lineHeight: '1.4' }}>{item.content}</p>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #1e293b', paddingTop: '6px' }}>
-                    <span>{isRtl ? 'المستهدفون:' : 'Recipients:'} <strong style={{ color: '#e2e8f0' }}>{recipientLabels[item.recipient] || item.recipient}</strong></span>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>{item.content}</p>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>المستهدفون: {item.recipient}</span>
                     <span>{new Date(item.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</span>
                   </div>
                 </div>
@@ -293,4 +265,4 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
       </div>
     </div>
   );
-  }
+}
