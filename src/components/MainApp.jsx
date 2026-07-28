@@ -34,6 +34,7 @@ const Reports = safeLazy(() => import('./Reports.jsx'));
 const SubscriptionPage = safeLazy(() => import('./SubscriptionPage.jsx'));
 const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
+const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx')); // 👈 تم إضافة استيراد مركز المراسلات
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -107,7 +108,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
 
-  // 🔒 1. مراقبة انتهاء الصلاحية وتسجيل الخروج المفاجئ لجلسة السحابة
+  // 🔒 1. مراقبة انتهاء الصلاحية وتسجيل الخروج المفاجئ للجلسة
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
@@ -138,13 +139,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 🌍 تطبيق خصائص اتجاهات اللغات بشكل فوري وموحد
+  // 🌍 تطبيق خصائص اتجاهات اللغات
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = currentLang;
   }, [isRtl, currentLang]);
 
-  // ⏰ ساعة المنصة الذكية المزامنة مع النطاق الزمني للمؤسسة
+  // ⏰ ساعة المنصة الذكية
   useEffect(() => {
     const updateTime = () => {
       try {
@@ -164,7 +165,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return () => clearInterval(interval);
   }, [timezone, currentLang]);
 
-  // 🔄 2. دالة جلب وإعادة تحميل بيانات الأكاديمية ديناميكياً عند التبديل
+  // 🔄 2. جلب بيانات الأكاديمية
   const fetchAcademyData = useCallback(async (targetAcademyId) => {
     if (!targetAcademyId) return;
     setLoadingData(true);
@@ -201,14 +202,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
-  // 🔀 3. دالة معالجة حدث اختيار أكاديمية جديدة من القائمة المنسدلة
+  // 🔀 3. دالة معالجة حدث اختيار أكاديمية جديدة
   const handleSwitchAcademy = useCallback((newAcademyId) => {
     if (!newAcademyId || newAcademyId === academyId) return;
     setAcademyId(newAcademyId);
     fetchAcademyData(newAcademyId);
   }, [academyId, fetchAcademyData]);
 
-  // 📥 نواة جلب البيانات المركزية المبدئية عند فتح الجلسة
+  // 📥 نواة جلب البيانات المركزية
   useEffect(() => {
     const currentUserId = session?.user?.id;
     if (!currentUserId) {
@@ -251,7 +252,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     loadInitialData();
   }, [session, fetchAcademyData]);
 
-  // 🛠️ ربط وتحديث مصفوفة الحلقات لتضمين أسماء المعلمين ديناميكياً للعرض المحمي
+  // 🛠️ ربط بيانات الحلقات بأدوار المعلمين
   const enrichedHalaqas = useMemo(() => {
     return halaqas.map(h => {
       const teacher = teachers.find(t => t.id === h.teacher_id);
@@ -262,7 +263,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     });
   }, [halaqas, teachers, isRtl]);
 
-  // 💾 دالة إنشاء حلقة جديدة وإرسالها لـ Supabase فوريّاً مع تثبيت مرجعي
+  // 💾 إنشاء حلقة جديدة
   const handleCreateHalaqa = useCallback(async (formData) => {
     try {
       const { data, error } = await supabase
@@ -283,11 +284,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       if (data) setHalaqas(prev => [data[0], ...prev]);
     } catch (err) {
       console.error("Error creating new halaqa row:", err);
-      alert(isRtl ? "حدث خطأ أثناء حفظ الحلقة، يرجى التحقق من بنية الجدول" : "Failed to create halaqa");
+      alert(isRtl ? "حدث خطأ أثناء حفظ الحلقة" : "Failed to create halaqa");
     }
   }, [academyId, isRtl]);
 
-  // 📦 دالة أرشفة أو تنشيط الحلقة داخل Supabase فوريّاً مع تثبيت مرجعي
+  // 📦 أرشفة / تنشيط حلقة
   const handleToggleArchiveHalaqa = useCallback(async (id, currentArchivedStatus) => {
     try {
       const { error } = await supabase
@@ -322,7 +323,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     (!isTrial && trialDaysLeft <= 0)
   );
 
-    // 🌟 4. سجل التبويبات المميّز (Tab Components Lookup Object Engine)
+  // 🌟 4. سجل التبويبات المميّز الشامل (مربوط بالكامل بالمعرفات المستعملة بالجانبية)
   const tabComponentRegistry = {
     dashboard: <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={currentActivationState} />,
     students: <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />,
@@ -332,8 +333,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     settings: <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />,
     reports: <Reports students={students} academyId={academyId} countryCode={countryCode} />,
     
-    // 👈 تم إضافة تبويب سجل التدقيق هنا
+    // 👈 الأقسام المضافة والمصححة:
+    'audit': <RealtimeAudit session={session} userRole={userRole} />,
     'realtime-audit': <RealtimeAudit session={session} userRole={userRole} />,
+    'communication': <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />,
 
     halaqas: (
       <ActiveHalaqas 
@@ -348,6 +351,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       </div>
     )
   };
+
   if (showEarlyUpgrade) {
     return (
       <Suspense fallback={<div style={{ padding: '40px', color: '#FBBF24' }}>Loading Infrastructure Module...</div>}>
@@ -384,7 +388,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-    return (
+  return (
     <div 
       style={{
         display: 'flex', 
@@ -406,6 +410,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         setActiveTab={setActiveTab} 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
+        isOpen={sidebarOpen || !isMobile}
+        onClose={() => setSidebarOpen(false)}
         isMobile={isMobile} 
         isRtl={isRtl} 
         t={t} 
@@ -457,4 +463,4 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       </div>
     </div>
   );
-                                                 }
+}
