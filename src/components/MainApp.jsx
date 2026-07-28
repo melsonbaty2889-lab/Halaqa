@@ -41,25 +41,26 @@ class ErrorBoundaryInner extends React.Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("🚨 Catch Error in Component:", error, errorInfo);
+    console.error("🚨 Error Logged:", error, errorInfo);
   }
   render() {
     const { t } = this.props;
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '30px', background: '#1e293b', borderRadius: '12px', textAlign: 'center', color: '#EF4444', margin: '20px' }}>
-          <h3>⚠️ {t ? t('errorLoading', 'حدث خطأ غير متوقع في تشغيل هذا القسم') : 'حدث خطأ غير متوقع في تشغيل هذا القسم'}</h3>
-          <p style={{ color: '#F87171', fontSize: '0.9rem', background: '#0f172a', padding: '10px', borderRadius: '6px', fontFamily: 'monospace', direction: 'ltr' }}>
+        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', color: '#EF4444', margin: '20px' }}>
+          <h3 style={{ marginBottom: '8px' }}>⚠️ حدث خطأ في تحميل هذا القسم</h3>
+          {/* إظهار كود الخطأ الدقيق لتشخيصه */}
+          <pre style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', color: '#f87171', fontSize: '0.8rem', overflowX: 'auto', direction: 'ltr', textAlign: 'left' }}>
             {this.state.error?.toString()}
-          </p>
+          </pre>
           <button 
             onClick={() => {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}
+            style={{ padding: '8px 16px', background: '#FBBF24', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}
           >
-            إعادة تحميل التطبيق
+            إعادة تحميل الصفحة
           </button>
         </div>
       );
