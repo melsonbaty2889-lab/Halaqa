@@ -9,11 +9,9 @@ import {
   FaCoins, 
   FaCheck, 
   FaCheckDouble, 
-  FaTrashAlt,
-  FaSignOutAlt
+  FaTrashAlt
 } from 'react-icons/fa';
 
-// 🎯 استدعاء Supabase من مساره الصحيح الدقيق (src/lib/supabase.js)
 import { supabase } from '../../lib/supabase';
 
 import arTranslation from '../../locales/ar.json';
@@ -29,7 +27,8 @@ export default function Header({
 }) {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language || 'ar';
-  
+  const isAr = currentLanguage === 'ar';
+
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -100,8 +99,6 @@ export default function Header({
     { code: 'AED', name: 'AED' },
   ];
 
-  const currentTranslations = currentLanguage === 'ar' ? arTranslation : enTranslation;
-
   let pathname = '';
   try {
     const location = useLocation();
@@ -112,28 +109,28 @@ export default function Header({
 
   const activeKey = (activeTab || pathname.replace('/', '') || 'dashboard').trim();
 
-  // 🗺️ خريطة حماية للترجمة الفورية في حال كان ملف JSON يفتقد للمفتاح
-  const fallbackTitles = {
-    'dashboard': currentLanguage === 'ar' ? 'لوحة التحكم والتحليلات' : 'Dashboard & Analytics',
-    'realtime-audit': currentLanguage === 'ar' ? 'السجل الحي للأنشطة' : 'Realtime Audit Trail',
-    'communication-hub': currentLanguage === 'ar' ? 'مركز التواصل والمراسلات' : 'Communication Hub',
-    'reports': currentLanguage === 'ar' ? 'التقارير والتحليلات' : 'Reports & Analytics',
-    'students': currentLanguage === 'ar' ? 'شؤون الطلاب' : 'Students Directory',
-    'teachers': currentLanguage === 'ar' ? 'الكادر التعليمي' : 'Faculty & Reciters',
-    'halaqas': currentLanguage === 'ar' ? 'الحلقات القرأنية' : 'Quranic Halaqas',
-    'attendance': currentLanguage === 'ar' ? 'متابعة الحضور' : 'Attendance Tracking',
-    'exams': currentLanguage === 'ar' ? 'الاختبارات والتعديل' : 'Exams & Assessment',
-    'payments': currentLanguage === 'ar' ? 'المالية والاشتراكات' : 'Payments & Treasury',
-    'settings': currentLanguage === 'ar' ? 'إعدادات الأكاديمية' : 'Academy Settings',
+  // 🌐 جدول عناوين الصفحات المترجم بالكامل للغتين
+  const pageTitlesMap = {
+    'dashboard': { ar: 'لوحة التحكم والتحليلات', en: 'Dashboard & Analytics' },
+    'realtime-audit': { ar: 'السجل الحي للأنشطة', en: 'Realtime Audit Trail' },
+    'communication-hub': { ar: 'مركز التواصل والمراسلات', en: 'Communication & Broadcast Hub' },
+    'reports': { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' },
+    'students': { ar: 'شؤون الطلاب', en: 'Students Directory' },
+    'teachers': { ar: 'الكادر التعليمي', en: 'Faculty & Reciters' },
+    'halaqas': { ar: 'الحلقات القرآنية', en: 'Quranic Halaqas' },
+    'attendance': { ar: 'متابعة الحضور', en: 'Attendance Tracking' },
+    'exams': { ar: 'الاختبارات والتعديل', en: 'Exams & Assessment' },
+    'payments': { ar: 'المالية والاشتراكات', en: 'Payments & Treasury' },
+    'settings': { ar: 'إعدادات الأكاديمية', en: 'Academy Settings' },
   };
 
-  const rawTitle = currentTranslations?.nav?.[activeKey] || t(`nav.${activeKey}`);
-  const pageTitle = (rawTitle && !rawTitle.startsWith('nav.')) 
-    ? rawTitle 
-    : (fallbackTitles[activeKey] || activeKey);
+  // 🎯 تحديد عنوان الصفحة حسب اللغة الحالية بشكل مضمون
+  const currentTranslations = isAr ? arTranslation : enTranslation;
+  const jsonTitle = currentTranslations?.nav?.[activeKey];
+  const pageTitle = jsonTitle || pageTitlesMap[activeKey]?.[isAr ? 'ar' : 'en'] || activeKey;
 
   const toggleLanguage = () => {
-    const nextLng = currentLanguage === 'ar' ? 'en' : 'ar';
+    const nextLng = isAr ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
     localStorage.setItem('i18nextLng', nextLng);
   };
@@ -166,13 +163,13 @@ export default function Header({
   const formatTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleTimeString(currentLanguage === 'ar' ? 'ar-EG' : 'en-US', {
+    return date.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  const dropdownPositionStyle = isRtl
+  const dropdownPositionStyle = (isRtl !== undefined ? isRtl : isAr)
     ? { left: 0, right: 'auto' }
     : { right: 0, left: 'auto' };
 
@@ -190,7 +187,7 @@ export default function Header({
       zIndex: 100,
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       color: '#fff',
-      direction: isRtl ? 'rtl' : 'ltr',
+      direction: (isRtl !== undefined ? isRtl : isAr) ? 'rtl' : 'ltr',
       gap: '8px',
       flexWrap: 'nowrap'
     }}>
@@ -210,7 +207,7 @@ export default function Header({
             fontSize: '0.95rem',
             flexShrink: 0
           }}
-          title={isRtl ? "القائمة" : "Menu"}
+          title={isAr ? "القائمة" : "Menu"}
         >
           <FaBars />
         </button>
@@ -286,7 +283,7 @@ export default function Header({
                     color: selectedCurrency === curr.code ? '#10b981' : '#cbd5e1',
                     fontSize: '0.75rem',
                     cursor: 'pointer',
-                    textAlign: isRtl ? 'right' : 'left'
+                    textAlign: isAr ? 'right' : 'left'
                   }}
                 >
                   <span>{curr.name}</span>
@@ -314,7 +311,7 @@ export default function Header({
           }}
         >
           <FaGlobe style={{ color: '#38bdf8', fontSize: '0.75rem' }} />
-          <span>{currentLanguage === 'ar' ? 'EN' : 'عربي'}</span>
+          <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
         <div style={{ position: 'relative' }} ref={notifRef}>
@@ -365,7 +362,7 @@ export default function Header({
               maxWidth: 'calc(100vw - 24px)',
               color: '#cbd5e1',
               fontSize: '0.75rem',
-              textAlign: isRtl ? 'right' : 'left'
+              textAlign: isAr ? 'right' : 'left'
             }}>
               <div style={{ 
                 display: 'flex', 
@@ -376,20 +373,20 @@ export default function Header({
                 paddingBottom: '6px' 
               }}>
                 <span style={{ fontWeight: 'bold', color: '#fff' }}>
-                  {currentLanguage === 'ar' ? 'التنبيهات' : 'Notifications'}
+                  {isAr ? 'التنبيهات' : 'Notifications'}
                 </span>
                 {notifications.length > 0 && (
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button 
                       onClick={markAllAsRead} 
-                      title={currentLanguage === 'ar' ? 'تحديد الكل كمقروء' : 'Mark all read'} 
+                      title={isAr ? 'تحديد الكل كمقروء' : 'Mark all read'} 
                       style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.75rem' }}
                     >
                       <FaCheckDouble />
                     </button>
                     <button 
                       onClick={clearAll} 
-                      title={currentLanguage === 'ar' ? 'مسح القائمة' : 'Clear list'} 
+                      title={isAr ? 'مسح القائمة' : 'Clear list'} 
                       style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', fontSize: '0.75rem' }}
                     >
                       <FaTrashAlt />
@@ -400,11 +397,11 @@ export default function Header({
 
               {loadingNotifs ? (
                 <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
-                  {currentLanguage === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                  {isAr ? 'جاري التحميل...' : 'Loading...'}
                 </div>
               ) : notifications.length === 0 ? (
                 <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
-                  {currentLanguage === 'ar' ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
+                  {isAr ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
                 </div>
               ) : (
                 notifications.map((item) => (
@@ -456,7 +453,7 @@ export default function Header({
               border: '1px solid #1e293b',
               cursor: 'pointer'
             }}
-            title={isRtl ? "الملف الشخصي" : "Profile"}
+            title={isAr ? "الملف الشخصي" : "Profile"}
           >
             <div style={{ 
               width: '22px', 
@@ -488,10 +485,10 @@ export default function Header({
               maxWidth: 'calc(100vw - 24px)',
               color: '#cbd5e1',
               fontSize: '0.75rem',
-              textAlign: isRtl ? 'right' : 'left'
+              textAlign: isAr ? 'right' : 'left'
             }}>
               <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '0.82rem' }}>
-                {currentLanguage === 'ar' ? 'صاحب الأكاديمية' : 'Academy Owner'}
+                {isAr ? 'صاحب الأكاديمية' : 'Academy Owner'}
               </div>
 
               <div style={{ 
@@ -503,7 +500,7 @@ export default function Header({
                 gap: '6px'
               }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
-                <span>{currentLanguage === 'ar' ? 'الجلسة نشطة' : 'Active Session'}</span>
+                <span>{isAr ? 'الجلسة نشطة' : 'Active Session'}</span>
               </div>
             </div>
           )}
