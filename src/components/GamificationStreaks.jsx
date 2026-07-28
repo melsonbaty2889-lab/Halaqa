@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   FaTrophy, FaFire, FaMedal, FaStar, FaCrown, 
-  FaUserGraduate, FaSpinner, FaAward, FaCalendarCheck 
+  FaUserGraduate, FaSpinner, FaAward 
 } from 'react-icons/fa';
 
 export default function GamificationStreaks({ academyId, isRtl = true }) {
@@ -16,37 +16,69 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
     async function fetchGamificationData() {
       setLoading(true);
       try {
-        // 1. جلب قائمة المتصدرين والأوائل
-        const { data: achieversData } = await supabase
+        // -------------------------------------------------------------
+        // 1. جلب قائمة المتصدرين والأوائل (مع التصفية بالأكاديمية)
+        // -------------------------------------------------------------
+        let achieversQuery = supabase
           .from('vw_top_achievers')
           .select('*')
           .limit(10);
 
-        // إذا لم يكن العرض يعمل أو فارغاً، نجلب الأوائل مباشرة من جدول الطلاب
-        if (achieversData && achieversData.length > 0) {
+        if (academyId) {
+          achieversQuery = achieversQuery.eq('academy_id', academyId);
+        }
+
+        const { data: achieversData, error: achieversErr } = await achieversQuery;
+
+        if (!achieversErr && achieversData && achieversData.length > 0) {
           setTopAchievers(achieversData);
         } else {
-          const { data: studentsData } = await supabase
+          // جلب بديل من جدول الطلاب النشطين فقط
+          let studentsQuery = supabase
             .from('students')
-            .select('id, name, points, avatar_url')
-            .eq('academy_id', academyId)
-            .order('points', { ascending: false })
+            .select('id, name, avatar_url, status')
+            .eq('status', 'active')
             .limit(10);
+
+          if (academyId) {
+            studentsQuery = studentsQuery.eq('academy_id', academyId);
+          }
+
+          const { data: studentsData } = await studentsQuery;
           setTopAchievers(studentsData || []);
         }
 
-        // 2. جلب الأوسمة للشارات
-        const { data: badgesData } = await supabase
+        // -------------------------------------------------------------
+        // 2. جلب الأوسمة النشطة التابعة للأكاديمية
+        // -------------------------------------------------------------
+        let badgesQuery = supabase
           .from('badges')
-          .select('*');
+          .select('*')
+          .eq('is_active', true);
+
+        if (academyId) {
+          badgesQuery = badgesQuery.eq('academy_id', academyId);
+        }
+
+        const { data: badgesData, error: badgesErr } = await badgesQuery;
+        if (badgesErr) console.error("خطأ جلب الأوسمة:", badgesErr);
         setBadges(badgesData || []);
 
+        // -------------------------------------------------------------
         // 3. جلب بيانات التتابع والالتزام اليومي
-        const { data: streaksData } = await supabase
+        // -------------------------------------------------------------
+        let streaksQuery = supabase
           .from('student_streaks')
           .select('*, students(name)')
           .order('current_streak', { ascending: false })
           .limit(10);
+
+        if (academyId) {
+          streaksQuery = streaksQuery.eq('academy_id', academyId);
+        }
+
+        const { data: streaksData, error: streaksErr } = await streaksQuery;
+        if (streaksErr) console.error("خطأ جلب السلاسل:", streaksErr);
         setStreaks(streaksData || []);
 
       } catch (err) {
@@ -192,7 +224,7 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
               {streaks.map((st, i) => (
-                <div key={i} style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+                <div key={st.id || i} style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
                   <FaFire style={{ color: '#EF4444', fontSize: '32px', marginBottom: '8px' }} />
                   <h3 style={{ color: '#FFF', fontSize: '1rem', margin: '0 0 6px 0' }}>{st.students?.name || 'طالب'}</h3>
                   <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '1.2rem' }}>
@@ -217,10 +249,15 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
               {badges.map((badge, i) => (
-                <div key={i} style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+                <div key={badge.id || i} style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
                   <FaAward style={{ color: '#10B981', fontSize: '36px', marginBottom: '8px' }} />
-                  <h3 style={{ color: '#FFF', fontSize: '1rem', margin: '0 0 4px 0' }}>{badge.name || badge.title}</h3>
+                  <h3 style={{ color: '#FFF', fontSize: '1rem', margin: '0 0 4px 0' }}>{badge.title}</h3>
                   <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>{badge.description || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}</p>
+                  {badge.points_rewarded && (
+                    <span style={{ display: 'inline-block', marginTop: '8px', color: '#F59E0B', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      +{badge.points_rewarded} {isRtl ? 'نقطة' : 'Pts'}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
