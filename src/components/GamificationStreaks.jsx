@@ -5,7 +5,7 @@ import {
   FaUserGraduate, FaSpinner, FaAward 
 } from 'react-icons/fa';
 
-export default function GamificationStreaks({ academyId, isRtl = true }) {
+export default function GamificationStreaks({ academyId: propAcademyId, isRtl = true }) {
   const [loading, setLoading] = useState(true);
   const [topAchievers, setTopAchievers] = useState([]);
   const [badges, setBadges] = useState([]);
@@ -16,16 +16,29 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
     async function fetchGamificationData() {
       setLoading(true);
       try {
-        // -------------------------------------------------------------
-        // 1. جلب قائمة المتصدرين والأوائل (مع التصفية بالأكاديمية)
-        // -------------------------------------------------------------
+        // 0️⃣ تحديد ID الأكاديمية (إذا لم يتم تمريره نجلب أول أكاديمية مجهزة)
+        let targetAcademyId = propAcademyId;
+
+        if (!targetAcademyId) {
+          const { data: academyData } = await supabase
+            .from('academies')
+            .select('id')
+            .limit(1)
+            .maybeSingle();
+
+          if (academyData?.id) {
+            targetAcademyId = academyData.id;
+          }
+        }
+
+        // 1️⃣ جلب قائمة المتصدرين والأوائل
         let achieversQuery = supabase
           .from('vw_top_achievers')
           .select('*')
           .limit(10);
 
-        if (academyId) {
-          achieversQuery = achieversQuery.eq('academy_id', academyId);
+        if (targetAcademyId) {
+          achieversQuery = achieversQuery.eq('academy_id', targetAcademyId);
         }
 
         const { data: achieversData, error: achieversErr } = await achieversQuery;
@@ -33,48 +46,44 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
         if (!achieversErr && achieversData && achieversData.length > 0) {
           setTopAchievers(achieversData);
         } else {
-          // جلب بديل من جدول الطلاب النشطين فقط
+          // جلب بديل مباشر من جدول الطلاب النشطين
           let studentsQuery = supabase
             .from('students')
             .select('id, name, avatar_url, status')
             .eq('status', 'active')
             .limit(10);
 
-          if (academyId) {
-            studentsQuery = studentsQuery.eq('academy_id', academyId);
+          if (targetAcademyId) {
+            studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
           }
 
           const { data: studentsData } = await studentsQuery;
           setTopAchievers(studentsData || []);
         }
 
-        // -------------------------------------------------------------
-        // 2. جلب الأوسمة النشطة التابعة للأكاديمية
-        // -------------------------------------------------------------
+        // 2️⃣ جلب الأوسمة النشطة التابعة للأكاديمية
         let badgesQuery = supabase
           .from('badges')
           .select('*')
           .eq('is_active', true);
 
-        if (academyId) {
-          badgesQuery = badgesQuery.eq('academy_id', academyId);
+        if (targetAcademyId) {
+          badgesQuery = badgesQuery.eq('academy_id', targetAcademyId);
         }
 
         const { data: badgesData, error: badgesErr } = await badgesQuery;
         if (badgesErr) console.error("خطأ جلب الأوسمة:", badgesErr);
         setBadges(badgesData || []);
 
-        // -------------------------------------------------------------
-        // 3. جلب بيانات التتابع والالتزام اليومي
-        // -------------------------------------------------------------
+        // 3️⃣ جلب بيانات التتابع والالتزام اليومي
         let streaksQuery = supabase
           .from('student_streaks')
           .select('*, students(name)')
           .order('current_streak', { ascending: false })
           .limit(10);
 
-        if (academyId) {
-          streaksQuery = streaksQuery.eq('academy_id', academyId);
+        if (targetAcademyId) {
+          streaksQuery = streaksQuery.eq('academy_id', targetAcademyId);
         }
 
         const { data: streaksData, error: streaksErr } = await streaksQuery;
@@ -88,12 +97,9 @@ export default function GamificationStreaks({ academyId, isRtl = true }) {
       }
     }
 
-    if (academyId) {
-      fetchGamificationData();
-    } else {
-      setLoading(false);
-    }
-  }, [academyId]);
+    // تشغيل الجلب دائماً سواء كان propAcademyId موجوداً أم لا
+    fetchGamificationData();
+  }, [propAcademyId]);
 
   if (loading) {
     return (
