@@ -38,7 +38,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     {
       titleKey: 'sidebar.sections.academic',
       items: [
-        { key: 'students', path: '/students', icon: FaUserGrad },
+        { key: 'students', path: '/students', icon: FaUserGraduate },
         { key: 'teachers', path: '/teachers', icon: FaChalkboardTeacher },
         { key: 'halaqas', path: '/halaqas', icon: FaQuran },
         { key: 'attendance', path: '/attendance', icon: FaClipboardCheck },
