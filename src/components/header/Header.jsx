@@ -111,9 +111,9 @@ export default function Header({
 
   // 🌐 جدول عناوين الصفحات المترجم بالكامل للغتين
   const pageTitlesMap = {
-    'dashboard': { ar: 'لوحة التحكم والتحليلات', en: 'Dashboard & Analytics' },
+    'dashboard': {ar: 'لوحة التحكم', en: 'Dashboard' },
     'realtime-audit': { ar: 'السجل الحي للأنشطة', en: 'Realtime Audit Trail' },
-    'communication-hub': { ar: 'مركز التواصل والمراسلات', en: 'Communication & Broadcast Hub' },
+    'communication-hub': { ar: 'مركز التواصل', en: 'Communication Hub' },
     'reports': { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' },
     'students': { ar: 'شؤون الطلاب', en: 'Students Directory' },
     'teachers': { ar: 'الكادر التعليمي', en: 'Faculty & Reciters' },
