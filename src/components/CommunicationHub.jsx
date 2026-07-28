@@ -1,12 +1,17 @@
-/* src/components/CommunicationHub.jsx */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { 
   FaPaperPlane, FaBullhorn, FaWhatsapp, FaEnvelope, 
   FaSms, FaBell, FaCheckCircle, FaSpinner, FaHistory 
 } from 'react-icons/fa';
 
-export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
+export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl }) {
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.language || 'ar';
+  const isAr = currentLanguage === 'ar';
+  const isRtl = propIsRtl !== undefined ? propIsRtl : isAr;
+
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [history, setHistory] = useState([]);
@@ -20,7 +25,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
     priority: 'normal'
   });
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setFetching(true);
     try {
       const { data, error } = await supabase
@@ -36,11 +41,11 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
     } finally {
       setFetching(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [fetchNotifications]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -66,7 +71,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
 
       if (error) throw error;
 
-      setSuccessMsg(isRtl ? 'تم إرسال الرسالة بنجاح!' : 'Message sent successfully!');
+      setSuccessMsg(isAr ? 'تم إرسال الرسالة بنجاح!' : 'Broadcast sent successfully!');
       setFormData({
         title: '',
         content: '',
@@ -78,10 +83,39 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
       fetchNotifications();
     } catch (err) {
       console.error('Error sending message:', err);
-      alert(isRtl ? 'حدث خطأ أثناء الإرسال' : 'Error sending message');
+      alert(isAr ? 'حدث خطأ أثناء الإرسال' : 'Error sending message');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 🌐 مصفوفة القنوات مترجمة
+  const channels = [
+    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: FaBell },
+    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: FaWhatsapp },
+    { id: 'sms', label: 'SMS', icon: FaSms },
+    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: FaEnvelope }
+  ];
+
+  // 🎯 مصفوفة المستهدفين مترجمة
+  const recipientOptions = [
+    { id: 'all_students', label: isAr ? 'جميع الطلاب والدارسين' : 'All Students' },
+    { id: 'parents', label: isAr ? 'أولياء الأمور' : 'Parents' },
+    { id: 'teachers', label: isAr ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff' }
+  ];
+
+  // 🛠️ دالة تحويل القناة والمستهدف إلى نص مترجم في السجل
+  const getRecipientLabel = (key) => {
+    const found = recipientOptions.find(r => r.id === key);
+    if (found) return found.label;
+    if (key === 'parents') return isAr ? 'أولياء الأمور' : 'Parents';
+    if (key === 'teachers') return isAr ? 'الكادر التعليمي' : 'Teachers';
+    return isAr ? 'جميع الطلاب' : 'All Students';
+  };
+
+  const getChannelLabel = (key) => {
+    const found = channels.find(c => c.id === key);
+    return found ? found.label : key;
   };
 
   return (
@@ -93,10 +127,10 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700' }}>
-            {isRtl ? 'مركز التواصل والمراسلات الجماعية' : 'Communication & Broadcast Hub'}
+            {isAr ? 'مركز التواصل والمراسلات الجماعية' : 'Communication & Broadcast Hub'}
           </h1>
           <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8' }}>
-            {isRtl ? 'إرسال التنبيهات والتعاميم للطلاب والأولياء والكادر التعليمي' : 'Broadcast notifications & announcements'}
+            {isAr ? 'إرسال التنبيهات والتعاميم للطلاب والأولياء والكادر التعليمي' : 'Broadcast notifications and announcements to students, parents, and teachers'}
           </p>
         </div>
       </div>
@@ -107,7 +141,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
         {/* 1️⃣ نموذج الإرسال */}
         <div style={{ background: '#131f37', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
           <h2 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
-            <FaBullhorn /> {isRtl ? 'إرسال تعميم جديد' : 'New Broadcast'}
+            <FaBullhorn /> {isAr ? 'إرسال تعميم جديد' : 'New Broadcast'}
           </h2>
 
           {successMsg && (
@@ -118,17 +152,13 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
 
           <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
+            {/* قناة الإرسال */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                {isRtl ? 'قناة الإرسال' : 'Channel'}
+                {isAr ? 'قناة الإرسال' : 'Channel'}
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                {[
-                  { id: 'in_app', label: isRtl ? 'التطبيق' : 'In-App', icon: FaBell },
-                  { id: 'whatsapp', label: 'واتساب', icon: FaWhatsapp },
-                  { id: 'sms', label: 'SMS', icon: FaSms },
-                  { id: 'email', label: 'إيميل', icon: FaEnvelope }
-                ].map(ch => {
+                {channels.map(ch => {
                   const Icon = ch.icon;
                   const active = formData.channel === ch.id;
                   return (
@@ -158,43 +188,46 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
               </div>
             </div>
 
+            {/* المستهدفون */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                {isRtl ? 'المستهدفون' : 'Recipients'}
+                {isAr ? 'المستهدفون' : 'Recipients'}
               </label>
               <select
                 value={formData.recipient}
                 onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
                 style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem' }}
               >
-                <option value="all_students">{isRtl ? 'جميع الطلاب والدارسين' : 'All Students'}</option>
-                <option value="parents">{isRtl ? 'أولياء الأمور' : 'Parents'}</option>
-                <option value="teachers">{isRtl ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff'}</option>
+                {recipientOptions.map(opt => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
               </select>
             </div>
 
+            {/* العنوان */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                {isRtl ? 'عنوان التعميم / الموضوع' : 'Title'}
+                {isAr ? 'عنوان التعميم / الموضوع' : 'Title'}
               </label>
               <input
                 type="text"
                 required
-                placeholder={isRtl ? 'مثال: موعد اختبارات نهاية الفصل' : 'e.g., Final Exam Schedule'}
+                placeholder={isAr ? 'مثال: موعد اختبارات نهاية الفصل' : 'e.g., Final Exam Schedule'}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', boxSizing: 'border-box' }}
               />
             </div>
 
+            {/* المحتوى */}
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                {isRtl ? 'محتوى الرسالة' : 'Content'}
+                {isAr ? 'محتوى الرسالة' : 'Content'}
               </label>
               <textarea
                 rows="4"
                 required
-                placeholder={isRtl ? 'اكتب تفاصيل الرسالة هنا...' : 'Write notification details here...'}
+                placeholder={isAr ? 'اكتب تفاصيل الرسالة هنا...' : 'Write notification details here...'}
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 style={{ width: '100%', padding: '9px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', resize: 'vertical', boxSizing: 'border-box' }}
@@ -222,7 +255,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
               }}
             >
               {loading ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaPaperPlane />}
-              <span>{isRtl ? 'إرسال التعميم الآن' : 'Send Broadcast'}</span>
+              <span>{isAr ? 'إرسال التعميم الآن' : 'Send Broadcast'}</span>
             </button>
           </form>
         </div>
@@ -230,16 +263,16 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
         {/* 2️⃣ سجل المراسلات */}
         <div style={{ background: '#131f37', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
           <h2 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
-            <FaHistory /> {isRtl ? 'سجل المراسلات السابقة' : 'Recent History'}
+            <FaHistory /> {isAr ? 'سجل المراسلات السابقة' : 'Recent History'}
           </h2>
 
           {fetching ? (
             <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
-              {isRtl ? 'جاري التحميل...' : 'Loading...'}
+              {isAr ? 'جاري التحميل...' : 'Loading...'}
             </div>
           ) : history.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#64748b', padding: '30px 10px', fontSize: '0.8rem' }}>
-              {isRtl ? 'لا توجد مراسلات أُرسلت بعد' : 'No notification history found'}
+              {isAr ? 'لا توجد مراسلات أُرسلت بعد' : 'No notification history found'}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
@@ -248,13 +281,13 @@ export default function CommunicationHub({ currentAcademyId, isRtl = true }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#e2e8f0' }}>{item.title}</span>
                     <span style={{ fontSize: '0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                      {item.channel}
+                      {getChannelLabel(item.channel)}
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>{item.content}</p>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>{item.content || item.message}</p>
                   <div style={{ fontSize: '0.65rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>المستهدفون: {item.recipient}</span>
-                    <span>{new Date(item.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</span>
+                    <span>{isAr ? 'المستهدفون:' : 'Recipients:'} {getRecipientLabel(item.recipient)}</span>
+                    <span>{new Date(item.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</span>
                   </div>
                 </div>
               ))}
