@@ -2,7 +2,10 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import { useAcademy } from './context/AcademyContext';
-import { FaSpinner, FaClock, FaSignOutAlt, FaLock, FaWifi, FaExclamationTriangle, FaSync } from 'react-icons/fa';
+import { 
+  FaSpinner, FaClock, FaSignOutAlt, FaLock, FaWifi, 
+  FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes 
+} from 'react-icons/fa';
 
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
@@ -24,6 +27,137 @@ if (typeof window !== 'undefined') {
   };
   window.addEventListener('unhandledrejection', (event) => handleChunkError(event.reason));
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
+}
+
+// 🛡️ مكون نافذة الترقية المبنية داخلياً (تغني عن وجود ملف UpgradeModal.jsx)
+function InlineUpgradeModal({ isOpen, onClose, academyName }) {
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      backdropFilter: 'blur(5px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 10000,
+      padding: '20px',
+      direction: 'rtl',
+      fontFamily: "'Cairo', sans-serif"
+    }}>
+      <div style={{
+        background: '#111C2A',
+        border: '1px solid #334155',
+        borderRadius: '16px',
+        maxWidth: '480px',
+        width: '100%',
+        padding: '24px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+        position: 'relative'
+      }}>
+        {/* زر الإغلاق */}
+        <button 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '16px',
+            background: 'none',
+            border: 'none',
+            color: '#94A3B8',
+            fontSize: '1.2rem',
+            cursor: 'pointer'
+          }}
+        >
+          <FaTimes />
+        </button>
+
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            background: 'rgba(245, 158, 11, 0.15)',
+            color: '#F59E0B',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.5rem',
+            margin: '0 auto 12px'
+          }}>
+            <FaBolt />
+          </div>
+          <h2 style={{ color: '#FFF', fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
+            ترقية حساب الأكاديمية
+          </h2>
+          <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
+            احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك
+          </p>
+        </div>
+
+        <div style={{
+          background: '#1E293B',
+          borderRadius: '10px',
+          padding: '14px',
+          marginBottom: '20px',
+          border: '1px solid rgba(255,255,255,0.05)'
+        }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#E2E8F0', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaCheckCircle style={{ color: '#10B981' }} />
+              <span>إدارة عدد غير محدود من الطلاب والحلقات</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaCheckCircle style={{ color: '#10B981' }} />
+              <span>تقارير وأداء لحظي وتنبيهات مستمرة</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaCheckCircle style={{ color: '#10B981' }} />
+              <span>دعم فني وتحديثات مستمرة للباقة الاحترافية</span>
+            </li>
+          </ul>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={() => {
+              alert("تم إرسال طلب الترقية إلى إدارة المنصة بنجاح، سيتم التواصل معكم فوراً.");
+              onClose();
+            }}
+            style={{
+              flex: 1,
+              padding: '12px',
+              background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+              color: '#000',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              cursor: 'pointer'
+            }}
+          >
+            تأكيد طلب الترقية
+          </button>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '12px 18px',
+              background: 'transparent',
+              color: '#94A3B8',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              cursor: 'pointer'
+            }}
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // 🛡️ حارس المكونات المطور للتشخيص المباشر
@@ -62,11 +196,11 @@ function AppContent() {
   const [authView, setAuthView] = useState('login');
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // 🌟 حالة فتح نافذة الترقية
+  const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
   const goldColor = '#C9A84C';
-
-  // 🛠️ تتبع الحالة للتشخيص
-  console.log("🛠️ Current App State:", appState, { user, profile, academy });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -166,7 +300,18 @@ function AppContent() {
             <FaWifi style={{ marginLeft: '8px' }} /> انقطع الاتصال بالإنترنت.
           </div>
         )}
-        <MainApp session={formattedSession} userRole={profile?.role || 'staff'} />
+        <MainApp 
+          session={formattedSession} 
+          userRole={profile?.role || 'staff'} 
+          setShowEarlyUpgrade={setShowEarlyUpgrade}
+        />
+
+        {/* 🚀 نافذة الترقية المضمنة بالداخل */}
+        <InlineUpgradeModal 
+          isOpen={showEarlyUpgrade} 
+          onClose={() => setShowEarlyUpgrade(false)} 
+          academyName={academy?.name}
+        />
       </>
     );
   }
