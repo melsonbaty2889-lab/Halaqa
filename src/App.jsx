@@ -196,9 +196,10 @@ function AppContent() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // 🌟 منع تكرار ظهور الشاشة الافتتاحية باستخدام sessionStorage
-  const [splashFinished, setSplashFinished] = useState(() => {
-    return typeof window !== 'undefined' && sessionStorage.getItem('splash_shown') === 'true';
+  // 1. 🌟 التحقق الذكي: هل تم عرض الـ Splash مسبقاً في هذه الجلسة؟
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !sessionStorage.getItem('splash_has_shown');
   });
 
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
@@ -227,13 +228,14 @@ function AppContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  // 2. 🌟 دالة إنهاء الـ Splash وتسجيلها في الـ Session
   const handleSplashFinish = () => {
-    sessionStorage.setItem('splash_shown', 'true');
-    setSplashFinished(true);
+    sessionStorage.setItem('splash_has_shown', 'true');
+    setShowSplash(false);
   };
 
-  // 1. الشاشة الافتتاحية
-  if (!splashFinished || appState === 'LOADING') {
+  // 3. 🌟 إظهار الشاشة الافتتاحية للمرة الأولى فقط في الجلسة
+  if (showSplash) {
     return (
       <SplashScreen 
         lang="ar" 
@@ -242,10 +244,26 @@ function AppContent() {
     );
   }
 
-  // 2. Password Update
+  // 4. 🌟 شاشة تحميل خفيفة ومستقرة أثناء جلب البيانات (تمنع الوميض)
+  if (appState === 'LOADING') {
+    return (
+      <div style={{
+        background: '#090F17',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: goldColor
+      }}>
+        <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
+      </div>
+    );
+  }
+
+  // 5. Password Update
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 3. Unauthenticated
+  // 6. Unauthenticated
   if (appState === 'UNAUTHENTICATED') {
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
@@ -256,7 +274,7 @@ function AppContent() {
     );
   }
 
-  // 4. Pending Approval
+  // 7. Pending Approval
   if (appState === 'PENDING_APPROVAL') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
@@ -290,12 +308,12 @@ function AppContent() {
     );
   }
 
-  // 5. Super Admin
+  // 8. Super Admin
   if (appState === 'SUPER_ADMIN') {
     return (
       <Suspense fallback={
-        <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C9A84C' }}>
-          <FaSpinner className="fa-spin" style={{ fontSize: '30px' }} />
+        <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: goldColor }}>
+          <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
         </div>
       }>
         <AdminDashboard session={{ user }} onLogout={logout} />
@@ -303,12 +321,12 @@ function AppContent() {
     );
   }
 
-  // 6. No Academy
+  // 9. No Academy
   if (appState === 'NO_ACADEMY') {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 7. Fully Active
+  // 10. Fully Active
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
@@ -333,7 +351,7 @@ function AppContent() {
     );
   }
 
-  // 8. Debug / Fallback Screen
+  // 11. Fallback Screen
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif", padding: '20px', textAlign: 'center' }}>
       <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
@@ -356,4 +374,4 @@ export default function App() {
       <AppContent />
     </GlobalErrorBoundary>
   );
-      }
+}
