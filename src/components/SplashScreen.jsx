@@ -9,7 +9,7 @@ const QURAN_AYAT = [
   "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ"
 ];
 
-// 🎵 رابط صوت فتح الصفحة/النغمة الهادئة (يمكن استبداله بأي ملف mp3 لديك)
+// 🎵 صوت فتح هادئ ونقي
 const SPLASH_AUDIO_URL = "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"; 
 
 export default function SplashScreen() {
@@ -19,29 +19,23 @@ export default function SplashScreen() {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // اختيار آية عشوائية
+    // اختيار آية قرآنية
     const selectedAya = QURAN_AYAT[Math.floor(Math.random() * QURAN_AYAT.length)];
     setRandomAya(selectedAya);
 
-    // تشغيل الصوت إذا لم يكن مكتوماً
+    // محاولة تشغيل الصوت
     if (!isMuted && audioRef.current) {
-      audioRef.current.volume = 0.25; // صوت هادئ جداً 25%
+      audioRef.current.volume = 0.3;
       audioRef.current.play().catch(() => {
-        // المتصفح قد يمنع التاب التلقائي بدون تفاعل سابق
-        console.log("Autoplay prevented by browser policy");
+        // المتصفح يمنع التشغيل التلقائي حتى يتفاعل المستخدم
+        console.log("Audio autoplay waiting for user interaction");
       });
     }
 
-    // محاكاة شريط التقدم 0% -> 100%
+    // شريط التقدم السلس
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 80);
+      setProgress((prev) => (prev >= 100 ? 100 : prev + 5));
+    }, 70);
 
     return () => clearInterval(interval);
   }, [isMuted]);
@@ -50,6 +44,10 @@ export default function SplashScreen() {
     const newMuteState = !isMuted;
     setIsMuted(newMuteState);
     localStorage.setItem('splash_muted', newMuteState);
+    if (!newMuteState && audioRef.current) {
+      audioRef.current.volume = 0.3;
+      audioRef.current.play().catch(() => {});
+    }
   };
 
   return (
@@ -68,10 +66,10 @@ export default function SplashScreen() {
       userSelect: 'none'
     }}>
 
-      {/* 🎵 عنصر الصوت المخفي */}
+      {/* 🎵 عنصر الصوت */}
       <audio ref={audioRef} src={SPLASH_AUDIO_URL} preload="auto" />
 
-      {/* 🔊 زر التحكم في الصوت (كتم / تشغيل) أعلى الشاشة */}
+      {/* 🔊 زر الصوت */}
       <button 
         onClick={toggleMute}
         title={isMuted ? "تفعيل الصوت" : "كتم الصوت"}
@@ -83,29 +81,30 @@ export default function SplashScreen() {
           border: '1px solid rgba(255,255,255,0.1)',
           color: isMuted ? '#64748B' : '#C9A84C',
           borderRadius: '50%',
-          width: '38px',
-          height: '38px',
+          width: '40px',
+          height: '40px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          zIndex: 10
+          zIndex: 10,
+          backdropFilter: 'blur(4px)'
         }}
       >
-        {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+        {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
       </button>
 
-      {/* 🌟 1. نمط إسلامي شفاف في الخلفية */}
+      {/* 🌟 1. نمط إسلامي خفيف في الخلفية */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: `radial-gradient(rgba(201, 168, 76, 0.05) 1px, transparent 0)`,
-        backgroundSize: '32px 32px',
-        opacity: 0.6,
+        backgroundImage: `radial-gradient(rgba(201, 168, 76, 0.08) 1px, transparent 0)`,
+        backgroundSize: '28px 28px',
+        opacity: 0.5,
         pointerEvents: 'none'
       }} />
 
-      {/* 🌟 2. أيقونة الشعار مع التوهج والنبض */}
+      {/* 🌟 2. أيقونة الشعار مع إصلاح تراكب الحلقة الذهبية */}
       <div style={{
         position: 'relative',
         width: '90px',
@@ -115,19 +114,24 @@ export default function SplashScreen() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 0 40px rgba(16, 185, 129, 0.35), 0 0 10px rgba(201, 168, 76, 0.2)',
-        border: '1px solid rgba(201, 168, 76, 0.3)',
+        boxShadow: '0 0 35px rgba(16, 185, 129, 0.3)',
+        border: '1px solid rgba(201, 168, 76, 0.4)',
         marginBottom: '24px',
         animation: 'pulseGlow 2.5s infinite ease-in-out'
       }}>
+        {/* الحلقة الذهبية الدائرية المفتوحة والمضبوطة تماماً */}
         <div style={{
           position: 'absolute',
-          inset: '-6px',
-          borderRadius: '28px',
+          top: '-6px',
+          left: '-6px',
+          right: '-6px',
+          bottom: '-6px',
+          borderRadius: '30px',
           border: '2px solid transparent',
           borderTopColor: '#C9A84C',
           borderRightColor: '#C9A84C',
-          animation: 'spin 3s linear infinite'
+          animation: 'spin 3s linear infinite',
+          boxSizing: 'border-box'
         }} />
 
         <FaBookOpen style={{ color: '#FCD34D', fontSize: '38px' }} />
@@ -146,8 +150,8 @@ export default function SplashScreen() {
       
       <p style={{
         color: '#94A3B8',
-        fontSize: '0.9rem',
-        margin: '0 0 28px 0',
+        fontSize: '0.88rem',
+        margin: '0 0 24px 0',
         fontWeight: '500'
       }}>
         المنصة الذكية لإدارة حلقات القرآن الكريم
@@ -157,14 +161,14 @@ export default function SplashScreen() {
       <div style={{
         background: 'rgba(30, 41, 59, 0.5)',
         backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: '12px',
         padding: '10px 20px',
-        marginBottom: '35px',
+        marginBottom: '30px',
         maxWidth: '320px',
         textAlign: 'center'
       }}>
-        <span style={{ color: '#C9A84C', fontSize: '0.85rem', fontStyle: 'italic', display: 'block' }}>
+        <span style={{ color: '#C9A84C', fontSize: '0.85rem', fontWeight: '600', display: 'block' }}>
           ﴿ {randomAya} ﴾
         </span>
       </div>
@@ -200,7 +204,7 @@ export default function SplashScreen() {
         </div>
       </div>
 
-      {/* 🌟 6. الإصدار */}
+      {/* 🌟 6. التوقيع والإصدار */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
@@ -217,8 +221,8 @@ export default function SplashScreen() {
           100% { transform: rotate(360deg); }
         }
         @keyframes pulseGlow {
-          0%, 100% { transform: scale(1); boxShadow: 0 0 30px rgba(16, 185, 129, 0.3); }
-          50% { transform: scale(1.04); boxShadow: 0 0 50px rgba(16, 185, 129, 0.5), 0 0 20px rgba(201, 168, 76, 0.4); }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.03); }
         }
       `}</style>
     </div>
