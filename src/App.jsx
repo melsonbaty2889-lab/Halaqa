@@ -268,6 +268,91 @@ function AppContent() {
               style={{ padding: '10px 20px', background: goldColor, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <FaSync className={isRefreshing ? 'fa-spin' : ''} />
+function AppContent() {
+  const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
+  const [authView, setAuthView] = useState('login');
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // 🌟 الحل هنا: التثبت من sessionStorage هل عُرضت الشاشة الافتتاحية سابقاً في هذه الجلسة أم لا
+  const [splashFinished, setSplashFinished] = useState(() => {
+    return typeof window !== 'undefined' && sessionStorage.getItem('splash_shown') === 'true';
+  });
+
+  const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
+  const goldColor = '#C9A84C';
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
+    });
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      if (subscription) subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    if (refreshStatus) await refreshStatus();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  // دالة التعامل مع انتهاء الـ Splash وتخزينها
+  const handleSplashFinish = () => {
+    sessionStorage.setItem('splash_shown', 'true');
+    setSplashFinished(true);
+  };
+
+  // 1. 🌟 الشاشة الافتتاحية تظهر فقط إذا لم تظهر من قبل في هذه الجلسة أو أثناء التحميل الأولي
+  if (!splashFinished || appState === 'LOADING') {
+    return (
+      <SplashScreen 
+        lang="ar" 
+        onFinish={handleSplashFinish} 
+      />
+    );
+  }
+
+  // 2. Password Update
+  if (authView === 'update_password') return <UpdatePassword />;
+
+  // 3. Unauthenticated
+  if (appState === 'UNAUTHENTICATED') {
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
+        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
+        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
+      </div>
+    );
+  }
+
+  // 4. Pending Approval
+  if (appState === 'PENDING_APPROVAL') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '1px solid #1E293B' }}>
+          <FaClock style={{ color: goldColor, fontSize: '40px', marginBottom: '20px' }} />
+          <h2 style={{ color: '#fff', marginBottom: '15px' }}>طلبك قيد المراجعة</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '25px', lineHeight: '1.6' }}>
+            حسابك ({profile?.full_name || 'المستخدم'}) وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              onClick={handleManualRefresh} 
+              disabled={isRefreshing}
+              style={{ padding: '10px 20px', background: goldColor, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <FaSync className={isRefreshing ? 'fa-spin' : ''} />
               {isRefreshing ? 'جاري الفحص...' : 'تحديث حالة الطلب'}
             </button>
             
@@ -284,10 +369,14 @@ function AppContent() {
     );
   }
 
-  // 5. Super Admin
+  // 5. Super Admin (تم استبدال الـ Fallback بدائرة تحميل خفيفة لمنع تكرار الـ Splash هنا أيضاً)
   if (appState === 'SUPER_ADMIN') {
     return (
-      <Suspense fallback={<SplashScreen lang="ar" />}>
+      <Suspense fallback={
+        <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C9A84C' }}>
+          <FaSpinner className="fa-spin" style={{ fontSize: '30px' }} />
+        </div>
+      }>
         <AdminDashboard session={{ user }} onLogout={logout} />
       </Suspense>
     );
