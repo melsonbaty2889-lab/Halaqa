@@ -44,8 +44,8 @@ export default function SplashScreen({
 
     // شريط التقدم السلس 0% -> 100%
     const interval = setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 100 : prev + 5));
-    }, 60);
+      setProgress((prev) => (prev >= 100 ? 100 : prev + 2));
+    }, 70);
 
     return () => clearInterval(interval);
   }, [lang]);
