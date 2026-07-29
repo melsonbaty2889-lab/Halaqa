@@ -1,17 +1,49 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 🌟 شعار المنظومة الاحترافي (المعتمد في باقي التطبيق)
+const SmartHalaqaProLogo = ({ size = 90 }) => (
+  <div style={{ 
+    width: `${size}px`, 
+    height: `${size}px`, 
+    borderRadius: '24px', 
+    background: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)', 
+    border: '1.5px solid rgba(45, 212, 191, 0.35)', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    boxShadow: '0 8px 25px rgba(15, 118, 110, 0.4)', 
+    flexShrink: 0 
+  }}>
+    <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="50%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <linearGradient id="emeraldGrad" x1="8" y1="12" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#047857" />
+        </linearGradient>
+      </defs>
+      <circle cx="16" cy="16" r="12" stroke="url(#goldGrad)" strokeWidth="1.8" strokeDasharray="40 12" />
+      <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
+      <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
+    </svg>
+  </div>
+);
+
 export default function SplashScreen() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isRtl = i18n.language === 'ar';
 
-  // ⚜️ لوحة الألوان البصرية المعتمدة بدقة عالية
-  const goldMain = '#E5C060';       // الذهبي المشرق للّوجو ومؤشر التحميل
-  const goldMuted = '#A38238';      // الذهبي الخافت المخصص لنصوص التحميل
-  const bgDarkGradient = '#060B11'; // الخلفية العميقة الداكنة جداً للمنصة
+  const goldMain = '#E5C060';
+  const goldMuted = '#A38238';
+  const bgDarkGradient = '#060B11';
   const surfaceDark = '#0A0F18';
 
-  // الحماية الاحترافية من وميض الخطوط (FOUT Protection) اعتماداً على خطوط النظام كبديل فوري
-  const fontSuite = `'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+  const fontSuite = `'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
 
   return (
     <div 
@@ -32,45 +64,19 @@ export default function SplashScreen() {
       }}
     >
       
-      {/* 🌟 حاوية الشعار الأصلي (القوس المفتوح والنقطة المركزية) */}
+      {/* 🌟 استدعاء الشعار الموحد */}
       <div style={{ 
-        position: 'relative', 
-        marginBottom: '40px', 
+        marginBottom: '35px', 
         animation: 'fadeInSplash 1s ease-out forwards',
-        willChange: 'transform, opacity' // تسريع المعالجة الرسومية للشعار
+        willChange: 'transform, opacity'
       }}>
-        <svg 
-          width="120" 
-          height="120" 
-          viewBox="0 0 100 100" 
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="logoGold" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#F1D385" />
-              <stop offset="100%" stopColor="#B38F39" />
-            </linearGradient>
-          </defs>
-          
-          {/* القوس الذهبي المفتوح بدقة من زاوية الساعة 2 إلى الساعة 12 */}
-          <path 
-            d="M 75.5 24.5 A 36 36 0 1 1 50 14" 
-            stroke="url(#logoGold)" 
-            strokeWidth="5" 
-            fill="none" 
-            strokeLinecap="round"
-          />
-          
-          {/* النقطة الذهبية المركزية المستقرة في المنتصف */}
-          <circle cx="50" cy="50" r="5.5" fill="url(#logoGold)" />
-        </svg>
+        <SmartHalaqaProLogo size={96} />
       </div>
 
-      {/* 📝 العناوين الرئيسية للمشروع (الحلقة الذكية) */}
+      {/* 📝 العناوين الرئيسية */}
       <h1 style={{ 
         margin: 0, 
-        fontSize: '32px', 
+        fontSize: '30px', 
         color: '#FFFFFF', 
         fontWeight: '700', 
         textAlign: 'center',
@@ -79,7 +85,6 @@ export default function SplashScreen() {
         {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
       </h1>
       
-      {/* النصوص الفرعية المعتمدة باللون الرمادي المزرق الهادئ */}
       <p style={{ 
         margin: '12px 0 0 0', 
         fontSize: '14px', 
@@ -93,19 +98,18 @@ export default function SplashScreen() {
         {isRtl ? 'المنصة الذكية لإدارة حلقات القرآن الكريم' : 'Advanced Platform for Quranic Circles'}
       </p>
       
-      {/* ⏳ شريط ومؤشر التحميل السفلي المطور وعالي الأداء */}
-      <div style={{ marginTop: '70px', width: '240px' }}>
+      {/* ⏳ شريط التحميل */}
+      <div style={{ marginTop: '60px', width: '220px' }}>
         <div style={{ 
           fontSize: '12.5px', 
           color: goldMuted, 
           textAlign: 'center', 
-          marginBottom: '14px', 
+          marginBottom: '12px', 
           fontWeight: '500'
         }}>
           {isRtl ? 'جاري تحميل البيانات...' : 'Loading data...'}
         </div>
         
-        {/* المجرى الخلفي الثابت للشريط */}
         <div style={{ 
           width: '100%', 
           height: '3px', 
@@ -114,15 +118,14 @@ export default function SplashScreen() {
           overflow: 'hidden',
           position: 'relative'
         }}>
-          {/* مؤشر التحميل الانسيابي المطور كلياً بتقنية العزل والتسريع الرسومي */}
           <div style={{ 
             position: 'absolute',
             top: 0,
             height: '100%', 
-            width: '40%', // عرض كتلة التحميل المتحركة
+            width: '40%', 
             background: goldMain, 
             borderRadius: '10px',
-            willChange: 'transform', // إجبار المتصفح على استخدام كارت الشاشة للحركة
+            willChange: 'transform',
             ...(isRtl 
               ? { right: 0, animation: 'smoothLoadRTL 2s infinite ease-in-out' } 
               : { left: 0, animation: 'smoothLoadLTR 2s infinite ease-in-out' }
@@ -131,18 +134,15 @@ export default function SplashScreen() {
         </div>
       </div>
 
-      {/* حركات الـ CSS الاحترافية المبنية على الـ Transforms لتلافي الـ Lag كلياً */}
       <style>{`
         @keyframes fadeInSplash { 
-          from { opacity: 0; transform: scale(0.97); } 
+          from { opacity: 0; transform: scale(0.92); } 
           to { opacity: 1; transform: scale(1); } 
         }
-        /* حركة انسيابية مخصصة للواجهات الإنجليزية من اليسار لليمين */
         @keyframes smoothLoadLTR { 
           0% { transform: translateX(-100%); } 
           100% { transform: translateX(250%); } 
         }
-        /* حركة انسيابية مخصصة للواجهات العربية من اليمين لليسار */
         @keyframes smoothLoadRTL { 
           0% { transform: translateX(100%); } 
           100% { transform: translateX(-250%); } 
