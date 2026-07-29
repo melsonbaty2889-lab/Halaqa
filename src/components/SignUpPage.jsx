@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { t, i18n } = useTranslation();
@@ -14,27 +14,26 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
-  // فحص قوة وشروط كلمة المرور
-  const validatePassword = (pass) => {
-    const hasMinLength = pass.length >= 8;
-    const hasUpper = /[A-Z]/.test(pass);
-    const hasLower = /[a-z]/.test(pass);
-    const hasNumber = /[0-9]/.test(pass);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass);
-
-    return hasMinLength && hasUpper && hasLower && hasNumber && hasSpecial;
+  // فحص شروط كلمة المرور بشكل منفصل
+  const rules = {
+    length: password.length >= 8,
+    capital: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
   };
+
+  const isPasswordValid = rules.length && rules.capital && rules.number && rules.special;
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
 
-    if (!validatePassword(password)) {
+    if (!isPasswordValid) {
       setStatus({
         type: 'error',
         msg: isRtl 
-          ? 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، تتضمن حروفاً كبيرة وصغيرة وأرقاماً ورموزاً خاصة.' 
-          : 'Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.'
+          ? 'يرجى استيفاء جميع شروط كلمة المرور الموضحة بالأسفل.' 
+          : 'Please satisfy all password requirements shown below.'
       });
       return;
     }
@@ -76,7 +75,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
-  // نمط موحد للمدخلات لمنع تغير اللون الأبيض عند التعبئة التلقائية (Autofill)
   const inputStyle = {
     width: '100%',
     padding: '14px 42px',
@@ -92,7 +90,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
       
-      {/* ستايل مخصص لمعالجة خلفية الـ Autofill في المتصفحات */}
       <style>{`
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
@@ -112,7 +109,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'قم بإنشاء حسابك للبدء في إدارة أكاديميتك' : 'Sign up to start managing your academy'}
         </p>
 
-        {/* عرض رسائل الخطأ والتنبيه بشكل منسق */}
         {status.msg && (
           <div style={{
             padding: '12px 16px',
@@ -121,13 +117,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
             fontSize: '13px',
             lineHeight: '1.6',
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             gap: '10px',
             background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
             color: status.type === 'success' ? '#34D399' : '#F87171',
             border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
           }}>
-            <FaExclamationCircle style={{ marginTop: '3px', flexShrink: 0 }} />
+            <FaExclamationCircle style={{ flexShrink: 0 }} />
             <div>{status.msg}</div>
           </div>
         )}
@@ -177,6 +173,24 @@ export default function SignUpPage({ onSwitchToLogin }) {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
+
+          {/* الشروط التفاعلية الحية عند بداية كتابة كلمة المرور */}
+          {password && (
+            <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+              <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.length ? <FaCheckCircle /> : <FaTimesCircle />} 8+ أحرف
+              </div>
+              <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.capital ? <FaCheckCircle /> : <FaTimesCircle />} حرف كبير (A-Z)
+              </div>
+              <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.number ? <FaCheckCircle /> : <FaTimesCircle />} رقم (0-9)
+              </div>
+              <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.special ? <FaCheckCircle /> : <FaTimesCircle />} رمز خاص (@!#)
+              </div>
+            </div>
+          )}
 
           {/* زر التسجيل */}
           <button 
