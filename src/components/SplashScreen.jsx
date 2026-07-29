@@ -1,37 +1,60 @@
 /* src/components/SplashScreen.jsx */
 import React, { useState, useEffect, useRef } from 'react';
 import { FaBookOpen, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+// إذا كنت تستخدم react-i18next، استدعي التخصيص:
+// import { useTranslation } from 'react-i18next';
 
-const QURAN_AYAT = [
-  "وَفِي ذَلِكَ فَلْيَتَنَافَسِ الْمُتَنَافِسُونَ",
-  "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
-  "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",
-  "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ"
-];
-
-// 🎵 صوت فتح هادئ ومميز
-const SPLASH_AUDIO_URL = "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"; 
-
-export default function SplashScreen() {
+export default function SplashScreen({ 
+  lang = 'ar', // اللغة الحالية للمستخدم ('ar', 'en', إلخ)
+  t // دالة الترجمة إذا كانت ممررة من الصفحة الأب
+}) {
   const [progress, setProgress] = useState(0);
   const [randomAya, setRandomAya] = useState('');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioRef = useRef(null);
 
-  useEffect(() => {
-    // اختيار آية قرآنية عشوائية
-    const selectedAya = QURAN_AYAT[Math.floor(Math.random() * QURAN_AYAT.length)];
-    setRandomAya(selectedAya);
+  // نصوص مترجمة افتراضية في حال لم تكن مكتبة الترجمة تـعـمل مباشرة
+  const translations = {
+    ar: {
+      title: "الحلقة الذكية",
+      subtitle: "المنصة الذكية لإدارة حلقات القرآن الكريم",
+      loading: "جاري التحميل...",
+      ayat: [
+        "وَفِي ذَلِكَ فَلْيَتَنَافَسِ الْمُتَنَافِسُونَ",
+        "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+        "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",
+        "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ"
+      ]
+    },
+    en: {
+      title: "Smart Halaqa",
+      subtitle: "The Smart Platform for Quranic Circles",
+      loading: "Loading...",
+      ayat: [
+        "And for this let the competitors compete",
+        "And recite the Quran with measured recitation",
+        "The best among you are those who learn the Quran and teach it"
+      ]
+    }
+  };
 
-    // شريط التقدم السلس 0% -> 100%
+  const currentT = translations[lang] || translations['ar'];
+
+  useEffect(() => {
+    // اختيار النص / الآية بناءً على اللغة الحالية
+    const selectedAyat = currentT.ayat;
+    const selected = selectedAyat[Math.floor(Math.random() * selectedAyat.length)];
+    setRandomAya(selected);
+
+    // شريط التقدم السلس
     const interval = setInterval(() => {
       setProgress((prev) => (prev >= 100 ? 100 : prev + 5));
     }, 70);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [lang]);
 
-  // 🔊 تشغيل الصوت فور الضغط على زر الصوت
+  // 🔊 تشغيل وتوقيف الصوت عند الضغط على الزر
   const handleSoundClick = () => {
     if (audioRef.current) {
       if (isAudioPlaying) {
@@ -47,6 +70,8 @@ export default function SplashScreen() {
     }
   };
 
+  const isRtl = lang === 'ar';
+
   return (
     <div style={{
       position: 'fixed',
@@ -58,7 +83,7 @@ export default function SplashScreen() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: "'Cairo', sans-serif",
-      direction: 'rtl',
+      direction: isRtl ? 'rtl' : 'ltr',
       overflow: 'hidden',
       userSelect: 'none'
     }}>
@@ -66,19 +91,19 @@ export default function SplashScreen() {
       {/* 🎵 عنصر الصوت */}
       <audio 
         ref={audioRef} 
-        src={SPLASH_AUDIO_URL} 
+        src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" 
         preload="auto" 
         onEnded={() => setIsAudioPlaying(false)}
       />
 
-      {/* 🔊 زر الصوت (يعمل بالضغط المباشر) */}
+      {/* 🔊 زر الصوت (يتغير موضعه حسـب الاتجاه RTL / LTR) */}
       <button 
         onClick={handleSoundClick}
-        title={isAudioPlaying ? "إيقاف الصوت" : "تشغيل الصوت"}
+        title={isAudioPlaying ? "Mute" : "Unmute"}
         style={{
           position: 'absolute',
           top: '20px',
-          left: '20px',
+          [isRtl ? 'left' : 'right']: '20px',
           background: 'rgba(30, 41, 59, 0.6)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           color: isAudioPlaying ? '#C9A84C' : '#64748B',
@@ -90,8 +115,7 @@ export default function SplashScreen() {
           justifyContent: 'center',
           cursor: 'pointer',
           zIndex: 10,
-          backdropFilter: 'blur(4px)',
-          transition: 'all 0.2s ease'
+          backdropFilter: 'blur(4px)'
         }}
       >
         {isAudioPlaying ? <FaVolumeUp size={18} /> : <FaVolumeMute size={18} />}
@@ -121,7 +145,7 @@ export default function SplashScreen() {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         marginBottom: '24px'
       }}>
-        {/* 🌟 3. الحلقة الدائرية الذهبية الأصلية (حول المصحف وتدور) */}
+        {/* الحلقة الذهبية الدوارة الأصلية حول المصحف */}
         <div style={{
           position: 'relative',
           width: '64px',
@@ -130,7 +154,6 @@ export default function SplashScreen() {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          {/* الحلقة الذهبية الدوارة */}
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -142,12 +165,11 @@ export default function SplashScreen() {
             animation: 'spin 2.5s linear infinite'
           }} />
 
-          {/* أيقونة المصحف الشريف بالمنتصف */}
           <FaBookOpen style={{ color: '#FCD34D', fontSize: '32px', zIndex: 2 }} />
         </div>
       </div>
 
-      {/* 🌟 4. اسم المنصة */}
+      {/* 🌟 3. اسم المنصة المترجم */}
       <h1 style={{
         color: '#FFFFFF',
         fontSize: '1.8rem',
@@ -155,7 +177,7 @@ export default function SplashScreen() {
         margin: '0 0 6px 0',
         letterSpacing: '0.5px'
       }}>
-        الحلقة الذكية
+        {t ? t('app_name') : currentT.title}
       </h1>
       
       <p style={{
@@ -164,10 +186,10 @@ export default function SplashScreen() {
         margin: '0 0 24px 0',
         fontWeight: '500'
       }}>
-        المنصة الذكية لإدارة حلقات القرآن الكريم
+        {t ? t('app_subtitle') : currentT.subtitle}
       </p>
 
-      {/* 🌟 5. الآية القرآنية */}
+      {/* 🌟 4. الآية/القول المترجم */}
       <div style={{
         background: 'rgba(30, 41, 59, 0.5)',
         backdropFilter: 'blur(8px)',
@@ -175,15 +197,15 @@ export default function SplashScreen() {
         borderRadius: '12px',
         padding: '10px 20px',
         marginBottom: '30px',
-        maxWidth: '320px',
+        maxWidth: '340px',
         textAlign: 'center'
       }}>
         <span style={{ color: '#C9A84C', fontSize: '0.85rem', fontWeight: '600', display: 'block' }}>
-          ﴿ {randomAya} ﴾
+          {isRtl ? `﴿ ${randomAya} ﴾` : `"${randomAya}"`}
         </span>
       </div>
 
-      {/* 🌟 6. شريط التحميل بالنسبة المئوية */}
+      {/* 🌟 5. شريط التحميل المترجم */}
       <div style={{ width: '220px', position: 'relative' }}>
         <div style={{
           display: 'flex',
@@ -193,7 +215,7 @@ export default function SplashScreen() {
           fontSize: '0.75rem',
           marginBottom: '6px'
         }}>
-          <span>جاري التحميل...</span>
+          <span>{t ? t('loading') : currentT.loading}</span>
           <span style={{ color: '#C9A84C', fontWeight: 'bold' }}>{progress}%</span>
         </div>
 
@@ -214,7 +236,7 @@ export default function SplashScreen() {
         </div>
       </div>
 
-      {/* 🌟 7. التوقيع والإصدار */}
+      {/* 🌟 6. الإصدار */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
@@ -233,4 +255,4 @@ export default function SplashScreen() {
       `}</style>
     </div>
   );
-          }
+      }
