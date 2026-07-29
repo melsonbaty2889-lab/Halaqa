@@ -29,7 +29,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
 }
 
-// 🛡️ مكون نافذة الترقية المبنية داخلياً (تغني عن وجود ملف UpgradeModal.jsx)
+// 🛡️ مكون نافذة الترقية المبنية داخلياً
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   if (!isOpen) return null;
 
@@ -197,18 +197,13 @@ function AppContent() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // 🌟 حالة لضمان ظهور الشاشة الافتتاحية فور فتح الموقع لمدة أدناها 2 ثانية
-  const [minSplashDone, setMinSplashDone] = useState(false);
+  // 🌟 حالة إنهاء الشاشة الافتتاحية
+  const [splashFinished, setSplashFinished] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
   const goldColor = '#C9A84C';
 
   useEffect(() => {
-    // 🌟 تشغيل الشاشة الافتتاحية فور فتح الرابط
-    const splashTimer = setTimeout(() => {
-      setMinSplashDone(true);
-    }, 2000);
-
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
@@ -219,7 +214,6 @@ function AppContent() {
     });
 
     return () => {
-      clearTimeout(splashTimer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       if (subscription) subscription.unsubscribe();
@@ -232,9 +226,14 @@ function AppContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 1. 🌟 الشاشة الافتتاحية تظهر أول شيء فور فتح الرابط وطوال فترة التجهيز الأولى
-  if (!minSplashDone || appState === 'LOADING') {
-    return <SplashScreen />;
+  // 1. 🌟 الشاشة الافتتاحية تعتمد على اكتمال وقت الحركة (3.5 ثانية) + تحضير بيانات التطبيق (appState !== 'LOADING')
+  if (!splashFinished || appState === 'LOADING') {
+    return (
+      <SplashScreen 
+        lang="ar" 
+        onFinish={() => setSplashFinished(true)} 
+      />
+    );
   }
 
   // 2. Password Update
@@ -288,7 +287,7 @@ function AppContent() {
   // 5. Super Admin
   if (appState === 'SUPER_ADMIN') {
     return (
-      <Suspense fallback={<SplashScreen />}>
+      <Suspense fallback={<SplashScreen lang="ar" />}>
         <AdminDashboard session={{ user }} onLogout={logout} />
       </Suspense>
     );
@@ -348,4 +347,4 @@ export default function App() {
       <AppContent />
     </GlobalErrorBoundary>
   );
-        }
+      }
