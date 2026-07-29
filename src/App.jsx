@@ -197,12 +197,18 @@ function AppContent() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // 🌟 حالة فتح نافذة الترقية
+  // 🌟 حالة لضمان ظهور الشاشة الافتتاحية فور فتح الموقع لمدة أدناها 2 ثانية
+  const [minSplashDone, setMinSplashDone] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
   const goldColor = '#C9A84C';
 
   useEffect(() => {
+    // 🌟 تشغيل الشاشة الافتتاحية فور فتح الرابط
+    const splashTimer = setTimeout(() => {
+      setMinSplashDone(true);
+    }, 2000);
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
@@ -213,6 +219,7 @@ function AppContent() {
     });
 
     return () => {
+      clearTimeout(splashTimer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       if (subscription) subscription.unsubscribe();
@@ -225,8 +232,10 @@ function AppContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 1. Loading
-  if (appState === 'LOADING') return <SplashScreen />;
+  // 1. 🌟 الشاشة الافتتاحية تظهر أول شيء فور فتح الرابط وطوال فترة التجهيز الأولى
+  if (!minSplashDone || appState === 'LOADING') {
+    return <SplashScreen />;
+  }
 
   // 2. Password Update
   if (authView === 'update_password') return <UpdatePassword />;
@@ -339,4 +348,4 @@ export default function App() {
       <AppContent />
     </GlobalErrorBoundary>
   );
-}
+        }
