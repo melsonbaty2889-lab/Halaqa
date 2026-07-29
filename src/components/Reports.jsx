@@ -96,10 +96,10 @@ export default function Reports({ students = [], academyId }) {
     localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
-  // معالج تحويل النصوص الموحد (Unified Parser) لتوليد الرسالة النهائية بدقة فائقة
+  // معالج تحويل النصوص الموحد (Unified Parser) المربوط بقاعدة البيانات مباشرة
   const getParsedMessage = (student, record) => {
     const statusText = () => {
-      if (!record) return isRtl ? 'حاضر (افتراضي)' : 'Present (Default)';
+      if (!record) return isRtl ? 'حاضر ✅' : 'Present ✅';
       switch (record.status) {
         case 'present': return isRtl ? 'حاضر ✅' : 'Present ✅';
         case 'absent': return isRtl ? 'غائب ❌' : 'Absent ❌';
@@ -110,27 +110,23 @@ export default function Reports({ students = [], academyId }) {
     };
 
     const gradeText = () => {
-      if (!record?.daily_grade) return isRtl ? 'لم يحدد' : 'Not specified';
-      switch (record.daily_grade) {
-        case 'excellent': return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
-        case 'good': return isRtl ? 'جيد جداً ⭐⭐' : 'Good ⭐⭐';
-        case 'needs_improvement': return isRtl ? 'يحتاج مزيد من التركيز 🎯' : 'Needs Focus 🎯';
-        default: return record.daily_grade;
-      }
+      if (!record || record.session_grade === null || record.session_grade === undefined) return isRtl ? 'لم يحدد' : 'Not specified';
+      const grade = Number(record.session_grade);
+      if (grade >= 9) return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
+      if (grade >= 7) return isRtl ? 'جيد جداً ⭐⭐' : 'Very Good ⭐⭐';
+      return isRtl ? 'يحتاج مزيد من التركيز 🎯' : 'Needs Focus 🎯';
     };
 
-    // استخدام التعبيرات المنتظمة (Regex) للاستبدال الشامل والعالمي مهما تكرر الوسم بالقالب
     return messageTemplate
       .replace(/\[اسم_الطالب\]/g, student.name || '')
       .replace(/\[التاريخ\]/g, selectedDate)
       .replace(/\[الحالة\]/g, statusText())
-      .replace(/\[الحفظ\]/g, record?.memorization || (record?.status === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')))
-      .replace(/\[المراجعة\]/g, record?.revision || '---')
-      .replace(/\[الماضي\]/g, record?.distant_revision || '---')
+      .replace(/\[الحفظ\]/g, record?.new_memorization || (record?.status === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')))
+      .replace(/\[المراجعة\]/g, record?.retention_assignment || '---')
+      .replace(/\[الماضي\]/g, '---')
       .replace(/\[التقييم\]/g, gradeText())
       .replace(/\[الملاحظات\]/g, record?.notes || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
   };
-
   // دالة لتوليد رابط الواتساب الجاهز
   const generateWhatsAppLink = (student, record) => {
     const parsedMessage = getParsedMessage(student, record);
