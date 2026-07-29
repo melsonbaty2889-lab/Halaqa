@@ -17,7 +17,7 @@ import CreateAcademy from './components/CreateAcademy';
 
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
-// 🛡️ درع الأمان: اصطياد أخطاء التحديثات
+// 🛡️ درع الأمان: اصطياد أخطاء التحديثات وتسهيل إعادة التحميل عند تغيير الملفات
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -28,6 +28,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => handleChunkError(event.reason));
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
 }
+
+// 🔐 قفل ذاكرة عالمي يضمن عدم تكرار شاشة الـ Splash مطلقاً خلال جلسة المتصفح
+let hasSplashBeenTriggeredInSession = false;
 
 // 🛡️ مكون نافذة الترقية المبنية داخلياً
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
@@ -196,10 +199,15 @@ function AppContent() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // 1. 🌟 التحقق الذكي: هل تم عرض الـ Splash مسبقاً في هذه الجلسة؟
+  // 🌟 حماية قاطعة: التحقق المزدوج لمنع ظهور الـ Splash أكثر من مرة واحدة في الجلسة الكاملة
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return !sessionStorage.getItem('splash_has_shown');
+    const isShown = sessionStorage.getItem('splash_has_shown') === 'true' || hasSplashBeenTriggeredInSession;
+    if (!isShown) {
+      hasSplashBeenTriggeredInSession = true;
+      return true;
+    }
+    return false;
   });
 
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
@@ -228,13 +236,16 @@ function AppContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 2. 🌟 دالة إنهاء الـ Splash وتسجيلها في الـ Session
   const handleSplashFinish = () => {
-    sessionStorage.setItem('splash_has_shown', 'true');
+    try {
+      sessionStorage.setItem('splash_has_shown', 'true');
+    } catch (e) {
+      console.warn("Could not write to sessionStorage:", e);
+    }
     setShowSplash(false);
   };
 
-  // 3. 🌟 إظهار الشاشة الافتتاحية للمرة الأولى فقط في الجلسة
+  // 1. الشاشة الافتتاحية (تظهر مرة واحدة فقط عند بداية التصفح)
   if (showSplash) {
     return (
       <SplashScreen 
@@ -244,7 +255,21 @@ function AppContent() {
     );
   }
 
-  // 4. 🌟 شاشة تحميل خفيفة ومستقرة أثناء جلب البيانات (تمنع الوميض)
+  // 2. تحديث كلمة المرور
+  if (authView === 'update_password') return <UpdatePassword />;
+
+  // 3. غير مسجل الدخول (تسجيل الدخول / إنشاء حساب / استعادة كلمة المرور)
+  if (appState === 'UNAUTHENTICATED') {
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
+        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
+        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
+      </div>
+    );
+  }
+
+  // 4. مؤشر تحضير البيانات أثناء التنقل أو الدخول (Spinner بسيط بدلاً من الـ Splash)
   if (appState === 'LOADING') {
     return (
       <div style={{
@@ -260,21 +285,7 @@ function AppContent() {
     );
   }
 
-  // 5. Password Update
-  if (authView === 'update_password') return <UpdatePassword />;
-
-  // 6. Unauthenticated
-  if (appState === 'UNAUTHENTICATED') {
-    return (
-      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
-        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
-        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
-        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
-      </div>
-    );
-  }
-
-  // 7. Pending Approval
+  // 5. الطلب قيد المراجعة
   if (appState === 'PENDING_APPROVAL') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
@@ -308,7 +319,7 @@ function AppContent() {
     );
   }
 
-  // 8. Super Admin
+  // 6. لوحة تحكم الأدمن الرئيسي
   if (appState === 'SUPER_ADMIN') {
     return (
       <Suspense fallback={
@@ -321,12 +332,12 @@ function AppContent() {
     );
   }
 
-  // 9. No Academy
+  // 7. حساب بدون أكاديمية
   if (appState === 'NO_ACADEMY') {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 10. Fully Active
+  // 8. الحساب نشط بالكامل
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
@@ -351,7 +362,7 @@ function AppContent() {
     );
   }
 
-  // 11. Fallback Screen
+  // 9. شاشة الخطأ الاحتياطية (Fallback)
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif", padding: '20px', textAlign: 'center' }}>
       <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
@@ -367,11 +378,13 @@ export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
-  if (!isAllowed) return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
+  if (!isAllowed) {
+    return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
+  }
 
   return (
     <GlobalErrorBoundary>
       <AppContent />
     </GlobalErrorBoundary>
   );
-}
+    }
