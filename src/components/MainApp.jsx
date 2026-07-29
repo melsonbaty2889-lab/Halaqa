@@ -98,18 +98,31 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [academyName, setAcademyName] = useState(""); 
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   
-  // 🌟 2. إدارة حالة الشاشة الافتتاحية
-  const [showSplash, setShowSplash] = useState(true);
+    // 🌟 2. إدارة حالة الشاشة الافتتاحية (مع التحقق من القفل فوراً)
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // إذا كان القفل موجوداً في الجلسة، لا تعرض السبلاش إطلاقاً
+      return sessionStorage.getItem('block_splash') !== 'true';
+    }
+    return true;
+  });
+
   const [loadingData, setLoadingData] = useState(true);
 
-  // إخفاء الـ SplashScreen بعد 2 ثانية على الأقل أو فور تجهيز البيانات الأولية
+  // إخفاء الـ SplashScreen بعد 2 ثانية وحفظ القفل تلقائياً
   useEffect(() => {
+    if (!showSplash) return; // إذا كانت مخفية من الأساس لا داعي لعمل المؤقت
+
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 2000); // 2 ثوانٍ لإتاحة رؤية الأنيميشن والشعار باحترافية
-    return () => clearTimeout(splashTimer);
-  }, []);
+      // حفظ القفل حتى لا تظهر الشاشة مرة أخرى خلال هذه الجلسة
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('block_splash', 'true');
+      }
+    }, 2000);
 
+    return () => clearTimeout(splashTimer);
+  }, [showSplash]);
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
   const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
