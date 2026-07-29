@@ -6,7 +6,7 @@ import { supabase } from './supabase';
 export const fetchAttendance = async (academyId, date) => {
   const { data, error } = await supabase
     .from('attendance')
-    .select('*') // نستخدم * لضمان جلب كافة الحقول (سواء الحضور أو التسميع المدمج) دون أخطاء
+    .select('*') 
     .eq('academy_id', academyId)
     .eq('date', date);
   
@@ -25,7 +25,7 @@ export const upsertAttendance = async (records) => {
 
   const { error } = await supabase
     .from('attendance')
-    .upsert(records, { onConflict: 'student_id,date' }); // يمنع التكرار لنفس الطالب في نفس اليوم
+    .upsert(records, { onConflict: 'student_id,halaqa_id,date' }); // تم التعديل لتطابق قيد الداتابيز تماماً
 
   if (error) {
     console.error("Error upserting attendance:", error.message);
@@ -36,15 +36,15 @@ export const upsertAttendance = async (records) => {
 
 /**
  * 3️⃣ تسجيل الحصة اليومية للطالب (حضور + تسميع وحفظ جديد)
- * مصممة لتنفيذ العمليات بسرعة فائقة لتناسب شبكات الهواتف المحمولة
  */
 export const saveDailySession = async ({
   studentId,
   academyId,
+  halaqaId,
   teacherId,
   attendanceStatus, // 'present', 'absent', 'late', 'excused'
   attendanceNotes,
-  hifzData,        // object: { newStart, newEnd, reviewStart, reviewEnd, grade, mistakes }
+  hifzData,        
 }) => {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -56,11 +56,12 @@ export const saveDailySession = async ({
         {
           student_id: studentId,
           academy_id: academyId,
+          halaqa_id: halaqaId || null,
           date: today,
           status: attendanceStatus,
           notes: attendanceNotes || null,
         },
-        { onConflict: 'student_id,date' }
+        { onConflict: 'student_id,halaqa_id,date' }
       );
 
     if (attendanceError) throw attendanceError;
@@ -75,6 +76,7 @@ export const saveDailySession = async ({
               student_id: studentId,
               academy_id: academyId,
               teacher_id: teacherId || null,
+              halaqa_id: halaqaId || null,
               date: today,
               new_hifz_start: hifzData.newStart || null,
               new_hifz_end: hifzData.newEnd || null,
@@ -88,7 +90,6 @@ export const saveDailySession = async ({
 
         if (progressError) throw progressError;
 
-        // تحديث الورد الحالي في جدول الطلاب الأساسي ليبقى مرجعاً سريعاً
         await supabase
           .from('students')
           .update({
@@ -155,7 +156,6 @@ export const saveStudentExam = async ({
   }
 };
 
-// 👑 التصدير الموحد والذكي لمنع كسر أي استيراد قديم وحل مشكلة بناء التطبيق فوراً
 export const sessionService = {
   fetchAttendance,
   upsertAttendance,
