@@ -135,7 +135,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     });
   };
 
-  // 🔥 الحفظ المجمع الشامل (مع ضمان استخراج halaqa_id لجميع الحالات)
+  // 🔥 الحفظ المجمع الشامل (مع إمداد قيمة halaqa_id مضمونة وغير فارغة)
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'حدث خطأ في معرف الأكاديمية', 'Error in academy ID'), type: 'error' });
@@ -145,7 +145,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     setIsSaving(true);
     setMessage({ text: '', type: '' });
 
-    // تحديد halaqa_id افتراضية من أول حلقة متوفرة في الأكاديمية بحال عدم ارتقائها من الطالب
+    // تحديد halaqa_id افتراضية من أول حلقة متوفرة في الأكاديمية بحال عدم وجودها لدى الطالب أو في المنسدلة
     const fallbackHalaqaId = halaqas.length > 0 ? halaqas[0].id : null;
 
     try {
@@ -157,8 +157,12 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
         const juzNum = Math.ceil(qIndex / 8);
         const qInHizb = ((qIndex - 1) % 4) + 1;
 
-        // 💡 تضمن هذه المعادلة ألا تخرج قيمة halaqa_id كـ null إطلاقاً
+        // 💡 تسلسل استخراج halaqa_id لمنع خروج null نهائياً
         const targetHalaqaId = student.halaqa_id || (selectedHalaqaId !== '' ? selectedHalaqaId : fallbackHalaqaId);
+
+        if (!targetHalaqaId) {
+          throw new Error(isRtl ? "لم يتم العثور على حلقة مرتبطة بهذا الطالب. يرجى التأكد من إضافة حلقات وتعيين الطالب إليها أولاً." : "No halaqa associated with this student.");
+        }
 
         return {
           student_id: student.id,
