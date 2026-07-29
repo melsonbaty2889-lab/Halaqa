@@ -29,9 +29,6 @@ if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
 }
 
-// 🔐 قفل ذاكرة عالمي يضمن عدم تكرار شاشة الـ Splash مطلقاً خلال جلسة المتصفح
-let hasSplashBeenTriggeredInSession = false;
-
 // 🛡️ مكون نافذة الترقية المبنية داخلياً
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   if (!isOpen) return null;
@@ -193,23 +190,12 @@ class GlobalErrorBoundary extends Component {
 
 const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
 
-function AppContent() {
+// ⚡ المكون الرئيسي لمحتوى التطبيق بعد الانتهاء من الـ Splash
+function MainContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // 🌟 حماية قاطعة: التحقق المزدوج لمنع ظهور الـ Splash أكثر من مرة واحدة في الجلسة الكاملة
-  const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const isShown = sessionStorage.getItem('splash_has_shown') === 'true' || hasSplashBeenTriggeredInSession;
-    if (!isShown) {
-      hasSplashBeenTriggeredInSession = true;
-      return true;
-    }
-    return false;
-  });
-
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
   const goldColor = '#C9A84C';
 
@@ -236,29 +222,10 @@ function AppContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const handleSplashFinish = () => {
-    try {
-      sessionStorage.setItem('splash_has_shown', 'true');
-    } catch (e) {
-      console.warn("Could not write to sessionStorage:", e);
-    }
-    setShowSplash(false);
-  };
-
-  // 1. الشاشة الافتتاحية (تظهر مرة واحدة فقط عند بداية التصفح)
-  if (showSplash) {
-    return (
-      <SplashScreen 
-        lang="ar" 
-        onFinish={handleSplashFinish} 
-      />
-    );
-  }
-
-  // 2. تحديث كلمة المرور
+  // 1. Password Update
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 3. غير مسجل الدخول (تسجيل الدخول / إنشاء حساب / استعادة كلمة المرور)
+  // 2. Unauthenticated
   if (appState === 'UNAUTHENTICATED') {
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
@@ -269,7 +236,7 @@ function AppContent() {
     );
   }
 
-  // 4. مؤشر تحضير البيانات أثناء التنقل أو الدخول (Spinner بسيط بدلاً من الـ Splash)
+  // 3. Loading Data State
   if (appState === 'LOADING') {
     return (
       <div style={{
@@ -285,7 +252,7 @@ function AppContent() {
     );
   }
 
-  // 5. الطلب قيد المراجعة
+  // 4. Pending Approval
   if (appState === 'PENDING_APPROVAL') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
@@ -319,7 +286,7 @@ function AppContent() {
     );
   }
 
-  // 6. لوحة تحكم الأدمن الرئيسي
+  // 5. Super Admin
   if (appState === 'SUPER_ADMIN') {
     return (
       <Suspense fallback={
@@ -332,12 +299,12 @@ function AppContent() {
     );
   }
 
-  // 7. حساب بدون أكاديمية
+  // 6. No Academy
   if (appState === 'NO_ACADEMY') {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 8. الحساب نشط بالكامل
+  // 7. Fully Active
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
@@ -362,7 +329,7 @@ function AppContent() {
     );
   }
 
-  // 9. شاشة الخطأ الاحتياطية (Fallback)
+  // 8. Fallback Screen
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif", padding: '20px', textAlign: 'center' }}>
       <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
@@ -374,7 +341,13 @@ function AppContent() {
   );
 }
 
+// 🛡️ التغليف المعزول للـ Splash لمنع ظهورها نهائياً بعد الدخول
 export default function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !sessionStorage.getItem('splash_has_shown');
+  });
+
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
@@ -382,9 +355,22 @@ export default function App() {
     return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
   }
 
+  const handleSplashFinish = () => {
+    try {
+      sessionStorage.setItem('splash_has_shown', 'true');
+    } catch (e) {
+      console.warn("Storage error:", e);
+    }
+    setShowSplash(false);
+  };
+
   return (
     <GlobalErrorBoundary>
-      <AppContent />
+      {showSplash ? (
+        <SplashScreen lang="ar" onFinish={handleSplashFinish} />
+      ) : (
+        <MainContent />
+      )}
     </GlobalErrorBoundary>
   );
-    }
+              }
