@@ -110,12 +110,18 @@ export default function Reports({ students = [], academyId }) {
     };
 
     const gradeText = () => {
-      if (!record || record.session_grade === null || record.session_grade === undefined) return isRtl ? 'لم يحدد' : 'Not specified';
-      const grade = Number(record.session_grade);
-      if (grade >= 9) return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
-      if (grade >= 7) return isRtl ? 'جيد جداً ⭐⭐' : 'Very Good ⭐⭐';
-      return isRtl ? 'يحتاج مزيد من التركيز 🎯' : 'Needs Focus 🎯';
-    };
+  if (!record || record.session_grade === null || record.session_grade === undefined) {
+    return isRtl ? 'لم يحدد' : 'Not specified';
+  }
+  
+  const grade = Number(record.session_grade);
+  
+  if (grade >= 10) return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
+  if (grade >= 8)  return isRtl ? 'جيد جداً ⭐⭐' : 'Very Good ⭐⭐';
+  if (grade >= 6)  return isRtl ? 'يحتاج مزيد من التركيز 🎯' : 'Needs Focus 🎯';
+  
+  return isRtl ? 'ضعيف ⚠️' : 'Weak ⚠️';
+};
 
     return messageTemplate
       .replace(/\[اسم_الطالب\]/g, student.name || '')
