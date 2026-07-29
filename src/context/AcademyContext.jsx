@@ -84,7 +84,6 @@ export const AcademyProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // 🌟 الاعتماد المباشر على onAuthStateChange فقط لمنع تكرار استدعاء البيانات
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       fetchUserStatus(session?.user);
     });
@@ -99,10 +98,23 @@ export const AcademyProvider = ({ children }) => {
       academy, 
       appState, 
       logout: async () => {
-        setAcademy(null);
-        setUser(null);
-        setProfile(null);
-        await supabase.auth.signOut();
+        try {
+          // 1. مسح القفل فوراً عند الخروج
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('block_splash');
+            localStorage.removeItem('app_splash_seen_v4');
+          }
+
+          // 2. تصفير الـ States
+          setAcademy(null);
+          setUser(null);
+          setProfile(null);
+
+          // 3. الخروج من Supabase
+          await supabase.auth.signOut();
+        } catch (error) {
+          console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
+        }
       }, 
       refreshStatus: () => fetchUserStatus(user) 
     }}>
