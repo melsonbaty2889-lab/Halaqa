@@ -6,6 +6,7 @@ import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 import SubscriptionPage from './SubscriptionPage';
+import SplashScreen from './SplashScreen.jsx'; // 🌟 1. استيراد الشاشة الافتتاحية
 
 // 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء التحديث والبناء
 const safeLazy = (importFn) => {
@@ -96,8 +97,19 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [academyId, setAcademyId] = useState(null);
   const [academyName, setAcademyName] = useState(""); 
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
-  const [loadingData, setLoadingData] = useState(true);
   
+  // 🌟 2. إدارة حالة الشاشة الافتتاحية
+  const [showSplash, setShowSplash] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
+
+  // إخفاء الـ SplashScreen بعد 2 ثانية على الأقل أو فور تجهيز البيانات الأولية
+  useEffect(() => {
+    const splashTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000); // 2 ثوانٍ لإتاحة رؤية الأنيميشن والشعار باحترافية
+    return () => clearTimeout(splashTimer);
+  }, []);
+
   const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
   const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
@@ -268,12 +280,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           </div>
         );
       case 'gamification-streaks':
-  return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
-        return (
-          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937' }}>
-            <h2 style={{ color: '#F59E0B' }}>{isRtl ? '🏆 الإنجاز والحوافز' : 'Gamification & Streaks'}</h2>
-          </div>
-        );
+        return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
       case 'payments':
         return <Payments students={students} academyId={academyId} currency={currency} />;
       case 'asset-management':
@@ -305,6 +312,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       </div>
     </div>
   );
+
+  // 🌟 3. إظهار الشاشة الافتتاحية أولاً عند فتح المنصة
+  if (showSplash || (loadingData && activeTab === 'dashboard' && students.length === 0)) {
+    return <SplashScreen />;
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#0f172a', color: '#fff', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
