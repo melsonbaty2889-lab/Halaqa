@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { t, i18n } = useTranslation();
@@ -14,14 +14,27 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
+  // فحص قوة وشروط كلمة المرور
+  const validatePassword = (pass) => {
+    const hasMinLength = pass.length >= 8;
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasLower = /[a-z]/.test(pass);
+    const hasNumber = /[0-9]/.test(pass);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass);
+
+    return hasMinLength && hasUpper && hasLower && hasNumber && hasSpecial;
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
 
-    if (password.length < 6) {
+    if (!validatePassword(password)) {
       setStatus({
         type: 'error',
-        msg: isRtl ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters'
+        msg: isRtl 
+          ? 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، تتضمن حروفاً كبيرة وصغيرة وأرقاماً ورموزاً خاصة.' 
+          : 'Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.'
       });
       return;
     }
@@ -29,14 +42,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
     setLoading(true);
 
     try {
-      // 1. تسجيل المستخدم في Supabase Auth مع تمرير الاسم في metadata
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
         options: {
           data: {
             full_name: fullName.trim(),
-            role: 'admin' // دور افتراضي لمن ينشئ الحساب لأول مرة
+            role: 'admin'
           }
         }
       });
@@ -50,7 +62,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
           : '✅ Account created successfully! Please check your email to confirm.'
       });
 
-      // تفريغ الحقول
       setFullName('');
       setEmail('');
       setPassword('');
@@ -65,32 +76,63 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
+  // نمط موحد للمدخلات لمنع تغير اللون الأبيض عند التعبئة التلقائية (Autofill)
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 42px',
+    borderRadius: '10px',
+    border: '1px solid #223147',
+    background: '#090F16',
+    color: '#ffffff',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box'
+  };
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
-      <div style={{ width: '100%', maxWidth: '420px', background: '#111C2A', padding: '35px 25px', borderRadius: '16px', border: '1px solid #1E2D3D', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
+      
+      {/* ستايل مخصص لمعالجة خلفية الـ Autofill في المتصفحات */}
+      <style>{`
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+      `}</style>
+
+      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
         
-        <h2 style={{ color: '#fff', fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
+        <h2 style={{ color: '#F8FAFC', fontSize: '24px', textAlign: 'center', marginBottom: '8px', fontWeight: 'bold' }}>
           {isRtl ? 'إنشاء حساب جديد' : 'Create New Account'}
         </h2>
-        <p style={{ color: '#64748b', fontSize: '13px', textAlign: 'center', marginBottom: '25px' }}>
+        <p style={{ color: '#94A3B8', fontSize: '13px', textAlign: 'center', marginBottom: '25px' }}>
           {isRtl ? 'قم بإنشاء حسابك للبدء في إدارة أكاديميتك' : 'Sign up to start managing your academy'}
         </p>
 
+        {/* عرض رسائل الخطأ والتنبيه بشكل منسق */}
         {status.msg && (
           <div style={{
-            padding: '12px',
-            borderRadius: '10px',
+            padding: '12px 16px',
+            borderRadius: '12px',
             marginBottom: '20px',
             fontSize: '13px',
+            lineHeight: '1.6',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
             background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            color: status.type === 'success' ? '#10B981' : '#EF4444',
-            border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+            color: status.type === 'success' ? '#34D399' : '#F87171',
+            border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
           }}>
-            {status.msg}
+            <FaExclamationCircle style={{ marginTop: '3px', flexShrink: 0 }} />
+            <div>{status.msg}</div>
           </div>
         )}
 
-        <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
           {/* الاسم الكامل */}
           <div style={{ position: 'relative' }}>
@@ -100,9 +142,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setFullName(e.target.value)}
               placeholder={isRtl ? 'الاسم الكامل' : 'Full Name'}
               required
-              style={{ width: '100%', padding: '12px 40px', borderRadius: '10px', border: '1px solid #223147', background: '#090F16', color: '#fff', outline: 'none' }}
+              style={inputStyle}
             />
-            <FaUser style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '12px', color: '#64748b' }} />
+            <FaUser style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
           </div>
 
           {/* البريد الإلكتروني */}
@@ -113,9 +155,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
-              style={{ width: '100%', padding: '12px 40px', borderRadius: '10px', border: '1px solid #223147', background: '#090F16', color: '#fff', outline: 'none' }}
+              style={inputStyle}
             />
-            <FaEnvelope style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '12px', color: '#64748b' }} />
+            <FaEnvelope style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
           </div>
 
           {/* كلمة المرور */}
@@ -126,28 +168,41 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               required
-              style={{ width: '100%', padding: '12px 40px', borderRadius: '10px', border: '1px solid #223147', background: '#090F16', color: '#fff', outline: 'none' }}
+              style={inputStyle}
             />
             <span 
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '12px', color: '#64748b', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B', cursor: 'pointer' }}
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
+          {/* زر التسجيل */}
           <button 
             type="submit" 
             disabled={loading}
-            style={{ padding: '12px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '10px' }}
+            style={{ 
+              padding: '14px', 
+              background: '#D97706', 
+              color: '#FFFFFF', 
+              border: 'none', 
+              borderRadius: '12px', 
+              fontWeight: 'bold', 
+              fontSize: '15px',
+              cursor: loading ? 'not-allowed' : 'pointer', 
+              marginTop: '8px',
+              transition: 'background 0.2s ease',
+              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)'
+            }}
           >
             {loading ? (isRtl ? 'جاري إنشاء الحساب...' : 'Creating Account...') : (isRtl ? 'إنشاء حساب' : 'Sign Up')}
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#64748b' }}>
+        <div style={{ marginTop: '22px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
           {isRtl ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
-          <span onClick={onSwitchToLogin} style={{ color: '#C9A84C', cursor: 'pointer', fontWeight: 'bold' }}>
+          <span onClick={onSwitchToLogin} style={{ color: '#F59E0B', cursor: 'pointer', fontWeight: 'bold' }}>
             {isRtl ? 'تسجيل الدخول' : 'Log In'}
           </span>
         </div>
