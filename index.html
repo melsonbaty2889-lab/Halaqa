@@ -2,8 +2,23 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport"content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- العنوان والأيقونة -->
     <title>الحلقة الذكية | Smart Halaqa</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph (معاينة الرابط عند المشاركة على واتساب وفيسبوك) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="منصة الحلقة الذكية | Smart Halaqa" />
+    <meta property="og:description" content="نظام إدارة الحلقات القرآنية ومتابعة الحضور والإنتاجية اليومية للطلاب." />
+    <meta property="og:image" content="/og-preview.png" />
+
+    <!-- خط تجوال الاحترافي من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
     <style>
       /* 🌟 إعادة ضبط الأساسيات لمنع انكماش الشاشة أو السكرول الأفقي */
       :root { 
@@ -23,7 +38,7 @@
         max-width: 100vw;
         min-height: 100vh;
         overflow-x: hidden; /* منع التمدد الأفقي */
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Tajawal', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       #root {
@@ -32,11 +47,24 @@
         display: flex;
         flex-direction: column;
       }
+
+      /* شاشة التحميل المبدئية لحين تحميل ملفات React */
+      .app-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        color: #f59e0b;
+        font-size: 1.1rem;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
 
-    <div id="root"></div>
+    <div id="root">
+      <div class="app-loading">جاري تحميل منصة الحلقة الذكية...</div>
+    </div>
     
     <script type="module" src="/src/main.jsx"></script>
 
