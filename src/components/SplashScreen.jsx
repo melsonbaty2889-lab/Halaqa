@@ -1,19 +1,14 @@
 /* src/components/SplashScreen.jsx */
-import React, { useState, useEffect, useRef } from 'react';
-import { FaBookOpen, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
-// إذا كنت تستخدم react-i18next، استدعي التخصيص:
-// import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
+import { FaBookOpen } from 'react-icons/fa';
 
 export default function SplashScreen({ 
-  lang = 'ar', // اللغة الحالية للمستخدم ('ar', 'en', إلخ)
-  t // دالة الترجمة إذا كانت ممررة من الصفحة الأب
+  lang = 'ar',
+  t 
 }) {
   const [progress, setProgress] = useState(0);
   const [randomAya, setRandomAya] = useState('');
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const audioRef = useRef(null);
 
-  // نصوص مترجمة افتراضية في حال لم تكن مكتبة الترجمة تـعـمل مباشرة
   const translations = {
     ar: {
       title: "الحلقة الذكية",
@@ -39,38 +34,21 @@ export default function SplashScreen({
   };
 
   const currentT = translations[lang] || translations['ar'];
+  const isRtl = lang === 'ar';
 
   useEffect(() => {
-    // اختيار النص / الآية بناءً على اللغة الحالية
+    // اختيار آية عشوائية
     const selectedAyat = currentT.ayat;
     const selected = selectedAyat[Math.floor(Math.random() * selectedAyat.length)];
     setRandomAya(selected);
 
-    // شريط التقدم السلس
+    // شريط التقدم السلس 0% -> 100%
     const interval = setInterval(() => {
       setProgress((prev) => (prev >= 100 ? 100 : prev + 5));
-    }, 70);
+    }, 60);
 
     return () => clearInterval(interval);
   }, [lang]);
-
-  // 🔊 تشغيل وتوقيف الصوت عند الضغط على الزر
-  const handleSoundClick = () => {
-    if (audioRef.current) {
-      if (isAudioPlaying) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        setIsAudioPlaying(false);
-      } else {
-        audioRef.current.volume = 0.4;
-        audioRef.current.play().then(() => {
-          setIsAudioPlaying(true);
-        }).catch((err) => console.log("Audio play error:", err));
-      }
-    }
-  };
-
-  const isRtl = lang === 'ar';
 
   return (
     <div style={{
@@ -88,39 +66,6 @@ export default function SplashScreen({
       userSelect: 'none'
     }}>
 
-      {/* 🎵 عنصر الصوت */}
-      <audio 
-        ref={audioRef} 
-        src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" 
-        preload="auto" 
-        onEnded={() => setIsAudioPlaying(false)}
-      />
-
-      {/* 🔊 زر الصوت (يتغير موضعه حسـب الاتجاه RTL / LTR) */}
-      <button 
-        onClick={handleSoundClick}
-        title={isAudioPlaying ? "Mute" : "Unmute"}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          [isRtl ? 'left' : 'right']: '20px',
-          background: 'rgba(30, 41, 59, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: isAudioPlaying ? '#C9A84C' : '#64748B',
-          borderRadius: '50%',
-          width: '42px',
-          height: '42px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 10,
-          backdropFilter: 'blur(4px)'
-        }}
-      >
-        {isAudioPlaying ? <FaVolumeUp size={18} /> : <FaVolumeMute size={18} />}
-      </button>
-
       {/* 🌟 1. نمط إسلامي خفيف في الخلفية */}
       <div style={{
         position: 'absolute',
@@ -131,7 +76,7 @@ export default function SplashScreen({
         pointerEvents: 'none'
       }} />
 
-      {/* 🌟 2. المربع الأخضر واللوجو الأصلي */}
+      {/* 🌟 2. المربع الأخضر واللوجو الأصلي الدقيق */}
       <div style={{
         position: 'relative',
         width: '100px',
