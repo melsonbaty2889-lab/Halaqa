@@ -197,10 +197,10 @@ function MainContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
   
-  // 🎯 التحكم في إظهار السبلاش للمستخدمين غير المسجلين فقط
+  // 🎯 التخزين بـ localStorage يضمن عدم التكرار نهائياً على الجهاز، مع تحسين القراءة اللحظية
   const [hasSeenSplash, setHasSeenSplash] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return !!sessionStorage.getItem('splash_shown');
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('app_splash_seen_v2') === 'true';
   });
 
   const goldColor = '#C9A84C';
@@ -230,7 +230,7 @@ function MainContent() {
 
   const handleSplashFinish = () => {
     try {
-      sessionStorage.setItem('splash_shown', 'true');
+      localStorage.setItem('app_splash_seen_v2', 'true');
     } catch (e) {
       console.warn(e);
     }
@@ -239,22 +239,7 @@ function MainContent() {
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 1. حالة الشاشات قبل الدخول (السبلاش تظهر هنا فقط وللمرة الأولى)
-  if (appState === 'UNAUTHENTICATED') {
-    if (!hasSeenSplash) {
-      return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
-    }
-
-    return (
-      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
-        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
-        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
-        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
-      </div>
-    );
-  }
-
-  // 2. حالة تحميل البيانات الجارية
+  // 1. حالة تحميل البيانات الجارية (تُعرض أولاً لمنع الفليكر أو ظهور السبلاش المؤقت)
   if (appState === 'LOADING') {
     return (
       <div style={{
@@ -269,6 +254,21 @@ function MainContent() {
       }}>
         <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
         <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', sans-serif" }}>جاري تحميل المنظومة...</span>
+      </div>
+    );
+  }
+
+  // 2. حالة غير المسجلين (تظهر السبلاش للمرة الأولى فقط على هذا الجهاز)
+  if (appState === 'UNAUTHENTICATED') {
+    if (!hasSeenSplash) {
+      return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
+    }
+
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
+        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
+        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
       </div>
     );
   }
@@ -325,7 +325,7 @@ function MainContent() {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 6. الدخول النشط والكامل (مستحيل ظهور السبلاش هنا أبداً)
+  // 6. الدخول النشط والكامل
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
@@ -374,4 +374,4 @@ export default function App() {
       <MainContent />
     </GlobalErrorBoundary>
   );
-                                         }
+      }
