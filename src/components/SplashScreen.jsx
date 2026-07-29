@@ -9,44 +9,41 @@ const QURAN_AYAT = [
   "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ"
 ];
 
-// 🎵 صوت فتح هادئ ونقي
+// 🎵 صوت فتح هادئ ومميز
 const SPLASH_AUDIO_URL = "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"; 
 
 export default function SplashScreen() {
   const [progress, setProgress] = useState(0);
   const [randomAya, setRandomAya] = useState('');
-  const [isMuted, setIsMuted] = useState(() => localStorage.getItem('splash_muted') === 'true');
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // اختيار آية قرآنية
+    // اختيار آية قرآنية عشوائية
     const selectedAya = QURAN_AYAT[Math.floor(Math.random() * QURAN_AYAT.length)];
     setRandomAya(selectedAya);
 
-    // محاولة تشغيل الصوت
-    if (!isMuted && audioRef.current) {
-      audioRef.current.volume = 0.3;
-      audioRef.current.play().catch(() => {
-        // المتصفح يمنع التشغيل التلقائي حتى يتفاعل المستخدم
-        console.log("Audio autoplay waiting for user interaction");
-      });
-    }
-
-    // شريط التقدم السلس
+    // شريط التقدم السلس 0% -> 100%
     const interval = setInterval(() => {
       setProgress((prev) => (prev >= 100 ? 100 : prev + 5));
     }, 70);
 
     return () => clearInterval(interval);
-  }, [isMuted]);
+  }, []);
 
-  const toggleMute = () => {
-    const newMuteState = !isMuted;
-    setIsMuted(newMuteState);
-    localStorage.setItem('splash_muted', newMuteState);
-    if (!newMuteState && audioRef.current) {
-      audioRef.current.volume = 0.3;
-      audioRef.current.play().catch(() => {});
+  // 🔊 تشغيل الصوت فور الضغط على زر الصوت
+  const handleSoundClick = () => {
+    if (audioRef.current) {
+      if (isAudioPlaying) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsAudioPlaying(false);
+      } else {
+        audioRef.current.volume = 0.4;
+        audioRef.current.play().then(() => {
+          setIsAudioPlaying(true);
+        }).catch((err) => console.log("Audio play error:", err));
+      }
     }
   };
 
@@ -67,77 +64,90 @@ export default function SplashScreen() {
     }}>
 
       {/* 🎵 عنصر الصوت */}
-      <audio ref={audioRef} src={SPLASH_AUDIO_URL} preload="auto" />
+      <audio 
+        ref={audioRef} 
+        src={SPLASH_AUDIO_URL} 
+        preload="auto" 
+        onEnded={() => setIsAudioPlaying(false)}
+      />
 
-      {/* 🔊 زر الصوت */}
+      {/* 🔊 زر الصوت (يعمل بالضغط المباشر) */}
       <button 
-        onClick={toggleMute}
-        title={isMuted ? "تفعيل الصوت" : "كتم الصوت"}
+        onClick={handleSoundClick}
+        title={isAudioPlaying ? "إيقاف الصوت" : "تشغيل الصوت"}
         style={{
           position: 'absolute',
           top: '20px',
           left: '20px',
           background: 'rgba(30, 41, 59, 0.6)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          color: isMuted ? '#64748B' : '#C9A84C',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          color: isAudioPlaying ? '#C9A84C' : '#64748B',
           borderRadius: '50%',
-          width: '40px',
-          height: '40px',
+          width: '42px',
+          height: '42px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
           zIndex: 10,
-          backdropFilter: 'blur(4px)'
+          backdropFilter: 'blur(4px)',
+          transition: 'all 0.2s ease'
         }}
       >
-        {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
+        {isAudioPlaying ? <FaVolumeUp size={18} /> : <FaVolumeMute size={18} />}
       </button>
 
       {/* 🌟 1. نمط إسلامي خفيف في الخلفية */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: `radial-gradient(rgba(201, 168, 76, 0.08) 1px, transparent 0)`,
+        backgroundImage: `radial-gradient(rgba(201, 168, 76, 0.06) 1px, transparent 0)`,
         backgroundSize: '28px 28px',
         opacity: 0.5,
         pointerEvents: 'none'
       }} />
 
-      {/* 🌟 2. أيقونة الشعار مع إصلاح تراكب الحلقة الذهبية */}
+      {/* 🌟 2. المربع الأخضر واللوجو الأصلي */}
       <div style={{
         position: 'relative',
-        width: '90px',
-        height: '90px',
-        borderRadius: '24px',
-        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+        width: '100px',
+        height: '100px',
+        borderRadius: '26px',
+        background: 'linear-gradient(145deg, #0E7490 0%, #047857 50%, #064E3B 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 0 35px rgba(16, 185, 129, 0.3)',
-        border: '1px solid rgba(201, 168, 76, 0.4)',
-        marginBottom: '24px',
-        animation: 'pulseGlow 2.5s infinite ease-in-out'
+        boxShadow: '0 0 30px rgba(16, 185, 129, 0.25)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        marginBottom: '24px'
       }}>
-        {/* الحلقة الذهبية الدائرية المفتوحة والمضبوطة تماماً */}
+        {/* 🌟 3. الحلقة الدائرية الذهبية الأصلية (حول المصحف وتدور) */}
         <div style={{
-          position: 'absolute',
-          top: '-6px',
-          left: '-6px',
-          right: '-6px',
-          bottom: '-6px',
-          borderRadius: '30px',
-          border: '2px solid transparent',
-          borderTopColor: '#C9A84C',
-          borderRightColor: '#C9A84C',
-          animation: 'spin 3s linear infinite',
-          boxSizing: 'border-box'
-        }} />
+          position: 'relative',
+          width: '64px',
+          height: '64px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {/* الحلقة الذهبية الدوارة */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '50%',
+            border: '2.5px solid transparent',
+            borderTopColor: '#F59E0B',
+            borderRightColor: '#F59E0B',
+            borderBottomColor: '#F59E0B',
+            animation: 'spin 2.5s linear infinite'
+          }} />
 
-        <FaBookOpen style={{ color: '#FCD34D', fontSize: '38px' }} />
+          {/* أيقونة المصحف الشريف بالمنتصف */}
+          <FaBookOpen style={{ color: '#FCD34D', fontSize: '32px', zIndex: 2 }} />
+        </div>
       </div>
 
-      {/* 🌟 3. اسم المنصة */}
+      {/* 🌟 4. اسم المنصة */}
       <h1 style={{
         color: '#FFFFFF',
         fontSize: '1.8rem',
@@ -157,7 +167,7 @@ export default function SplashScreen() {
         المنصة الذكية لإدارة حلقات القرآن الكريم
       </p>
 
-      {/* 🌟 4. الآية القرآنية */}
+      {/* 🌟 5. الآية القرآنية */}
       <div style={{
         background: 'rgba(30, 41, 59, 0.5)',
         backdropFilter: 'blur(8px)',
@@ -173,7 +183,7 @@ export default function SplashScreen() {
         </span>
       </div>
 
-      {/* 🌟 5. شريط التحميل بالنسبة المئوية */}
+      {/* 🌟 6. شريط التحميل بالنسبة المئوية */}
       <div style={{ width: '220px', position: 'relative' }}>
         <div style={{
           display: 'flex',
@@ -204,7 +214,7 @@ export default function SplashScreen() {
         </div>
       </div>
 
-      {/* 🌟 6. التوقيع والإصدار */}
+      {/* 🌟 7. التوقيع والإصدار */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
@@ -220,11 +230,7 @@ export default function SplashScreen() {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        @keyframes pulseGlow {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.03); }
-        }
       `}</style>
     </div>
   );
-      }
+          }
