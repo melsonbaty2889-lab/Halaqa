@@ -3,7 +3,7 @@ import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import { useAcademy } from './context/AcademyContext';
 import { 
-  FaSpinner, FaClock, FaSignOutAlt, FaLock, FaWifi, 
+  FaSpinner, FaClock, FaSignOutAlt, FaWifi, 
   FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes 
 } from 'react-icons/fa';
 
@@ -57,7 +57,6 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
         position: 'relative'
       }}>
-        {/* زر الإغلاق */}
         <button 
           onClick={onClose}
           style={{
@@ -93,7 +92,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             ترقية حساب الأكاديمية
           </h2>
           <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
-            احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك
+            احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك ({academyName || ''})
           </p>
         </div>
 
@@ -197,10 +196,12 @@ function AppContent() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // 🌟 حالة إنهاء الشاشة الافتتاحية
-  const [splashFinished, setSplashFinished] = useState(false);
-  const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
+  // 🌟 منع تكرار ظهور الشاشة الافتتاحية باستخدام sessionStorage
+  const [splashFinished, setSplashFinished] = useState(() => {
+    return typeof window !== 'undefined' && sessionStorage.getItem('splash_shown') === 'true';
+  });
 
+  const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
   const goldColor = '#C9A84C';
 
   useEffect(() => {
@@ -226,12 +227,17 @@ function AppContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 1. 🌟 الشاشة الافتتاحية تعتمد على اكتمال وقت الحركة (3.5 ثانية) + تحضير بيانات التطبيق (appState !== 'LOADING')
+  const handleSplashFinish = () => {
+    sessionStorage.setItem('splash_shown', 'true');
+    setSplashFinished(true);
+  };
+
+  // 1. الشاشة الافتتاحية
   if (!splashFinished || appState === 'LOADING') {
     return (
       <SplashScreen 
         lang="ar" 
-        onFinish={() => setSplashFinished(true)} 
+        onFinish={handleSplashFinish} 
       />
     );
   }
@@ -287,7 +293,11 @@ function AppContent() {
   // 5. Super Admin
   if (appState === 'SUPER_ADMIN') {
     return (
-      <Suspense fallback={<SplashScreen lang="ar" />}>
+      <Suspense fallback={
+        <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C9A84C' }}>
+          <FaSpinner className="fa-spin" style={{ fontSize: '30px' }} />
+        </div>
+      }>
         <AdminDashboard session={{ user }} onLogout={logout} />
       </Suspense>
     );
@@ -314,7 +324,6 @@ function AppContent() {
           setShowEarlyUpgrade={setShowEarlyUpgrade}
         />
 
-        {/* 🚀 نافذة الترقية المضمنة بالداخل */}
         <InlineUpgradeModal 
           isOpen={showEarlyUpgrade} 
           onClose={() => setShowEarlyUpgrade(false)} 
@@ -347,4 +356,4 @@ export default function App() {
       <AppContent />
     </GlobalErrorBoundary>
   );
-        }
+      }
