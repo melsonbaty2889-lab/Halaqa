@@ -4,10 +4,12 @@ import { FaBookOpen } from 'react-icons/fa';
 
 export default function SplashScreen({ 
   lang = 'ar',
-  t 
+  t,
+  onFinish // 👈 دالة اختيارية يتم استدعاؤها فور انتهاء التحميل والإغلاق
 }) {
   const [progress, setProgress] = useState(0);
   const [randomAya, setRandomAya] = useState('');
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   const translations = {
     ar: {
@@ -37,14 +39,31 @@ export default function SplashScreen({
   const isRtl = lang === 'ar';
 
   useEffect(() => {
-    // اختيار آية عشوائية
+    // 1. اختيار آية عشوائية
     const selectedAyat = currentT.ayat;
     const selected = selectedAyat[Math.floor(Math.random() * selectedAyat.length)];
     setRandomAya(selected);
 
-    // شريط التقدم السلس 0% -> 100%
+    // 2. ضبط الوقت ليكون حوالي 3.5 ثانية (70ms * 50 steps = 3500ms)
     const interval = setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 100 : prev + 2));
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          
+          // 🌟 3. بدء تأثير الاختفاء التدريجي (Fade-Out) عند الاكتمال
+          setTimeout(() => {
+            setIsFadingOut(true);
+            
+            // استدعاء دالة النهاية بعد اكتمال تأثير الاختفاء (0.5s)
+            setTimeout(() => {
+              if (onFinish) onFinish();
+            }, 500);
+          }, 200);
+
+          return 100;
+        }
+        return prev + 2;
+      });
     }, 70);
 
     return () => clearInterval(interval);
@@ -63,7 +82,12 @@ export default function SplashScreen({
       fontFamily: "'Cairo', sans-serif",
       direction: isRtl ? 'rtl' : 'ltr',
       overflow: 'hidden',
-      userSelect: 'none'
+      userSelect: 'none',
+
+      // 🌟 تأثير الانتقال والاختفاء السلس
+      opacity: isFadingOut ? 0 : 1,
+      visibility: isFadingOut ? 'hidden' : 'visible',
+      transition: 'opacity 0.5s ease-in-out, visibility 0.5s ease-in-out'
     }}>
 
       {/* 🌟 1. نمط إسلامي خفيف في الخلفية */}
@@ -200,4 +224,4 @@ export default function SplashScreen({
       `}</style>
     </div>
   );
-      }
+}
