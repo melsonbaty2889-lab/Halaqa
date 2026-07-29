@@ -135,7 +135,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     });
   };
 
-  // 🔥 الحفظ المجمع الشامل
+  // 🔥 الحفظ المجمع الشامل (مع ضمان استخراج halaqa_id لجميع الحالات)
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'حدث خطأ في معرف الأكاديمية', 'Error in academy ID'), type: 'error' });
@@ -144,6 +144,9 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
 
     setIsSaving(true);
     setMessage({ text: '', type: '' });
+
+    // تحديد halaqa_id افتراضية من أول حلقة متوفرة في الأكاديمية بحال عدم ارتقائها من الطالب
+    const fallbackHalaqaId = halaqas.length > 0 ? halaqas[0].id : null;
 
     try {
       const attendanceRecords = filteredStudents.map(student => {
@@ -154,10 +157,13 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
         const juzNum = Math.ceil(qIndex / 8);
         const qInHizb = ((qIndex - 1) % 4) + 1;
 
+        // 💡 تضمن هذه المعادلة ألا تخرج قيمة halaqa_id كـ null إطلاقاً
+        const targetHalaqaId = student.halaqa_id || (selectedHalaqaId !== '' ? selectedHalaqaId : fallbackHalaqaId);
+
         return {
           student_id: student.id,
           academy_id: academyId,
-          halaqa_id: student.halaqa_id || selectedHalaqaId || null,
+          halaqa_id: targetHalaqaId, 
           date: selectedDate,
           status: currentRecord?.status || 'present',
           notes: currentRecord?.notes || '',
@@ -187,7 +193,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
   return (
     <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* 1️⃣ الهيدر والتحكم بالتاريخ والحلقة (تصميم متجاوب دون أي قطع) */}
+      {/* 1️⃣ الهيدر والتحكم بالتاريخ والحلقة */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-2 m-0">
@@ -234,9 +240,8 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
         </div>
       </div>
 
-      {/* 2️⃣ شريط الإحصائيات التفاعلي (موزع بدقة على الموبايل والتابلت والشاشات الكبيرة) */}
+      {/* 2️⃣ شريط الإحصائيات التفاعلي */}
       <div className="flex flex-col gap-2.5 mb-5">
-        {/* الأرقام الأربعة الرئيسية */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl flex flex-col items-center justify-center">
             <span className="text-[10px] text-slate-400 font-bold">{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</span>
@@ -256,7 +261,6 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
           </div>
         </div>
 
-        {/* سطر نسبة الحضور + زر تحضير الكل (متطابق متوازٍ) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div className="sm:col-span-1 bg-blue-950/30 border border-blue-800/40 p-2.5 rounded-xl flex items-center justify-between px-4">
             <span className="text-xs text-blue-400 font-bold flex items-center gap-1.5">
