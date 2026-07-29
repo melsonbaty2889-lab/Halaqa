@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { FaGoogle, FaEnvelope, FaLock, FaGlobe } from 'react-icons/fa';
 
 export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }) {
-  // 🌐 استخراج تابع الترجمة والتحكم باللغات
   const { t, i18n } = useTranslation();
   
   const [email, setEmail] = useState('');
@@ -12,48 +11,48 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 🛠️ متغيرات حالة جديدة للتحكم في زر إعادة إرسال التفعيل
   const [showResend, setShowResend] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // 📐 إدارة اتجاه الواجهة بناءً على اللغة المحددة
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
-  // 🧠 دالة الترجمة الذكية: تقرأ من ملف i18n، وإذا لم تجد الكلمة تترجمها فورياً
   const translateText = (key, arText, enText) => {
     if (i18n.exists(key)) return t(key);
     return isRtl ? arText : enText;
   };
 
-  // 🔄 دالة التبديل الفوري للغة
   const toggleLanguage = () => {
     const nextLang = currentLang === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLang);
   };
 
-  // 🔄 دالة تسجيل الدخول المحدثة بالتوجيه التلقائي الذكي حسب الـ Role
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
-    setShowResend(false); // إعادة تعيين حالة زر الإعادة عند كل محاولة جديدة
+    setShowResend(false);
 
-    // 1. محاولة تسجيل الدخول في Supabase Auth
+    // ⚡ 1. قفل الشاشة الافتتاحية فوراً وبدون أي تأخير في ذاكرة الجلسة
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('block_splash', 'true');
+      localStorage.setItem('app_splash_seen_v4', 'true');
+    }
+
+    // 2. محاولة تسجيل الدخول في Supabase Auth
     const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: password.trim(),
     });
 
     if (error) {
-      // 💡 فحص رسالة الخطأ وترجمتها فورياً بناءً على لغة الواجهة الحالية
       if (error.message === "Email not confirmed") {
         setErrorMsg(
           isRtl 
             ? "يرجى تأكيد بريدك الإلكتروني أولاً! تحقق من صندوق الوارد أو مجلد الـ Spam لتفعيل حسابك." 
             : "Email not confirmed. Please check your inbox or spam folder to verify your account."
         );
-        setShowResend(true); // 🌟 تفعيل ظهور زر إعادة الإرسال فوراً
+        setShowResend(true);
       } else if (error.message === "Invalid login credentials") {
         setErrorMsg(
           isRtl 
@@ -64,49 +63,13 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         setErrorMsg(error.message);
       }
       setLoading(false);
-      return; // إيقاف التنفيذ عند حدوث خطأ في الـ Auth
+      return;
     }
 
-    // 2. إذا نجح الدخول، نقوم بجلب دور المستخدم (Role) من جدول profiles
-    if (authData?.user) {
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', authData.user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        // 3. التوجيه الذكي التلقائي إلى لوحة التحكم المناسبة للدور
-        switch (profile.role) {
-          case 'admin':
-            window.location.href = '/admin-dashboard';
-            break;
-          case 'teacher':
-            window.location.href = '/teacher-dashboard';
-            break;
-          case 'student':
-            window.location.href = '/student-dashboard';
-            break;
-          case 'parent':
-            window.location.href = '/parent-dashboard';
-            break;
-          default:
-            window.location.href = '/dashboard'; // مسار افتراضي عام
-        }
-      } catch (err) {
-        setErrorMsg(
-          isRtl 
-            ? "خطأ في تحميل صلاحيات الحساب. يرجى مراجعة الإدارة." 
-            : "Error loading account permissions. Please contact administration."
-        );
-        setLoading(false);
-      }
-    }
+    // 3. نجاح الدخول - تغيير الحالة وتجنب window.location.href التي تسبب Re-load كامل للصفحة
+    // ملاحظة: الـ Auth Listener الخاص بـ Supabase في Context سيتكفل بالتوجيه بسلاسة دون إعادة تحميل المكونات من الصفر!
   };
 
-  // 🚀 دالة إعادة إرسال رابط تفعيل الحساب عبر بريد Supabase الإلكتروني
   const handleResendEmail = async () => {
     if (!email.trim()) return;
     setResendLoading(true);
@@ -116,20 +79,18 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         type: 'signup',
         email: email.trim(),
         options: {
-          // تمرير لغة المستخدم الحالية ليعود إلى النظام بنفس لغته المحددة مسبقاً
           emailRedirectTo: `${window.location.origin}?lang=${currentLang}`
         }
       });
 
       if (error) throw error;
 
-      // تحديث الرسالة للمستخدم عند النجاح
       setErrorMsg(
         isRtl 
           ? "✅ تم إعادة إرسال رابط التفعيل بنجاح! تفقد صندوق الوارد أو الـ Spam." 
           : "✅ Verification link resent successfully! Check your inbox or spam folder."
       );
-      setShowResend(false); // إخفاء الزر بعد الإرسال الناجح لتفادي الضغط المتكرر
+      setShowResend(false);
 
     } catch (error) {
       setErrorMsg(error.message);
@@ -138,10 +99,13 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
     }
   };
 
-  // دالة تسجيل الدخول بواسطة جوجل (بدون المساس بالبنية الأصلية)
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('block_splash', 'true');
+        localStorage.setItem('app_splash_seen_v4', 'true');
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.origin },
@@ -162,11 +126,9 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
       background: '#0C1520', 
       padding: '20px', 
       fontFamily: "'Cairo', sans-serif",
-      direction: isRtl ? 'rtl' : 'ltr', // قلب الصفحة كاملاً بناءً على اللغة
+      direction: isRtl ? 'rtl' : 'ltr',
       position: 'relative'
     }}>
-      
-      {/* 🌐 زر تغيير اللغة الاحترافي العائم في أعلى الشاشة */}
       <button 
         onClick={toggleLanguage}
         style={{
@@ -204,7 +166,6 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
           </p>
         </div>
 
-        {/* 🌟 صندوق تنبيه الأخطاء المطور والذكي */}
         {errorMsg && (
           <div style={{ 
             background: 'rgba(239, 68, 68, 0.1)', 
@@ -222,7 +183,6 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
           }}>
             <span>{errorMsg}</span>
             
-            {/* عرض زر إعادة الإرسال الذهبي فقط في حال تعليق الحساب بسبب التفعيل */}
             {showResend && (
               <button
                 type="button"
@@ -251,8 +211,6 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
         )}
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          
-          {/* حقل البريد الإلكتروني المطور */}
           <div style={{ position: 'relative' }}>
             <FaEnvelope style={{ 
               position: 'absolute', 
@@ -267,11 +225,8 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               placeholder={translateText('email', 'البريد الإلكتروني', 'Email Address')} 
-              
-              // 🌟 إضافة الترجمة الديناميكية للتنبيه
               onInvalid={(e) => e.target.setCustomValidity(translateText('fieldRequired', 'هذا الحقل مطلوب ولا يمكن تركه فارغاً', 'This field is required'))}
               onInput={(e) => e.target.setCustomValidity('')}
-              
               style={{ 
                 width: '100%', 
                 padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', 
@@ -285,7 +240,6 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
             />
           </div>
           
-          {/* حقل كلمة المرور المطور */}
           <div style={{ position: 'relative' }}>
             <FaLock style={{ 
               position: 'absolute', 
@@ -300,11 +254,8 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               placeholder={translateText('password', 'كلمة المرور', 'Password')} 
-              
-              // 🌟 إضافة الترجمة الديناميكية للتنبيه
               onInvalid={(e) => e.target.setCustomValidity(translateText('fieldRequired', 'هذا الحقل مطلوب ولا يمكن تركه فارغاً', 'This field is required'))}
               onInput={(e) => e.target.setCustomValidity('')}
-              
               style={{ 
                 width: '100%', 
                 padding: isRtl ? '14px 40px 14px 14px' : '14px 14px 14px 40px', 
@@ -348,4 +299,4 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToForgotPassword }
       </div>
     </div>
   );
-}
+            }
