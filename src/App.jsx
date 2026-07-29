@@ -190,7 +190,7 @@ class GlobalErrorBoundary extends Component {
 
 const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
 
-// ⚡ منطق التطبيق الداخلي (مستقل تماماً ولا يعلم بوجود شيء اسمه SplashScreen)
+// ⚡ منطق التطبيق الداخلي
 function MainContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
@@ -225,18 +225,7 @@ function MainContent() {
 
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 1. حالة غير المسجلين (تسجيل الدخول / إنشاء حساب فقط)
-  if (appState === 'UNAUTHENTICATED') {
-    return (
-      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
-        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
-        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
-        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
-      </div>
-    );
-  }
-
-  // 2. حالة تحميل البيانات
+  // 1. حالة تحميل البيانات
   if (appState === 'LOADING') {
     return (
       <div style={{
@@ -251,6 +240,17 @@ function MainContent() {
       }}>
         <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
         <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', sans-serif" }}>جاري تحميل المنظومة...</span>
+      </div>
+    );
+  }
+
+  // 2. حالة غير المسجلين
+  if (appState === 'UNAUTHENTICATED') {
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
+        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
+        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
       </div>
     );
   }
@@ -348,15 +348,44 @@ export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
-  // 🎯 التحكم التام في الشاشة الافتتاحية عند فتح الصفحة لأول مرة فقط
+  // 🔒 الفحص الفوري المباشر وجود جلسة مسجلة بـ LocalStorage لـ Supabase
+  const hasExistingSupabaseToken = () => {
+    if (typeof window === 'undefined') return false;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.includes('sb-') && key.includes('-auth-token')) {
+          const val = localStorage.getItem(key);
+          if (val && val.includes('access_token')) return true;
+        }
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    return false;
+  };
+
+  // 🎯 التحكم القاطع بالسبلاش
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return localStorage.getItem('app_splash_seen_v3') !== 'true';
+    
+    // القفل الأول: هل تم حفظ علامة المشاهدة سابقاً؟
+    const seenBefore = localStorage.getItem('app_splash_seen_v4') === 'true';
+    if (seenBefore) return false;
+
+    // القفل الثاني: هل هناك جلسة تسجل دخول نشطة بالفعل؟
+    const hasToken = hasExistingSupabaseToken();
+    if (hasToken) {
+      localStorage.setItem('app_splash_seen_v4', 'true');
+      return false; // إلغاء السبلاش فوراً
+    }
+
+    return true;
   });
 
   const handleSplashFinish = () => {
     try {
-      localStorage.setItem('app_splash_seen_v3', 'true');
+      localStorage.setItem('app_splash_seen_v4', 'true');
     } catch (e) {
       console.warn(e);
     }
@@ -367,15 +396,14 @@ export default function App() {
     return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
   }
 
-  // إذا كانت الشاشة الافتتاحية لم تظهر من قبل على هذا المتصفح، يتم عرضها هنا حصراً
+  // إظهار السبلاش فقط إذا غاب القفلان معاً
   if (showSplash) {
     return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
   }
 
-  // بمجرد إغلاق الشاشة الافتتاحية أو إذا كانت المعاينة سابقة، يتم الانتقال إلى التطبيق وتدمير السبلاش من الذاكرة
   return (
     <GlobalErrorBoundary>
       <MainContent />
     </GlobalErrorBoundary>
   );
-          }
+      }
