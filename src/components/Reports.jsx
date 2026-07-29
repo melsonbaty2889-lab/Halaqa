@@ -96,7 +96,7 @@ export default function Reports({ students = [], academyId }) {
     localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
-  // معالج تحويل النصوص الموحد (Unified Parser) المربوط بقاعدة البيانات مباشرة
+    // معالج تحويل النصوص الموحد (Unified Parser) المربوط بقاعدة البيانات مباشرة
   const getParsedMessage = (student, record) => {
     const statusText = () => {
       if (!record) return isRtl ? 'حاضر ✅' : 'Present ✅';
