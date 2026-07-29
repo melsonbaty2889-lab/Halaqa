@@ -17,7 +17,7 @@ import CreateAcademy from './components/CreateAcademy';
 
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
-// 🛡️ درع الأمان: اصطياد أخطاء التحديثات وتسهيل إعادة التحميل عند تغيير الملفات
+// 🛡️ درع الأمان: اصطياد أخطاء التحديثات
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -190,13 +190,19 @@ class GlobalErrorBoundary extends Component {
 
 const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
 
-// ⚡ المكون الرئيسي لمحتوى التطبيق بعد الانتهاء من الـ Splash
 function MainContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
+  
+  // 🎯 التحكم في إظهار السبلاش للمستخدمين غير المسجلين فقط
+  const [hasSeenSplash, setHasSeenSplash] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !!sessionStorage.getItem('splash_shown');
+  });
+
   const goldColor = '#C9A84C';
 
   useEffect(() => {
@@ -222,11 +228,23 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 1. Password Update
+  const handleSplashFinish = () => {
+    try {
+      sessionStorage.setItem('splash_shown', 'true');
+    } catch (e) {
+      console.warn(e);
+    }
+    setHasSeenSplash(true);
+  };
+
   if (authView === 'update_password') return <UpdatePassword />;
 
-  // 2. Unauthenticated
+  // 1. حالة الشاشات قبل الدخول (السبلاش تظهر هنا فقط وللمرة الأولى)
   if (appState === 'UNAUTHENTICATED') {
+    if (!hasSeenSplash) {
+      return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
+    }
+
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
         {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
@@ -236,23 +254,26 @@ function MainContent() {
     );
   }
 
-  // 3. Loading Data State
+  // 2. حالة تحميل البيانات الجارية
   if (appState === 'LOADING') {
     return (
       <div style={{
         background: '#090F17',
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: goldColor
+        color: goldColor,
+        gap: '12px'
       }}>
-        <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
+        <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
+        <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', sans-serif" }}>جاري تحميل المنظومة...</span>
       </div>
     );
   }
 
-  // 4. Pending Approval
+  // 3. حالة الحساب قيد المراجعة
   if (appState === 'PENDING_APPROVAL') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
@@ -286,7 +307,7 @@ function MainContent() {
     );
   }
 
-  // 5. Super Admin
+  // 4. السوبر أدمن
   if (appState === 'SUPER_ADMIN') {
     return (
       <Suspense fallback={
@@ -299,12 +320,12 @@ function MainContent() {
     );
   }
 
-  // 6. No Academy
+  // 5. إنشاء أكاديمية
   if (appState === 'NO_ACADEMY') {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 7. Fully Active
+  // 6. الدخول النشط والكامل (مستحيل ظهور السبلاش هنا أبداً)
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
@@ -329,7 +350,6 @@ function MainContent() {
     );
   }
 
-  // 8. Fallback Screen
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif", padding: '20px', textAlign: 'center' }}>
       <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
@@ -341,13 +361,7 @@ function MainContent() {
   );
 }
 
-// 🛡️ التغليف المعزول للـ Splash لمنع ظهورها نهائياً بعد الدخول
 export default function App() {
-  const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return !sessionStorage.getItem('splash_has_shown');
-  });
-
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
@@ -355,22 +369,9 @@ export default function App() {
     return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
   }
 
-  const handleSplashFinish = () => {
-    try {
-      sessionStorage.setItem('splash_has_shown', 'true');
-    } catch (e) {
-      console.warn("Storage error:", e);
-    }
-    setShowSplash(false);
-  };
-
   return (
     <GlobalErrorBoundary>
-      {showSplash ? (
-        <SplashScreen lang="ar" onFinish={handleSplashFinish} />
-      ) : (
-        <MainContent />
-      )}
+      <MainContent />
     </GlobalErrorBoundary>
   );
-              }
+                                         }
