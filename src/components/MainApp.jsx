@@ -314,9 +314,27 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   );
 
   // 🌟 3. إظهار الشاشة الافتتاحية أولاً عند فتح المنصة
-  if (showSplash || (loadingData && activeTab === 'dashboard' && students.length === 0)) {
-    return <SplashScreen />;
-  }
+  // 1. إذا كان شرط السبلاش الصريح مفعل فقط
+if (showSplash) {
+  return <SplashScreen />;
+}
+
+// 2. إذا كانت البيانات قيد التحميل، اعرض شاشة تحميل عادية وليس السبلاش الكاملة
+if (loadingData && activeTab === 'dashboard' && students.length === 0) {
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: '#0C1520', 
+      color: '#C9A84C', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      fontFamily: "'Cairo', sans-serif"
+    }}>
+      <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>جاري تحميل البيانات...</p>
+    </div>
+  );
+}
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#0f172a', color: '#fff', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
