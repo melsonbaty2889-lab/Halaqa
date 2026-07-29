@@ -174,23 +174,23 @@ export default function SignUpPage({ onSwitchToLogin }) {
             </span>
           </div>
 
-          {/* الشروط التفاعلية الحية عند بداية كتابة كلمة المرور */}
-          {password && (
-            <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
-              <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.length ? <FaCheckCircle /> : <FaTimesCircle />} 8+ أحرف
-              </div>
-              <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.capital ? <FaCheckCircle /> : <FaTimesCircle />} حرف كبير (A-Z)
-              </div>
-              <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.number ? <FaCheckCircle /> : <FaTimesCircle />} رقم (0-9)
-              </div>
-              <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.special ? <FaCheckCircle /> : <FaTimesCircle />} رمز خاص (@!#)
-              </div>
-            </div>
-          )}
+          {/* الشروط التفاعلية الحية */}
+{password && (
+  <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+    <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {rules.length ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? '8+ أحرف' : '8+ Characters'}
+    </div>
+    <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {rules.capital ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? 'حرف كبير (A-Z)' : 'Uppercase (A-Z)'}
+    </div>
+    <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {rules.number ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? 'رقم (0-9)' : 'Number (0-9)'}
+    </div>
+    <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {rules.special ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? 'رمز خاص (@!#)' : 'Symbol (@!#)'}
+    </div>
+  </div>
+)}
 
           {/* زر التسجيل */}
           <button 
