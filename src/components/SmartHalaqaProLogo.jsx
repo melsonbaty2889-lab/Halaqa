@@ -1,4 +1,6 @@
 // 🌟 شعار المنظومة الاحترافي
+import React from 'react';
+
 const SmartHalaqaProLogo = () => (
   <div style={{
     width: '36px',
@@ -30,3 +32,5 @@ const SmartHalaqaProLogo = () => (
     </svg>
   </div>
 );
+
+export default SmartHalaqaProLogo;
