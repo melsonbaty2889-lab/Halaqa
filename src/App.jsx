@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import { useAcademy } from './context/AcademyContext';
-import { ROLES, getRouteForRole } from './constants/roles'; // 👈 استيراد الثوابت والدوال
+import { ROLES, getRouteForRole } from './constants/roles';
 import { 
   FaSpinner, FaClock, FaSignOutAlt, FaWifi, 
   FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes 
@@ -34,7 +34,6 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
 
   if (!isAllowed) {
-    // توجيه أمني تلقائي بناءً على الدور المعرّف
     const targetRoute = getRouteForRole(cleanRole);
     console.warn(`🔒 غير مصرح بالدخول للتحويل إلى: ${targetRoute}`);
   }
@@ -392,19 +391,23 @@ export default function App() {
     return false;
   };
 
-  // 🎯 التحكم القاطع بالسبلاش
+  // 🎯 التحكم القاطع بالسبلاش (معدّل لتعطيل إظهاره فورياً بمجرد تسجيل الدخول أو وجود التوكن)
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     
-    // القفل الأول: هل تم حفظ علامة المشاهدة سابقاً؟
+    // القفل الأول: هل تمت مشاهدة السبلاش سابقاً؟
     const seenBefore = localStorage.getItem('app_splash_seen_v4') === 'true';
-    if (seenBefore) return false;
-
-    // القفل الثاني: هل هناك جلسة تسجل دخول نشطة بالفعل؟
+    
+    // القفل الثاني: هل هناك توكن جلسة فعال؟
     const hasToken = hasExistingSupabaseToken();
-    if (hasToken) {
-      localStorage.setItem('app_splash_seen_v4', 'true');
-      return false; // إلغاء السبلاش فوراً
+
+    if (seenBefore || hasToken) {
+      try {
+        localStorage.setItem('app_splash_seen_v4', 'true');
+      } catch (e) {
+        console.warn(e);
+      }
+      return false; // إلغاء إظهار الشاشة الافتتاحية فوراً
     }
 
     return true;
@@ -423,7 +426,7 @@ export default function App() {
     return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
   }
 
-  // إظهار السبلاش فقط إذا غاب القفلان معاً
+  // إظهار السبلاش فقط إذا لم يسبق إغلاقها
   if (showSplash) {
     return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
   }
