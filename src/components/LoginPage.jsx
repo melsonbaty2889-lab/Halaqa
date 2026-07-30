@@ -116,13 +116,13 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
       } else {
         const role = profile?.role?.toLowerCase().trim() || 'student';
         const routeMap = {
-          admin: '/admin-dashboard',
-          super_admin: '/admin-dashboard',
-          teacher: '/teacher-dashboard',
-          academy_admin: '/academy-dashboard',
-          student: '/student-dashboard',
-          parent: '/parent-dashboard',
-        };
+  super_admin: '/admin-dashboard',   // صفحة المدير العام AdminDashboard.jsx
+  admin: '/dashboard',               // صفحة مدير الأكاديمية Dashboard.jsx
+  academy_admin: '/dashboard',       // في حال وجود مسمى آخر لمدير الأكاديمية
+  teacher: '/teacher-dashboard',
+  student: '/student-dashboard',
+  parent: '/parent-dashboard',
+};
         navigate(routeMap[role] || '/dashboard');
       }
 
