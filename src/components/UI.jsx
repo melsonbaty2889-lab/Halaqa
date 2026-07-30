@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef } from 'react';
 import { C, g } from "../constants/colors";
 
 // 1. الميدالية / الشارة (Badge)
-const Badge = forwardRef(({ children, color = C.green, className = "", style = {}, ...props }, ref) => (
+const Badge = forwardRef(({ children, color = C.success, className = "", style = {}, ...props }, ref) => (
   <span 
     ref={ref}
     className={`ui-badge ${className}`}
@@ -18,6 +18,7 @@ const Badge = forwardRef(({ children, color = C.green, className = "", style = {
       color, 
       border: `1px solid ${color}33`, 
       whiteSpace: "nowrap",
+      fontFamily: "inherit",
       ...style 
     }}
     {...props}
@@ -32,16 +33,15 @@ const Btn = forwardRef(({ children, onClick, variant = "primary", style = {}, di
   const [isHovered, setIsHovered] = useState(false);
   
   const styles = {
-    primary: { background: g.gold, color: "#1A1208" },
+    primary: { background: g.gold, color: "#0C1520" },
     secondary: { background: `${C.gold}15`, color: C.gold, border: `1px solid ${C.gold}30` },
     ghost: { background: "rgba(255,255,255,0.04)", color: C.text, border: "1px solid rgba(255,255,255,0.08)" },
-    danger: { background: `${C.red}15`, color: C.red, border: `1px solid ${C.red}30` },
-    success: { background: C.green, color: "#0C1520", fontWeight: "bold" },
-    failed: { background: C.red, color: "#fff", fontWeight: "bold" }
+    danger: { background: `${C.danger}15`, color: C.danger, border: `1px solid ${C.danger}30` },
+    success: { background: C.success, color: "#0C1520", fontWeight: "bold" },
+    failed: { background: C.danger, color: "#fff", fontWeight: "bold" }
   };
 
-  // إضافة تأثير بصري خفيف عند التحويم (Hover)
-  const hoverStyle = isHovered && !disabled ? { filter: "brightness(1.15)", transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(0,0,0,0.2)" } : {};
+  const hoverStyle = isHovered && !disabled ? { filter: "brightness(1.15)", transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" } : {};
 
   return (
     <button
@@ -61,8 +61,8 @@ const Btn = forwardRef(({ children, onClick, variant = "primary", style = {}, di
         borderRadius: 10,
         border: "none",
         cursor: disabled ? "not-allowed" : "pointer",
-        fontFamily: "'Cairo', sans-serif",
-        fontSize: "0.8rem",
+        fontFamily: "inherit",
+        fontSize: "0.82rem",
         fontWeight: 600,
         opacity: disabled ? 0.4 : 1,
         transition: "all 0.2s ease-in-out",
@@ -78,7 +78,7 @@ const Btn = forwardRef(({ children, onClick, variant = "primary", style = {}, di
 });
 Btn.displayName = 'Btn';
 
-// 3. الكارد (Card)
+// 3. الكارد الموحد (Card)
 const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
   <div 
     ref={ref}
@@ -90,6 +90,7 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
       padding: 20, 
       width: "100%", 
       boxSizing: "border-box", 
+      boxShadow: C.shadow,
       ...style 
     }}
     {...props}
@@ -99,18 +100,18 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
 ));
 Card.displayName = 'Card';
 
-// 4. حقل الإدخال الذكي مع دعم الـ Focus المضيء (Input)
+// 4. حقل الإدخال الذكي (Input & Textarea)
 const Input = forwardRef(({ label, value, onChange, type = "text", placeholder = "", as = "input", className = "", style = {}, ...props }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const baseStyle = { 
     width: "100%", 
-    background: "#1A2638", 
-    border: isFocused ? `1px solid ${C.gold}` : `1px solid rgba(201,168,76,0.25)`, 
+    background: C.surface, 
+    border: isFocused ? `1px solid ${C.gold}` : `1px solid ${C.border}`, 
     borderRadius: 10, 
     padding: "12px 14px", 
     color: C.text, 
-    fontFamily: "'Cairo', sans-serif", 
+    fontFamily: "inherit", 
     fontSize: "0.85rem", 
     outline: "none", 
     boxSizing: "border-box",
@@ -148,12 +149,12 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         className={`ui-select ${className}`}
         style={{ 
           width: "100%", 
-          background: "#1A2638", 
-          border: isFocused ? `1px solid ${C.gold}` : `1px solid rgba(201,168,76,0.25)`, 
+          background: C.surface, 
+          border: isFocused ? `1px solid ${C.gold}` : `1px solid ${C.border}`, 
           borderRadius: 10, 
           padding: "12px 14px", 
           color: C.text, 
-          fontFamily: "'Cairo', sans-serif", 
+          fontFamily: "inherit", 
           fontSize: "0.85rem", 
           outline: "none", 
           cursor: "pointer", 
@@ -165,14 +166,14 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         }}
         {...props}
       >
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {options.map(o => <option key={o.value} value={o.value} style={{ background: C.surface, color: C.text }}>{o.label}</option>)}
       </select>
     </div>
   );
 });
 Select.displayName = 'Select';
 
-// 6. النافذة المنبثقة الذكية العالمية (Modal)
+// 6. النافذة المنبثقة (Modal)
 const Modal = ({ open, onClose, title, children, className = "", style = {} }) => {
   useEffect(() => {
     if (!open) return;
@@ -185,7 +186,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
 
   return (
     <div 
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16 }} 
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16 }} 
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div 
@@ -200,14 +201,14 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
           maxHeight: "85vh", 
           overflowY: "auto", 
           boxSizing: "border-box", 
-          boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
           textAlign: "start",
           ...style 
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h3 style={{ fontWeight: 800, color: C.gold, fontSize: "1.05rem", margin: 0 }}>{title}</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, fontSize: 28, cursor: "pointer", padding: 0, lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: C.textSub, fontSize: 28, cursor: "pointer", padding: 0, lineHeight: 1 }}>×</button>
         </div>
         {children}
       </div>
@@ -224,14 +225,14 @@ const PageHeader = forwardRef(({ title, sub, action, className = "", style = {} 
   >
     <div style={{ textAlign: "start" }}>
       <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: C.gold, margin: 0 }}>{title}</h2>
-      {sub && <p style={{ fontSize: "0.82rem", color: C.muted, marginTop: 4, margin: 0 }}>{sub}</p>}
+      {sub && <p style={{ fontSize: "0.82rem", color: C.textSub, marginTop: 4, margin: 0 }}>{sub}</p>}
     </div>
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>{action}</div>
   </div>
 ));
 PageHeader.displayName = 'PageHeader';
 
-// 8. خلايا الجداول العالمية المستجيبة للغات (TH & TD)
+// 8. خلايا الجداول (TH & TD)
 const TH = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
   <th 
     ref={ref}
@@ -273,14 +274,4 @@ const TD = forwardRef(({ children, style = {}, className = "", ...props }, ref) 
 ));
 TD.displayName = 'TD';
 
-export {
-  Badge,
-  Btn,
-  Card,
-  Input,
-  Select,
-  Modal,
-  PageHeader,
-  TH,
-  TD
-};
+export { Badge, Btn, Card, Input, Select, Modal, PageHeader, TH, TD };
