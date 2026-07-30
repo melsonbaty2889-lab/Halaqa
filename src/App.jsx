@@ -2,6 +2,7 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import { useAcademy } from './context/AcademyContext';
+import { ROLES, getRouteForRole } from './constants/roles'; // 👈 استيراد الثوابت والدوال
 import { 
   FaSpinner, FaClock, FaSignOutAlt, FaWifi, 
   FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes 
@@ -16,6 +17,30 @@ import MainApp from './components/MainApp';
 import CreateAcademy from './components/CreateAcademy';
 
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+
+// 🛡️ مكون حماية المسارات المدمج (ProtectedRoute)
+const ProtectedRoute = ({ allowedRoles, children }) => {
+  const { profile, appState } = useAcademy();
+
+  if (appState === 'LOADING') {
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#C9A84C' }}>
+        <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
+      </div>
+    );
+  }
+
+  const cleanRole = profile?.role?.toLowerCase()?.trim();
+  const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
+
+  if (!isAllowed) {
+    // توجيه أمني تلقائي بناءً على الدور المعرّف
+    const targetRoute = getRouteForRole(cleanRole);
+    console.warn(`🔒 غير مصرح بالدخول للتحويل إلى: ${targetRoute}`);
+  }
+
+  return children;
+};
 
 // 🛡️ درع الأمان: اصطياد أخطاء التحديثات
 if (typeof window !== 'undefined') {
@@ -289,16 +314,18 @@ function MainContent() {
     );
   }
 
-  // 4. السوبر أدمن
+  // 4. السوبر أدمن (مغلف بمكون الحماية)
   if (appState === 'SUPER_ADMIN') {
     return (
-      <Suspense fallback={
-        <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: goldColor }}>
-          <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
-        </div>
-      }>
-        <AdminDashboard session={{ user }} onLogout={logout} />
-      </Suspense>
+      <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+        <Suspense fallback={
+          <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: goldColor }}>
+            <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
+          </div>
+        }>
+          <AdminDashboard session={{ user }} onLogout={logout} />
+        </Suspense>
+      </ProtectedRoute>
     );
   }
 
@@ -307,11 +334,11 @@ function MainContent() {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 6. الدخول النشط والكامل
+  // 6. الدخول النشط والكامل (مغلف بمكون الحماية للأدوار المعرفية)
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
-      <>
+      <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
         {!isOnline && (
           <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold' }}>
             <FaWifi style={{ marginLeft: '8px' }} /> انقطع الاتصال بالإنترنت.
@@ -319,7 +346,7 @@ function MainContent() {
         )}
         <MainApp 
           session={formattedSession} 
-          userRole={profile?.role || 'staff'} 
+          userRole={profile?.role || 'student'} 
           setShowEarlyUpgrade={setShowEarlyUpgrade}
         />
 
@@ -328,7 +355,7 @@ function MainContent() {
           onClose={() => setShowEarlyUpgrade(false)} 
           academyName={academy?.name}
         />
-      </>
+      </ProtectedRoute>
     );
   }
 
@@ -406,4 +433,4 @@ export default function App() {
       <MainContent />
     </GlobalErrorBoundary>
   );
-      }
+}
