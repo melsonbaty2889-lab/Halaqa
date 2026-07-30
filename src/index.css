@@ -33,7 +33,10 @@
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
   }
-
+  /* إجبار جميع العناصر والحقول على استدعاء خط Cairo الموحد */
+button, input, select, textarea {
+  font-family: 'Cairo', sans-serif !important;
+}
   /* ضبط سلوك الصناديق لمنع خروج العناصر عن حواف الشاشة */
   *, *::before, *::after {
     box-sizing: border-box;
