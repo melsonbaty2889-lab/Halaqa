@@ -1,54 +1,65 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { handleAuthError } from '../utils/errorHandler';
 import { 
   FaEnvelope, 
   FaLock, 
   FaEye, 
   FaEyeSlash, 
   FaExclamationCircle, 
-  FaGlobe, 
-  FaMobileAlt 
+  FaGlobe 
 } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 
 export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginSuccess }) {
   const { i18n } = useTranslation();
-  const isRtl = i18n?.language === 'ar';
+  const currentLang = i18n?.language || 'ar';
+  const isRtl = currentLang === 'ar';
 
   // الحالات (States)
-  const [loginMethod, setLoginMethod] = useState('email'); // 'email' | 'phone'
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  
+  // إدارة حالات الخطأ والتفعيل
   const [status, setStatus] = useState({ type: null, msg: '' });
+  const [showResend, setShowResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
-  // تبديل اللغة
+  // تغيير اللغة
   const toggleLanguage = () => {
-    i18n.changeLanguage(isRtl ? 'en' : 'ar');
+    const nextLang = currentLang === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(nextLang);
   };
 
-  // 1. معالجة التسجيل بالبريد وكلمة المرور دون إعادة تحميل الصفحة (No Full Page Reload)
+  // 1. تسجيل الدخول بالبريد الإلكتروني وكلمة المرور
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
+    setShowResend(false);
     setLoading(true);
 
     try {
-      // أ. تسجيل الدخول من خلال Supabase Auth
+      // أ. تسجيل الدخول في Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // إظهار زر إعادة الإرسال في حالة عدم تفعيل الإيميل
+        if (authError.message === 'Email not confirmed') {
+          setShowResend(true);
+        }
+        throw authError;
+      }
 
       const user = authData.user;
 
-      // ب. تحديث حالة الاتصال وآخر تسجيل دخول
+      // ب. تحديث حالة الاتصال وآخر تسجيل دخول في profiles
       await supabase
         .from('profiles')
         .update({ 
@@ -57,12 +68,12 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         })
         .eq('id', user.id);
 
-      // ج. جلب الـ Profile للتأكد من الدور (Role) وصلاحية الحساب
+      // ج. جلب الـ Profile للتأكد من الدور (Role) وحالة الحساب
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, academy_id, is_activated, is_deleted')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
@@ -73,30 +84,72 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
 
       setStatus({
         type: 'success',
-        msg: isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التحويل...' : '✅ Logged in successfully! Redirecting...'
+        msg: isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...' : '✅ Logged in successfully! Redirecting...'
       });
 
-      // د. تمرير البيانات دون استخدام window.location.reload() لتجنب ظهور الشاشة الافتتاحية
+      // د. التوجيه المباشر بدون عمل Refresh
       if (onLoginSuccess) {
         onLoginSuccess({ user, profile });
       }
 
     } catch (err) {
       console.error('Login Error:', err);
+      const userFriendlyMsg = handleAuthError(err, isRtl);
       setStatus({
         type: 'error',
-        msg: err.message === 'Invalid login credentials' 
-          ? (isRtl ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email or password')
-          : (err.message || (isRtl ? 'حدث خطأ أثناء تسجيل الدخول' : 'An error occurred during login'))
+        msg: userFriendlyMsg
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. التسجيل عبر حساب Google
+  // 2. إعادة إرسال رابط التفعيل
+  const handleResendEmail = async () => {
+    if (!email.trim()) {
+      setStatus({
+        type: 'error',
+        msg: isRtl ? 'يرجى إدخال البريد الإلكتروني أولاً' : 'Please enter your email address first'
+      });
+      return;
+    }
+
+    setResendLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      });
+
+      if (error) throw error;
+
+      setStatus({
+        type: 'success',
+        msg: isRtl 
+          ? '✅ تم إعادة إرسال رابط التفعيل! تفقد صندوق الوارد أو الـ Spam' 
+          : '✅ Activation link resent! Check your inbox or spam folder'
+      });
+      setShowResend(false);
+
+    } catch (error) {
+      const userFriendlyMsg = handleAuthError(error, isRtl);
+      setStatus({
+        type: 'error',
+        msg: userFriendlyMsg
+      });
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // 3. التسجيل عبر حساب Google
   const handleGoogleLogin = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -106,10 +159,12 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
       if (error) throw error;
     } catch (err) {
       console.error('Google Auth Error:', err);
+      const userFriendlyMsg = handleAuthError(err, isRtl);
       setStatus({
         type: 'error',
-        msg: isRtl ? 'فشل تسجيل الدخول باستخدام Google' : 'Google sign-in failed'
+        msg: userFriendlyMsg
       });
+      setLoading(false);
     }
   };
 
@@ -144,6 +199,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         {/* زر تغير اللغة */}
         <div style={{ position: 'absolute', top: '-50px', [isRtl ? 'left' : 'right']: '0' }}>
           <button 
+            type="button"
             onClick={toggleLanguage}
             style={{ 
               background: '#0D1724', 
@@ -179,21 +235,49 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             fontSize: '13px',
             lineHeight: '1.6',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             gap: '10px',
             background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
             color: status.type === 'success' ? '#34D399' : '#F87171',
             border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
           }}>
-            <FaExclamationCircle style={{ flexShrink: 0 }} />
-            <div>{status.msg}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaExclamationCircle style={{ flexShrink: 0 }} />
+              <span>{status.msg}</span>
+            </div>
+
+            {/* زر إعادة إرسال رابط التفعيل */}
+            {showResend && (
+              <button
+                type="button"
+                onClick={handleResendEmail}
+                disabled={resendLoading}
+                style={{
+                  background: '#D4AF37',
+                  color: '#0B131E',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  cursor: resendLoading ? 'not-allowed' : 'pointer',
+                  marginTop: '4px',
+                  opacity: resendLoading ? 0.6 : 1
+                }}
+              >
+                {resendLoading 
+                  ? (isRtl ? 'جاري الإرسال...' : 'Sending...') 
+                  : (isRtl ? 'إعادة إرسال رابط التفعيل؟' : 'Resend Activation Link?')}
+              </button>
+            )}
           </div>
         )}
 
         {/* نموذج الدخول */}
         <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* حقل الإيميل */}
+          {/* حقل البريد الإلكتروني */}
           <div style={{ position: 'relative' }}>
             <input 
               type="email"
@@ -259,10 +343,11 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               fontSize: '16px',
               cursor: loading ? 'not-allowed' : 'pointer', 
               marginTop: '6px',
+              opacity: loading ? 0.7 : 1,
               transition: 'background 0.2s ease'
             }}
           >
-            {loading ? (isRtl ? 'جاري الدخول...' : 'Logging In...') : (isRtl ? 'تسجيل الدخول' : 'Log In')}
+            {loading ? (isRtl ? 'جاري التحقق...' : 'Signing in...') : (isRtl ? 'تسجيل الدخول' : 'Log In')}
           </button>
         </form>
 
@@ -277,6 +362,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         <button 
           onClick={handleGoogleLogin}
           type="button"
+          disabled={loading}
           style={{ 
             width: '100%',
             padding: '14px', 
