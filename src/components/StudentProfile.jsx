@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from "react-i18next";
@@ -13,15 +13,14 @@ import {
   FaArrowLeft, FaArrowRight, FaSave, FaTimes, FaEdit, 
   FaCheckCircle, FaExclamationCircle, FaGraduationCap,
   FaBookOpen, FaInfoCircle, FaMoneyBillWave, FaCheckSquare,
-  FaFire, FaAward, FaCrown
+  FaFire, FaAward, FaCrown, FaUserGraduate
 } from 'react-icons/fa';
 
-export default function StudentProfile() {
+export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   
-  const currentLang = i18n.language || 'ar';
   const isRtl = i18n.dir() === 'rtl';
   
   const [student, setStudent] = useState(null);
@@ -31,45 +30,58 @@ export default function StudentProfile() {
   const [activeTab, setActiveTab] = useState('quran'); 
   const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
 
-  // حالات خاصة بمنحنى الإنجاز الأسبوعي الحقيقي
+  // حالات البيانات الخاصة بمنحنى الإنجاز الأسبوعي
   const [weeklyData, setWeeklyData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
-  const triggerToast = (text, type = 'success') => {
+  const triggerToast = useCallback((text, type = 'success') => {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
-  };
+  }, []);
 
-  // 1. تأثير جلب بيانات الطالب الأساسية والسلاسل المحدثة
+  // 1. جلب بيانات الطالب الموحدة
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const { data, error } = await supabase.from("students").select("*").eq("id", id).single();
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("students")
+          .select(`
+            *,
+            halaqas (
+              id,
+              name_ar,
+              name_en,
+              target_audience
+            )
+          `)
+          .eq("id", id)
+          .single();
+
         if (error) throw error;
         if (data) setStudent(data);
       } catch (err) {
         console.error("Error fetching student details:", err);
-        triggerToast(t('error_fetching_student'), "error");
+        triggerToast(t('error_fetching_student') || "تعذر جلب بيانات الطالب", "error");
       } finally {
         setLoading(false);
       }
     };
-    fetchStudent();
-  }, [id, t]);
 
-  // 2. تأثير جلب بيانات جدول المتابعة اليومية وحساب الصفحات الحقيقية للمنحنى
+    if (id) fetchStudent();
+  }, [id, t, triggerToast]);
+
+  // 2. جلب بيانات جدول المتابعة اليومية وحساب منحنى الإنجاز
   useEffect(() => {
     const fetchWeeklyAchievement = async () => {
       if (!id) return;
       try {
         setChartLoading(true);
         
-        // حساب نطاق آخر 7 أيام من تاريخ اليوم الحالي
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const formattedDate = sevenDaysAgo.toISOString().split('T')[0];
 
-        // استعلام ذكي يعتمد على الفهارس المركبة في جدولك
         const { data, error } = await supabase
           .from('daily_progress')
           .select('date, new_hifz_start, new_hifz_end, review_start, review_end')
@@ -82,8 +94,7 @@ export default function StudentProfile() {
         const daysMapAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const daysMapEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-        // خوارزمية فك النطاقات النصية وحساب فوارق الصفحات التراكمية بأمان
-        const processedChartData = data.map(record => {
+        const processedChartData = (data || []).map(record => {
           const recordDate = new Date(record.date);
           const dayIndex = recordDate.getDay();
 
@@ -102,7 +113,7 @@ export default function StudentProfile() {
           return {
             dayAr: daysMapAr[dayIndex],
             dayEn: daysMapEn[dayIndex],
-            pages: newHifzPages + reviewPages // جمع الحفظ والمراجعة معاً
+            pages: newHifzPages + reviewPages
           };
         });
 
@@ -128,10 +139,10 @@ export default function StudentProfile() {
   };
 
   const handleUpdate = async (e) => {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     setSaving(true);
 
-    const selectedIndex = parseInt(student.current_quarter_index) || 0;
+    const selectedIndex = parseInt(student.current_quarter_index, 10) || 0;
     const autoSurahText = getQuranProgress(selectedIndex).text;
     const calculatedJuz = Math.floor(selectedIndex / 8) + 1;
 
@@ -144,13 +155,13 @@ export default function StudentProfile() {
           parent_phone: student.parent_phone?.trim() || null,
           birth_date: student.birth_date || null,
           gender: student.gender,
-          country: student.country || student.country_code || null, 
-          subscription_system: student.subscription_system || student.payment_plan || 'monthly', 
+          country: student.country || student.country_code || 'EG', 
+          subscription_system: student.subscription_system || 'monthly', 
           status: student.status || 'active',
           current_quarter_index: selectedIndex,
           current_juz: calculatedJuz, 
-          current_surah: autoSurahText,
-          notes: student.notes?.trim() || null
+          notes: student.notes?.trim() || null,
+          updated_at: new Date().toISOString()
         })
         .eq("id", id);
       
@@ -158,14 +169,14 @@ export default function StudentProfile() {
 
       setStudent(prev => ({ 
         ...prev, 
-        current_surah: autoSurahText,
-        current_juz: calculatedJuz
+        current_juz: calculatedJuz,
+        current_surah_name: autoSurahText
       }));
       setIsEditing(false);
-      triggerToast(t('profile_updated_success'), "success");
+      triggerToast(t('profile_updated_success') || "تم تحديث الملف الشخصي بنجاح", "success");
     } catch (error) {
       console.error("Error saving student profile:", error);
-      triggerToast(t('profile_updated_failed'), "error");
+      triggerToast(t('profile_updated_failed') || "فشل تحديث البيانات", "error");
     } finally {
       setSaving(false);
     }
@@ -175,7 +186,7 @@ export default function StudentProfile() {
     return (
       <div style={{ color: C.text || '#fff', textAlign: 'center', padding: '100px 20px' }}>
         <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <div>{t('loading_premium_profile')}</div>
+        <div>{t('loading_premium_profile') || 'جاري تحميل ملف الطالب...'}</div>
       </div>
     );
   }
@@ -183,7 +194,7 @@ export default function StudentProfile() {
   if (!student) {
     return (
       <div style={{ color: '#EF4444', textAlign: 'center', padding: '50px 20px' }}>
-        <div>{t('student_not_found')}</div>
+        <div>{t('student_not_found') || 'الطالب غير موجود'}</div>
       </div>
     );
   }
@@ -194,22 +205,22 @@ export default function StudentProfile() {
 
   const getStatusStyle = (status) => {
     switch(status) {
-      case 'paused': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', label: t('status_paused') };
-      case 'inactive': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#EF4444', label: t('status_inactive') };
-      default: return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10B981', label: t('status_active') };
+      case 'paused': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', label: t('status_paused') || 'موقوف موقتاً' };
+      case 'inactive': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#EF4444', label: t('status_inactive') || 'غير نشط' };
+      default: return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10B981', label: t('status_active') || 'نشط' };
     }
   };
   const statusInfo = getStatusStyle(student.status);
 
   const statusOptions = [
-    { value: "active", label: t('status_active') },
-    { value: "paused", label: t('status_paused') },
-    { value: "inactive", label: t('status_inactive') }
+    { value: "active", label: t('status_active') || 'نشط' },
+    { value: "paused", label: t('status_paused') || 'موقوف' },
+    { value: "inactive", label: t('status_inactive') || 'غير نشط' }
   ];
 
   const genderOptions = [
-    { value: "male", label: t('gender_male') },
-    { value: "female", label: t('gender_female') }
+    { value: "male", label: t('gender_male') || 'ذكر' },
+    { value: "female", label: t('gender_female') || 'أنثى' }
   ];
 
   const countryOptions = COUNTRIES_LIST.map(c => ({
@@ -218,14 +229,15 @@ export default function StudentProfile() {
   }));
 
   const paymentOptions = [
-    { value: "monthly", label: t('plan_monthly') },
-    { value: "per_hour", label: t('plan_per_hour') },
-    { value: "free", label: t('plan_free') }
+    { value: "monthly", label: t('plan_monthly') || 'اشتراك شهري' },
+    { value: "per_hour", label: t('plan_per_hour') || 'بالساعة' },
+    { value: "free", label: t('plan_free') || 'مجاني / منحة' }
   ];
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '480px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '520px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
       
+      {/* التنبيهات المباشرة Toast Notification */}
       {inlineMessage.text && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '12px 20px', borderRadius: '30px', zIndex: 1200, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', fontSize: '14px', fontWeight: 'bold' }}>
           {inlineMessage.type === 'success' ? <FaCheckCircle /> : <FaExclamationCircle />}
@@ -235,14 +247,15 @@ export default function StudentProfile() {
 
       <PageHeader 
         title={isEditing ? "" : student.name}
-        sub={isEditing ? "" : `${t('student_id')}: #${student.id}`}
+        sub={isEditing ? "" : `${t('student_id') || 'كود الطالب'}: #${student.student_code || student.id.slice(0, 8)}`}
         action={
           <Btn variant="ghost" onClick={() => navigate(-1)} style={{ borderRadius: '20px' }}>
-            {isRtl ? <><FaArrowRight /> {t('back_to_classes')}</> : <><FaArrowLeft /> {t('back_to_classes')}</>}
+            {isRtl ? <><FaArrowRight /> {t('back') || 'رجوع'}</> : <><FaArrowLeft /> {t('back') || 'Back'}</>}
           </Btn>
         }
       />
 
+      {/* البطاقة العلوية للطالب */}
       <Card style={{ borderRadius: '16px 16px 0 0', display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', borderBottom: 'none' }}>
         
         <div style={{ position: 'absolute', top: '16px', left: isRtl ? '16px' : 'auto', right: isRtl ? 'auto' : '16px' }}>
@@ -260,8 +273,13 @@ export default function StudentProfile() {
           )}
         </div>
 
-        <div style={{ width: '54px', height: '54px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
-          {student.gender === 'female' ? '🧕' : '🙋‍♂️'}
+        {/* رمز الطالب مع مراعاة سياسة الخصوصية */}
+        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
+          {genderPolicy === 'separated' && student.gender === 'female' ? (
+            <FaUserGraduate style={{ color: '#EC4899', fontSize: '22px' }} />
+          ) : (
+            student.gender === 'female' ? '🧕' : '🙋‍♂️'
+          )}
         </div>
 
         <div style={{ flex: 1 }}>
@@ -278,18 +296,20 @@ export default function StudentProfile() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>
                 <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
                 <span>{matchedCountry ? (isRtl ? (matchedCountry.name_ar || matchedCountry.nameAr) : (matchedCountry.name_en || matchedCountry.nameEn)) : ''}</span>
-                {currentAge !== null && <span>• {currentAge} {t('years_old')}</span>}
+                {currentAge !== null && <span>• {currentAge} {t('years_old') || 'سنة'}</span>}
+                {student.halaqas?.name_ar && <span style={{ color: C.gold }}>• {student.halaqas.name_ar}</span>}
               </div>
             </div>
           )}
         </div>
       </Card>
 
+      {/* التبويبات الداخلية */}
       <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`, padding: '4px' }}>
         {[
-          { id: 'quran', label: t('tab_quran_track'), icon: <FaBookOpen size={12} /> },
-          { id: 'personal', label: t('tab_identity_contact'), icon: <FaInfoCircle size={12} /> },
-          { id: 'financial', label: t('tab_financials'), icon: <FaMoneyBillWave size={12} /> }
+          { id: 'quran', label: t('tab_quran_track') || 'مسار القرآن', icon: <FaBookOpen size={12} /> },
+          { id: 'personal', label: t('tab_identity_contact') || 'البيانات والتواصل', icon: <FaInfoCircle size={12} /> },
+          { id: 'financial', label: t('tab_financials') || 'المالية والملاحظات', icon: <FaMoneyBillWave size={12} /> }
         ].map(tab => (
           <Btn 
             key={tab.id}
@@ -302,12 +322,14 @@ export default function StudentProfile() {
         ))}
       </div>
 
+      {/* جسم البطاقة الرئيسي */}
       <Card style={{ borderRadius: '0 0 16px 16px', borderTop: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
+        {/* تبويب مسار القرآن والانجاز */}
         {activeTab === 'quran' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
-            {/* مؤشرات السلاسل اليومية الذكية (Streaks Widget) */}
+            {/* السلاسل والنقاط */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                 <FaFire size={20} style={{ color: '#EF4444' }} />
@@ -319,65 +341,57 @@ export default function StudentProfile() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(245, 158, 11, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                 <FaCrown size={18} style={{ color: '#F59E0B' }} />
                 <div style={{ textAlign: 'start' }}>
-                  <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{isRtl ? 'أطول سلسلة' : 'Longest Streak'}</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#F59E0B' }}>{student.longest_streak || 0} {isRtl ? 'يوم' : 'Days'}</div>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{isRtl ? 'إجمالي النقاط' : 'Total Points'}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#F59E0B' }}>{student.points || 0} {isRtl ? 'نقطة' : 'Pts'}</div>
                 </div>
               </div>
             </div>
 
-            {/* نظام الشارات التكيفية المبني على قواعد الإتقان */}
+            {/* نظام الشارات */}
             <div style={{ background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'start' }}>
               <div style={{ fontSize: '12px', color: C.gold, fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <FaAward style={{ color: C.gold }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {/* شارة السلسلة المتقدة */}
                 {(student.current_streak >= 3) && (
-                  <span style={{ background: 'linear-gradient(135deg, #EF4444, #F59E0B)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}>
+                  <span style={{ background: 'linear-gradient(135deg, #EF4444, #F59E0B)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     🔥 {isRtl ? 'شعلة الحفظ' : 'Hifz Spark'}
                   </span>
                 )}
-                {/* شارة تقدم الأرباح والأجزاء */}
                 {(student.current_quarter_index >= 8) && (
-                  <span style={{ background: 'linear-gradient(135deg, #3B82F6, #10B981)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>
+                  <span style={{ background: 'linear-gradient(135deg, #3B82F6, #10B981)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     ⭐ {isRtl ? 'مُتقن الأجزاء' : 'Juz Mastery'}
                   </span>
                 )}
-                {/* شارة المثابرة والإنتاجية الأسبوعية */}
                 {weeklyData.length >= 4 && (
-                  <span style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(139,92,246,0.3)' }}>
+                  <span style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     👑 {isRtl ? 'المثابر الأسبوعي' : 'Weekly Achiever'}
-                  </span>
-                )}
-                {/* رسالة حالة فارغة تحفيزية */}
-                {(!student.current_streak || student.current_streak < 3) && (student.current_quarter_index || 0) < 8 && weeklyData.length < 4 && (
-                  <span style={{ color: '#6B7280', fontSize: '11px', fontStyle: 'italic' }}>
-                    {isRtl ? 'سيتم فتح الشارات التكيفية عند زيادة الالتزام والحفظ التدريجي.' : 'Badges unlock with consistent daily logs and progress.'}
                   </span>
                 )}
               </div>
             </div>
 
+            {/* شريط التقدم والسورة */}
             <div style={{ background: '#0C1520', padding: '14px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', textAlign: 'start' }}>
                 <span style={{ fontSize: '12px', color: C.gold, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <FaCheckSquare style={{color: '#10B981'}} /> {t('current_memorization_progress')}
+                  <FaCheckSquare style={{color: '#10B981'}} /> {t('current_memorization_progress') || 'التقدم الحفظي الحالي'}
                 </span>
               </div>
               <div style={{ margin: '8px 0 12px 0' }}>
                 <QuranProgressBar currentQuarterIndex={student.current_quarter_index || 0} />
               </div>
               <div style={{ background: '#111827', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', border: `1px solid ${C.border}` }}>
-                <span style={{ color: '#9CA3AF' }}>{t('current_surah')}</span>
-                <span style={{ fontWeight: 'bold', color: '#10B981' }}>{student.current_surah || t('not_specified')}</span>
+                <span style={{ color: '#9CA3AF' }}>{t('current_juz') || 'الجزء الحالي'}</span>
+                <span style={{ fontWeight: 'bold', color: '#10B981' }}>{t('juz') || 'الجزء'} {student.current_juz || 1}</span>
               </div>
             </div>
 
+            {/* رسم بياني للإنجاز */}
             <div className="w-full">
               {chartLoading ? (
                 <div style={{ background: '#0C1520', padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'center', fontSize: '12px', color: '#9CA3AF' }}>
-                  <span style={{ display: 'inline-block', marginRight: '6px' }}>⏳</span>
-                  {isRtl ? 'جاري تحليل منحنى الإنجاز الأسبوعي من السجلات...' : 'Analyzing weekly achievement logs...'}
+                  ⏳ {isRtl ? 'جاري تحليل منحنى الإنجاز الأسبوعي...' : 'Analyzing weekly achievement logs...'}
                 </div>
               ) : (
                 <AchievementChart data={weeklyData} isRtl={isRtl} />
@@ -386,10 +400,12 @@ export default function StudentProfile() {
 
             {isEditing && (
               <div style={{ background: '#0C1520', padding: '14px', borderRadius: '12px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'start' }}><FaGraduationCap /> {t('update_progress_selector')}</label>
+                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'start' }}>
+                  <FaGraduationCap /> {t('update_progress_selector') || 'تعديل موضع الحفظ'}
+                </label>
                 <div style={{ background: '#111827', padding: '6px', borderRadius: '8px', border: `1px solid ${C.border}` }}>
                   <QuranProgressSelector 
-                    initialIndex={parseInt(student.current_quarter_index) || 0} 
+                    initialIndex={parseInt(student.current_quarter_index, 10) || 0} 
                     onIndexChange={(idx) => setStudent(prev => ({ ...prev, current_quarter_index: idx }))}
                   />
                 </div>
@@ -398,18 +414,19 @@ export default function StudentProfile() {
           </div>
         )}
 
+        {/* تبويب البيانات والتواصل */}
         {activeTab === 'personal' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <Select 
-                label={t("gender")} 
+                label={t("gender") || 'الجنس'} 
                 value={student.gender || "male"} 
                 onChange={(e) => setStudent({...student, gender: e.target.value})} 
                 disabled={!isEditing}
                 options={genderOptions}
               />
               <Input 
-                label={t('birth_date')} 
+                label={t('birth_date') || 'تاريخ الميلاد'} 
                 type="date" 
                 value={student.birth_date || ""} 
                 onChange={(e) => setStudent({...student, birth_date: e.target.value})} 
@@ -418,7 +435,7 @@ export default function StudentProfile() {
             </div>
 
             <Select 
-              label={t('country_geographic_region')} 
+              label={t('country_geographic_region') || 'الدولة / المنطقة'} 
               value={student.country || student.country_code || "EG"} 
               onChange={(e) => setStudent({...student, country: e.target.value, country_code: e.target.value})} 
               disabled={!isEditing}
@@ -427,9 +444,9 @@ export default function StudentProfile() {
 
             <div style={{ background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <Input 
-                label={t('parent_custody_name')} 
+                label={t('parent_custody_name') || 'اسم ولي الأمر'} 
                 value={student.parent_name || ""} 
-                placeholder={t('not_specified')} 
+                placeholder={t('not_specified') || 'غير محدد'} 
                 onChange={(e) => setStudent({...student, parent_name: e.target.value})} 
                 disabled={!isEditing}
               />
@@ -437,10 +454,10 @@ export default function StudentProfile() {
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <Input 
-                    label={t('contact_hotline')} 
+                    label={t('contact_hotline') || 'رقم هاتف التواصل'} 
                     type="tel" 
                     value={student.parent_phone || ""} 
-                    placeholder={t('not_specified')} 
+                    placeholder={t('not_specified') || 'غير محدد'} 
                     onChange={(e) => setStudent({...student, parent_phone: e.target.value})} 
                     disabled={!isEditing}
                     style={{ textAlign: 'left', direction: 'ltr' }} 
@@ -462,21 +479,22 @@ export default function StudentProfile() {
           </div>
         )}
 
+        {/* تبويب المالية والملاحظات */}
         {activeTab === 'financial' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <Select 
-              label={t('financial_tariff_plan')} 
-              value={student.subscription_system || student.payment_plan || "monthly"} 
-              onChange={(e) => setStudent({...student, subscription_system: e.target.value, payment_plan: e.target.value})} 
+              label={t('financial_tariff_plan') || 'نظام الاشتراك'} 
+              value={student.subscription_system || "monthly"} 
+              onChange={(e) => setStudent({...student, subscription_system: e.target.value})} 
               disabled={!isEditing}
               options={paymentOptions}
             />
 
             <Input 
-              label={t('academic_teacher_notes')} 
+              label={t('academic_teacher_notes') || 'ملاحظات المعلم والأكاديمية'} 
               as="textarea"
               value={student.notes || ""} 
-              placeholder={t('academic_notes_placeholder')} 
+              placeholder={t('academic_notes_placeholder') || 'اكتب أي ملاحظات خاصة بالطالب...'} 
               onChange={(e) => setStudent({...student, notes: e.target.value})} 
               disabled={!isEditing}
               style={{ minHeight: '100px', lineHeight: '1.5' }}
@@ -484,19 +502,20 @@ export default function StudentProfile() {
           </div>
         )}
 
+        {/* أزرار الحفظ والتعديل */}
         <div style={{ marginTop: '4px' }}>
           {isEditing ? (
             <div style={{ display: 'flex', gap: '10px' }}>
               <Btn variant="success" onClick={handleUpdate} disabled={saving} style={{ flex: 1, padding: '12px' }}>
-                <FaSave /> {saving ? t("saving") : t('save_changes')}
+                <FaSave /> {saving ? (t("saving") || "جاري الحفظ...") : (t('save_changes') || "حفظ التغييرات")}
               </Btn>
               <Btn variant="ghost" onClick={() => setIsEditing(false)} style={{ flex: 1, padding: '12px' }}>
-                <FaTimes /> {t("cancel")}
+                <FaTimes /> {t("cancel") || "إلغاء"}
               </Btn>
             </div>
           ) : (
             <Btn variant="primary" onClick={() => setIsEditing(true)} style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}>
-              <FaEdit /> {t('edit_full_profile')}
+              <FaEdit /> {t('edit_full_profile') || "تعديل بيانات الملف الشخصي"}
             </Btn>
           )}
         </div>
