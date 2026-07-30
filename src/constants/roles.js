@@ -22,7 +22,7 @@ export const DEFAULT_ROUTE = '/';
 // 4. دالة مساعدة لتنظيف مسمى الدور وتوحيده
 const sanitizeRole = (role) => (typeof role === 'string' ? role.toLowerCase().trim() : '');
 
-// 5. دوال مساعدة للتحقق من الصلاحيات (شاملة ومُؤمّنة)
+// 5. دوال مساعدة للتحقق من الصلاحيات
 export const isSuperAdmin = (role) => sanitizeRole(role) === ROLES.SUPER_ADMIN;
 export const isAdmin = (role) => sanitizeRole(role) === ROLES.ADMIN;
 export const isTeacher = (role) => sanitizeRole(role) === ROLES.TEACHER;
