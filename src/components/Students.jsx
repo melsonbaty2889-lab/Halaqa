@@ -51,7 +51,18 @@ export default function StudentsList() {
     }
   };
 
-  // Filtering Logic
+  // Helper function to check gender safely
+  const checkIsMale = (student) => {
+    const g = String(student.gender || '').trim().toLowerCase();
+    return g === 'male' || g === 'ذكر' || g === 'm';
+  };
+
+  const checkIsFemale = (student) => {
+    const g = String(student.gender || '').trim().toLowerCase();
+    return g === 'female' || g === 'أنثى' || g === 'f';
+  };
+
+  // Dynamic Filtering Logic
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       const status = student.status || 'active';
@@ -65,11 +76,8 @@ export default function StudentsList() {
       if (selectedHalaqa !== 'all' && selectedHalaqa !== 'no_halaqa' && String(student.halaqa_id) !== String(selectedHalaqa)) return false;
 
       // Gender Filter
-      if (selectedGender !== 'all') {
-        const g = (student.gender || '').toLowerCase();
-        if (selectedGender === 'male' && !(g === 'male' || g === 'ذكر')) return false;
-        if (selectedGender === 'female' && !(g === 'female' || g === 'أنثى')) return false;
-      }
+      if (selectedGender === 'male' && !checkIsMale(student)) return false;
+      if (selectedGender === 'female' && !checkIsFemale(student)) return false;
 
       // Search Query
       if (searchTerm.trim()) {
@@ -85,20 +93,11 @@ export default function StudentsList() {
 
   // Statistics Calculation
   const stats = useMemo(() => {
-    const isMale = (s) => {
-      const g = (s.gender || '').toLowerCase();
-      return g === 'male' || g === 'ذكر';
-    };
-    const isFemale = (s) => {
-      const g = (s.gender || '').toLowerCase();
-      return g === 'female' || g === 'أنثى';
-    };
-
     return {
       displayed: filteredStudents.length,
       noHalaqa: filteredStudents.filter(s => !s.halaqa_id).length,
-      males: filteredStudents.filter(isMale).length,
-      females: filteredStudents.filter(isFemale).length,
+      males: filteredStudents.filter(checkIsMale).length,
+      females: filteredStudents.filter(checkIsFemale).length,
     };
   }, [filteredStudents]);
 
@@ -107,6 +106,7 @@ export default function StudentsList() {
     e.stopPropagation();
     const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
 
+    // Optimistic UI Update
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus } : s));
 
     try {
@@ -116,8 +116,10 @@ export default function StudentsList() {
         .eq('id', studentId);
 
       if (error) {
+        console.error('Supabase Update Error:', error);
+        // Rollback on failure
         setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus } : s));
-        alert('حدث خطأ أثناء تحديث الحالة');
+        alert('لم يتم الحفظ في قاعدة البيانات: يرجى التأكد من تشغيل أمر SQL لإضافة عمود status');
       }
     } catch (err) {
       console.error(err);
@@ -379,7 +381,7 @@ export default function StudentsList() {
                     fontSize: '20px',
                     border: '1px solid #334155'
                   }}>
-                    {((student.gender || '').toLowerCase() === 'female' || student.gender === 'أنثى') ? '🧕' : '👨‍🎓'}
+                    {checkIsFemale(student) ? '🧕' : '👨‍🎓'}
                   </div>
 
                   <div style={{ flex: 1 }}>
@@ -479,4 +481,4 @@ export default function StudentsList() {
       )}
     </div>
   );
-        }
+}
