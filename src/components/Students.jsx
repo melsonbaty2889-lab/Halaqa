@@ -151,7 +151,7 @@ export default function StudentsList() {
           onClick={() => setSelectedStatus(prev => prev === 'active' ? 'archived' : 'active')}
           style={{ padding: '8px 4px', fontSize: '11px', borderRadius: '10px' }}
         >
-          <FaArchive /> {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
+          <FaBoxArchive /> {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
         </Btn>
 
         <Btn 
