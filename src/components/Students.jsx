@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { 
   FaUserPlus, FaFileExcel, FaBoxArchive, 
   FaUserGraduate, FaVenus, FaMars, FaLayerGroup, 
-  FaEye, FaWhatsapp, FaBookOpen, FaRotateLeft, FaPhone
+  FaEye, FaWhatsapp, FaBookOpen, FaRotateLeft
 } from 'react-icons/fa6';
 
 export default function StudentsList() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
   const [students, setStudents] = useState([]);
@@ -21,7 +21,7 @@ export default function StudentsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedHalaqa, setSelectedHalaqa] = useState('all');
   const [selectedGender, setSelectedGender] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('active'); // 'active' | 'archived'
+  const [selectedStatus, setSelectedStatus] = useState('active');
 
   useEffect(() => {
     fetchData();
@@ -51,7 +51,7 @@ export default function StudentsList() {
     }
   };
 
-  // 1. Filtering Logic Fix
+  // Filtering Logic
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       const status = student.status || 'active';
@@ -64,7 +64,7 @@ export default function StudentsList() {
       if (selectedHalaqa === 'no_halaqa' && student.halaqa_id) return false;
       if (selectedHalaqa !== 'all' && selectedHalaqa !== 'no_halaqa' && String(student.halaqa_id) !== String(selectedHalaqa)) return false;
 
-      // Gender Filter (Fix for Arabic & English strings)
+      // Gender Filter
       if (selectedGender !== 'all') {
         const g = (student.gender || '').toLowerCase();
         if (selectedGender === 'male' && !(g === 'male' || g === 'ذكر')) return false;
@@ -83,7 +83,7 @@ export default function StudentsList() {
     });
   }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm]);
 
-  // 2. Statistics Calculation Fix
+  // Statistics Calculation
   const stats = useMemo(() => {
     const isMale = (s) => {
       const g = (s.gender || '').toLowerCase();
@@ -102,12 +102,11 @@ export default function StudentsList() {
     };
   }, [filteredStudents]);
 
-  // 3. Toggle Archive Action Fix
+  // Toggle Archive Action
   const handleToggleArchive = async (e, studentId, currentStatus) => {
-    e.stopPropagation(); // منع تداخل الضغط
+    e.stopPropagation();
     const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
 
-    // التحديث المحلي الفوري لسرعة الاستجابة
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus } : s));
 
     try {
@@ -117,7 +116,6 @@ export default function StudentsList() {
         .eq('id', studentId);
 
       if (error) {
-        // إعادة الحالة الأصلية في حال فشل الاتصال
         setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus } : s));
         alert('حدث خطأ أثناء تحديث الحالة');
       }
@@ -224,7 +222,6 @@ export default function StudentsList() {
 
       {/* KPI Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-        
         <div style={{ background: '#1E293B', borderRadius: '14px', padding: '14px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>{isRtl ? 'العدد المعروض' : 'Displayed'}</div>
@@ -264,13 +261,10 @@ export default function StudentsList() {
             <FaVenus size={18} />
           </div>
         </div>
-
       </div>
 
       {/* Search & Select Filters */}
       <div style={{ background: '#1E293B', borderRadius: '14px', padding: '14px', border: '1px solid #334155', marginBottom: '20px' }}>
-        
-        {/* Search Field */}
         <input 
           type="text"
           placeholder={isRtl ? '🔍 ابحث باسم الطالب أو رقم الهاتف...' : '🔍 Search student name or phone...'}
@@ -290,9 +284,7 @@ export default function StudentsList() {
           }}
         />
 
-        {/* Dropdowns */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: '#94A3B8', marginBottom: '4px' }}>
               {isRtl ? 'تصفية بالحلقة' : 'Halaqa'}
@@ -344,7 +336,6 @@ export default function StudentsList() {
               <option value="female">{isRtl ? 'إناث فقط' : 'Females Only'}</option>
             </select>
           </div>
-
         </div>
       </div>
 
@@ -358,9 +349,6 @@ export default function StudentsList() {
           <div style={{ fontSize: '28px', marginBottom: '8px' }}>📬</div>
           <div style={{ color: '#CBD5E1', fontSize: '14px', fontWeight: 'bold' }}>
             {isRtl ? 'لم يتم العثور على نتائج مطابقة' : 'No matching results'}
-          </div>
-          <div style={{ color: '#64748B', fontSize: '12px', marginTop: '4px' }}>
-            {isRtl ? 'حاول إزالة الفلاتر أو البحث باسم آخر' : 'Try clearing filters'}
           </div>
         </div>
       ) : (
@@ -380,8 +368,6 @@ export default function StudentsList() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  
-                  {/* Avatar Icon */}
                   <div style={{ 
                     width: '44px', 
                     height: '44px', 
@@ -396,7 +382,6 @@ export default function StudentsList() {
                     {((student.gender || '').toLowerCase() === 'female' || student.gender === 'أنثى') ? '🧕' : '👨‍🎓'}
                   </div>
 
-                  {/* Student Info */}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC', marginBottom: '4px' }}>
                       {student.name}
@@ -420,7 +405,6 @@ export default function StudentsList() {
                     </div>
                   </div>
 
-                  {/* Direct WhatsApp Call */}
                   {student.parent_phone && (
                     <a 
                       href={`https://wa.me/${student.parent_phone.replace(/\+/g, '')}`} 
@@ -437,17 +421,13 @@ export default function StudentsList() {
                         justifyContent: 'center',
                         textDecoration: 'none'
                       }}
-                      title={isRtl ? 'تواصل عبر واتساب' : 'WhatsApp'}
                     >
                       <FaWhatsapp size={18} />
                     </a>
                   )}
                 </div>
 
-                {/* Actions Footer */}
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(51, 65, 85, 0.5)' }}>
-                  
-                  {/* View Details */}
                   <button
                     type="button"
                     onClick={() => navigate(`/students/${student.id}`)}
@@ -471,7 +451,6 @@ export default function StudentsList() {
                     {isRtl ? 'عرض التفاصيل' : 'View Details'}
                   </button>
 
-                  {/* Archive / Restore Button */}
                   <button
                     type="button"
                     onClick={(e) => handleToggleArchive(e, student.id, student.status)}
@@ -492,8 +471,12 @@ export default function StudentsList() {
                     {isStudentArchived ? <FaRotateLeft size={12} /> : <FaBoxArchive size={12} />}
                     {isStudentArchived ? (isRtl ? 'استعادة' : 'Restore') : (isRtl ? 'أرشفة' : 'Archive')}
                   </button>
-
                 </div>
               </div>
             );
-      
+          })}
+        </div>
+      )}
+    </div>
+  );
+        }
