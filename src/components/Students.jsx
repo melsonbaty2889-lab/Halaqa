@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { C } from '../constants/colors';
 import { Btn, Card, Input, Select, PageHeader } from '../components/UI';
 import { 
-  FaUserPlus, FaFileExcel, FaArchive, FaSearch, 
+  FaUserPlus, FaFileExcel, FaBoxArchive, FaSearch, 
   FaUserGraduate, FaVenus, FaMars, FaLayerGroup, 
   FaEye, FaBoxArchive, FaWhatsapp, FaBookOpen 
 } from 'react-icons/fa6';
