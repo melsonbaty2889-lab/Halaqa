@@ -1,31 +1,36 @@
-// 1. التعريف القياسي لأدوار النظام (تطابق القيم في Supabase)
-export const ROLES = {
+// 1. التعريف القياسي لأدوار النظام (تطابق القيم بالضبط مع Supabase)
+export const ROLES = Object.freeze({
   SUPER_ADMIN: 'super_admin', // المدير العام
   ADMIN: 'admin',             // مدير الأكاديمية
   TEACHER: 'teacher',         // معلم / محفظ
   STUDENT: 'student',         // طالب
   PARENT: 'parent',           // ولي أمر
-};
+});
 
 // 2. خريطة التوجيه الموحدة للمسارات (Routes Mapping)
-export const ROLE_ROUTES = {
+export const ROLE_ROUTES = Object.freeze({
   [ROLES.SUPER_ADMIN]: '/admin-dashboard',
   [ROLES.ADMIN]: '/academy-dashboard',
   [ROLES.TEACHER]: '/teacher-dashboard',
   [ROLES.STUDENT]: '/student-dashboard',
   [ROLES.PARENT]: '/parent-dashboard',
-};
+});
 
-// 3. المسار الافتراضي للتحويل عند عدم التعرف على الدور
+// 3. المسار الافتراضي عند عدم التعرف على الدور (شبكة الأمان للأمان وتجربة المستخدم)
 export const DEFAULT_ROUTE = '/';
 
-// 4. دوال مساعدة للتحقق من الصلاحيات والمسارات
-export const isSuperAdmin = (role) => role?.toLowerCase() === ROLES.SUPER_ADMIN;
-export const isAdmin = (role) => role?.toLowerCase() === ROLES.ADMIN;
-export const isTeacher = (role) => role?.toLowerCase() === ROLES.TEACHER;
-export const isStudent = (role) => role?.toLowerCase() === ROLES.STUDENT;
+// 4. دالة مساعدة لتنظيف مسمى الدور وتوحيده
+const sanitizeRole = (role) => (typeof role === 'string' ? role.toLowerCase().trim() : '');
 
+// 5. دوال مساعدة للتحقق من الصلاحيات (شاملة ومُؤمّنة)
+export const isSuperAdmin = (role) => sanitizeRole(role) === ROLES.SUPER_ADMIN;
+export const isAdmin = (role) => sanitizeRole(role) === ROLES.ADMIN;
+export const isTeacher = (role) => sanitizeRole(role) === ROLES.TEACHER;
+export const isStudent = (role) => sanitizeRole(role) === ROLES.STUDENT;
+export const isParent = (role) => sanitizeRole(role) === ROLES.PARENT;
+
+// 6. دالة جلب المسار بناءً على الدور
 export const getRouteForRole = (role) => {
-  const cleanRole = role?.toLowerCase()?.trim();
+  const cleanRole = sanitizeRole(role);
   return ROLE_ROUTES[cleanRole] || DEFAULT_ROUTE;
 };
