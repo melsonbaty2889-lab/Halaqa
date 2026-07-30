@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { handleAuthError } from '../utils/errorHandler';
+import { loginSchema, validateFormData } from '../schemas/auth';
 import { 
   FaEnvelope, 
   FaLock, 
@@ -14,6 +16,8 @@ import { FcGoogle } from 'react-icons/fc';
 
 export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginSuccess }) {
   const { i18n } = useTranslation();
+  const navigate = useNavigate();
+  
   const currentLang = i18n?.language || 'ar';
   const isRtl = currentLang === 'ar';
 
@@ -24,7 +28,10 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   
-  // إدارة حالات الخطأ والتفعيل
+  // أخطاء الحقول والتحقق (Zod Validation)
+  const [fieldErrors, setFieldErrors] = useState({});
+  
+  // إدارة حالات الخطأ العامة والتفعيل
   const [status, setStatus] = useState({ type: null, msg: '' });
   const [showResend, setShowResend] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -39,18 +46,34 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
+    setFieldErrors({});
     setShowResend(false);
+
+    // أ. التحقق من المدخلات بواسطة Zod قبل إرسال الطلب
+    const validationResult = validateFormData(
+      { email: email.trim(), password: password.trim() },
+      loginSchema
+    );
+
+    if (!validationResult.valid) {
+      setFieldErrors(validationResult.errors);
+      setStatus({
+        type: 'error',
+        msg: isRtl ? 'يرجى تصحيح الأخطاء الموضحة أدناه' : 'Please correct the errors below'
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // أ. تسجيل الدخول في Supabase Auth
+      // ب. تسجيل الدخول في Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
+        email: validationResult.data.email,
+        password: validationResult.data.password,
       });
 
       if (authError) {
-        // إظهار زر إعادة الإرسال في حالة عدم تفعيل الإيميل
         if (authError.message === 'Email not confirmed') {
           setShowResend(true);
         }
@@ -59,7 +82,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
 
       const user = authData.user;
 
-      // ب. تحديث حالة الاتصال وآخر تسجيل دخول في profiles
+      // ج. تحديث حالة الاتصال وآخر تسجيل دخول
       await supabase
         .from('profiles')
         .update({ 
@@ -68,7 +91,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         })
         .eq('id', user.id);
 
-      // ج. جلب الـ Profile للتأكد من الدور (Role) وحالة الحساب
+      // د. جلب الـ Profile للتأكد من الدور وحالة الحساب
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, academy_id, is_activated, is_deleted')
@@ -87,9 +110,20 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         msg: isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...' : '✅ Logged in successfully! Redirecting...'
       });
 
-      // د. التوجيه المباشر بدون عمل Refresh
+      // هـ. التوجيه المباشر (دعم React Router والتكالم مع Props)
       if (onLoginSuccess) {
         onLoginSuccess({ user, profile });
+      } else {
+        const role = profile?.role?.toLowerCase().trim() || 'student';
+        const routeMap = {
+          admin: '/admin-dashboard',
+          super_admin: '/admin-dashboard',
+          teacher: '/teacher-dashboard',
+          academy_admin: '/academy-dashboard',
+          student: '/student-dashboard',
+          parent: '/parent-dashboard',
+        };
+        navigate(routeMap[role] || '/dashboard');
       }
 
     } catch (err) {
@@ -121,7 +155,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         type: 'signup',
         email: email.trim(),
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: `${window.location.origin}?lang=${currentLang}`
         }
       });
 
@@ -168,17 +202,18 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
     }
   };
 
-  const inputStyle = {
+  const getInputStyle = (hasError) => ({
     width: '100%',
     padding: '16px 45px 16px 45px',
     borderRadius: '12px',
-    border: '1px solid #1E2D3D',
+    border: hasError ? '1px solid #EF4444' : '1px solid #1E2D3D',
     background: '#0B131E',
     color: '#ffffff',
     fontSize: '15px',
     outline: 'none',
-    boxSizing: 'border-box'
-  };
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s ease'
+  });
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#090E17', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
@@ -196,7 +231,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
       {/* الكارت الرئيسي */}
       <div style={{ width: '100%', maxWidth: '420px', background: '#0D1724', padding: '35px 24px', borderRadius: '24px', border: '1px solid #1A2738', boxShadow: '0 20px 40px rgba(0,0,0,0.6)', position: 'relative' }}>
         
-        {/* زر تغير اللغة */}
+        {/* زر تغيير اللغة */}
         <div style={{ position: 'absolute', top: '-50px', [isRtl ? 'left' : 'right']: '0' }}>
           <button 
             type="button"
@@ -282,12 +317,19 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             <input 
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+              }}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
-              required
-              style={inputStyle}
+              style={getInputStyle(!!fieldErrors.email)}
             />
-            <FaEnvelope style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '16px', color: '#64748B' }} />
+            <FaEnvelope style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '16px', color: fieldErrors.email ? '#EF4444' : '#64748B' }} />
+            {fieldErrors.email && (
+              <span style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', display: 'block', paddingRight: '4px' }}>
+                {fieldErrors.email}
+              </span>
+            )}
           </div>
 
           {/* حقل كلمة المرور */}
@@ -295,18 +337,25 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             <input 
               type={showPassword ? 'text' : 'password'}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+              }}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
-              required
-              style={inputStyle}
+              style={getInputStyle(!!fieldErrors.password)}
             />
-            <FaLock style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '16px', color: '#64748B' }} />
+            <FaLock style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '16px', color: fieldErrors.password ? '#EF4444' : '#64748B' }} />
             <span 
               onClick={() => setShowPassword(!showPassword)}
               style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '16px', color: '#64748B', cursor: 'pointer' }}
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
+            {fieldErrors.password && (
+              <span style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', display: 'block', paddingRight: '4px' }}>
+                {fieldErrors.password}
+              </span>
+            )}
           </div>
 
           {/* تذكرني + نسيت كلمة المرور */}
