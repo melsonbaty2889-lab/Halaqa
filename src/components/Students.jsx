@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { Card, Badge, Btn, TH, TD } from './UI';
@@ -6,37 +6,38 @@ import { useTranslation } from 'react-i18next';
 import { COUNTRIES_LIST } from '../constants/countries';
 import QuranProgressSelector from './QuranProgressSelector';
 import { getQuranProgress } from '../utils/quranUtils';
+import { 
+  FaUserPlus, FaArchive, FaSearch, FaWhatsapp, 
+  FaUserGraduate, FaUsers, FaExclamationTriangle, FaFilter 
+} from 'react-icons/fa';
 
-// دالة حساب التاريخ المزدوج المستقلة
-const getDualDateString = (lang, isRtl) => {
-  const today = new Date();
-  const gregOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const gregPart = today.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', gregOptions);
-  
-  try {
-    const hijriOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
-    let hijriPart = today.toLocaleDateString(
-      lang === 'ar' ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura', 
-      hijriOptions
-    );
-    hijriPart = hijriPart.replace(/\bBC\b/g, 'AH').replace(/\bقبل الميلاد\b/g, 'هـ');
-    return isRtl ? `${gregPart} مـ | 🗓️ هجري: ${hijriPart}` : `${gregPart} AD | 🗓️ Hijri: ${hijriPart}`;
-  } catch (e) {
-    return gregPart;
-  }
-};
-
-// =========================================================================
-// 1. المكون الرئيسي الموحد (Orchestrator Component)
-// =========================================================================
-export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas = [] }) {
+export default function Students({ academyId, refreshTrigger, halaqas = [] }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
-  const dualDateString = useMemo(() => getDualDateString(currentLang, isRtl), [currentLang, isRtl]);
-  const [mainTab, setMainTab] = useState('students');
+  // حالات العرض والبحث والفلترة
+  const [studentViewMode, setStudentViewMode] = useState('active'); // 'active' or 'archive'
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [studentsList, setStudentsList] = useState([]);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [selectedHalaqaFilter, setSelectedHalaqaFilter] = useState('all');
+  const [selectedGenderFilter, setSelectedGenderFilter] = useState('all');
+  const [studentLoading, setStudentLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // نموذج الإضافة
+  const [studentFormData, setStudentFormData] = useState({
+    name: '', 
+    gender: 'male', 
+    parent_name: '', 
+    country_code: 'EG',
+    parent_phone: '', 
+    subscription_type: 'monthly', 
+    quarter_index: 1, 
+    notes: '', 
+    halaqa_id: ''
+  });
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -50,106 +51,12 @@ export default function StudentsAndTeachers({ academyId, refreshTrigger, halaqas
     return isRtl ? fallbackAr : fallbackEn;
   };
 
-  return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif", paddingBottom: '40px' }}>
-      
-      {/* رأس الصفحة */}
-      <div style={{ marginBottom: '20px', textAlign: isRtl ? 'right' : 'left' }}>
-        <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: C.gold, margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
-          {trans('mainModuleTitle', 'إدارة شؤون الأكاديمية العظمى', 'Academy Corporate Management')} 🎓
-        </h2>
-        <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', fontWeight: '600', opacity: 0.9 }}>
-          {dualDateString}
-        </p>
-      </div>
-
-      {/* شريط الإشعارات والتحذيرات */}
-      {errorMessage && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>⚠️ {errorMessage}</span>
-          <button onClick={() => setErrorMessage('')} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', marginRight: 'auto', marginLeft: isRtl ? '0' : 'auto' }}>✖</button>
-        </div>
-      )}
-
-      {/* التبويبات العلوية */}
-      <div style={{ display: 'flex', background: '#162030', padding: '6px', borderRadius: '14px', marginBottom: '24px', gap: '6px' }}>
-        <button
-          onClick={() => { setMainTab('students'); setErrorMessage(''); }}
-          style={{
-            flex: 1, padding: '12px 8px', borderRadius: '10px', border: 'none',
-            background: mainTab === 'students' ? C.gold : 'transparent',
-            color: mainTab === 'students' ? '#0f172a' : '#94a3b8',
-            fontWeight: '800', fontSize: isMobile ? '13px' : '15px', cursor: 'pointer', transition: 'all 0.2s'
-          }}
-        >
-          👨‍🎓 {trans('tabStudentsLabel', 'شؤون الطلاب', 'Students Division')}
-        </button>
-        <button
-          onClick={() => { setMainTab('teachers'); setErrorMessage(''); }}
-          style={{
-            flex: 1, padding: '12px 8px', borderRadius: '10px', border: 'none',
-            background: mainTab === 'teachers' ? C.gold : 'transparent',
-            color: mainTab === 'teachers' ? '#0f172a' : '#94a3b8',
-            fontWeight: '800', fontSize: isMobile ? '13px' : '15px', cursor: 'pointer', transition: 'all 0.2s'
-          }}
-        >
-          🕌 {trans('tabTeachersLabel', 'هيئة المحفظين والمعلمين', 'Teachers & Faculty')}
-        </button>
-      </div>
-
-      {/* التبويب النشط */}
-      {mainTab === 'students' ? (
-        <StudentsSection 
-          academyId={academyId} 
-          refreshTrigger={refreshTrigger} 
-          halaqas={halaqas} 
-          isMobile={isMobile} 
-          isRtl={isRtl} 
-          trans={trans}
-          setExternalError={setErrorMessage}
-          currentLang={currentLang}
-        />
-      ) : (
-        <TeachersSection 
-          academyId={academyId} 
-          refreshTrigger={refreshTrigger} 
-          isMobile={isMobile} 
-          isRtl={isRtl} 
-          trans={trans}
-          setExternalError={setErrorMessage}
-          currentLang={currentLang}
-        />
-      )}
-    </div>
-  );
-}
-
-// =========================================================================
-// 2. مكون إدارة الطلاب الفرعي (Students Section Component)
-// =========================================================================
-function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, trans, setExternalError, currentLang }) {
-  const [studentViewMode, setStudentViewMode] = useState('active');
-  const [showStudentForm, setShowStudentForm] = useState(false);
-  const [studentsList, setStudentsList] = useState([]);
-  const [studentSearch, setStudentSearch] = useState('');
-  const [studentLoading, setStudentLoading] = useState(false);
-  const [studentFormData, setStudentFormData] = useState({
-    name: '', 
-    gender: 'male', 
-    parent_name: '', 
-    country_code: 'EG',
-    parent_phone: '', 
-    subscription_type: 'monthly', 
-    quarter_index: 1, 
-    notes: '', 
-    halaqa_id: ''
-  });
-
+  // جلب بيانات الطلاب من قاعدة البيانات
   useEffect(() => {
     const fetchStudents = async () => {
       if (!academyId) return;
       setStudentLoading(true);
-      setExternalError('');
+      setErrorMessage('');
       const { data, error } = await supabase
         .from('students')
         .select('*')
@@ -158,7 +65,7 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
         .order('created_at', { ascending: false });
 
       if (error) {
-        setExternalError(trans('fetchError', 'حدث خطأ أثناء جلب البيانات من السيرفر', 'Error fetching data'));
+        setErrorMessage(trans('fetchError', 'حدث خطأ أثناء جلب بيانات الطلاب', 'Error fetching students data'));
       } else if (data) {
         setStudentsList(data);
       }
@@ -167,18 +74,18 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
     fetchStudents();
   }, [academyId, studentViewMode, refreshTrigger]);
 
+  // إضافة طالب جديد
   const handleCreateStudent = async (e) => {
     e.preventDefault();
-    setExternalError('');
+    setErrorMessage('');
     if (!studentFormData.name.trim() || !studentFormData.parent_phone.trim()) {
-      return setExternalError(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية (*)', 'Fill required fields (*)'));
+      return setErrorMessage(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية (*)', 'Fill required fields (*)'));
     }
     
     const selectedCountry = COUNTRIES_LIST.find(c => c.code === studentFormData.country_code);
     const cleanPhone = studentFormData.parent_phone.trim().replace(/^0+/, '').replace(/\D/g, '');
     const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
 
-    // حساب التفاصيل القرآنية بناءً على الربع المختار
     const qProgress = getQuranProgress(studentFormData.quarter_index);
 
     const payload = {
@@ -199,7 +106,7 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
 
     const { data, error } = await supabase.from('students').insert(payload).select();
     if (error) {
-      setExternalError(trans('saveError', 'فشل في حفظ البيانات، يرجى المحاولة لاحقاً', 'Failed to save data'));
+      setErrorMessage(trans('saveError', 'فشل حفظ بيانات الطالب، يرجى المحاولة لاحقاً', 'Failed to save student data'));
     } else if (data) {
       setStudentsList(prev => [data[0], ...prev]);
       setShowStudentForm(false);
@@ -210,48 +117,141 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
     }
   };
 
+  // أرشفة وتنشيط
   const toggleArchiveStudent = async (id, currentStatus) => {
-    setExternalError('');
+    setErrorMessage('');
     const { error } = await supabase.from('students').update({ is_archived: !currentStatus }).eq('id', id);
     if (error) {
-      setExternalError(trans('archiveError', 'فشلت عملية نقل السجل لإجراء الأرشفة', 'Failed to change archive status'));
+      setErrorMessage(trans('archiveError', 'فشلت عملية نقل سجل الطالب للأرشيف', 'Failed to change student archive status'));
     } else {
       setStudentsList(prev => prev.filter(s => s.id !== id));
     }
   };
 
-  const filteredStudents = studentsList.filter(s =>
-    s.name.toLowerCase().includes(studentSearch.toLowerCase()) || (s.parent_phone && s.parent_phone.includes(studentSearch))
-  );
+  // تصفية الفلترة السريعة
+  const filteredStudents = useMemo(() => {
+    return studentsList.filter(s => {
+      const matchesSearch = s.name.toLowerCase().includes(studentSearch.toLowerCase()) || 
+                            (s.parent_phone && s.parent_phone.includes(studentSearch));
+      const matchesHalaqa = selectedHalaqaFilter === 'all' || 
+                            (selectedHalaqaFilter === 'unassigned' ? !s.halaqa_id : s.halaqa_id === selectedHalaqaFilter);
+      const matchesGender = selectedGenderFilter === 'all' || s.gender === selectedGenderFilter;
+
+      return matchesSearch && matchesHalaqa && matchesGender;
+    });
+  }, [studentsList, studentSearch, selectedHalaqaFilter, selectedGenderFilter]);
+
+  // إحصائيات سريعة
+  const stats = useMemo(() => {
+    const total = studentsList.length;
+    const unassigned = studentsList.filter(s => !s.halaqa_id).length;
+    const males = studentsList.filter(s => s.gender === 'male').length;
+    const females = studentsList.filter(s => s.gender === 'female').length;
+    return { total, unassigned, males, females };
+  }, [studentsList]);
+
+  // فتح مراسلة واتساب
+  const openWhatsApp = (phone, name) => {
+    if (!phone) return;
+    const cleanNumber = phone.replace(/[^0-9]/g, '');
+    const text = encodeURIComponent(isRtl ? `السلام عليكم ورحمة الله، بشأن الطالب: ${name}` : `Hello, regarding student: ${name}`);
+    window.open(`https://wa.me/${cleanNumber}?text=${text}`, '_blank');
+  };
 
   return (
-    <div>
+    <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "'Cairo', sans-serif" }}>
+      
+      {/* 1. رأس الصفحة */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: C.gold, margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaUserGraduate /> {trans('studentsManagement', 'إدارة شؤون الطلاب والدارسين', 'Students Management')}
+          </h2>
+          <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px' }}>
+            {trans('studentsSubHeading', 'متابعة بيانات الطلاب، الحلقات المنتسبين إليها، وتحديث الحالة الحفظية', 'Manage student records, assigned halaqas, and quranic progress')}
+          </p>
+        </div>
+      </div>
+
+      {/* تنبيه الأخطاء */}
+      {errorMessage && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontSize: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span><FaExclamationTriangle style={{ marginLeft: '6px' }} /> {errorMessage}</span>
+          <button onClick={() => setErrorMessage('')} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>✖</button>
+        </div>
+      )}
+
+      {/* 2. بطاقات الإحصائيات الذكية */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+        <Card style={{ padding: '14px', background: '#162030', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{trans('totalDisplayCount', 'العدد المعروض', 'Displayed Total')}</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: '#38bdf8', marginTop: '4px' }}>{stats.total}</div>
+        </Card>
+
+        <Card style={{ padding: '14px', background: '#162030', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{trans('unassignedCount', 'بدون حلقة حالياً', 'Unassigned')}</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: stats.unassigned > 0 ? '#f59e0b' : '#10b981', marginTop: '4px' }}>{stats.unassigned}</div>
+        </Card>
+
+        <Card style={{ padding: '14px', background: '#162030', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{trans('malesCount', 'الطلاب الذكور', 'Male Students')}</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: '#60a5fa', marginTop: '4px' }}>{stats.males}</div>
+        </Card>
+
+        <Card style={{ padding: '14px', background: '#162030', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{trans('femalesCount', 'الطالبات الإناث', 'Female Students')}</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: '#f472b6', marginTop: '4px' }}>{stats.females}</div>
+        </Card>
+      </div>
+
+      {/* 3. أزرار الإجراءات الرئيسية */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexDirection: isMobile ? 'column' : 'row' }}>
-        <button onClick={() => setShowStudentForm(!showStudentForm)} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: showStudentForm ? '#1e293b' : C.gold, color: showStudentForm ? '#fff' : '#0f172a', fontWeight: '700', cursor: 'pointer', fontSize: '14px' }}>
-          {showStudentForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : `➕ ${trans('addNewStudent', 'إضافة طالب جديد للمنظومة', 'Add New Student')}`}
+        <button 
+          onClick={() => setShowStudentForm(!showStudentForm)} 
+          style={{ 
+            flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+            background: showStudentForm ? '#1e293b' : C.gold, 
+            color: showStudentForm ? '#fff' : '#0f172a', fontWeight: '800', 
+            cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' 
+          }}
+        >
+          {showStudentForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : <><FaUserPlus /> {trans('addNewStudent', 'إضافة طالب جديد للمنظومة', 'Add New Student')}</>}
         </button>
-        <button onClick={() => setStudentViewMode(studentViewMode === 'active' ? 'archive' : 'active')} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `1px solid ${studentViewMode === 'active' ? '#ef4444' : C.gold}`, background: studentViewMode === 'active' ? 'transparent' : '#ef4444', color: studentViewMode === 'active' ? '#ef4444' : '#fff', fontWeight: '700', cursor: 'pointer', fontSize: '14px' }}>
-          📦 {studentViewMode === 'active' ? trans('viewArchive', 'عرض أرشيف الطلاب', 'View Students Archive') : trans('viewActive', 'عرض الطلاب النشطين', 'View Active Students')}
+
+        <button 
+          onClick={() => setStudentViewMode(studentViewMode === 'active' ? 'archive' : 'active')} 
+          style={{ 
+            flex: 1, padding: '14px', borderRadius: '12px', 
+            border: `1px solid ${studentViewMode === 'active' ? '#ef4444' : C.gold}`, 
+            background: studentViewMode === 'active' ? 'transparent' : '#ef4444', 
+            color: studentViewMode === 'active' ? '#ef4444' : '#fff', fontWeight: '800', 
+            cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' 
+          }}
+        >
+          <FaArchive /> {studentViewMode === 'active' ? trans('viewArchive', 'عرض أرشيف الطلاب', 'View Students Archive') : trans('viewActive', 'عرض الطلاب النشطين', 'View Active Students')}
         </button>
       </div>
 
+      {/* 4. استمارة الإضافة والتعديل */}
       {showStudentForm && (
-        <Card style={{ padding: '24px', marginBottom: '24px' }}>
+        <Card style={{ padding: '24px', marginBottom: '24px', border: `1px solid ${C.gold}` }}>
+          <h3 style={{ color: C.gold, margin: '0 0 16px 0', fontSize: '16px' }}>{trans('formAddStudentHeader', 'بيانات تسجيل طالب جديد', 'New Student Information')}</h3>
           <form onSubmit={handleCreateStudent} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>*{trans('lblFullName', 'اسم الطالب بالكامل', 'Student Full Name')}</label>
-              <input type="text" value={studentFormData.name} onChange={(e) => setStudentFormData({...studentFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }} />
+              <input type="text" required value={studentFormData.name} onChange={(e) => setStudentFormData({...studentFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }} />
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ color: C.gold, fontSize: '14px', fontWeight: '700' }}>{trans('lblStudentHalaqa', 'تنسيب وتعيين الحلقة القرآنية', 'Assign Quranic Halaqa')}</label>
               <select value={studentFormData.halaqa_id} onChange={(e) => setStudentFormData({...studentFormData, halaqa_id: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}>
-                <option value="">{trans('unassignedHalaqaOption', '🚫 بدون حلقة حالياً', 'No Halaqa')}</option>
+                <option value="">{trans('unassignedHalaqaOption', '🚫 بدون حلقة حالياً', 'No Halaqa Assigned')}</option>
                 {halaqas.map(h => <option key={h.id} value={h.id}>🔹 {isRtl ? h.name_ar : h.name_en}</option>)}
               </select>
             </div>
 
-            {/* محدد مستوى القرآن الجديد */}
+            {/* محدد مستوى القرآن */}
             <div style={{ background: '#162030', padding: '14px', borderRadius: '10px', border: '1px solid #334155' }}>
               <QuranProgressSelector 
                 initialIndex={studentFormData.quarter_index}
@@ -279,34 +279,65 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
                 <select value={studentFormData.country_code} onChange={(e) => setStudentFormData({...studentFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}>
                   {COUNTRIES_LIST.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode} ({currentLang === 'ar' ? c.nameAr : c.nameEn})</option>)}
                 </select>
-                <input type="tel" value={studentFormData.parent_phone} onChange={(e) => setStudentFormData({...studentFormData, parent_phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', textAlign: 'left' }} />
+                <input type="tel" required value={studentFormData.parent_phone} onChange={(e) => setStudentFormData({...studentFormData, parent_phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', textAlign: 'left' }} />
               </div>
             </div>
 
-            <button type="submit" style={{ padding: '14px', borderRadius: '10px', border: 'none', background: C.gold, color: '#0f172a', fontWeight: '700', cursor: 'pointer' }}>
+            <button type="submit" style={{ padding: '14px', borderRadius: '10px', border: 'none', background: C.gold, color: '#0f172a', fontWeight: '800', cursor: 'pointer', marginTop: '6px' }}>
               {trans('btnConfirmAdd', 'تأكيد وحفظ بيانات الطالب 🚀', 'Save Student 🚀')}
             </button>
           </form>
         </Card>
       )}
 
-      <div style={{ marginBottom: '16px' }}>
-        <input type="text" placeholder={trans('phSearchStudent', 'ابحث باسم الطالب...', 'Search student...')} value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', boxSizing: 'border-box' }} />
+      {/* 5. شريط التصفية والبحث المتقدم */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+        <div style={{ position: 'relative' }}>
+          <input 
+            type="text" 
+            placeholder={trans('phSearchStudent', 'ابحث باسم الطالب أو رقم الهاتف...', 'Search by student name or phone...')} 
+            value={studentSearch} 
+            onChange={(e) => setStudentSearch(e.target.value)} 
+            style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', boxSizing: 'border-box' }} 
+          />
+        </div>
+
+        <select 
+          value={selectedHalaqaFilter} 
+          onChange={(e) => setSelectedHalaqaFilter(e.target.value)}
+          style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}
+        >
+          <option value="all">📂 {trans('allHalaqasFilter', 'جميع الحلقات', 'All Halaqas')}</option>
+          <option value="unassigned">🚫 {trans('unassignedOnly', 'بدون حلقة فقط', 'Unassigned Only')}</option>
+          {halaqas.map(h => <option key={h.id} value={h.id}>🔹 {isRtl ? h.name_ar : h.name_en}</option>)}
+        </select>
+
+        <select 
+          value={selectedGenderFilter} 
+          onChange={(e) => setSelectedGenderFilter(e.target.value)}
+          style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}
+        >
+          <option value="all">👥 {trans('allGendersFilter', 'جميع الجنسين', 'All Genders')}</option>
+          <option value="male">🧑 {trans('malesOnly', 'الذكور', 'Males')}</option>
+          <option value="female">👧 {trans('femalesOnly', 'الإناث', 'Females')}</option>
+        </select>
       </div>
 
+      {/* 6. قائمة الجدول والبطاقات */}
       <Card style={{ padding: 0, background: 'transparent' }}>
-        {studentLoading ? <p style={{ color: C.muted, textAlign: 'center' }}>...</p> : filteredStudents.length === 0 ? (
-          <div style={{ padding: '30px', textAlign: 'center', background: '#162030', borderRadius: '12px', border: '1px dashed #334155' }}>
-            <p style={{ color: '#94a3b8', margin: 0 }}>{trans('noStudentsFound', 'لم يتم العثور على طلاب', 'No students found')}</p>
+        {studentLoading ? (
+          <p style={{ color: C.gold, textAlign: 'center', padding: '30px' }}>⚡ {trans('loadingData', 'جاري جيل بيانات الطلاب...', 'Loading students...')}</p>
+        ) : filteredStudents.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', background: '#162030', borderRadius: '12px', border: '1px dashed #334155' }}>
+            <p style={{ color: '#94a3b8', margin: 0, fontSize: '15px' }}>{trans('noStudentsFound', 'لم يتم العثور على نتائج مطابقة للبحث', 'No students match your criteria')}</p>
           </div>
         ) : !isMobile ? (
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: isRtl ? 'right' : 'left' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #334155' }}>
+              <tr style={{ borderBottom: '2px solid #334155', background: '#162030' }}>
                 <TH>{trans('thStudentName', 'الاسم / الحلقة', 'Name / Halaqa')}</TH>
                 <TH>{trans('thGender', 'الجنس', 'Gender')}</TH>
-
-                <TH>{trans('thParentContact', 'ولي الأمر', 'Guardian')}</TH>
+                <TH>{trans('thParentContact', 'ولي الأمر واتساب', 'Guardian / WhatsApp')}</TH>
                 <TH>{trans('thSubscription', 'الاشتراك', 'Subscription')}</TH>
                 <TH>{trans('thActions', 'الإجراءات', 'Actions')}</TH>
               </tr>
@@ -317,18 +348,29 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
                 return (
                   <tr key={student.id} style={{ borderBottom: '1px solid #1e293b' }}>
                     <TD>
-                      <div style={{ fontWeight: '700', color: '#fff' }}>{student.name}</div>
-                      <div style={{ fontSize: '11px', color: C.gold, marginTop: '2px' }}>
+                      <div style={{ fontWeight: '700', color: '#fff', fontSize: '14px' }}>{student.name}</div>
+                      <div style={{ fontSize: '11px', color: matchedHalaqa ? C.gold : '#f59e0b', marginTop: '2px' }}>
                         📢 {matchedHalaqa ? (isRtl ? matchedHalaqa.name_ar : matchedHalaqa.name_en) : trans('unassignedHalaqaText', 'غير مدرج بحلقة', 'Unassigned')}
                       </div>
                     </TD>
                     <TD><Badge color={student.gender === 'male' ? 'blue' : 'pink'}>{student.gender === 'male' ? 'ذكر' : 'أنثى'}</Badge></TD>
                     <TD>
-                      <div>{student.parent_name || '—'}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', direction: 'ltr' }}>{student.parent_phone}</div>
+                      <div style={{ color: '#e2e8f0', fontSize: '13px' }}>{student.parent_name || '—'}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#22c55e', direction: 'ltr', marginTop: '2px' }}>
+                        <span style={{ color: '#94a3b8' }}>{student.parent_phone}</span>
+                        {student.parent_phone && (
+                          <button onClick={() => openWhatsApp(student.parent_phone, student.name)} title="واتساب" style={{ background: 'transparent', border: 'none', color: '#22c55e', cursor: 'pointer', padding: 0 }}>
+                            <FaWhatsapp size={15} />
+                          </button>
+                        )}
+                      </div>
                     </TD>
                     <TD><Badge color="orange">{student.subscription_system}</Badge></TD>
-                    <TD><Btn onClick={() => toggleArchiveStudent(student.id, student.is_archived)} color={student.is_archived ? 'green' : 'red'}>{student.is_archived ? 'تنشيط ⚡' : 'أرشفة 📦'}</Btn></TD>
+                    <TD>
+                      <Btn onClick={() => toggleArchiveStudent(student.id, student.is_archived)} color={student.is_archived ? 'green' : 'red'}>
+                        {student.is_archived ? 'تنشيط ⚡' : 'أرشفة 📦'}
+                      </Btn>
+                    </TD>
                   </tr>
                 );
               })}
@@ -336,206 +378,35 @@ function StudentsSection({ academyId, refreshTrigger, halaqas, isMobile, isRtl, 
           </table>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredStudents.map(student => (
-              <Card key={student.id} style={{ padding: '16px', background: '#162030', border: '1px solid #334155' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: '700', color: '#fff' }}>{student.name}</span>
-                  <Badge color={student.gender === 'male' ? 'blue' : 'pink'}>{student.gender === 'male' ? '🧑' : '👧'}</Badge>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Badge color="orange">{student.subscription_system}</Badge>
-                  <Btn onClick={() => toggleArchiveStudent(student.id, student.is_archived)} color={student.is_archived ? 'green' : 'red'}>{student.is_archived ? '⚡' : '📦'}</Btn>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </Card>
-    </div>
-  );
-}
+            {filteredStudents.map(student => {
+              const matchedHalaqa = halaqas.find(h => h.id === student.halaqa_id);
+              return (
+                <Card key={student.id} style={{ padding: '16px', background: '#162030', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: '700', color: '#fff', fontSize: '15px' }}>{student.name}</div>
+                      <div style={{ fontSize: '12px', color: matchedHalaqa ? C.gold : '#f59e0b', marginTop: '2px' }}>
+                        📢 {matchedHalaqa ? (isRtl ? matchedHalaqa.name_ar : matchedHalaqa.name_en) : trans('unassignedHalaqaText', 'غير مدرج بحلقة', 'Unassigned')}
+                      </div>
+                    </div>
+                    <Badge color={student.gender === 'male' ? 'blue' : 'pink'}>{student.gender === 'male' ? '🧑' : '👧'}</Badge>
+                  </div>
 
-// =========================================================================
-// 3. مكون إدارة المعلمين الفرعي (Teachers Section Component)
-// =========================================================================
-function TeachersSection({ academyId, refreshTrigger, isMobile, isRtl, trans, setExternalError, currentLang }) {
-  const [teacherViewMode, setTeacherViewMode] = useState('active');
-  const [showTeacherForm, setShowTeacherForm] = useState(false);
-  const [teachersList, setTeachersList] = useState([]);
-  const [teacherSearch, setTeacherSearch] = useState('');
-  const [teacherLoading, setTeacherLoading] = useState(false);
-  const [teacherFormData, setTeacherFormData] = useState({
-    name: '', gender: 'male', country_code: 'EG', phone: '', salary_type: 'monthly', notes: ''
-  });
-
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      if (!academyId) return;
-      setTeacherLoading(true);
-      setExternalError('');
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('academy_id', academyId)
-        .eq('is_archived', teacherViewMode === 'archive')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        setExternalError(trans('fetchError', 'حدث خطأ أثناء جلب البيانات', 'Error fetching data'));
-      } else if (data) {
-        setTeachersList(data);
-      }
-      setTeacherLoading(false);
-    };
-    fetchTeachers();
-  }, [academyId, teacherViewMode, refreshTrigger]);
-
-  const handleCreateTeacher = async (e) => {
-    e.preventDefault();
-    setExternalError('');
-    if (!teacherFormData.name.trim() || !teacherFormData.phone.trim()) {
-      return setExternalError(trans('requiredFieldsAlert', 'الرجاء ملء الحقول الإلزامية (*)', 'Fill required fields (*)'));
-    }
-    
-    const selectedCountry = COUNTRIES_LIST.find(c => c.code === teacherFormData.country_code);
-    const cleanPhone = teacherFormData.phone.trim().replace(/^0+/, '').replace(/\D/g, '');
-    const fullPhone = `${selectedCountry?.dialCode || ''}${cleanPhone}`;
-
-    const payload = {
-      academy_id: academyId,
-      name: teacherFormData.name.trim(),
-      gender: teacherFormData.gender,
-      country: teacherFormData.country_code,
-      phone: fullPhone,
-      salary_system: teacherFormData.salary_type,
-      notes: teacherFormData.notes.trim(),
-      is_archived: false
-    };
-
-    const { data, error } = await supabase.from('teachers').insert(payload).select();
-    if (error) {
-      setExternalError(trans('saveError', 'فشل في حفظ البيانات', 'Failed to save data'));
-    } else if (data) {
-      setTeachersList(prev => [data[0], ...prev]);
-      setShowTeacherForm(false);
-      setTeacherFormData({ name: '', gender: 'male', country_code: 'EG', phone: '', salary_type: 'monthly', notes: '' });
-    }
-  };
-
-  const toggleArchiveTeacher = async (id, currentStatus) => {
-    setExternalError('');
-    const { error } = await supabase.from('teachers').update({ is_archived: !currentStatus }).eq('id', id);
-    if (error) {
-      setExternalError(trans('archiveError', 'فشلت أرشفة السجل', 'Failed to archive record'));
-    } else {
-      setTeachersList(prev => prev.filter(t => t.id !== id));
-    }
-  };
-
-  const filteredTeachers = teachersList.filter(t =>
-    t.name.toLowerCase().includes(teacherSearch.toLowerCase()) || (t.phone && t.phone.includes(teacherSearch))
-  );
-
-  return (
-    <div>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexDirection: isMobile ? 'column' : 'row' }}>
-        <button onClick={() => setShowTeacherForm(!showTeacherForm)} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: showTeacherForm ? '#1e293b' : C.gold, color: showTeacherForm ? '#fff' : '#0f172a', fontWeight: '700', fontSize: '14px' }}>
-          {showTeacherForm ? trans('closeForm', 'إغلاق الاستمارة ✖', 'Close Form ✖') : `➕ ${trans('addNewTeacher', 'إضافة معلم/محفظ جديد', 'Add New Teacher')}`}
-        </button>
-        <button onClick={() => setTeacherViewMode(teacherViewMode === 'active' ? 'archive' : 'active')} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `1px solid ${teacherViewMode === 'active' ? '#ef4444' : C.gold}`, background: teacherViewMode === 'active' ? 'transparent' : '#ef4444', color: teacherViewMode === 'active' ? '#ef4444' : '#fff', fontWeight: '700', fontSize: '14px' }}>
-          📦 {teacherViewMode === 'active' ? trans('viewTeacherArchive', 'عرض أرشيف المعلمين', 'View Teachers Archive') : trans('viewTeacherActive', 'عرض المعلمين النشطين', 'View Active Teachers')}
-        </button>
-      </div>
-
-      {showTeacherForm && (
-        <Card style={{ padding: '24px', marginBottom: '24px' }}>
-          <form onSubmit={handleCreateTeacher} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ color: '#fff', fontSize: '14px' }}>*{trans('lblTeacherName', 'اسم المعلم بالكامل', 'Teacher Full Name')}</label>
-              <input type="text" value={teacherFormData.name} onChange={(e) => setTeacherFormData({...teacherFormData, name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }} />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
-              <div>
-                <label style={{ color: '#fff', fontSize: '14px' }}>{trans('lblGender', 'الجنس', 'Gender')}</label>
-                <select value={teacherFormData.gender} onChange={(e) => setTeacherFormData({...teacherFormData, gender: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}>
-                  <option value="male">ذكر 🧑</option>
-                  <option value="female">أنثى 👧</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ color: '#fff', fontSize: '14px' }}>{trans('lblSalarySystem', 'نظام المرتب', 'Salary System')}</label>
-                <select value={teacherFormData.salary_type} onChange={(e) => setTeacherFormData({...teacherFormData, salary_type: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}>
-                  <option value="monthly">راتب شهري ثابت</option>
-                  <option value="per_hour">بالحصة/الساعة</option>
-                  <option value="volunteer">عمل تطوعي</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label style={{ color: '#fff', fontSize: '14px' }}>*{trans('lblTeacherPhone', 'رقم الاتصال', 'Contact')}</label>
-              <div style={{ display: 'flex', gap: '10px', direction: 'ltr' }}>
-                <select value={teacherFormData.country_code} onChange={(e) => setTeacherFormData({...teacherFormData, country_code: e.target.value})} style={{ width: '130px', padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff' }}>
-                  {COUNTRIES_LIST.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dialCode} ({currentLang === 'ar' ? c.nameAr : c.nameEn})</option>)}
-                </select>
-                <input type="tel" value={teacherFormData.phone} onChange={(e) => setTeacherFormData({...teacherFormData, phone: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#162030', border: '1px solid #334155', color: '#fff', textAlign: 'left' }} />
-              </div>
-            </div>
-
-            <button type="submit" style={{ padding: '14px', borderRadius: '10px', border: 'none', background: C.gold, color: '#0f172a', fontWeight: '700' }}>
-              {trans('btnConfirmAddTeacher', 'حفظ المعلم الجديد 🚀', 'Save Teacher 🚀')}
-            </button>
-          </form>
-        </Card>
-      )}
-
-      <div style={{ marginBottom: '16px' }}>
-        <input type="text" placeholder={trans('phSearchTeacher', 'ابحث باسم المعلم...', 'Search teacher...')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', background: '#162030', border: '1px solid #334155', color: '#fff', boxSizing: 'border-box' }} />
-      </div>
-
-      <Card style={{ padding: 0, background: 'transparent' }}>
-        {teacherLoading ? <p style={{ color: C.muted, textAlign: 'center' }}>...</p> : filteredTeachers.length === 0 ? (
-          <div style={{ padding: '30px', textAlign: 'center', background: '#162030', borderRadius: '12px', border: '1px dashed #334155' }}>
-            <p style={{ color: '#94a3b8', margin: 0 }}>{trans('noTeachersFound', 'لم يتم العثور على معلمين', 'No teachers found')}</p>
-          </div>
-        ) : !isMobile ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: isRtl ? 'right' : 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #334155' }}>
-                <TH>{trans('thTeacherName', 'اسم المعلم', 'Teacher Name')}</TH>
-                <TH>{trans('thGender', 'الجنس', 'Gender')}</TH>
-                <TH>{trans('thTeacherPhone', 'رقم الاتصال', 'Phone')}</TH>
-                <TH>{trans('thSalarySystem', 'النظام المالي', 'Salary System')}</TH>
-                <TH>{trans('thActions', 'الإجراءات', 'Actions')}</TH>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTeachers.map(teacher => (
-                <tr key={teacher.id} style={{ borderBottom: '1px solid #1e293b' }}>
-                  <TD style={{ fontWeight: '700', color: '#fff' }}>{teacher.name}</TD>
-                  <TD><Badge color={teacher.gender === 'male' ? 'blue' : 'pink'}>{teacher.gender === 'male' ? 'ذكر' : 'أنثى'}</Badge></TD>
-                  <TD style={{ direction: 'ltr' }}>{teacher.phone}</TD>
-                  <TD><Badge color="orange">{teacher.salary_system}</Badge></TD>
-                  <TD><Btn onClick={() => toggleArchiveTeacher(teacher.id, teacher.is_archived)} color={teacher.is_archived ? 'green' : 'red'}>{teacher.is_archived ? 'تنشيط ⚡' : 'أرشفة 📦'}</Btn></TD>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredTeachers.map(teacher => (
-              <Card key={teacher.id} style={{ padding: '16px', background: '#162030', border: '1px solid #334155' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: '700', color: '#fff' }}>{teacher.name}</span>
-                  <Badge color={teacher.gender === 'male' ? 'blue' : 'pink'}>{teacher.gender === 'male' ? '🧑' : '👧'}</Badge>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Badge color="orange">{teacher.salary_system}</Badge>
-                  <Btn onClick={() => toggleArchiveTeacher(teacher.id, teacher.is_archived)} color={teacher.is_archived ? 'green' : 'red'}>{teacher.is_archived ? '⚡' : '📦'}</Btn>
-                </div>
-              </Card>
-            ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #1e293b' }}>
+                    <button 
+                      onClick={() => openWhatsApp(student.parent_phone, student.name)}
+                      style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid #22c55e', color: '#4ade80', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                    >
+                      <FaWhatsapp /> واتساب
+                    </button>
+                    
+                    <Btn onClick={() => toggleArchiveStudent(student.id, student.is_archived)} color={student.is_archived ? 'green' : 'red'}>
+                      {student.is_archived ? 'تنشيط ⚡' : 'أرشفة 📦'}
+                    </Btn>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
       </Card>
