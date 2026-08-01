@@ -1,85 +1,47 @@
-// src/types/student.ts
+import { Json } from './database.types';
 
-/**
- * الأنواع المحددة للجنس والحالة بناءً على قيود قاعدة البيانات (Supabase Constraints)
- */
 export type StudentGender = 'male' | 'female';
 export type StudentStatus = 'active' | 'inactive' | 'paused' | 'graduated';
 
-/**
- * إعدادات الأكاديمية والخصوصية
- */
-export interface AcademySettings {
-  id: string;
-  name: string;
-  currency: string;
-  calendar_type?: 'gregorian' | 'hijri';
-  metadata?: {
-    gender_policy?: 'separated' | 'mixed'; // سياسة الفصل بين الجنسين
-    default_gender_view?: 'all' | 'male' | 'female'; // العرض الافتراضي للمركز
-  };
-}
-
-/**
- * بيانات الحلقة المنسوب إليها الطالب (من جدول halaqas)
- */
-export interface StudentHalaqa {
-  id: string;
-  name_ar: string;
-  name_en?: string;
-  target_audience: 'all' | 'kids' | 'males' | 'females';
-}
-
-/**
- * الواجهة الموحدة الشاملة لبيانات الطالب (Student Type)
- * مطابقة 100% لأعمدة جدول public.students في Supabase
- */
 export interface Student {
   id: string;
-  student_code?: string;
+  student_code?: string | null;
   academy_id: string;
-  name: string;
-  birth_date?: string;
-  gender?: StudentGender;
-  nationality?: string;
-  country?: string;
+  name: Json; // مطابقة نوع Json للغة المتعددة في Supabase
+  birth_date?: string | null; // الحقل الصريح من Supabase
+  gender?: StudentGender | string | null;
+  nationality?: string | null;
+  country?: string | null;
   
-  // بيانات التقدم والتسميع (Gamification & Progress)
-  current_juz: number;
-  current_quarter: number;
-  current_quarter_index: number;
-  points: number;
-  level_score: number;
-  last_test_score: number;
+  // بيانات التقدم والتسميع
+  current_juz?: number | null;
+  current_quarter?: number | null;
+  current_quarter_index?: number | null;
+  current_surah_id?: number | null;
+  points?: number | null;
+  level_score?: number | null;
+  last_test_score?: number | null;
   
   // بيانات التواصل وولي الأمر
-  parent_id?: string;
-  parent_name?: string;
-  parent_phone?: string;
+  parent_id?: string | null;
+  parent_name?: string | null;
+  parent_phone?: string | null;
   
   // بيانات الحلقة والحالة
-  halaqa_id?: string;
-  halaqas?: StudentHalaqa | null; // العلاقة المسترجعة من Supabase
-  status: StudentStatus;
-  is_archived: boolean;
-  avatar_url?: string;
-  notes?: string;
+  halaqa_id?: string | null;
+  status?: StudentStatus | string | null;
+  is_archived?: boolean | null;
+  avatar_url?: string | null;
+  notes?: Json | null;
   
-  // بيانات مالية خفيفة للعرض
-  payment_status?: string;
-  subscription_system?: string;
+  // بيانات مالية
+  plan_id?: string | null;
+  payment_status?: string | null;
+  subscription_system?: string | null;
+  last_payment_date?: string | null;
+  next_payment_date?: string | null;
   
+  added_by?: string | null;
   created_at: string;
-  updated_at?: string;
-}
-
-/**
- * شروط الفلترة والبحث لصفحة الطلاب (Filter Payload)
- */
-export interface StudentFilters {
-  searchTerm?: string;
-  gender?: 'all' | 'male' | 'female';
-  halaqaId?: string; // 'all' | 'none' | ID الحلقة
-  status?: StudentStatus | 'all';
-  isArchived: boolean;
+  updated_at?: string | null;
 }
