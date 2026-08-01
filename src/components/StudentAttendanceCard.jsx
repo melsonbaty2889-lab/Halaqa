@@ -13,17 +13,32 @@ import {
 } from 'react-icons/fa';
 import { sendWhatsAppAttendanceReport } from '../utils/whatsappUtils';
 
+// 🛠️ دالة مساعدة لفك واستخراج اسم الطالب أو السورة بأمان (دعم JSONB والنصوص)
+const formatName = (nameData, isRtl) => {
+  if (!nameData) return '';
+  if (typeof nameData === 'string') return nameData;
+  if (typeof nameData === 'object') {
+    return isRtl 
+      ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
+      : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
+  }
+  return String(nameData);
+};
+
 const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, selectedDate, isRtl, t }) => {
   const currentStatus = record.status || 'present';
   const isPresent = currentStatus === 'present' || currentStatus === 'late';
   const quickNotes = ['ممتاز ومرتل ✨', 'تثبيت المتشابهات 🔁', 'مراجعة الورد جيداً 📖', 'تركيز في الأحكام 🎯'];
+
+  const studentName = formatName(student.name, isRtl);
+  const studentSurah = formatName(student.current_surah || student.current_surah_name, isRtl);
 
   return (
     <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-800/80 p-4 rounded-2xl flex flex-col gap-3.5 transition-all hover:border-slate-700/60 box-border shadow-sm">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
         <div className={isRtl ? 'text-right' : 'text-left'}>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-extrabold text-white tracking-wide">{student.name}</span>
+            <span className="text-sm font-extrabold text-white tracking-wide">{studentName}</span>
             {(student.parent_phone || student.phone) && (
               <button
                 type="button"
@@ -35,7 +50,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
             )}
           </div>
           <span className="text-[11px] font-bold text-amber-500/80 block mt-0.5">
-            {t('memorization_prefix') || 'مستوى الحفظ الحالي:'} {student.current_surah || (isRtl ? 'الربع ' + (student.current_quarter_index || 1) : 'Quarter ' + (student.current_quarter_index || 1))}
+            {t('memorization_prefix') || 'مستوى الحفظ الحالي:'} {studentSurah || (isRtl ? 'الربع ' + (student.current_quarter_index || 1) : 'Quarter ' + (student.current_quarter_index || 1))}
           </span>
         </div>
         
