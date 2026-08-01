@@ -27,18 +27,32 @@ export default function StudentsList() {
     fetchData();
   }, []);
 
+  // 🛠️ دالة مساعدة لاستخراج الاسم النصي سواء كان JSON أو String
+  const formatName = (nameData) => {
+    if (!nameData) return '';
+    if (typeof nameData === 'string') return nameData;
+    if (typeof nameData === 'object') {
+      return isRtl 
+        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
+        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
+    }
+    return String(nameData);
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
 
+      // 1. جلب الحلقات باستخدام حقل name الجيسون الصحيح
       const { data: halaqasData } = await supabase
         .from('halaqas')
-        .select('id, name_ar, name_en');
+        .select('id, name');
       if (halaqasData) setHalaqas(halaqasData);
 
+      // 2. جلب الطلاب مع بيانات الحلقة المرتبطة
       const { data: studentsData, error } = await supabase
         .from('students')
-        .select(`*, halaqas ( id, name_ar, name_en )`)
+        .select(`*, halaqas ( id, name )`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -65,11 +79,11 @@ export default function StudentsList() {
   // Dynamic Filtering Logic
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      const status = student.status || 'active';
+      const isArchived = student.is_archived || student.status === 'archived';
       
       // Status Filter
-      if (selectedStatus === 'active' && status === 'archived') return false;
-      if (selectedStatus === 'archived' && status !== 'archived') return false;
+      if (selectedStatus === 'active' && isArchived) return false;
+      if (selectedStatus === 'archived' && !isArchived) return false;
 
       // Halaqa Filter
       if (selectedHalaqa === 'no_halaqa' && student.halaqa_id) return false;
@@ -79,17 +93,18 @@ export default function StudentsList() {
       if (selectedGender === 'male' && !checkIsMale(student)) return false;
       if (selectedGender === 'female' && !checkIsFemale(student)) return false;
 
-      // Search Query
+      // Search Query (استخراج الاسم النصي بأمان للبحث)
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
-        const matchName = student.name?.toLowerCase().includes(query);
+        const studentDisplayName = formatName(student.name).toLowerCase();
+        const matchName = studentDisplayName.includes(query);
         const matchPhone = student.parent_phone?.includes(query);
         return matchName || matchPhone;
       }
 
       return true;
     });
-  }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm]);
+  }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm, isRtl]);
 
   // Statistics Calculation
   const stats = useMemo(() => {
@@ -102,24 +117,25 @@ export default function StudentsList() {
   }, [filteredStudents]);
 
   // Toggle Archive Action
-  const handleToggleArchive = async (e, studentId, currentStatus) => {
+  const handleToggleArchive = async (e, studentId, currentStatus, currentIsArchived) => {
     e.stopPropagation();
-    const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
+    const willBeArchived = !(currentIsArchived || currentStatus === 'archived');
+    const newStatus = willBeArchived ? 'archived' : 'active';
 
     // Optimistic UI Update
-    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus } : s));
+    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus, is_archived: willBeArchived } : s));
 
     try {
       const { error } = await supabase
         .from('students')
-        .update({ status: newStatus })
+        .update({ status: newStatus, is_archived: willBeArchived })
         .eq('id', studentId);
 
       if (error) {
         console.error('Supabase Update Error:', error);
         // Rollback on failure
-        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus } : s));
-        alert('لم يتم الحفظ في قاعدة البيانات: يرجى التأكد من تشغيل أمر SQL لإضافة عمود status');
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus, is_archived: currentIsArchived } : s));
+        alert(isRtl ? 'حدث خطأ أثناء التحديث في قاعدة البيانات' : 'Failed to update student status');
       }
     } catch (err) {
       console.error(err);
@@ -309,7 +325,7 @@ export default function StudentsList() {
               <option value="no_halaqa">{isRtl ? 'بدون حلقة' : 'Without Halaqa'}</option>
               {halaqas.map(h => (
                 <option key={h.id} value={h.id}>
-                  {isRtl ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)}
+                  {formatName(h.name)}
                 </option>
               ))}
             </select>
@@ -356,7 +372,9 @@ export default function StudentsList() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filteredStudents.map(student => {
-            const isStudentArchived = student.status === 'archived';
+            const isStudentArchived = student.is_archived || student.status === 'archived';
+            const studentDisplayName = formatName(student.name);
+            const halaqaDisplayName = student.halaqas ? formatName(student.halaqas.name) : '';
 
             return (
               <div 
@@ -386,7 +404,7 @@ export default function StudentsList() {
 
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC', marginBottom: '4px' }}>
-                      {student.name}
+                      {studentDisplayName}
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '11px' }}>
@@ -397,7 +415,7 @@ export default function StudentsList() {
                         borderRadius: '6px',
                         fontWeight: '600'
                       }}>
-                        {student.halaqas ? (isRtl ? student.halaqas.name_ar : student.halaqas.name_en) : (isRtl ? 'بدون حلقة' : 'No Halaqa')}
+                        {student.halaqas ? halaqaDisplayName : (isRtl ? 'بدون حلقة' : 'No Halaqa')}
                       </span>
 
                       <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -455,7 +473,7 @@ export default function StudentsList() {
 
                   <button
                     type="button"
-                    onClick={(e) => handleToggleArchive(e, student.id, student.status)}
+                    onClick={(e) => handleToggleArchive(e, student.id, student.status, student.is_archived)}
                     style={{
                       padding: '8px 12px',
                       fontSize: '12px',
