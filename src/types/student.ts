@@ -7,12 +7,12 @@ export interface Student {
   id: string;
   student_code?: string | null;
   academy_id: string;
-  name: Json; // مطابقة نوع Json للغة المتعددة في Supabase
-  birth_date?: string | null; // الحقل الصريح من Supabase
+  name: Json; // مطابقة نوع Json للغات المتعددة في Supabase
+  birth_date?: string | null; // مطابقة الحقل مع قاعدة البيانات
   gender?: StudentGender | string | null;
   nationality?: string | null;
   country?: string | null;
-  
+
   // بيانات التقدم والتسميع
   current_juz?: number | null;
   current_quarter?: number | null;
@@ -21,27 +21,35 @@ export interface Student {
   points?: number | null;
   level_score?: number | null;
   last_test_score?: number | null;
-  
+
   // بيانات التواصل وولي الأمر
   parent_id?: string | null;
   parent_name?: string | null;
   parent_phone?: string | null;
-  
+
   // بيانات الحلقة والحالة
   halaqa_id?: string | null;
   status?: StudentStatus | string | null;
   is_archived?: boolean | null;
   avatar_url?: string | null;
   notes?: Json | null;
-  
+
   // بيانات مالية
   plan_id?: string | null;
   payment_status?: string | null;
   subscription_system?: string | null;
   last_payment_date?: string | null;
   next_payment_date?: string | null;
-  
+
   added_by?: string | null;
   created_at: string;
   updated_at?: string | null;
+}
+
+export interface StudentFilters {
+  searchTerm?: string;
+  gender?: 'all' | 'male' | 'female';
+  halaqaId?: string;
+  status?: StudentStatus | 'all';
+  isArchived: boolean;
 }
