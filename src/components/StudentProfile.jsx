@@ -39,6 +39,18 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
   }, []);
 
+  // 🛠️ دالة مساعدة لاستخراج الاسم النصي سواء كان JSON أو String
+  const formatName = useCallback((nameData) => {
+    if (!nameData) return '';
+    if (typeof nameData === 'string') return nameData;
+    if (typeof nameData === 'object') {
+      return isRtl 
+        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
+        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
+    }
+    return String(nameData);
+  }, [isRtl]);
+
   // 1. جلب بيانات الطالب الموحدة
   useEffect(() => {
     const fetchStudent = async () => {
@@ -50,8 +62,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             *,
             halaqas (
               id,
-              name_ar,
-              name_en,
+              name,
               target_audience
             )
           `)
@@ -132,6 +143,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     if (!dateOfBirth) return null;
     const today = new Date();
     const birth = new Date(dateOfBirth);
+    if (isNaN(birth.getTime())) return null;
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
@@ -146,13 +158,18 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     const autoSurahText = getQuranProgress(selectedIndex).text;
     const calculatedJuz = Math.floor(selectedIndex / 8) + 1;
 
+    // التعامل الأمني مع الاسم لمنع أخطاء التنسيق
+    const formattedSaveName = typeof student.name === 'string' 
+      ? student.name.trim() 
+      : student.name;
+
     try {
       const { error } = await supabase
         .from("students")
         .update({
-          name: student.name.trim(),
-          parent_name: student.parent_name?.trim() || null,
-          parent_phone: student.parent_phone?.trim() || null,
+          name: formattedSaveName,
+          parent_name: typeof student.parent_name === 'string' ? student.parent_name.trim() : student.parent_name || null,
+          parent_phone: typeof student.parent_phone === 'string' ? student.parent_phone.trim() : student.parent_phone || null,
           birth_date: student.birth_date || null,
           gender: student.gender,
           country: student.country || student.country_code || 'EG', 
@@ -160,7 +177,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           status: student.status || 'active',
           current_quarter_index: selectedIndex,
           current_juz: calculatedJuz, 
-          notes: student.notes?.trim() || null,
+          notes: typeof student.notes === 'string' ? student.notes.trim() : student.notes || null,
           updated_at: new Date().toISOString()
         })
         .eq("id", id);
@@ -199,6 +216,8 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     );
   }
 
+  const studentDisplayName = formatName(student.name);
+  const halaqaDisplayName = student.halaqas ? formatName(student.halaqas.name) : '';
   const currentAge = calculateAge(student.birth_date);
   const studentCountryCode = student.country || student.country_code || "EG";
   const matchedCountry = COUNTRIES_LIST.find(c => c.code === studentCountryCode);
@@ -246,7 +265,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
       )}
 
       <PageHeader 
-        title={isEditing ? "" : student.name}
+        title={isEditing ? "" : studentDisplayName}
         sub={isEditing ? "" : `${t('student_id') || 'كود الطالب'}: #${student.student_code || student.id.slice(0, 8)}`}
         action={
           <Btn variant="ghost" onClick={() => navigate(-1)} style={{ borderRadius: '20px' }}>
@@ -285,19 +304,19 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         <div style={{ flex: 1 }}>
           {isEditing ? (
             <Input 
-              value={student.name} 
+              value={studentDisplayName} 
               onChange={(e) => setStudent({...student, name: e.target.value})} 
               style={{ marginBottom: 0, fontSize: '14px', fontWeight: 'bold' }}
               required
             />
           ) : (
             <div style={{ textAlign: 'start' }}>
-              <h3 style={{ margin: 0, color: '#fff', fontSize: '17px', fontWeight: 'bold' }}>{student.name}</h3>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: '17px', fontWeight: 'bold' }}>{studentDisplayName}</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>
                 <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
                 <span>{matchedCountry ? (isRtl ? (matchedCountry.name_ar || matchedCountry.nameAr) : (matchedCountry.name_en || matchedCountry.nameEn)) : ''}</span>
                 {currentAge !== null && <span>• {currentAge} {t('years_old') || 'سنة'}</span>}
-                {student.halaqas?.name_ar && <span style={{ color: C.gold }}>• {student.halaqas.name_ar}</span>}
+                {halaqaDisplayName && <span style={{ color: C.gold }}>• {halaqaDisplayName}</span>}
               </div>
             </div>
           )}
