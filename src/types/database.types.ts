@@ -27,11 +27,6 @@ export interface Database {
           metadata: Json | null
           created_at: string
           updated_at: string | null
-          my_referral_code: string | null
-          contact_email: string | null
-          contact_phone: string | null
-          website: string | null
-          country_code: string | null
         }
       }
       students: {
@@ -83,7 +78,6 @@ export interface Database {
           hourly_rate: number | null
           vodafone_cash: string | null
           instapay_id: string | null
-          international_payout: Json | null
           created_at: string
           is_archived: boolean
           country: string | null
@@ -145,49 +139,6 @@ export interface Database {
           updated_at: string | null
           metadata: Json | null
           academy_id: string | null
-        }
-      }
-      payments: {
-        Row: {
-          id: string
-          academy_id: string
-          student_id: string
-          plan_id: string | null
-          amount: number
-          currency: string
-          period_start: string | null
-          period_end: string | null
-          due_date: string
-          paid_at: string | null
-          status: string
-          payment_method: string | null
-          gateway_ref: string | null
-          notes: string | null
-          created_at: string
-          updated_at: string
-          invoice_number: string | null
-          metadata: Json | null
-          created_by: string | null
-        }
-      }
-      attendance: {
-        Row: {
-          id: string
-          academy_id: string
-          halaqa_id: string
-          student_id: string
-          teacher_id: string | null
-          date: string
-          status: string
-          retention_assignment: string | null
-          new_memorization: string | null
-          session_grade: number | null
-          notes: string | null
-          created_at: string | null
-          updated_at: string | null
-          quarter_index: number | null
-          juz: number | null
-          quarter_in_hizb: number | null
         }
       }
     }
