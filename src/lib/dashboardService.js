@@ -1,11 +1,10 @@
 /**
  * src/lib/dashboardService.js
- * تم التحديث للتوافق مع الترجمة متعددة اللغات وأداء اللوحة الاحترافي
+ * تم التحديث للتوافق مع حقول Supabase الحقيقية (JSONB name)
  */
 
 export async function getDashboardStats(supabase, profile) {
   try {
-    // 1️⃣ جلب تاريخ اليوم الفعلي بتوقيت القاهرة بصيغة YYYY-MM-DD
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Africa/Cairo' });
 
     // 🔴 صلاحية الأدمن العام 'super_admin'
@@ -55,7 +54,7 @@ export async function getDashboardStats(supabase, profile) {
         attendanceRate = `${((presentCount / attendanceData.length) * 100).toFixed(1)}%`;
       }
 
-      // ج) إجمالي جلسات/عمليات التسميع اليومية المنجزة اليوم (إرجاع الرقم صريحاً للترجمة)
+      // ج) إجمالي ورد التسميع اليومي
       const { count: progressCount, error: progressError } = await supabase
         .from('daily_progress')
         .select('*', { count: 'exact', head: true })
@@ -64,20 +63,19 @@ export async function getDashboardStats(supabase, profile) {
 
       if (progressError) console.warn('خطأ في جلب التسميع اليومي:', progressError);
 
-      // د) رصد الاشتراكات/المدفوعات المتأخرة
+      // د) الاشتراكات المتأخرة
       const { count: overdueCount } = await supabase
         .from('payments')
         .select('*', { count: 'exact', head: true })
         .eq('academy_id', academyId)
         .eq('status', 'overdue');
 
-      // هـ) جلب حلقات اليوم النشطة وغير المؤرشفة
+      // هـ) جلب حلقات اليوم النشطة (تحديد الحقل name الجيسون)
       const { data: halaqasData, error: halaqasError } = await supabase
         .from('halaqas')
         .select(`
           id,
-          name_ar,
-          name_en,
+          name,
           start_time,
           end_time,
           teachers (
@@ -131,10 +129,15 @@ export async function getDashboardStats(supabase, profile) {
             attendance_rate = Math.round((presentCount / halaqaAttendance.length) * 100);
           }
 
+          // معالجة حقل name الجيسون
+          const nameObj = typeof halaqa.name === 'object' && halaqa.name !== null ? halaqa.name : {};
+          const nameAr = nameObj.ar || nameObj.en || (typeof halaqa.name === 'string' ? halaqa.name : '');
+          const nameEn = nameObj.en || nameObj.ar || (typeof halaqa.name === 'string' ? halaqa.name : '');
+
           return {
             id: halaqa.id,
-            name_ar: halaqa.name_ar,
-            name_en: halaqa.name_en || halaqa.name_ar,
+            name_ar: nameAr,
+            name_en: nameEn,
             teacher_name_ar: halaqa.teachers?.name || 'غير محدد',
             teacher_name_en: halaqa.teachers?.name || 'Not Assigned',
             time_display_ar: `${startFormatted.ar} - ${endFormatted.ar}`,
@@ -149,7 +152,7 @@ export async function getDashboardStats(supabase, profile) {
         studentsCount: studentsCount || 0, 
         academiesCount: null,
         attendanceRate,
-        totalSessions: progressCount || 0, // 👈 رقم مجرد
+        totalSessions: progressCount || 0,
         overdueCount: overdueCount || 0,
         activeHalaqasData
       }; 
