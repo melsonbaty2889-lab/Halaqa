@@ -1,5 +1,5 @@
 // src/components/Attendance.jsx
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   FaCalendarAlt, 
@@ -38,6 +38,25 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
     translateText
   } = useAttendance({ students, academyId, halaqas, t, i18n });
 
+  // 🛠️ دالة مساعدة لفك واستخراج اسم الحلقة بأمان (دعم JSONB والنصوص)
+  const formatHalaqaName = useCallback((halaqa) => {
+    if (!halaqa) return '';
+    
+    // إذا كان الحقل المباشر name_ar أو name_en موجوداً
+    if (isRtl && halaqa.name_ar) return halaqa.name_ar;
+    if (!isRtl && halaqa.name_en) return halaqa.name_en;
+
+    const nameData = halaqa.name;
+    if (!nameData) return halaqa.name_ar || halaqa.name_en || '';
+    if (typeof nameData === 'string') return nameData;
+    if (typeof nameData === 'object') {
+      return isRtl 
+        ? (nameData.ar || nameData.en || Object.values(nameData)[0] || '')
+        : (nameData.en || nameData.ar || Object.values(nameData)[0] || '');
+    }
+    return String(nameData);
+  }, [isRtl]);
+
   return (
     <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
@@ -66,7 +85,7 @@ export default function Attendance({ students = [], academyId, halaqas = [] }) {
               </option>
               {halaqas.map(halaqa => (
                 <option key={halaqa.id} value={halaqa.id} className="bg-slate-950 text-white">
-                  {isRtl ? (halaqa.name_ar || halaqa.name_en || halaqa.name) : (halaqa.name_en || halaqa.name_ar || halaqa.name)}
+                  {formatHalaqaName(halaqa)}
                 </option>
               ))}
             </select>
