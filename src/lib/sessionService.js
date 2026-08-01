@@ -25,7 +25,7 @@ export const upsertAttendance = async (records) => {
 
   const { error } = await supabase
     .from('attendance')
-    .upsert(records, { onConflict: 'student_id,halaqa_id,date' }); // تم التعديل لتطابق قيد الداتابيز تماماً
+    .upsert(records, { onConflict: 'student_id,halaqa_id,date' });
 
   if (error) {
     console.error("Error upserting attendance:", error.message);
@@ -78,10 +78,12 @@ export const saveDailySession = async ({
               teacher_id: teacherId || null,
               halaqa_id: halaqaId || null,
               date: today,
-              new_hifz_start: hifzData.newStart || null,
-              new_hifz_end: hifzData.newEnd || null,
-              review_start: hifzData.reviewStart || null,
-              review_end: hifzData.reviewEnd || null,
+              hifz_surah_id: hifzData.hifzSurahId || null,
+              hifz_from_ayah: hifzData.hifzFromAyah || null,
+              hifz_to_ayah: hifzData.hifzToAyah || null,
+              review_surah_id: hifzData.reviewSurahId || null,
+              review_from_ayah: hifzData.reviewFromAyah || null,
+              review_to_ayah: hifzData.reviewToAyah || null,
               grade: hifzData.grade || 'ممتاز',
               mistakes_count: parseInt(hifzData.mistakes) || 0,
               notes: hifzData.notes || null,
@@ -90,13 +92,15 @@ export const saveDailySession = async ({
 
         if (progressError) throw progressError;
 
-        await supabase
-          .from('students')
-          .update({
-            current_surah: hifzData.newEnd || hifzData.newStart,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', studentId);
+        if (hifzData.hifzSurahId) {
+          await supabase
+            .from('students')
+            .update({
+              current_surah_id: hifzData.hifzSurahId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', studentId);
+        }
       }
     }
 
@@ -113,8 +117,13 @@ export const saveDailySession = async ({
 export const saveStudentExam = async ({
   studentId,
   academyId,
+  teacherId,
+  halaqaId,
   examType,
-  examTarget,
+  fromSurahId,
+  toSurahId,
+  fromAyah,
+  toAyah,
   mistakes,
   prompts,
   tajweedGrade,
@@ -128,11 +137,16 @@ export const saveStudentExam = async ({
         {
           student_id: studentId,
           academy_id: academyId,
+          teacher_id: teacherId || null,
+          halaqa_id: halaqaId || null,
           exam_type: examType,
-          exam_target: examTarget,
+          from_surah_id: fromSurahId || null,
+          to_surah_id: toSurahId || null,
+          from_ayah: fromAyah || null,
+          to_ayah: toAyah || null,
           mistakes: mistakes || 0,
           prompts: prompts || 0,
-          tajweed_grade: tajweedGrade,
+          tajweed_grade: tajweedGrade || null,
           final_score: finalScore,
           notes: notes || null,
           date: new Date().toISOString().split('T')[0],
