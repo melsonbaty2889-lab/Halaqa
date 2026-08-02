@@ -25,7 +25,7 @@ const safeLazy = (importFn) => {
 
 // 🌐 استيراد الأقسام ديناميكياً
 const Students = safeLazy(() => import('./Students.jsx'));
-const Teachers = safeLazy(() => import('./Teachers.jsx')); // ⚡ تم الربط
+const Teachers = safeLazy(() => import('./Teachers.jsx')); 
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
 const Exams = safeLazy(() => import('./Exams.jsx')); 
 const Payments = safeLazy(() => import('./Payments.jsx'));
@@ -85,6 +85,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const lastFetchedUserId = useRef(null);
 
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('smart_halaqa_tab') || 'dashboard');
+  
+  // 🚀 حالة التوجيه لحلقة محددة بين الشاشات
+  const [selectedHalaqaId, setSelectedHalaqaId] = useState(null);
+
   useEffect(() => {
     localStorage.setItem('smart_halaqa_tab', activeTab);
   }, [activeTab]); 
@@ -278,9 +282,33 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'teachers':
         return <Teachers teachers={teachers} setTeachers={setTeachers} academyId={academyId} halaqas={enrichedHalaqas} />;
       case 'halaqas':
-        return <ActiveHalaqas halaqas={enrichedHalaqas} teachers={teachers} students={students} isLoading={loadingData} error={null} isRtl={isRtl} isMobile={isMobile} />;
+        return (
+          <ActiveHalaqas 
+            halaqas={enrichedHalaqas} 
+            teachers={teachers} 
+            students={students} 
+            isLoading={loadingData} 
+            error={null} 
+            isRtl={isRtl} 
+            isMobile={isMobile} 
+            // 🚀 ربط التنقل الذكي لغرفة التسميع
+            onNavigateToAttendance={(halaqaId) => {
+              setSelectedHalaqaId(halaqaId);
+              setActiveTab('attendance');
+            }}
+          />
+        );
       case 'attendance':
-        return <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} />;
+        return (
+          <Attendance 
+            students={students} 
+            academyId={academyId} 
+            timezone={timezone} 
+            halaqas={enrichedHalaqas} 
+            // 🚀 تمرير رقم الحلقة المحددة لتثبيتها في الشاشة
+            selectedHalaqaId={selectedHalaqaId}
+          />
+        );
       case 'exams':
         return <Exams students={students} academyId={academyId} />;
       case 'guardian-portal':
