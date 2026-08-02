@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'; 
+// src/components/Exams.jsx
+import React, { useState, useEffect, useCallback } from 'react'; 
 import { supabase } from '../lib/supabase';
 import { sessionService } from '../lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
@@ -9,15 +10,25 @@ import {
   FaCheckCircle, 
   FaSearch, 
   FaGraduationCap, 
-  FaSpinner, 
-  FaCalendarAlt,
-  FaFileCertificate,
+  FaSpinner,
   FaPrint
 } from 'react-icons/fa';
 
-export default function Exams({ students, academyId }) {
+export default function Exams({ students = [], academyId }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
+
+  // 🛠️ دالة مساعدة لفك واستخراج اسم الطالب بأمان (دعم JSONB والنصوص)
+  const formatStudentName = useCallback((nameData) => {
+    if (!nameData) return '';
+    if (typeof nameData === 'string') return nameData;
+    if (typeof nameData === 'object') {
+      return isRtl 
+        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
+        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
+    }
+    return String(nameData);
+  }, [isRtl]);
 
   // 🌍 أوزان الخصم الديناميكية (Dynamic SaaS Settings)
   const [mistakeWeight, setMistakeWeight] = useState(5);
@@ -54,8 +65,8 @@ export default function Exams({ students, academyId }) {
           .maybeSingle();
 
         if (!error && data) {
-          if (data.mistake_weight) setMistakeWeight(data.mistake_weight);
-          if (data.prompt_weight) setPromptWeight(data.prompt_weight);
+          if (data.mistake_weight !== undefined && data.mistake_weight !== null) setMistakeWeight(Number(data.mistake_weight));
+          if (data.prompt_weight !== undefined && data.prompt_weight !== null) setPromptWeight(Number(data.prompt_weight));
         }
       } catch (err) {
         console.error("🚨 خطأ في جلب أوزان الأكاديمية الديناميكية:", err);
@@ -65,7 +76,7 @@ export default function Exams({ students, academyId }) {
   }, [academyId]);
 
   // 2️⃣ 📜 تأثير جلب سجل الاختبارات السابقة المعتمدة للأكاديمية
-  const fetchExamLogs = async () => {
+  const fetchExamLogs = useCallback(async () => {
     if (!academyId) return;
     setLoadingLogs(true);
     try {
@@ -85,11 +96,11 @@ export default function Exams({ students, academyId }) {
     } finally {
       setLoadingLogs(false);
     }
-  };
+  }, [academyId]);
 
   useEffect(() => {
     fetchExamLogs();
-  }, [academyId]);
+  }, [fetchExamLogs]);
 
   // 3️⃣ 💾 دالة اعتماد وحفظ نتيجة الاختبار الحي عبر الخدمة الموحدة
   const handleSaveExam = async () => {
@@ -105,16 +116,19 @@ export default function Exams({ students, academyId }) {
     setFeedbackMsg({ type: '', text: '' });
 
     try {
+      const combinedNotes = notes.trim() 
+        ? `${examContent.trim()} - ${notes.trim()}` 
+        : examContent.trim();
+
       const result = await sessionService.saveStudentExam({
         studentId: selectedStudent,
         academyId: academyId,
         examType: examType,
-        examTarget: examContent.trim(),
         mistakes: fullErrors,
         prompts: warnings,
         tajweedGrade: tajweedRating,
         finalScore: calculatedScore,
-        notes: notes.trim()
+        notes: combinedNotes
       });
 
       if (!result.success) throw new Error(result.error);
@@ -145,25 +159,27 @@ export default function Exams({ students, academyId }) {
 
   // محاكي طباعة الشهادة للطالب المتفوق
   const handlePrintCertificate = (log) => {
+    const studentName = formatStudentName(log.students?.name) || (isRtl ? 'الطالب' : 'Student');
+    const target = log.exam_target || log.notes || (isRtl ? 'الاختبار القرآن' : 'Quran Exam');
     alert(isRtl 
-      ? `جاري تجهيز شهادة التقدير الكبرى للطالب: ${log.students?.name} لنجاحه في اختبار ${log.exam_target} بمعدل ${log.final_score}%` 
-      : `Generating formal certificate for ${log.students?.name} for passing ${log.exam_target} with score ${log.final_score}%`
+      ? `جاري تجهيز شهادة التقدير الكبرى للطالب: ${studentName} لنجاحه في اختبار ${target} بمعدل ${log.final_score}%` 
+      : `Generating formal certificate for ${studentName} for passing ${target} with score ${log.final_score}%`
     );
   };
 
   const filteredLogs = examLogs.filter(log => {
-    const studentName = log.students?.name?.toLowerCase() || '';
-    const content = log.exam_target?.toLowerCase() || ''; 
-    const query = searchQuery.toLowerCase();
+    const studentName = formatStudentName(log.students?.name).toLowerCase();
+    const content = (log.exam_target || log.notes || '').toLowerCase(); 
+    const query = searchQuery.toLowerCase().trim();
     return studentName.includes(query) || content.includes(query);
   });
 
   return (
     <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* هيدر اللوحة التوضيحي الفاخر */}
+      {/* هيدر اللوحة التوضيحي */}
       <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md mb-6">
-        <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-3 margin-0">
+        <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-3 m-0">
           <FaAward className="text-amber-500" /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية الرسمية' : 'Quranic Exams & Milestones Panel'}
         </h2>
         <p className="text-xs text-slate-400 mt-2 font-medium">
@@ -199,10 +215,13 @@ export default function Exams({ students, academyId }) {
               value={selectedStudent} 
               onChange={(e) => setSelectedStudent(e.target.value)}
               className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40"
+              style={{ backgroundColor: '#020617' }}
             >
               <option value="">{isRtl ? '-- ابحث واختر الطالب --' : '-- Select student --'}</option>
               {students.map(std => (
-                <option key={std.id} value={std.id}>{std.name}</option>
+                <option key={std.id} value={std.id}>
+                  {formatStudentName(std.name)}
+                </option>
               ))}
             </select>
           </div>
@@ -213,6 +232,7 @@ export default function Exams({ students, academyId }) {
               value={examType} 
               onChange={(e) => setExamType(e.target.value)}
               className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/40"
+              style={{ backgroundColor: '#020617' }}
             >
               <option value="surah">{isRtl ? 'سورة قصيرة / كاملة' : 'Short / Full Surah'}</option>
               <option value="juz">{isRtl ? 'اختبار جزء قرآن كامل (مثال: جزء عم)' : 'Full Quranic Juz'}</option>
@@ -238,9 +258,9 @@ export default function Exams({ students, academyId }) {
           <div className="p-4 rounded-xl border border-red-500/10 bg-slate-950/40 text-center">
             <span className="block text-xs font-bold text-red-400 mb-3">{isRtl ? 'الخطأ الكامل (نسيان/تبديل كلمة)' : 'Full Errors (Deductions)'}</span>
             <div className="flex items-center justify-center gap-4">
-              <button type="button" onClick={() => setFullErrors(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors"><FaMinus size={11} /></button>
+              <button type="button" onClick={() => setFullErrors(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer"><FaMinus size={11} /></button>
               <span className="text-xl font-extrabold text-white min-w-[24px]">{fullErrors}</span>
-              <button type="button" onClick={() => setFullErrors(prev => prev + 1)} className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors"><FaPlus size={11} /></button>
+              <button type="button" onClick={() => setFullErrors(prev => prev + 1)} className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors cursor-pointer"><FaPlus size={11} /></button>
             </div>
             <span className="block text-[10px] text-slate-500 mt-2">(-{mistakeWeight} {isRtl ? 'درجات للخطأ' : 'pts each'})</span>
           </div>
@@ -248,9 +268,9 @@ export default function Exams({ students, academyId }) {
           <div className="p-4 rounded-xl border border-amber-500/10 bg-slate-950/40 text-center">
             <span className="block text-xs font-bold text-amber-400 mb-3">{isRtl ? 'الردة / التنبيه (مساعدة الفتح للشيخ)' : 'Warnings / Prompts Given'}</span>
             <div className="flex items-center justify-center gap-4">
-              <button type="button" onClick={() => setWarnings(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors"><FaMinus size={11} /></button>
+              <button type="button" onClick={() => setWarnings(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer"><FaMinus size={11} /></button>
               <span className="text-xl font-extrabold text-white min-w-[24px]">{warnings}</span>
-              <button type="button" onClick={() => setWarnings(prev => prev + 1)} className="w-9 h-9 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center transition-colors"><FaPlus size={11} /></button>
+              <button type="button" onClick={() => setWarnings(prev => prev + 1)} className="w-9 h-9 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center transition-colors cursor-pointer"><FaPlus size={11} /></button>
             </div>
             <span className="block text-[10px] text-slate-500 mt-2">(-{promptWeight} {isRtl ? 'درجات للتنبيه' : 'pts each'})</span>
           </div>
@@ -269,7 +289,7 @@ export default function Exams({ students, academyId }) {
                 key={item.id}
                 type="button"
                 onClick={() => setTajweedRating(item.id)}
-                className={`p-3 text-xs font-bold rounded-xl border transition-all ${
+                className={`p-3 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                   tajweedRating === item.id 
                     ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/10' 
                     : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'
@@ -309,7 +329,7 @@ export default function Exams({ students, academyId }) {
         <button
           onClick={handleSaveExam}
           disabled={isSubmitting}
-          className="w-full p-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/5 active:scale-[0.99] transition-all"
+          className="w-full p-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/5 active:scale-[0.99] transition-all cursor-pointer"
         >
           <FaCheckCircle /> {isSubmitting ? (isRtl ? 'جاري توثيق الدرجة...' : 'Certifying...') : (isRtl ? 'اعتماد نتيجة الاختبار الحالية وإدراجها بلوحة الشرف 🚀' : 'Certify Official Exam & Log to Registry 🚀')}
         </button>
@@ -352,42 +372,46 @@ export default function Exams({ students, academyId }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-900/60 font-medium">
-                {filteredLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-slate-900/30 transition-colors text-slate-200">
-                    <td className="py-3.5 px-3 font-bold text-white">{log.students?.name || (isRtl ? 'طالب غير متوفر' : 'N/A')}</td>
-                    <td className="py-3.5 px-3">
-                      <span className="bg-slate-900 border border-slate-800 text-[10px] px-1.5 py-0.5 rounded text-slate-400 mx-1">
-                        {log.exam_type === 'surah' ? (isRtl ? 'سورة' : 'Surah') : log.exam_type === 'juz' ? (isRtl ? 'جزء' : 'Juz') : (isRtl ? 'آيات' : 'Verses')}
-                      </span>
-                      <span className="text-slate-300">{log.exam_target}</span>
-                    </td>
-                    <td className={`py-3.5 px-3 text-center font-extrabold ${log.final_score >= 90 ? 'text-emerald-400' : log.final_score >= 75 ? 'text-amber-400' : 'text-red-400'}`}>
-                      {log.final_score}%
-                    </td>
-                    <td className="py-3.5 px-3 text-center text-[11px] text-slate-400">
-                      {log.tajweed_grade === 'excellent' ? 'امتياز ومجود ✨' : log.tajweed_grade === 'good' ? 'حسن التلاوة 👍' : 'ضبط مخارج 🎯'}
-                    </td>
-                    <td className="py-3.5 px-3 text-center text-slate-500 font-mono text-[11px]">
-                      {log.date ? new Date(log.date).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '—'}
-                    </td>
-                    {/* ميزة توليد وطباعة الشهادة المضافة للمتفوقين */}
-                    <td className="py-3.5 px-3 text-center">
-                      <button
-                        onClick={() => handlePrintCertificate(log)}
-                        disabled={log.final_score < 75}
-                        className={`p-1.5 rounded-lg border text-[10px] font-bold inline-flex items-center gap-1.5 transition-all active:scale-90 ${
-                          log.final_score >= 90 
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-slate-950' 
-                            : 'bg-slate-950 text-slate-600 border-slate-900 disabled:opacity-20'
-                        }`}
-                        title={isRtl ? "طباعة شهادة التقدير الرسمية" : "Print Official Milestone Certificate"}
-                      >
-                        <FaPrint size={11} />
-                        <span>{isRtl ? 'الشهادة' : 'Cert'}</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredLogs.map(log => {
+                  const studentName = formatStudentName(log.students?.name) || (isRtl ? 'طالب غير متوفر' : 'N/A');
+                  const examTarget = log.exam_target || log.notes || '—';
+
+                  return (
+                    <tr key={log.id} className="hover:bg-slate-900/30 transition-colors text-slate-200">
+                      <td className="py-3.5 px-3 font-bold text-white">{studentName}</td>
+                      <td className="py-3.5 px-3">
+                        <span className="bg-slate-900 border border-slate-800 text-[10px] px-1.5 py-0.5 rounded text-slate-400 mx-1">
+                          {log.exam_type === 'surah' ? (isRtl ? 'سورة' : 'Surah') : log.exam_type === 'juz' ? (isRtl ? 'جزء' : 'Juz') : (isRtl ? 'آيات' : 'Verses')}
+                        </span>
+                        <span className="text-slate-300">{examTarget}</span>
+                      </td>
+                      <td className={`py-3.5 px-3 text-center font-extrabold ${log.final_score >= 90 ? 'text-emerald-400' : log.final_score >= 75 ? 'text-amber-400' : 'text-red-400'}`}>
+                        {log.final_score}%
+                      </td>
+                      <td className="py-3.5 px-3 text-center text-[11px] text-slate-400">
+                        {log.tajweed_grade === 'excellent' ? 'امتياز ومجود ✨' : log.tajweed_grade === 'good' ? 'حسن التلاوة 👍' : 'ضبط مخارج 🎯'}
+                      </td>
+                      <td className="py-3.5 px-3 text-center text-slate-500 font-mono text-[11px]">
+                        {log.date ? new Date(log.date.replace(/-/g, '/')).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '—'}
+                      </td>
+                      <td className="py-3.5 px-3 text-center">
+                        <button
+                          onClick={() => handlePrintCertificate(log)}
+                          disabled={Number(log.final_score) < 75}
+                          className={`p-1.5 rounded-lg border text-[10px] font-bold inline-flex items-center gap-1.5 transition-all active:scale-90 cursor-pointer ${
+                            Number(log.final_score) >= 90 
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-slate-950' 
+                              : 'bg-slate-950 text-slate-600 border-slate-900 disabled:opacity-20'
+                          }`}
+                          title={isRtl ? "طباعة شهادة التقدير الرسمية" : "Print Official Milestone Certificate"}
+                        >
+                          <FaPrint size={11} />
+                          <span>{isRtl ? 'الشهادة' : 'Cert'}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
