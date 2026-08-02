@@ -1,5 +1,5 @@
 // src/hooks/useAttendance.js
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { sessionService } from '../lib/sessionService';
 
 export function useAttendance({ students = [], academyId, halaqas = [], t, i18n }) {
@@ -14,20 +14,36 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  const translateText = (key, arText, enText) => {
-    if (i18n.exists(key)) return t(key);
+  const translateText = useCallback((key, arText, enText) => {
+    if (i18n && i18n.exists && i18n.exists(key)) return t(key);
     return isRtl ? arText : enText;
-  };
+  }, [i18n, isRtl, t]);
 
-  // 🔍 فلترة الطلاب
+  // 🛠️ دالة مساعدة لفك واستخراج اسم الطالب نصياً لعملية البحث
+  const getSearchableName = useCallback((nameData) => {
+    if (!nameData) return '';
+    if (typeof nameData === 'string') return nameData;
+    if (typeof nameData === 'object') {
+      return `${nameData.ar || ''} ${nameData.en || ''} ${nameData.full_name || ''} ${Object.values(nameData).join(' ')}`;
+    }
+    return String(nameData);
+  }, []);
+
+  // 🔍 فلترة الطلاب الآمنة
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
+    
+    const query = searchQuery.trim().toLowerCase();
+    
     return students.filter(student => {
       const matchHalaqa = !selectedHalaqaId || String(student.halaqa_id) === String(selectedHalaqaId);
-      const matchSearch = !searchQuery.trim() || (student.name && student.name.toLowerCase().includes(searchQuery.toLowerCase().trim()));
+      
+      const studentNameStr = getSearchableName(student.name).toLowerCase();
+      const matchSearch = !query || studentNameStr.includes(query);
+      
       return matchHalaqa && matchSearch;
     });
-  }, [students, selectedHalaqaId, searchQuery]);
+  }, [students, selectedHalaqaId, searchQuery, getSearchableName]);
 
   // 📊 حساب الإحصائيات
   const stats = useMemo(() => {
@@ -133,9 +149,9 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
         const currentRecord = attendanceData[student.id];
         const isPresent = !currentRecord?.status || currentRecord.status === 'present' || currentRecord.status === 'late';
         
-        const qIndex = currentRecord?.quarter_index || student.current_quarter_index || 1;
-        const juzNum = Math.ceil(qIndex / 8);
-        const qInHizb = ((qIndex - 1) % 4) + 1;
+        const qIndex = Number(currentRecord?.quarter_index || student.current_quarter_index || 1);
+        const juzNum = Math.ceil(qIndex / 8) || 1;
+        const qInHizb = (((qIndex - 1) % 4) + 1) || 1;
 
         const targetHalaqaId = student.halaqa_id || (selectedHalaqaId !== '' ? selectedHalaqaId : fallbackHalaqaId);
 
@@ -192,4 +208,4 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
     handleSaveAttendance,
     translateText
   };
-                                                  }
+}
