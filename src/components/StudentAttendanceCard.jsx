@@ -1,16 +1,16 @@
 // src/components/StudentAttendanceCard.jsx
 import React, { memo } from 'react';
 import { 
-  FaCheck, 
-  FaTimes, 
-  FaClock, 
-  FaUserClock, 
-  FaBookOpen, 
-  FaBook, 
-  FaGraduationCap,
-  FaWhatsapp,
-  FaMagic
-} from 'react-icons/fa';
+  Check, 
+  X, 
+  Clock, 
+  UserClock, 
+  BookOpen, 
+  Book, 
+  GraduationCap,
+  MessageCircle,
+  Sparkles
+} from 'lucide-react';
 import { sendWhatsAppAttendanceReport } from '../utils/whatsappUtils';
 
 // 🛠️ دالة مساعدة لفك واستخراج اسم الطالب أو السورة بأمان (دعم JSONB والنصوص)
@@ -45,7 +45,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
                 onClick={() => sendWhatsAppAttendanceReport(student, record, selectedDate, isRtl)}
                 className="p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
               >
-                <FaWhatsapp className="text-emerald-400 text-xs" /> {isRtl ? "تقرير الواتساب" : "WhatsApp"}
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400" /> {isRtl ? "تقرير الواتساب" : "WhatsApp"}
               </button>
             )}
           </div>
@@ -64,7 +64,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
                 : 'bg-slate-950 text-emerald-400 border-slate-800/80 hover:bg-slate-900'
             }`}
           >
-            <FaCheck size={10} /> {t('present') || 'حاضر'}
+            <Check className="w-3.5 h-3.5" /> {t('present') || 'حاضر'}
           </button>
 
           <button 
@@ -76,7 +76,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
                 : 'bg-slate-950 text-red-400 border-slate-800/80 hover:bg-slate-900'
             }`}
           >
-            <FaTimes size={10} /> {t('absent') || 'غائب'}
+            <X className="w-3.5 h-3.5" /> {t('absent') || 'غائب'}
           </button>
 
           <button 
@@ -88,7 +88,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
                 : 'bg-slate-950 text-amber-400 border-slate-800/80 hover:bg-slate-900'
             }`}
           >
-            <FaClock size={10} /> {t('late') || 'متأخر'}
+            <Clock className="w-3.5 h-3.5" /> {t('late') || 'متأخر'}
           </button>
 
           <button 
@@ -100,7 +100,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
                 : 'bg-slate-950 text-blue-400 border-slate-800/80 hover:bg-slate-900'
             }`}
           >
-            <FaUserClock size={10} /> {t('excused') || 'معتذر'}
+            <UserClock className="w-3.5 h-3.5" /> {t('excused') || 'معتذر'}
           </button>
         </div>
       </div>
@@ -110,7 +110,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
-                <FaBookOpen className="text-amber-500 text-xs" /> {isRtl ? "ورد الحفظ الجديد" : "New Memorization"}
+                <BookOpen className="w-3.5 h-3.5 text-amber-500" /> {isRtl ? "ورد الحفظ الجديد" : "New Memorization"}
               </label>
               <input 
                 type="text" 
@@ -123,7 +123,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
 
             <div className="flex flex-col gap-1">
               <label className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
-                <FaBook className="text-emerald-400 text-xs" /> {isRtl ? "ورد المراجعة والربط" : "Retention & Revision"}
+                <Book className="w-3.5 h-3.5 text-emerald-400" /> {isRtl ? "ورد المراجعة والربط" : "Retention & Revision"}
               </label>
               <input 
                 type="text" 
@@ -138,7 +138,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
             <div className="flex flex-col gap-1 flex-1">
               <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1">
-                <FaGraduationCap className="text-amber-500" /> {isRtl ? "التقييم اليومي" : "Daily Grade"}
+                <GraduationCap className="w-3.5 h-3.5 text-amber-500" /> {isRtl ? "التقييم اليومي" : "Daily Grade"}
               </span>
               <div className="flex gap-1.5">
                 {[
@@ -179,7 +179,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
 
           <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-900">
             <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1">
-              <FaMagic className="text-amber-500/70" /> {isRtl ? "ملاحظات سريعة:" : "Quick Notes:"}
+              <Sparkles className="w-3.5 h-3.5 text-amber-500/70" /> {isRtl ? "ملاحظات سريعة:" : "Quick Notes:"}
             </span>
             {quickNotes.map((chip, idx) => (
               <button
