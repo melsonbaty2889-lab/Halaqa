@@ -44,17 +44,29 @@ export default function Dashboard({
   
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
+  // 🛡️ دالة آمنة لاستخراج النصوص ومنع React Error #31
+  const safeText = useCallback((val, fallback = '') => {
+    if (!val) return fallback;
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object') {
+      return isArabic ? (val.ar || val.en || fallback) : (val.en || val.ar || fallback);
+    }
+    return fallback;
+  }, [isArabic]);
+
   const isSuperAdmin = userRole === 'super_admin';
-  const academyName = preloadedDashboardData?.academyName || "";
+  const rawAcademyName = preloadedDashboardData?.academyName || preloadedDashboardData?.name || "";
   const rawUserName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
   
   const displayName = useMemo(() => {
-    if (academyName) return academyName;
-    if (!rawUserName || rawUserName === 'Global Platform Admin' || rawUserName.toLowerCase().includes('admin')) {
+    const parsedAcademyName = safeText(rawAcademyName);
+    if (parsedAcademyName) return parsedAcademyName;
+    const parsedUserName = safeText(rawUserName);
+    if (!parsedUserName || parsedUserName === 'Global Platform Admin' || parsedUserName.toLowerCase().includes('admin')) {
       return isArabic ? 'إدارة المنصة' : 'Platform Admin';
     }
-    return rawUserName;
-  }, [academyName, rawUserName, isArabic]);
+    return parsedUserName;
+  }, [rawAcademyName, rawUserName, isArabic, safeText]);
 
   const academyId = preloadedDashboardData?.academy_id || preloadedDashboardData?.id || session?.user?.user_metadata?.academy_id;
 
@@ -164,7 +176,7 @@ export default function Dashboard({
             <span>{isArabic ? 'إجمالي الدارسين' : 'Total Students'}</span>
             <GraduationCap style={{ color: '#38BDF8' }} size={22} />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FFFFFF' }}>{stats?.studentsCount ?? 0}</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FFFFFF' }}>{safeText(stats?.studentsCount, '0')}</div>
           <div style={{ fontSize: '0.75rem', color: '#34D399', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? '↑ مسجلون بالحلقات' : '↑ Enrolled'}
           </div>
@@ -181,7 +193,7 @@ export default function Dashboard({
             <span>{isArabic ? 'نسبة الحضور اليومي' : 'Daily Attendance'}</span>
             <TrendingUp style={{ color: '#38BDF8' }} size={22} />
           </div>
-          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#38BDF8' }}>{stats?.attendanceRate || '0%'}</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#38BDF8' }}>{safeText(stats?.attendanceRate, '0%')}</div>
           <div style={{ fontSize: '0.75rem', color: '#7DD3FC', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? 'مؤشر أداء اليوم' : 'Today Performance'}
           </div>
@@ -199,7 +211,7 @@ export default function Dashboard({
             <BookOpen style={{ color: '#FBBF24' }} size={22} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FBBF24' }}>
-            {stats?.totalSessions ?? 0} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#CBD5E1' }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
+            {safeText(stats?.totalSessions, '0')} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#CBD5E1' }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: '#FDE047', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? 'إجمالي المسموع اليوم' : 'Completed Today'}
@@ -218,7 +230,7 @@ export default function Dashboard({
             <AlertTriangle style={{ color: (stats?.overdueCount || 0) > 0 ? '#F87171' : '#34D399' }} size={22} />
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: (stats?.overdueCount || 0) > 0 ? '#F87171' : '#34D399' }}>
-            {stats?.overdueCount ?? 0}
+            {safeText(stats?.overdueCount, '0')}
           </div>
           <div style={{ fontSize: '0.75rem', color: (stats?.overdueCount || 0) > 0 ? '#FCA5A5' : '#A7F3D0', marginTop: '4px', fontWeight: '600' }}>
             {isArabic ? 'اشتراكات تحتاج متابعة' : 'Requires Follow-up'}
@@ -241,7 +253,7 @@ export default function Dashboard({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-            {stats.activeHalaqasData.map((halaqa) => {
+            {stats.activeHalaqasData.map((halaqa, idx) => {
               const isLive = halaqa.status === 'live';
               const isFinished = halaqa.status === 'finished';
               
@@ -255,11 +267,15 @@ export default function Dashboard({
 
               const StatusIcon = isLive ? RefreshCw : isFinished ? CheckCircle2 : Hourglass;
 
+              const halaqaName = safeText(isArabic ? (halaqa.name_ar || halaqa.name) : (halaqa.name_en || halaqa.name), isArabic ? 'حلقة قرآنيّة' : 'Quran Halaqa');
+              const teacherName = safeText(isArabic ? (halaqa.teacher_name_ar || halaqa.teacher_name) : (halaqa.teacher_name_en || halaqa.teacher_name), isArabic ? 'غير محدد' : 'N/A');
+              const timeDisplay = safeText(isArabic ? (halaqa.time_display_ar || halaqa.time_display) : (halaqa.time_display_en || halaqa.time_display), '');
+
               return (
-                <div key={halaqa.id} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div key={halaqa.id || idx} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <h4 style={{ margin: 0, color: '#FFFFFF', fontSize: '0.9rem', fontWeight: '700' }}>
-                      {isArabic ? halaqa.name_ar : halaqa.name_en}
+                      {halaqaName}
                     </h4>
                     <span style={{ padding: '3px 8px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.72rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <StatusIcon size={12} className={isLive ? styles?.spinning || '' : ''} />
@@ -269,18 +285,20 @@ export default function Dashboard({
 
                   <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <User style={{ color: '#94A3B8' }} size={14} />
-                    <span>{isArabic ? `المعلم: ${halaqa.teacher_name_ar}` : `Teacher: ${halaqa.teacher_name_en}`}</span>
+                    <span>{isArabic ? `المعلم: ${teacherName}` : `Teacher: ${teacherName}`}</span>
                   </div>
 
-                  <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Clock style={{ color: '#94A3B8' }} size={14} />
-                    <span>{isArabic ? halaqa.time_display_ar : halaqa.time_display_en}</span>
-                  </div>
+                  {timeDisplay && (
+                    <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Clock style={{ color: '#94A3B8' }} size={14} />
+                      <span>{timeDisplay}</span>
+                    </div>
+                  )}
 
-                  {halaqa.attendance_rate !== null && (
+                  {halaqa.attendance_rate !== undefined && halaqa.attendance_rate !== null && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#38BDF8' }}>
                       <span>{isArabic ? 'نسبة حضور الحلقة:' : 'Attendance:'}</span>
-                      <span style={{ fontWeight: 'bold' }}>{halaqa.attendance_rate}%</span>
+                      <span style={{ fontWeight: 'bold' }}>{safeText(halaqa.attendance_rate)}%</span>
                     </div>
                   )}
                 </div>
