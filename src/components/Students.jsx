@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +8,10 @@ import {
   FaEye, FaWhatsapp, FaBookOpen, FaRotateLeft
 } from 'react-icons/fa6';
 
-export default function StudentsList() {
+export default function StudentsList({ academyId }) {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl';
+  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
   const [students, setStudents] = useState([]);
   const [halaqas, setHalaqas] = useState([]);
@@ -23,12 +23,8 @@ export default function StudentsList() {
   const [selectedGender, setSelectedGender] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   // 🛠️ دالة مساعدة لاستخراج الاسم النصي سواء كان JSON أو String
-  const formatName = (nameData) => {
+  const formatName = useCallback((nameData) => {
     if (!nameData) return '';
     if (typeof nameData === 'string') return nameData;
     if (typeof nameData === 'object') {
@@ -37,33 +33,42 @@ export default function StudentsList() {
         : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
     }
     return String(nameData);
-  };
+  }, [isRtl]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!academyId) return;
+    
     try {
       setLoading(true);
 
-      // 1. جلب الحلقات باستخدام حقل name الجيسون الصحيح
+      // 1. جلب الحلقات الخاصة بالأكاديمية فقط
       const { data: halaqasData } = await supabase
         .from('halaqas')
-        .select('id, name');
+        .select('id, name')
+        .eq('academy_id', academyId);
+        
       if (halaqasData) setHalaqas(halaqasData);
 
-      // 2. جلب الطلاب مع بيانات الحلقة المرتبطة
+      // 2. جلب الطلاب مع بيانات الحلقة المرتبطة للأكاديمية فقط
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`*, halaqas ( id, name )`)
+        .eq('academy_id', academyId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setStudents(studentsData || []);
 
     } catch (err) {
-      console.error('Error fetching data:', err);
+      console.error('🚨 Error fetching data:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [academyId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Helper function to check gender safely
   const checkIsMale = (student) => {
@@ -93,7 +98,7 @@ export default function StudentsList() {
       if (selectedGender === 'male' && !checkIsMale(student)) return false;
       if (selectedGender === 'female' && !checkIsFemale(student)) return false;
 
-      // Search Query (استخراج الاسم النصي بأمان للبحث)
+      // Search Query
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const studentDisplayName = formatName(student.name).toLowerCase();
@@ -104,7 +109,7 @@ export default function StudentsList() {
 
       return true;
     });
-  }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm, isRtl]);
+  }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm, formatName]);
 
   // Statistics Calculation
   const stats = useMemo(() => {
@@ -128,11 +133,11 @@ export default function StudentsList() {
     try {
       const { error } = await supabase
         .from('students')
-        .update({ status: newStatus, is_archived: willBeArchived })
+        .update({ status: newStatus, is_archived: willBeArchived, updated_at: new Date().toISOString() })
         .eq('id', studentId);
 
       if (error) {
-        console.error('Supabase Update Error:', error);
+        console.error('🚨 Supabase Update Error:', error);
         // Rollback on failure
         setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus, is_archived: currentIsArchived } : s));
         alert(isRtl ? 'حدث خطأ أثناء التحديث في قاعدة البيانات' : 'Failed to update student status');
@@ -217,7 +222,7 @@ export default function StudentsList() {
         {/* Export Button */}
         <button
           type="button"
-          onClick={() => alert(isRtl ? 'جاري تجهيز الملف...' : 'Exporting...')}
+          onClick={() => alert(isRtl ? 'ميزة التصدير ستتوفر قريباً...' : 'Export coming soon...')}
           style={{
             padding: '10px 6px',
             fontSize: '12px',
@@ -376,6 +381,9 @@ export default function StudentsList() {
             const studentDisplayName = formatName(student.name);
             const halaqaDisplayName = student.halaqas ? formatName(student.halaqas.name) : '';
 
+            // Clean phone number for WhatsApp
+            const cleanPhone = student.parent_phone ? String(student.parent_phone).replace(/\D/g, '') : null;
+
             return (
               <div 
                 key={student.id} 
@@ -425,9 +433,9 @@ export default function StudentsList() {
                     </div>
                   </div>
 
-                  {student.parent_phone && (
+                  {cleanPhone && (
                     <a 
-                      href={`https://wa.me/${student.parent_phone.replace(/\+/g, '')}`} 
+                      href={`https://wa.me/${cleanPhone}`} 
                       target="_blank" 
                       rel="noreferrer" 
                       style={{ 
