@@ -31,6 +31,16 @@ export default function Sidebar({
 
   const [openSectionId, setOpenSectionId] = useState(null);
 
+  // 🛡️ دالة مساعدة معالجة لاستخراج النص بأمان ومنع خطأ React #31
+  const getText = (val) => {
+    if (!val) return '';
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object') {
+      return isRtl ? (val.ar || val.en || '') : (val.en || val.ar || '');
+    }
+    return '';
+  };
+
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items.some(item => item.id === activeTab));
     if (activeSection) {
@@ -47,14 +57,14 @@ export default function Sidebar({
   const currentLocale = isRtl ? 'ar' : 'en';
   const hijri = formatHijriDate(new Date(), currentLocale);
 
-    const loadAcademies = async () => {
+  const loadAcademies = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       let list = [];
 
-      // 1️⃣ أولاً: تجربة جلب الأكاديمية عبر دالة get_user_academy_id إذا كانت متوفرة
+      // 1. تجربة جلب عبر RPC
       const { data: rpcAcademyId, error: rpcError } = await supabase.rpc('get_user_academy_id');
 
       if (rpcAcademyId && !rpcError) {
@@ -64,12 +74,10 @@ export default function Sidebar({
           .eq('id', rpcAcademyId)
           .single();
 
-        if (academyData) {
-          list.push(academyData);
-        }
+        if (academyData) list.push(academyData);
       }
 
-      // 2️⃣ ثانياً: إذا لم نجد نتائج عبر RPC، نبحث في جدول staff
+      // 2. البحث في جدول staff
       if (list.length === 0) {
         const { data: staffData } = await supabase
           .from('staff')
@@ -81,7 +89,7 @@ export default function Sidebar({
         }
       }
 
-      // 3️⃣ ثالثاً: إذا لم نجد نتائج حتى الآن، نبحث في جدول academies كـ Owner مباشرة
+      // 3. البحث في جدول academies كـ Owner
       if (list.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
@@ -93,10 +101,8 @@ export default function Sidebar({
         }
       }
 
-      // تحديث قائمة الأكاديميات
       setAcademiesList(list);
 
-      // 🔄 ربط تلقائي: تحديث الـ currentAcademyId وتمريره للمكون الأب لتعمل باقي الصفحات
       if (list.length > 0) {
         const exists = list.some(a => a.id === currentAcademyId);
         if (!currentAcademyId || !exists) {
@@ -126,7 +132,7 @@ export default function Sidebar({
   }, [currentAcademyId]);
 
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academiesList[0];
-  const currentAcademyName = currentAcademy?.name || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
+  const currentAcademyName = getText(currentAcademy?.name) || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
   const calculateEffectiveDaysLeft = () => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
@@ -189,8 +195,9 @@ export default function Sidebar({
   const statusBadge = getStatusBadge();
 
   const normalizeArabic = (text) => {
-    if (!text) return '';
-    return text
+    const str = getText(text);
+    if (!str) return '';
+    return str
       .replace(/[\u064B-\u0652]/g, '')
       .replace(/[أإآ]/g, 'ا')
       .replace(/ة/g, 'ه')
@@ -199,10 +206,9 @@ export default function Sidebar({
   };
 
   const filteredMenuSections = menuSections.map(section => {
-    const filteredItems = section.items.filter(item => {
-      const labelText = typeof item.label === 'object' ? (isRtl ? item.label.ar : item.label.en) : item.label;
-      return normalizeArabic(labelText).includes(normalizeArabic(searchQuery.trim()));
-    });
+    const filteredItems = section.items.filter(item =>
+      normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
+    );
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
@@ -289,7 +295,7 @@ export default function Sidebar({
                 fontWeight: '700',
                 ...statusBadge.style
               }}>
-                {statusBadge.text}
+                {getText(statusBadge.text)}
               </span>
             </div>
 
@@ -350,7 +356,7 @@ export default function Sidebar({
                       fontSize: '0.78rem'
                     }}
                   >
-                    <span dir="auto">{acc.name}</span>
+                    <span dir="auto">{getText(acc.name)}</span>
                     <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
                   </button>
                 ))}
@@ -413,7 +419,6 @@ export default function Sidebar({
               </span>
             </div>
 
-            {/* ⚡ زر الترقية - تحويل فوري لصفحة الاشتراكات */}
             <button
               onClick={() => {
                 setActiveTab('subscriptions');
@@ -501,10 +506,7 @@ export default function Sidebar({
                         transition: '0.15s ease'
                       }}
                     >
-                      {/* 🟢 معالجة عنوان القسم للتعامل مع Object أو String */}
-                      <span>
-                        {typeof section.title === 'object' ? (isRtl ? section.title.ar : section.title.en) : section.title}
-                      </span>
+                      <span>{getText(section.title)}</span>
 
                       {isExpanded ? (
                         <ChevronUp size={14} />
@@ -554,9 +556,8 @@ export default function Sidebar({
                             >
                               <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
                               
-                              {/* 🟢 معالجة اسم العنصر للتعامل مع Object أو String */}
                               <span style={{ fontSize: '0.78rem' }}>
-                                {typeof item.label === 'object' ? (isRtl ? item.label.ar : item.label.en) : item.label}
+                                {getText(item.label)}
                               </span>
                             </button>
                           );
@@ -595,7 +596,7 @@ export default function Sidebar({
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justify.content: 'center',
               gap: '6px',
               padding: '7px',
               background: 'rgba(239, 68, 68, 0.08)',
