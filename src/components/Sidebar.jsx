@@ -5,9 +5,9 @@ import { supabase } from '../lib/supabase';
 import { getMenuSections } from '../constants/sidebarMenu';
 import SmartHalaqaProLogo from './SmartHalaqaProLogo';
 import { 
-  FaSearch, FaTimes, FaChevronDown, FaChevronUp, 
-  FaCloud, FaSignOutAlt, FaBolt, FaClock
-} from "react-icons/fa";
+  Search, X, ChevronDown, ChevronUp, 
+  Cloud, LogOut, Zap, Clock 
+} from "lucide-react";
 
 export default function Sidebar({
   currentAcademyId,
@@ -224,9 +224,9 @@ export default function Sidebar({
             {isMobile && (
               <button 
                 onClick={() => setSidebarOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1rem', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
               >
-                <FaTimes />
+                <X size={18} />
               </button>
             )}
           </div>
@@ -268,7 +268,7 @@ export default function Sidebar({
               <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {currentAcademyName}
               </span>
-              <FaChevronDown style={{ fontSize: '0.65rem', color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+              <ChevronDown size={14} style={{ color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
             </button>
 
             {dropdownOpen && (
@@ -335,7 +335,7 @@ export default function Sidebar({
               fontFamily: 'monospace',
               flexShrink: 0
             }}>
-              <FaClock style={{ fontSize: '0.8rem', color: '#38bdf8' }} />
+              <Clock size={14} style={{ color: '#38bdf8' }} />
               <span>{academyTime || '12:24 PM'}</span>
             </div>
 
@@ -391,7 +391,7 @@ export default function Sidebar({
                 boxShadow: '0 2px 4px rgba(245, 158, 11, 0.15)'
               }}
             >
-              <FaBolt style={{ fontSize: '0.65rem' }} />
+              <Zap size={12} />
               <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
             </button>
           </div>
@@ -407,7 +407,7 @@ export default function Sidebar({
             alignItems: 'center',
             padding: '0 8px'
           }}>
-            <FaSearch style={{ color: '#64748b', fontSize: '0.7rem' }} />
+            <Search size={14} style={{ color: '#64748b' }} />
             <input 
               type="text"
               placeholder={isRtl ? 'بحث سريع...' : 'Quick search...'}
@@ -458,9 +458,9 @@ export default function Sidebar({
                     >
                       <span>{section.title}</span>
                       {isExpanded ? (
-                        <FaChevronUp style={{ fontSize: '0.6rem' }} />
+                        <ChevronUp size={14} />
                       ) : (
-                        <FaChevronDown style={{ fontSize: '0.6rem' }} />
+                        <ChevronDown size={14} />
                       )}
                     </button>
 
@@ -503,7 +503,7 @@ export default function Sidebar({
                                 transition: 'all 0.15s ease'
                               }}
                             >
-                              <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} />
+                              <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
                               <span style={{ fontSize: '0.78rem' }}>{item.label}</span>
                             </button>
                           );
@@ -532,7 +532,7 @@ export default function Sidebar({
         {/* 🔒 6️⃣ إنهاء الجلسة */}
         <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', background: '#080d1a' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px', fontSize: '0.68rem', color: '#64748b' }}>
-            <FaCloud style={{ color: '#10b981' }} />
+            <Cloud size={14} style={{ color: '#10b981' }} />
             <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
           </div>
 
@@ -554,7 +554,7 @@ export default function Sidebar({
               cursor: 'pointer'
             }}
           >
-            <FaSignOutAlt />
+            <LogOut size={16} />
             <span>{isRtl ? 'إنهاء الجلسة وتأكيد الخروج' : 'Logout'}</span>
           </button>
         </div>
