@@ -47,19 +47,63 @@ export default function Sidebar({
   const currentLocale = isRtl ? 'ar' : 'en';
   const hijri = formatHijriDate(new Date(), currentLocale);
 
-  const loadAcademies = async () => {
+    const loadAcademies = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: staffData } = await supabase
-        .from('staff')
-        .select('academy_id, academies(id, name, trial_ends_at, is_active)')
-        .eq('user_id', user.id);
+      let list = [];
 
-      if (staffData && staffData.length > 0) {
-        const list = staffData.map(s => s.academies).filter(Boolean);
-        setAcademiesList(list);
+      // 1️⃣ أولاً: تجربة جلب الأكاديمية عبر دالة get_user_academy_id إذا كانت متوفرة
+      const { data: rpcAcademyId, error: rpcError } = await supabase.rpc('get_user_academy_id');
+
+      if (rpcAcademyId && !rpcError) {
+        const { data: academyData } = await supabase
+          .from('academies')
+          .select('id, name, trial_ends_at, is_active')
+          .eq('id', rpcAcademyId)
+          .single();
+
+        if (academyData) {
+          list.push(academyData);
+        }
+      }
+
+      // 2️⃣ ثانياً: إذا لم نجد نتائج عبر RPC، نبحث في جدول staff
+      if (list.length === 0) {
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('academy_id, academies(id, name, trial_ends_at, is_active)')
+          .eq('user_id', user.id);
+
+        if (staffData && staffData.length > 0) {
+          list = staffData.map(s => s.academies).filter(Boolean);
+        }
+      }
+
+      // 3️⃣ ثالثاً: إذا لم نجد نتائج حتى الآن، نبحث في جدول academies كـ Owner مباشرة
+      if (list.length === 0) {
+        const { data: ownedAcademies } = await supabase
+          .from('academies')
+          .select('id, name, trial_ends_at, is_active')
+          .eq('owner_id', user.id);
+
+        if (ownedAcademies && ownedAcademies.length > 0) {
+          list = ownedAcademies;
+        }
+      }
+
+      // تحديث قائمة الأكاديميات
+      setAcademiesList(list);
+
+      // 🔄 ربط تلقائي: تحديث الـ currentAcademyId وتمريره للمكون الأب لتعمل باقي الصفحات
+      if (list.length > 0) {
+        const exists = list.some(a => a.id === currentAcademyId);
+        if (!currentAcademyId || !exists) {
+          if (typeof onSwitchAcademy === 'function') {
+            onSwitchAcademy(list[0].id);
+          }
+        }
       }
     } catch (err) {
       console.error("Error loading user academies:", err);
