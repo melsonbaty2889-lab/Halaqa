@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatName } from '../utils/formatters';
 import { 
   FaTrophy, FaFire, FaMedal, FaStar, FaCrown, 
   FaUserGraduate, FaSpinner, FaExclamationTriangle 
@@ -44,18 +45,24 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
         if (badgesErr) errMsg += `خطأ الأوسمة: ${badgesErr.message} | `;
         setBadges(badgesData || []);
 
-        // 3️⃣ جلب بيانات التتابع (Streaks)
-        let streaksQuery = supabase.from('student_streaks').select('*, students(name)').limit(10);
+        // 3️⃣ جلب بيانات التتابع (Streaks) مباشرة من جدول students
+        let streaksQuery = supabase
+          .from('students')
+          .select('id, name, current_streak, longest_streak')
+          .order('current_streak', { ascending: false })
+          .limit(10);
+
         if (targetAcademyId) streaksQuery = streaksQuery.eq('academy_id', targetAcademyId);
 
         const { data: streaksData, error: streaksErr } = await streaksQuery;
         if (streaksErr) errMsg += `خطأ السلاسل: ${streaksErr.message} | `;
         setStreaks(streaksData || []);
 
-        // 4️⃣ جلب المتصدرين
+        // 4️⃣ جلب المتصدرين حسب النقاط مباشرة من جدول students
         let studentsQuery = supabase
           .from('students')
-          .select('id, name, avatar_url')
+          .select('id, name, avatar_url, points')
+          .order('points', { ascending: false })
           .limit(10);
 
         if (targetAcademyId) studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
@@ -86,6 +93,8 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
       </div>
     );
   }
+
+  const lang = isRtl ? 'ar' : 'en';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', direction: isRtl ? 'rtl' : 'ltr', padding: '8px' }}>
@@ -214,7 +223,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
                         <div>
                           <span style={{ color: '#FFF', fontWeight: '700', fontSize: '0.92rem', display: 'block' }}>
-                            {item.name || 'طالب'}
+                            {formatName(item.name, lang, isRtl ? 'طالب' : 'Student')}
                           </span>
                           <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>
                             {isRtl ? `المستوى ${level}` : `Level ${level}`}
@@ -291,7 +300,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
                       <div>
                         <h3 style={{ color: '#FFF', fontSize: '0.9rem', fontWeight: '700', margin: '0 0 2px 0' }}>
-                          {st.students?.name || st.student_name || 'طالب'}
+                          {formatName(st.name, lang, isRtl ? 'طالب' : 'Student')}
                         </h3>
                         <div style={{ color: '#64748B', fontSize: '0.72rem' }}>
                           {isRtl ? `أفضل رقم: ${longestStreak} يوم` : `Best: ${longestStreak} days`}
@@ -399,4 +408,4 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
     </div>
   );
-          }
+}
