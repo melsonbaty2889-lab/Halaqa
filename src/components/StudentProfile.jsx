@@ -8,6 +8,7 @@ import QuranProgressSelector from './QuranProgressSelector';
 import QuranProgressBar from './QuranProgressBar';
 import AchievementChart from './AchievementChart'; 
 import { getQuranProgress } from '../utils/quranUtils';
+import { formatName } from '../utils/formatters';
 import { COUNTRIES_LIST } from '../constants/countries';
 import { 
   FaArrowLeft, FaArrowRight, FaSave, FaTimes, FaEdit, 
@@ -22,6 +23,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const { t, i18n } = useTranslation();
   
   const isRtl = i18n.dir() === 'rtl';
+  const currentLang = isRtl ? 'ar' : 'en';
   
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,18 +40,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
   }, []);
-
-  // 🛠️ دالة مساعدة لاستخراج الاسم النصي سواء كان JSON أو String
-  const formatName = useCallback((nameData) => {
-    if (!nameData) return '';
-    if (typeof nameData === 'string') return nameData;
-    if (typeof nameData === 'object') {
-      return isRtl 
-        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
-        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
-    }
-    return String(nameData);
-  }, [isRtl]);
 
   // 1. جلب بيانات الطالب الموحدة
   useEffect(() => {
@@ -155,8 +145,9 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     setSaving(true);
 
     const selectedIndex = parseInt(student.current_quarter_index, 10) || 0;
-    const autoSurahText = getQuranProgress(selectedIndex).text;
-    const calculatedJuz = Math.floor(selectedIndex / 8) + 1;
+    const progressInfo = getQuranProgress(selectedIndex);
+    const autoSurahText = progressInfo.text;
+    const calculatedJuz = progressInfo.juz || 1;
 
     // التعامل الأمني مع الاسم لمنع أخطاء التنسيق
     const formattedSaveName = typeof student.name === 'string' 
@@ -216,8 +207,8 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     );
   }
 
-  const studentDisplayName = formatName(student.name);
-  const halaqaDisplayName = student.halaqas ? formatName(student.halaqas.name) : '';
+  const studentDisplayName = formatName(student.name, currentLang);
+  const halaqaDisplayName = student.halaqas ? formatName(student.halaqas.name, currentLang) : '';
   const currentAge = calculateAge(student.birth_date);
   const studentCountryCode = student.country || student.country_code || "EG";
   const matchedCountry = COUNTRIES_LIST.find(c => c.code === studentCountryCode);
