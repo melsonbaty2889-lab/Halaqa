@@ -4,7 +4,7 @@ import {
   Check, 
   X, 
   Clock, 
-  UserClock, 
+  UserCheck, 
   BookOpen, 
   Book, 
   GraduationCap,
