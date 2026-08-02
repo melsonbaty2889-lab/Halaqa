@@ -8,41 +8,40 @@ import {
   FaCheckCircle, 
   FaShieldAlt,
   FaBan,
-  FaSearch,
   FaSync,
   FaExclamationTriangle,
   FaUser,
-  FaEnvelope,
-  FaInfoCircle,
   FaFileCsv,
   FaPlus,
   FaTimes,
   FaInfinity,
-  FaReceipt,
   FaEye,
-  FaMoneyBillWave,
   FaUnlock
 } from 'react-icons/fa';
+
+// 🛡️ دالة أمان لمنع خطأ React #31 واستخراج النص العربي بأمان
+const getSafeText = (val, defaultVal = '') => {
+  if (!val) return defaultVal;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    return val.ar || val.en || val.name || Object.values(val)[0] || defaultVal;
+  }
+  return String(val);
+};
 
 export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
   const [activeAcademies, setActiveAcademies] = useState([]); 
-  const [blockedAcademies, setBlockedAcademies] = useState([]); // 🚫 الأكاديميات المحظورة/المعطلة
+  const [blockedAcademies, setBlockedAcademies] = useState([]); 
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   
-  // 🔍 حالات البحث
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchRef = useRef(null);                               
-
   const [activeTab, setActiveTab] = useState('all'); 
-  const [selectedAcademy, setSelectedAcademy] = useState(null);
   const [extendModalAcademy, setExtendModalAcademy] = useState(null);
-  const [receiptModalUrl, setReceiptModalUrl] = useState(null); // معاينة صورة الإشعار
+  const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'success') => {
@@ -56,7 +55,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     else setRefreshing(true);
 
     try {
-      // 1️⃣ جلب الطلبات المعلقة من جدول saas_subscriptions
+      // 1️⃣ جلب الطلبات المعلقة
       const { data: subData, error: subErr } = await supabase
         .from('saas_subscriptions')
         .select(`
@@ -78,7 +77,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (aErr) throw aErr;
 
-      // 3️⃣ جلب الأكاديميات المحظورة / غير النشطة 🚫
+      // 3️⃣ جلب الأكاديميات المحظورة / غير النشطة
       const { data: blockedData, error: bErr } = await supabase
         .from('academies')
         .select('*')
@@ -92,7 +91,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         .from('academies')
         .select('*', { count: 'exact', head: true });
 
-      // إثراء تفاصيل المالك لكافة الأكاديميات
       const allAcademies = [...(activeData || []), ...(blockedData || [])];
       const ownerIds = [...new Set(allAcademies.map(a => a.owner_id).filter(Boolean))];
       let profilesMap = {};
@@ -137,7 +135,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   useEffect(() => {
     fetchDashboardData();
 
-    // الاستماع للتغيرات في جدول الاشتراكات والأكاديميات فورياً
     const realTimeChannel = supabase
       .channel('admin-dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saas_subscriptions' }, () => {
@@ -152,17 +149,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       supabase.removeChannel(realTimeChannel);
     };
   }, [fetchDashboardData]);
-
-  // إغلاق المنسدلة عند النقر في الخارج
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // ✅ اعتماد طلب الاشتراك
   const onApproveSubscription = async (subscription) => {
@@ -181,7 +167,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         expiresAt.setMonth(now.getMonth() + 1);
       }
 
-      // 1. تحديث حالة الاشتراك في saas_subscriptions
       const { error: subErr } = await supabase
         .from('saas_subscriptions')
         .update({
@@ -194,7 +179,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (subErr) throw subErr;
 
-      // 2. تفعيل الأكاديمية وتعديل تاريخ انتهاء التجربة/الاشتراك
       if (subscription.academy_id) {
         await supabase
           .from('academies')
@@ -205,7 +189,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           .eq('id', subscription.academy_id);
       }
 
-      // 3. تفعيل حساب المالك
       if (subscription.payer_id) {
         await supabase
           .from('profiles')
@@ -249,7 +232,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const onDeactivateClick = async (id, ownerId) => {
     if (processingId) return;
     const targetAcademy = activeAcademies.find(a => a.id === id);
-    if (!window.confirm(isRtl ? `تعليق/حظر (${targetAcademy?.name || ''})؟` : 'Deactivate this academy?')) return;
+    const targetName = getSafeText(targetAcademy?.name);
+    if (!window.confirm(isRtl ? `تعليق/حظر (${targetName})؟` : 'Deactivate this academy?')) return;
 
     setProcessingId(`deactivate-${id}`);
 
@@ -260,7 +244,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const targetOwnerId = ownerId || targetAcademy?.owner_id;
       if (targetOwnerId) await supabase.from('profiles').update({ is_activated: false }).eq('id', targetOwnerId);
 
-      showToast(isRtl ? `تم تعليق "${targetAcademy?.name || ''}"` : "Deactivated", "info");
+      showToast(isRtl ? `تم تعليق "${targetName}"` : "Deactivated", "info");
       fetchDashboardData(true);
     } catch (error) {
       showToast(isRtl ? "فشل الحظر." : "Failed.", "error");
@@ -273,7 +257,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const onActivateClick = async (id, ownerId) => {
     if (processingId) return;
     const targetAcademy = blockedAcademies.find(a => a.id === id);
-    if (!window.confirm(isRtl ? `إلغاء حظر وتفعيل (${targetAcademy?.name || ''})؟` : 'Activate this academy?')) return;
+    const targetName = getSafeText(targetAcademy?.name);
+    if (!window.confirm(isRtl ? `إلغاء حظر وتفعيل (${targetName})؟` : 'Activate this academy?')) return;
 
     setProcessingId(`activate-${id}`);
 
@@ -284,7 +269,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const targetOwnerId = ownerId || targetAcademy?.owner_id;
       if (targetOwnerId) await supabase.from('profiles').update({ is_activated: true }).eq('id', targetOwnerId);
 
-      showToast(isRtl ? `تم إلغاء حظر "${targetAcademy?.name || ''}" بنجاح! 🎉` : "Activated", "success");
+      showToast(isRtl ? `تم إلغاء حظر "${targetName}" بنجاح! 🎉` : "Activated", "success");
       fetchDashboardData(true);
     } catch (error) {
       showToast(isRtl ? "فشل تفعيل الأكاديمية." : "Failed to activate.", "error");
@@ -328,7 +313,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
     const headers = ["ID", "Academy Name", "Owner", "Email", "Status", "Trial Ends At"];
     const rows = allList.map(a => [
-      a.id, `"${a.name || ''}"`, `"${a.ownerProfile?.full_name || ''}"`, `"${a.ownerProfile?.email || ''}"`,
+      a.id, `"${getSafeText(a.name)}"`, `"${getSafeText(a.ownerProfile?.full_name)}"`, `"${getSafeText(a.ownerProfile?.email)}"`,
       a.is_active ? "Active" : "Blocked", a.trial_ends_at ? new Date(a.trial_ends_at).toLocaleDateString() : "Lifetime"
     ]);
 
@@ -451,8 +436,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           ) : (
             <div className={styles.requestsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
               {pendingSubscriptions.map(sub => {
-                const academyName = sub.academies?.name || 'أكاديمية غير معروفة';
-                const payerName = sub.profiles?.full_name || 'غير معروف';
+                const academyName = getSafeText(sub.academies?.name, 'أكاديمية غير معروفة');
+                const payerName = getSafeText(sub.profiles?.full_name, 'غير معروف');
                 const payerPhone = sub.profiles?.phone || '';
                 const receiptUrl = sub.metadata?.receipt_url;
 
@@ -487,7 +472,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                       )}
                     </div>
 
-                    {/* زر معاينة إشعار التحويل */}
                     {receiptUrl ? (
                       <button 
                         onClick={() => setReceiptModalUrl(receiptUrl)}
@@ -534,10 +518,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               {activeAcademies.map(academy => (
                 <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #10B981' }}>
                   <div className={styles.requestInfo}>
-                    <h3 className={styles.requestName} onClick={() => setSelectedAcademy(academy)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{academy.name}</h3>
+                    <h3 className={styles.requestName}>{getSafeText(academy.name)}</h3>
                     {academy.ownerProfile && (
                       <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {academy.ownerProfile.full_name}</span>
+                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {getSafeText(academy.ownerProfile.full_name)}</span>
                       </div>
                     )}
                     <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>⏱️ {getTrialStatusBadge(academy.trial_ends_at).text}</span>
@@ -555,7 +539,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </section>
       )}
 
-      {/* 🚫 Blocked / Deactivated Section (الأكاديميات المحظورة) */}
+      {/* 🚫 Blocked / Deactivated Section */}
       {(activeTab === 'all' || activeTab === 'blocked') && (
         <section style={{ marginBottom: '32px' }}>
           <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -569,10 +553,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               {blockedAcademies.map(academy => (
                 <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
                   <div className={styles.requestInfo}>
-                    <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{academy.name}</h3>
+                    <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name)}</h3>
                     {academy.ownerProfile && (
                       <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {academy.ownerProfile.full_name}</span>
+                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {getSafeText(academy.ownerProfile.full_name)}</span>
                       </div>
                     )}
                     <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
@@ -616,7 +600,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
           <div style={{ background: '#0F172A', border: '1px solid #FBBF24', borderRadius: '16px', padding: '20px', maxWidth: '400px', width: '100%', color: '#FFF', textAlign: 'center' }}>
             <h3 style={{ marginBottom: '8px', fontSize: '1.05rem' }}>⏱️ {isRtl ? 'تمديد اشتراك الأكاديمية' : 'Extend Subscription'}</h3>
-            <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>{extendModalAcademy.name}</p>
+            <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>{getSafeText(extendModalAcademy.name)}</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
               <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 7)} style={{ background: '#1E293B', border: '1px solid #334155', color: '#FFF', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+7 {isRtl ? 'أيام' : 'Days'}</button>
