@@ -100,7 +100,7 @@ const StudentAttendanceCard = memo(({ student, record = {}, updateStudentField, 
                 : 'bg-slate-950 text-blue-400 border-slate-800/80 hover:bg-slate-900'
             }`}
           >
-            <UserClock className="w-3.5 h-3.5" /> {t('excused') || 'معتذر'}
+            <UserCheck className="w-3.5 h-3.5" /> {t('excused') || 'معتذر'}
           </button>
         </div>
       </div>
