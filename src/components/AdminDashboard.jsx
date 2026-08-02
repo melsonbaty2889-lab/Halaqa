@@ -2,22 +2,24 @@ import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Dashboard.module.css';
 import { supabase } from '../lib/supabase';
 import EmptyState from './EmptyState'; 
+
+// ✨ استيراد الأيقونات من Lucide React الحديثة
 import { 
-  FaBuilding, 
-  FaClock, 
-  FaCheckCircle, 
-  FaShieldAlt,
-  FaBan,
-  FaSync,
-  FaExclamationTriangle,
-  FaUser,
-  FaFileCsv,
-  FaPlus,
-  FaTimes,
-  FaInfinity,
-  FaEye,
-  FaUnlock
-} from 'react-icons/fa';
+  Building2, 
+  Clock, 
+  CheckCircle2, 
+  ShieldCheck,
+  Ban,
+  RefreshCw,
+  AlertTriangle,
+  User,
+  FileSpreadsheet,
+  Plus,
+  X,
+  Infinity as InfinityIcon,
+  Eye,
+  Unlock
+} from 'lucide-react';
 
 // 🛡️ دالة أمان لمنع خطأ React #31 واستخراج النصوص أو الأسطر البرمجية بأمان
 const getSafeText = (val, defaultVal = '') => {
@@ -366,17 +368,17 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       {/* 🔝 الهيدر الرئيسي */}
       <header className={styles.adminHeader}>
         <h1 className={styles.adminTitle}>
-          <FaShieldAlt style={{ color: '#FBBF24', flexShrink: 0 }} />
+          <ShieldCheck size={24} color="#FBBF24" style={{ flexShrink: 0 }} />
           <span>{isRtl ? 'المنصة العالمية لحلقات القرآن' : 'Global Quran Terminal'}</span>
           <span className={styles.adminBadge}>Super Admin</span>
         </h1>
         
         <div className={styles.headerActions}>
           <button onClick={exportToCSV} style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10B981', color: '#34D399', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            <FaFileCsv /> CSV
+            <FileSpreadsheet size={16} /> CSV
           </button>
           <button onClick={() => fetchDashboardData(true)} disabled={refreshing} style={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
-            <FaSync style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} /> {isRtl ? 'مزامنة' : 'Sync'}
+            <RefreshCw size={16} className={refreshing ? styles.spinAnimation : ''} /> {isRtl ? 'مزامنة' : 'Sync'}
           </button>
           {onLogout && <button onClick={onLogout} style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem' }}>{isRtl ? 'خروج' : 'Logout'}</button>}
         </div>
@@ -389,7 +391,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             <p className={styles.statLabel}>{isRtl ? 'الأكاديميات المشتركة' : 'Total Academies'}</p>
             <h2 className={styles.statNumber}>{loading ? '...' : totalAcademiesCount}</h2>
           </div>
-          <div className={styles.statIcon}><FaBuilding /></div>
+          <div className={styles.statIcon}><Building2 size={24} /></div>
         </div>
 
         <div className={styles.premiumStatBox}>
@@ -397,7 +399,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             <p className={styles.statLabel}>{isRtl ? 'انتظار المراجعة' : 'Pending Verification'}</p>
             <h2 className={styles.statNumber} style={{ color: pendingSubscriptions.length > 0 ? '#FBBF24' : 'inherit' }}>{loading ? '...' : pendingSubscriptions.length}</h2>
           </div>
-          <div className={styles.statIcon}><FaClock /></div>
+          <div className={styles.statIcon}><Clock size={24} /></div>
         </div>
 
         <div className={styles.premiumStatBox} style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
@@ -405,7 +407,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             <p className={styles.statLabel}>{isRtl ? 'أكاديميات محظورة / منتهية' : 'Blocked / Expired'}</p>
             <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : blockedAcademies.length + expiredAcademies.length}</h2>
           </div>
-          <div className={styles.statIcon}><FaExclamationTriangle style={{ color: '#EF4444' }} /></div>
+          <div className={styles.statIcon}><AlertTriangle size={24} color="#EF4444" /></div>
         </div>
       </div>
 
@@ -438,13 +440,13 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       {(activeTab === 'all' || activeTab === 'pending') && (
         <section className={styles.sectionPending} style={{ marginBottom: '32px' }}>
           <h2 className={styles.sectionTitle} style={{ fontSize: '1.1rem', color: '#FFF', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaClock style={{ color: '#FBBF24' }} />
+            <Clock size={20} color="#FBBF24" />
             <span>{isRtl ? 'طلبات الاشتراك بانتظار المراجعة' : 'Pending Subscriptions'}</span>
           </h2>
 
           {pendingSubscriptions.length === 0 ? (
             <EmptyState 
-              icon={<FaCheckCircle style={{ color: '#10B981' }} />} 
+              icon={<CheckCircle2 size={36} color="#10B981" />} 
               title={isRtl ? "لا توجد طلبات معلقة" : "No Pending Requests"} 
               description={isRtl ? "جميع الطلبات تم البت فيها." : "All caught up."} 
             />
@@ -466,7 +468,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                       <div>
                         <h3 style={{ fontSize: '1.05rem', color: '#FFF', margin: '0 0 4px 0' }}>{academyName}</h3>
                         <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaUser style={{ fontSize: '0.7rem' }} /> {payerName} {payerPhone && `(${payerPhone})`}
+                          <User size={14} /> {payerName} {payerPhone && `(${payerPhone})`}
                         </p>
                       </div>
                       <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#FBBF24', border: '1px solid #FBBF24', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
@@ -496,7 +498,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                         onClick={() => setReceiptModalUrl(receiptUrl)}
                         style={{ width: '100%', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}
                       >
-                        <FaEye /> {isRtl ? 'معاينة إشعار التحويل 📄' : 'View Receipt'}
+                        <Eye size={16} /> {isRtl ? 'معاينة إشعار التحويل 📄' : 'View Receipt'}
                       </button>
                     ) : (
                       <p style={{ fontSize: '0.75rem', color: '#EF4444', textAlign: 'center', marginBottom: '12px' }}>⚠️ لا يوجد إشعار مرفق</p>
@@ -526,7 +528,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </section>
       )}
 
-      {/* ✅ قسم الأكاديميات النشطة والمنتهية (مُعدل لدعم تبويب Expired) */}
+      {/* ✅ قسم الأكاديميات النشطة والمنتهية */}
       {(activeTab === 'all' || activeTab === 'active' || activeTab === 'expired') && (() => {
         const filteredAcademies = activeAcademies.filter(academy => {
           if (activeTab === 'expired') {
@@ -547,7 +549,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
             {filteredAcademies.length === 0 ? (
               <EmptyState 
-                icon={<FaBuilding />} 
+                icon={<Building2 size={36} />} 
                 title={
                   activeTab === 'expired' 
                     ? (isRtl ? "لا توجد أكاديميات منتهية" : "No Expired Academies")
@@ -574,8 +576,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                         </h3>
                         {academy.ownerProfile && (
                           <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                            <span>
-                              <FaUser style={{ fontSize: '0.65rem' }} /> {getSafeText(academy.ownerProfile.full_name)}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <User size={12} /> {getSafeText(academy.ownerProfile.full_name)}
                             </span>
                           </div>
                         )}
@@ -601,7 +603,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                             gap: '4px' 
                           }}
                         >
-                          <FaPlus style={{ fontSize: '0.65rem' }} /> {isRtl ? 'تمديد' : 'Extend'}
+                          <Plus size={14} /> {isRtl ? 'تمديد' : 'Extend'}
                         </button>
                         <button 
                           onClick={() => onDeactivateClick(academy.id, academy.owner_id)} 
@@ -617,7 +619,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                           }} 
                           title={isRtl ? "حظر الأكاديمية" : "Block Academy"}
                         >
-                          <FaBan />
+                          <Ban size={14} />
                         </button>
                       </div>
                     </div>
@@ -633,11 +635,11 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       {(activeTab === 'all' || activeTab === 'blocked') && (
         <section style={{ marginBottom: '32px' }}>
           <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaBan />
+            <Ban size={20} />
             <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
           </h2>
           {blockedAcademies.length === 0 ? (
-            <EmptyState icon={<FaShieldAlt style={{ color: '#10B981' }} />} title={isRtl ? "لا توجد أكاديميات محظورة" : "No Blocked Academies"} description={isRtl ? "جميع الأكاديميات تعمل بشكل ممتاز." : "All academies active."} />
+            <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد أكاديميات محظورة" : "No Blocked Academies"} description={isRtl ? "جميع الأكاديميات تعمل بشكل ممتاز." : "All academies active."} />
           ) : (
             <div className={styles.requestsGrid}>
               {blockedAcademies.map(academy => (
@@ -646,7 +648,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
                     {academy.ownerProfile && (
                       <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {getSafeText(academy.ownerProfile.full_name)}</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {getSafeText(academy.ownerProfile.full_name)}</span>
                       </div>
                     )}
                     <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
@@ -657,7 +659,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                       disabled={processingId !== null} 
                       style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
-                      <FaUnlock /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
+                      <Unlock size={14} /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
                     </button>
                   </div>
                 </div>
@@ -671,8 +673,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       {receiptModalUrl && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '16px' }}>
           <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '16px', padding: '20px', maxWidth: '500px', width: '100%', color: '#FFF', position: 'relative', textAlign: 'center' }}>
-            <button onClick={() => setReceiptModalUrl(null)} style={{ position: 'absolute', top: '14px', right: '14px', background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '1.2rem' }}>
-              <FaTimes />
+            <button onClick={() => setReceiptModalUrl(null)} style={{ position: 'absolute', top: '14px', right: '14px', background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
+              <X size={20} />
             </button>
             <h3 style={{ marginBottom: '14px', fontSize: '1.1rem' }}>📄 إشعار التحويل المرفق</h3>
             <div style={{ background: '#000', borderRadius: '8px', overflow: 'hidden', maxHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -697,8 +699,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 30)} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FBBF24', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+30 {isRtl ? 'يوم' : 'Days'}</button>
             </div>
 
-            <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 0, true)} style={{ width: '100%', background: '#3B82F6', color: '#FFF', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>
-              <FaInfinity /> {isRtl ? 'اشتراك دائم (Lifetime)' : 'Grant Lifetime'}
+            <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 0, true)} style={{ width: '100%', background: '#3B82F6', color: '#FFF', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <InfinityIcon size={18} /> {isRtl ? 'اشتراك دائم (Lifetime)' : 'Grant Lifetime'}
             </button>
 
             <button onClick={() => setExtendModalAcademy(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '0.8rem' }}>
