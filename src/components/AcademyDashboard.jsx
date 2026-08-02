@@ -2,14 +2,9 @@
 import React from 'react';
 import styles from './Dashboard.module.css';
 import { 
-  FaBookOpen, 
-  FaAward, 
-  FaWhatsapp, 
-  FaUserGraduate, 
-  FaUserClock, 
-  FaMosque, 
-  FaCheckCircle
-} from 'react-icons/fa';
+  BookOpen, Award, MessageCircle, GraduationCap, 
+  Clock, Landmark, CheckCircle2 
+} from 'lucide-react';
 import ActiveHalaqas from './ActiveHalaqas';
 import AchievementChart from './AchievementChart';
 
