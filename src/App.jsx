@@ -5,7 +5,7 @@ import { useAcademy } from './context/AcademyContext';
 import { ROLES, getRouteForRole } from './constants/roles';
 import { 
   FaSpinner, FaClock, FaSignOutAlt, FaWifi, 
-  FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes 
+  FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes, FaLock 
 } from 'react-icons/fa';
 
 import SplashScreen from './components/SplashScreen';
@@ -18,9 +18,9 @@ import CreateAcademy from './components/CreateAcademy';
 
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
-// 🛡️ مكون حماية المسارات المدمج (ProtectedRoute)
+// 🛡️ مكون حماية المسارات المدمج المحسّن (ProtectedRoute)
 const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { profile, appState } = useAcademy();
+  const { profile, appState, logout } = useAcademy();
 
   if (appState === 'LOADING') {
     return (
@@ -33,15 +33,54 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   const cleanRole = profile?.role?.toLowerCase()?.trim();
   const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
 
+  // 🔒 حظر الوصول الفعلي للحسابات غير المصرح لها
   if (!isAllowed) {
-    const targetRoute = getRouteForRole(cleanRole);
-    console.warn(`🔒 غير مصرح بالدخول للتحويل إلى: ${targetRoute}`);
+    const targetRoute = getRouteForRole ? getRouteForRole(cleanRole) : '/';
+    console.warn(`🔒 تم منع الوصول غير المصرح به لدور: ${cleanRole} -> توجيه إلى: ${targetRoute}`);
+
+    return (
+      <div style={{
+        background: '#090F17',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#FFF',
+        padding: '20px',
+        textAlign: 'center',
+        fontFamily: "'Cairo', system-ui, sans-serif",
+        direction: 'rtl'
+      }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '20px', borderRadius: '50%', marginBottom: '16px', color: '#EF4444' }}>
+          <FaLock size={40} />
+        </div>
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>غير مصرح لك بالوصول لهذه الشاشة</h2>
+        <p style={{ color: '#94A3B8', fontSize: '14px', maxWidth: '400px', marginBottom: '24px' }}>
+          دور حسابك الحقيقي ({profile?.role || 'غير معروف'}) لا يمتلك الصلاحية الكافية لعرض هذا القسم.
+        </p>
+        <button
+          onClick={logout}
+          style={{
+            padding: '10px 20px',
+            background: '#C9A84C',
+            color: '#000',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}
+        >
+          تسجيل الخروج والعودة
+        </button>
+      </div>
+    );
   }
 
   return children;
 };
 
-// 🛡️ درع الأمان: اصطياد أخطاء التحديثات
+// 🛡️ درع الأمان: اصطياد أخطاء التحديثات ووحدات الشبكة
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -69,7 +108,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
       zIndex: 10000,
       padding: '20px',
       direction: 'rtl',
-      fontFamily: "'Cairo', sans-serif"
+      fontFamily: "'Cairo', system-ui, sans-serif"
     }}>
       <div style={{
         background: '#111C2A',
@@ -183,7 +222,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   );
 }
 
-// 🛡️ حارس المكونات
+// 🛡️ حارس المكونات البرمجية (Error Boundary)
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -193,7 +232,7 @@ class GlobalErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', sans-serif" }}>
+        <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
           <FaExclamationTriangle style={{ color: '#EF4444', fontSize: '48px', marginBottom: '15px' }} />
           <h2 style={{ color: '#EF4444', marginBottom: '10px' }}>حدث خطأ تقني في النظام</h2>
           <div style={{ background: '#1E293B', padding: '15px', borderRadius: '8px', border: '1px solid #334155', maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: '#F87171', overflowX: 'auto' }}>
@@ -263,7 +302,7 @@ function MainContent() {
         gap: '12px'
       }}>
         <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
-        <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', sans-serif" }}>جاري تحميل المنظومة...</span>
+        <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', system-ui, sans-serif" }}>جاري تحميل المنظومة...</span>
       </div>
     );
   }
@@ -282,7 +321,7 @@ function MainContent() {
   // 3. حالة الحساب قيد المراجعة
   if (appState === 'PENDING_APPROVAL') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
         <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '1px solid #1E293B' }}>
           <FaClock style={{ color: goldColor, fontSize: '40px', marginBottom: '20px' }} />
           <h2 style={{ color: '#fff', marginBottom: '15px' }}>طلبك قيد المراجعة</h2>
@@ -359,7 +398,7 @@ function MainContent() {
   }
 
   return (
-    <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', sans-serif", padding: '20px', textAlign: 'center' }}>
+    <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px', textAlign: 'center' }}>
       <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
       <h2 style={{ marginBottom: '10px' }}>عذراً، حالة النظام غير معرفة</h2>
       <p style={{ color: '#9CA3AF', marginBottom: '5px' }}>App State: <strong style={{ color: goldColor }}>{appState || 'NULL'}</strong></p>
@@ -391,14 +430,11 @@ export default function App() {
     return false;
   };
 
-  // 🎯 التحكم القاطع بالسبلاش (معدّل لتعطيل إظهاره فورياً بمجرد تسجيل الدخول أو وجود التوكن)
+  // 🎯 التحكم القاطع بالسبلاش
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     
-    // القفل الأول: هل تمت مشاهدة السبلاش سابقاً؟
     const seenBefore = localStorage.getItem('app_splash_seen_v4') === 'true';
-    
-    // القفل الثاني: هل هناك توكن جلسة فعال؟
     const hasToken = hasExistingSupabaseToken();
 
     if (seenBefore || hasToken) {
@@ -423,10 +459,9 @@ export default function App() {
   };
 
   if (!isAllowed) {
-    return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
+    return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', system-ui, sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
   }
 
-  // إظهار السبلاش فقط إذا لم يسبق إغلاقها
   if (showSplash) {
     return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
   }
