@@ -526,109 +526,37 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </section>
       )}
 
-      {/* ✅ قسم الأكاديميات النشطة والمنتهية */}
-{(activeTab === 'all' || activeTab === 'active' || activeTab === 'expired') && (() => {
-  // تصفية الأكاديميات بناءً على التبويب المختار
-  const filteredAcademies = activeAcademies.filter(academy => {
-    if (activeTab === 'expired') {
-      return academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
-    }
-    return true;
-  });
-
-  // تحديد العنوان بحسب التبويب النشط
-  const sectionTitle = activeTab === 'expired' 
-    ? (isRtl ? 'الأكاديميات منتهية التجربة ⚠️' : 'Expired Trial Academies ⚠️')
-    : (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies ✅');
-
-  return (
-    <section style={{ marginBottom: '32px' }}>
-      <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>
-        {sectionTitle}
-      </h2>
-
-      {filteredAcademies.length === 0 ? (
-        <EmptyState 
-          icon={<FaBuilding />} 
-          title={
-            activeTab === 'expired' 
-              ? (isRtl ? "لا توجد أكاديميات منتهية" : "No Expired Academies")
-              : (isRtl ? "لا توجد أكاديميات نشطة" : "No Active Academies")
-          } 
-          description={isRtl ? "لا توجد نتائج مطابقة." : "No matching results."} 
-        />
-      ) : (
-        <div className={styles.requestsGrid}>
-          {filteredAcademies.map(academy => {
-            const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
-
-            return (
-              <div 
-                key={academy.id} 
-                className={styles.requestCard} 
-                style={{ 
-                  borderRight: isExpired ? '4px solid #EF4444' : '4px solid #10B981' 
-                }}
-              >
-                <div className={styles.requestInfo}>
-                  <h3 className={styles.requestName}>
-                    {getSafeText(academy.name, 'أكاديمية بدون اسم')}
-                  </h3>
-                  {academy.ownerProfile && (
-                    <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                      <span>
-                        <FaUser style={{ fontSize: '0.65rem' }} /> {getSafeText(academy.ownerProfile.full_name)}
-                      </span>
-                    </div>
-                  )}
-                  <span style={{ fontSize: '0.72rem', color: isExpired ? '#F87171' : '#94A3B8' }}>
-                    ⏱️ {getTrialStatusBadge(academy.trial_ends_at).text}
-                  </span>
+      {/* ✅ قسم الأكاديميات النشطة */}
+      {(activeTab === 'all' || activeTab === 'active') && (
+        <section style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>✅ {isRtl ? 'الأكاديميات النشطة' : 'Active Academies'}</h2>
+          {activeAcademies.length === 0 ? (
+            <EmptyState icon={<FaBuilding />} title={isRtl ? "لا توجد أكاديميات نشطة" : "No Active Academies"} description={isRtl ? "لا توجد نتائج مطابقة." : "No active results."} />
+          ) : (
+            <div className={styles.requestsGrid}>
+              {activeAcademies.map(academy => (
+                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #10B981' }}>
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span><FaUser style={{ fontSize: '0.65rem' }} /> {getSafeText(academy.ownerProfile.full_name)}</span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>⏱️ {getTrialStatusBadge(academy.trial_ends_at).text}</span>
+                  </div>
+                  <div className={styles.cardActions}>
+                    <button onClick={() => setExtendModalAcademy(academy)} disabled={processingId !== null} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <FaPlus style={{ fontSize: '0.65rem' }} /> {isRtl ? 'تمديد' : 'Extend'}
+                    </button>
+                    <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }} title={isRtl ? "حظر الأكاديمية" : "Block Academy"}><FaBan /></button>
+                  </div>
                 </div>
-
-                <div className={styles.cardActions}>
-                  <button 
-                    onClick={() => setExtendModalAcademy(academy)} 
-                    disabled={processingId !== null} 
-                    style={{ 
-                      background: '#1E293B', 
-                      border: '1px solid #FBBF24', 
-                      color: '#FFF', 
-                      padding: '6px 10px', 
-                      borderRadius: '6px', 
-                      cursor: 'pointer', 
-                      fontSize: '0.75rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '4px' 
-                    }}
-                  >
-                    <FaPlus style={{ fontSize: '0.65rem' }} /> {isRtl ? 'تمديد' : 'Extend'}
-                  </button>
-                  <button 
-                    onClick={() => onDeactivateClick(academy.id, academy.owner_id)} 
-                    disabled={processingId !== null} 
-                    style={{ 
-                      background: '#EF4444', 
-                      border: 'none', 
-                      color: '#FFF', 
-                      padding: '6px 10px', 
-                      borderRadius: '6px', 
-                      cursor: 'pointer', 
-                      fontSize: '0.75rem' 
-                    }} 
-                    title={isRtl ? "حظر الأكاديمية" : "Block Academy"}
-                  >
-                    <FaBan />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
-    </section>
-  )}
 
       {/* 🚫 قسم الأكاديميات المحظورة */}
       {(activeTab === 'all' || activeTab === 'blocked') && (
