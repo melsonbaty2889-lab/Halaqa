@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { ROLES } from '../constants/roles';
 import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 import SubscriptionPage from './SubscriptionPage';
-import SplashScreen from './SplashScreen.jsx'; // 🌟 1. استيراد الشاشة الافتتاحية
 
 // 🛡️ دالة الاستيراد الديناميكي المطور لمكافحة أخطاء التحديث والبناء
 const safeLazy = (importFn) => {
@@ -25,6 +25,7 @@ const safeLazy = (importFn) => {
 
 // 🌐 استيراد الأقسام ديناميكياً
 const Students = safeLazy(() => import('./Students.jsx'));
+const Teachers = safeLazy(() => import('./Teachers.jsx')); // ⚡ تم الربط
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
 const Exams = safeLazy(() => import('./Exams.jsx')); 
 const Payments = safeLazy(() => import('./Payments.jsx'));
@@ -97,33 +98,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [academyId, setAcademyId] = useState(null);
   const [academyName, setAcademyName] = useState(""); 
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
-  
-    // 🌟 2. إدارة حالة الشاشة الافتتاحية (مع التحقق من القفل فوراً)
-  const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window !== 'undefined') {
-      // إذا كان القفل موجوداً في الجلسة، لا تعرض السبلاش إطلاقاً
-      return sessionStorage.getItem('block_splash') !== 'true';
-    }
-    return true;
-  });
-
   const [loadingData, setLoadingData] = useState(true);
 
-  // إخفاء الـ SplashScreen بعد 2 ثانية وحفظ القفل تلقائياً
-  useEffect(() => {
-    if (!showSplash) return; // إذا كانت مخفية من الأساس لا داعي لعمل المؤقت
-
-    const splashTimer = setTimeout(() => {
-      setShowSplash(false);
-      // حفظ القفل حتى لا تظهر الشاشة مرة أخرى خلال هذه الجلسة
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('block_splash', 'true');
-      }
-    }, 2000);
-
-    return () => clearTimeout(splashTimer);
-  }, [showSplash]);
-  const isPlatformAdmin = userRole === 'super_admin' || userRole === 'admin';
+  // 🛡️ تحديد أدمن المنصة العامة بدقة
+  const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
+  
   const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
   const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
@@ -206,13 +185,36 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     async function loadInitialData() {
       try {
         setLoadingData(true);
+        
+        // 1. محاولة جلب أكاديمية الكادر / المعلم
         const { data: staff } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, currency, timezone, country_code, is_active)')
           .eq('user_id', currentUserId)
           .maybeSingle();
 
-        const currentAcademyId = staff?.academies?.id || staff?.academy_id;
+        let currentAcademyId = staff?.academies?.id || staff?.academy_id;
+
+        // 2. Fallback: إذا لم يعثر عليه بالـ staff، جرب كـ Owner في الأكاديمية
+        if (!currentAcademyId) {
+          const { data: ownedAcademy } = await supabase
+            .from('academies')
+            .select('id')
+            .eq('owner_id', currentUserId)
+            .maybeSingle();
+          currentAcademyId = ownedAcademy?.id;
+        }
+
+        // 3. Fallback: جرب جدول البروفايل
+        if (!currentAcademyId) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('academy_id')
+            .eq('id', currentUserId)
+            .maybeSingle();
+          currentAcademyId = profileData?.academy_id;
+        }
+
         if (currentAcademyId) {
           setAcademyId(currentAcademyId);
           await fetchAcademyData(currentAcademyId);
@@ -274,12 +276,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'students':
         return <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />;
       case 'teachers':
-        return (
-          <div style={{ padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #1f2937', direction: isRtl ? 'rtl' : 'ltr' }}>
-            <h2 style={{ color: '#38BDF8', marginBottom: '12px' }}>{isRtl ? '👨‍🏫 الكادر التعليمي والمقرئين' : '👨‍🏫 Faculty & Reciters'}</h2>
-            <p style={{ color: '#9CA3AF' }}>{isRtl ? 'إجمالي المقرئين النشطين:' : 'Total active teachers:'} <strong style={{ color: '#FFF' }}>{teachers.length}</strong></p>
-          </div>
-        );
+        return <Teachers teachers={teachers} setTeachers={setTeachers} academyId={academyId} halaqas={enrichedHalaqas} />;
       case 'halaqas':
         return <ActiveHalaqas halaqas={enrichedHalaqas} teachers={teachers} students={students} isLoading={loadingData} error={null} isRtl={isRtl} isMobile={isMobile} />;
       case 'attendance':
@@ -326,31 +323,25 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     </div>
   );
 
-  // 🌟 3. إظهار الشاشة الافتتاحية أولاً عند فتح المنصة
-  // 1. إذا كان شرط السبلاش الصريح مفعل فقط
-if (showSplash) {
-  return <SplashScreen />;
-}
-
-// 2. إذا كانت البيانات قيد التحميل، اعرض شاشة تحميل عادية وليس السبلاش الكاملة
-if (loadingData && activeTab === 'dashboard' && students.length === 0) {
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: '#0C1520', 
-      color: '#C9A84C', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      fontFamily: "'Cairo', sans-serif"
-    }}>
-      <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>جاري تحميل البيانات...</p>
-    </div>
-  );
-}
+  // إذا كانت البيانات قيد التحميل لأول مرة
+  if (loadingData && activeTab === 'dashboard' && students.length === 0) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: '#0C1520', 
+        color: '#C9A84C', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        fontFamily: "'Cairo', system-ui, sans-serif"
+      }}>
+        <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>جاري تحميل البيانات...</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#0f172a', color: '#fff', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#0f172a', color: '#fff', fontFamily: "'Cairo', system-ui, sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
       <Sidebar 
         currentAcademyId={academyId}
         onSwitchAcademy={handleSwitchAcademy}
