@@ -596,7 +596,7 @@ export default function Sidebar({
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-              justify.content: 'center',
+              justifycontent: 'center',
               gap: '6px',
               padding: '7px',
               background: 'rgba(239, 68, 68, 0.08)',
