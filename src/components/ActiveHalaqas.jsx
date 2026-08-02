@@ -1,10 +1,19 @@
 /* src/components/ActiveHalaqas.jsx */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  FaUser, FaClock, FaFolderOpen, FaPlus, FaArchive, 
-  FaSearch, FaCheckCircle, FaTimes, FaBookOpen, FaFire, FaChartLine 
-} from 'react-icons/fa';
-import { supabase } from '../lib/supabase'; // للتعامل الفوري مع السور ونظام الحفظ
+  User, 
+  Clock, 
+  FolderOpen, 
+  Plus, 
+  Archive, 
+  Search, 
+  CheckCircle2, 
+  X, 
+  BookOpen, 
+  Flame, 
+  RotateCcw 
+} from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function ActiveHalaqas({ 
   halaqas = [], 
@@ -18,6 +27,20 @@ export default function ActiveHalaqas({
   onToggleArchiveHalaqa
 }) {
 
+  // 🛡️ دالة آمنة لمعالجة وقراءة النصوص المتعددة اللغات {ar, en} لمنع خطأ React Error #31
+  const getLocalizedText = useCallback((val, isArabic = true) => {
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object') {
+      if (isArabic) {
+        return val.ar || val.name_ar || val.en || val.name_en || Object.values(val).find(v => typeof v === 'string') || '';
+      } else {
+        return val.en || val.name_en || val.ar || val.name_ar || Object.values(val).find(v => typeof v === 'string') || '';
+      }
+    }
+    return String(val);
+  }, []);
+
   // حالات التحكم الواجهية
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState('active'); 
@@ -30,7 +53,7 @@ export default function ActiveHalaqas({
   const [isSubmittingProgress, setIsSubmittingProgress] = useState(false);
   const [trackingMessage, setTrackingMessage] = useState({ text: '', type: '' });
 
-  // نموذج الحفظ والمراجعة الرقمي المتطابق تماماً مع قاعدة البيانات
+  // نموذج الحفظ والمراجعة الرقمي
   const [progressForm, setProgressForm] = useState({
     date: new Date().toISOString().split('T')[0],
     hifz_surah_id: '',
@@ -54,19 +77,24 @@ export default function ActiveHalaqas({
   // جلب قائمة السور فوراً عند تفعيل لوحة الرصد
   useEffect(() => {
     async function loadSurahsRegistry() {
-      const { data } = await supabase
-        .from('surahs')
-        .select('id, number, name_ar, name_en')
-        .order('number', { ascending: true });
-      if (data) setSurahs(data);
+      try {
+        const { data } = await supabase
+          .from('surahs')
+          .select('id, number, name_ar, name_en')
+          .order('number', { ascending: true });
+        if (data) setSurahs(data);
+      } catch (e) {
+        console.error("Failed to load surahs list", e);
+      }
     }
     loadSurahsRegistry();
   }, []);
 
   // تصفية الطلاب المنتمين للحلقة المفتوحة حالياً فقط
-  const currentHalaqaStudents = students.filter(student => 
-    activeTrackingHalaqa && student.halaqa_id === activeTrackingHalaqa.id
-  );
+  const currentHalaqaStudents = useMemo(() => {
+    if (!activeTrackingHalaqa) return [];
+    return (students || []).filter(student => student.halaqa_id === activeTrackingHalaqa.id);
+  }, [students, activeTrackingHalaqa]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -153,15 +181,20 @@ export default function ActiveHalaqas({
     }
   };
 
-  const filteredHalaqas = halaqas.filter(h => {
-    const matchesView = viewMode === 'active' ? !h.is_archived : h.is_archived;
-    const teacherName = h.teacher_name || '';
-    return matchesView && (
-      (h.name_ar && h.name_ar.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (h.name_en && h.name_en.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      teacherName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  // 🛡️ تصفية الحلقات الآمنة مع دعم الكائنات المترجمة
+  const filteredHalaqas = useMemo(() => {
+    const query = (searchQuery || '').toLowerCase().trim();
+    return (halaqas || []).filter(h => {
+      const matchesView = viewMode === 'active' ? !h.is_archived : h.is_archived;
+      
+      const nameAr = getLocalizedText(h.name_ar || h.name || h.title, true).toLowerCase();
+      const nameEn = getLocalizedText(h.name_en || h.name || h.title, false).toLowerCase();
+      const teacherName = getLocalizedText(h.teacher_name || h.teacher, isRtl).toLowerCase();
+
+      const matchesSearch = !query || nameAr.includes(query) || nameEn.includes(query) || teacherName.includes(query);
+      return matchesView && matchesSearch;
+    });
+  }, [halaqas, viewMode, searchQuery, isRtl, getLocalizedText]);
 
   if (isLoading) {
     return (
@@ -201,7 +234,7 @@ export default function ActiveHalaqas({
             onClick={() => setShowForm(!showForm)}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 ${showForm ? 'bg-slate-800 text-white' : 'bg-amber-400 text-slate-950 hover:bg-amber-500'}`}
           >
-            <FaPlus size={11} />
+            <Plus size={14} />
             {showForm ? trans('close', 'إغلاق ✖', 'Close ✖') : trans('addHalaqa', 'إنشاء حلقة جديدة', 'Create Halaqa')}
           </button>
           
@@ -209,7 +242,7 @@ export default function ActiveHalaqas({
             onClick={() => setViewMode(viewMode === 'active' ? 'archived' : 'active')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 border flex items-center gap-2 ${viewMode === 'active' ? 'border-red-500/20 bg-red-500/10 text-red-400' : 'border-amber-400 bg-amber-400/10 text-amber-400'}`}
           >
-            <FaArchive size={11} />
+            <Archive size={14} />
             {viewMode === 'active' ? trans('viewArchived', 'أرشيف الحلقات', 'View Archive') : trans('viewActive', 'الحلقات النشطة', 'View Active')}
           </button>
         </div>
@@ -231,7 +264,7 @@ export default function ActiveHalaqas({
               <label className="text-xs font-semibold text-slate-300">*{trans('assignTeacher', 'تعيين المعلم / المحفظ المسؤول', 'Assign Teacher')}</label>
               <select required value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-amber-400 transition-colors">
                 <option value="">{trans('selectTeacher', '-- اختر المعلم --', '-- Select Teacher --')}</option>
-                {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                {teachers.map(t => <option key={t.id} value={t.id}>{getLocalizedText(t.name || t.teacher_name, isRtl)}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -253,7 +286,7 @@ export default function ActiveHalaqas({
 
       {/* حقل البحث الفوري */}
       <div className="relative">
-        <span className={`absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-4' : 'left-4'}`}><FaSearch size={14} /></span>
+        <span className={`absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-4' : 'left-4'}`}><Search size={16} /></span>
         <input 
           type="text" 
           placeholder={trans('searchPh', 'ابحث باسم الحلقة أو اسم المحفظ المكلف...', 'Search by circle name or assigned teacher...')}
@@ -266,7 +299,7 @@ export default function ActiveHalaqas({
       {/* عرض البيانات التفاعلية (جدول / بطاقات) */}
       {filteredHalaqas.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-white/5 rounded-xl bg-white/[0.01]">
-          <FaFolderOpen className="text-slate-600 mb-3" size={32} />
+          <FolderOpen className="text-slate-600 mb-3" size={36} />
           <p className="text-slate-400 text-sm font-medium">{trans('noData', 'لا توجد حلقات قرآنية مسجلة تطابق التصفية والبحث حالياً', 'No learning circles match your active filters')}</p>
         </div>
       ) : isMobile ? (
@@ -275,17 +308,19 @@ export default function ActiveHalaqas({
             <div key={halaqa.id} className="p-4 rounded-xl border border-white/5 bg-slate-900/40 flex flex-col gap-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="text-sm font-bold text-slate-100">{isRtl ? (halaqa.name_ar || halaqa.name) : (halaqa.name_en || halaqa.name)}</h4>
+                  <h4 className="text-sm font-bold text-slate-100">
+                    {getLocalizedText(halaqa.name_ar || halaqa.name || halaqa.title, isRtl)}
+                  </h4>
                   <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
-                    <FaUser size={10} className="text-amber-400/80" />
-                    <span>{halaqa.teacher_name || trans('noTeacher', 'غير معين', 'Unassigned')}</span>
+                    <User size={12} className="text-amber-400/80" />
+                    <span>{getLocalizedText(halaqa.teacher_name || halaqa.teacher, isRtl) || trans('noTeacher', 'غير معين', 'Unassigned')}</span>
                   </div>
                 </div>
                 <button 
                   onClick={() => setActiveTrackingHalaqa(halaqa)} 
                   className="px-2.5 py-1 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-[11px] font-bold flex items-center gap-1"
                 >
-                  <FaBookOpen size={10} /> {trans('track', 'رصد الحفظ', 'Track')}
+                  <BookOpen size={12} /> {trans('track', 'رصد الحفظ', 'Track')}
                 </button>
               </div>
               <div className="flex items-center justify-between border-t border-white/[0.03] pt-2 mt-1">
@@ -312,8 +347,12 @@ export default function ActiveHalaqas({
             <tbody className="text-slate-300 text-xs divide-y divide-white/[0.03]">
               {filteredHalaqas.map((halaqa) => (
                 <tr key={halaqa.id} className="hover:bg-white/[0.01] transition-colors">
-                  <td className="p-3 font-semibold text-white">{isRtl ? (halaqa.name_ar || halaqa.name) : (halaqa.name_en || halaqa.name)}</td>
-                  <td className="p-3 text-slate-400">🧑‍🏫 {halaqa.teacher_name || trans('unassigned', 'لم يحدد بعد', 'Unassigned')}</td>
+                  <td className="p-3 font-semibold text-white">
+                    {getLocalizedText(halaqa.name_ar || halaqa.name || halaqa.title, isRtl)}
+                  </td>
+                  <td className="p-3 text-slate-400">
+                    🧑‍🏫 {getLocalizedText(halaqa.teacher_name || halaqa.teacher, isRtl) || trans('unassigned', 'لم يحدد بعد', 'Unassigned')}
+                  </td>
                   <td className="p-3 text-slate-400 font-mono">⏰ {halaqa.start_time || '00:00'} - {halaqa.end_time || '00:00'}</td>
                   <td className="p-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border inline-flex items-center gap-1 ${halaqa.status === 'live' || halaqa.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15' : 'bg-amber-500/10 text-amber-400 border-amber-500/15'}`}>
@@ -321,12 +360,11 @@ export default function ActiveHalaqas({
                     </span>
                   </td>
                   <td className="p-3 flex items-center justify-center gap-2">
-                    {/* 🚀 الزر الإستراتيجي العالمي الجديد لفتح لوحة الرصد الفورية */}
                     <button
                       onClick={() => setActiveTrackingHalaqa(halaqa)}
                       className="px-3 py-1.5 rounded-lg font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition-colors flex items-center gap-1.5"
                     >
-                      <FaBookOpen size={12} />
+                      <BookOpen size={14} />
                       {trans('logProgress', 'رصد الإنجاز اليومي', 'Log Daily Progress')}
                     </button>
 
@@ -344,7 +382,7 @@ export default function ActiveHalaqas({
         </div>
       )}
 
-      {/* 👑 لوحة الرصد السينمائية الجانبية المتطورة (Slide-over Drawer Panel) */}
+      {/* 👑 لوحة الرصد الجانبية (Slide-over Drawer Panel) */}
       {activeTrackingHalaqa && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm transition-opacity duration-300">
           <div className={`w-full max-w-xl bg-slate-950 border-l border-white/10 h-full flex flex-col p-6 shadow-2xl relative animate-slide-in ${isRtl ? 'text-right' : 'text-left'}`} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -352,13 +390,15 @@ export default function ActiveHalaqas({
             {/* الهيدر المصغر للوحة الرصد */}
             <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
               <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-slate-950 font-bold"><FaBookOpen /></div>
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-slate-950 font-bold"><BookOpen size={18} /></div>
                 <div>
                   <h4 className="text-md font-bold text-white">{trans('liveTracking', 'لوحة الرصد الذكي الفوري', 'Live Smart Logger')}</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">{isRtl ? activeTrackingHalaqa.name_ar : activeTrackingHalaqa.name_en}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {getLocalizedText(activeTrackingHalaqa.name_ar || activeTrackingHalaqa.name || activeTrackingHalaqa.title, isRtl)}
+                  </p>
                 </div>
               </div>
-              <button onClick={() => { setActiveTrackingHalaqa(null); setTrackingMessage({text:'', type:''}); }} className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-colors"><FaTimes size={16} /></button>
+              <button onClick={() => { setActiveTrackingHalaqa(null); setTrackingMessage({text:'', type:''}); }} className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-colors"><X size={18} /></button>
             </div>
 
             {/* رسائل تأكيد العمليات */}
@@ -372,7 +412,7 @@ export default function ActiveHalaqas({
             {/* محتوى الاستمارة الذكية */}
             <form onSubmit={handleSaveStudentProgress} className="flex-1 overflow-y-auto space-y-4 pr-1">
               
-              {/* اختيار الطالب من طلاب هذه الحلقة حصراً */}
+              {/* اختيار الطالب */}
               <div>
                 <label className="block text-xs font-bold text-slate-400 mb-2">{trans('selectStudent', 'اختر الطالب المستمع له حالياً', 'Select Active Student')}</label>
                 <select 
@@ -383,7 +423,7 @@ export default function ActiveHalaqas({
                 >
                   <option value="">{trans('chooseStOption', '-- اختر من طلاب الحلقة الحالية --', '-- Select from this Halaqa --')}</option>
                   {currentHalaqaStudents.map(st => (
-                    <option key={st.id} value={st.id}>{st.name}</option>
+                    <option key={st.id} value={st.id}>{getLocalizedText(st.name || st.student_name, isRtl)}</option>
                   ))}
                 </select>
               </div>
@@ -401,7 +441,7 @@ export default function ActiveHalaqas({
                   <div className="col-span-3 sm:col-span-1">
                     <select value={progressForm.hifz_surah_id} onChange={e => setProgressForm({...progressForm, hifz_surah_id: e.target.value})} className="w-full p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white">
                       <option value="">{trans('surah', 'السورة...', 'Surah...')}</option>
-                      {surahs.map(s => <option key={s.id} value={s.id}>{isRtl ? s.name_ar : s.name_en}</option>)}
+                      {surahs.map(s => <option key={s.id} value={s.id}>{getLocalizedText(s.name_ar || s.name_en, isRtl)}</option>)}
                     </select>
                   </div>
                   <input type="number" placeholder={trans('fromA', 'من آية', 'From Ayah')} value={progressForm.hifz_from_ayah} onChange={e => setProgressForm({...progressForm, hifz_from_ayah: e.target.value})} className="p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white text-center" />
@@ -416,7 +456,7 @@ export default function ActiveHalaqas({
                   <div className="col-span-3 sm:col-span-1">
                     <select value={progressForm.review_surah_id} onChange={e => setProgressForm({...progressForm, review_surah_id: e.target.value})} className="w-full p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white">
                       <option value="">{trans('surah', 'السورة...', 'Surah...')}</option>
-                      {surahs.map(s => <option key={s.id} value={s.id}>{isRtl ? s.name_ar : s.name_en}</option>)}
+                      {surahs.map(s => <option key={s.id} value={s.id}>{getLocalizedText(s.name_ar || s.name_en, isRtl)}</option>)}
                     </select>
                   </div>
                   <input type="number" placeholder={trans('fromA', 'من آية', 'From Ayah')} value={progressForm.review_from_ayah} onChange={e => setProgressForm({...progressForm, review_from_ayah: e.target.value})} className="p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white text-center" />
