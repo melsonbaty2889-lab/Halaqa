@@ -1,5 +1,5 @@
 /* src/components/ActiveHalaqas.jsx */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { 
   User, 
   Clock, 
@@ -7,27 +7,23 @@ import {
   Plus, 
   Archive, 
   Search, 
-  CheckCircle2, 
-  X, 
-  BookOpen, 
-  Flame, 
-  RotateCcw 
+  ArrowRightLeft,
+  BookOpen
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 export default function ActiveHalaqas({ 
   halaqas = [], 
   teachers = [], 
-  students = [], 
   isLoading = false, 
   error = null, 
   isRtl = true,
   isMobile = false,
   onCreateHalaqa, 
-  onToggleArchiveHalaqa
+  onToggleArchiveHalaqa,
+  onNavigateToAttendance // 🚀 Callback للنقل المباشر لغرفة التسميع
 }) {
 
-  // 🛡️ دالة آمنة لمعالجة وقراءة النصوص المتعددة اللغات {ar, en} لمنع خطأ React Error #31
+  // 🛡️ دالة آمنة لمعالجة وقراءة النصوص المتعددة اللغات
   const getLocalizedText = useCallback((val, isArabic = true) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -45,27 +41,6 @@ export default function ActiveHalaqas({
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState('active'); 
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // 🌟 حالة إدارة الرصد اليومي للحلقة المختارة (Slide-over Drawer)
-  const [activeTrackingHalaqa, setActiveTrackingHalaqa] = useState(null);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [surahs, setSurahs] = useState([]);
-  const [isSubmittingProgress, setIsSubmittingProgress] = useState(false);
-  const [trackingMessage, setTrackingMessage] = useState({ text: '', type: '' });
-
-  // نموذج الحفظ والمراجعة الرقمي
-  const [progressForm, setProgressForm] = useState({
-    date: new Date().toISOString().split('T')[0],
-    hifz_surah_id: '',
-    hifz_from_ayah: '',
-    hifz_to_ayah: '',
-    review_surah_id: '',
-    review_from_ayah: '',
-    review_to_ayah: '',
-    grade: 'A',
-    mistakes_count: 0,
-    notes: ''
-  });
 
   // حالة استمارة الحلقات الجديدة
   const [formData, setFormData] = useState({
@@ -73,28 +48,6 @@ export default function ActiveHalaqas({
   });
 
   const trans = (key, ar, en) => (isRtl ? ar : en);
-
-  // جلب قائمة السور فوراً عند تفعيل لوحة الرصد
-  useEffect(() => {
-    async function loadSurahsRegistry() {
-      try {
-        const { data } = await supabase
-          .from('surahs')
-          .select('id, number, name_ar, name_en')
-          .order('number', { ascending: true });
-        if (data) setSurahs(data);
-      } catch (e) {
-        console.error("Failed to load surahs list", e);
-      }
-    }
-    loadSurahsRegistry();
-  }, []);
-
-  // تصفية الطلاب المنتمين للحلقة المفتوحة حالياً فقط
-  const currentHalaqaStudents = useMemo(() => {
-    if (!activeTrackingHalaqa) return [];
-    return (students || []).filter(student => student.halaqa_id === activeTrackingHalaqa.id);
-  }, [students, activeTrackingHalaqa]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -109,79 +62,7 @@ export default function ActiveHalaqas({
     }
   };
 
-  // حفظ التقرير اليومي وتحديث الـ Streak تلقائياً من داخل الحلقة
-  const handleSaveStudentProgress = async (e) => {
-    e.preventDefault();
-    if (!selectedStudentId || !activeTrackingHalaqa) return;
-
-    setIsSubmittingProgress(true);
-    setTrackingMessage({ text: '', type: '' });
-
-    try {
-      // 1️⃣ إدراج السجل في جدول daily_progress
-      const { error: pError } = await supabase.from('daily_progress').insert([{
-        academy_id: activeTrackingHalaqa.academy_id || null,
-        student_id: selectedStudentId,
-        teacher_id: activeTrackingHalaqa.teacher_id || null,
-        halaqa_id: activeTrackingHalaqa.id,
-        date: progressForm.date,
-        hifz_surah_id: progressForm.hifz_surah_id ? parseInt(progressForm.hifz_surah_id) : null,
-        hifz_from_ayah: progressForm.hifz_from_ayah ? parseInt(progressForm.hifz_from_ayah) : null,
-        hifz_to_ayah: progressForm.hifz_to_ayah ? parseInt(progressForm.hifz_to_ayah) : null,
-        review_surah_id: progressForm.review_surah_id ? parseInt(progressForm.review_surah_id) : null,
-        review_from_ayah: progressForm.review_from_ayah ? parseInt(progressForm.review_from_ayah) : null,
-        review_to_ayah: progressForm.review_to_ayah ? parseInt(progressForm.review_to_ayah) : null,
-        grade: progressForm.grade,
-        mistakes_count: parseInt(progressForm.mistakes_count) || 0,
-        notes: progressForm.notes || null
-      }]);
-
-      if (pError) throw pError;
-
-      // 2️⃣ تحديث خوارزمية الـ Streak للتعلم المستمر
-      const { data: streakRecord } = await supabase
-        .from('student_streaks')
-        .select('*')
-        .eq('student_id', selectedStudentId)
-        .maybeSingle();
-
-      const todayStr = progressForm.date;
-
-      if (streakRecord) {
-        let nextStreak = (streakRecord.current_streak || 0) + 1;
-        if (streakRecord.last_activity_date === todayStr) nextStreak = streakRecord.current_streak;
-        const maxStreak = nextStreak > (streakRecord.longest_streak || 0) ? nextStreak : streakRecord.longest_streak;
-
-        await supabase.from('student_streaks').update({
-          current_streak: nextStreak,
-          longest_streak: maxStreak,
-          last_activity_date: todayStr,
-          total_active_days: (streakRecord.total_active_days || 0) + 1,
-          updated_at: new Date().toISOString()
-        }).eq('student_id', selectedStudentId);
-      } else {
-        await supabase.from('student_streaks').insert([{
-          student_id: selectedStudentId,
-          academy_id: activeTrackingHalaqa.academy_id || null,
-          current_streak: 1,
-          longest_streak: 1,
-          last_activity_date: todayStr,
-          total_active_days: 1
-        }]);
-      }
-
-      setTrackingMessage({ text: trans('saved', 'تم رصد الإنجاز وتحديث المؤشرات بنجاح! 🔥', 'Progress logged & Streak updated! 🔥'), type: 'success' });
-      setProgressForm(prev => ({
-        ...prev, hifz_surah_id: '', hifz_from_ayah: '', hifz_to_ayah: '', review_surah_id: '', review_from_ayah: '', review_to_ayah: '', mistakes_count: 0, notes: ''
-      }));
-    } catch (err) {
-      setTrackingMessage({ text: err.message, type: 'error' });
-    } finally {
-      setIsSubmittingProgress(false);
-    }
-  };
-
-  // 🛡️ تصفية الحلقات الآمنة مع دعم الكائنات المترجمة
+  // 🛡️ تصفية الحلقات
   const filteredHalaqas = useMemo(() => {
     const query = (searchQuery || '').toLowerCase().trim();
     return (halaqas || []).filter(h => {
@@ -226,7 +107,7 @@ export default function ActiveHalaqas({
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <span>🕌</span> {trans('halaqasManager', 'منظومة إدارة الحلقات القرآنية والتعليمية', 'Halaqas Management System')}
           </h3>
-          <p className="text-xs text-slate-400 mt-1">{trans('halaqaSub', 'إدارة الصفوف، ربط المحفظين، ومتابعة معدلات الحضور المباشرة', 'Manage learning circles, assign teachers and track live attendance')}</p>
+          <p className="text-xs text-slate-400 mt-1">{trans('halaqaSub', 'إدارة الصفوف، ربط المحفظين، ومتابعة هيكلة الحلقات', 'Manage learning circles and assign teachers')}</p>
         </div>
 
         <div className="flex gap-2">
@@ -316,11 +197,12 @@ export default function ActiveHalaqas({
                     <span>{getLocalizedText(halaqa.teacher_name || halaqa.teacher, isRtl) || trans('noTeacher', 'غير معين', 'Unassigned')}</span>
                   </div>
                 </div>
+                {/* 🚀 زر الانتقال المباشر بدلاً من فتح النافذة المكررة */}
                 <button 
-                  onClick={() => setActiveTrackingHalaqa(halaqa)} 
-                  className="px-2.5 py-1 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-[11px] font-bold flex items-center gap-1"
+                  onClick={() => onNavigateToAttendance && onNavigateToAttendance(halaqa.id)} 
+                  className="px-3 py-1.5 rounded-lg bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 border border-amber-400/20 text-xs font-bold flex items-center gap-1.5 transition-colors"
                 >
-                  <BookOpen size={12} /> {trans('track', 'رصد الحفظ', 'Track')}
+                  <BookOpen size={13} /> {trans('goToAttendance', 'غرفة التسميع 🚀', 'Go to Live Room 🚀')}
                 </button>
               </div>
               <div className="flex items-center justify-between border-t border-white/[0.03] pt-2 mt-1">
@@ -360,12 +242,13 @@ export default function ActiveHalaqas({
                     </span>
                   </td>
                   <td className="p-3 flex items-center justify-center gap-2">
+                    {/* 🚀 زر الانتقال المباشر الشفاف والسريع */}
                     <button
-                      onClick={() => setActiveTrackingHalaqa(halaqa)}
-                      className="px-3 py-1.5 rounded-lg font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition-colors flex items-center gap-1.5"
+                      onClick={() => onNavigateToAttendance && onNavigateToAttendance(halaqa.id)}
+                      className="px-3 py-1.5 rounded-lg font-bold bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 border border-amber-400/20 transition-colors flex items-center gap-1.5"
                     >
                       <BookOpen size={14} />
-                      {trans('logProgress', 'رصد الإنجاز اليومي', 'Log Daily Progress')}
+                      {trans('goToAttendance', 'انتقال لغرفة التسميع الحي 🚀', 'Go to Live Room 🚀')}
                     </button>
 
                     <button
@@ -379,124 +262,6 @@ export default function ActiveHalaqas({
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* 👑 لوحة الرصد الجانبية (Slide-over Drawer Panel) */}
-      {activeTrackingHalaqa && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm transition-opacity duration-300">
-          <div className={`w-full max-w-xl bg-slate-950 border-l border-white/10 h-full flex flex-col p-6 shadow-2xl relative animate-slide-in ${isRtl ? 'text-right' : 'text-left'}`} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
-            
-            {/* الهيدر المصغر للوحة الرصد */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-slate-950 font-bold"><BookOpen size={18} /></div>
-                <div>
-                  <h4 className="text-md font-bold text-white">{trans('liveTracking', 'لوحة الرصد الذكي الفوري', 'Live Smart Logger')}</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {getLocalizedText(activeTrackingHalaqa.name_ar || activeTrackingHalaqa.name || activeTrackingHalaqa.title, isRtl)}
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => { setActiveTrackingHalaqa(null); setTrackingMessage({text:'', type:''}); }} className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-colors"><X size={18} /></button>
-            </div>
-
-            {/* رسائل تأكيد العمليات */}
-            {trackingMessage.text && (
-              <div className={`p-3.5 rounded-xl text-xs font-semibold mb-4 flex items-center gap-2 ${trackingMessage.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                {trackingMessage.text}
-              </div>
-            )}
-
-            {/* محتوى الاستمارة الذكية */}
-            <form onSubmit={handleSaveStudentProgress} className="flex-1 overflow-y-auto space-y-4 pr-1">
-              
-              {/* اختيار الطالب */}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">{trans('selectStudent', 'اختر الطالب المستمع له حالياً', 'Select Active Student')}</label>
-                <select 
-                  required 
-                  value={selectedStudentId} 
-                  onChange={e => setSelectedStudentId(e.target.value)} 
-                  className="w-full p-3 text-sm rounded-xl bg-slate-900 border border-slate-800 text-white outline-none focus:border-sky-500 transition-colors"
-                >
-                  <option value="">{trans('chooseStOption', '-- اختر من طلاب الحلقة الحالية --', '-- Select from this Halaqa --')}</option>
-                  {currentHalaqaStudents.map(st => (
-                    <option key={st.id} value={st.id}>{getLocalizedText(st.name || st.student_name, isRtl)}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* التاريخ */}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">{trans('tDate', 'تاريخ جلسة التسميع', 'Session Date')}</label>
-                <input type="date" required value={progressForm.date} onChange={e => setProgressForm({...progressForm, date: e.target.value})} className="w-full p-3 text-sm rounded-xl bg-slate-900 border border-slate-800 text-white outline-none" />
-              </div>
-
-              {/* قسم الحفظ الجديد التفاعلي */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3">
-                <span className="text-xs font-bold text-sky-400 flex items-center gap-1">📖 {trans('newHifz', 'الحفظ الجديد اليوم', 'New Memorization')}</span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-3 sm:col-span-1">
-                    <select value={progressForm.hifz_surah_id} onChange={e => setProgressForm({...progressForm, hifz_surah_id: e.target.value})} className="w-full p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white">
-                      <option value="">{trans('surah', 'السورة...', 'Surah...')}</option>
-                      {surahs.map(s => <option key={s.id} value={s.id}>{getLocalizedText(s.name_ar || s.name_en, isRtl)}</option>)}
-                    </select>
-                  </div>
-                  <input type="number" placeholder={trans('fromA', 'من آية', 'From Ayah')} value={progressForm.hifz_from_ayah} onChange={e => setProgressForm({...progressForm, hifz_from_ayah: e.target.value})} className="p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white text-center" />
-                  <input type="number" placeholder={trans('toA', 'إلى آية', 'To Ayah')} value={progressForm.hifz_to_ayah} onChange={e => setProgressForm({...progressForm, hifz_to_ayah: e.target.value})} className="p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white text-center" />
-                </div>
-              </div>
-
-              {/* قسم المراجعة اليومية */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3">
-                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">🔄 {trans('dailyRev', 'المراجعة والورد الحالي', 'Current Review')}</span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-3 sm:col-span-1">
-                    <select value={progressForm.review_surah_id} onChange={e => setProgressForm({...progressForm, review_surah_id: e.target.value})} className="w-full p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white">
-                      <option value="">{trans('surah', 'السورة...', 'Surah...')}</option>
-                      {surahs.map(s => <option key={s.id} value={s.id}>{getLocalizedText(s.name_ar || s.name_en, isRtl)}</option>)}
-                    </select>
-                  </div>
-                  <input type="number" placeholder={trans('fromA', 'من آية', 'From Ayah')} value={progressForm.review_from_ayah} onChange={e => setProgressForm({...progressForm, review_from_ayah: e.target.value})} className="p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white text-center" />
-                  <input type="number" placeholder={trans('toA', 'إلى آية', 'To Ayah')} value={progressForm.review_to_ayah} onChange={e => setProgressForm({...progressForm, review_to_ayah: e.target.value})} className="p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-white text-center" />
-                </div>
-              </div>
-
-              {/* التقييم وعدد الأخطاء الدقيق */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">{trans('grade', 'التقدير الإجمالي', 'Session Grade')}</label>
-                  <select value={progressForm.grade} onChange={e => setProgressForm({...progressForm, grade: e.target.value})} className="w-full p-3 text-sm rounded-xl bg-slate-900 border border-slate-800 text-white outline-none">
-                    <option value="A+">A+ (ممتاز مرتفع)</option>
-                    <option value="A">A (ممتاز)</option>
-                    <option value="B">B (جيد جداً)</option>
-                    <option value="C">C (جيد)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">{trans('mistakes', 'عدد الأخطاء / التنبيهات', 'Mistakes Count')}</label>
-                  <input type="number" min="0" value={progressForm.mistakes_count} onChange={e => setProgressForm({...progressForm, mistakes_count: e.target.value})} className="w-full p-3 text-sm rounded-xl bg-slate-900 border border-slate-800 text-white outline-none" />
-                </div>
-              </div>
-
-              {/* التوجيهات والملاحظات */}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">{trans('notes', 'ملاحظات وتوجيهات المحفظ', 'Teacher Feedback & Notes')}</label>
-                <textarea rows="2" placeholder={trans('notesPh', 'اكتب هنا توجيهات التجويد أو خطة التكليف القادمة للطالب...', 'Write any tajweed feedback or upcoming tasks...')} value={progressForm.notes} onChange={e => setProgressForm({...progressForm, notes: e.target.value})} className="w-full p-3 text-sm rounded-xl bg-slate-900 border border-slate-800 text-white outline-none resize-none" />
-              </div>
-
-              {/* زر الحفظ النهائي */}
-              <button 
-                type="submit" 
-                disabled={isSubmittingProgress}
-                className="w-full p-3.5 rounded-xl bg-sky-400 hover:bg-sky-500 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-sky-400/10 flex items-center justify-center gap-2"
-              >
-                {isSubmittingProgress ? trans('saving', 'جاري معالجة السجلات وتحديث النقاط...', 'Processing Assets...') : trans('submitProgress', '💾 اعتماد تقرير الجلسة وتحديث السلسلة اليومية', '💾 Log Session & Sync Streak')}
-              </button>
-            </form>
-          </div>
         </div>
       )}
     </div>
