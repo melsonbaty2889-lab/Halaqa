@@ -14,7 +14,7 @@ import {
   FaArrowLeft, FaArrowRight, FaSave, FaTimes, FaEdit, 
   FaCheckCircle, FaExclamationCircle, FaGraduationCap,
   FaBookOpen, FaInfoCircle, FaMoneyBillWave, FaCheckSquare,
-  FaFire, FaAward, FaCrown, FaUserGraduate
+  FaFire, FaAward, FaCrown, FaUserGraduate, FaWhatsapp
 } from 'react-icons/fa';
 
 export default function StudentProfile({ genderPolicy = 'mixed' }) {
@@ -22,7 +22,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   
-  const isRtl = i18n.dir() === 'rtl';
+  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
   const currentLang = isRtl ? 'ar' : 'en';
   
   const [student, setStudent] = useState(null);
@@ -36,6 +36,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const [weeklyData, setWeeklyData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
+  // التنبيهات المباشرة (Toast Notifications)
   const triggerToast = useCallback((text, type = 'success') => {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
@@ -63,14 +64,14 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         if (data) setStudent(data);
       } catch (err) {
         console.error("Error fetching student details:", err);
-        triggerToast(t('error_fetching_student') || "تعذر جلب بيانات الطالب", "error");
+        triggerToast(t('error_fetching_student') || (isRtl ? "تعذر جلب بيانات الطالب" : "Failed to fetch student profile"), "error");
       } finally {
         setLoading(false);
       }
     };
 
     if (id) fetchStudent();
-  }, [id, t, triggerToast]);
+  }, [id, t, isRtl, triggerToast]);
 
   // 2. جلب بيانات جدول المتابعة اليومية وحساب منحنى الإنجاز
   useEffect(() => {
@@ -129,6 +130,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     fetchWeeklyAchievement();
   }, [id]);
 
+  // حساب العمر
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -140,13 +142,14 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     return age;
   };
 
+  // 💾 تحديث الملف الشخصي للطالب
   const handleUpdate = async (e) => {
     if (e) e.preventDefault();
     setSaving(true);
 
     const selectedIndex = parseInt(student.current_quarter_index, 10) || 0;
-    const progressInfo = getQuranProgress(selectedIndex);
-    const autoSurahText = progressInfo.text;
+    const progressInfo = getQuranProgress ? getQuranProgress(selectedIndex) : { juz: Math.floor(selectedIndex / 8) + 1, text: '' };
+    const autoSurahText = progressInfo.text || '';
     const calculatedJuz = progressInfo.juz || 1;
 
     // التعامل الأمني مع الاسم لمنع أخطاء التنسيق
@@ -181,10 +184,10 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         current_surah_name: autoSurahText
       }));
       setIsEditing(false);
-      triggerToast(t('profile_updated_success') || "تم تحديث الملف الشخصي بنجاح", "success");
+      triggerToast(t('profile_updated_success') || (isRtl ? "تم تحديث الملف الشخصي بنجاح" : "Profile updated successfully"), "success");
     } catch (error) {
       console.error("Error saving student profile:", error);
-      triggerToast(t('profile_updated_failed') || "فشل تحديث البيانات", "error");
+      triggerToast(t('profile_updated_failed') || (isRtl ? "فشل تحديث البيانات" : "Failed to update profile"), "error");
     } finally {
       setSaving(false);
     }
@@ -193,16 +196,19 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   if (loading) {
     return (
       <div style={{ color: C.text || '#fff', textAlign: 'center', padding: '100px 20px' }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <div>{t('loading_premium_profile') || 'جاري تحميل ملف الطالب...'}</div>
+        <div style={{ fontSize: '28px', marginBottom: '10px' }}>⏳</div>
+        <div style={{ fontSize: '14px', color: '#94A3B8' }}>{t('loading_premium_profile') || (isRtl ? 'جاري تحميل ملف الطالب...' : 'Loading student profile...')}</div>
       </div>
     );
   }
 
   if (!student) {
     return (
-      <div style={{ color: '#EF4444', textAlign: 'center', padding: '50px 20px' }}>
-        <div>{t('student_not_found') || 'الطالب غير موجود'}</div>
+      <div style={{ color: '#EF4444', textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{t('student_not_found') || (isRtl ? 'الطالب غير موجود' : 'Student not found')}</div>
+        <Btn variant="ghost" onClick={() => navigate('/students')} style={{ marginTop: '16px' }}>
+          {isRtl ? 'العودة لقائمة الطلاب' : 'Back to Students List'}
+        </Btn>
       </div>
     );
   }
@@ -211,41 +217,44 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const halaqaDisplayName = student.halaqas ? formatName(student.halaqas.name, currentLang) : '';
   const currentAge = calculateAge(student.birth_date);
   const studentCountryCode = student.country || student.country_code || "EG";
-  const matchedCountry = COUNTRIES_LIST.find(c => c.code === studentCountryCode);
+  const matchedCountry = COUNTRIES_LIST ? COUNTRIES_LIST.find(c => c.code === studentCountryCode) : null;
+
+  // تنقية رقم الهاتف لرابط الواتساب
+  const cleanPhone = student.parent_phone ? String(student.parent_phone).replace(/\D/g, '') : '';
 
   const getStatusStyle = (status) => {
     switch(status) {
-      case 'paused': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', label: t('status_paused') || 'موقوف موقتاً' };
-      case 'inactive': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#EF4444', label: t('status_inactive') || 'غير نشط' };
-      default: return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10B981', label: t('status_active') || 'نشط' };
+      case 'paused': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', label: t('status_paused') || (isRtl ? 'موقوف مؤقتاً' : 'Paused') };
+      case 'inactive': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#EF4444', label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') };
+      default: return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10B981', label: t('status_active') || (isRtl ? 'نشط' : 'Active') };
     }
   };
   const statusInfo = getStatusStyle(student.status);
 
   const statusOptions = [
-    { value: "active", label: t('status_active') || 'نشط' },
-    { value: "paused", label: t('status_paused') || 'موقوف' },
-    { value: "inactive", label: t('status_inactive') || 'غير نشط' }
+    { value: "active", label: t('status_active') || (isRtl ? 'نشط' : 'Active') },
+    { value: "paused", label: t('status_paused') || (isRtl ? 'موقوف' : 'Paused') },
+    { value: "inactive", label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') }
   ];
 
   const genderOptions = [
-    { value: "male", label: t('gender_male') || 'ذكر' },
-    { value: "female", label: t('gender_female') || 'أنثى' }
+    { value: "male", label: t('gender_male') || (isRtl ? 'ذكر' : 'Male') },
+    { value: "female", label: t('gender_female') || (isRtl ? 'أنثى' : 'Female') }
   ];
 
-  const countryOptions = COUNTRIES_LIST.map(c => ({
+  const countryOptions = (COUNTRIES_LIST || []).map(c => ({
     value: c.code,
     label: `${c.flag} ${isRtl ? (c.name_ar || c.nameAr) : (c.name_en || c.nameEn)} (${c.code})`
   }));
 
   const paymentOptions = [
-    { value: "monthly", label: t('plan_monthly') || 'اشتراك شهري' },
-    { value: "per_hour", label: t('plan_per_hour') || 'بالساعة' },
-    { value: "free", label: t('plan_free') || 'مجاني / منحة' }
+    { value: "monthly", label: t('plan_monthly') || (isRtl ? 'اشتراك شهري' : 'Monthly Subscription') },
+    { value: "per_hour", label: t('plan_per_hour') || (isRtl ? 'بالساعة' : 'Per Hour') },
+    { value: "free", label: t('plan_free') || (isRtl ? 'مجاني / منحة' : 'Free / Scholarship') }
   ];
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '520px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
       
       {/* التنبيهات المباشرة Toast Notification */}
       {inlineMessage.text && (
@@ -257,7 +266,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
 
       <PageHeader 
         title={isEditing ? "" : studentDisplayName}
-        sub={isEditing ? "" : `${t('student_id') || 'كود الطالب'}: #${student.student_code || student.id.slice(0, 8)}`}
+        sub={isEditing ? "" : `${t('student_id') || (isRtl ? 'كود الطالب' : 'Student Code')}: #${student.student_code || (student.id ? student.id.slice(0, 8) : '')}`}
         action={
           <Btn variant="ghost" onClick={() => navigate(-1)} style={{ borderRadius: '20px' }}>
             {isRtl ? <><FaArrowRight /> {t('back') || 'رجوع'}</> : <><FaArrowLeft /> {t('back') || 'Back'}</>}
@@ -266,7 +275,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
       />
 
       {/* البطاقة العلوية للطالب */}
-      <Card style={{ borderRadius: '16px 16px 0 0', display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', borderBottom: 'none' }}>
+      <Card style={{ borderRadius: '16px 16px 0 0', display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', borderBottom: 'none', background: '#1E293B', border: '1px solid #334155' }}>
         
         <div style={{ position: 'absolute', top: '16px', left: isRtl ? '16px' : 'auto', right: isRtl ? 'auto' : '16px' }}>
           {isEditing ? (
@@ -283,12 +292,12 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           )}
         </div>
 
-        {/* رمز الطالب مع مراعاة سياسة الخصوصية */}
+        {/* رمز الطالب الشخصي */}
         <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
           {genderPolicy === 'separated' && student.gender === 'female' ? (
             <FaUserGraduate style={{ color: '#EC4899', fontSize: '22px' }} />
           ) : (
-            student.gender === 'female' ? '🧕' : '🙋‍♂️'
+            student.gender === 'female' ? '🧕' : '👨‍🎓'
           )}
         </div>
 
@@ -302,12 +311,12 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             />
           ) : (
             <div style={{ textAlign: 'start' }}>
-              <h3 style={{ margin: 0, color: '#fff', fontSize: '17px', fontWeight: 'bold' }}>{studentDisplayName}</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>
+              <h3 style={{ margin: 0, color: '#F8FAFC', fontSize: '17px', fontWeight: 'bold' }}>{studentDisplayName}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
                 <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
                 <span>{matchedCountry ? (isRtl ? (matchedCountry.name_ar || matchedCountry.nameAr) : (matchedCountry.name_en || matchedCountry.nameEn)) : ''}</span>
-                {currentAge !== null && <span>• {currentAge} {t('years_old') || 'سنة'}</span>}
-                {halaqaDisplayName && <span style={{ color: C.gold }}>• {halaqaDisplayName}</span>}
+                {currentAge !== null && <span>• {currentAge} {t('years_old') || (isRtl ? 'سنة' : 'yrs')}</span>}
+                {halaqaDisplayName && <span style={{ color: '#F59E0B' }}>• {halaqaDisplayName}</span>}
               </div>
             </div>
           )}
@@ -315,17 +324,17 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
       </Card>
 
       {/* التبويبات الداخلية */}
-      <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`, padding: '4px' }}>
+      <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid #334155`, borderRight: `1px solid #334155`, padding: '4px' }}>
         {[
-          { id: 'quran', label: t('tab_quran_track') || 'مسار القرآن', icon: <FaBookOpen size={12} /> },
-          { id: 'personal', label: t('tab_identity_contact') || 'البيانات والتواصل', icon: <FaInfoCircle size={12} /> },
-          { id: 'financial', label: t('tab_financials') || 'المالية والملاحظات', icon: <FaMoneyBillWave size={12} /> }
+          { id: 'quran', label: t('tab_quran_track') || (isRtl ? 'مسار القرآن' : 'Quran Track'), icon: <FaBookOpen size={12} /> },
+          { id: 'personal', label: t('tab_identity_contact') || (isRtl ? 'البيانات والتواصل' : 'Identity & Contact'), icon: <FaInfoCircle size={12} /> },
+          { id: 'financial', label: t('tab_financials') || (isRtl ? 'المالية والملاحظات' : 'Financials & Notes'), icon: <FaMoneyBillWave size={12} /> }
         ].map(tab => (
           <Btn 
             key={tab.id}
             variant={activeTab === tab.id ? 'primary' : 'ghost'}
             onClick={() => setActiveTab(tab.id)}
-            style={{ flex: 1, padding: '10px 4px', fontSize: '11px', borderRadius: activeTab === tab.id ? '8px' : '0', border: 'none', background: activeTab === tab.id ? C.surface : 'transparent', color: activeTab === tab.id ? C.gold : '#9CA3AF' }}
+            style={{ flex: 1, padding: '10px 4px', fontSize: '11px', borderRadius: activeTab === tab.id ? '8px' : '0', border: 'none', background: activeTab === tab.id ? '#1E293B' : 'transparent', color: activeTab === tab.id ? '#F59E0B' : '#94A3B8' }}
           >
             {tab.icon} {tab.label}
           </Btn>
@@ -333,34 +342,34 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
       </div>
 
       {/* جسم البطاقة الرئيسي */}
-      <Card style={{ borderRadius: '0 0 16px 16px', borderTop: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Card style={{ borderRadius: '0 0 16px 16px', borderTop: 'none', background: '#1E293B', border: '1px solid #334155', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
-        {/* تبويب مسار القرآن والانجاز */}
+        {/* تبويب مسار القرآن والإنجاز */}
         {activeTab === 'quran' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
             {/* السلاسل والنقاط */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0F172A', padding: '12px', borderRadius: '12px', border: `1px solid #334155` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                 <FaFire size={20} style={{ color: '#EF4444' }} />
                 <div style={{ textAlign: 'start' }}>
-                  <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{isRtl ? 'السلسلة الحالية' : 'Current Streak'}</div>
+                  <div style={{ fontSize: '11px', color: '#94A3B8' }}>{isRtl ? 'السلسلة الحالية' : 'Current Streak'}</div>
                   <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#EF4444' }}>{student.current_streak || 0} {isRtl ? 'يوم' : 'Days'}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(245, 158, 11, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                 <FaCrown size={18} style={{ color: '#F59E0B' }} />
                 <div style={{ textAlign: 'start' }}>
-                  <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{isRtl ? 'إجمالي النقاط' : 'Total Points'}</div>
+                  <div style={{ fontSize: '11px', color: '#94A3B8' }}>{isRtl ? 'إجمالي النقاط' : 'Total Points'}</div>
                   <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#F59E0B' }}>{student.points || 0} {isRtl ? 'نقطة' : 'Pts'}</div>
                 </div>
               </div>
             </div>
 
             {/* نظام الشارات */}
-            <div style={{ background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'start' }}>
-              <div style={{ fontSize: '12px', color: C.gold, fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaAward style={{ color: C.gold }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
+            <div style={{ background: '#0F172A', padding: '12px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'start' }}>
+              <div style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FaAward style={{ color: '#F59E0B' }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {(student.current_streak >= 3) && (
@@ -382,25 +391,25 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             </div>
 
             {/* شريط التقدم والسورة */}
-            <div style={{ background: '#0C1520', padding: '14px', borderRadius: '12px', border: `1px solid ${C.border}` }}>
+            <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155` }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', textAlign: 'start' }}>
-                <span style={{ fontSize: '12px', color: C.gold, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <FaCheckSquare style={{color: '#10B981'}} /> {t('current_memorization_progress') || 'التقدم الحفظي الحالي'}
+                <span style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FaCheckSquare style={{color: '#10B981'}} /> {t('current_memorization_progress') || (isRtl ? 'التقدم الحفظي الحالي' : 'Current Memorization Progress')}
                 </span>
               </div>
               <div style={{ margin: '8px 0 12px 0' }}>
                 <QuranProgressBar currentQuarterIndex={student.current_quarter_index || 0} />
               </div>
-              <div style={{ background: '#111827', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', border: `1px solid ${C.border}` }}>
-                <span style={{ color: '#9CA3AF' }}>{t('current_juz') || 'الجزء الحالي'}</span>
-                <span style={{ fontWeight: 'bold', color: '#10B981' }}>{t('juz') || 'الجزء'} {student.current_juz || 1}</span>
+              <div style={{ background: '#1E293B', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', border: `1px solid #334155` }}>
+                <span style={{ color: '#94A3B8' }}>{t('current_juz') || (isRtl ? 'الجزء الحالي' : 'Current Juz')}</span>
+                <span style={{ fontWeight: 'bold', color: '#10B981' }}>{t('juz') || (isRtl ? 'الجزء' : 'Juz')} {student.current_juz || 1}</span>
               </div>
             </div>
 
             {/* رسم بياني للإنجاز */}
             <div className="w-full">
               {chartLoading ? (
-                <div style={{ background: '#0C1520', padding: '24px', borderRadius: '12px', border: `1px solid ${C.border}`, textAlign: 'center', fontSize: '12px', color: '#9CA3AF' }}>
+                <div style={{ background: '#0F172A', padding: '24px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'center', fontSize: '12px', color: '#94A3B8' }}>
                   ⏳ {isRtl ? 'جاري تحليل منحنى الإنجاز الأسبوعي...' : 'Analyzing weekly achievement logs...'}
                 </div>
               ) : (
@@ -409,11 +418,11 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             </div>
 
             {isEditing && (
-              <div style={{ background: '#0C1520', padding: '14px', borderRadius: '12px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'start' }}>
-                  <FaGraduationCap /> {t('update_progress_selector') || 'تعديل موضع الحفظ'}
+              <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ color: '#94A3B8', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'start' }}>
+                  <FaGraduationCap /> {t('update_progress_selector') || (isRtl ? 'تعديل موضع الحفظ' : 'Update Memorization Selector')}
                 </label>
-                <div style={{ background: '#111827', padding: '6px', borderRadius: '8px', border: `1px solid ${C.border}` }}>
+                <div style={{ background: '#1E293B', padding: '6px', borderRadius: '8px', border: `1px solid #334155` }}>
                   <QuranProgressSelector 
                     initialIndex={parseInt(student.current_quarter_index, 10) || 0} 
                     onIndexChange={(idx) => setStudent(prev => ({ ...prev, current_quarter_index: idx }))}
@@ -429,14 +438,14 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <Select 
-                label={t("gender") || 'الجنس'} 
+                label={t("gender") || (isRtl ? 'الجنس' : 'Gender')} 
                 value={student.gender || "male"} 
                 onChange={(e) => setStudent({...student, gender: e.target.value})} 
                 disabled={!isEditing}
                 options={genderOptions}
               />
               <Input 
-                label={t('birth_date') || 'تاريخ الميلاد'} 
+                label={t('birth_date') || (isRtl ? 'تاريخ الميلاد' : 'Birth Date')} 
                 type="date" 
                 value={student.birth_date || ""} 
                 onChange={(e) => setStudent({...student, birth_date: e.target.value})} 
@@ -445,18 +454,18 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             </div>
 
             <Select 
-              label={t('country_geographic_region') || 'الدولة / المنطقة'} 
+              label={t('country_geographic_region') || (isRtl ? 'الدولة / المنطقة' : 'Country / Region')} 
               value={student.country || student.country_code || "EG"} 
               onChange={(e) => setStudent({...student, country: e.target.value, country_code: e.target.value})} 
               disabled={!isEditing}
               options={countryOptions}
             />
 
-            <div style={{ background: '#0C1520', padding: '12px', borderRadius: '12px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div style={{ background: '#0F172A', padding: '12px', borderRadius: '12px', border: `1px solid #334155`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <Input 
-                label={t('parent_custody_name') || 'اسم ولي الأمر'} 
+                label={t('parent_custody_name') || (isRtl ? 'اسم ولي الأمر' : 'Parent Name')} 
                 value={student.parent_name || ""} 
-                placeholder={t('not_specified') || 'غير محدد'} 
+                placeholder={t('not_specified') || (isRtl ? 'غير محدد' : 'Not specified')} 
                 onChange={(e) => setStudent({...student, parent_name: e.target.value})} 
                 disabled={!isEditing}
               />
@@ -464,24 +473,24 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <Input 
-                    label={t('contact_hotline') || 'رقم هاتف التواصل'} 
+                    label={t('contact_hotline') || (isRtl ? 'رقم هاتف التواصل' : 'Contact Phone')} 
                     type="tel" 
                     value={student.parent_phone || ""} 
-                    placeholder={t('not_specified') || 'غير محدد'} 
+                    placeholder={t('not_specified') || (isRtl ? 'غير محدد' : 'Not specified')} 
                     onChange={(e) => setStudent({...student, parent_phone: e.target.value})} 
                     disabled={!isEditing}
                     style={{ textAlign: 'left', direction: 'ltr' }} 
                   />
                 </div>
-                {!isEditing && student.parent_phone && (
+                {!isEditing && cleanPhone && (
                   <a 
-                    href={`https://wa.me/${student.parent_phone.replace(/\+/g, '')}`} 
+                    href={`https://wa.me/${cleanPhone}`} 
                     target="_blank" 
                     rel="noreferrer" 
-                    style={{ background: '#10B981', color: '#fff', width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '16px', marginBottom: '16px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                    style={{ background: '#10B981', color: '#fff', width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '18px', marginBottom: '16px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
                     title="WhatsApp"
                   >
-                    💬
+                    <FaWhatsapp />
                   </a>
                 )}
               </div>
@@ -493,7 +502,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         {activeTab === 'financial' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <Select 
-              label={t('financial_tariff_plan') || 'نظام الاشتراك'} 
+              label={t('financial_tariff_plan') || (isRtl ? 'نظام الاشتراك' : 'Subscription Plan')} 
               value={student.subscription_system || "monthly"} 
               onChange={(e) => setStudent({...student, subscription_system: e.target.value})} 
               disabled={!isEditing}
@@ -501,10 +510,10 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             />
 
             <Input 
-              label={t('academic_teacher_notes') || 'ملاحظات المعلم والأكاديمية'} 
+              label={t('academic_teacher_notes') || (isRtl ? 'ملاحظات المعلم والأكاديمية' : 'Teacher & Academy Notes')} 
               as="textarea"
               value={student.notes || ""} 
-              placeholder={t('academic_notes_placeholder') || 'اكتب أي ملاحظات خاصة بالطالب...'} 
+              placeholder={t('academic_notes_placeholder') || (isRtl ? 'اكتب أي ملاحظات خاصة بالطالب...' : 'Type student notes...')} 
               onChange={(e) => setStudent({...student, notes: e.target.value})} 
               disabled={!isEditing}
               style={{ minHeight: '100px', lineHeight: '1.5' }}
@@ -517,15 +526,15 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           {isEditing ? (
             <div style={{ display: 'flex', gap: '10px' }}>
               <Btn variant="success" onClick={handleUpdate} disabled={saving} style={{ flex: 1, padding: '12px' }}>
-                <FaSave /> {saving ? (t("saving") || "جاري الحفظ...") : (t('save_changes') || "حفظ التغييرات")}
+                <FaSave /> {saving ? (t("saving") || (isRtl ? "جاري الحفظ..." : "Saving...")) : (t('save_changes') || (isRtl ? "حفظ التغييرات" : "Save Changes"))}
               </Btn>
               <Btn variant="ghost" onClick={() => setIsEditing(false)} style={{ flex: 1, padding: '12px' }}>
-                <FaTimes /> {t("cancel") || "إلغاء"}
+                <FaTimes /> {t("cancel") || (isRtl ? "إلغاء" : "Cancel")}
               </Btn>
             </div>
           ) : (
             <Btn variant="primary" onClick={() => setIsEditing(true)} style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}>
-              <FaEdit /> {t('edit_full_profile') || "تعديل بيانات الملف الشخصي"}
+              <FaEdit /> {t('edit_full_profile') || (isRtl ? "تعديل بيانات الملف الشخصي" : "Edit Full Profile")}
             </Btn>
           )}
         </div>
