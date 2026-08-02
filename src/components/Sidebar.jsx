@@ -155,9 +155,10 @@ export default function Sidebar({
   };
 
   const filteredMenuSections = menuSections.map(section => {
-    const filteredItems = section.items.filter(item =>
-      normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
-    );
+    const filteredItems = section.items.filter(item => {
+      const labelText = typeof item.label === 'object' ? (isRtl ? item.label.ar : item.label.en) : item.label;
+      return normalizeArabic(labelText).includes(normalizeArabic(searchQuery.trim()));
+    });
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
@@ -456,7 +457,11 @@ export default function Sidebar({
                         transition: '0.15s ease'
                       }}
                     >
-                      <span>{section.title}</span>
+                      {/* 🟢 معالجة عنوان القسم للتعامل مع Object أو String */}
+                      <span>
+                        {typeof section.title === 'object' ? (isRtl ? section.title.ar : section.title.en) : section.title}
+                      </span>
+
                       {isExpanded ? (
                         <ChevronUp size={14} />
                       ) : (
@@ -504,7 +509,11 @@ export default function Sidebar({
                               }}
                             >
                               <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
-                              <span style={{ fontSize: '0.78rem' }}>{item.label}</span>
+                              
+                              {/* 🟢 معالجة اسم العنصر للتعامل مع Object أو String */}
+                              <span style={{ fontSize: '0.78rem' }}>
+                                {typeof item.label === 'object' ? (isRtl ? item.label.ar : item.label.en) : item.label}
+                              </span>
                             </button>
                           );
                         })}
