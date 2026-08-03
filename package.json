@@ -16,7 +16,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@supabase/supabase-js": "^2.109.0",
-    "browser-image-resizer": "^2.4.1",
+    "browser-image-compression": "^2.4.1",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
