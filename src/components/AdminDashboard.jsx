@@ -76,22 +76,21 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (subErr) throw subErr;
 
-      // 2️⃣ الأكاديميات النشطة
+            // 2️⃣ الأكاديميات النشطة مع اشتراكاتها
       const { data: activeData, error: aErr } = await supabase
         .from('academies')
-        .select('*')
+        .select('*, saas_subscriptions(*)')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (aErr) throw aErr;
 
-      // 3️⃣ الأكاديميات المحظورة
+      // 3️⃣ الأكاديميات المحظورة مع اشتراكاتها
       const { data: blockedData, error: bErr } = await supabase
         .from('academies')
-        .select('*')
+        .select('*, saas_subscriptions(*)')
         .eq('is_active', false)
         .order('created_at', { ascending: false });
-
       if (bErr) throw bErr;
 
       // 4️⃣ إجمالي العدد
