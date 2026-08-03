@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { processAndUploadReceipt } from '../lib/uploadHelper';
+import { processAndUploadReceipt } from '../lib/uploadHelper'; // 🌟 استدعاء دالة المعالجة والرفع
 import { useAcademy } from '../context/AcademyContext';
 import { 
   getPrices, 
@@ -14,13 +14,12 @@ import PaymentSection from './PaymentSection';
 
 export default function SubscriptionPage({ session: propSession, academyId: propAcademyId, onBack }) {
   const { t, i18n } = useTranslation();
-  const { academy, user } = useAcademy(); // 🌟 جلب الأكاديمية تلقائياً من Context
+  const { academy, user } = useAcademy();
 
-  // استخدام الـ prop إن وجد، أو جلب القيمة من Context كخيار آمن
   const activeAcademyId = propAcademyId || academy?.id;
   const activeUser = propSession?.user || user;
   const [region, setRegion] = useState('egypt');
-  const [duration, setDuration] = useState('yearly'); // جعل الخطة السنوية افتراضية لزيادة المبيعات
+  const [duration, setDuration] = useState('yearly');
   const [txId, setTxId] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,7 +37,6 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     setRegion(detectUserRegion(userLoc, i18n.language));
   }, [i18n.language]);
 
-  // تطبيق كود الخصم باستخدام دالة validateCoupon
   const handleApplyCoupon = () => {
     const { valid, discountPercent: discount, code } = validateCoupon(couponInput);
     
@@ -64,107 +62,99 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     setTimeout(() => setNotification(null), 4000);
   };
 
-const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
-  let resolvedAcademyId = activeAcademyId;
+  const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
+    let resolvedAcademyId = activeAcademyId;
 
-  // 🛡️ آلية حماية وانقاذ (Fail-Safe): البحث عن الأكاديمية مباشرة من قاعدة البيانات إن لم تكن متوفرة
-  if (!resolvedAcademyId && activeUser?.id) {
-    const { data: userAcad } = await supabase
-      .from('academies')
-      .select('id')
-      .eq('owner_id', activeUser.id)
-      .maybeSingle();
-
-    if (userAcad?.id) {
-      resolvedAcademyId = userAcad.id;
-    } else {
-      // في حالة حساب الاختبار أو السوبر أدمن، يتم جلب أول أكاديمية موجودة في النظام
-      const { data: firstAcad } = await supabase
+    if (!resolvedAcademyId && activeUser?.id) {
+      const { data: userAcad } = await supabase
         .from('academies')
         .select('id')
-        .limit(1)
+        .eq('owner_id', activeUser.id)
         .maybeSingle();
 
-      resolvedAcademyId = firstAcad?.id || null;
-    }
-  }
-
-  // التنبيه فقط في حال عدم وجود أي أكاديمية نهائياً في قاعدة البيانات
-  if (!resolvedAcademyId) {
-    showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    let receiptUrl = null;
-
-    // 1. رفع صورة إشعار التحويل اليدوي إلى Supabase Storage
-    if (isManualTransfer && receiptFile) {
-      const fileExt = receiptFile.name.split('.').pop();
-      const fileName = `receipt_${resolvedAcademyId}_${Date.now()}.${fileExt}`;
-      const filePath = `subscriptions/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('subscription-receipts')
-        .upload(filePath, receiptFile);
-
-      if (uploadError) {
-        console.error("🚨 Receipt Upload Error:", uploadError);
+      if (userAcad?.id) {
+        resolvedAcademyId = userAcad.id;
       } else {
-        const { data: urlData } = supabase.storage
-          .from('subscription-receipts')
-          .getPublicUrl(filePath);
-        
-        receiptUrl = urlData?.publicUrl || null;
+        const { data: firstAcad } = await supabase
+          .from('academies')
+          .select('id')
+          .limit(1)
+          .maybeSingle();
+
+        resolvedAcademyId = firstAcad?.id || null;
       }
     }
 
-    // 2. احتساب تواريخ بداية ونهاية الاشتراك
-    const startsAt = new Date();
-    const expiryDate = new Date();
-    if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
-    else if (duration === 'yearly') expiryDate.setDate(expiryDate.getDate() + 365);
-    else if (duration === 'lifetime') expiryDate.setDate(expiryDate.getDate() + 36500);
+    if (!resolvedAcademyId) {
+      showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
+      return;
+    }
 
-    const rawAmount = basePrices[region][duration];
-    const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
+    setLoading(true);
+    try {
+      let receiptUrl = null;
 
-    // 3. إدراج أو تحديث بيانات الاشتراك في الجدول (Upsert)
-    const { error } = await supabase
-      .from('saas_subscriptions')
-      .upsert([{
-        academy_id: resolvedAcademyId,
-        payer_id: activeUser?.id,
-        plan_tier: 'pro',
-        plan_duration: duration,
-        status: isManualTransfer ? 'pending_verification' : 'active',
-        payment_gateway: selectedPaymentMethod,
-        price: finalAmount,
-        currency: basePrices[region].curr,
-        starts_at: startsAt.toISOString(),
-        expires_at: expiryDate.toISOString(),
-        metadata: {
-          transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
-          region: region,
-          discount_applied: discountPercent,
-          coupon_code: appliedCoupon || null,
-          receipt_url: receiptUrl
+      // 1️⃣ ضغط ورفع صورة إشعار التحويل اليدوي بشكل آمن معالَج
+      if (isManualTransfer && receiptFile) {
+        try {
+          const { url } = await processAndUploadReceipt(
+            receiptFile, 
+            supabase, 
+            activeUser?.id || resolvedAcademyId
+          );
+          receiptUrl = url;
+        } catch (uploadError) {
+          console.error("🚨 Receipt Upload Error:", uploadError);
+          showNotification(`⚠️ ${uploadError.message || 'فشل رفع صورة الإشعار'}`);
+          setLoading(false);
+          return;
         }
-      }], { onConflict: 'academy_id' });
+      }
 
-    if (error) throw error;
-    setIsSubmitted(true);
+      // 2️⃣ احتساب تواريخ بداية ونهاية الاشتراك
+      const startsAt = new Date();
+      const expiryDate = new Date();
+      if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
+      else if (duration === 'yearly') expiryDate.setDate(expiryDate.getDate() + 365);
+      else if (duration === 'lifetime') expiryDate.setDate(expiryDate.getDate() + 36500);
+
+      const rawAmount = basePrices[region][duration];
+      const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
+
+      // 3️⃣ إدراج أو تحديث بيانات الاشتراك
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .upsert([{
+          academy_id: resolvedAcademyId,
+          payer_id: activeUser?.id,
+          plan_tier: 'pro',
+          plan_duration: duration,
+          status: isManualTransfer ? 'pending_verification' : 'active',
+          payment_gateway: selectedPaymentMethod,
+          price: finalAmount,
+          currency: basePrices[region].curr,
+          starts_at: startsAt.toISOString(),
+          expires_at: expiryDate.toISOString(),
+          metadata: {
+            transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
+            region: region,
+            discount_applied: discountPercent,
+            coupon_code: appliedCoupon || null,
+            receipt_url: receiptUrl
+          }
+        }], { onConflict: 'academy_id' });
+
+      if (error) throw error;
+      setIsSubmitted(true);
     } catch (err) {
-    console.error("🚨 Subscription Error Details:", err);
-    // 🌟 إظهار نص الخطأ الفعلي بدلاً من الرسالة العامة
-    const errorMessage = err?.message || err?.error_description || (isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
-    showNotification(`❌ ${errorMessage}`);
-  } finally {
-    setLoading(false);
-  }
-};
-  // هيكلة الباقات والمميزات
+      console.error("🚨 Subscription Error Details:", err);
+      const errorMessage = err?.message || err?.error_description || (isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
+      showNotification(`❌ ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const plans = [
     {
       id: 'monthly',
@@ -205,14 +195,12 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
   return (
     <div style={{ background: '#0a0f1d', color: '#f8fafc', minHeight: '100vh', padding: '40px 20px', fontFamily: 'system-ui, sans-serif', direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
       
-      {/* Toast Notification */}
       {notification && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#1e293b', color: '#f8fafc', padding: '14px 28px', borderRadius: '12px', border: '1px solid #f59e0b', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', fontWeight: '700' }}>
           {notification}
         </div>
       )}
 
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 30px auto', borderBottom: '1px solid #1e293b', paddingBottom: '20px' }}>
         <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ background: '#1e293b', color: '#f59e0b', border: '1px solid #334155', padding: '10px 22px', borderRadius: '12px', cursor: 'pointer', fontWeight: '700' }}>
           🌐 {t('subscription.switchLang')}
@@ -226,13 +214,11 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
 
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '35px' }}>
           <h1 style={{ color: '#f59e0b', fontSize: '2.5rem', fontWeight: '800', marginBottom: '14px' }}>{t('subscription.title')}</h1>
           <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>{t('subscription.subtitle')}</p>
         </div>
 
-        {/* Coupon Code Input Section */}
         <div style={{
           maxWidth: '500px',
           width: '100%',
@@ -285,7 +271,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
             </button>
           </div>
 
-          {/* Coupon Message Alert */}
           {couponMessage && (
             <div style={{ 
               marginTop: '10px', 
@@ -299,7 +284,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
           )}
         </div>
 
-        {/* Region Selector */}
         <div style={{ marginBottom: '40px', background: '#111827', padding: '20px', borderRadius: '20px', border: '1px solid #1e293b' }}>
           <label style={{ display: 'block', color: '#94a3b8', marginBottom: '14px', fontWeight: '700', textAlign: 'center' }}>{t('subscription.regionLabel')}</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
@@ -311,7 +295,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
           </div>
         </div>
 
-        {/* Plans Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '25px', marginBottom: '50px', alignItems: 'stretch' }}>
           {plans.map((plan) => {
             const isSelected = duration === plan.id;
@@ -337,7 +320,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
                   boxShadow: isSelected ? '0 10px 30px rgba(0,0,0,0.4)' : 'none'
                 }}
               >
-                {/* Badge */}
                 {plan.badge && (
                   <span style={{ 
                     position: 'absolute', 
@@ -366,7 +348,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
                     {finalPrice} <span style={{ fontSize: '0.95rem', color: '#94a3b8', fontWeight: '600' }}>/ {basePrices[region].curr}</span>
                   </div>
 
-                  {/* Features List */}
                   <ul style={{ listStyle: 'none', padding: '0', margin: '20px 0', borderTop: '1px dashed #1e293b', paddingTop: '16px' }}>
                     {plan.features.map((feat, idx) => (
                       <li key={idx} style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -398,7 +379,6 @@ const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, rece
           })}
         </div>
 
-        {/* Payment Section */}
         <PaymentSection 
           region={region}
           duration={duration}
