@@ -48,7 +48,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
-  // 🔍 حالات البحث والفلترة (المرحلة الأولى)
+  // 🔍 حالات البحث والفلترة
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('all'); // all, trial, lifetime, monthly, yearly
 
@@ -159,7 +159,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     };
   }, [fetchDashboardData]);
 
-    // 🔍 دالة الفلترة الذكية المحدثة للدعم الكامل للشهري والسنوي والتجريبي
+  // 🔍 دالة الفلترة الذكية المحدثة للدعم الكامل للشهري والسنوي والتجريبي والدائم
   const filterList = useCallback((list) => {
     return list.filter(item => {
       const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
@@ -167,15 +167,15 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
       const q = searchQuery.trim().toLowerCase();
 
-      // 1️⃣ شرط البحث بالاسم أو البريد
+      // 1️⃣ شرط البحث النصي بالاسم أو المالك أو البريد
       const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
 
-      // 2️⃣ استخراج كائن الاشتراك النشط أو الأول
+      // 2️⃣ استخراج الاشتراك النشط أو الأول
       const sub = Array.isArray(item.saas_subscriptions) 
         ? (item.saas_subscriptions.find(s => s.status === 'active') || item.saas_subscriptions[0])
         : item.saas_subscriptions;
 
-      // 3️⃣ تجميع القيمة النصية لنوع الاشتراك من كافة الحقول الممكنة
+      // 3️⃣ تجميع القيمة النصية لنوع الخطة والمدة
       const durationRaw = (
         item.plan_duration || 
         sub?.plan_duration || 
@@ -185,21 +185,23 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ''
       ).toLowerCase();
 
-      // 4️⃣ الفحوصات الأمنية لأنواع الخطط
+      // 4️⃣ الفحوصات المنطقية لأنواع الخطط
       const isLongDuration = item.trial_ends_at && (new Date(item.trial_ends_at).getFullYear() > 2090);
-      const isLifetime = durationRaw.includes('lifetime') || durationRaw.includes('permanent') || isLongDuration;
-      
-      const isMonthly = durationRaw.includes('month') || durationRaw.includes('شهري');
-      const isYearly = durationRaw.includes('year') || durationRaw.includes('annual') || durationRaw.includes('سنوي');
+      const isLifetime = durationRaw.includes('lifetime') || durationRaw.includes('permanent') || isLongDuration || !item.trial_ends_at;
 
-      // 5️⃣ تطبيق الفلترة حسب الاختيار
+      // الحساب التجريبي هو الحساب غير الدائم وله تاريخ نهاية تجربة معرّف أو يحمل طابع trial
+      const isTrial = !isLifetime && (durationRaw.includes('trial') || Boolean(item.trial_ends_at));
+
+      const isMonthly = !isLifetime && (durationRaw.includes('month') || durationRaw.includes('شهري'));
+      const isYearly = !isLifetime && (durationRaw.includes('year') || durationRaw.includes('annual') || durationRaw.includes('سنوي'));
+
+      // 5️⃣ تطبيق الفلترة حسب الخيار المحدد
       let matchesPlan = true;
 
       if (planFilter === 'lifetime') {
         matchesPlan = isLifetime;
       } else if (planFilter === 'trial') {
-        // أي حساب ليس دائمًا وليس شهرِيًا ولا سنويًا معتمدًا يُعتبر حسابًا تجريبيًا
-        matchesPlan = !isLifetime && !isMonthly && !isYearly;
+        matchesPlan = isTrial;
       } else if (planFilter === 'monthly') {
         matchesPlan = isMonthly;
       } else if (planFilter === 'yearly') {
@@ -389,7 +391,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     link.click();
   };
 
-  // 1️⃣ الملاحظة الأولى: فحص الحسابات الدائمة للسنوات البعيدة
+  // 1️⃣ فحص الحسابات الدائمة
   const getTrialStatusBadge = (trialEndsAt) => {
     if (!trialEndsAt) return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
     
@@ -466,7 +468,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
       </div>
 
-      {/* 3️⃣ الملاحظة الثالثة: محاذاة وتناسق شريط البحث مع اختيار الخطة للهواتف */}
+      {/* 🔍 شريط البحث واختيار الخطة */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
@@ -508,7 +510,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           )}
         </div>
 
-        {/* قائمة اختيار الخطة */}
+        {/* قائمة اختيار الخطة (المستحدثة بالأكتمال) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 140px' }}>
           <Filter size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
           <select
@@ -528,6 +530,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           >
             <option value="all">{isRtl ? 'جميع الخطط' : 'All Plans'}</option>
             <option value="trial">{isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
+            <option value="monthly">{isRtl ? 'اشتراك شهري 📅' : 'Monthly'}</option>
+            <option value="yearly">{isRtl ? 'اشتراك سنوي 🗓️' : 'Yearly'}</option>
             <option value="lifetime">{isRtl ? 'حسابات دائمة ♾️' : 'Lifetime'}</option>
           </select>
         </div>
@@ -558,7 +562,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ))}
       </div>
 
-      {/* 2️⃣ الملاحظة الثانية: إخفاء كرت الطلبات الفارغ عند البحث أو عدم وجود طلبات معلقة */}
+      {/* ⏳ قسم طلبات الاشتراكات المعلقة */}
       {(activeTab === 'pending' || (activeTab === 'all' && filteredPendingSubscriptions.length > 0)) && (
         <section className={styles.sectionPending} style={{ marginBottom: '32px' }}>
           <h2 className={styles.sectionTitle} style={{ fontSize: '1.1rem', color: '#FFF', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -717,43 +721,43 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         );
       })()}
 
-      {/* 🚫 قسم الأكاديميات المحظورة */}
-{(activeTab === 'blocked' || (activeTab === 'all' && filteredBlockedAcademies.length > 0)) && (
-  <section style={{ marginBottom: '32px' }}>
-    <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <Ban size={20} />
-      <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
-    </h2>
-    {filteredBlockedAcademies.length === 0 ? (
-      <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد نتائج" : "No Results"} description={isRtl ? "لا توجد أكاديميات محظورة مطابقة للبحث." : "No matching blocked academies."} />
-    ) : (
-      <div className={styles.requestsGrid}>
-        {filteredBlockedAcademies.map(academy => (
-          <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
-            <div className={styles.requestInfo}>
-              <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
-              {academy.ownerProfile && (
-                <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {getSafeText(academy.ownerProfile.full_name)}</span>
+      {/* 🚫 قسم الأكاديميات المحظورة (مُحسّن شرط الظهور) */}
+      {(activeTab === 'blocked' || (activeTab === 'all' && filteredBlockedAcademies.length > 0)) && (
+        <section style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Ban size={20} />
+            <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
+          </h2>
+          {filteredBlockedAcademies.length === 0 ? (
+            <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد نتائج" : "No Results"} description={isRtl ? "لا توجد أكاديميات محظورة مطابقة للبحث." : "No matching blocked academies."} />
+          ) : (
+            <div className={styles.requestsGrid}>
+              {filteredBlockedAcademies.map(academy => (
+                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {getSafeText(academy.ownerProfile.full_name)}</span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
+                  </div>
+                  <div className={styles.cardActions}>
+                    <button 
+                      onClick={() => onActivateClick(academy.id, academy.owner_id)} 
+                      disabled={processingId !== null} 
+                      style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Unlock size={14} /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
+                    </button>
+                  </div>
                 </div>
-              )}
-              <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
+              ))}
             </div>
-            <div className={styles.cardActions}>
-              <button 
-                onClick={() => onActivateClick(academy.id, academy.owner_id)} 
-                disabled={processingId !== null} 
-                style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <Unlock size={14} /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </section>
-)}
+          )}
+        </section>
+      )}
 
       {/* 🖼️ معاينة التحويل */}
       {receiptModalUrl && (
