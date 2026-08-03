@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { processAndUploadReceipt } from '../lib/uploadHelper';
 import { useAcademy } from '../context/AcademyContext';
 import { 
   getPrices, 
