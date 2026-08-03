@@ -86,21 +86,37 @@ export default function Dashboard({
     }
   }, [userRole, academyId, currentLang]);
 
+  // ⚡ الإضافة الجديدة: تحسين الـ Realtime بالفلترة وحماية الأداء بـ Debounce
   useEffect(() => {
     fetchDashboardData(true);
 
+    if (!academyId) return;
+
+    // 1. تحديد الفلتر الخاص بأكاديمية المستخدم لحظر التنبيهات من أكاديميات أخرى
+    const filterCondition = `academy_id=eq.${academyId}`;
+
+    // 2. معالج التغيير المباشر مع Debounce لمنع تكرار الطلبات
+    let debounceTimer = null;
+    const handleRealtimeChange = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchDashboardData(false);
+      }, 300);
+    };
+
     const channel = supabase
-      .channel('dashboard-realtime-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => fetchDashboardData(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress' }, () => fetchDashboardData(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => fetchDashboardData(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas' }, () => fetchDashboardData(false))
+      .channel(`dashboard-realtime-${academyId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: filterCondition }, handleRealtimeChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress', filter: filterCondition }, handleRealtimeChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: filterCondition }, handleRealtimeChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas', filter: filterCondition }, handleRealtimeChange)
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
-  }, [fetchDashboardData]);
+  }, [fetchDashboardData, academyId]);
 
   if (loading) {
     return (
