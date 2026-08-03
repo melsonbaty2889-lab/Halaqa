@@ -67,17 +67,25 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [sortBy, setSortBy] = useState('created_at_desc'); 
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 📥 الخطوة 4️⃣: حالة Drawer التفاصيل العميقة
+  // 📥 حالة Drawer التفاصيل العميقة
   const [selectedAcademyDetails, setSelectedAcademyDetails] = useState(null);
   const [academyStatsLoading, setAcademyStatsLoading] = useState(false);
   const [deepStats, setDeepStats] = useState({ studentsCount: 0, halaqatCount: 0, payments: [] });
 
-  // 🔲 الخطوة 5️⃣: حالة التحديد الجماعي
+  // 🔲 حالة التحديد الجماعي
   const [selectedAcademyIds, setSelectedAcademyIds] = useState([]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  // 📲 دالة فتح الواتساب مباشرة مع رسالة مجهزة
+  const handleWhatsAppClick = (phone, academyName) => {
+    if (!phone) return;
+    const cleanPhone = phone.replace(/\D/g, '');
+    const message = encodeURIComponent(`السلام عليكم، تواصل معك من إدارة منصة حلقات بشأن أكاديمية (${academyName})`);
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
   // 📥 جلب البيانات المرقّمة من Supabase
@@ -175,10 +183,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
   useEffect(() => {
     setCurrentPage(1);
-    setSelectedAcademyIds([]); // إعادة تصفير التحديد عند تغيير الفلتر
+    setSelectedAcademyIds([]); 
   }, [activeTab, searchQuery, planFilter, sortBy]);
 
-  // 🔍 فلترة الصفحة الحالية نصياً وحسب نوع الخطة
+  // 🔍 فلترة الصفحة الحالية
   const filteredAcademies = useMemo(() => {
     return academies.filter(item => {
       const acadName = getSafeText(item.name).toLowerCase();
@@ -223,7 +231,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     });
   }, [academies, searchQuery, planFilter, activeTab]);
 
-  // 📥 الخطوة 4️⃣: فتح Drawer وجلب الإحصائيات العميقة للأكاديمية
+  // 📥 فتح Drawer وجلب الإحصائيات العميقة
   const openAcademyDrawer = async (academy) => {
     setSelectedAcademyDetails(academy);
     setAcademyStatsLoading(true);
@@ -251,7 +259,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // 🔲 الخطوة 5️⃣: إدارات التحديد الجماعي (Bulk Selection Handlers)
+  // 🔲 إدارات التحديد الجماعي
   const toggleSelectAll = () => {
     if (selectedAcademyIds.length === filteredAcademies.length) {
       setSelectedAcademyIds([]);
@@ -266,7 +274,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     );
   };
 
-  // 🔲 الخطوة 5️⃣: الإجراءات الجماعية (Bulk Actions)
+  // 🔲 الإجراءات الجماعية
   const handleBulkStatusChange = async (newStatus) => {
     if (selectedAcademyIds.length === 0) return;
     const actionText = newStatus ? (isRtl ? 'تفعيل' : 'Activate') : (isRtl ? 'حظر' : 'Block');
@@ -314,56 +322,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       fetchDashboardData(true);
     } catch (err) {
       showToast(isRtl ? "فشل التمديد الجماعي." : "Failed to extend.", "error");
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // ✅ القبول والاعتماد
-  const onApproveSubscription = async (subscription) => {
-    if (processingId) return;
-    setProcessingId(`approve-${subscription.id}`);
-
-    try {
-      const duration = getSafeText(subscription.plan_duration, 'monthly');
-      const academyId = subscription.academy_id || subscription.academies?.id;
-      const payerId = subscription.payer_id || subscription.profiles?.id;
-
-      const { error } = await supabase.rpc('approve_academy_subscription', {
-        p_subscription_id: subscription.id,
-        p_academy_id: academyId,
-        p_payer_id: payerId,
-        p_duration: duration
-      });
-
-      if (error) throw error;
-
-      showToast(isRtl ? `تم تفعيل الاشتراك والأكاديمية بنجاح! 🎉` : "Subscription Approved 🎉");
-      fetchDashboardData(true);
-    } catch (error) {
-      showToast(isRtl ? "فشل اعتماد الطلب." : "Failed to approve.", "error");
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // 🚫 الرفض
-  const onRejectSubscription = async (subscriptionId) => {
-    if (processingId) return;
-    if (!window.confirm(isRtl ? 'هل أنت تأكد من رفض هذا الطلب؟' : 'Reject this order?')) return;
-
-    setProcessingId(`reject-${subscriptionId}`);
-    try {
-      const { error } = await supabase
-        .from('saas_subscriptions')
-        .update({ status: 'canceled', updated_at: new Date().toISOString() })
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
-      showToast(isRtl ? "تم رفض الطلب." : "Order Rejected.", "info");
-      fetchDashboardData(true);
-    } catch (error) {
-      showToast(isRtl ? "حدث خطأ أثناء الرفض." : "Error rejecting.", "error");
     } finally {
       setProcessingId(null);
     }
@@ -455,12 +413,13 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const exportToCSV = () => {
     if (academies.length === 0) return;
 
-    const headers = ["ID", "Academy Name", "Owner", "Email", "Status", "Trial Ends At"];
+    const headers = ["ID", "Academy Name", "Owner", "Email", "Phone", "Status", "Trial Ends At"];
     const rows = academies.map(a => [
       a.id, 
       `"${getSafeText(a.name)}"`, 
       `"${getSafeText(a.ownerProfile?.full_name)}"`, 
       `"${getSafeText(a.ownerProfile?.email)}"`,
+      `"${getSafeText(a.ownerProfile?.phone)}"`,
       a.is_active ? "Active" : "Blocked", 
       a.trial_ends_at ? new Date(a.trial_ends_at).toLocaleDateString() : "Lifetime"
     ]);
@@ -579,7 +538,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
       </div>
 
-      {/* ⚡ الخطوة 5️⃣: شريط الإجراءات الجماعية (Bulk Actions Bar) */}
+      {/* ⚡ شريط الإجراءات الجماعية (Bulk Actions Bar) */}
       {selectedAcademyIds.length > 0 && (
         <div style={{
           background: 'linear-gradient(90deg, #1E293B 0%, #0F172A 100%)',
@@ -711,7 +670,61 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     </span>
                   </div>
 
+                  {/* 🕹️ أزرار التحكم بالكارت الرئيسي مع زر WhatsApp وإضافة الرقم */}
                   <div className={styles.cardActions}>
+                    {academy.ownerProfile?.phone ? (
+                      <button 
+                        onClick={() => handleWhatsAppClick(academy.ownerProfile.phone, getSafeText(academy.name))}
+                        title="تواصل عبر واتساب"
+                        style={{ 
+                          background: '#25D366', 
+                          border: 'none', 
+                          color: '#FFF', 
+                          padding: '6px 10px', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer', 
+                          fontSize: '0.75rem', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        <MessageCircle size={14} /> WhatsApp
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          const newPhone = prompt(isRtl ? 'أدخل رقم هاتف المالك (مع كود الدولة مثل 2010...):' : 'Enter owner phone number:');
+                          if (newPhone) {
+                            supabase.from('profiles').update({ phone: newPhone }).eq('id', academy.owner_id)
+                              .then(({ error }) => {
+                                if (error) showToast(isRtl ? "فشل حفظ الرقم" : "Failed", "error");
+                                else {
+                                  showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح!" : "Phone saved!");
+                                  fetchDashboardData(true);
+                                }
+                              });
+                          }
+                        }}
+                        title="إضافة رقم هاتف"
+                        style={{ 
+                          background: 'rgba(239, 68, 68, 0.15)', 
+                          border: '1px solid #EF4444', 
+                          color: '#F87171', 
+                          padding: '6px 10px', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer', 
+                          fontSize: '0.75rem', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px' 
+                        }}
+                      >
+                        <MessageCircle size={14} /> + هاتف
+                      </button>
+                    )}
+
                     <button 
                       onClick={() => openAcademyDrawer(academy)} 
                       style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -755,7 +768,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         )}
       </section>
 
-      {/* 📥 الخطوة 4️⃣: Drawer التفاصيل العميقة للأكاديمية */}
+      {/* 📥 Drawer التفاصيل العميقة للأكاديمية */}
       {selectedAcademyDetails && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 3000, display: 'flex', justifyContent: isRtl ? 'flex-start' : 'flex-end' }}>
           <div style={{ width: '100%', maxWidth: '440px', background: '#0F172A', height: '100%', borderLeft: isRtl ? 'none' : '1px solid #334155', borderRight: isRtl ? '1px solid #334155' : 'none', padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -775,18 +788,40 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               <h4 style={{ margin: '0 0 4px 0', color: '#FFF', fontSize: '1rem' }}>{getSafeText(selectedAcademyDetails.ownerProfile?.full_name, 'غير معروف')}</h4>
               <p style={{ margin: '0 0 12px 0', fontSize: '0.8rem', color: '#CBD5E1' }}>{getSafeText(selectedAcademyDetails.ownerProfile?.email)}</p>
 
-              {/* 📲 زر التواصل عبر WhatsApp */}
+              {/* 📲 زر التواصل عبر WhatsApp داخل Drawer */}
               {selectedAcademyDetails.ownerProfile?.phone ? (
-                <a
-                  href={`https://wa.me/${selectedAcademyDetails.ownerProfile.phone.replace(/[^0-9]/g, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#25D366', color: '#FFF', padding: '10px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}
+                <button
+                  onClick={() => handleWhatsAppClick(selectedAcademyDetails.ownerProfile.phone, getSafeText(selectedAcademyDetails.name))}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#25D366', color: '#FFF', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer' }}
                 >
                   <MessageCircle size={18} /> {isRtl ? 'تواصل عبر واتساب مباشر' : 'Direct WhatsApp Chat'}
-                </a>
+                </button>
               ) : (
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#EF4444' }}>⚠️ لا يوجد رقم هاتف مسجل للمالك</p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#EF4444' }}>⚠️ لا يوجد رقم هاتف مسجل للمالك</p>
+                  <button
+                    onClick={() => {
+                      const newPhone = prompt(isRtl ? 'أدخل رقم هاتف المالك:' : 'Enter owner phone number:');
+                      if (newPhone) {
+                        supabase.from('profiles').update({ phone: newPhone }).eq('id', selectedAcademyDetails.owner_id)
+                          .then(({ error }) => {
+                            if (error) showToast(isRtl ? "فشل حفظ الرقم" : "Failed", "error");
+                            else {
+                              showToast(isRtl ? "تم حفظ الرقم بنجاح!" : "Phone saved!");
+                              setSelectedAcademyDetails(prev => ({
+                                ...prev,
+                                ownerProfile: { ...prev.ownerProfile, phone: newPhone }
+                              }));
+                              fetchDashboardData(true);
+                            }
+                          });
+                      }
+                    }}
+                    style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #EF4444', color: '#F87171', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}
+                  >
+                    + إضافة رقم
+                  </button>
+                </div>
               )}
             </div>
 
