@@ -46,14 +46,14 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     // 1. جلب حالة الاشتراك الحالية عند التحميل
     const fetchCurrentSubscription = async () => {
       const { data } = await supabase
-        .from('subscriptions')
+        .from('saas_subscriptions')
         .select('*')
         .eq('academy_id', activeAcademyId)
         .maybeSingle();
 
       if (data) {
         setSubscriptionStatus(data.status);
-        if (data.status === 'pending') {
+        if (data.status === 'pending_verification') {
           setIsSubmitted(true);
         }
       }
@@ -61,7 +61,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
 
     fetchCurrentSubscription();
 
-    // 2. تفعيل التنست اللحظي على جدول الاشتراكات
+    // 2. تفعيل التنست اللحظي على جدول saas_subscriptions
     const subscriptionChannel = supabase
       .channel(`subscription-status-${activeAcademyId}`)
       .on(
@@ -69,7 +69,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
         {
           event: '*',
           schema: 'public',
-          table: 'subscriptions',
+          table: 'saas_subscriptions',
           filter: `academy_id=eq.${activeAcademyId}`
         },
         (payload) => {
@@ -83,7 +83,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
                 ? '🎉 تم قبول طلبك وتفعيل اشتراك الأكاديمية بنجاح!' 
                 : '🎉 Your subscription has been approved and activated!'
             );
-          } else if (newStatus === 'rejected') {
+          } else if (newStatus === 'canceled' || newStatus === 'unpaid') {
             setIsSubmitted(false);
             showNotification(
               isRTL 
@@ -174,7 +174,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
         }
       }
 
-      // 2️⃣ احتساب التواريخ الأولية والمبلغ الخامي
+      // 2️⃣ احتساب التواريخ الأولية والمبلغ الخصمي
       const startsAt = new Date();
       const expiryDate = new Date();
       if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
@@ -184,7 +184,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
       const rawAmount = basePrices[region][duration];
       const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
 
-      // 3️⃣ إدراج / تحديث الطلب في جدول `subscriptions` لربطه بسلاسة مع لوحة الأدمن (AdminDashboard)
+      // 3️⃣ إدراج / تحديث الطلب في جدول `saas_subscriptions` مع مراعاة القيود المطلوبة (Constraints)
       const { error } = await supabase
         .from('saas_subscriptions')
         .upsert([{
@@ -192,10 +192,10 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
           payer_id: activeUser?.id,
           plan_tier: 'pro',
           plan_duration: duration,
-          status: isManualTransfer ? 'pending' : 'active',
+          status: isManualTransfer ? 'pending_verification' : 'active',
           payment_gateway: selectedPaymentMethod,
           price: finalAmount,
-          currency: basePrices[region].curr,
+          currency: basePrices[region]?.curr || 'EGP',
           starts_at: startsAt.toISOString(),
           expires_at: expiryDate.toISOString(),
           metadata: {
@@ -204,14 +204,14 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
             coupon_code: appliedCoupon || null,
             receipt_url: receiptUrl,
             transaction_id: txId || 'MANUAL_VERIFICATION_PENDING'
-    },
-    updated_at: new Date().toISOString()
-  }], { onConflict: 'academy_id' });
+          },
+          updated_at: new Date().toISOString()
+        }], { onConflict: 'academy_id' });
       
       if (error) throw error;
       
       setIsSubmitted(true);
-      setSubscriptionStatus('pending');
+      setSubscriptionStatus('pending_verification');
       showNotification(
         isRTL 
           ? "✅ تم إرسال طلب الاشتراك بنجاح! وهو قيد المراجعة حالياً." 
@@ -287,7 +287,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* ⏳ كارت تنبيه في حال وجود طلب اشتراك قيد التنسيق والتحقق */}
-        {subscriptionStatus === 'pending' && (
+        {subscriptionStatus === 'pending_verification' && (
           <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: '16px', padding: '20px', marginBottom: '30px', textAlign: 'center' }}>
             <h3 style={{ color: '#f59e0b', margin: '0 0 8px 0', fontSize: '1.2rem' }}>
               ⏳ {isRTL ? 'طلب الاشتراك قيد المراجعة' : 'Subscription Request Pending Review'}
