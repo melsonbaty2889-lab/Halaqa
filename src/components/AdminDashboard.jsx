@@ -19,9 +19,14 @@ import {
   Infinity as InfinityIcon,
   Eye,
   Unlock,
-  Search,       // 🔍 أيقونة البحث
-  Filter        // 🌪️ أيقونة الفلترة
+  Search,
+  Filter,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+
+const PAGE_SIZE = 10;
 
 // 🛡️ دالة أمان لمساعدات النصوص
 const getSafeText = (val, defaultVal = '') => {
@@ -35,35 +40,57 @@ const getSafeText = (val, defaultVal = '') => {
 
 export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
-  const [activeAcademies, setActiveAcademies] = useState([]); 
-  const [blockedAcademies, setBlockedAcademies] = useState([]); 
+  const [academies, setAcademies] = useState([]); 
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [blockedCount, setBlockedCount] = useState(0);
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   
-  const [activeTab, setActiveTab] = useState('all'); 
+  const [activeTab, setActiveTab] = useState('all'); // all, pending, active, blocked, expired
   const [extendModalAcademy, setExtendModalAcademy] = useState(null);
   const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
-  // 🔍 حالات البحث والفلترة
+  // 🔍 حالات البحث والفلترة والفرز والصفحات
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('all'); // all, trial, lifetime, monthly, yearly
+  const [sortBy, setSortBy] = useState('created_at_desc'); // created_at_desc, created_at_asc, trial_ends_asc
+  const [currentPage, setCurrentPage] = useState(1);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  // 📥 جلب البيانات من Supabase
+  // 📥 جلب البيانات المرقّمة من Supabase
   const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
     if (!isSilentRefresh) setLoading(true);
     else setRefreshing(true);
 
     try {
-      // 1️⃣ طلبات الاشتراكات المعلقة
+      // 1️⃣ حساب الإحصائيات العامة أولاً (Counts)
+      const [
+        { count: totalCount },
+        { count: pCount },
+        { count: aCount },
+        { count: bCount }
+      ] = await Promise.all([
+        supabase.from('academies').select('*', { count: 'exact', head: true }),
+        supabase.from('saas_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'pending_verification'),
+        supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', false)
+      ]);
+
+      setTotalAcademiesCount(totalCount || 0);
+      setPendingCount(pCount || 0);
+      setActiveCount(aCount || 0);
+      setBlockedCount(bCount || 0);
+
+      // 2️⃣ جلب طلبات الاشتراكات المعلقة
       const { data: subData, error: subErr } = await supabase
         .from('saas_subscriptions')
         .select(`
@@ -75,32 +102,38 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         .order('created_at', { ascending: false });
 
       if (subErr) throw subErr;
+      setPendingSubscriptions(subData || []);
 
-      // 2️⃣ الأكاديميات النشطة مع اشتراكاتها
-      const { data: activeData, error: aErr } = await supabase
+      // 3️⃣ بناء استعلام الأكاديميات المرقّم (Server-side Pagination & Sorting)
+      const from = (currentPage - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      let acadQuery = supabase
         .from('academies')
-        .select('*, saas_subscriptions(*)')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .select('*, saas_subscriptions(*)', { count: 'exact' });
 
-      if (aErr) throw aErr;
+      // تطبيق تصفية الحالة من الخادم حسب التبويب النشط
+      if (activeTab === 'active') {
+        acadQuery = acadQuery.eq('is_active', true);
+      } else if (activeTab === 'blocked') {
+        acadQuery = acadQuery.eq('is_active', false);
+      }
 
-      // 3️⃣ الأكاديميات المحظورة مع اشتراكاتها
-      const { data: blockedData, error: bErr } = await supabase
-        .from('academies')
-        .select('*, saas_subscriptions(*)')
-        .eq('is_active', false)
-        .order('created_at', { ascending: false });
-      if (bErr) throw bErr;
+      // تطبيق الفرز من جهة الخادم
+      if (sortBy === 'created_at_desc') {
+        acadQuery = acadQuery.order('created_at', { ascending: false });
+      } else if (sortBy === 'created_at_asc') {
+        acadQuery = acadQuery.order('created_at', { ascending: true });
+      } else if (sortBy === 'trial_ends_asc') {
+        acadQuery = acadQuery.order('trial_ends_at', { ascending: true, nullsFirst: false });
+      }
 
-      // 4️⃣ إجمالي العدد
-      const { count } = await supabase
-        .from('academies')
-        .select('*', { count: 'exact', head: true });
+      // تطبيق الترقيم (Pagination Range)
+      const { data: acadData, error: acadErr } = await acadQuery.range(from, to);
+      if (acadErr) throw acadErr;
 
-      // ربط بيانات المالكين
-      const allAcademies = [...(activeData || []), ...(blockedData || [])];
-      const ownerIds = [...new Set(allAcademies.map(a => a.owner_id).filter(Boolean))];
+      // 4️⃣ جلب بيانات المالكين
+      const ownerIds = [...new Set((acadData || []).map(a => a.owner_id).filter(Boolean))];
       let profilesMap = {};
 
       if (ownerIds.length > 0) {
@@ -117,20 +150,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         }
       }
 
-      const enrichedActiveData = (activeData || []).map(acad => ({
+      const enrichedAcademies = (acadData || []).map(acad => ({
         ...acad,
         ownerProfile: profilesMap[acad.owner_id] || null
       }));
 
-      const enrichedBlockedData = (blockedData || []).map(acad => ({
-        ...acad,
-        ownerProfile: profilesMap[acad.owner_id] || null
-      }));
-
-      setPendingSubscriptions(subData || []);
-      setActiveAcademies(enrichedActiveData);
-      setBlockedAcademies(enrichedBlockedData);
-      if (count !== null) setTotalAcademiesCount(count);
+      setAcademies(enrichedAcademies);
 
     } catch (err) {
       console.error("❌ Admin Dashboard Fetch Error:", err.message);
@@ -139,7 +164,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isRtl]);
+  }, [isRtl, currentPage, activeTab, sortBy]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -159,23 +184,25 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     };
   }, [fetchDashboardData]);
 
-  // 🔍 دالة الفلترة الذكية المحدثة للدعم الكامل للشهري والسنوي والتجريبي والدائم
-  const filterList = useCallback((list) => {
-    return list.filter(item => {
-      const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
-      const ownerName = getSafeText(item.ownerProfile?.full_name || item.profiles?.full_name).toLowerCase();
-      const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
+  // إعادة ضبط الصفحة الأولى عند تغيير التبويب أو الفلتر
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery, planFilter, sortBy]);
+
+  // 🔍 فلترة الصفحة الحالية نصياً وحسب نوع الخطة
+  const filteredAcademies = useMemo(() => {
+    return academies.filter(item => {
+      const acadName = getSafeText(item.name).toLowerCase();
+      const ownerName = getSafeText(item.ownerProfile?.full_name).toLowerCase();
+      const ownerEmail = getSafeText(item.ownerProfile?.email).toLowerCase();
       const q = searchQuery.trim().toLowerCase();
 
-      // 1️⃣ شرط البحث النصي بالاسم أو المالك أو البريد
       const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
 
-      // 2️⃣ استخراج الاشتراك النشط أو الأول
       const sub = Array.isArray(item.saas_subscriptions) 
         ? (item.saas_subscriptions.find(s => s.status === 'active') || item.saas_subscriptions[0])
         : item.saas_subscriptions;
 
-      // 3️⃣ تجميع القيمة النصية لنوع الخطة والمدة
       const durationRaw = (
         item.plan_duration || 
         sub?.plan_duration || 
@@ -185,36 +212,27 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ''
       ).toLowerCase();
 
-      // 4️⃣ الفحوصات المنطقية لأنواع الخطط
       const isLongDuration = item.trial_ends_at && (new Date(item.trial_ends_at).getFullYear() > 2090);
       const isLifetime = durationRaw.includes('lifetime') || durationRaw.includes('permanent') || isLongDuration || !item.trial_ends_at;
 
-      // الحساب التجريبي هو الحساب غير الدائم وله تاريخ نهاية تجربة معرّف أو يحمل طابع trial
       const isTrial = !isLifetime && (durationRaw.includes('trial') || Boolean(item.trial_ends_at));
-
       const isMonthly = !isLifetime && (durationRaw.includes('month') || durationRaw.includes('شهري'));
       const isYearly = !isLifetime && (durationRaw.includes('year') || durationRaw.includes('annual') || durationRaw.includes('سنوي'));
 
-      // 5️⃣ تطبيق الفلترة حسب الخيار المحدد
       let matchesPlan = true;
+      if (planFilter === 'lifetime') matchesPlan = isLifetime;
+      else if (planFilter === 'trial') matchesPlan = isTrial;
+      else if (planFilter === 'monthly') matchesPlan = isMonthly;
+      else if (planFilter === 'yearly') matchesPlan = isYearly;
 
-      if (planFilter === 'lifetime') {
-        matchesPlan = isLifetime;
-      } else if (planFilter === 'trial') {
-        matchesPlan = isTrial;
-      } else if (planFilter === 'monthly') {
-        matchesPlan = isMonthly;
-      } else if (planFilter === 'yearly') {
-        matchesPlan = isYearly;
+      if (activeTab === 'expired') {
+        const isExpired = item.trial_ends_at && new Date(item.trial_ends_at) <= new Date();
+        return matchesSearch && matchesPlan && isExpired;
       }
 
       return matchesSearch && matchesPlan;
     });
-  }, [searchQuery, planFilter]);
-
-  const filteredActiveAcademies = useMemo(() => filterList(activeAcademies), [activeAcademies, filterList]);
-  const filteredBlockedAcademies = useMemo(() => filterList(blockedAcademies), [blockedAcademies, filterList]);
-  const filteredPendingSubscriptions = useMemo(() => filterList(pendingSubscriptions), [pendingSubscriptions, filterList]);
+  }, [academies, searchQuery, planFilter, activeTab]);
 
   // ✅ القبول والاعتماد
   const onApproveSubscription = async (subscription) => {
@@ -270,7 +288,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   // ⛔ الحظر
   const onDeactivateClick = async (id, ownerId) => {
     if (processingId) return;
-    const targetAcademy = activeAcademies.find(a => a.id === id);
+    const targetAcademy = academies.find(a => a.id === id);
     const targetName = getSafeText(targetAcademy?.name, 'الأكاديمية');
     
     if (!window.confirm(isRtl ? `هل ترغب بتعليق/حظر (${targetName})؟` : 'Deactivate this academy?')) return;
@@ -298,7 +316,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   // 🔓 إلغاء الحظر
   const onActivateClick = async (id, ownerId) => {
     if (processingId) return;
-    const targetAcademy = blockedAcademies.find(a => a.id === id);
+    const targetAcademy = academies.find(a => a.id === id);
     const targetName = getSafeText(targetAcademy?.name, 'الأكاديمية');
 
     if (!window.confirm(isRtl ? `إلغاء حظر وتفعيل (${targetName})؟` : 'Activate this academy?')) return;
@@ -330,7 +348,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
     let newDateIso = null;
     if (!isLifetime) {
-      const target = activeAcademies.find(a => a.id === id) || blockedAcademies.find(a => a.id === id);
+      const target = academies.find(a => a.id === id);
       const now = new Date();
       const currentEnd = target?.trial_ends_at ? new Date(target.trial_ends_at) : now;
       const baseDate = currentEnd > now ? currentEnd : now;
@@ -371,11 +389,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
   // 📊 CSV Export
   const exportToCSV = () => {
-    const allList = [...activeAcademies, ...blockedAcademies];
-    if (allList.length === 0) return;
+    if (academies.length === 0) return;
 
     const headers = ["ID", "Academy Name", "Owner", "Email", "Status", "Trial Ends At"];
-    const rows = allList.map(a => [
+    const rows = academies.map(a => [
       a.id, 
       `"${getSafeText(a.name)}"`, 
       `"${getSafeText(a.ownerProfile?.full_name)}"`, 
@@ -387,7 +404,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
-    link.download = `academies_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `academies_page_${currentPage}_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
   };
 
@@ -405,7 +422,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     return { text: isRtl ? `متبقي ${diffDays} يوم` : `${diffDays}d left`, color: '#10B981' };
   };
 
-  const expiredAcademies = activeAcademies.filter(a => a.trial_ends_at && new Date(a.trial_ends_at) <= new Date());
+  const totalPages = Math.ceil(totalAcademiesCount / PAGE_SIZE) || 1;
 
   return (
     <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -454,21 +471,21 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         <div className={styles.premiumStatBox}>
           <div>
             <p className={styles.statLabel}>{isRtl ? 'انتظار المراجعة' : 'Pending Verification'}</p>
-            <h2 className={styles.statNumber} style={{ color: pendingSubscriptions.length > 0 ? '#FBBF24' : 'inherit' }}>{loading ? '...' : pendingSubscriptions.length}</h2>
+            <h2 className={styles.statNumber} style={{ color: pendingCount > 0 ? '#FBBF24' : 'inherit' }}>{loading ? '...' : pendingCount}</h2>
           </div>
           <div className={styles.statIcon}><Clock size={24} /></div>
         </div>
 
         <div className={styles.premiumStatBox} style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
           <div>
-            <p className={styles.statLabel}>{isRtl ? 'أكاديميات محظورة / منتهية' : 'Blocked / Expired'}</p>
-            <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : blockedAcademies.length + expiredAcademies.length}</h2>
+            <p className={styles.statLabel}>{isRtl ? 'أكاديميات محظورة / معطلة' : 'Blocked Academies'}</p>
+            <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : blockedCount}</h2>
           </div>
           <div className={styles.statIcon}><AlertTriangle size={24} color="#EF4444" /></div>
         </div>
       </div>
 
-      {/* 🔍 شريط البحث واختيار الخطة */}
+      {/* 🔍 شريط البحث والفلترة والفرز */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
@@ -510,8 +527,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           )}
         </div>
 
-        {/* قائمة اختيار الخطة (المستحدثة بالأكتمال) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 140px' }}>
+        {/* قائمة اختيار الخطة */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 130px' }}>
           <Filter size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
           <select
             value={planFilter}
@@ -535,16 +552,39 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             <option value="lifetime">{isRtl ? 'حسابات دائمة ♾️' : 'Lifetime'}</option>
           </select>
         </div>
+
+        {/* ↕️ قائمة الترتيب والفرز (Sorting) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 140px' }}>
+          <ArrowUpDown size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              width: '100%',
+              background: '#0F172A',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              padding: '9px 8px',
+              color: '#FFF',
+              fontSize: '0.8rem',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="created_at_desc">{isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
+            <option value="created_at_asc">{isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
+            <option value="trial_ends_asc">{isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
+          </select>
+        </div>
       </div>
 
       {/* 🗂️ شريط التبويبات Tabs */}
       <div className={styles.tabsBar}>
         {[
-          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: filteredPendingSubscriptions.length + filteredActiveAcademies.length + filteredBlockedAcademies.length },
-          { id: 'pending', label: isRtl ? 'طلبات الاشتراكات المعلقة' : 'Pending Subscriptions', count: filteredPendingSubscriptions.length },
-          { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: filteredActiveAcademies.length },
-          { id: 'blocked', label: isRtl ? 'المحظورة / المعطلة 🚫' : 'Blocked', count: filteredBlockedAcademies.length },
-          { id: 'expired', label: isRtl ? 'منتهية التجربة ⚠️' : 'Expired', count: expiredAcademies.length },
+          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: totalAcademiesCount },
+          { id: 'pending', label: isRtl ? 'طلبات الاشتراكات المعلقة' : 'Pending Subscriptions', count: pendingCount },
+          { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: activeCount },
+          { id: 'blocked', label: isRtl ? 'المحظورة / المعطلة 🚫' : 'Blocked', count: blockedCount },
         ].map(tab => (
           <button
             key={tab.id}
@@ -563,201 +603,222 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       </div>
 
       {/* ⏳ قسم طلبات الاشتراكات المعلقة */}
-      {(activeTab === 'pending' || (activeTab === 'all' && filteredPendingSubscriptions.length > 0)) && (
+      {(activeTab === 'pending' || activeTab === 'all') && pendingSubscriptions.length > 0 && (
         <section className={styles.sectionPending} style={{ marginBottom: '32px' }}>
           <h2 className={styles.sectionTitle} style={{ fontSize: '1.1rem', color: '#FFF', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Clock size={20} color="#FBBF24" />
             <span>{isRtl ? 'طلبات الاشتراك بانتظار المراجعة' : 'Pending Subscriptions'}</span>
           </h2>
 
-          {filteredPendingSubscriptions.length === 0 ? (
-            <EmptyState 
-              icon={<CheckCircle2 size={36} color="#10B981" />} 
-              title={isRtl ? "لا توجد طلبات مطابقة" : "No Matching Requests"} 
-              description={isRtl ? "لم يتم العثور على نتائج للبحث الحالي." : "No results found for current query."} 
-            />
-          ) : (
-            <div className={styles.requestsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-              {filteredPendingSubscriptions.map(sub => {
-                const academyName = getSafeText(sub.academies?.name, 'أكاديمية غير معروفة');
-                const payerName = getSafeText(sub.profiles?.full_name, 'غير معروف');
-                const payerPhone = getSafeText(sub.profiles?.phone);
-                const receiptUrl = sub.metadata?.receipt_url;
-                const planTier = getSafeText(sub.plan_tier, 'مجاني').toUpperCase();
-                const planDuration = getSafeText(sub.plan_duration);
-                const paymentGateway = getSafeText(sub.payment_gateway, 'تحويل يدوي');
-                const currency = getSafeText(sub.currency, 'EGP');
+          <div className={styles.requestsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+            {pendingSubscriptions.map(sub => {
+              const academyName = getSafeText(sub.academies?.name, 'أكاديمية غير معروفة');
+              const payerName = getSafeText(sub.profiles?.full_name, 'غير معروف');
+              const payerPhone = getSafeText(sub.profiles?.phone);
+              const receiptUrl = sub.metadata?.receipt_url;
+              const planTier = getSafeText(sub.plan_tier, 'مجاني').toUpperCase();
+              const planDuration = getSafeText(sub.plan_duration);
+              const paymentGateway = getSafeText(sub.payment_gateway, 'تحويل يدوي');
+              const currency = getSafeText(sub.currency, 'EGP');
 
-                return (
-                  <div key={sub.id} className={styles.requestCard} style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '12px', padding: '16px', position: 'relative' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.05rem', color: '#FFF', margin: '0 0 4px 0' }}>{academyName}</h3>
-                        <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <User size={14} /> {payerName} {payerPhone && `(${payerPhone})`}
-                        </p>
-                      </div>
-                      <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#FBBF24', border: '1px solid #FBBF24', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
-                        {planTier} - {planDuration}
-                      </span>
+              return (
+                <div key={sub.id} className={styles.requestCard} style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '12px', padding: '16px', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.05rem', color: '#FFF', margin: '0 0 4px 0' }}>{academyName}</h3>
+                      <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <User size={14} /> {payerName} {payerPhone && `(${payerPhone})`}
+                      </p>
                     </div>
+                    <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#FBBF24', border: '1px solid #FBBF24', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                      {planTier} - {planDuration}
+                    </span>
+                  </div>
 
-                    <div style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>المبلغ المفروض:</span>
-                        <strong style={{ color: '#34D399' }}>{sub.price} {currency}</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>طريقة الدفع:</span>
-                        <span>{paymentGateway}</span>
-                      </div>
+                  <div style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>المبلغ المفروض:</span>
+                      <strong style={{ color: '#34D399' }}>{sub.price} {currency}</strong>
                     </div>
-
-                    {receiptUrl ? (
-                      <button 
-                        onClick={() => setReceiptModalUrl(receiptUrl)}
-                        style={{ width: '100%', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}
-                      >
-                        <Eye size={16} /> {isRtl ? 'معاينة إشعار التحويل 📄' : 'View Receipt'}
-                      </button>
-                    ) : (
-                      <p style={{ fontSize: '0.75rem', color: '#EF4444', textAlign: 'center', marginBottom: '12px' }}>⚠️ لا يوجد إشعار مرفق</p>
-                    )}
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <button 
-                        onClick={() => onApproveSubscription(sub)} 
-                        disabled={processingId !== null}
-                        style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
-                      >
-                        {processingId === `approve-${sub.id}` ? 'جاري الاعتماد...' : 'تأكيد وقبول ✅'}
-                      </button>
-                      <button 
-                        onClick={() => onRejectSubscription(sub.id)} 
-                        disabled={processingId !== null}
-                        style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
-                      >
-                        رفض الطلب ❌
-                      </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>طريقة الدفع:</span>
+                      <span>{paymentGateway}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
 
-      {/* ✅ قسم الأكاديميات النشطة */}
-      {(activeTab === 'all' || activeTab === 'active' || activeTab === 'expired') && (() => {
-        const academiesToRender = filteredActiveAcademies.filter(academy => {
-          if (activeTab === 'expired') {
-            return academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
-          }
-          return true;
-        });
-
-        return (
-          <section style={{ marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>
-              {activeTab === 'expired' ? (isRtl ? 'الأكاديميات منتهية التجربة ⚠️' : 'Expired Trial Academies ⚠️') : (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies ✅')}
-            </h2>
-
-            {academiesToRender.length === 0 ? (
-              <EmptyState 
-                icon={<Building2 size={36} />} 
-                title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} 
-                description={isRtl ? "جرب تعديل عبارة البحث." : "Try adjusting your search query."} 
-              />
-            ) : (
-              <div className={styles.requestsGrid}>
-                {academiesToRender.map(academy => {
-                  const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
-
-                  return (
-                    <div 
-                      key={academy.id} 
-                      className={styles.requestCard} 
-                      style={{ borderRight: isExpired ? '4px solid #EF4444' : '4px solid #10B981' }}
-                    >
-                      <div className={styles.requestInfo}>
-                        <h3 className={styles.requestName}>
-                          {getSafeText(academy.name, 'أكاديمية بدون اسم')}
-                        </h3>
-                        {academy.ownerProfile && (
-                          <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <User size={12} /> {getSafeText(academy.ownerProfile.full_name)}
-                            </span>
-                          </div>
-                        )}
-                        <span style={{ fontSize: '0.72rem', color: isExpired ? '#F87171' : '#94A3B8' }}>
-                          ⏱️ {getTrialStatusBadge(academy.trial_ends_at).text}
-                        </span>
-                      </div>
-
-                      <div className={styles.cardActions}>
-                        <button 
-                          onClick={() => setExtendModalAcademy(academy)} 
-                          disabled={processingId !== null} 
-                          style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <Plus size={14} /> {isRtl ? 'تمديد' : 'Extend'}
-                        </button>
-                        <button 
-                          onClick={() => onDeactivateClick(academy.id, academy.owner_id)} 
-                          disabled={processingId !== null} 
-                          style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }} 
-                        >
-                          <Ban size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        );
-      })()}
-
-      {/* 🚫 قسم الأكاديميات المحظورة (مُحسّن شرط الظهور) */}
-      {(activeTab === 'blocked' || (activeTab === 'all' && filteredBlockedAcademies.length > 0)) && (
-        <section style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Ban size={20} />
-            <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
-          </h2>
-          {filteredBlockedAcademies.length === 0 ? (
-            <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد نتائج" : "No Results"} description={isRtl ? "لا توجد أكاديميات محظورة مطابقة للبحث." : "No matching blocked academies."} />
-          ) : (
-            <div className={styles.requestsGrid}>
-              {filteredBlockedAcademies.map(academy => (
-                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
-                  <div className={styles.requestInfo}>
-                    <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
-                    {academy.ownerProfile && (
-                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {getSafeText(academy.ownerProfile.full_name)}</span>
-                      </div>
-                    )}
-                    <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
-                  </div>
-                  <div className={styles.cardActions}>
+                  {receiptUrl ? (
                     <button 
-                      onClick={() => onActivateClick(academy.id, academy.owner_id)} 
-                      disabled={processingId !== null} 
-                      style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={() => setReceiptModalUrl(receiptUrl)}
+                      style={{ width: '100%', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}
                     >
-                      <Unlock size={14} /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
+                      <Eye size={16} /> {isRtl ? 'معاينة إشعار التحويل 📄' : 'View Receipt'}
+                    </button>
+                  ) : (
+                    <p style={{ fontSize: '0.75rem', color: '#EF4444', textAlign: 'center', marginBottom: '12px' }}>⚠️ لا يوجد إشعار مرفق</p>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <button 
+                      onClick={() => onApproveSubscription(sub)} 
+                      disabled={processingId !== null}
+                      style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
+                    >
+                      {processingId === `approve-${sub.id}` ? 'جاري الاعتماد...' : 'تأكيد وقبول ✅'}
+                    </button>
+                    <button 
+                      onClick={() => onRejectSubscription(sub.id)} 
+                      disabled={processingId !== null}
+                      style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
+                    >
+                      رفض الطلب ❌
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </section>
       )}
+
+      {/* 🏢 قائمة الأكاديميات الرئيسية (نشطة / محظورة) */}
+      <section style={{ marginBottom: '32px' }}>
+        <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>
+          {activeTab === 'active' ? (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies') :
+           activeTab === 'blocked' ? (isRtl ? 'الأكاديميات المحظورة 🚫' : 'Blocked Academies') :
+           (isRtl ? 'جميع الأكاديميات 🏢' : 'All Academies')}
+        </h2>
+
+        {filteredAcademies.length === 0 ? (
+          <EmptyState 
+            icon={<Building2 size={36} />} 
+            title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} 
+            description={isRtl ? "جرب تعديل عبارة البحث أو خيار التصفية." : "Try adjusting your filters or query."} 
+          />
+        ) : (
+          <div className={styles.requestsGrid}>
+            {filteredAcademies.map(academy => {
+              const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
+              const isBlocked = !academy.is_active;
+
+              return (
+                <div 
+                  key={academy.id} 
+                  className={styles.requestCard} 
+                  style={{ 
+                    borderRight: isBlocked ? '4px solid #EF4444' : isExpired ? '4px solid #F59E0B' : '4px solid #10B981',
+                    background: isBlocked ? '#1E1B2E' : '#1E293B'
+                  }}
+                >
+                  <div className={styles.requestInfo}>
+                    <h3 className={styles.requestName} style={{ color: isBlocked ? '#FCA5A5' : '#FFF' }}>
+                      {getSafeText(academy.name, 'أكاديمية بدون اسم')}
+                    </h3>
+                    {academy.ownerProfile && (
+                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <User size={12} /> {getSafeText(academy.ownerProfile.full_name)}
+                        </span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '0.72rem', color: isBlocked ? '#EF4444' : isExpired ? '#F87171' : '#94A3B8' }}>
+                      {isBlocked ? '🚫 محظورة / معطلة' : `⏱️ ${getTrialStatusBadge(academy.trial_ends_at).text}`}
+                    </span>
+                  </div>
+
+                  <div className={styles.cardActions}>
+                    <button 
+                      onClick={() => setExtendModalAcademy(academy)} 
+                      disabled={processingId !== null} 
+                      style={{ background: '#0F172A', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Plus size={14} /> {isRtl ? 'تمديد' : 'Extend'}
+                    </button>
+
+                    {isBlocked ? (
+                      <button 
+                        onClick={() => onActivateClick(academy.id, academy.owner_id)} 
+                        disabled={processingId !== null} 
+                        style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Unlock size={14} /> {isRtl ? 'تفعيل' : 'Activate'}
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => onDeactivateClick(academy.id, academy.owner_id)} 
+                        disabled={processingId !== null} 
+                        style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }} 
+                      >
+                        <Ban size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 📄 شريط الترقيم والتنقل بين الصفحات (Pagination Controls) */}
+        {totalPages > 1 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'center',
+            gap: '12px',
+            marginTop: '24px',
+            background: '#1E293B',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '1px solid #334155'
+          }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              style={{
+                background: currentPage === 1 ? '#0F172A' : '#3B82F6',
+                color: '#FFF',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '0.8rem',
+                opacity: currentPage === 1 ? 0.5 : 1
+              }}
+            >
+              {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              {isRtl ? 'السابقة' : 'Previous'}
+            </button>
+
+            <span style={{ color: '#CBD5E1', fontSize: '0.85rem', fontWeight: 'bold' }}>
+              {isRtl ? `الصفحة ${currentPage} من ${totalPages}` : `Page ${currentPage} of ${totalPages}`}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage >= totalPages}
+              style={{
+                background: currentPage >= totalPages ? '#0F172A' : '#3B82F6',
+                color: '#FFF',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '0.8rem',
+                opacity: currentPage >= totalPages ? 0.5 : 1
+              }}
+            >
+              {isRtl ? 'التالية' : 'Next'}
+              {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* 🖼️ معاينة التحويل */}
       {receiptModalUrl && (
