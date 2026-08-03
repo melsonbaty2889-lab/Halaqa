@@ -7,15 +7,19 @@ import { Btn, Card, Input, Select, PageHeader } from './UI';
 import QuranProgressSelector from './QuranProgressSelector';
 import QuranProgressBar from './QuranProgressBar';
 import AchievementChart from './AchievementChart'; 
+import StudentBadges from './Student/StudentBadges';
+import StudentStatsCard from './Student/StudentStatsCard';
 import { getQuranProgress } from '../utils/quranUtils';
 import { formatName } from '../utils/formatters';
 import { COUNTRIES_LIST } from '../constants/countries';
+
+// توحيد الأيقونات بـ Lucide React
 import { 
-  FaArrowLeft, FaArrowRight, FaSave, FaTimes, FaEdit, 
-  FaCheckCircle, FaExclamationCircle, FaGraduationCap,
-  FaBookOpen, FaInfoCircle, FaMoneyBillWave, FaCheckSquare,
-  FaFire, FaAward, FaCrown, FaUserGraduate, FaWhatsapp
-} from 'react-icons/fa';
+  ArrowLeft, ArrowRight, Save, X, Edit3, 
+  CheckCircle, AlertCircle, GraduationCap,
+  BookOpen, Info, Banknote, CheckSquare,
+  UserCheck, MessageCircle, Phone, Calendar, Globe
+} from 'lucide-react';
 
 export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const { id } = useParams();
@@ -32,11 +36,10 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const [activeTab, setActiveTab] = useState('quran'); 
   const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
 
-  // حالات البيانات الخاصة بمنحنى الإنجاز الأسبوعي
   const [weeklyData, setWeeklyData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
-  // التنبيهات المباشرة (Toast Notifications)
+  // التنبيهات المباشرة Toast
   const triggerToast = useCallback((text, type = 'success') => {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
@@ -73,7 +76,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     if (id) fetchStudent();
   }, [id, t, isRtl, triggerToast]);
 
-  // 2. جلب بيانات جدول المتابعة اليومية وحساب منحنى الإنجاز
+  // 2. جلب بيانات جدول المتابعة اليومية
   useEffect(() => {
     const fetchWeeklyAchievement = async () => {
       if (!id) return;
@@ -152,7 +155,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     const autoSurahText = progressInfo.text || '';
     const calculatedJuz = progressInfo.juz || 1;
 
-    // التعامل الأمني مع الاسم لمنع أخطاء التنسيق
     const formattedSaveName = typeof student.name === 'string' 
       ? student.name.trim() 
       : student.name;
@@ -218,8 +220,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const currentAge = calculateAge(student.birth_date);
   const studentCountryCode = student.country || student.country_code || "EG";
   const matchedCountry = COUNTRIES_LIST ? COUNTRIES_LIST.find(c => c.code === studentCountryCode) : null;
-
-  // تنقية رقم الهاتف لرابط الواتساب
   const cleanPhone = student.parent_phone ? String(student.parent_phone).replace(/\D/g, '') : '';
 
   const getStatusStyle = (status) => {
@@ -256,10 +256,10 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
       
-      {/* التنبيهات المباشرة Toast Notification */}
+      {/* Toast Notification */}
       {inlineMessage.text && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '12px 20px', borderRadius: '30px', zIndex: 1200, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', fontSize: '14px', fontWeight: 'bold' }}>
-          {inlineMessage.type === 'success' ? <FaCheckCircle /> : <FaExclamationCircle />}
+          {inlineMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{inlineMessage.text}</span>
         </div>
       )}
@@ -269,7 +269,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         sub={isEditing ? "" : `${t('student_id') || (isRtl ? 'كود الطالب' : 'Student Code')}: #${student.student_code || (student.id ? student.id.slice(0, 8) : '')}`}
         action={
           <Btn variant="ghost" onClick={() => navigate(-1)} style={{ borderRadius: '20px' }}>
-            {isRtl ? <><FaArrowRight /> {t('back') || 'رجوع'}</> : <><FaArrowLeft /> {t('back') || 'Back'}</>}
+            {isRtl ? <><ArrowRight className="w-4 h-4" /> {t('back') || 'رجوع'}</> : <><ArrowLeft className="w-4 h-4" /> {t('back') || 'Back'}</>}
           </Btn>
         }
       />
@@ -295,7 +295,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         {/* رمز الطالب الشخصي */}
         <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
           {genderPolicy === 'separated' && student.gender === 'female' ? (
-            <FaUserGraduate style={{ color: '#EC4899', fontSize: '22px' }} />
+            <UserCheck style={{ color: '#EC4899' }} className="w-6 h-6" />
           ) : (
             student.gender === 'female' ? '🧕' : '👨‍🎓'
           )}
@@ -326,15 +326,15 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
       {/* التبويبات الداخلية */}
       <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid #334155`, borderRight: `1px solid #334155`, padding: '4px' }}>
         {[
-          { id: 'quran', label: t('tab_quran_track') || (isRtl ? 'مسار القرآن' : 'Quran Track'), icon: <FaBookOpen size={12} /> },
-          { id: 'personal', label: t('tab_identity_contact') || (isRtl ? 'البيانات والتواصل' : 'Identity & Contact'), icon: <FaInfoCircle size={12} /> },
-          { id: 'financial', label: t('tab_financials') || (isRtl ? 'المالية والملاحظات' : 'Financials & Notes'), icon: <FaMoneyBillWave size={12} /> }
+          { id: 'quran', label: t('tab_quran_track') || (isRtl ? 'مسار القرآن' : 'Quran Track'), icon: <BookOpen className="w-3.5 h-3.5" /> },
+          { id: 'personal', label: t('tab_identity_contact') || (isRtl ? 'البيانات والتواصل' : 'Identity & Contact'), icon: <Info className="w-3.5 h-3.5" /> },
+          { id: 'financial', label: t('tab_financials') || (isRtl ? 'المالية والملاحظات' : 'Financials & Notes'), icon: <Banknote className="w-3.5 h-3.5" /> }
         ].map(tab => (
           <Btn 
             key={tab.id}
             variant={activeTab === tab.id ? 'primary' : 'ghost'}
             onClick={() => setActiveTab(tab.id)}
-            style={{ flex: 1, padding: '10px 4px', fontSize: '11px', borderRadius: activeTab === tab.id ? '8px' : '0', border: 'none', background: activeTab === tab.id ? '#1E293B' : 'transparent', color: activeTab === tab.id ? '#F59E0B' : '#94A3B8' }}
+            style={{ flex: 1, padding: '10px 4px', fontSize: '11px', borderRadius: activeTab === tab.id ? '8px' : '0', border: 'none', background: activeTab === tab.id ? '#1E293B' : 'transparent', color: activeTab === tab.id ? '#F59E0B' : '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
           >
             {tab.icon} {tab.label}
           </Btn>
@@ -348,135 +348,17 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         {activeTab === 'quran' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
-            {/* السلاسل والنقاط */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0F172A', padding: '12px', borderRadius: '12px', border: `1px solid #334155` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                <FaFire size={20} style={{ color: '#EF4444' }} />
-                <div style={{ textAlign: 'start' }}>
-                  <div style={{ fontSize: '11px', color: '#94A3B8' }}>{isRtl ? 'السلسلة الحالية' : 'Current Streak'}</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#EF4444' }}>{student.current_streak || 0} {isRtl ? 'يوم' : 'Days'}</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(245, 158, 11, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                <FaCrown size={18} style={{ color: '#F59E0B' }} />
-                <div style={{ textAlign: 'start' }}>
-                  <div style={{ fontSize: '11px', color: '#94A3B8' }}>{isRtl ? 'إجمالي النقاط' : 'Total Points'}</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#F59E0B' }}>{student.points || 0} {isRtl ? 'نقطة' : 'Pts'}</div>
-                </div>
-              </div>
-            </div>
+            {/* 1. مكون كارت السلسلة والنقاط المطور */}
+            <StudentStatsCard student={student} isRtl={isRtl} />
 
-            {/* نظام شارات التميز والإتقان (المحدث) */}
-<div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'start' }}>
-  
-  {/* الهيدر العلوي لشبكة الأوسمة */}
-  <div style={{ fontSize: '13px', color: '#F59E0B', fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <FaAward style={{ color: '#F59E0B' }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
-    </span>
-    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 'normal' }}>
-      {((student.current_streak >= 3 ? 1 : 0) + (student.current_quarter_index >= 8 ? 1 : 0) + (weeklyData.length >= 4 ? 1 : 0))} / 3
-    </span>
-  </div>
-
-  {/* شبكة الأوسمة متجاوبة Grid */}
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-    {[
-      {
-        id: 'streak',
-        titleAr: 'شعلة الحفظ',
-        titleEn: 'Hifz Spark',
-        descAr: 'استمرار لـ 3 أيام',
-        descEn: '3 Days Streak',
-        icon: '🔥',
-        bg: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2))',
-        border: '#EF4444',
-        unlocked: student.current_streak >= 3,
-        count: Math.floor((student.current_streak || 0) / 3)
-      },
-      {
-        id: 'juz_master',
-        titleAr: 'مُتقن الأجزاء',
-        titleEn: 'Juz Mastery',
-        descAr: 'إتمام جزء كامل',
-        descEn: 'Completed 1 Juz',
-        icon: '⭐',
-        bg: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2))',
-        border: '#3B82F6',
-        unlocked: student.current_quarter_index >= 8,
-        count: Math.floor((student.current_quarter_index || 0) / 8)
-      },
-      {
-        id: 'weekly_achiever',
-        titleAr: 'المثابر الأسبوعي',
-        titleEn: 'Weekly Achiever',
-        descAr: 'التزام أسبوعي منتظم',
-        descEn: 'Consistent Active Week',
-        icon: '👑',
-        bg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2))',
-        border: '#8B5CF6',
-        unlocked: weeklyData.length >= 4,
-        count: 1
-      }
-    ].map((badge) => (
-      <div 
-        key={badge.id}
-        style={{
-          background: badge.unlocked ? badge.bg : 'rgba(30, 41, 59, 0.4)',
-          border: `1px solid ${badge.unlocked ? badge.border : '#334155'}`,
-          borderRadius: '10px',
-          padding: '10px 8px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          position: 'relative',
-          opacity: badge.unlocked ? 1 : 0.45,
-          filter: badge.unlocked ? 'none' : 'grayscale(80%)',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        {/* شارة عداد التكرار Badge Counter */}
-        {badge.unlocked && badge.count > 1 && (
-          <span style={{
-            position: 'absolute',
-            top: '-6px',
-            right: isRtl ? 'auto' : '-6px',
-            left: isRtl ? '-6px' : 'auto',
-            background: badge.border,
-            color: '#fff',
-            fontSize: '9px',
-            fontWeight: 'bold',
-            padding: '2px 6px',
-            borderRadius: '10px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-          }}>
-            x{badge.count}
-          </span>
-        )}
-
-        <div style={{ fontSize: '22px', marginBottom: '4px' }}>
-          {badge.icon}
-        </div>
-        
-        <div style={{ fontSize: '11px', fontWeight: 'bold', color: badge.unlocked ? '#F8FAFC' : '#94A3B8', marginBottom: '2px' }}>
-          {isRtl ? badge.titleAr : badge.titleEn}
-        </div>
-
-        <div style={{ fontSize: '9px', color: badge.unlocked ? '#CBD5E1' : '#64748B' }}>
-          {isRtl ? badge.descAr : badge.descEn}
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
+            {/* 2. مكون شبكة الأوسمة المطور */}
+            <StudentBadges student={student} weeklyData={weeklyData} isRtl={isRtl} />
 
             {/* شريط التقدم والسورة */}
             <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155` }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', textAlign: 'start' }}>
                 <span style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <FaCheckSquare style={{color: '#10B981'}} /> {t('current_memorization_progress') || (isRtl ? 'التقدم الحفظي الحالي' : 'Current Memorization Progress')}
+                  <CheckSquare className="w-4 h-4 text-emerald-500" /> {t('current_memorization_progress') || (isRtl ? 'التقدم الحفظي الحالي' : 'Current Memorization Progress')}
                 </span>
               </div>
               <div style={{ margin: '8px 0 12px 0' }}>
@@ -502,7 +384,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             {isEditing && (
               <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ color: '#94A3B8', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'start' }}>
-                  <FaGraduationCap /> {t('update_progress_selector') || (isRtl ? 'تعديل موضع الحفظ' : 'Update Memorization Selector')}
+                  <GraduationCap className="w-4 h-4" /> {t('update_progress_selector') || (isRtl ? 'تعديل موضع الحفظ' : 'Update Memorization Selector')}
                 </label>
                 <div style={{ background: '#1E293B', padding: '6px', borderRadius: '8px', border: `1px solid #334155` }}>
                   <QuranProgressSelector 
@@ -569,10 +451,10 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
                     href={`https://wa.me/${cleanPhone}`} 
                     target="_blank" 
                     rel="noreferrer" 
-                    style={{ background: '#10B981', color: '#fff', width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '18px', marginBottom: '16px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                    style={{ background: '#10B981', color: '#fff', width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', marginBottom: '16px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
                     title="WhatsApp"
                   >
-                    <FaWhatsapp />
+                    <MessageCircle className="w-5 h-5" />
                   </a>
                 )}
               </div>
@@ -607,16 +489,16 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         <div style={{ marginTop: '4px' }}>
           {isEditing ? (
             <div style={{ display: 'flex', gap: '10px' }}>
-              <Btn variant="success" onClick={handleUpdate} disabled={saving} style={{ flex: 1, padding: '12px' }}>
-                <FaSave /> {saving ? (t("saving") || (isRtl ? "جاري الحفظ..." : "Saving...")) : (t('save_changes') || (isRtl ? "حفظ التغييرات" : "Save Changes"))}
+              <Btn variant="success" onClick={handleUpdate} disabled={saving} style={{ flex: 1, padding: '12px', display: 'flex', items: 'center', justifyContent: 'center', gap: '6px' }}>
+                <Save className="w-4 h-4" /> {saving ? (t("saving") || (isRtl ? "جاري الحفظ..." : "Saving...")) : (t('save_changes') || (isRtl ? "حفظ التغييرات" : "Save Changes"))}
               </Btn>
-              <Btn variant="ghost" onClick={() => setIsEditing(false)} style={{ flex: 1, padding: '12px' }}>
-                <FaTimes /> {t("cancel") || (isRtl ? "إلغاء" : "Cancel")}
+              <Btn variant="ghost" onClick={() => setIsEditing(false)} style={{ flex: 1, padding: '12px', display: 'flex', items: 'center', justifyContent: 'center', gap: '6px' }}>
+                <X className="w-4 h-4" /> {t("cancel") || (isRtl ? "إلغاء" : "Cancel")}
               </Btn>
             </div>
           ) : (
-            <Btn variant="primary" onClick={() => setIsEditing(true)} style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}>
-              <FaEdit /> {t('edit_full_profile') || (isRtl ? "تعديل بيانات الملف الشخصي" : "Edit Full Profile")}
+            <Btn variant="primary" onClick={() => setIsEditing(true)} style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold', display: 'flex', items: 'center', justifyContent: 'center', gap: '6px' }}>
+              <Edit3 className="w-4 h-4" /> {t('edit_full_profile') || (isRtl ? "تعديل بيانات الملف الشخصي" : "Edit Full Profile")}
             </Btn>
           )}
         </div>
