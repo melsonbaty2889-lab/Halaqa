@@ -377,9 +377,16 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     link.click();
   };
 
-  const getTrialStatusBadge = (trialEndsAt) => {
+    const getTrialStatusBadge = (trialEndsAt) => {
     if (!trialEndsAt) return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
-    const diffDays = Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24));
+    
+    // 🟢 إضافة هذا الشرط لمنع كتابة 36524 يوم
+    const endDate = new Date(trialEndsAt);
+    if (endDate.getFullYear() > 2090) {
+      return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
+    }
+
+    const diffDays = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
     if (diffDays <= 0) return { text: isRtl ? 'منتهية ⚠️' : 'Expired ⚠️', color: '#EF4444' };
     return { text: isRtl ? `متبقي ${diffDays} يوم` : `${diffDays}d left`, color: '#10B981' };
   };
