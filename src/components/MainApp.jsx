@@ -24,7 +24,7 @@ const safeLazy = (importFn) => {
 };
 
 // 🌐 استيراد الأقسام ديناميكياً
-const Students = safeLazy(() => import('./Students.jsx'));
+const Students = safeLazy(() => import('./Student/StudentProfile.jsx'))
 const Teachers = safeLazy(() => import('./Teachers.jsx')); 
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
 const Exams = safeLazy(() => import('./Exams.jsx')); 
