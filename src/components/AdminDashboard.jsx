@@ -51,6 +51,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [blockedCount, setBlockedCount] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,7 +93,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
-    // 💾 دالة حفظ رقم الهاتف من الـ Modal مع رصد الأخطاء بدقة
+  // 💾 دالة حفظ رقم الهاتف من الـ Modal مع رصد الأخطاء بدقة
   const handleSavePhone = async () => {
     if (!inputPhone.trim() || !phoneModalData) return;
     
@@ -145,18 +146,25 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         { count: totalCount },
         { count: pCount },
         { count: aCount },
-        { count: bCount }
+        { count: bCount },
+        { data: allSubsForRevenue }
       ] = await Promise.all([
         supabase.from('academies').select('*', { count: 'exact', head: true }),
         supabase.from('saas_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'pending_verification'),
         supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', false)
+        supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', false),
+        supabase.from('saas_subscriptions').select('price, status')
       ]);
 
       setTotalAcademiesCount(totalCount || 0);
       setPendingCount(pCount || 0);
       setActiveCount(aCount || 0);
       setBlockedCount(bCount || 0);
+
+      const revenue = (allSubsForRevenue || [])
+        .filter(sub => sub.status === 'active' || sub.status === 'approved' || sub.status === 'completed')
+        .reduce((sum, sub) => sum + (Number(sub.price) || 0), 0);
+      setTotalRevenue(revenue);
 
       const { data: subData, error: subErr } = await supabase
         .from('saas_subscriptions')
@@ -268,6 +276,16 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       else if (planFilter === 'trial') matchesPlan = isTrial;
       else if (planFilter === 'monthly') matchesPlan = isMonthly;
       else if (planFilter === 'yearly') matchesPlan = isYearly;
+      else if (planFilter === 'expiring_soon') {
+        if (!item.trial_ends_at || isLifetime) {
+          matchesPlan = false;
+        } else {
+          const endDate = new Date(item.trial_ends_at);
+          const now = new Date();
+          const diffDays = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+          matchesPlan = diffDays > 0 && diffDays <= 7;
+        }
+      }
 
       if (activeTab === 'expired') {
         const isExpired = item.trial_ends_at && new Date(item.trial_ends_at) <= new Date();
@@ -552,6 +570,14 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           </div>
           <div className={styles.statIcon}><AlertTriangle size={24} color="#EF4444" /></div>
         </div>
+
+        <div className={styles.premiumStatBox} style={{ background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>
+          <div>
+            <p className={styles.statLabel}>{isRtl ? 'إجمالي الإيرادات' : 'Total Revenue'}</p>
+            <h2 className={styles.statNumber} style={{ color: '#34D399' }}>{loading ? '...' : `${totalRevenue} EGP`}</h2>
+          </div>
+          <div className={styles.statIcon}><FileSpreadsheet size={24} color="#34D399" /></div>
+        </div>
       </div>
 
       {/* 🔍 شريط البحث والفلترة والفرز */}
@@ -571,6 +597,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 8px', color: '#FFF', fontSize: '0.8rem', outline: 'none', cursor: 'pointer', textAlign: 'center' }}>
             <option value="all">🔍 {isRtl ? 'جميع الخطط' : 'All Plans'}</option>
+            <option value="expiring_soon">⏳ {isRtl ? 'تنتهي خلال 7 أيام' : 'Expiring in 7 Days'}</option>
             <option value="trial">⏱️ {isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
             <option value="monthly">📅 {isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
             <option value="yearly">🗓️ {isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
@@ -595,7 +622,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           marginBottom: '20px',
           display: 'flex',
           alignItems: 'center',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '12px',
           boxShadow: '0 4px 14px rgba(59, 130, 246, 0.2)'
