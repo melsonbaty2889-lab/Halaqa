@@ -186,28 +186,28 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
 
       // 3️⃣ إدراج / تحديث الطلب في جدول `subscriptions` لربطه بسلاسة مع لوحة الأدمن (AdminDashboard)
       const { error } = await supabase
-        .from('subscriptions')
+        .from('saas_subscriptions')
         .upsert([{
           academy_id: resolvedAcademyId,
-          user_id: activeUser?.id,
+          payer_id: activeUser?.id,
           plan_tier: 'pro',
-          plan_type: duration,
+          plan_duration: duration,
           status: isManualTransfer ? 'pending' : 'active',
-          payment_method: selectedPaymentMethod,
+          payment_gateway: selectedPaymentMethod,
           price: finalAmount,
           currency: basePrices[region].curr,
           starts_at: startsAt.toISOString(),
-          ends_at: expiryDate.toISOString(),
-          receipt_url: receiptUrl,
-          transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
+          expires_at: expiryDate.toISOString(),
           metadata: {
             region: region,
             discount_applied: discountPercent,
-            coupon_code: appliedCoupon || null
-          },
-          updated_at: new Date().toISOString()
-        }], { onConflict: 'academy_id' });
-
+            coupon_code: appliedCoupon || null,
+            receipt_url: receiptUrl,
+            transaction_id: txId || 'MANUAL_VERIFICATION_PENDING'
+    },
+    updated_at: new Date().toISOString()
+  }], { onConflict: 'academy_id' });
+      
       if (error) throw error;
       
       setIsSubmitted(true);
