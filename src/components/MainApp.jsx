@@ -101,6 +101,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [halaqas, setHalaqas] = useState([]);
   const [academyId, setAcademyId] = useState(null);
   const [academyName, setAcademyName] = useState(""); 
+  const [isAcademyActive, setIsAcademyActive] = useState(true); // 🔐 حالة تفعيل الأكاديمية الحقيقية
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
 
@@ -152,6 +153,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
       if (academyData) {
         setAcademyName(academyData.name || "");
+        setIsAcademyActive(academyData.is_active ?? true); // 👈 تحديث حالة التفعيل الفعلية للأكاديمية
         if (academyData.currency) setCurrency(academyData.currency);
         if (academyData.timezone) setTimezone(academyData.timezone);
         if (academyData.country_code) setCountryCode(academyData.country_code);
@@ -248,20 +250,20 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const preloadedDashboardData = useMemo(() => ({
     academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || "الأكاديمية"),
     role: userRole || 'staff', 
-    is_activated: true,
+    is_activated: isAcademyActive,
     stats: {
       students: Array.isArray(students) ? students.length : 0,
       pending: Array.isArray(students) ? students.filter(s => s?.payment_status === 'unpaid' || s?.payment_status === 'pending').length : 0,
       activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h?.is_archived).length : 0, 
       completedExams: completedExamsCount || 0
     }
-  }), [isPlatformAdmin, isRtl, academyName, userRole, students, halaqas, completedExamsCount]);
+  }), [isPlatformAdmin, isRtl, academyName, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
   // 🎯 بناء التبويب النشط
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />;
+        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
       case 'subscriptions':
       case 'upgrade':
         return (
@@ -336,7 +338,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'settings':
         return <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />;
       default:
-        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={true} />;
+        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
     }
   };
 
@@ -383,7 +385,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         userRole={userRole} 
         trialDaysLeft={trialDaysLeft} 
         isTrial={isTrial}
-        accountActivated={true} 
+        accountActivated={isAcademyActive} 
         setShowEarlyUpgrade={setShowEarlyUpgrade} 
         numberFormatter={numberFormatter}
         timezone={timezone} 
