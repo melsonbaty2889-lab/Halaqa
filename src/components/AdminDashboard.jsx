@@ -706,42 +706,42 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       })()}
 
       {/* 🚫 قسم الأكاديميات المحظورة */}
-      {(activeTab === 'all' || activeTab === 'blocked') && (
-        <section style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Ban size={20} />
-            <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
-          </h2>
-          {filteredBlockedAcademies.length === 0 ? (
-            <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد نتائج" : "No Results"} description={isRtl ? "لا توجد أكاديميات محظورة مطابقة للبحث." : "No matching blocked academies."} />
-          ) : (
-            <div className={styles.requestsGrid}>
-              {filteredBlockedAcademies.map(academy => (
-                <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
-                  <div className={styles.requestInfo}>
-                    <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
-                    {academy.ownerProfile && (
-                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {getSafeText(academy.ownerProfile.full_name)}</span>
-                      </div>
-                    )}
-                    <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
-                  </div>
-                  <div className={styles.cardActions}>
-                    <button 
-                      onClick={() => onActivateClick(academy.id, academy.owner_id)} 
-                      disabled={processingId !== null} 
-                      style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <Unlock size={14} /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
-                    </button>
-                  </div>
+{(activeTab === 'blocked' || (activeTab === 'all' && filteredBlockedAcademies.length > 0)) && (
+  <section style={{ marginBottom: '32px' }}>
+    <h2 style={{ fontSize: '1.05rem', color: '#F87171', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <Ban size={20} />
+      <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
+    </h2>
+    {filteredBlockedAcademies.length === 0 ? (
+      <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد نتائج" : "No Results"} description={isRtl ? "لا توجد أكاديميات محظورة مطابقة للبحث." : "No matching blocked academies."} />
+    ) : (
+      <div className={styles.requestsGrid}>
+        {filteredBlockedAcademies.map(academy => (
+          <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
+            <div className={styles.requestInfo}>
+              <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
+              {academy.ownerProfile && (
+                <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {getSafeText(academy.ownerProfile.full_name)}</span>
                 </div>
-              ))}
+              )}
+              <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 'bold' }}>🚫 {isRtl ? 'محظورة / معطلة' : 'Blocked'}</span>
             </div>
-          )}
-        </section>
-      )}
+            <div className={styles.cardActions}>
+              <button 
+                onClick={() => onActivateClick(academy.id, academy.owner_id)} 
+                disabled={processingId !== null} 
+                style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Unlock size={14} /> {isRtl ? 'إلغاء الحظر وتفعيل' : 'Activate'}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
+)}
 
       {/* 🖼️ معاينة التحويل */}
       {receiptModalUrl && (
