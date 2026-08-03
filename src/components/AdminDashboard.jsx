@@ -23,7 +23,13 @@ import {
   Filter,
   ArrowUpDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageCircle,
+  Users,
+  BookOpen,
+  History,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
@@ -50,16 +56,24 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   
-  const [activeTab, setActiveTab] = useState('all'); // all, pending, active, blocked, expired
+  const [activeTab, setActiveTab] = useState('all'); 
   const [extendModalAcademy, setExtendModalAcademy] = useState(null);
   const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
   // 🔍 حالات البحث والفلترة والفرز والصفحات
   const [searchQuery, setSearchQuery] = useState('');
-  const [planFilter, setPlanFilter] = useState('all'); // all, trial, lifetime, monthly, yearly
-  const [sortBy, setSortBy] = useState('created_at_desc'); // created_at_desc, created_at_asc, trial_ends_asc
+  const [planFilter, setPlanFilter] = useState('all'); 
+  const [sortBy, setSortBy] = useState('created_at_desc'); 
   const [currentPage, setCurrentPage] = useState(1);
+
+  // 📥 الخطوة 4️⃣: حالة Drawer التفاصيل العميقة
+  const [selectedAcademyDetails, setSelectedAcademyDetails] = useState(null);
+  const [academyStatsLoading, setAcademyStatsLoading] = useState(false);
+  const [deepStats, setDeepStats] = useState({ studentsCount: 0, halaqatCount: 0, payments: [] });
+
+  // 🔲 الخطوة 5️⃣: حالة التحديد الجماعي
+  const [selectedAcademyIds, setSelectedAcademyIds] = useState([]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -72,7 +86,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     else setRefreshing(true);
 
     try {
-      // 1️⃣ حساب الإحصائيات العامة أولاً (Counts)
       const [
         { count: totalCount },
         { count: pCount },
@@ -90,21 +103,15 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       setActiveCount(aCount || 0);
       setBlockedCount(bCount || 0);
 
-      // 2️⃣ جلب طلبات الاشتراكات المعلقة
       const { data: subData, error: subErr } = await supabase
         .from('saas_subscriptions')
-        .select(`
-          *,
-          academies (*),
-          profiles (*)
-        `)
+        .select(`*, academies (*), profiles (*)`)
         .eq('status', 'pending_verification')
         .order('created_at', { ascending: false });
 
       if (subErr) throw subErr;
       setPendingSubscriptions(subData || []);
 
-      // 3️⃣ بناء استعلام الأكاديميات المرقّم (Server-side Pagination & Sorting)
       const from = (currentPage - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
@@ -112,14 +119,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         .from('academies')
         .select('*, saas_subscriptions(*)', { count: 'exact' });
 
-      // تطبيق تصفية الحالة من الخادم حسب التبويب النشط
       if (activeTab === 'active') {
         acadQuery = acadQuery.eq('is_active', true);
       } else if (activeTab === 'blocked') {
         acadQuery = acadQuery.eq('is_active', false);
       }
 
-      // تطبيق الفرز من جهة الخادم
       if (sortBy === 'created_at_desc') {
         acadQuery = acadQuery.order('created_at', { ascending: false });
       } else if (sortBy === 'created_at_asc') {
@@ -128,18 +133,16 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         acadQuery = acadQuery.order('trial_ends_at', { ascending: true, nullsFirst: false });
       }
 
-      // تطبيق الترقيم (Pagination Range)
       const { data: acadData, error: acadErr } = await acadQuery.range(from, to);
       if (acadErr) throw acadErr;
 
-      // 4️⃣ جلب بيانات المالكين
       const ownerIds = [...new Set((acadData || []).map(a => a.owner_id).filter(Boolean))];
       let profilesMap = {};
 
       if (ownerIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, full_name, email')
+          .select('id, full_name, email, phone')
           .in('id', ownerIds);
 
         if (profilesData) {
@@ -168,25 +171,11 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
   useEffect(() => {
     fetchDashboardData();
-
-    const realTimeChannel = supabase
-      .channel('admin-dashboard-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saas_subscriptions' }, () => {
-        fetchDashboardData(true);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
-        fetchDashboardData(true);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(realTimeChannel);
-    };
   }, [fetchDashboardData]);
 
-  // إعادة ضبط الصفحة الأولى عند تغيير التبويب أو الفلتر
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedAcademyIds([]); // إعادة تصفير التحديد عند تغيير الفلتر
   }, [activeTab, searchQuery, planFilter, sortBy]);
 
   // 🔍 فلترة الصفحة الحالية نصياً وحسب نوع الخطة
@@ -234,6 +223,102 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     });
   }, [academies, searchQuery, planFilter, activeTab]);
 
+  // 📥 الخطوة 4️⃣: فتح Drawer وجلب الإحصائيات العميقة للأكاديمية
+  const openAcademyDrawer = async (academy) => {
+    setSelectedAcademyDetails(academy);
+    setAcademyStatsLoading(true);
+
+    try {
+      const [
+        { count: stCount },
+        { count: hCount },
+        { data: paymentsData }
+      ] = await Promise.all([
+        supabase.from('students').select('*', { count: 'exact', head: true }).eq('academy_id', academy.id),
+        supabase.from('classes').select('*', { count: 'exact', head: true }).eq('academy_id', academy.id),
+        supabase.from('saas_subscriptions').select('*').eq('academy_id', academy.id).order('created_at', { ascending: false })
+      ]);
+
+      setDeepStats({
+        studentsCount: stCount || 0,
+        halaqatCount: hCount || 0,
+        payments: paymentsData || []
+      });
+    } catch (err) {
+      console.error("Failed to load deep stats:", err);
+    } finally {
+      setAcademyStatsLoading(false);
+    }
+  };
+
+  // 🔲 الخطوة 5️⃣: إدارات التحديد الجماعي (Bulk Selection Handlers)
+  const toggleSelectAll = () => {
+    if (selectedAcademyIds.length === filteredAcademies.length) {
+      setSelectedAcademyIds([]);
+    } else {
+      setSelectedAcademyIds(filteredAcademies.map(a => a.id));
+    }
+  };
+
+  const toggleSelectAcademy = (id) => {
+    setSelectedAcademyIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  // 🔲 الخطوة 5️⃣: الإجراءات الجماعية (Bulk Actions)
+  const handleBulkStatusChange = async (newStatus) => {
+    if (selectedAcademyIds.length === 0) return;
+    const actionText = newStatus ? (isRtl ? 'تفعيل' : 'Activate') : (isRtl ? 'حظر' : 'Block');
+    
+    if (!window.confirm(isRtl ? `هل تأكد من ${actionText} عدد (${selectedAcademyIds.length}) أكاديمية؟` : `Confirm ${actionText} ${selectedAcademyIds.length} academies?`)) return;
+
+    setProcessingId('bulk');
+    try {
+      const { error } = await supabase
+        .from('academies')
+        .update({ is_active: newStatus })
+        .in('id', selectedAcademyIds);
+
+      if (error) throw error;
+
+      showToast(isRtl ? `تم ${actionText} الأكاديميات بنجاح!` : `Bulk action completed!`);
+      setSelectedAcademyIds([]);
+      fetchDashboardData(true);
+    } catch (err) {
+      showToast(isRtl ? "حدث خطأ أثناء تنفيذ الإجراء الجماعي." : "Bulk action failed.", "error");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleBulkExtend = async (days) => {
+    if (selectedAcademyIds.length === 0) return;
+    if (!window.confirm(isRtl ? `هل تأكد من تمديد +${days} يوم لعدد (${selectedAcademyIds.length}) أكاديمية؟` : `Extend +${days} days for ${selectedAcademyIds.length} academies?`)) return;
+
+    setProcessingId('bulk');
+    try {
+      const now = new Date();
+      now.setDate(now.getDate() + days);
+      const newEndIso = now.toISOString();
+
+      const { error } = await supabase
+        .from('academies')
+        .update({ trial_ends_at: newEndIso })
+        .in('id', selectedAcademyIds);
+
+      if (error) throw error;
+
+      showToast(isRtl ? `تم التمديد الجماعي بنجاح (+${days} يوم)!` : `Bulk extension applied!`);
+      setSelectedAcademyIds([]);
+      fetchDashboardData(true);
+    } catch (err) {
+      showToast(isRtl ? "فشل التمديد الجماعي." : "Failed to extend.", "error");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   // ✅ القبول والاعتماد
   const onApproveSubscription = async (subscription) => {
     if (processingId) return;
@@ -256,7 +341,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       showToast(isRtl ? `تم تفعيل الاشتراك والأكاديمية بنجاح! 🎉` : "Subscription Approved 🎉");
       fetchDashboardData(true);
     } catch (error) {
-      console.error("Approve Error:", error.message || error);
       showToast(isRtl ? "فشل اعتماد الطلب." : "Failed to approve.", "error");
     } finally {
       setProcessingId(null);
@@ -285,7 +369,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // ⛔ الحظر
+  // ⛔ الحظر الفردي
   const onDeactivateClick = async (id, ownerId) => {
     if (processingId) return;
     const targetAcademy = academies.find(a => a.id === id);
@@ -299,11 +383,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const { error: acadErr } = await supabase.from('academies').update({ is_active: false }).eq('id', id);
       if (acadErr) throw acadErr;
 
-      const targetOwnerId = ownerId || targetAcademy?.owner_id;
-      if (targetOwnerId) {
-        await supabase.from('profiles').update({ is_activated: false }).eq('id', targetOwnerId);
-      }
-
       showToast(isRtl ? `تم حظر "${targetName}"` : "Deactivated", "info");
       fetchDashboardData(true);
     } catch (error) {
@@ -313,7 +392,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // 🔓 إلغاء الحظر
+  // 🔓 إلغاء الحظر الفردي
   const onActivateClick = async (id, ownerId) => {
     if (processingId) return;
     const targetAcademy = academies.find(a => a.id === id);
@@ -327,11 +406,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const { error: acadErr } = await supabase.from('academies').update({ is_active: true }).eq('id', id);
       if (acadErr) throw acadErr;
 
-      const targetOwnerId = ownerId || targetAcademy?.owner_id;
-      if (targetOwnerId) {
-        await supabase.from('profiles').update({ is_activated: true }).eq('id', targetOwnerId);
-      }
-
       showToast(isRtl ? `تم إلغاء حظر "${targetName}" بنجاح! 🎉` : "Activated", "success");
       fetchDashboardData(true);
     } catch (error) {
@@ -341,7 +415,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // ⏱️ التمديد
+  // ⏱️ التمديد الفردي
   const onExtendTrialClick = async (id, daysToAdd, isLifetime = false) => {
     if (processingId) return;
     setProcessingId(`extend-${id}`);
@@ -367,20 +441,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         .eq('id', id);
       if (acadErr) throw acadErr;
 
-      await supabase
-        .from('saas_subscriptions')
-        .update({ 
-          expires_at: newDateIso,
-          status: 'active',
-          updated_at: new Date().toISOString()
-        })
-        .eq('academy_id', id);
-
       showToast(isLifetime ? (isRtl ? "تم منح اشتراك دائم ♾️" : "Lifetime granted ♾️") : (isRtl ? `تم التمديد +${daysToAdd} يوم` : `+${daysToAdd} Days extended`));
       setExtendModalAcademy(null);
       fetchDashboardData(true);
     } catch (error) {
-      console.error("Extension Error:", error);
       showToast(isRtl ? "تعذر التمديد." : "Failed.", "error");
     } finally {
       setProcessingId(null);
@@ -408,7 +472,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     link.click();
   };
 
-  // 1️⃣ فحص الحسابات الدائمة
   const getTrialStatusBadge = (trialEndsAt) => {
     if (!trialEndsAt) return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
     
@@ -485,18 +548,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
       </div>
 
-      {/* 🔍 شريط البحث والفلترة والفرز - منظم ومناسب لشاشات الجوال */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '12px',
-        marginBottom: '20px',
-        background: '#1E293B',
-        padding: '14px',
-        borderRadius: '12px',
-        border: '1px solid #334155'
-      }}>
-        {/* 1️⃣ مربع البحث */}
+      {/* 🔍 شريط البحث والفلترة والفرز */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '20px', background: '#1E293B', padding: '14px', borderRadius: '12px', border: '1px solid #334155' }}>
         <div style={{ position: 'relative', width: '100%' }}>
           <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '12px' }} />
           <input
@@ -504,85 +557,66 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك..." : "Search academy, owner..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              background: '#0F172A',
-              border: '1px solid #334155',
-              borderRadius: '8px',
-              padding: '10px 40px 10px 12px',
-              color: '#FFF',
-              fontSize: '0.85rem',
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
+            style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 40px 10px 12px', color: '#FFF', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
           />
-          {searchQuery && (
-            <X 
-              size={16} 
-              color="#94A3B8" 
-              onClick={() => setSearchQuery('')}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', cursor: 'pointer' }} 
-            />
-          )}
+          {searchQuery && <X size={16} color="#94A3B8" onClick={() => setSearchQuery('')} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', cursor: 'pointer' }} />}
         </div>
 
-        {/* 2️⃣ أدوات الفلترة والترتيب جنبًا إلى جنب في الشاشات الصغيرة */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          {/* تصفية الخطط */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
-              style={{
-                width: '100%',
-                background: '#0F172A',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '10px 8px',
-                color: '#FFF',
-                fontSize: '0.8rem',
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                textAlign: 'center'
-              }}
-            >
-              <option value="all">🔍 {isRtl ? 'جميع الخطط' : 'All Plans'}</option>
-              <option value="trial">⏱️ {isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
-              <option value="monthly">📅 {isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
-              <option value="yearly">🗓️ {isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
-              <option value="lifetime">♾️ {isRtl ? 'حسابات دائمة' : 'Lifetime'}</option>
-            </select>
-          </div>
+          <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 8px', color: '#FFF', fontSize: '0.8rem', outline: 'none', cursor: 'pointer', textAlign: 'center' }}>
+            <option value="all">🔍 {isRtl ? 'جميع الخطط' : 'All Plans'}</option>
+            <option value="trial">⏱️ {isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
+            <option value="monthly">📅 {isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
+            <option value="yearly">🗓️ {isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
+            <option value="lifetime">♾️ {isRtl ? 'حسابات دائمة' : 'Lifetime'}</option>
+          </select>
 
-          {/* الترتيب والفرز */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                width: '100%',
-                background: '#0F172A',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '10px 8px',
-                color: '#FFF',
-                fontSize: '0.8rem',
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                textAlign: 'center'
-              }}
-            >
-              <option value="created_at_desc">⬇️ {isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
-              <option value="created_at_asc">⬆️ {isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
-              <option value="trial_ends_asc">⚠️ {isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
-            </select>
-          </div>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 8px', color: '#FFF', fontSize: '0.8rem', outline: 'none', cursor: 'pointer', textAlign: 'center' }}>
+            <option value="created_at_desc">⬇️ {isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
+            <option value="created_at_asc">⬆️ {isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
+            <option value="trial_ends_asc">⚠️ {isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
+          </select>
         </div>
       </div>
+
+      {/* ⚡ الخطوة 5️⃣: شريط الإجراءات الجماعية (Bulk Actions Bar) */}
+      {selectedAcademyIds.length > 0 && (
+        <div style={{
+          background: 'linear-gradient(90deg, #1E293B 0%, #0F172A 100%)',
+          border: '1px solid #3B82F6',
+          borderRadius: '12px',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justify: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          boxShadow: '0 4px 14px rgba(59, 130, 246, 0.2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ background: '#3B82F6', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.8rem' }}>
+              {selectedAcademyIds.length} {isRtl ? 'محدد' : 'Selected'}
+            </span>
+            <span style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>{isRtl ? 'اختر إجراءً لتطبيقه دفعة واحدة:' : 'Choose a bulk action:'}</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button onClick={() => handleBulkExtend(30)} disabled={processingId === 'bulk'} style={{ background: 'rgba(251, 191, 36, 0.15)', border: '1px solid #FBBF24', color: '#FBBF24', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              +30 {isRtl ? 'يوم' : 'Days'}
+            </button>
+            <button onClick={() => handleBulkStatusChange(true)} disabled={processingId === 'bulk'} style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              {isRtl ? 'تفعيل الجماعي' : 'Bulk Activate'}
+            </button>
+            <button onClick={() => handleBulkStatusChange(false)} disabled={processingId === 'bulk'} style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              {isRtl ? 'حظر الجماعي' : 'Bulk Block'}
+            </button>
+            <button onClick={() => setSelectedAcademyIds([])} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '0.8rem' }}>
+              {isRtl ? 'إلغاء التحديد' : 'Deselect'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 🗂️ شريط التبويبات Tabs */}
       <div className={styles.tabsBar}>
@@ -608,103 +642,35 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ))}
       </div>
 
-      {/* ⏳ قسم طلبات الاشتراكات المعلقة */}
-      {(activeTab === 'pending' || activeTab === 'all') && pendingSubscriptions.length > 0 && (
-        <section className={styles.sectionPending} style={{ marginBottom: '32px' }}>
-          <h2 className={styles.sectionTitle} style={{ fontSize: '1.1rem', color: '#FFF', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Clock size={20} color="#FBBF24" />
-            <span>{isRtl ? 'طلبات الاشتراك بانتظار المراجعة' : 'Pending Subscriptions'}</span>
+      {/* 🏢 قائمة الأكاديميات الرئيسية */}
+      <section style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <h2 style={{ fontSize: '1.05rem', color: '#FFF', margin: 0 }}>
+            {activeTab === 'active' ? (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies') :
+             activeTab === 'blocked' ? (isRtl ? 'الأكاديميات المحظورة 🚫' : 'Blocked Academies') :
+             (isRtl ? 'جميع الأكاديميات 🏢' : 'All Academies')}
           </h2>
 
-          <div className={styles.requestsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-            {pendingSubscriptions.map(sub => {
-              const academyName = getSafeText(sub.academies?.name, 'أكاديمية غير معروفة');
-              const payerName = getSafeText(sub.profiles?.full_name, 'غير معروف');
-              const payerPhone = getSafeText(sub.profiles?.phone);
-              const receiptUrl = sub.metadata?.receipt_url;
-              const planTier = getSafeText(sub.plan_tier, 'مجاني').toUpperCase();
-              const planDuration = getSafeText(sub.plan_duration);
-              const paymentGateway = getSafeText(sub.payment_gateway, 'تحويل يدوي');
-              const currency = getSafeText(sub.currency, 'EGP');
-
-              return (
-                <div key={sub.id} className={styles.requestCard} style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '12px', padding: '16px', position: 'relative' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1.05rem', color: '#FFF', margin: '0 0 4px 0' }}>{academyName}</h3>
-                      <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <User size={14} /> {payerName} {payerPhone && `(${payerPhone})`}
-                      </p>
-                    </div>
-                    <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#FBBF24', border: '1px solid #FBBF24', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
-                      {planTier} - {planDuration}
-                    </span>
-                  </div>
-
-                  <div style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span>المبلغ المفروض:</span>
-                      <strong style={{ color: '#34D399' }}>{sub.price} {currency}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span>طريقة الدفع:</span>
-                      <span>{paymentGateway}</span>
-                    </div>
-                  </div>
-
-                  {receiptUrl ? (
-                    <button 
-                      onClick={() => setReceiptModalUrl(receiptUrl)}
-                      style={{ width: '100%', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}
-                    >
-                      <Eye size={16} /> {isRtl ? 'معاينة إشعار التحويل 📄' : 'View Receipt'}
-                    </button>
-                  ) : (
-                    <p style={{ fontSize: '0.75rem', color: '#EF4444', textAlign: 'center', marginBottom: '12px' }}>⚠️ لا يوجد إشعار مرفق</p>
-                  )}
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <button 
-                      onClick={() => onApproveSubscription(sub)} 
-                      disabled={processingId !== null}
-                      style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
-                    >
-                      {processingId === `approve-${sub.id}` ? 'جاري الاعتماد...' : 'تأكيد وقبول ✅'}
-                    </button>
-                    <button 
-                      onClick={() => onRejectSubscription(sub.id)} 
-                      disabled={processingId !== null}
-                      style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
-                    >
-                      رفض الطلب ❌
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* 🏢 قائمة الأكاديميات الرئيسية (نشطة / محظورة) */}
-      <section style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>
-          {activeTab === 'active' ? (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies') :
-           activeTab === 'blocked' ? (isRtl ? 'الأكاديميات المحظورة 🚫' : 'Blocked Academies') :
-           (isRtl ? 'جميع الأكاديميات 🏢' : 'All Academies')}
-        </h2>
+          {/* زر تحديد الكل */}
+          {filteredAcademies.length > 0 && (
+            <button
+              onClick={toggleSelectAll}
+              style={{ background: 'transparent', border: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              {selectedAcademyIds.length === filteredAcademies.length ? <CheckSquare size={16} /> : <Square size={16} />}
+              {selectedAcademyIds.length === filteredAcademies.length ? (isRtl ? 'إلغاء تحديد الكل' : 'Deselect All') : (isRtl ? 'تحديد كل الصفحة' : 'Select All')}
+            </button>
+          )}
+        </div>
 
         {filteredAcademies.length === 0 ? (
-          <EmptyState 
-            icon={<Building2 size={36} />} 
-            title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} 
-            description={isRtl ? "جرب تعديل عبارة البحث أو خيار التصفية." : "Try adjusting your filters or query."} 
-          />
+          <EmptyState icon={<Building2 size={36} />} title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} description={isRtl ? "جرب تعديل عبارة البحث أو خيار التصفية." : "Try adjusting your filters or query."} />
         ) : (
           <div className={styles.requestsGrid}>
             {filteredAcademies.map(academy => {
               const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
               const isBlocked = !academy.is_active;
+              const isSelected = selectedAcademyIds.includes(academy.id);
 
               return (
                 <div 
@@ -712,11 +678,25 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                   className={styles.requestCard} 
                   style={{ 
                     borderRight: isBlocked ? '4px solid #EF4444' : isExpired ? '4px solid #F59E0B' : '4px solid #10B981',
-                    background: isBlocked ? '#1E1B2E' : '#1E293B'
+                    background: isSelected ? '#1E293B' : isBlocked ? '#1E1B2E' : '#1E293B',
+                    borderColor: isSelected ? '#3B82F6' : undefined,
+                    position: 'relative'
                   }}
                 >
-                  <div className={styles.requestInfo}>
-                    <h3 className={styles.requestName} style={{ color: isBlocked ? '#FCA5A5' : '#FFF' }}>
+                  {/* Checkbox التحديد الجماعي */}
+                  <div 
+                    onClick={() => toggleSelectAcademy(academy.id)}
+                    style={{ position: 'absolute', top: '14px', left: isRtl ? 'unset' : '14px', right: isRtl ? '14px' : 'unset', cursor: 'pointer', zIndex: 5, color: isSelected ? '#3B82F6' : '#64748B' }}
+                  >
+                    {isSelected ? <CheckSquare size={20} /> : <Square size={20} />}
+                  </div>
+
+                  <div className={styles.requestInfo} style={{ paddingRight: isRtl ? '28px' : '0', paddingLeft: !isRtl ? '28px' : '0' }}>
+                    <h3 
+                      className={styles.requestName} 
+                      onClick={() => openAcademyDrawer(academy)}
+                      style={{ color: isBlocked ? '#FCA5A5' : '#FFF', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
                       {getSafeText(academy.name, 'أكاديمية بدون اسم')}
                     </h3>
                     {academy.ownerProfile && (
@@ -733,6 +713,13 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
                   <div className={styles.cardActions}>
                     <button 
+                      onClick={() => openAcademyDrawer(academy)} 
+                      style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Eye size={14} /> {isRtl ? 'تفاصيل' : 'Details'}
+                    </button>
+
+                    <button 
                       onClick={() => setExtendModalAcademy(academy)} 
                       disabled={processingId !== null} 
                       style={{ background: '#0F172A', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -741,21 +728,9 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     </button>
 
                     {isBlocked ? (
-                      <button 
-                        onClick={() => onActivateClick(academy.id, academy.owner_id)} 
-                        disabled={processingId !== null} 
-                        style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <Unlock size={14} /> {isRtl ? 'تفعيل' : 'Activate'}
-                      </button>
+                      <button onClick={() => onActivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><Unlock size={14} /></button>
                     ) : (
-                      <button 
-                        onClick={() => onDeactivateClick(academy.id, academy.owner_id)} 
-                        disabled={processingId !== null} 
-                        style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }} 
-                      >
-                        <Ban size={14} />
-                      </button>
+                      <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><Ban size={14} /></button>
                     )}
                   </div>
                 </div>
@@ -764,89 +739,102 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           </div>
         )}
 
-        {/* 📄 شريط الترقيم والتنقل بين الصفحات (Pagination Controls) */}
+        {/* 📄 الترقيم */}
         {totalPages > 1 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justify: 'center',
-            gap: '12px',
-            marginTop: '24px',
-            background: '#1E293B',
-            padding: '12px',
-            borderRadius: '12px',
-            border: '1px solid #334155'
-          }}>
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              style={{
-                background: currentPage === 1 ? '#0F172A' : '#3B82F6',
-                color: '#FFF',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '0.8rem',
-                opacity: currentPage === 1 ? 0.5 : 1
-              }}
-            >
-              {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-              {isRtl ? 'السابقة' : 'Previous'}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '24px', background: '#1E293B', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ background: currentPage === 1 ? '#0F172A' : '#3B82F6', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', opacity: currentPage === 1 ? 0.5 : 1 }}>
+              {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />} {isRtl ? 'السابقة' : 'Previous'}
             </button>
 
-            <span style={{ color: '#CBD5E1', fontSize: '0.85rem', fontWeight: 'bold' }}>
-              {isRtl ? `الصفحة ${currentPage} من ${totalPages}` : `Page ${currentPage} of ${totalPages}`}
-            </span>
+            <span style={{ color: '#CBD5E1', fontSize: '0.85rem', fontWeight: 'bold' }}>{isRtl ? `الصفحة ${currentPage} من ${totalPages}` : `Page ${currentPage} of ${totalPages}`}</span>
 
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage >= totalPages}
-              style={{
-                background: currentPage >= totalPages ? '#0F172A' : '#3B82F6',
-                color: '#FFF',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '0.8rem',
-                opacity: currentPage >= totalPages ? 0.5 : 1
-              }}
-            >
-              {isRtl ? 'التالية' : 'Next'}
-              {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage >= totalPages} style={{ background: currentPage >= totalPages ? '#0F172A' : '#3B82F6', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', opacity: currentPage >= totalPages ? 0.5 : 1 }}>
+              {isRtl ? 'التالية' : 'Next'} {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
           </div>
         )}
       </section>
 
-      {/* 🖼️ معاينة التحويل */}
-      {receiptModalUrl && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '16px' }}>
-          <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '16px', padding: '20px', maxWidth: '500px', width: '100%', color: '#FFF', position: 'relative', textAlign: 'center' }}>
-            <button onClick={() => setReceiptModalUrl(null)} style={{ position: 'absolute', top: '14px', right: '14px', background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-            <h3 style={{ marginBottom: '14px', fontSize: '1.1rem' }}>📄 إشعار التحويل المرفق</h3>
-            <div style={{ background: '#000', borderRadius: '8px', overflow: 'hidden', maxHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain' }} />
+      {/* 📥 الخطوة 4️⃣: Drawer التفاصيل العميقة للأكاديمية */}
+      {selectedAcademyDetails && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 3000, display: 'flex', justifyContent: isRtl ? 'flex-start' : 'flex-end' }}>
+          <div style={{ width: '100%', maxWidth: '440px', background: '#0F172A', height: '100%', borderLeft: isRtl ? 'none' : '1px solid #334155', borderRight: isRtl ? '1px solid #334155' : 'none', padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            
+            {/* هيدر النافذة */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, color: '#FFF', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Building2 color="#3B82F6" size={20} />
+                {getSafeText(selectedAcademyDetails.name)}
+              </h3>
+              <button onClick={() => setSelectedAcademyDetails(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}><X size={20} /></button>
             </div>
-            <button onClick={() => setReceiptModalUrl(null)} style={{ marginTop: '16px', background: '#3B82F6', color: '#FFF', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-              إغلاق
-            </button>
+
+            {/* بيانات المالك والتواصل السريع */}
+            <div style={{ background: '#1E293B', borderRadius: '12px', padding: '14px', marginBottom: '16px', border: '1px solid #334155' }}>
+              <p style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: '#94A3B8' }}>{isRtl ? 'مالك الأكاديمية:' : 'Academy Owner:'}</p>
+              <h4 style={{ margin: '0 0 4px 0', color: '#FFF', fontSize: '1rem' }}>{getSafeText(selectedAcademyDetails.ownerProfile?.full_name, 'غير معروف')}</h4>
+              <p style={{ margin: '0 0 12px 0', fontSize: '0.8rem', color: '#CBD5E1' }}>{getSafeText(selectedAcademyDetails.ownerProfile?.email)}</p>
+
+              {/* 📲 زر التواصل عبر WhatsApp */}
+              {selectedAcademyDetails.ownerProfile?.phone ? (
+                <a
+                  href={`https://wa.me/${selectedAcademyDetails.ownerProfile.phone.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#25D366', color: '#FFF', padding: '10px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}
+                >
+                  <MessageCircle size={18} /> {isRtl ? 'تواصل عبر واتساب مباشر' : 'Direct WhatsApp Chat'}
+                </a>
+              ) : (
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#EF4444' }}>⚠️ لا يوجد رقم هاتف مسجل للمالك</p>
+              )}
+            </div>
+
+            {/* 📊 بطاقات الإحصائيات الحية */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #334155' }}>
+                <Users size={20} color="#34D399" style={{ marginBottom: '4px' }} />
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</p>
+                <h3 style={{ margin: '4px 0 0 0', color: '#FFF' }}>{academyStatsLoading ? '...' : deepStats.studentsCount}</h3>
+              </div>
+              <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #334155' }}>
+                <BookOpen size={20} color="#60A5FA" style={{ marginBottom: '4px' }} />
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>{isRtl ? 'الحلقات الدراسية' : 'Halaqat Classes'}</p>
+                <h3 style={{ margin: '4px 0 0 0', color: '#FFF' }}>{academyStatsLoading ? '...' : deepStats.halaqatCount}</h3>
+              </div>
+            </div>
+
+            {/* 📜 سجل المدفوعات والاشتراكات */}
+            <h4 style={{ color: '#FFF', fontSize: '0.95rem', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <History size={16} color="#FBBF24" /> {isRtl ? 'سجل المدفوعات والاشتراكات' : 'Payment History'}
+            </h4>
+
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {deepStats.payments.length === 0 ? (
+                <p style={{ fontSize: '0.8rem', color: '#64748B', textAlign: 'center', marginTop: '20px' }}>{isRtl ? 'لا يوجد سجل مدفوعات سابق' : 'No prior payment history'}</p>
+              ) : (
+                deepStats.payments.map(p => (
+                  <div key={p.id} style={{ background: '#1E293B', border: '1px solid #334155', padding: '10px', borderRadius: '8px', marginBottom: '8px', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FFF', marginBottom: '4px' }}>
+                      <strong>{p.plan_tier} ({p.plan_duration})</strong>
+                      <span style={{ color: p.status === 'active' ? '#34D399' : '#FBBF24' }}>{p.status}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.75rem' }}>
+                      <span>{p.price} {p.currency || 'EGP'}</span>
+                      <span>{new Date(p.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* ⏱️ نافذة التمديد */}
+      {/* ⏱️ نافذة التمديد الفردي */}
       {extendModalAcademy && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '16px' }}>
           <div style={{ background: '#0F172A', border: '1px solid #FBBF24', borderRadius: '16px', padding: '20px', maxWidth: '400px', width: '100%', color: '#FFF', textAlign: 'center' }}>
             <h3 style={{ marginBottom: '8px', fontSize: '1.05rem' }}>⏱️ {isRtl ? 'تمديد اشتراك الأكاديمية' : 'Extend Subscription'}</h3>
             <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>{getSafeText(extendModalAcademy.name)}</p>
