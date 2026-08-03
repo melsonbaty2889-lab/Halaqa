@@ -43,7 +43,7 @@ export async function processAndUploadReceipt(file, supabaseClient, userId) {
 
   // 5️⃣ الرفع إلى Supabase Storage Bucket
   const { data, error } = await supabaseClient.storage
-    .from('payment-receipts')
+    .from('subscription-receipts')
     .upload(filePath, compressedBlob, {
       contentType: 'image/webp',
       cacheControl: '3600',
@@ -57,7 +57,7 @@ export async function processAndUploadReceipt(file, supabaseClient, userId) {
 
   // 6️⃣ استخراج الرابط المباشر
   const { data: publicUrlData } = supabaseClient.storage
-    .from('payment-receipts')
+    .from('subscription-receipts')
     .getPublicUrl(filePath);
 
   return {
