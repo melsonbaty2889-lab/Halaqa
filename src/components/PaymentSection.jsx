@@ -155,6 +155,7 @@ export default function PaymentSection({
   useEffect(() => {
     if (activeMethods.length > 0) {
       setSelectedMethod(activeMethods[0].id);
+      setReceiptFile(null);
     }
   }, [region]);
 
