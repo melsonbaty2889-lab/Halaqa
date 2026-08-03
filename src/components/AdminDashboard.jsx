@@ -76,7 +76,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (subErr) throw subErr;
 
-            // 2️⃣ الأكاديميات النشطة مع اشتراكاتها
+      // 2️⃣ الأكاديميات النشطة مع اشتراكاتها
       const { data: activeData, error: aErr } = await supabase
         .from('academies')
         .select('*, saas_subscriptions(*)')
@@ -159,7 +159,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     };
   }, [fetchDashboardData]);
 
-    // 🔍 دالة الفلترة الذكية المدمجة
+  // 🔍 دالة الفلترة الذكية المدمجة
   const filterList = useCallback((list) => {
     return list.filter(item => {
       const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
@@ -377,10 +377,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     link.click();
   };
 
-    const getTrialStatusBadge = (trialEndsAt) => {
+  // 1️⃣ الملاحظة الأولى: فحص الحسابات الدائمة للسنوات البعيدة
+  const getTrialStatusBadge = (trialEndsAt) => {
     if (!trialEndsAt) return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
     
-    // 🟢 إضافة هذا الشرط لمنع كتابة 36524 يوم
     const endDate = new Date(trialEndsAt);
     if (endDate.getFullYear() > 2090) {
       return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
@@ -454,24 +454,25 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
       </div>
 
-      {/* 🔍 ⚡ المرحلة الأولى: شريط البحث والفلترة السريعة */}
+      {/* 3️⃣ الملاحظة الثالثة: محاذاة وتناسق شريط البحث مع اختيار الخطة للهواتف */}
       <div style={{
         display: 'flex',
+        flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: '12px',
+        gap: '10px',
         marginBottom: '20px',
         background: '#1E293B',
-        padding: '12px 16px',
+        padding: '12px',
         borderRadius: '12px',
         border: '1px solid #334155',
         alignItems: 'center'
       }}>
         {/* مربع البحث */}
-        <div style={{ flex: '1 1 260px', position: 'relative' }}>
+        <div style={{ flex: '1 1 200px', position: 'relative' }}>
           <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: isRtl ? '12px' : 'auto', left: !isRtl ? '12px' : 'auto' }} />
           <input
             type="text"
-            placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك، أو البريد..." : "Search by academy, owner, or email..."}
+            placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك..." : "Search academy, owner..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -496,25 +497,26 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
 
         {/* قائمة اختيار الخطة */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Filter size={16} color="#94A3B8" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 140px' }}>
+          <Filter size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
           <select
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value)}
             style={{
+              width: '100%',
               background: '#0F172A',
               border: '1px solid #334155',
               borderRadius: '8px',
-              padding: '9px 12px',
+              padding: '9px 8px',
               color: '#FFF',
-              fontSize: '0.82rem',
+              fontSize: '0.8rem',
               outline: 'none',
               cursor: 'pointer'
             }}
           >
-            <option value="all">{isRtl ? 'جميع الخطت والاشتراكات' : 'All Plans'}</option>
-            <option value="trial">{isRtl ? 'مؤقتة / تجريبية' : 'Trial / Temporary'}</option>
-            <option value="lifetime">{isRtl ? 'حسابات دائمة (Lifetime) ♾️' : 'Lifetime'}</option>
+            <option value="all">{isRtl ? 'جميع الخطط' : 'All Plans'}</option>
+            <option value="trial">{isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
+            <option value="lifetime">{isRtl ? 'حسابات دائمة ♾️' : 'Lifetime'}</option>
           </select>
         </div>
       </div>
@@ -544,8 +546,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ))}
       </div>
 
-      {/* 📋 قسم طلبات الاشتراك المعلقة */}
-      {(activeTab === 'all' || activeTab === 'pending') && (
+      {/* 2️⃣ الملاحظة الثانية: إخفاء كرت الطلبات الفارغ عند البحث أو عدم وجود طلبات معلقة */}
+      {(activeTab === 'pending' || (activeTab === 'all' && filteredPendingSubscriptions.length > 0)) && (
         <section className={styles.sectionPending} style={{ marginBottom: '32px' }}>
           <h2 className={styles.sectionTitle} style={{ fontSize: '1.1rem', color: '#FFF', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Clock size={20} color="#FBBF24" />
