@@ -366,29 +366,111 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
               </div>
             </div>
 
-            {/* نظام الشارات */}
-            <div style={{ background: '#0F172A', padding: '12px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'start' }}>
-              <div style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaAward style={{ color: '#F59E0B' }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {(student.current_streak >= 3) && (
-                  <span style={{ background: 'linear-gradient(135deg, #EF4444, #F59E0B)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    🔥 {isRtl ? 'شعلة الحفظ' : 'Hifz Spark'}
-                  </span>
-                )}
-                {(student.current_quarter_index >= 8) && (
-                  <span style={{ background: 'linear-gradient(135deg, #3B82F6, #10B981)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    ⭐ {isRtl ? 'مُتقن الأجزاء' : 'Juz Mastery'}
-                  </span>
-                )}
-                {weeklyData.length >= 4 && (
-                  <span style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    👑 {isRtl ? 'المثابر الأسبوعي' : 'Weekly Achiever'}
-                  </span>
-                )}
-              </div>
-            </div>
+            {/* نظام شارات التميز والإتقان (المحدث) */}
+<div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'start' }}>
+  
+  {/* الهيدر العلوي لشبكة الأوسمة */}
+  <div style={{ fontSize: '13px', color: '#F59E0B', fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <FaAward style={{ color: '#F59E0B' }} /> {isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}
+    </span>
+    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 'normal' }}>
+      {((student.current_streak >= 3 ? 1 : 0) + (student.current_quarter_index >= 8 ? 1 : 0) + (weeklyData.length >= 4 ? 1 : 0))} / 3
+    </span>
+  </div>
+
+  {/* شبكة الأوسمة متجاوبة Grid */}
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+    {[
+      {
+        id: 'streak',
+        titleAr: 'شعلة الحفظ',
+        titleEn: 'Hifz Spark',
+        descAr: 'استمرار لـ 3 أيام',
+        descEn: '3 Days Streak',
+        icon: '🔥',
+        bg: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2))',
+        border: '#EF4444',
+        unlocked: student.current_streak >= 3,
+        count: Math.floor((student.current_streak || 0) / 3)
+      },
+      {
+        id: 'juz_master',
+        titleAr: 'مُتقن الأجزاء',
+        titleEn: 'Juz Mastery',
+        descAr: 'إتمام جزء كامل',
+        descEn: 'Completed 1 Juz',
+        icon: '⭐',
+        bg: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2))',
+        border: '#3B82F6',
+        unlocked: student.current_quarter_index >= 8,
+        count: Math.floor((student.current_quarter_index || 0) / 8)
+      },
+      {
+        id: 'weekly_achiever',
+        titleAr: 'المثابر الأسبوعي',
+        titleEn: 'Weekly Achiever',
+        descAr: 'التزام أسبوعي منتظم',
+        descEn: 'Consistent Active Week',
+        icon: '👑',
+        bg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2))',
+        border: '#8B5CF6',
+        unlocked: weeklyData.length >= 4,
+        count: 1
+      }
+    ].map((badge) => (
+      <div 
+        key={badge.id}
+        style={{
+          background: badge.unlocked ? badge.bg : 'rgba(30, 41, 59, 0.4)',
+          border: `1px solid ${badge.unlocked ? badge.border : '#334155'}`,
+          borderRadius: '10px',
+          padding: '10px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          position: 'relative',
+          opacity: badge.unlocked ? 1 : 0.45,
+          filter: badge.unlocked ? 'none' : 'grayscale(80%)',
+          transition: 'all 0.3s ease'
+        }}
+      >
+        {/* شارة عداد التكرار Badge Counter */}
+        {badge.unlocked && badge.count > 1 && (
+          <span style={{
+            position: 'absolute',
+            top: '-6px',
+            right: isRtl ? 'auto' : '-6px',
+            left: isRtl ? '-6px' : 'auto',
+            background: badge.border,
+            color: '#fff',
+            fontSize: '9px',
+            fontWeight: 'bold',
+            padding: '2px 6px',
+            borderRadius: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+          }}>
+            x{badge.count}
+          </span>
+        )}
+
+        <div style={{ fontSize: '22px', marginBottom: '4px' }}>
+          {badge.icon}
+        </div>
+        
+        <div style={{ fontSize: '11px', fontWeight: 'bold', color: badge.unlocked ? '#F8FAFC' : '#94A3B8', marginBottom: '2px' }}>
+          {isRtl ? badge.titleAr : badge.titleEn}
+        </div>
+
+        <div style={{ fontSize: '9px', color: badge.unlocked ? '#CBD5E1' : '#64748B' }}>
+          {isRtl ? badge.descAr : badge.descEn}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 
             {/* شريط التقدم والسورة */}
             <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155` }}>
