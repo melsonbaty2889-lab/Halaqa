@@ -92,25 +92,31 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
-  // 💾 دالة حفظ رقم الهاتف من الـ Modal
+    // 💾 دالة حفظ رقم الهاتف من الـ Modal مع رصد الأخطاء بدقة
   const handleSavePhone = async () => {
     if (!inputPhone.trim() || !phoneModalData) return;
     
-    // تنظيف الرقم للتأكد من وجود كود الدولة
     let cleanPhone = inputPhone.replace(/\D/g, '');
     
     setProcessingId('save-phone');
     try {
-      const { error } = await supabase
+      console.log("Updating phone for user:", phoneModalData.ownerId, "with phone:", cleanPhone);
+
+      // محاولة التحديث في جدول profiles
+      const { data, error } = await supabase
         .from('profiles')
         .update({ phone: cleanPhone })
-        .eq('id', phoneModalData.ownerId);
-  
-      if (error) throw error;
-  
+        .eq('id', phoneModalData.ownerId)
+        .select();
+
+      if (error) {
+        console.error("Supabase update error:", error);
+        throw new Error(error.message);
+      }
+
+      console.log("Update success response:", data);
       showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح! 🎉" : "Phone saved successfully!");
       
-      // تحديث حالة الـ Drawer إذا كان مفتوحاً لنفس الأكاديمية
       if (selectedAcademyDetails && selectedAcademyDetails.owner_id === phoneModalData.ownerId) {
         setSelectedAcademyDetails(prev => ({
           ...prev,
@@ -122,7 +128,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       setInputPhone('');
       fetchDashboardData(true);
     } catch (err) {
-      showToast(isRtl ? "فشل حفظ الرقم." : "Failed to save phone.", "error");
+      console.error("Catch error saving phone:", err);
+      showToast(isRtl ? `فشل الحفظ: ${err.message}` : `Failed to save: ${err.message}`, "error");
     } finally {
       setProcessingId(null);
     }
