@@ -485,22 +485,20 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
       </div>
 
-      {/* 🔍 شريط البحث والفلترة والفرز */}
+      {/* 🔍 شريط البحث والفلترة والفرز - منظم ومناسب لشاشات الجوال */}
       <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: '10px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '12px',
         marginBottom: '20px',
         background: '#1E293B',
-        padding: '12px',
+        padding: '14px',
         borderRadius: '12px',
-        border: '1px solid #334155',
-        alignItems: 'center'
+        border: '1px solid #334155'
       }}>
-        {/* مربع البحث */}
-        <div style={{ flex: '1 1 200px', position: 'relative' }}>
-          <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: isRtl ? '12px' : 'auto', left: !isRtl ? '12px' : 'auto' }} />
+        {/* 1️⃣ مربع البحث */}
+        <div style={{ position: 'relative', width: '100%' }}>
+          <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '12px' }} />
           <input
             type="text"
             placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك..." : "Search academy, owner..."}
@@ -511,10 +509,11 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               background: '#0F172A',
               border: '1px solid #334155',
               borderRadius: '8px',
-              padding: '10px 38px 10px 12px',
+              padding: '10px 40px 10px 12px',
               color: '#FFF',
               fontSize: '0.85rem',
-              outline: 'none'
+              outline: 'none',
+              boxSizing: 'border-box'
             }}
           />
           {searchQuery && (
@@ -522,118 +521,68 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               size={16} 
               color="#94A3B8" 
               onClick={() => setSearchQuery('')}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isRtl ? '12px' : 'auto', right: !isRtl ? '12px' : 'auto', cursor: 'pointer' }} 
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', cursor: 'pointer' }} 
             />
           )}
         </div>
 
-        {/* قائمة اختيار الخطة */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 130px' }}>
-          <Filter size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
-          <select
-            value={planFilter}
-            onChange={(e) => setPlanFilter(e.target.value)}
-            style={{
-              width: '100%',
-              background: '#0F172A',
-{/* 🔍 شريط البحث والفلترة والفرز - منظم ومناسب لشاشات الجوال */}
-<div style={{
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-  gap: '12px',
-  marginBottom: '20px',
-  background: '#1E293B',
-  padding: '14px',
-  borderRadius: '12px',
-  border: '1px solid #334155'
-}}>
-  {/* 1️⃣ مربع البحث */}
-  <div style={{ position: 'relative', width: '100%' }}>
-    <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '12px' }} />
-    <input
-      type="text"
-      placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك..." : "Search academy, owner..."}
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      style={{
-        width: '100%',
-        background: '#0F172A',
-        border: '1px solid #334155',
-        borderRadius: '8px',
-        padding: '10px 40px 10px 12px',
-        color: '#FFF',
-        fontSize: '0.85rem',
-        outline: 'none',
-        boxSizing: 'border-box'
-      }}
-    />
-    {searchQuery && (
-      <X 
-        size={16} 
-        color="#94A3B8" 
-        onClick={() => setSearchQuery('')}
-        style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', cursor: 'pointer' }} 
-      />
-    )}
-  </div>
+        {/* 2️⃣ أدوات الفلترة والترتيب جنبًا إلى جنب في الشاشات الصغيرة */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {/* تصفية الخطط */}
+          <div style={{ position: 'relative' }}>
+            <select
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value)}
+              style={{
+                width: '100%',
+                background: '#0F172A',
+                border: '1px solid #334155',
+                borderRadius: '8px',
+                padding: '10px 8px',
+                color: '#FFF',
+                fontSize: '0.8rem',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                textAlign: 'center'
+              }}
+            >
+              <option value="all">🔍 {isRtl ? 'جميع الخطط' : 'All Plans'}</option>
+              <option value="trial">⏱️ {isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
+              <option value="monthly">📅 {isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
+              <option value="yearly">🗓️ {isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
+              <option value="lifetime">♾️ {isRtl ? 'حسابات دائمة' : 'Lifetime'}</option>
+            </select>
+          </div>
 
-  {/* 2️⃣ أدوات الفلترة والترتيب جنبًا إلى جنب في الشاشات الصغيرة */}
-  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-    {/* تصفية الخطط */}
-    <div style={{ position: 'relative' }}>
-      <select
-        value={planFilter}
-        onChange={(e) => setPlanFilter(e.target.value)}
-        style={{
-          width: '100%',
-          background: '#0F172A',
-          border: '1px solid #334155',
-          borderRadius: '8px',
-          padding: '10px 8px',
-          color: '#FFF',
-          fontSize: '0.8rem',
-          outline: 'none',
-          cursor: 'pointer',
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          textAlign: 'center'
-        }}
-      >
-        <option value="all">🔍 {isRtl ? 'جميع الخطط' : 'All Plans'}</option>
-        <option value="trial">⏱️ {isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
-        <option value="monthly">📅 {isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
-        <option value="yearly">🗓️ {isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
-        <option value="lifetime">♾️ {isRtl ? 'حسابات دائمة' : 'Lifetime'}</option>
-      </select>
-    </div>
-
-    {/* الترتيب والفرز */}
-    <div style={{ position: 'relative' }}>
-      <select
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-        style={{
-          width: '100%',
-          background: '#0F172A',
-          border: '1px solid #334155',
-          borderRadius: '8px',
-          padding: '10px 8px',
-          color: '#FFF',
-          fontSize: '0.8rem',
-          outline: 'none',
-          cursor: 'pointer',
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          textAlign: 'center'
-        }}
-      >
-        <option value="created_at_desc">⬇️ {isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
-        <option value="created_at_asc">⬆️ {isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
-        <option value="trial_ends_asc">⚠️ {isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
-      </select>
-    </div>
-  </div>
-</div>
+          {/* الترتيب والفرز */}
+          <div style={{ position: 'relative' }}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                width: '100%',
+                background: '#0F172A',
+                border: '1px solid #334155',
+                borderRadius: '8px',
+                padding: '10px 8px',
+                color: '#FFF',
+                fontSize: '0.8rem',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                textAlign: 'center'
+              }}
+            >
+              <option value="created_at_desc">⬇️ {isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
+              <option value="created_at_asc">⬆️ {isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
+              <option value="trial_ends_asc">⚠️ {isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
       {/* 🗂️ شريط التبويبات Tabs */}
       <div className={styles.tabsBar}>
