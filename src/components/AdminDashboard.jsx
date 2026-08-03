@@ -159,38 +159,44 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     };
   }, [fetchDashboardData]);
 
-  // 🔍 دالة الفلترة الذكية المدمجة (تعتمد على useMemo لمنع استهلاك المعالج)
-const filterList = useCallback((list) => {
-  return list.filter(item => {
-    const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
-    const ownerName = getSafeText(item.ownerProfile?.full_name || item.profiles?.full_name).toLowerCase();
-    const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
-    const q = searchQuery.trim().toLowerCase();
+    // 🔍 دالة الفلترة الذكية المدمجة
+  const filterList = useCallback((list) => {
+    return list.filter(item => {
+      const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
+      const ownerName = getSafeText(item.ownerProfile?.full_name || item.profiles?.full_name).toLowerCase();
+      const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
+      const q = searchQuery.trim().toLowerCase();
 
-    // شرط البحث بالاسم أو الإيميل
-    const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
+      // شرط البحث بالاسم أو الإيميل
+      const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
 
-    // 🟢 شرط الفلترة الدقيق حسب الخطة ومدة الاشتراك
-    let matchesPlan = true;
-    
-    // جلب مدة الاشتراك من الكائن مباشرة أو من كائن الاشتراك المرفق (subscription)
-    const planDuration = (item.plan_duration || item.saas_subscriptions?.plan_duration || '').toLowerCase();
+      // استخراج كائن الاشتراك (إن وجد كـ Object أو Array)
+      const sub = Array.isArray(item.saas_subscriptions) 
+        ? item.saas_subscriptions[0] 
+        : item.saas_subscriptions;
 
-    if (planFilter === 'lifetime') {
-      // يفحص حقل plan_duration المباشر
-      matchesPlan = planDuration === 'lifetime';
-    } else if (planFilter === 'trial') {
-      // يفحص الخطة التجريبية بناءً على المدة أو فترات التجربة الحقيقية
-      matchesPlan = planDuration === 'trial' || planDuration === 'temporary';
-    } else if (planFilter === 'monthly') {
-      matchesPlan = planDuration === 'monthly';
-    } else if (planFilter === 'yearly') {
-      matchesPlan = planDuration === 'yearly';
-    }
+      // جلب duration
+      const planDuration = (item.plan_duration || sub?.plan_duration || item.plan_tier || sub?.plan_tier || '').toLowerCase();
 
-    return matchesSearch && matchesPlan;
-  });
-}, [searchQuery, planFilter]);
+      // التحقق من مدة الأيام المتبقية (لتغطية حالة 36524 يوم)
+      const isLongDuration = item.trial_ends_at && (new Date(item.trial_ends_at).getFullYear() > 2090);
+
+      // شرط الفلترة حسب الخطة
+      let matchesPlan = true;
+
+      if (planFilter === 'lifetime') {
+        matchesPlan = planDuration === 'lifetime' || isLongDuration;
+      } else if (planFilter === 'trial') {
+        matchesPlan = (planDuration === 'trial' || planDuration === 'temporary') && !isLongDuration;
+      } else if (planFilter === 'monthly') {
+        matchesPlan = planDuration === 'monthly';
+      } else if (planFilter === 'yearly') {
+        matchesPlan = planDuration === 'yearly';
+      }
+
+      return matchesSearch && matchesPlan;
+    });
+  }, [searchQuery, planFilter]);
 
   const filteredActiveAcademies = useMemo(() => filterList(activeAcademies), [activeAcademies, filterList]);
   const filteredBlockedAcademies = useMemo(() => filterList(blockedAcademies), [blockedAcademies, filterList]);
