@@ -5,14 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { handleAuthError } from '../utils/errorHandler';
 import { loginSchema, validateFormData } from '../schemas/auth';
 import { 
-  FaEnvelope, 
-  FaLock, 
-  FaEye, 
-  FaEyeSlash, 
-  FaExclamationCircle, 
-  FaGlobe 
-} from 'react-icons/fa';
-import { FcGoogle } from 'react-icons/fc';
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  Globe 
+} from 'lucide-react';
 
 export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginSuccess }) {
   const { i18n } = useTranslation();
@@ -49,7 +48,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
     setFieldErrors({});
     setShowResend(false);
 
-    // أ. التحقق من المدخلات بواسطة Zod قبل إرسال الطلب
+    // التحقق من المدخلات بواسطة Zod
     const validationResult = validateFormData(
       { email: email.trim(), password: password.trim() },
       loginSchema
@@ -67,7 +66,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
     setLoading(true);
 
     try {
-      // ب. تسجيل الدخول في Supabase Auth
+      // تسجيل الدخول في Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: validationResult.data.email,
         password: validationResult.data.password,
@@ -82,7 +81,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
 
       const user = authData.user;
 
-      // ج. تحديث حالة الاتصال وآخر تسجيل دخول
+      // تحديث حالة الاتصال وآخر تسجيل دخول
       await supabase
         .from('profiles')
         .update({ 
@@ -91,7 +90,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         })
         .eq('id', user.id);
 
-      // د. جلب الـ Profile للتأكد من الدور وحالة الحساب
+      // جلب الـ Profile للتأكد من الدور وحالة الحساب
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, academy_id, is_activated, is_deleted')
@@ -110,19 +109,19 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         msg: isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...' : '✅ Logged in successfully! Redirecting...'
       });
 
-      // هـ. التوجيه المباشر (دعم React Router والتكالم مع Props)
+      // التوجيه المباشر
       if (onLoginSuccess) {
         onLoginSuccess({ user, profile });
       } else {
         const role = profile?.role?.toLowerCase().trim() || 'student';
         const routeMap = {
-  super_admin: '/admin-dashboard',   // صفحة المدير العام AdminDashboard.jsx
-  admin: '/dashboard',               // صفحة مدير الأكاديمية Dashboard.jsx
-  academy_admin: '/dashboard',       // في حال وجود مسمى آخر لمدير الأكاديمية
-  teacher: '/teacher-dashboard',
-  student: '/student-dashboard',
-  parent: '/parent-dashboard',
-};
+          super_admin: '/admin-dashboard',
+          admin: '/dashboard',
+          academy_admin: '/dashboard',
+          teacher: '/teacher-dashboard',
+          student: '/student-dashboard',
+          parent: '/parent-dashboard',
+        };
         navigate(routeMap[role] || '/dashboard');
       }
 
@@ -249,7 +248,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               gap: '6px' 
             }}
           >
-            <FaGlobe /> {isRtl ? 'English' : 'العربية'}
+            <Globe className="w-4 h-4" /> {isRtl ? 'English' : 'العربية'}
           </button>
         </div>
 
@@ -278,7 +277,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FaExclamationCircle style={{ flexShrink: 0 }} />
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{status.msg}</span>
             </div>
 
@@ -324,7 +323,16 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               style={getInputStyle(!!fieldErrors.email)}
             />
-            <FaEnvelope style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '16px', color: fieldErrors.email ? '#EF4444' : '#64748B' }} />
+            <Mail 
+              className="w-5 h-5"
+              style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                transform: 'translateY(-50%)', 
+                [isRtl ? 'right' : 'left']: '16px', 
+                color: fieldErrors.email ? '#EF4444' : '#64748B' 
+              }} 
+            />
             {fieldErrors.email && (
               <span style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', display: 'block', paddingRight: '4px' }}>
                 {fieldErrors.email}
@@ -344,12 +352,21 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               style={getInputStyle(!!fieldErrors.password)}
             />
-            <FaLock style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '16px', color: fieldErrors.password ? '#EF4444' : '#64748B' }} />
+            <Lock 
+              className="w-5 h-5"
+              style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                transform: 'translateY(-50%)', 
+                [isRtl ? 'right' : 'left']: '16px', 
+                color: fieldErrors.password ? '#EF4444' : '#64748B' 
+              }} 
+            />
             <span 
               onClick={() => setShowPassword(!showPassword)}
               style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '16px', color: '#64748B', cursor: 'pointer' }}
             >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </span>
             {fieldErrors.password && (
               <span style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', display: 'block', paddingRight: '4px' }}>
@@ -407,7 +424,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           <div style={{ flex: 1, height: '1px', background: '#1E2D3D' }}></div>
         </div>
 
-        {/* زر Google */}
+        {/* زر Google بحجم أيقونة ملائم */}
         <button 
           onClick={handleGoogleLogin}
           type="button"
@@ -429,7 +446,13 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
           }}
         >
-          <FcGoogle style={{ fontSize: '20px' }} />
+          {/* SVG Google أصلية عالية الجودة لتطابق التصميم القياسي */}
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+          </svg>
           <span>Sign in with Google</span>
         </button>
 
