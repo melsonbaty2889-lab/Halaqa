@@ -161,27 +161,37 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   }, [fetchDashboardData]);
 
   // 🔍 دالة الفلترة الذكية المدمجة (تعتمد على useMemo لمنع استهلاك المعالج)
-  const filterList = useCallback((list) => {
-    return list.filter(item => {
-      const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
-      const ownerName = getSafeText(item.ownerProfile?.full_name || item.profiles?.full_name).toLowerCase();
-      const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
-      const q = searchQuery.trim().toLowerCase();
+const filterList = useCallback((list) => {
+  return list.filter(item => {
+    const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
+    const ownerName = getSafeText(item.ownerProfile?.full_name || item.profiles?.full_name).toLowerCase();
+    const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
 
-      // شرط البحث بالاسم أو الإيميل
-      const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
+    // شرط البحث بالاسم أو الإيميل
+    const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
 
-      // شرط الفلترة حسب الخطة
-      let matchesPlan = true;
-      if (planFilter === 'lifetime') {
-        matchesPlan = !item.trial_ends_at;
-      } else if (planFilter === 'trial') {
-        matchesPlan = Boolean(item.trial_ends_at);
-      }
+    // 🟢 شرط الفلترة الدقيق حسب الخطة ومدة الاشتراك
+    let matchesPlan = true;
+    
+    // جلب مدة الاشتراك من الكائن مباشرة أو من كائن الاشتراك المرفق (subscription)
+    const planDuration = (item.plan_duration || item.saas_subscriptions?.plan_duration || '').toLowerCase();
 
-      return matchesSearch && matchesPlan;
-    });
-  }, [searchQuery, planFilter]);
+    if (planFilter === 'lifetime') {
+      // يفحص حقل plan_duration المباشر
+      matchesPlan = planDuration === 'lifetime';
+    } else if (planFilter === 'trial') {
+      // يفحص الخطة التجريبية بناءً على المدة أو فترات التجربة الحقيقية
+      matchesPlan = planDuration === 'trial' || planDuration === 'temporary';
+    } else if (planFilter === 'monthly') {
+      matchesPlan = planDuration === 'monthly';
+    } else if (planFilter === 'yearly') {
+      matchesPlan = planDuration === 'yearly';
+    }
+
+    return matchesSearch && matchesPlan;
+  });
+}, [searchQuery, planFilter]);
 
   const filteredActiveAcademies = useMemo(() => filterList(activeAcademies), [activeAcademies, filterList]);
   const filteredBlockedAcademies = useMemo(() => filterList(blockedAcademies), [blockedAcademies, filterList]);
