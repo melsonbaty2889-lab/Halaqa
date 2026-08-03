@@ -21,9 +21,13 @@ export async function processAndUploadReceipt(file, supabaseInstance, userId) {
       fileToUpload = file;
     }
 
-    const fileExt = fileToUpload.name?.split('.').pop() || 'png';
-    // التوافق مع المسار الظاهر في لقطة الشاشة: subscriptions/receipt_...
-    const fileName = `subscriptions/receipt_${userId}_${Date.now()}.${fileExt}`;
+    // تحديد الامتداد بدقة بحسب نوع الملف المعالج
+    const fileExt = fileToUpload.type === 'image/webp' 
+      ? 'webp' 
+      : (file.name?.split('.').pop() || 'png');
+
+    // مسار مباشر داخل الـ Bucket دون مجلدات فرعية زائدة
+    const fileName = `receipt_${userId}_${Date.now()}.${fileExt}`;
 
     // الرفع إلى Bucket: subscription-receipts
     const { data, error } = await supabaseInstance.storage
