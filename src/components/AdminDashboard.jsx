@@ -154,63 +154,36 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       supabase.removeChannel(realTimeChannel);
     };
   }, [fetchDashboardData]);
+  
+// ✅ الاعتماد والقبول عبر Transaction موحدة بطلب واحد
+const onApproveSubscription = async (subscription) => {
+  if (processingId) return;
+  setProcessingId(`approve-${subscription.id}`);
 
-  // ✅ تفعيل واعتراف طلب الاشتراك
-  const onApproveSubscription = async (subscription) => {
-    if (processingId) return;
-    setProcessingId(`approve-${subscription.id}`);
+  try {
+    const duration = getSafeText(subscription.plan_duration, 'monthly');
+    const academyId = subscription.academy_id || subscription.academies?.id;
+    const payerId = subscription.payer_id || subscription.profiles?.id;
 
-    try {
-      const now = new Date();
-      let expiresAt = new Date();
+    // استدعاء دالة الـ Postgres RPC لتمرير التغييرات في Atomic Transaction واحدة
+    const { error } = await supabase.rpc('approve_academy_subscription', {
+      p_subscription_id: subscription.id,
+      p_academy_id: academyId,
+      p_payer_id: payerId,
+      p_duration: duration
+    });
 
-      const duration = getSafeText(subscription.plan_duration);
-      if (duration === 'yearly') {
-        expiresAt.setFullYear(now.getFullYear() + 1);
-      } else if (duration === 'lifetime') {
-        expiresAt.setFullYear(now.getFullYear() + 100);
-      } else {
-        expiresAt.setMonth(now.getMonth() + 1);
-      }
+    if (error) throw error;
 
-      const { error: subErr } = await supabase
-        .from('saas_subscriptions')
-        .update({
-          status: 'active',
-          starts_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
-          updated_at: now.toISOString()
-        })
-        .eq('id', subscription.id);
-
-      if (subErr) throw subErr;
-
-      if (subscription.academy_id) {
-        await supabase
-          .from('academies')
-          .update({ 
-            is_active: true,
-            trial_ends_at: expiresAt.toISOString()
-          })
-          .eq('id', subscription.academy_id);
-      }
-
-      if (subscription.payer_id) {
-        await supabase
-          .from('profiles')
-          .update({ is_activated: true })
-          .eq('id', subscription.payer_id);
-      }
-
-      showToast(isRtl ? `تم تفعيل الاشتراك والأكاديمية بنجاح! 🎉` : "Subscription Approved 🎉");
-      fetchDashboardData(true);
-    } catch (error) {
-      console.error("Approve Error:", error);
-      showToast(isRtl ? "فشل اعتماد الطلب." : "Failed to approve.", "error");
-    } finally {
-      setProcessingId(null);
-    }
-  };
+    showToast(isRtl ? `تم تفعيل الاشتراك والأكاديمية بنجاح! 🎉` : "Subscription Approved 🎉");
+    fetchDashboardData(true);
+  } catch (error) {
+    console.error("Approve Error:", error.message || error);
+    showToast(isRtl ? "فشل اعتماد الطلب." : "Failed to approve.", "error");
+  } finally {
+    setProcessingId(null);
+  }
+};
 
   // 🚫 رفض طلب الاشتراك
   const onRejectSubscription = async (subscriptionId) => {
