@@ -159,7 +159,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     };
   }, [fetchDashboardData]);
 
-  // 🔍 دالة الفلترة الذكية المدمجة
+    // 🔍 دالة الفلترة الذكية المحدثة للدعم الكامل للشهري والسنوي والتجريبي
   const filterList = useCallback((list) => {
     return list.filter(item => {
       const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
@@ -167,31 +167,43 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
       const q = searchQuery.trim().toLowerCase();
 
-      // شرط البحث بالاسم أو الإيميل
+      // 1️⃣ شرط البحث بالاسم أو البريد
       const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
 
-      // استخراج كائن الاشتراك (إن وجد كـ Object أو Array)
+      // 2️⃣ استخراج كائن الاشتراك النشط أو الأول
       const sub = Array.isArray(item.saas_subscriptions) 
-        ? item.saas_subscriptions[0] 
+        ? (item.saas_subscriptions.find(s => s.status === 'active') || item.saas_subscriptions[0])
         : item.saas_subscriptions;
 
-      // جلب duration
-      const planDuration = (item.plan_duration || sub?.plan_duration || item.plan_tier || sub?.plan_tier || '').toLowerCase();
+      // 3️⃣ تجميع القيمة النصية لنوع الاشتراك من كافة الحقول الممكنة
+      const durationRaw = (
+        item.plan_duration || 
+        sub?.plan_duration || 
+        item.plan_tier || 
+        sub?.plan_tier || 
+        sub?.billing_period || 
+        ''
+      ).toLowerCase();
 
-      // التحقق من مدة الأيام المتبقية (لتغطية حالة 36524 يوم)
+      // 4️⃣ الفحوصات الأمنية لأنواع الخطط
       const isLongDuration = item.trial_ends_at && (new Date(item.trial_ends_at).getFullYear() > 2090);
+      const isLifetime = durationRaw.includes('lifetime') || durationRaw.includes('permanent') || isLongDuration;
+      
+      const isMonthly = durationRaw.includes('month') || durationRaw.includes('شهري');
+      const isYearly = durationRaw.includes('year') || durationRaw.includes('annual') || durationRaw.includes('سنوي');
 
-      // شرط الفلترة حسب الخطة
+      // 5️⃣ تطبيق الفلترة حسب الاختيار
       let matchesPlan = true;
 
       if (planFilter === 'lifetime') {
-        matchesPlan = planDuration === 'lifetime' || isLongDuration;
+        matchesPlan = isLifetime;
       } else if (planFilter === 'trial') {
-        matchesPlan = (planDuration === 'trial' || planDuration === 'temporary') && !isLongDuration;
+        // أي حساب ليس دائمًا وليس شهرِيًا ولا سنويًا معتمدًا يُعتبر حسابًا تجريبيًا
+        matchesPlan = !isLifetime && !isMonthly && !isYearly;
       } else if (planFilter === 'monthly') {
-        matchesPlan = planDuration === 'monthly';
+        matchesPlan = isMonthly;
       } else if (planFilter === 'yearly') {
-        matchesPlan = planDuration === 'yearly';
+        matchesPlan = isYearly;
       }
 
       return matchesSearch && matchesPlan;
