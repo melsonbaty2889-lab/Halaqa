@@ -1,96 +1,116 @@
+// src/components/PaymentSection.jsx
 import React, { useState, useEffect } from 'react';
 
-// حاوية قياسية موحدة الحجم لجميع الشعارات لمنع أي اختلال
+// حاوية قياسية موحدة الحجم والشكل لجميع اللوجوهات الرسمية
 const LogoSlot = ({ children }) => (
   <div style={{ 
-    width: '48px', 
-    height: '32px', 
+    width: '52px', 
+    height: '34px', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
-    borderRadius: '6px',
-    background: 'rgba(255, 255, 255, 0.05)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '8px',
+    background: '#ffffff',
+    padding: '4px 6px',
+    boxSizing: 'border-box',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
     flexShrink: 0 
   }}>
     {children}
   </div>
 );
 
-// الشعارات المحدثة
+// الشعارات الأصلية الرسمية (Official High-Quality SVGs)
 const PaymentLogos = {
   applePay: (
     <LogoSlot>
-      <svg width="34" height="18" viewBox="0 0 50 30" fill="none">
-        <path d="M12.5 14.1c0-2.8 2.2-4.2 2.3-4.3-1.3-1.9-3.3-2.1-4-2.2-1.7-0.2-3.4 1-4.3 1-.9 0-2.2-0.9-3.6-0.9-1.9 0-3.6 1.1-4.6 2.8-2 3.5-0.5 8.7 1.4 11.5 0.9 1.4 2 2.9 3.5 2.8 1.4-0.1 2-0.9 3.7-0.9 1.7 0 2.2 0.9 3.6 0.9 1.5 0 2.5-1.3 3.4-2.7 1.1-1.6 1.5-3.1 1.6-3.2-0.1 0-3-1.1-3-4.5z" fill="#FFF"/>
-        <path d="M9.8 5.6c0.8-1 1.3-2.3 1.1-3.6-1.1 0-2.5 0.7-3.3 1.7-0.7 0.8-1.3 2.2-1.1 3.5 1.3 0.1 2.5-0.6 3.3-1.6z" fill="#FFF"/>
-        <text x="18" y="20" fill="#FFF" fontSize="14" fontWeight="bold" fontFamily="sans-serif">Pay</text>
+      <svg width="36" height="20" viewBox="0 0 100 40" fill="none">
+        <path d="M12.8 22.3c0-4.1 3.3-6.1 3.5-6.2-1.9-2.8-4.9-3.2-6-3.2-2.5-0.3-5 1.5-6.3 1.5-1.3 0-3.3-1.4-5.4-1.4-2.8 0-5.3 1.6-6.8 4.2-3 5.2-0.8 12.9 2.1 17.1 1.4 2 3.1 4.3 5.3 4.2 2.1-0.1 2.9-1.3 5.5-1.3 2.5 0 3.3 1.3 5.5 1.3 2.3 0 3.7-2.1 5.1-4.1 1.6-2.3 2.2-4.6 2.3-4.7-0.1-0.1-4.8-1.8-4.8-6.7z" fill="#000000"/>
+        <path d="M8.8 9.7c1.1-1.4 1.9-3.4 1.7-5.4-1.6 0.1-3.7 1.1-4.8 2.4-1 1.2-1.9 3.2-1.7 5.1 1.9 0.2 3.7-0.8 4.8-2.1z" fill="#000000"/>
+        <text x="24" y="30" fill="#000000" fontSize="24" fontWeight="bold" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Pay</text>
       </svg>
     </LogoSlot>
   ),
   mada: (
     <LogoSlot>
-      <div style={{ background: '#00A859', color: '#FFF', padding: '2px 5px', borderRadius: '4px', fontWeight: '900', fontSize: '9px', letterSpacing: '0.5px' }}>
-        mada
-      </div>
+      <svg width="40" height="20" viewBox="0 0 100 40">
+        <rect width="100" height="40" rx="4" fill="#00A859"/>
+        <path d="M15 12h10v16H15z" fill="#0058A3"/>
+        <text x="30" y="27" fill="#FFFFFF" fontSize="20" fontWeight="900" fontFamily="sans-serif">mada</text>
+      </svg>
     </LogoSlot>
   ),
   instapay: (
     <LogoSlot>
-      <div style={{ background: 'linear-gradient(135deg, #4c1d95, #6d28d9)', color: '#FFF', padding: '2px 5px', borderRadius: '4px', fontWeight: '800', fontSize: '9px', display: 'flex', alignItems: 'center', gap: '2px' }}>
-        <span>⚡</span>Insta
-      </div>
+      <svg width="40" height="22" viewBox="0 0 120 40">
+        <defs>
+          <linearGradient id="instaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2E0854"/>
+            <stop offset="100%" stopColor="#6B11B0"/>
+          </linearGradient>
+        </defs>
+        <rect width="120" height="40" rx="6" fill="url(#instaGrad)"/>
+        <path d="M22 8L10 22h10l-2 10 12-14H20l2-10z" fill="#00E5FF"/>
+        <text x="36" y="27" fill="#FFFFFF" fontSize="18" fontWeight="800" fontFamily="sans-serif">InstaPay</text>
+      </svg>
     </LogoSlot>
   ),
   vodafone: (
     <LogoSlot>
-      <div style={{ background: '#e60000', color: '#FFF', padding: '2px 4px', borderRadius: '4px', fontWeight: 'bold', fontSize: '9px', textAlign: 'center', lineHeight: '1' }}>
-        Voda
-      </div>
+      <svg width="24" height="24" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="#E60000"/>
+        <path d="M50 20c-16.5 0-30 13.5-30 30 0 14.5 10.3 26.6 24 29.3v-12.8c-6.8-2.2-11.8-8.6-11.8-16.2 0-9.4 7.6-17 17-17s17 7.6 17 17c0 7.6-5 14-11.8 16.2v12.8c13.7-2.7 24-14.8 24-29.3 0-16.5-13.5-30-30-30z" fill="#FFFFFF"/>
+      </svg>
     </LogoSlot>
   ),
   fawry: (
     <LogoSlot>
-      <div style={{ background: '#ffcc00', color: '#002b49', padding: '2px 4px', borderRadius: '4px', fontWeight: '900', fontSize: '9px' }}>
-        fawry
-      </div>
+      <svg width="42" height="20" viewBox="0 0 100 35">
+        <rect width="100" height="35" rx="4" fill="#FFCC00"/>
+        <text x="8" y="25" fill="#002B49" fontSize="22" fontWeight="900" fontFamily="sans-serif" italic="true">fawry</text>
+      </svg>
     </LogoSlot>
   ),
   stcPay: (
     <LogoSlot>
-      <div style={{ background: '#4F008C', color: '#FFF', padding: '2px 4px', borderRadius: '4px', fontWeight: 'bold', fontSize: '9px' }}>
-        stc
-      </div>
+      <svg width="40" height="20" viewBox="0 0 100 35">
+        <rect width="100" height="35" rx="4" fill="#4F008C"/>
+        <text x="12" y="24" fill="#FF375F" fontSize="18" fontWeight="900" fontFamily="sans-serif">stc</text>
+        <text x="48" y="24" fill="#FFFFFF" fontSize="18" fontWeight="700" fontFamily="sans-serif">pay</text>
+      </svg>
     </LogoSlot>
   ),
   paypal: (
     <LogoSlot>
-      <svg width="22" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.762.762 0 0 1 .752-.644h6.78c2.62 0 4.606.58 5.488 1.62.83 1.02.936 2.45.312 4.28-.795 2.33-2.316 3.66-4.52 3.96h-1.53c-.382 0-.712.277-.773.655l-.946 5.96a.64.64 0 0 1-.631.543z" fill="#003087"/>
-        <path d="M8.88 15.347l.95-6.02a.778.778 0 0 1 .77-.65h3.04c2.203 0 3.724-1.33 4.52-3.96.287-.84.38-1.63.28-2.34a7.84 7.84 0 0 1 1.77.21c.882 1.04.988 2.47.364 4.3-.795 2.33-2.316 3.66-4.52 3.96h-1.53a.778.778 0 0 0-.77.655l-.946 5.96a.64.64 0 0 1-.63.543H8.88z" fill="#0079C1"/>
+      <svg width="36" height="20" viewBox="0 0 100 40">
+        <path d="M25 8h15c7 0 12 3 10.5 9.5C49 23 44 26 38 26h-6l-3 12H18L25 8z" fill="#003087"/>
+        <path d="M35 14h15c7 0 12 3 10.5 9.5C59 29 54 32 48 32h-6l-3 12H28L35 14z" fill="#0079C1" opacity="0.85"/>
       </svg>
     </LogoSlot>
   ),
   card: (
     <LogoSlot>
-      <svg width="22" height="16" viewBox="0 0 24 24" fill="none" stroke="#f8fafc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-        <line x1="1" y1="10" x2="23" y2="10"></line>
+      <svg width="36" height="22" viewBox="0 0 100 60">
+        <rect width="100" height="60" rx="8" fill="#1A1F71"/>
+        <circle cx="40" cy="30" r="16" fill="#EB001B"/>
+        <circle cx="60" cy="30" r="16" fill="#F79E1B" fillOpacity="0.8"/>
       </svg>
     </LogoSlot>
   ),
   bank: (
     <LogoSlot>
-      <svg width="20" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+      <svg width="24" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
       </svg>
     </LogoSlot>
   ),
   crypto: (
     <LogoSlot>
-      <div style={{ background: '#26A17B', color: '#FFF', padding: '2px 4px', borderRadius: '4px', fontWeight: 'bold', fontSize: '9px' }}>
-        USDT
-      </div>
+      <svg width="26" height="26" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="#26A17B"/>
+        <path d="M50 20v10M30 30h40M35 40h30v25c0 8-6.7 15-15 15s-15-7-15-15V40z" stroke="#FFFFFF" strokeWidth="8" fill="none"/>
+      </svg>
     </LogoSlot>
   )
 };
@@ -130,8 +150,6 @@ export default function PaymentSection({
   };
 
   const activeMethods = paymentMethods[region] || paymentMethods.egypt;
-
-  // 🌟 ضبط الخيار الافتراضي تلقائياً عند تغيير المنطقة
   const [selectedMethod, setSelectedMethod] = useState(activeMethods[0]?.id || 'card_eg');
 
   useEffect(() => {
@@ -145,7 +163,6 @@ export default function PaymentSection({
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text);
       } else {
-        // طريقة احتياطية للمتصفحات القديمة
         const textArea = document.createElement("textarea");
         textArea.value = text;
         document.body.appendChild(textArea);
@@ -177,8 +194,6 @@ export default function PaymentSection({
         fontFamily: 'system-ui, -apple-system, Roboto, sans-serif'
       }}
     >
-      
-      {/* عنوان القسم */}
       <h4 style={{ 
         color: '#f59e0b', 
         marginTop: '0', 
@@ -194,7 +209,6 @@ export default function PaymentSection({
         <span>💳</span> {isRTL ? "اختر وسيلة الدفع المناسبة لك:" : "Select Payment Method:"}
       </h4>
 
-      {/* قائمة وسائط الدفع */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {activeMethods.map((item) => {
           const isSelected = selectedMethod === item.id;
@@ -257,7 +271,6 @@ export default function PaymentSection({
         })}
       </div>
 
-      {/* تفاصيل التحويل اليدوي */}
       {currentMethodObj.isManual && (
         <div style={{ marginTop: '16px', background: '#162032', border: '1px dashed #f59e0b', borderRadius: '16px', padding: '16px' }}>
           <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 10px 0', fontWeight: '600' }}>
@@ -352,7 +365,7 @@ export default function PaymentSection({
               </span>
               <input 
                 type="file" 
-                accept="image/*,.pdf" 
+                accept="image/png, image/jpeg, image/webp" 
                 onClick={(e) => { e.target.value = null; }}
                 onChange={(e) => setReceiptFile(e.target.files[0])} 
                 style={{ display: 'none' }} 
