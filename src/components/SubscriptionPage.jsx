@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { processAndUploadReceipt } from '../lib/uploadHelper'; // 🌟 استدعاء دالة المعالجة والرفع
+import { processAndUploadReceipt } from '../lib/uploadHelper';
 import { useAcademy } from '../context/AcademyContext';
 import { 
   getPrices, 
@@ -18,6 +18,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
 
   const activeAcademyId = propAcademyId || academy?.id;
   const activeUser = propSession?.user || user;
+  
   const [region, setRegion] = useState('egypt');
   const [duration, setDuration] = useState('yearly');
   const [txId, setTxId] = useState('');
@@ -28,6 +29,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
   const [couponInput, setCouponInput] = useState('');
   const [couponMessage, setCouponMessage] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
   const isRTL = i18n.language === 'ar';
   const basePrices = getPrices(t);
@@ -36,6 +38,67 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     const userLoc = navigator.language;
     setRegion(detectUserRegion(userLoc, i18n.language));
   }, [i18n.language]);
+
+  // 🔄 الاستماع اللحظي (Realtime) لتحديث حالة الاشتراك فور موافقة الأدمن
+  useEffect(() => {
+    if (!activeAcademyId) return;
+
+    // 1. جلب حالة الاشتراك الحالية عند التحميل
+    const fetchCurrentSubscription = async () => {
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('academy_id', activeAcademyId)
+        .maybeSingle();
+
+      if (data) {
+        setSubscriptionStatus(data.status);
+        if (data.status === 'pending') {
+          setIsSubmitted(true);
+        }
+      }
+    };
+
+    fetchCurrentSubscription();
+
+    // 2. تفعيل التنست اللحظي على جدول الاشتراكات
+    const subscriptionChannel = supabase
+      .channel(`subscription-status-${activeAcademyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscriptions',
+          filter: `academy_id=eq.${activeAcademyId}`
+        },
+        (payload) => {
+          const newStatus = payload.new?.status;
+          setSubscriptionStatus(newStatus);
+          
+          if (newStatus === 'active') {
+            setIsSubmitted(false);
+            showNotification(
+              isRTL 
+                ? '🎉 تم قبول طلبك وتفعيل اشتراك الأكاديمية بنجاح!' 
+                : '🎉 Your subscription has been approved and activated!'
+            );
+          } else if (newStatus === 'rejected') {
+            setIsSubmitted(false);
+            showNotification(
+              isRTL 
+                ? '❌ تعذر تفعيل الاشتراك، يرجى التواصل مع الدعم الفني.' 
+                : '❌ Subscription request was not approved.'
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscriptionChannel);
+    };
+  }, [activeAcademyId, isRTL]);
 
   const handleApplyCoupon = () => {
     const { valid, discountPercent: discount, code } = validateCoupon(couponInput);
@@ -59,7 +122,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
 
   const showNotification = (msg) => {
     setNotification(msg);
-    setTimeout(() => setNotification(null), 4000);
+    setTimeout(() => setNotification(null), 5000);
   };
 
   const handleSubmitPayment = async (selectedPaymentMethod, isManualTransfer, receiptFile) => {
@@ -105,13 +168,13 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
           receiptUrl = url;
         } catch (uploadError) {
           console.error("🚨 Receipt Upload Error:", uploadError);
-          showNotification(`⚠️ ${uploadError.message || 'فشل رفع صورة الإشعار'}`);
+          showNotification(`⚠️ ${uploadError.message || (isRTL ? 'فشل رفع صورة الإشعار' : 'Receipt upload failed')}`);
           setLoading(false);
           return;
         }
       }
 
-      // 2️⃣ احتساب تواريخ بداية ونهاية الاشتراك
+      // 2️⃣ احتساب التواريخ الأولية والمبلغ الخامي
       const startsAt = new Date();
       const expiryDate = new Date();
       if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
@@ -121,31 +184,40 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
       const rawAmount = basePrices[region][duration];
       const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
 
-      // 3️⃣ إدراج أو تحديث بيانات الاشتراك
+      // 3️⃣ إدراج / تحديث الطلب في جدول `subscriptions` لربطه بسلاسة مع لوحة الأدمن (AdminDashboard)
       const { error } = await supabase
-        .from('saas_subscriptions')
+        .from('subscriptions')
         .upsert([{
           academy_id: resolvedAcademyId,
-          payer_id: activeUser?.id,
+          user_id: activeUser?.id,
           plan_tier: 'pro',
-          plan_duration: duration,
-          status: isManualTransfer ? 'pending_verification' : 'active',
-          payment_gateway: selectedPaymentMethod,
+          plan_type: duration,
+          status: isManualTransfer ? 'pending' : 'active',
+          payment_method: selectedPaymentMethod,
           price: finalAmount,
           currency: basePrices[region].curr,
           starts_at: startsAt.toISOString(),
-          expires_at: expiryDate.toISOString(),
+          ends_at: expiryDate.toISOString(),
+          receipt_url: receiptUrl,
+          transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
           metadata: {
-            transaction_id: txId || (isManualTransfer ? 'MANUAL_VERIFICATION_PENDING' : 'AUTO_GATEWAY_SUCCESS'),
             region: region,
             discount_applied: discountPercent,
-            coupon_code: appliedCoupon || null,
-            receipt_url: receiptUrl
-          }
+            coupon_code: appliedCoupon || null
+          },
+          updated_at: new Date().toISOString()
         }], { onConflict: 'academy_id' });
 
       if (error) throw error;
+      
       setIsSubmitted(true);
+      setSubscriptionStatus('pending');
+      showNotification(
+        isRTL 
+          ? "✅ تم إرسال طلب الاشتراك بنجاح! وهو قيد المراجعة حالياً." 
+          : "✅ Subscription request submitted successfully and is under review."
+      );
+
     } catch (err) {
       console.error("🚨 Subscription Error Details:", err);
       const errorMessage = err?.message || err?.error_description || (isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
@@ -214,6 +286,20 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
 
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
+        {/* ⏳ كارت تنبيه في حال وجود طلب اشتراك قيد التنسيق والتحقق */}
+        {subscriptionStatus === 'pending' && (
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: '16px', padding: '20px', marginBottom: '30px', textAlign: 'center' }}>
+            <h3 style={{ color: '#f59e0b', margin: '0 0 8px 0', fontSize: '1.2rem' }}>
+              ⏳ {isRTL ? 'طلب الاشتراك قيد المراجعة' : 'Subscription Request Pending Review'}
+            </h3>
+            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '0.95rem' }}>
+              {isRTL 
+                ? 'تم استلام إيصال التحويل الخاص بك بنجاح، ويقوم فريق الإدارة بمراجعته الآن. سيتم تفعيل حسابك تلقائياً فور الاعتماد.' 
+                : 'Your receipt has been received and is being verified by admin. Your account will be activated automatically once approved.'}
+            </p>
+          </div>
+        )}
+
         <div style={{ textAlign: 'center', marginBottom: '35px' }}>
           <h1 style={{ color: '#f59e0b', fontSize: '2.5rem', fontWeight: '800', marginBottom: '14px' }}>{t('subscription.title')}</h1>
           <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>{t('subscription.subtitle')}</p>
