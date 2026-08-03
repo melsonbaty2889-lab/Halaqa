@@ -1,24 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
-import { C } from "../constants/colors";
-import { Btn, Card, Input, Select, PageHeader } from './UI'; 
-import QuranProgressSelector from './QuranProgressSelector';
-import QuranProgressBar from './QuranProgressBar';
-import AchievementChart from './AchievementChart'; 
-import StudentBadges from './Student/StudentBadges';
-import StudentStatsCard from './Student/StudentStatsCard';
-import { getQuranProgress } from '../utils/quranUtils';
-import { formatName } from '../utils/formatters';
-import { COUNTRIES_LIST } from '../constants/countries';
+import { C } from "../../constants/colors";
+
+// الرجوع خطوة للخلف جغرافياً للوصول للمكونات العامة
+import { Btn, Card, Input, Select, PageHeader } from '../UI'; 
+import QuranProgressSelector from '../QuranProgressSelector';
+import QuranProgressBar from '../QuranProgressBar';
+import AchievementChart from '../AchievementChart'; 
+import { getQuranProgress } from '../../utils/quranUtils';
+import { formatName } from '../../utils/formatters';
+import { COUNTRIES_LIST } from '../../constants/countries';
+
+// المكونات الفرعية الموجودة مع الملف في نفس المجلد
+import StudentBadges from './StudentBadges';
+import StudentStatsCard from './StudentStatsCard';
 
 // توحيد الأيقونات بـ Lucide React
 import { 
   ArrowLeft, ArrowRight, Save, X, Edit3, 
   CheckCircle, AlertCircle, GraduationCap,
   BookOpen, Info, Banknote, CheckSquare,
-  UserCheck, MessageCircle, Phone, Calendar, Globe
+  UserCheck, MessageCircle
 } from 'lucide-react';
 
 export default function StudentProfile({ genderPolicy = 'mixed' }) {
