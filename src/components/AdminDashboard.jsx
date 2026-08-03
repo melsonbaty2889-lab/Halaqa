@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './Dashboard.module.css';
 import { supabase } from '../lib/supabase';
 import EmptyState from './EmptyState'; 
 
-// ✨ استيراد الأيقونات من Lucide React الحديثة
+// ✨ استيراد الأيقونات
 import { 
   Building2, 
   Clock, 
@@ -18,10 +18,12 @@ import {
   X,
   Infinity as InfinityIcon,
   Eye,
-  Unlock
+  Unlock,
+  Search,       // 🔍 أيقونة البحث
+  Filter        // 🌪️ أيقونة الفلترة
 } from 'lucide-react';
 
-// 🛡️ دالة أمان لمنع خطأ React #31 واستخراج النصوص أو الأسطر البرمجية بأمان
+// 🛡️ دالة أمان لمساعدات النصوص
 const getSafeText = (val, defaultVal = '') => {
   if (val === null || val === undefined) return defaultVal;
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -46,18 +48,22 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
+  // 🔍 حالات البحث والفلترة (المرحلة الأولى)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [planFilter, setPlanFilter] = useState('all'); // all, trial, lifetime, monthly, yearly
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  // 📥 جلب كافة البيانات من Supabase
+  // 📥 جلب البيانات من Supabase
   const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
     if (!isSilentRefresh) setLoading(true);
     else setRefreshing(true);
 
     try {
-      // 1️⃣ جلب طلبات الاشتراكات المعلقة
+      // 1️⃣ طلبات الاشتراكات المعلقة
       const { data: subData, error: subErr } = await supabase
         .from('saas_subscriptions')
         .select(`
@@ -70,7 +76,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (subErr) throw subErr;
 
-      // 2️⃣ جلب الأكاديميات النشطة
+      // 2️⃣ الأكاديميات النشطة
       const { data: activeData, error: aErr } = await supabase
         .from('academies')
         .select('*')
@@ -79,7 +85,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (aErr) throw aErr;
 
-      // 3️⃣ جلب الأكاديميات المحظورة / المعطلة
+      // 3️⃣ الأكاديميات المحظورة
       const { data: blockedData, error: bErr } = await supabase
         .from('academies')
         .select('*')
@@ -88,12 +94,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (bErr) throw bErr;
 
-      // 4️⃣ حساب إجمالي الأكاديميات
+      // 4️⃣ إجمالي العدد
       const { count } = await supabase
         .from('academies')
         .select('*', { count: 'exact', head: true });
 
-      // ربط بيانات المالكين (Profiles) بالأكاديميات
+      // ربط بيانات المالكين
       const allAcademies = [...(activeData || []), ...(blockedData || [])];
       const ownerIds = [...new Set(allAcademies.map(a => a.owner_id).filter(Boolean))];
       let profilesMap = {};
@@ -139,7 +145,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   useEffect(() => {
     fetchDashboardData();
 
-    // الاشتراك في التحديثات الفورية Realtime
     const realTimeChannel = supabase
       .channel('admin-dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saas_subscriptions' }, () => {
@@ -154,38 +159,64 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       supabase.removeChannel(realTimeChannel);
     };
   }, [fetchDashboardData]);
-  
-// ✅ الاعتماد والقبول عبر Transaction موحدة بطلب واحد
-const onApproveSubscription = async (subscription) => {
-  if (processingId) return;
-  setProcessingId(`approve-${subscription.id}`);
 
-  try {
-    const duration = getSafeText(subscription.plan_duration, 'monthly');
-    const academyId = subscription.academy_id || subscription.academies?.id;
-    const payerId = subscription.payer_id || subscription.profiles?.id;
+  // 🔍 دالة الفلترة الذكية المدمجة (تعتمد على useMemo لمنع استهلاك المعالج)
+  const filterList = useCallback((list) => {
+    return list.filter(item => {
+      const acadName = getSafeText(item.name || item.academies?.name).toLowerCase();
+      const ownerName = getSafeText(item.ownerProfile?.full_name || item.profiles?.full_name).toLowerCase();
+      const ownerEmail = getSafeText(item.ownerProfile?.email || item.profiles?.email).toLowerCase();
+      const q = searchQuery.trim().toLowerCase();
 
-    // استدعاء دالة الـ Postgres RPC لتمرير التغييرات في Atomic Transaction واحدة
-    const { error } = await supabase.rpc('approve_academy_subscription', {
-      p_subscription_id: subscription.id,
-      p_academy_id: academyId,
-      p_payer_id: payerId,
-      p_duration: duration
+      // شرط البحث بالاسم أو الإيميل
+      const matchesSearch = !q || acadName.includes(q) || ownerName.includes(q) || ownerEmail.includes(q);
+
+      // شرط الفلترة حسب الخطة
+      let matchesPlan = true;
+      if (planFilter === 'lifetime') {
+        matchesPlan = !item.trial_ends_at;
+      } else if (planFilter === 'trial') {
+        matchesPlan = Boolean(item.trial_ends_at);
+      }
+
+      return matchesSearch && matchesPlan;
     });
+  }, [searchQuery, planFilter]);
 
-    if (error) throw error;
+  const filteredActiveAcademies = useMemo(() => filterList(activeAcademies), [activeAcademies, filterList]);
+  const filteredBlockedAcademies = useMemo(() => filterList(blockedAcademies), [blockedAcademies, filterList]);
+  const filteredPendingSubscriptions = useMemo(() => filterList(pendingSubscriptions), [pendingSubscriptions, filterList]);
 
-    showToast(isRtl ? `تم تفعيل الاشتراك والأكاديمية بنجاح! 🎉` : "Subscription Approved 🎉");
-    fetchDashboardData(true);
-  } catch (error) {
-    console.error("Approve Error:", error.message || error);
-    showToast(isRtl ? "فشل اعتماد الطلب." : "Failed to approve.", "error");
-  } finally {
-    setProcessingId(null);
-  }
-};
+  // ✅ القبول والاعتماد
+  const onApproveSubscription = async (subscription) => {
+    if (processingId) return;
+    setProcessingId(`approve-${subscription.id}`);
 
-  // 🚫 رفض طلب الاشتراك
+    try {
+      const duration = getSafeText(subscription.plan_duration, 'monthly');
+      const academyId = subscription.academy_id || subscription.academies?.id;
+      const payerId = subscription.payer_id || subscription.profiles?.id;
+
+      const { error } = await supabase.rpc('approve_academy_subscription', {
+        p_subscription_id: subscription.id,
+        p_academy_id: academyId,
+        p_payer_id: payerId,
+        p_duration: duration
+      });
+
+      if (error) throw error;
+
+      showToast(isRtl ? `تم تفعيل الاشتراك والأكاديمية بنجاح! 🎉` : "Subscription Approved 🎉");
+      fetchDashboardData(true);
+    } catch (error) {
+      console.error("Approve Error:", error.message || error);
+      showToast(isRtl ? "فشل اعتماد الطلب." : "Failed to approve.", "error");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // 🚫 الرفض
   const onRejectSubscription = async (subscriptionId) => {
     if (processingId) return;
     if (!window.confirm(isRtl ? 'هل أنت تأكد من رفض هذا الطلب؟' : 'Reject this order?')) return;
@@ -207,7 +238,7 @@ const onApproveSubscription = async (subscription) => {
     }
   };
 
-  // ⛔ تعليق / حظر أكاديمية
+  // ⛔ الحظر
   const onDeactivateClick = async (id, ownerId) => {
     if (processingId) return;
     const targetAcademy = activeAcademies.find(a => a.id === id);
@@ -235,7 +266,7 @@ const onApproveSubscription = async (subscription) => {
     }
   };
 
-  // 🔓 إلغاء الحظر وتفعيل الأكاديمية
+  // 🔓 إلغاء الحظر
   const onActivateClick = async (id, ownerId) => {
     if (processingId) return;
     const targetAcademy = blockedAcademies.find(a => a.id === id);
@@ -263,7 +294,7 @@ const onApproveSubscription = async (subscription) => {
     }
   };
 
-  // ⏱️ تمديد اشتراك الأكاديمية
+  // ⏱️ التمديد
   const onExtendTrialClick = async (id, daysToAdd, isLifetime = false) => {
     if (processingId) return;
     setProcessingId(`extend-${id}`);
@@ -276,23 +307,40 @@ const onApproveSubscription = async (subscription) => {
       const baseDate = currentEnd > now ? currentEnd : now;
       baseDate.setDate(baseDate.getDate() + daysToAdd);
       newDateIso = baseDate.toISOString();
+    } else {
+      const lifetimeDate = new Date();
+      lifetimeDate.setDate(lifetimeDate.getDate() + 36500);
+      newDateIso = lifetimeDate.toISOString();
     }
 
     try {
-      const { error } = await supabase.from('academies').update({ trial_ends_at: newDateIso }).eq('id', id);
-      if (error) throw error;
+      const { error: acadErr } = await supabase
+        .from('academies')
+        .update({ trial_ends_at: isLifetime ? null : newDateIso })
+        .eq('id', id);
+      if (acadErr) throw acadErr;
 
-      showToast(isLifetime ? (isRtl ? "اشتراك دائم ♾️" : "Lifetime ♾️") : (isRtl ? `+${daysToAdd} يوم` : `+${daysToAdd} Days`));
+      await supabase
+        .from('saas_subscriptions')
+        .update({ 
+          expires_at: newDateIso,
+          status: 'active',
+          updated_at: new Date().toISOString()
+        })
+        .eq('academy_id', id);
+
+      showToast(isLifetime ? (isRtl ? "تم منح اشتراك دائم ♾️" : "Lifetime granted ♾️") : (isRtl ? `تم التمديد +${daysToAdd} يوم` : `+${daysToAdd} Days extended`));
       setExtendModalAcademy(null);
       fetchDashboardData(true);
     } catch (error) {
+      console.error("Extension Error:", error);
       showToast(isRtl ? "تعذر التمديد." : "Failed.", "error");
     } finally {
       setProcessingId(null);
     }
   };
 
-  // 📊 تصدير البيانات إلى CSV
+  // 📊 CSV Export
   const exportToCSV = () => {
     const allList = [...activeAcademies, ...blockedAcademies];
     if (allList.length === 0) return;
@@ -326,7 +374,7 @@ const onApproveSubscription = async (subscription) => {
   return (
     <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* 🔔 التنبيهات المؤقتة Toast */}
+      {/* 🔔 Toast */}
       {toast && (
         <div style={{
           position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999,
@@ -384,13 +432,78 @@ const onApproveSubscription = async (subscription) => {
         </div>
       </div>
 
+      {/* 🔍 ⚡ المرحلة الأولى: شريط البحث والفلترة السريعة */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '12px',
+        marginBottom: '20px',
+        background: '#1E293B',
+        padding: '12px 16px',
+        borderRadius: '12px',
+        border: '1px solid #334155',
+        alignItems: 'center'
+      }}>
+        {/* مربع البحث */}
+        <div style={{ flex: '1 1 260px', position: 'relative' }}>
+          <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: isRtl ? '12px' : 'auto', left: !isRtl ? '12px' : 'auto' }} />
+          <input
+            type="text"
+            placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك، أو البريد..." : "Search by academy, owner, or email..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: '#0F172A',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              padding: '10px 38px 10px 12px',
+              color: '#FFF',
+              fontSize: '0.85rem',
+              outline: 'none'
+            }}
+          />
+          {searchQuery && (
+            <X 
+              size={16} 
+              color="#94A3B8" 
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isRtl ? '12px' : 'auto', right: !isRtl ? '12px' : 'auto', cursor: 'pointer' }} 
+            />
+          )}
+        </div>
+
+        {/* قائمة اختيار الخطة */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Filter size={16} color="#94A3B8" />
+          <select
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value)}
+            style={{
+              background: '#0F172A',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              padding: '9px 12px',
+              color: '#FFF',
+              fontSize: '0.82rem',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="all">{isRtl ? 'جميع الخطت والاشتراكات' : 'All Plans'}</option>
+            <option value="trial">{isRtl ? 'مؤقتة / تجريبية' : 'Trial / Temporary'}</option>
+            <option value="lifetime">{isRtl ? 'حسابات دائمة (Lifetime) ♾️' : 'Lifetime'}</option>
+          </select>
+        </div>
+      </div>
+
       {/* 🗂️ شريط التبويبات Tabs */}
       <div className={styles.tabsBar}>
         {[
-          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: pendingSubscriptions.length + activeAcademies.length + blockedAcademies.length },
-          { id: 'pending', label: isRtl ? 'طلبات الاشتراكات المعلقة' : 'Pending Subscriptions', count: pendingSubscriptions.length },
-          { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: activeAcademies.length },
-          { id: 'blocked', label: isRtl ? 'المحظورة / المعطلة 🚫' : 'Blocked', count: blockedAcademies.length },
+          { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: filteredPendingSubscriptions.length + filteredActiveAcademies.length + filteredBlockedAcademies.length },
+          { id: 'pending', label: isRtl ? 'طلبات الاشتراكات المعلقة' : 'Pending Subscriptions', count: filteredPendingSubscriptions.length },
+          { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: filteredActiveAcademies.length },
+          { id: 'blocked', label: isRtl ? 'المحظورة / المعطلة 🚫' : 'Blocked', count: filteredBlockedAcademies.length },
           { id: 'expired', label: isRtl ? 'منتهية التجربة ⚠️' : 'Expired', count: expiredAcademies.length },
         ].map(tab => (
           <button
@@ -417,15 +530,15 @@ const onApproveSubscription = async (subscription) => {
             <span>{isRtl ? 'طلبات الاشتراك بانتظار المراجعة' : 'Pending Subscriptions'}</span>
           </h2>
 
-          {pendingSubscriptions.length === 0 ? (
+          {filteredPendingSubscriptions.length === 0 ? (
             <EmptyState 
               icon={<CheckCircle2 size={36} color="#10B981" />} 
-              title={isRtl ? "لا توجد طلبات معلقة" : "No Pending Requests"} 
-              description={isRtl ? "جميع الطلبات تم البت فيها." : "All caught up."} 
+              title={isRtl ? "لا توجد طلبات مطابقة" : "No Matching Requests"} 
+              description={isRtl ? "لم يتم العثور على نتائج للبحث الحالي." : "No results found for current query."} 
             />
           ) : (
             <div className={styles.requestsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-              {pendingSubscriptions.map(sub => {
+              {filteredPendingSubscriptions.map(sub => {
                 const academyName = getSafeText(sub.academies?.name, 'أكاديمية غير معروفة');
                 const payerName = getSafeText(sub.profiles?.full_name, 'غير معروف');
                 const payerPhone = getSafeText(sub.profiles?.phone);
@@ -458,12 +571,6 @@ const onApproveSubscription = async (subscription) => {
                         <span>طريقة الدفع:</span>
                         <span>{paymentGateway}</span>
                       </div>
-                      {sub.metadata?.coupon_code && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>كوبون الخصم:</span>
-                          <span style={{ color: '#FBBF24' }}>{getSafeText(sub.metadata.coupon_code)}</span>
-                        </div>
-                      )}
                     </div>
 
                     {receiptUrl ? (
@@ -501,47 +608,37 @@ const onApproveSubscription = async (subscription) => {
         </section>
       )}
 
-      {/* ✅ قسم الأكاديميات النشطة والمنتهية */}
+      {/* ✅ قسم الأكاديميات النشطة */}
       {(activeTab === 'all' || activeTab === 'active' || activeTab === 'expired') && (() => {
-        const filteredAcademies = activeAcademies.filter(academy => {
+        const academiesToRender = filteredActiveAcademies.filter(academy => {
           if (activeTab === 'expired') {
             return academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
           }
           return true;
         });
 
-        const sectionTitle = activeTab === 'expired' 
-          ? (isRtl ? 'الأكاديميات منتهية التجربة ⚠️' : 'Expired Trial Academies ⚠️')
-          : (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies ✅');
-
         return (
           <section style={{ marginBottom: '32px' }}>
             <h2 style={{ fontSize: '1.05rem', color: '#FFF', marginBottom: '14px' }}>
-              {sectionTitle}
+              {activeTab === 'expired' ? (isRtl ? 'الأكاديميات منتهية التجربة ⚠️' : 'Expired Trial Academies ⚠️') : (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies ✅')}
             </h2>
 
-            {filteredAcademies.length === 0 ? (
+            {academiesToRender.length === 0 ? (
               <EmptyState 
                 icon={<Building2 size={36} />} 
-                title={
-                  activeTab === 'expired' 
-                    ? (isRtl ? "لا توجد أكاديميات منتهية" : "No Expired Academies")
-                    : (isRtl ? "لا توجد أكاديميات نشطة" : "No Active Academies")
-                } 
-                description={isRtl ? "لا توجد نتائج مطابقة." : "No matching results."} 
+                title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} 
+                description={isRtl ? "جرب تعديل عبارة البحث." : "Try adjusting your search query."} 
               />
             ) : (
               <div className={styles.requestsGrid}>
-                {filteredAcademies.map(academy => {
+                {academiesToRender.map(academy => {
                   const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
 
                   return (
                     <div 
                       key={academy.id} 
                       className={styles.requestCard} 
-                      style={{ 
-                        borderRight: isExpired ? '4px solid #EF4444' : '4px solid #10B981' 
-                      }}
+                      style={{ borderRight: isExpired ? '4px solid #EF4444' : '4px solid #10B981' }}
                     >
                       <div className={styles.requestInfo}>
                         <h3 className={styles.requestName}>
@@ -563,34 +660,14 @@ const onApproveSubscription = async (subscription) => {
                         <button 
                           onClick={() => setExtendModalAcademy(academy)} 
                           disabled={processingId !== null} 
-                          style={{ 
-                            background: '#1E293B', 
-                            border: '1px solid #FBBF24', 
-                            color: '#FFF', 
-                            padding: '6px 10px', 
-                            borderRadius: '6px', 
-                            cursor: 'pointer', 
-                            fontSize: '0.75rem', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '4px' 
-                          }}
+                          style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
                           <Plus size={14} /> {isRtl ? 'تمديد' : 'Extend'}
                         </button>
                         <button 
                           onClick={() => onDeactivateClick(academy.id, academy.owner_id)} 
                           disabled={processingId !== null} 
-                          style={{ 
-                            background: '#EF4444', 
-                            border: 'none', 
-                            color: '#FFF', 
-                            padding: '6px 10px', 
-                            borderRadius: '6px', 
-                            cursor: 'pointer', 
-                            fontSize: '0.75rem' 
-                          }} 
-                          title={isRtl ? "حظر الأكاديمية" : "Block Academy"}
+                          style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }} 
                         >
                           <Ban size={14} />
                         </button>
@@ -611,11 +688,11 @@ const onApproveSubscription = async (subscription) => {
             <Ban size={20} />
             <span>{isRtl ? 'الأكاديميات المحظورة / المعطلة' : 'Blocked Academies'}</span>
           </h2>
-          {blockedAcademies.length === 0 ? (
-            <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد أكاديميات محظورة" : "No Blocked Academies"} description={isRtl ? "جميع الأكاديميات تعمل بشكل ممتاز." : "All academies active."} />
+          {filteredBlockedAcademies.length === 0 ? (
+            <EmptyState icon={<ShieldCheck size={36} color="#10B981" />} title={isRtl ? "لا توجد نتائج" : "No Results"} description={isRtl ? "لا توجد أكاديميات محظورة مطابقة للبحث." : "No matching blocked academies."} />
           ) : (
             <div className={styles.requestsGrid}>
-              {blockedAcademies.map(academy => (
+              {filteredBlockedAcademies.map(academy => (
                 <div key={academy.id} className={styles.requestCard} style={{ borderRight: '4px solid #EF4444', background: '#1E1B2E', opacity: 0.9 }}>
                   <div className={styles.requestInfo}>
                     <h3 className={styles.requestName} style={{ color: '#FCA5A5' }}>{getSafeText(academy.name, 'أكاديمية بدون اسم')}</h3>
@@ -642,7 +719,7 @@ const onApproveSubscription = async (subscription) => {
         </section>
       )}
 
-      {/* 🖼️ نافذة معاينة إشعار التحويل */}
+      {/* 🖼️ معاينة التحويل */}
       {receiptModalUrl && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '16px' }}>
           <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '16px', padding: '20px', maxWidth: '500px', width: '100%', color: '#FFF', position: 'relative', textAlign: 'center' }}>
