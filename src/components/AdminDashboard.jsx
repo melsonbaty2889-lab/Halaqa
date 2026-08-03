@@ -61,6 +61,10 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
+  // 📱 حالة نافذة إدخال رقم الهاتف
+  const [phoneModalData, setPhoneModalData] = useState(null); // { ownerId, academyName, currentPhone }
+  const [inputPhone, setInputPhone] = useState('');
+
   // 🔍 حالات البحث والفلترة والفرز والصفحات
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('all'); 
@@ -86,6 +90,42 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     const cleanPhone = phone.replace(/\D/g, '');
     const message = encodeURIComponent(`السلام عليكم، تواصل معك من إدارة منصة حلقات بشأن أكاديمية (${academyName})`);
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  };
+
+  // 💾 دالة حفظ رقم الهاتف من الـ Modal
+  const handleSavePhone = async () => {
+    if (!inputPhone.trim() || !phoneModalData) return;
+    
+    // تنظيف الرقم للتأكد من وجود كود الدولة
+    let cleanPhone = inputPhone.replace(/\D/g, '');
+    
+    setProcessingId('save-phone');
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone: cleanPhone })
+        .eq('id', phoneModalData.ownerId);
+  
+      if (error) throw error;
+  
+      showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح! 🎉" : "Phone saved successfully!");
+      
+      // تحديث حالة الـ Drawer إذا كان مفتوحاً لنفس الأكاديمية
+      if (selectedAcademyDetails && selectedAcademyDetails.owner_id === phoneModalData.ownerId) {
+        setSelectedAcademyDetails(prev => ({
+          ...prev,
+          ownerProfile: { ...prev.ownerProfile, phone: cleanPhone }
+        }));
+      }
+
+      setPhoneModalData(null);
+      setInputPhone('');
+      fetchDashboardData(true);
+    } catch (err) {
+      showToast(isRtl ? "فشل حفظ الرقم." : "Failed to save phone.", "error");
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   // 📥 جلب البيانات المرقّمة من Supabase
@@ -670,24 +710,16 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     </span>
                   </div>
 
-                  {/* 🕹️ أزرار التحكم بالكارت الرئيسي مع زر WhatsApp وإضافة الرقم */}
+                  {/* 🕹️ أزرار التحكم بالكارت الرئيسي */}
                   <div className={styles.cardActions}>
                     {academy.ownerProfile?.phone ? (
                       <button 
                         onClick={() => handleWhatsAppClick(academy.ownerProfile.phone, getSafeText(academy.name))}
                         title="تواصل عبر واتساب"
                         style={{ 
-                          background: '#25D366', 
-                          border: 'none', 
-                          color: '#FFF', 
-                          padding: '6px 10px', 
-                          borderRadius: '6px', 
-                          cursor: 'pointer', 
-                          fontSize: '0.75rem', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '4px',
-                          fontWeight: 'bold'
+                          background: '#25D366', border: 'none', color: '#FFF', padding: '6px 10px', 
+                          borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', 
+                          alignItems: 'center', gap: '4px', fontWeight: 'bold'
                         }}
                       >
                         <MessageCircle size={14} /> WhatsApp
@@ -695,30 +727,18 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     ) : (
                       <button 
                         onClick={() => {
-                          const newPhone = prompt(isRtl ? 'أدخل رقم هاتف المالك (مع كود الدولة مثل 2010...):' : 'Enter owner phone number:');
-                          if (newPhone) {
-                            supabase.from('profiles').update({ phone: newPhone }).eq('id', academy.owner_id)
-                              .then(({ error }) => {
-                                if (error) showToast(isRtl ? "فشل حفظ الرقم" : "Failed", "error");
-                                else {
-                                  showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح!" : "Phone saved!");
-                                  fetchDashboardData(true);
-                                }
-                              });
-                          }
+                          setPhoneModalData({
+                            ownerId: academy.owner_id,
+                            academyName: getSafeText(academy.name),
+                            currentPhone: academy.ownerProfile?.phone || ''
+                          });
+                          setInputPhone(academy.ownerProfile?.phone || '');
                         }}
                         title="إضافة رقم هاتف"
                         style={{ 
-                          background: 'rgba(239, 68, 68, 0.15)', 
-                          border: '1px solid #EF4444', 
-                          color: '#F87171', 
-                          padding: '6px 10px', 
-                          borderRadius: '6px', 
-                          cursor: 'pointer', 
-                          fontSize: '0.75rem', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '4px' 
+                          background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#F87171', 
+                          padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', 
+                          display: 'flex', alignItems: 'center', gap: '4px' 
                         }}
                       >
                         <MessageCircle size={14} /> + هاتف
@@ -801,21 +821,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                   <p style={{ margin: 0, fontSize: '0.75rem', color: '#EF4444' }}>⚠️ لا يوجد رقم هاتف مسجل للمالك</p>
                   <button
                     onClick={() => {
-                      const newPhone = prompt(isRtl ? 'أدخل رقم هاتف المالك:' : 'Enter owner phone number:');
-                      if (newPhone) {
-                        supabase.from('profiles').update({ phone: newPhone }).eq('id', selectedAcademyDetails.owner_id)
-                          .then(({ error }) => {
-                            if (error) showToast(isRtl ? "فشل حفظ الرقم" : "Failed", "error");
-                            else {
-                              showToast(isRtl ? "تم حفظ الرقم بنجاح!" : "Phone saved!");
-                              setSelectedAcademyDetails(prev => ({
-                                ...prev,
-                                ownerProfile: { ...prev.ownerProfile, phone: newPhone }
-                              }));
-                              fetchDashboardData(true);
-                            }
-                          });
-                      }
+                      setPhoneModalData({
+                        ownerId: selectedAcademyDetails.owner_id,
+                        academyName: getSafeText(selectedAcademyDetails.name),
+                        currentPhone: selectedAcademyDetails.ownerProfile?.phone || ''
+                      });
+                      setInputPhone(selectedAcademyDetails.ownerProfile?.phone || '');
                     }}
                     style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #EF4444', color: '#F87171', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}
                   >
@@ -886,6 +897,74 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             <button onClick={() => setExtendModalAcademy(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '0.8rem' }}>
               {isRtl ? 'إلغاء' : 'Cancel'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📱 Modal إضافة / تعديل رقم الهاتف */}
+      {phoneModalData && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 4000, padding: '16px'
+        }}>
+          <div style={{
+            background: '#0F172A', border: '1px solid #3B82F6', borderRadius: '16px',
+            padding: '24px', maxWidth: '400px', width: '100%', color: '#FFF'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageCircle color="#25D366" size={20} />
+                {isRtl ? 'إدخال رقم هاتف المالك' : 'Enter Owner Phone'}
+              </h3>
+              <button onClick={() => setPhoneModalData(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ color: '#94A3B8', fontSize: '0.82rem', marginBottom: '16px' }}>
+              {isRtl ? `أدخل رقم هاتف مالك أكاديمية (${phoneModalData.academyName}) لتفعيل التواصل عبر الواتساب:` : `Enter phone for (${phoneModalData.academyName}):`}
+            </p>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#CBD5E1', marginBottom: '6px' }}>
+                {isRtl ? 'رقم الهاتف (مع رمز الدولة مثل 2010...):' : 'Phone number (with country code):'}
+              </label>
+              <input
+                type="tel"
+                placeholder="201000000000"
+                value={inputPhone}
+                onChange={(e) => setInputPhone(e.target.value)}
+                style={{
+                  width: '100%', background: '#1E293B', border: '1px solid #334155',
+                  borderRadius: '8px', padding: '10px 12px', color: '#FFF', fontSize: '0.9rem',
+                  outline: 'none', direction: 'ltr', textAlign: 'left', boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={handleSavePhone}
+                disabled={processingId === 'save-phone'}
+                style={{
+                  flex: 1, background: '#25D366', color: '#FFF', border: 'none',
+                  padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                {processingId === 'save-phone' ? '...' : (isRtl ? 'حفظ وتفعيل الواتساب' : 'Save & Enable WhatsApp')}
+              </button>
+              <button
+                onClick={() => setPhoneModalData(null)}
+                style={{
+                  background: 'transparent', border: '1px solid #334155', color: '#94A3B8',
+                  padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem'
+                }}
+              >
+                {isRtl ? 'إلغاء' : 'Cancel'}
+              </button>
+            </div>
           </div>
         </div>
       )}
