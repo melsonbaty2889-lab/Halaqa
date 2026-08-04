@@ -69,8 +69,12 @@ export default function ForgotPassword({ onBackToLogin }) {
     setLoading(true);
     setStatus({ type: null, msg: '' });
 
+    // 🌟 1. نحصل على رمز اللغة الحالية
+    const currentLang = i18n?.language || 'ar';
+
+    // 🌟 2. نرسل رابط التوجيه لمسار تحديث كلمة المرور مع برامتر اللغة
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}?lang=${i18n?.language || 'ar'}`,
+      redirectTo: `${window.location.origin}/update-password?lang=${currentLang}`,
     });
 
     if (error) {
@@ -170,7 +174,6 @@ export default function ForgotPassword({ onBackToLogin }) {
             </form>
           </>
         ) : (
-          /* شاشة التأكيد والنجاح التفاعلية */
           <div style={{ textAlign: 'center', padding: '10px 0' }}>
             <CheckCircle2 size={54} color="#10B981" style={{ margin: '0 auto 16px auto', display: 'block' }} />
             <h2 style={{ color: '#E2E8F0', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
