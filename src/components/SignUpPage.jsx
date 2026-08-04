@@ -77,12 +77,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
           <p style={{ marginTop: 0 }}><strong>1. القبول بالشروط:</strong> بإنشاء حساب في منصة "الحلقة الذكية"، تلتزم بالامتثال لكافة القوانين واللوائح التنظيمية الخاصة بالتطبيق.</p>
           <p><strong>2. إدارة الحساب والأكاديميات:</strong> يتعهد المسؤول (Admin) بصحة البيانات المدخلة وتوفير بيئة تعليمية آمنة للطلاب والمعلمين داخل الحلقة.</p>
           <p><strong>3. حماية البيانات والملكيات:</strong> يلتزم التطبيق بحفظ السجلات والبيانات التعليمية وتأمينها وفق أعلى معايير التشفير الإلكتروني.</p>
+          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>آخر تحديث: أغسطس 2026</em></p>
         </>
       ) : (
         <>
           <p style={{ marginTop: 0 }}><strong>1. Acceptance of Terms:</strong> By creating an account on Smart Halaqa, you agree to comply with all applicable policies and regulations.</p>
           <p><strong>2. Account & Academy Management:</strong> Administrators undertake to provide accurate data and foster a secure learning environment for students and teachers.</p>
           <p><strong>3. Data Protection:</strong> The platform is committed to safeguarding educational records and user data using industry-standard encryption.</p>
+          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>Last updated: August 2026</em></p>
         </>
       )
     },
@@ -93,12 +95,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
           <p style={{ marginTop: 0 }}><strong>1. جمع البيانات:</strong> تجمع منصة "الحلقة الذكية" البيانات الأساسية (الاسم، البريد الإلكتروني، بيانات الحلقة) لتشغيل الخدمات وتسهيل التواصل.</p>
           <p><strong>2. حماية واستخدام البيانات:</strong> لا يتم مشاركة أو بيع بيانات الطلاب والمعلمين لأي أطراف خارجية، وتُستخدم حصراً لإدارة المنظومة التعليمية.</p>
           <p><strong>3. حقوق المستخدم:</strong> يحق لك طلب تصدير بياناتك أو طلب حذف الحساب نهائياً في أي وقت.</p>
+          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>آخر تحديث: أغسطس 2026</em></p>
         </>
       ) : (
         <>
           <p style={{ marginTop: 0 }}><strong>1. Data Collection:</strong> Smart Halaqa collects essential details (Name, Email, Academy info) strictly to operate and facilitate learning services.</p>
           <p><strong>2. Data Usage & Protection:</strong> Student and teacher information is never shared or sold to third parties, used solely for system management.</p>
           <p><strong>3. User Rights:</strong> You reserve the right to export your data or request complete account deletion at any time.</p>
+          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>Last updated: August 2026</em></p>
         </>
       )
     }
@@ -252,7 +256,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
         }
       `}</style>
 
-      {/* 🟢 تعديل 1: تثبيت زر اللغة (fixed) ليبقى طافياً وثابتاً أثناء التمرير */}
+      {/* زر اللغة العائم الثابت */}
       <button
         type="button"
         onClick={toggleLanguage}
@@ -562,10 +566,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
               {policyTexts[modalContent].content}
             </div>
 
-            {/* 🟢 تعديل 2: جعل الزر بعرض الحاوية بالكامل (width: 100%) لسهولة النقر في الهاتف */}
+            {/* زر الموافقة والتأكيد مع التحديد التلقائي لمربع الموافقة */}
             <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', background: '#090F16' }}>
               <button 
-                onClick={() => setModalContent(null)}
+                onClick={() => {
+                  setAcceptedTerms(true);
+                  setModalContent(null);
+                }}
                 style={{ 
                   width: '100%', 
                   padding: '12px 22px', 
