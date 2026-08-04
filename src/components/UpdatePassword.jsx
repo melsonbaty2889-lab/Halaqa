@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { Lock, Eye, EyeOff, CheckCircle2, AlertTriangle, User, Loader2, ShieldCheck, Globe, LogIn } from 'lucide-react';
+import { Lock, AlertCircle, ShieldCheck, Loader2, Globe, CheckCircle2 } from 'lucide-react';
 
 const SmartHalaqaProLogo = ({ size = 52 }) => (
   <div style={{
@@ -35,18 +35,26 @@ const SmartHalaqaProLogo = ({ size = 52 }) => (
   </div>
 );
 
-export default function UpdatePassword() {
+export default function UpdatePassword({ onSuccess }) {
   const { i18n } = useTranslation();
-  const isRtl = i18n?.language === 'ar';
-
-  const [user, setUser] = useState(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [fetchingUser, setFetchingUser] = useState(true);
+  const [isDone, setIsDone] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
-  const [isSuccess, setIsSuccess] = useState(false);
+
+  // 🌟 1. قراءة اللغة من رابط الـ URL بمجرد فتح الصفحة وتغيير لغة التطبيق بناءً عليها
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const langParam = searchParams.get('lang');
+    if (langParam && (langParam === 'ar' || langParam === 'en')) {
+      if (i18n?.changeLanguage) {
+        i18n.changeLanguage(langParam);
+      }
+    }
+  }, [i18n]);
+
+  const isRtl = i18n?.language === 'ar';
 
   useEffect(() => {
     document.title = isRtl ? 'تحديث كلمة المرور | الحلقة الذكية' : 'Update Password | Smart Halaqa';
@@ -57,93 +65,43 @@ export default function UpdatePassword() {
     if (i18n?.changeLanguage) i18n.changeLanguage(nextLang);
   };
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
-        if (error || !currentUser) {
-          setStatus({
-            type: 'error',
-            msg: isRtl ? 'رابط إعادة التعيين غير صالح أو انتهت صلاحيته' : 'Invalid or expired reset link'
-          });
-        } else {
-          setUser(currentUser);
-        }
-      } catch (err) {
-        console.error('Error fetching user:', err);
-      } finally {
-        setFetchingUser(false);
-      }
-    }
-    loadUser();
-  }, [isRtl]);
-
-  const getPasswordStrength = (pass) => {
-    let score = 0;
-    if (pass.length >= 8) score++;
-    if (/[A-Z]/.test(pass)) score++;
-    if (/[0-9]/.test(pass)) score++;
-    if (/[^A-Za-z0-9]/.test(pass)) score++;
-    return score;
-  };
-
-  const strength = getPasswordStrength(password);
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
 
-    if (password !== confirmPassword) {
-      setStatus({ 
-        type: 'error', 
-        msg: isRtl ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match' 
+    if (password.length < 6) {
+      setStatus({
+        type: 'error',
+        msg: isRtl ? 'كلمة المرور يجب أن لا تقل عن 6 أحرف' : 'Password must be at least 6 characters'
       });
       return;
     }
 
-    if (strength < 2) {
-      setStatus({ 
-        type: 'error', 
-        msg: isRtl ? 'يرجى اختيار كلمة مرور أقوى تحتوي على أرقام وحروف' : 'Please choose a stronger password' 
+    if (password !== confirmPassword) {
+      setStatus({
+        type: 'error',
+        msg: isRtl ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'
       });
       return;
     }
 
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.updateUser({ password });
 
-      if (error) throw error;
-
-      setIsSuccess(true);
-      setStatus({
-        type: 'success',
-        msg: isRtl ? 'تم تحديث كلمة المرور بنجاح!' : 'Password updated successfully!'
-      });
-
-    } catch (err) {
+    if (error) {
       setStatus({
         type: 'error',
-        msg: err.message || (isRtl ? 'حدث خطأ أثناء التحديث' : 'An error occurred')
+        msg: error.message || (isRtl ? 'فشل تحديث كلمة المرور' : 'Failed to update password')
       });
-    } finally {
-      setLoading(false);
+    } else {
+      setIsDone(true);
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+      }, 2500);
     }
+    setLoading(false);
   };
-
-  if (fetchingUser) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', color: '#CBD5E1', fontFamily: "'Cairo', sans-serif" }}>
-        <Loader2 size={24} className="spin-icon" style={{ marginLeft: '10px' }} />
-        <span>{isRtl ? 'جاري التحقق من الحساب...' : 'Verifying user account...'}</span>
-      </div>
-    );
-  }
-
-  // منع تكرار البريد إذا لم يملك المستخدم اسماً صريحاً
-  const rawName = user?.user_metadata?.full_name || user?.user_metadata?.name;
-  const userName = rawName && rawName !== user?.email ? rawName : (isRtl ? 'حساب المستخدم' : 'User Account');
 
   return (
     <div 
@@ -160,31 +118,9 @@ export default function UpdatePassword() {
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <style>{`
-        /* منع خلفية المتصفح البيضاء التلقائية (Autofill) وتثبيت اللون الداكن */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important;
-          transition: background-color 5000s ease-in-out 0s;
-        }
-        .form-input-field { 
-          width: 100%; 
-          padding: 14px 42px; 
-          border-radius: 10px; 
-          border: 1px solid #223147; 
-          background: #090F16 !important; 
-          color: #ffffff !important; 
-          font-size: 14px; 
-          outline: none; 
-          box-sizing: border-box; 
-        }
-        .form-input-field:focus { 
-          border-color: #D97706 !important; 
-          box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important; 
-          background: #090F16 !important;
-        }
+        input:-webkit-autofill { -webkit-text-fill-color: #ffffff !important; -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important; }
+        .form-input-field { width: 100%; padding: 14px 42px; border-radius: 10px; border: 1px solid #223147; background: #090F16; color: #ffffff; font-size: 14px; outline: none; box-sizing: border-box; }
+        .form-input-field:focus { border-color: #D97706 !important; box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
@@ -210,134 +146,66 @@ export default function UpdatePassword() {
           </p>
         </div>
 
-        <h2 style={{ color: '#E2E8F0', fontSize: '18px', textAlign: 'center', marginBottom: '16px', fontWeight: '600' }}>
-          {isRtl ? 'تحديث كلمة المرور' : 'Update Password'}
-        </h2>
+        {!isDone ? (
+          <>
+            <h2 style={{ color: '#E2E8F0', fontSize: '18px', textAlign: 'center', marginBottom: '6px', fontWeight: '600' }}>
+              {isRtl ? 'تعيين كلمة مرور جديدة' : 'Set New Password'}
+            </h2>
+            <p style={{ color: '#94A3B8', fontSize: '13px', textAlign: 'center', marginBottom: '22px', lineHeight: '1.6' }}>
+              {isRtl ? 'يرجى إدخال كلمة المرور الجديدة وتأكيدها' : 'Please enter and confirm your new password'}
+            </p>
 
-        {user && (
-          <div style={{ background: '#090F16', padding: '12px 14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', border: '1px solid #223147' }}>
-            <User style={{ color: '#D97706', flexShrink: 0 }} size={24} />
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ color: '#F8FAFC', fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {userName}
-              </div>
-              <div style={{ color: '#38BDF8', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user.email}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {status.msg && (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: '12px',
-            marginBottom: '20px',
-            fontSize: '13px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            color: status.type === 'success' ? '#34D399' : '#F87171',
-            border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
-          }}>
-            {status.type === 'success' ? <CheckCircle2 size={18} style={{ flexShrink: 0 }} /> : <AlertTriangle size={18} style={{ flexShrink: 0 }} />}
-            <div>{status.msg}</div>
-          </div>
-        )}
-
-        {user && !isSuccess && (
-          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            
-            <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={isRtl ? 'كلمة المرور الجديدة' : 'New Password'}
-                required
-                className="form-input-field"
-              />
-              <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B' }} />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-
-            {password && (
-              <div style={{ display: 'flex', gap: '5px', height: '4px', marginTop: '-6px' }}>
-                {[1, 2, 3, 4].map((step) => (
-                  <div 
-                    key={step} 
-                    style={{ 
-                      flex: 1, 
-                      borderRadius: '2px', 
-                      background: step <= strength 
-                        ? (strength <= 1 ? '#EF4444' : strength <= 3 ? '#F59E0B' : '#10B981') 
-                        : '#1E293B',
-                      transition: 'all 0.3s' 
-                    }} 
-                  />
-                ))}
+            {status.msg && (
+              <div style={{ padding: '12px 16px', borderRadius: '12px', marginBottom: '18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239, 68, 68, 0.1)', color: '#F87171', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                <div>{status.msg}</div>
               </div>
             )}
 
-            <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={isRtl ? 'تأكيد كلمة المرور' : 'Confirm Password'}
-                required
-                className="form-input-field"
-              />
-              <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: confirmPassword ? '#D97706' : '#64748B' }} />
-            </div>
+            <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  placeholder={isRtl ? 'كلمة المرور الجديدة' : 'New Password'}
+                  required
+                  className="form-input-field"
+                />
+                <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B' }} />
+              </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              style={{ padding: '14px', background: '#D97706', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)' }}
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={18} className="spin-icon" />
-                  <span>{isRtl ? 'جاري التحديث...' : 'Updating...'}</span>
-                </>
-              ) : (
-                <span>{isRtl ? 'تحديث كلمة المرور' : 'Update Password'}</span>
-              )}
-            </button>
-          </form>
-        )}
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                  placeholder={isRtl ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password'}
+                  required
+                  className="form-input-field"
+                />
+                <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: confirmPassword ? '#D97706' : '#64748B' }} />
+              </div>
 
-        {/* زر صريح بعد نجاح العملية للذهاب إلى تسجيل الدخول */}
-        {isSuccess && (
-          <a
-            href="/"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '14px',
-              background: '#D97706',
-              color: '#FFFFFF',
-              borderRadius: '12px',
-              fontWeight: 'bold',
-              fontSize: '15px',
-              textDecoration: 'none',
-              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
-              marginTop: '10px'
-            }}
-          >
-            <LogIn size={18} />
-            <span>{isRtl ? 'الذهاب لتسجيل الدخول' : 'Go to Login'}</span>
-          </a>
+              <button 
+                type="submit" 
+                disabled={loading}
+                style={{ padding: '14px', background: '#D97706', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                {loading ? <Loader2 size={18} className="spin-icon" /> : <span>{isRtl ? 'حفظ كلمة المرور' : 'Save New Password'}</span>}
+              </button>
+            </form>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '10px 0' }}>
+            <CheckCircle2 size={54} color="#10B981" style={{ margin: '0 auto 16px auto', display: 'block' }} />
+            <h2 style={{ color: '#E2E8F0', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+              {isRtl ? 'تم التحديث بنجاح!' : 'Updated Successfully!'}
+            </h2>
+            <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: '1.6' }}>
+              {isRtl ? 'تم تغيير كلمة المرور الخاصة بك، جارٍ تحويلك لتسجيل الدخول...' : 'Your password has been reset. Redirecting to login...'}
+            </p>
+          </div>
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '24px' }}>
