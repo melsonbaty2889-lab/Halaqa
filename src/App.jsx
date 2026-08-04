@@ -4,9 +4,9 @@ import { supabase } from './lib/supabase';
 import { useAcademy } from './context/AcademyContext';
 import { ROLES, getRouteForRole } from './constants/roles';
 import { 
-  FaSpinner, FaClock, FaSignOutAlt, FaWifi, 
-  FaExclamationTriangle, FaSync, FaBolt, FaCheckCircle, FaTimes, FaLock 
-} from 'react-icons/fa';
+  Loader2, Clock, LogOut, Wifi, 
+  AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock 
+} from 'lucide-react';
 
 import SplashScreen from './components/SplashScreen';
 import LoginPage from './components/LoginPage';
@@ -25,7 +25,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   if (appState === 'LOADING') {
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#C9A84C' }}>
-        <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
+        <Loader2 className="fa-spin" size={28} />
       </div>
     );
   }
@@ -53,7 +53,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
         direction: 'rtl'
       }}>
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '20px', borderRadius: '50%', marginBottom: '16px', color: '#EF4444' }}>
-          <FaLock size={40} />
+          <Lock size={40} />
         </div>
         <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>غير مصرح لك بالوصول لهذه الشاشة</h2>
         <p style={{ color: '#94A3B8', fontSize: '14px', maxWidth: '400px', marginBottom: '24px' }}>
@@ -133,7 +133,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             cursor: 'pointer'
           }}
         >
-          <FaTimes />
+          <X size={20} />
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -146,10 +146,9 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.5rem',
             margin: '0 auto 12px'
           }}>
-            <FaBolt />
+            <Zap size={24} />
           </div>
           <h2 style={{ color: '#FFF', fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
             ترقية حساب الأكاديمية
@@ -168,15 +167,15 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
         }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#E2E8F0', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FaCheckCircle style={{ color: '#10B981' }} />
+              <CheckCircle size={18} style={{ color: '#10B981' }} />
               <span>إدارة عدد غير محدود من الطلاب والحلقات</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FaCheckCircle style={{ color: '#10B981' }} />
+              <CheckCircle size={18} style={{ color: '#10B981' }} />
               <span>تقارير وأداء لحظي وتنبيهات مستمرة</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FaCheckCircle style={{ color: '#10B981' }} />
+              <CheckCircle size={18} style={{ color: '#10B981' }} />
               <span>دعم فني وتحديثات مستمرة للباقة الاحترافية</span>
             </li>
           </ul>
@@ -233,7 +232,7 @@ class GlobalErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-          <FaExclamationTriangle style={{ color: '#EF4444', fontSize: '48px', marginBottom: '15px' }} />
+          <AlertTriangle size={48} style={{ color: '#EF4444', marginBottom: '15px' }} />
           <h2 style={{ color: '#EF4444', marginBottom: '10px' }}>حدث خطأ تقني في النظام</h2>
           <div style={{ background: '#1E293B', padding: '15px', borderRadius: '8px', border: '1px solid #334155', maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: '#F87171', overflowX: 'auto' }}>
             {this.state.error?.toString()}
@@ -301,7 +300,7 @@ function MainContent() {
         color: goldColor,
         gap: '12px'
       }}>
-        <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
+        <Loader2 className="fa-spin" size={28} />
         <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', system-ui, sans-serif" }}>جاري تحميل المنظومة...</span>
       </div>
     );
@@ -311,9 +310,23 @@ function MainContent() {
   if (appState === 'UNAUTHENTICATED') {
     return (
       <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
-        {authView === 'login' && <LoginPage onSwitchToSignUp={() => setAuthView('signup')} onSwitchToForgotPassword={() => setAuthView('forgot')} />}
-        {authView === 'signup' && <SignUpPage onSwitchToLogin={() => setAuthView('login')} />}
-        {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
+        {authView === 'login' && (
+          <LoginPage 
+            onSwitchToSignUp={() => setAuthView('signup')} 
+            onForgotPassword={() => setAuthView('forgot')}
+            onLoginSuccess={() => refreshStatus && refreshStatus()}
+          />
+        )}
+        {authView === 'signup' && (
+          <SignUpPage 
+            onSwitchToLogin={() => setAuthView('login')} 
+          />
+        )}
+        {authView === 'forgot' && (
+          <ForgotPassword 
+            onBackToLogin={() => setAuthView('login')} 
+          />
+        )}
       </div>
     );
   }
@@ -323,7 +336,7 @@ function MainContent() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
         <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '1px solid #1E293B' }}>
-          <FaClock style={{ color: goldColor, fontSize: '40px', marginBottom: '20px' }} />
+          <Clock size={40} style={{ color: goldColor, marginBottom: '20px' }} />
           <h2 style={{ color: '#fff', marginBottom: '15px' }}>طلبك قيد المراجعة</h2>
           <p style={{ color: '#94a3b8', marginBottom: '25px', lineHeight: '1.6' }}>
             حسابك ({profile?.full_name || 'المستخدم'}) وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.
@@ -335,7 +348,7 @@ function MainContent() {
               disabled={isRefreshing}
               style={{ padding: '10px 20px', background: goldColor, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <FaSync className={isRefreshing ? 'fa-spin' : ''} />
+              <RefreshCw size={16} className={isRefreshing ? 'fa-spin' : ''} />
               {isRefreshing ? 'جاري الفحص...' : 'تحديث حالة الطلب'}
             </button>
             
@@ -343,7 +356,7 @@ function MainContent() {
               onClick={logout} 
               style={{ padding: '10px 20px', background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <FaSignOutAlt />
+              <LogOut size={16} />
               تسجيل الخروج
             </button>
           </div>
@@ -352,13 +365,13 @@ function MainContent() {
     );
   }
 
-  // 4. السوبر أدمن (مغلف بمكون الحماية)
+  // 4. السوبر أدمن
   if (appState === 'SUPER_ADMIN') {
     return (
       <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
         <Suspense fallback={
           <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: goldColor }}>
-            <FaSpinner className="fa-spin" style={{ fontSize: '32px' }} />
+            <Loader2 className="fa-spin" size={32} />
           </div>
         }>
           <AdminDashboard session={{ user }} onLogout={logout} />
@@ -372,14 +385,14 @@ function MainContent() {
     return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
   }
 
-  // 6. الدخول النشط والكامل (مغلف بمكون الحماية للأدوار المعرفية)
+  // 6. الدخول النشط والكامل
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
       <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
         {!isOnline && (
-          <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold' }}>
-            <FaWifi style={{ marginLeft: '8px' }} /> انقطع الاتصال بالإنترنت.
+          <div style={{ background: '#EF4444', color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Wifi size={18} /> انقطع الاتصال بالإنترنت.
           </div>
         )}
         <MainApp 
@@ -399,7 +412,7 @@ function MainContent() {
 
   return (
     <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px', textAlign: 'center' }}>
-      <FaExclamationTriangle style={{ fontSize: '40px', color: '#EF4444', marginBottom: '15px' }} />
+      <AlertTriangle size={40} style={{ color: '#EF4444', marginBottom: '15px' }} />
       <h2 style={{ marginBottom: '10px' }}>عذراً، حالة النظام غير معرفة</h2>
       <p style={{ color: '#9CA3AF', marginBottom: '5px' }}>App State: <strong style={{ color: goldColor }}>{appState || 'NULL'}</strong></p>
       <p style={{ color: '#9CA3AF', marginBottom: '20px' }}>إذا ظهرت هذه الرسالة، فهذا يعني أن النظام لا يستطيع تصنيف حسابك حالياً.</p>
@@ -413,7 +426,6 @@ export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
-  // 🔒 الفحص الفوري المباشر وجود جلسة مسجلة بـ LocalStorage لـ Supabase
   const hasExistingSupabaseToken = () => {
     if (typeof window === 'undefined') return false;
     try {
@@ -430,7 +442,6 @@ export default function App() {
     return false;
   };
 
-  // 🎯 التحكم القاطع بالسبلاش
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     
@@ -443,7 +454,7 @@ export default function App() {
       } catch (e) {
         console.warn(e);
       }
-      return false; // إلغاء إظهار الشاشة الافتتاحية فوراً
+      return false;
     }
 
     return true;
