@@ -201,83 +201,42 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
     }
   };
 
-  const getInputStyle = (hasError) => ({
-    width: '100%',
-    padding: '16px 45px 16px 45px',
-    borderRadius: '12px',
-    border: hasError ? '1px solid #EF4444' : '1px solid #1E2D3D',
-    background: '#0B131E',
-    color: '#ffffff',
-    fontSize: '15px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.2s ease'
-  });
-
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#090E17', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
-      
-      <style>{`
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px #0B131E inset !important;
-          transition: background-color 5000s ease-in-out 0s;
-        }
-      `}</style>
-
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center bg-[#090E17] p-5 font-['Cairo',sans-serif]" 
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       {/* الكارت الرئيسي */}
-      <div style={{ width: '100%', maxWidth: '420px', background: '#0D1724', padding: '35px 24px', borderRadius: '24px', border: '1px solid #1A2738', boxShadow: '0 20px 40px rgba(0,0,0,0.6)', position: 'relative' }}>
+      <div className="w-full max-w-[420px] bg-[#0D1724] p-[35px_24px] rounded-[24px] border border-[#1A2738] shadow-[0_20px_40px_rgba(0,0,0,0.6)] relative">
         
         {/* زر تغيير اللغة */}
-        <div style={{ position: 'absolute', top: '-50px', [isRtl ? 'left' : 'right']: '0' }}>
+        <div className={`absolute -top-12 ${isRtl ? 'left-0' : 'right-0'}`}>
           <button 
             type="button"
             onClick={toggleLanguage}
-            style={{ 
-              background: '#0D1724', 
-              border: '1px solid #1E2D3D', 
-              color: '#D4AF37', 
-              padding: '6px 14px', 
-              borderRadius: '20px', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px' 
-            }}
+            className="bg-[#0D1724] border border-[#1E2D3D] text-[#D4AF37] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 hover:bg-[#152336] transition-colors"
           >
             <Globe className="w-4 h-4" /> {isRtl ? 'English' : 'العربية'}
           </button>
         </div>
 
         {/* العناوين */}
-        <h2 style={{ color: '#D4AF37', fontSize: '28px', textAlign: 'center', marginBottom: '6px', fontWeight: 'bold' }}>
+        <h2 className="text-[#D4AF37] text-2xl sm:text-3xl text-center mb-1.5 font-bold">
           {isRtl ? 'تسجيل الدخول' : 'Sign In'}
         </h2>
-        <p style={{ color: '#94A3B8', fontSize: '14px', textAlign: 'center', marginBottom: '24px' }}>
+        <p className="text-[#94A3B8] text-sm text-center mb-6">
           {isRtl ? 'مرحباً بك في الحلقة الذكية' : 'Welcome back to Smart Halaqa'}
         </p>
 
         {/* تنبيه الأخطاء أو النجاح */}
         {status.msg && (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: '12px',
-            marginBottom: '20px',
-            fontSize: '13px',
-            lineHeight: '1.6',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '10px',
-            background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            color: status.type === 'success' ? '#34D399' : '#F87171',
-            border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <div className={`p-3.5 rounded-xl mb-5 text-xs sm:text-sm leading-relaxed flex flex-col items-center gap-2.5 border ${
+            status.type === 'success' 
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
+              : 'bg-red-500/10 text-red-400 border-red-500/25'
+          }`}>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{status.msg}</span>
             </div>
 
@@ -287,18 +246,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
                 type="button"
                 onClick={handleResendEmail}
                 disabled={resendLoading}
-                style={{
-                  background: '#D4AF37',
-                  color: '#0B131E',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '6px 14px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  cursor: resendLoading ? 'not-allowed' : 'pointer',
-                  marginTop: '4px',
-                  opacity: resendLoading ? 0.6 : 1
-                }}
+                className="bg-[#D4AF37] text-[#0B131E] rounded-lg px-3.5 py-1.5 text-xs font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed mt-1"
               >
                 {resendLoading 
                   ? (isRtl ? 'جاري الإرسال...' : 'Sending...') 
@@ -309,10 +257,10 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         )}
 
         {/* نموذج الدخول */}
-        <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
           
           {/* حقل البريد الإلكتروني */}
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <input 
               type="email"
               value={email}
@@ -321,27 +269,24 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
                 if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
               }}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
-              style={getInputStyle(!!fieldErrors.email)}
+              className={`w-full py-4 px-11 rounded-xl bg-[#0B131E] text-white text-sm outline-none transition-colors border ${
+                fieldErrors.email ? 'border-red-500' : 'border-[#1E2D3D] focus:border-[#D4AF37]'
+              }`}
             />
             <Mail 
-              className="w-5 h-5"
-              style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                [isRtl ? 'right' : 'left']: '16px', 
-                color: fieldErrors.email ? '#EF4444' : '#64748B' 
-              }} 
+              className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 ${
+                isRtl ? 'right-4' : 'left-4'
+              } ${fieldErrors.email ? 'text-red-500' : 'text-slate-500'}`} 
             />
             {fieldErrors.email && (
-              <span style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', display: 'block', paddingRight: '4px' }}>
+              <span className="text-xs text-red-500 mt-1 block px-1">
                 {fieldErrors.email}
               </span>
             )}
           </div>
 
           {/* حقل كلمة المرور */}
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <input 
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -350,103 +295,76 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
                 if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
               }}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
-              style={getInputStyle(!!fieldErrors.password)}
+              className={`w-full py-4 px-11 rounded-xl bg-[#0B131E] text-white text-sm outline-none transition-colors border ${
+                fieldErrors.password ? 'border-red-500' : 'border-[#1E2D3D] focus:border-[#D4AF37]'
+              }`}
             />
             <Lock 
-              className="w-5 h-5"
-              style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                [isRtl ? 'right' : 'left']: '16px', 
-                color: fieldErrors.password ? '#EF4444' : '#64748B' 
-              }} 
+              className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 ${
+                isRtl ? 'right-4' : 'left-4'
+              } ${fieldErrors.password ? 'text-red-500' : 'text-slate-500'}`} 
             />
-            <span 
+            <button 
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '16px', color: '#64748B', cursor: 'pointer' }}
+              className={`absolute top-1/2 -translate-y-1/2 ${
+                isRtl ? 'left-4' : 'right-4'
+              } text-slate-500 hover:text-slate-300 transition-colors`}
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </span>
+            </button>
             {fieldErrors.password && (
-              <span style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', display: 'block', paddingRight: '4px' }}>
+              <span className="text-xs text-red-500 mt-1 block px-1">
                 {fieldErrors.password}
               </span>
             )}
           </div>
 
           {/* تذكرني + نسيت كلمة المرور */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
-            <label style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <div className="flex justify-between items-center text-xs sm:text-sm">
+            <label className="text-slate-400 flex items-center gap-1.5 cursor-pointer select-none">
               <input 
                 type="checkbox" 
                 checked={rememberMe} 
                 onChange={(e) => setRememberMe(e.target.checked)}
-                style={{ accentColor: '#D4AF37' }} 
+                className="accent-[#D4AF37] w-4 h-4 rounded" 
               />
               {isRtl ? 'تذكرني' : 'Remember me'}
             </label>
 
-            <span 
+            <button 
+              type="button"
               onClick={onForgotPassword}
-              style={{ color: '#94A3B8', cursor: 'pointer' }}
+              className="text-slate-400 hover:text-[#D4AF37] transition-colors"
             >
               {isRtl ? 'استعادة كلمة المرور' : 'Forgot Password?'}
-            </span>
+            </button>
           </div>
 
           {/* زر تسجيل الدخول الرئيسي */}
           <button 
             type="submit" 
             disabled={loading}
-            style={{ 
-              padding: '15px', 
-              background: '#D4AF37', 
-              color: '#0B131E', 
-              border: 'none', 
-              borderRadius: '12px', 
-              fontWeight: 'bold', 
-              fontSize: '16px',
-              cursor: loading ? 'not-allowed' : 'pointer', 
-              marginTop: '6px',
-              opacity: loading ? 0.7 : 1,
-              transition: 'background 0.2s ease'
-            }}
+            className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#c3a030] text-[#0B131E] rounded-xl font-bold text-base transition-colors mt-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? (isRtl ? 'جاري التحقق...' : 'Signing in...') : (isRtl ? 'تسجيل الدخول' : 'Log In')}
           </button>
         </form>
 
         {/* فاصل OR */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: '22px 0', gap: '10px' }}>
-          <div style={{ flex: 1, height: '1px', background: '#1E2D3D' }}></div>
-          <span style={{ color: '#64748B', fontSize: '12px', fontWeight: 'bold' }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: '#1E2D3D' }}></div>
+        <div className="flex items-center my-5 gap-2.5">
+          <div className="flex-1 h-px bg-[#1E2D3D]"></div>
+          <span className="text-slate-500 text-xs font-bold">OR</span>
+          <div className="flex-1 h-px bg-[#1E2D3D]"></div>
         </div>
 
-        {/* زر Google بحجم أيقونة ملائم */}
+        {/* زر Google */}
         <button 
           onClick={handleGoogleLogin}
           type="button"
           disabled={loading}
-          style={{ 
-            width: '100%',
-            padding: '14px', 
-            background: '#FFFFFF', 
-            color: '#1E293B', 
-            border: 'none', 
-            borderRadius: '12px', 
-            fontWeight: 'bold', 
-            fontSize: '15px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-          }}
+          className="w-full py-3.5 bg-white hover:bg-slate-100 text-slate-800 rounded-xl font-bold text-sm flex items-center justify-center gap-2.5 shadow-md transition-colors"
         >
-          {/* SVG Google أصلية عالية الجودة لتطابق التصميم القياسي */}
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -457,10 +375,14 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         </button>
 
         {/* رابط إنشاء حساب */}
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <span onClick={onSwitchToSignUp} style={{ color: '#D4AF37', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}>
+        <div className="mt-6 text-center">
+          <button 
+            type="button"
+            onClick={onSwitchToSignUp} 
+            className="text-[#D4AF37] hover:underline text-sm font-bold bg-transparent border-0 cursor-pointer"
+          >
             {isRtl ? 'إنشاء حساب معلم/مشرف' : 'Create Teacher/Admin Account'}
-          </span>
+          </button>
         </div>
 
       </div>
