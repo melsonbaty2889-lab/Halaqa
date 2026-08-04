@@ -204,7 +204,20 @@ export default function SignUpPage({ onSwitchToLogin }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', padding: '20px', fontFamily: "'Cairo', sans-serif", position: 'relative' }} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div 
+      style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)', 
+        padding: '60px 20px 40px 20px', 
+        fontFamily: "'Cairo', sans-serif", 
+        position: 'relative',
+        boxSizing: 'border-box'
+      }} 
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       
       <style>{`
         input:-webkit-autofill,
@@ -266,7 +279,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
         <span>{isRtl ? 'English' : 'العربية'}</span>
       </button>
 
-      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px 30px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', margin: 'auto 0' }}>
         
         {/* الشعار والهوية البصرية */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
@@ -344,7 +357,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* الاسم الكامل */}
+          {/* الاسم الكامل (ضبط أيقونة المستخدم يمين في AR ويسار في EN) */}
           <div style={{ position: 'relative' }}>
             <input 
               type="text"
@@ -354,10 +367,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               className="form-input-field"
             />
-            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: fullName ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
+            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: fullName ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
-          {/* البريد الإلكتروني */}
+          {/* البريد الإلكتروني (ضبط أيقونة البريد يمين في AR ويسار في EN) */}
           <div style={{ position: 'relative' }}>
             <input 
               type="email"
@@ -367,10 +380,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               className="form-input-field"
             />
-            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
+            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
-          {/* كلمة المرور */}
+          {/* كلمة المرور (أيقونة العين يسار في AR ويمين في EN) */}
           <div style={{ position: 'relative' }}>
             <input 
               type={showPassword ? 'text' : 'password'}
@@ -481,10 +494,16 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </button>
         </form>
 
-        {/* شارة الأمان والتقييد المشفر */}
+        {/* شارة الأمان والتقييد المشفر - مع محاذاة LTR دقيقة لـ 256-bit */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '16px' }}>
           <ShieldCheck size={14} color="#10B981" />
-          <span>{isRtl ? 'بياناتك مشفرة ومحمية وفق معايير 256-bit' : '256-bit SSL encrypted & secure data'}</span>
+          <span>
+            {isRtl ? (
+              <>بياناتك مشفرة ومحمية وفق معايير <span dir="ltr">256-bit</span></>
+            ) : (
+              '256-bit SSL encrypted & secure data'
+            )}
+          </span>
         </div>
 
         <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
