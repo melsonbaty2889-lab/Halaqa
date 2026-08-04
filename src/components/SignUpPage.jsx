@@ -252,12 +252,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
         }
       `}</style>
 
-      {/* زر التبديل السريع بين اللغات العائم */}
+      {/* 🟢 تعديل 1: تثبيت زر اللغة (fixed) ليبقى طافياً وثابتاً أثناء التمرير */}
       <button
         type="button"
         onClick={toggleLanguage}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: '20px',
           [isRtl ? 'left' : 'right']: '20px',
           background: '#0F172A',
@@ -272,7 +272,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           gap: '6px',
           cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          zIndex: 10
+          zIndex: 50
         }}
       >
         <Globe size={14} color="#D97706" />
@@ -357,7 +357,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* الاسم الكامل (ضبط أيقونة المستخدم يمين في AR ويسار في EN) */}
+          {/* الاسم الكامل */}
           <div style={{ position: 'relative' }}>
             <input 
               type="text"
@@ -370,7 +370,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: fullName ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
-          {/* البريد الإلكتروني (ضبط أيقونة البريد يمين في AR ويسار في EN) */}
+          {/* البريد الإلكتروني */}
           <div style={{ position: 'relative' }}>
             <input 
               type="email"
@@ -383,7 +383,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
-          {/* كلمة المرور (أيقونة العين يسار في AR ويمين في EN) */}
+          {/* كلمة المرور */}
           <div style={{ position: 'relative' }}>
             <input 
               type={showPassword ? 'text' : 'password'}
@@ -461,7 +461,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             </label>
           </div>
 
-          {/* زر التسجيل مع أيقونة دوران ناعمة عند التحميل */}
+          {/* زر التسجيل */}
           <button 
             type="submit" 
             disabled={loading}
@@ -494,7 +494,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </button>
         </form>
 
-        {/* شارة الأمان والتقييد المشفر - مع محاذاة LTR دقيقة لـ 256-bit */}
+        {/* شارة الأمان */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '16px' }}>
           <ShieldCheck size={14} color="#10B981" />
           <span>
@@ -562,10 +562,22 @@ export default function SignUpPage({ onSwitchToLogin }) {
               {policyTexts[modalContent].content}
             </div>
 
-            <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', textAlign: isRtl ? 'left' : 'right', background: '#090F16' }}>
+            {/* 🟢 تعديل 2: جعل الزر بعرض الحاوية بالكامل (width: 100%) لسهولة النقر في الهاتف */}
+            <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', background: '#090F16' }}>
               <button 
                 onClick={() => setModalContent(null)}
-                style={{ padding: '8px 22px', background: '#D97706', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '12px 22px', 
+                  background: '#D97706', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: '10px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold', 
+                  fontSize: '14px',
+                  textAlign: 'center'
+                }}
               >
                 {isRtl ? 'فهمت وموافق' : 'I Understand'}
               </button>
