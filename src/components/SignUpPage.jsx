@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
+import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, ShieldCheck, Globe, Loader2 } from 'lucide-react';
 
-// 🌟 شعار منصة الحلقة الذكية الرسمي
+// 🌟 شعار منصة الحلقة الذكية الرسمي (مع إغلاق الدائرة الذهبية بالكامل)
 const SmartHalaqaProLogo = ({ size = 52 }) => (
   <div style={{
     width: `${size}px`,
@@ -29,7 +29,8 @@ const SmartHalaqaProLogo = ({ size = 52 }) => (
           <stop offset="100%" stopColor="#047857" />
         </linearGradient>
       </defs>
-      <circle cx="16" cy="16" r="12" stroke="url(#goldGrad)" strokeWidth="1.8" strokeDasharray="40 12" />
+      {/* الدائرة الذهبية المكتملة */}
+      <circle cx="16" cy="16" r="12" stroke="url(#goldGrad)" strokeWidth="1.8" />
       <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
       <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
     </svg>
@@ -49,6 +50,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [status, setStatus] = useState({ type: null, msg: '' });
   const [modalContent, setModalContent] = useState(null); // 'terms' | 'privacy' | null
 
+  // التبديل السريع بين اللغات
+  const toggleLanguage = () => {
+    const nextLang = isRtl ? 'en' : 'ar';
+    if (i18n?.changeLanguage) {
+      i18n.changeLanguage(nextLang);
+    }
+  };
+
   // فحص شروط كلمة المرور
   const rules = {
     length: password.length >= 8,
@@ -60,7 +69,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const validRulesCount = Object.values(rules).filter(Boolean).length;
   const isPasswordValid = validRulesCount === 4;
 
-  // إعداد نصوص الشروط والسياسات متعددة اللغات
   const policyTexts = {
     terms: {
       title: isRtl ? 'الشروط والأحكام - الحلقة الذكية' : 'Terms of Service - Smart Halaqa',
@@ -189,18 +197,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
-  const inputStyle = {
-    width: '100%',
-    padding: '14px 42px',
-    borderRadius: '10px',
-    border: '1px solid #223147',
-    background: '#090F16',
-    color: '#ffffff',
-    fontSize: '14px',
-    outline: 'none',
-    boxSizing: 'border-box'
-  };
-
   const getStrengthColor = () => {
     if (validRulesCount <= 1) return '#EF4444';
     if (validRulesCount <= 3) return '#F59E0B';
@@ -208,7 +204,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', padding: '20px', fontFamily: "'Cairo', sans-serif", position: 'relative' }} dir={isRtl ? 'rtl' : 'ltr'}>
       
       <style>{`
         input:-webkit-autofill,
@@ -218,7 +214,57 @@ export default function SignUpPage({ onSwitchToLogin }) {
           -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important;
           transition: background-color 5000s ease-in-out 0s;
         }
+        .form-input-field {
+          width: 100%;
+          padding: 14px 42px;
+          border-radius: 10px;
+          border: 1px solid #223147;
+          background: #090F16;
+          color: #ffffff;
+          font-size: 14px;
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-input-field:focus {
+          border-color: #D97706 !important;
+          box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .spin-icon {
+          animation: spin 1s linear infinite;
+        }
       `}</style>
+
+      {/* زر التبديل السريع بين اللغات العائم */}
+      <button
+        type="button"
+        onClick={toggleLanguage}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          [isRtl ? 'left' : 'right']: '20px',
+          background: '#0F172A',
+          border: '1px solid #1E293B',
+          color: '#CBD5E1',
+          padding: '8px 14px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          zIndex: 10
+        }}
+      >
+        <Globe size={14} color="#D97706" />
+        <span>{isRtl ? 'English' : 'العربية'}</span>
+      </button>
 
       <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
         
@@ -306,9 +352,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setFullName(e.target.value)}
               placeholder={isRtl ? 'الاسم الكامل' : 'Full Name'}
               required
-              style={inputStyle}
+              className="form-input-field"
             />
-            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
+            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: fullName ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
           {/* البريد الإلكتروني */}
@@ -319,9 +365,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
-              style={inputStyle}
+              className="form-input-field"
             />
-            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
+            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
           {/* كلمة المرور */}
@@ -332,11 +378,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               required
-              style={inputStyle}
+              className="form-input-field"
             />
             <span 
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: password ? '#D97706' : '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </span>
@@ -346,7 +392,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {password && (
             <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               
-              {/* شريط قوة كلمة المرور */}
               <div style={{ height: '4px', width: '100%', background: '#1E293B', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ 
                   height: '100%', 
@@ -403,7 +448,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             </label>
           </div>
 
-          {/* زر التسجيل */}
+          {/* زر التسجيل مع أيقونة دوران ناعمة عند التحميل */}
           <button 
             type="submit" 
             disabled={loading}
@@ -418,12 +463,29 @@ export default function SignUpPage({ onSwitchToLogin }) {
               cursor: loading ? 'not-allowed' : 'pointer', 
               marginTop: '6px',
               transition: 'background 0.2s ease',
-              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)'
+              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
             }}
           >
-            {loading ? (isRtl ? 'جاري إنشاء الحساب...' : 'Creating Account...') : (isRtl ? 'إنشاء حساب' : 'Sign Up')}
+            {loading ? (
+              <>
+                <Loader2 size={18} className="spin-icon" />
+                <span>{isRtl ? 'جاري إنشاء الحساب...' : 'Creating Account...'}</span>
+              </>
+            ) : (
+              <span>{isRtl ? 'إنشاء حساب' : 'Sign Up'}</span>
+            )}
           </button>
         </form>
+
+        {/* شارة الأمان والتقييد المشفر */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '16px' }}>
+          <ShieldCheck size={14} color="#10B981" />
+          <span>{isRtl ? 'بياناتك مشفرة ومحمية وفق معايير 256-bit' : '256-bit SSL encrypted & secure data'}</span>
+        </div>
 
         <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
           {isRtl ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
@@ -434,7 +496,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       </div>
 
-      {/* النافذة المنبثقة الذكية للشروط والسياسات (مترجمة ديناميكياً مع ضبط الاتجاه) */}
+      {/* النافذة المنبثقة للشروط والسياسات */}
       {modalContent && policyTexts[modalContent] && (
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
