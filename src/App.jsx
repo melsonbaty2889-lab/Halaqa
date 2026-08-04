@@ -285,7 +285,17 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  if (authView === 'update_password') return <UpdatePassword />;
+  // 🌟 التعديل هنا: إضافة onSuccess للتوجيه بعد نجاح تحديث كلمة المرور
+  if (authView === 'update_password') {
+    return (
+      <UpdatePassword 
+        onSuccess={() => {
+          setAuthView('login');
+          if (refreshStatus) refreshStatus();
+        }} 
+      />
+    );
+  }
 
   // 1. حالة تحميل البيانات
   if (appState === 'LOADING') {
