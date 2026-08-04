@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
+import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { t, i18n } = useTranslation();
@@ -11,6 +11,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
@@ -27,6 +28,16 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const handleSignUp = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
+
+    if (!acceptedTerms) {
+      setStatus({
+        type: 'error',
+        msg: isRtl 
+          ? 'يجب الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
+          : 'You must accept the Terms and Privacy Policy to continue.'
+      });
+      return;
+    }
 
     if (!isPasswordValid) {
       setStatus({
@@ -54,6 +65,23 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       if (error) throw error;
 
+      // حفظ موافقة الشروط والسياسات في جدول user_consents
+      if (data?.user) {
+        await supabase.from('user_consents').insert([
+          {
+            user_id: data.user.id,
+            consent_type: 'terms_and_privacy',
+            version: 'v1.0',
+            is_accepted: true,
+            language_code: isRtl ? 'ar' : 'en',
+            metadata: {
+              role: 'admin',
+              signup_source: 'web'
+            }
+          }
+        ]);
+      }
+
       setStatus({
         type: 'success',
         msg: isRtl 
@@ -64,6 +92,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setFullName('');
       setEmail('');
       setPassword('');
+      setAcceptedTerms(false);
 
     } catch (err) {
       setStatus({
@@ -123,7 +152,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             color: status.type === 'success' ? '#34D399' : '#F87171',
             border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
           }}>
-            <FaExclamationCircle style={{ flexShrink: 0 }} />
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <div>{status.msg}</div>
           </div>
         )}
@@ -140,7 +169,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               style={inputStyle}
             />
-            <FaUser style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
+            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
           </div>
 
           {/* البريد الإلكتروني */}
@@ -153,7 +182,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               style={inputStyle}
             />
-            <FaEnvelope style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
+            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B' }} />
           </div>
 
           {/* كلمة المرور */}
@@ -168,29 +197,50 @@ export default function SignUpPage({ onSwitchToLogin }) {
             />
             <span 
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </span>
           </div>
 
           {/* الشروط التفاعلية الحية */}
-{password && (
-  <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
-    <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-      {rules.length ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? '8+ أحرف' : '8+ Characters'}
-    </div>
-    <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-      {rules.capital ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? 'حرف كبير (A-Z)' : 'Uppercase (A-Z)'}
-    </div>
-    <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-      {rules.number ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? 'رقم (0-9)' : 'Number (0-9)'}
-    </div>
-    <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-      {rules.special ? <FaCheckCircle /> : <FaTimesCircle />} {isRtl ? 'رمز خاص (@!#)' : 'Symbol (@!#)'}
-    </div>
-  </div>
-)}
+          {password && (
+            <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+              <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.length ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? '8+ أحرف' : '8+ Characters'}
+              </div>
+              <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.capital ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'حرف كبير (A-Z)' : 'Uppercase (A-Z)'}
+              </div>
+              <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.number ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'رقم (0-9)' : 'Number (0-9)'}
+              </div>
+              <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {rules.special ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'رمز خاص (@!#)' : 'Symbol (@!#)'}
+              </div>
+            </div>
+          )}
+
+          {/* مربع الموافقة على الشروط والأحكام */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#94A3B8' }}>
+            <input 
+              type="checkbox" 
+              id="terms"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              style={{ accentColor: '#D97706', width: '16px', height: '16px', cursor: 'pointer' }}
+            />
+            <label htmlFor="terms" style={{ cursor: 'pointer' }}>
+              {isRtl ? 'أوافق على ' : 'I agree to the '}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#F59E0B', textDecoration: 'underline' }}>
+                {isRtl ? 'الشروط والأحكام' : 'Terms of Service'}
+              </a>
+              {isRtl ? ' و ' : ' and '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#F59E0B', textDecoration: 'underline' }}>
+                {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}
+              </a>
+            </label>
+          </div>
 
           {/* زر التسجيل */}
           <button 
