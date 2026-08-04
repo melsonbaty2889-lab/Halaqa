@@ -1,7 +1,40 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, BookOpen, Sparkles } from 'lucide-react';
+import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
+
+// 🌟 شعار منصة الحلقة الذكية الرسمي
+const SmartHalaqaProLogo = ({ size = 52 }) => (
+  <div style={{
+    width: `${size}px`,
+    height: `${size}px`,
+    borderRadius: '14px',
+    background: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
+    border: '1px solid rgba(45, 212, 191, 0.35)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 8px 20px rgba(15, 118, 110, 0.35)',
+    flexShrink: 0
+  }}>
+    <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="50%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <linearGradient id="emeraldGrad" x1="8" y1="12" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#047857" />
+        </linearGradient>
+      </defs>
+      <circle cx="16" cy="16" r="12" stroke="url(#goldGrad)" strokeWidth="1.8" strokeDasharray="40 12" />
+      <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
+      <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
+    </svg>
+  </div>
+);
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { i18n } = useTranslation();
@@ -14,10 +47,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
-
-  // نافذة الشروط والسياسات المنبثقة
   const [modalContent, setModalContent] = useState(null); // 'terms' | 'privacy' | null
 
+  // فحص شروط كلمة المرور
   const rules = {
     length: password.length >= 8,
     capital: /[A-Z]/.test(password),
@@ -25,7 +57,44 @@ export default function SignUpPage({ onSwitchToLogin }) {
     special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
   };
 
-  const isPasswordValid = rules.length && rules.capital && rules.number && rules.special;
+  const validRulesCount = Object.values(rules).filter(Boolean).length;
+  const isPasswordValid = validRulesCount === 4;
+
+  // إعداد نصوص الشروط والسياسات متعددة اللغات
+  const policyTexts = {
+    terms: {
+      title: isRtl ? 'الشروط والأحكام - الحلقة الذكية' : 'Terms of Service - Smart Halaqa',
+      content: isRtl ? (
+        <>
+          <p style={{ marginTop: 0 }}><strong>1. القبول بالشروط:</strong> بإنشاء حساب في منصة "الحلقة الذكية"، تلتزم بالامتثال لكافة القوانين واللوائح التنظيمية الخاصة بالتطبيق.</p>
+          <p><strong>2. إدارة الحساب والأكاديميات:</strong> يتعهد المسؤول (Admin) بصحة البيانات المدخلة وتوفير بيئة تعليمية آمنة للطلاب والمعلمين داخل الحلقة.</p>
+          <p><strong>3. حماية البيانات والملكيات:</strong> يلتزم التطبيق بحفظ السجلات والبيانات التعليمية وتأمينها وفق أعلى معايير التشفير الإلكتروني.</p>
+        </>
+      ) : (
+        <>
+          <p style={{ marginTop: 0 }}><strong>1. Acceptance of Terms:</strong> By creating an account on Smart Halaqa, you agree to comply with all applicable policies and regulations.</p>
+          <p><strong>2. Account & Academy Management:</strong> Administrators undertake to provide accurate data and foster a secure learning environment for students and teachers.</p>
+          <p><strong>3. Data Protection:</strong> The platform is committed to safeguarding educational records and user data using industry-standard encryption.</p>
+        </>
+      )
+    },
+    privacy: {
+      title: isRtl ? 'سياسة الخصوصية - الحلقة الذكية' : 'Privacy Policy - Smart Halaqa',
+      content: isRtl ? (
+        <>
+          <p style={{ marginTop: 0 }}><strong>1. جمع البيانات:</strong> تجمع منصة "الحلقة الذكية" البيانات الأساسية (الاسم، البريد الإلكتروني، بيانات الحلقة) لتشغيل الخدمات وتسهيل التواصل.</p>
+          <p><strong>2. حماية واستخدام البيانات:</strong> لا يتم مشاركة أو بيع بيانات الطلاب والمعلمين لأي أطراف خارجية، وتُستخدم حصراً لإدارة المنظومة التعليمية.</p>
+          <p><strong>3. حقوق المستخدم:</strong> يحق لك طلب تصدير بياناتك أو طلب حذف الحساب نهائياً في أي وقت.</p>
+        </>
+      ) : (
+        <>
+          <p style={{ marginTop: 0 }}><strong>1. Data Collection:</strong> Smart Halaqa collects essential details (Name, Email, Academy info) strictly to operate and facilitate learning services.</p>
+          <p><strong>2. Data Usage & Protection:</strong> Student and teacher information is never shared or sold to third parties, used solely for system management.</p>
+          <p><strong>3. User Rights:</strong> You reserve the right to export your data or request complete account deletion at any time.</p>
+        </>
+      )
+    }
+  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -35,8 +104,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setStatus({
         type: 'error',
         msg: isRtl 
-          ? 'يجب الموافقة على الشروط والأحكام وسياسة الخصوصية الخاصة بالحلقة الذكية للمتابعة.' 
-          : 'You must accept Smart Halaqa Terms and Privacy Policy to continue.'
+          ? 'يجب الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
+          : 'You must accept the Terms and Privacy Policy to continue.'
       });
       return;
     }
@@ -132,6 +201,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
     boxSizing: 'border-box'
   };
 
+  const getStrengthColor = () => {
+    if (validRulesCount <= 1) return '#EF4444';
+    if (validRulesCount <= 3) return '#F59E0B';
+    return '#10B981';
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070C12', padding: '20px', fontFamily: "'Cairo', sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
       
@@ -147,28 +222,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
         
-        {/* الشعار والهوية البصرية منصة الحلقة الذكية */}
+        {/* الشعار والهوية البصرية */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
-          <div style={{ 
-            width: '52px', 
-            height: '52px', 
-            borderRadius: '14px', 
-            background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            boxShadow: '0 8px 20px rgba(217, 119, 6, 0.3)',
-            marginBottom: '12px',
-            position: 'relative'
-          }}>
-            <BookOpen size={26} color="#FFFFFF" />
-            <Sparkles size={14} color="#FDE68A" style={{ position: 'absolute', top: '6px', right: '6px' }} />
-          </div>
-          <h1 style={{ color: '#F8FAFC', fontSize: '22px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
+          <SmartHalaqaProLogo size={52} />
+          <h1 style={{ color: '#F8FAFC', fontSize: '22px', fontWeight: 'bold', margin: '12px 0 4px 0' }}>
             {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
           </h1>
-          <p style={{ color: '#D97706', fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px', margin: 0, textTransform: 'uppercase' }}>
-            {isRtl ? 'منصة إدارة المقارئ والأكاديميات' : 'Academy Management Platform'}
+          <p style={{ color: '#D97706', fontSize: '11px', fontWeight: '700', letterSpacing: '0.8px', margin: 0, textTransform: 'uppercase' }}>
+            {isRtl ? 'منصة إدارة المقارئ والأكاديميات' : 'ACADEMY MANAGEMENT PLATFORM'}
           </p>
         </div>
 
@@ -281,25 +342,38 @@ export default function SignUpPage({ onSwitchToLogin }) {
             </span>
           </div>
 
-          {/* شروط كلمة المرور الحية */}
+          {/* مؤشر وشروط كلمة المرور الحية */}
           {password && (
-            <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
-              <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.length ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? '8+ أحرف' : '8+ Characters'}
+            <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              
+              {/* شريط قوة كلمة المرور */}
+              <div style={{ height: '4px', width: '100%', background: '#1E293B', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ 
+                  height: '100%', 
+                  width: `${(validRulesCount / 4) * 100}%`, 
+                  background: getStrengthColor(), 
+                  transition: 'all 0.3s ease' 
+                }} />
               </div>
-              <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.capital ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'حرف كبير (A-Z)' : 'Uppercase (A-Z)'}
-              </div>
-              <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.number ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'رقم (0-9)' : 'Number (0-9)'}
-              </div>
-              <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {rules.special ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'رمز خاص (@!#)' : 'Symbol (@!#)'}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+                <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {rules.length ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? '8+ أحرف' : '8+ Characters'}
+                </div>
+                <div style={{ color: rules.capital ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {rules.capital ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'حرف كبير (A-Z)' : 'Uppercase (A-Z)'}
+                </div>
+                <div style={{ color: rules.number ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {rules.number ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'رقم (0-9)' : 'Number (0-9)'}
+                </div>
+                <div style={{ color: rules.special ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {rules.special ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? 'رمز خاص (@!#)' : 'Symbol (@!#)'}
+                </div>
               </div>
             </div>
           )}
 
-          {/* مربع الموافقة مع الروابط المنبثقة */}
+          {/* مربع الموافقة على الشروط والسياسات */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#94A3B8' }}>
             <input 
               type="checkbox" 
@@ -360,21 +434,25 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       </div>
 
-      {/* النافذة المنبثقة للشروط والسياسات الخاصة بـ الحلقة الذكية */}
-      {modalContent && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
+      {/* النافذة المنبثقة الذكية للشروط والسياسات (مترجمة ديناميكياً مع ضبط الاتجاه) */}
+      {modalContent && policyTexts[modalContent] && (
+        <div 
+          dir={isRtl ? 'rtl' : 'ltr'}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+        >
           <div style={{
             background: '#0F172A',
             border: '1px solid #1E293B',
@@ -384,37 +462,26 @@ export default function SignUpPage({ onSwitchToLogin }) {
             maxHeight: '80vh',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
           }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #1E293B', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ color: '#F8FAFC', margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
-                {modalContent === 'terms' 
-                  ? (isRtl ? 'الشروط والأحكام - الحلقة الذكية' : 'Terms of Service - Smart Halaqa')
-                  : (isRtl ? 'سياسة الخصوصية - الحلقة الذكية' : 'Privacy Policy - Smart Halaqa')
-                }
+                {policyTexts[modalContent].title}
               </h3>
-              <button onClick={() => setModalContent(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
+              <button 
+                onClick={() => setModalContent(null)} 
+                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', display: 'flex' }}
+              >
                 <X size={20} />
               </button>
             </div>
             
-            <div style={{ padding: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.8', overflowY: 'auto' }}>
-              {modalContent === 'terms' ? (
-                <div>
-                  <p style={{ marginTop: 0 }}><strong>1. القبول بالشروط:</strong> بإنشاء حساب في منصة "الحلقة الذكية"، تلتزم بالامتثال لكافة القوانين واللوائح التنظيمية الخاصة بالتطبيق.</p>
-                  <p><strong>2. إدارة الحساب والأكاديميات:</strong> يتعهد المسؤول (Admin) بصحة البيانات المدخلة وتوفير بيئة تعليمية آمنة للطلاب والمعلمين داخل الحلقة.</p>
-                  <p><strong>3. حماية البيانات والملكيات:</strong> يلتزم التطبيق بحفظ السجلات والبيانات التعليمية وتأمينها وفق أعلى معايير التشفير.</p>
-                </div>
-              ) : (
-                <div>
-                  <p style={{ marginTop: 0 }}><strong>1. جمع البيانات:</strong> تجمع منصة "الحلقة الذكية" البيانات الأساسية (الاسم، البريد الإلكتروني، بيانات الحلقة) لتشغيل الخدمات وتسهيل التواصل.</p>
-                  <p><strong>2. استخدام البيانات:</strong> لا يتم مشاركة أو بيع بيانات الطلاب والمعلمين مع أي أطراف خارجية، وتُستخدم حصراً لإدارة المنظومة التعليمية.</p>
-                  <p><strong>3. حقوق المستخدم:</strong> يحق لك طلب تصدير بياناتك أو حذف الحساب بشكل كامل في أي وقت.</p>
-                </div>
-              )}
+            <div style={{ padding: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.8', overflowY: 'auto', textAlign: isRtl ? 'right' : 'left' }}>
+              {policyTexts[modalContent].content}
             </div>
 
-            <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', textAlign: 'right', background: '#090F16' }}>
+            <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', textAlign: isRtl ? 'left' : 'right', background: '#090F16' }}>
               <button 
                 onClick={() => setModalContent(null)}
                 style={{ padding: '8px 22px', background: '#D97706', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
