@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { Lock, Eye, EyeOff, CheckCircle2, AlertTriangle, User, Loader2, ShieldCheck, Globe } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle2, AlertTriangle, User, Loader2, ShieldCheck, Globe, LogIn } from 'lucide-react';
 
-// 🌟 شعار منصة الحلقة الذكية الموحد
 const SmartHalaqaProLogo = ({ size = 52 }) => (
   <div style={{
     width: `${size}px`,
@@ -47,6 +46,7 @@ export default function UpdatePassword() {
   const [loading, setLoading] = useState(false);
   const [fetchingUser, setFetchingUser] = useState(true);
   const [status, setStatus] = useState({ type: null, msg: '' });
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     document.title = isRtl ? 'تحديث كلمة المرور | الحلقة الذكية' : 'Update Password | Smart Halaqa';
@@ -116,14 +116,11 @@ export default function UpdatePassword() {
 
       if (error) throw error;
 
+      setIsSuccess(true);
       setStatus({
         type: 'success',
-        msg: isRtl ? '✅ تم تحديث كلمة المرور بنجاح! جاري تحويلك...' : '✅ Password updated successfully! Redirecting...'
+        msg: isRtl ? 'تم تحديث كلمة المرور بنجاح!' : 'Password updated successfully!'
       });
-
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
 
     } catch (err) {
       setStatus({
@@ -144,7 +141,9 @@ export default function UpdatePassword() {
     );
   }
 
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
+  // منع تكرار البريد إذا لم يملك المستخدم اسماً صريحاً
+  const rawName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+  const userName = rawName && rawName !== user?.email ? rawName : (isRtl ? 'حساب المستخدم' : 'User Account');
 
   return (
     <div 
@@ -161,9 +160,31 @@ export default function UpdatePassword() {
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <style>{`
-        input:-webkit-autofill { -webkit-text-fill-color: #ffffff !important; -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important; }
-        .form-input-field { width: 100%; padding: 14px 42px; border-radius: 10px; border: 1px solid #223147; background: #090F16; color: #ffffff; font-size: 14px; outline: none; box-sizing: border-box; }
-        .form-input-field:focus { border-color: #D97706 !important; box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important; }
+        /* منع خلفية المتصفح البيضاء التلقائية (Autofill) وتثبيت اللون الداكن */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+        .form-input-field { 
+          width: 100%; 
+          padding: 14px 42px; 
+          border-radius: 10px; 
+          border: 1px solid #223147; 
+          background: #090F16 !important; 
+          color: #ffffff !important; 
+          font-size: 14px; 
+          outline: none; 
+          box-sizing: border-box; 
+        }
+        .form-input-field:focus { 
+          border-color: #D97706 !important; 
+          box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important; 
+          background: #090F16 !important;
+        }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
@@ -225,7 +246,7 @@ export default function UpdatePassword() {
           </div>
         )}
 
-        {user && (
+        {user && !isSuccess && (
           <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
             <div style={{ position: 'relative' }}>
@@ -292,6 +313,31 @@ export default function UpdatePassword() {
               )}
             </button>
           </form>
+        )}
+
+        {/* زر صريح بعد نجاح العملية للذهاب إلى تسجيل الدخول */}
+        {isSuccess && (
+          <a
+            href="/"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '14px',
+              background: '#D97706',
+              color: '#FFFFFF',
+              borderRadius: '12px',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
+              marginTop: '10px'
+            }}
+          >
+            <LogIn size={18} />
+            <span>{isRtl ? 'الذهاب لتسجيل الدخول' : 'Go to Login'}</span>
+          </a>
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '24px' }}>
