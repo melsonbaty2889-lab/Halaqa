@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
+import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, BookOpen, Sparkles } from 'lucide-react';
 
 export default function SignUpPage({ onSwitchToLogin }) {
   const { i18n } = useTranslation();
@@ -15,7 +15,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
-  // حالة التحكم في النافذة المنبثقة للسياسات والشروط
+  // نافذة الشروط والسياسات المنبثقة
   const [modalContent, setModalContent] = useState(null); // 'terms' | 'privacy' | null
 
   const rules = {
@@ -35,8 +35,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setStatus({
         type: 'error',
         msg: isRtl 
-          ? 'يجب الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
-          : 'You must accept the Terms and Privacy Policy to continue.'
+          ? 'يجب الموافقة على الشروط والأحكام وسياسة الخصوصية الخاصة بالحلقة الذكية للمتابعة.' 
+          : 'You must accept Smart Halaqa Terms and Privacy Policy to continue.'
       });
       return;
     }
@@ -76,6 +76,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             is_accepted: true,
             language_code: isRtl ? 'ar' : 'en',
             metadata: {
+              platform: 'Smart Halaqa',
               role: 'admin',
               signup_source: 'web'
             }
@@ -86,8 +87,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setStatus({
         type: 'success',
         msg: isRtl 
-          ? '✅ تم إنشاء الحساب بنجاح! تفقد بريدك الإلكتروني لتأكيد الحساب.' 
-          : '✅ Account created successfully! Please check your email to confirm.'
+          ? '✅ تم إنشاء حسابك في الحلقة الذكية بنجاح! تفقد بريدك الإلكتروني للتأكيد.' 
+          : '✅ Account created successfully in Smart Halaqa! Please check your email.'
       });
 
       setFullName('');
@@ -105,7 +106,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
-  // التسجيل عبر Google
   const handleGoogleSignUp = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -147,15 +147,39 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
         
-        {/* العنوان والوصف */}
-        <h2 style={{ color: '#F8FAFC', fontSize: '24px', textAlign: 'center', marginBottom: '8px', fontWeight: 'bold' }}>
+        {/* الشعار والهوية البصرية منصة الحلقة الذكية */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ 
+            width: '52px', 
+            height: '52px', 
+            borderRadius: '14px', 
+            background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 8px 20px rgba(217, 119, 6, 0.3)',
+            marginBottom: '12px',
+            position: 'relative'
+          }}>
+            <BookOpen size={26} color="#FFFFFF" />
+            <Sparkles size={14} color="#FDE68A" style={{ position: 'absolute', top: '6px', right: '6px' }} />
+          </div>
+          <h1 style={{ color: '#F8FAFC', fontSize: '22px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
+            {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
+          </h1>
+          <p style={{ color: '#D97706', fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px', margin: 0, textTransform: 'uppercase' }}>
+            {isRtl ? 'منصة إدارة المقارئ والأكاديميات' : 'Academy Management Platform'}
+          </p>
+        </div>
+
+        <h2 style={{ color: '#E2E8F0', fontSize: '18px', textAlign: 'center', marginBottom: '6px', fontWeight: '600' }}>
           {isRtl ? 'إنشاء حساب جديد' : 'Create New Account'}
         </h2>
-        <p style={{ color: '#94A3B8', fontSize: '13px', textAlign: 'center', marginBottom: '25px' }}>
-          {isRtl ? 'قم بإنشاء حسابك للبدء في إدارة أكاديميتك' : 'Sign up to start managing your academy'}
+        <p style={{ color: '#94A3B8', fontSize: '13px', textAlign: 'center', marginBottom: '22px' }}>
+          {isRtl ? 'ابدأ في إدارة حلقتك التعليمية بذكاء وسهولة' : 'Start managing your academy effortlessly'}
         </p>
 
-        {/* خيار التسجيل بواسطة Google */}
+        {/* التسجيل عبر Google */}
         <button
           type="button"
           onClick={handleGoogleSignUp}
@@ -173,7 +197,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             justifyContent: 'center',
             gap: '10px',
             cursor: 'pointer',
-            marginBottom: '20px',
+            marginBottom: '18px',
             transition: 'all 0.2s'
           }}
         >
@@ -186,7 +210,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'المتابعة بواسطة Google' : 'Continue with Google'}
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
           <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
           <span style={{ color: '#64748B', fontSize: '12px' }}>{isRtl ? 'أو عبر البريد' : 'or via email'}</span>
           <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
@@ -196,7 +220,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           <div style={{
             padding: '12px 16px',
             borderRadius: '12px',
-            marginBottom: '20px',
+            marginBottom: '18px',
             fontSize: '13px',
             lineHeight: '1.6',
             display: 'flex',
@@ -211,7 +235,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </div>
         )}
 
-        <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           {/* الاسم الكامل */}
           <div style={{ position: 'relative' }}>
@@ -285,7 +309,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               style={{ accentColor: '#D97706', width: '16px', height: '16px', cursor: 'pointer', marginTop: '3px' }}
             />
             <label htmlFor="terms" style={{ cursor: 'pointer', lineHeight: '1.5' }}>
-              {isRtl ? 'أوافق على ' : 'I agree to the '}
+              {isRtl ? 'أوافق على ' : 'I agree to '}
               <button 
                 type="button"
                 onClick={() => setModalContent('terms')}
@@ -301,6 +325,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               >
                 {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}
               </button>
+              {isRtl ? ' لمنصة الحلقة الذكية' : ' for Smart Halaqa'}
             </label>
           </div>
 
@@ -317,7 +342,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               fontWeight: 'bold', 
               fontSize: '15px',
               cursor: loading ? 'not-allowed' : 'pointer', 
-              marginTop: '8px',
+              marginTop: '6px',
               transition: 'background 0.2s ease',
               boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)'
             }}
@@ -326,7 +351,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </button>
         </form>
 
-        <div style={{ marginTop: '22px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
           {isRtl ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
           <span onClick={onSwitchToLogin} style={{ color: '#F59E0B', cursor: 'pointer', fontWeight: 'bold' }}>
             {isRtl ? 'تسجيل الدخول' : 'Log In'}
@@ -335,7 +360,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       </div>
 
-      {/* النافذة المنبثقة للشروط والسياسات (Modal) */}
+      {/* النافذة المنبثقة للشروط والسياسات الخاصة بـ الحلقة الذكية */}
       {modalContent && (
         <div style={{
           position: 'fixed',
@@ -343,7 +368,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.75)',
+          background: 'rgba(0,0,0,0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -354,7 +379,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             background: '#0F172A',
             border: '1px solid #1E293B',
             borderRadius: '16px',
-            maxWidth: '500px',
+            maxWidth: '520px',
             width: '100%',
             maxHeight: '80vh',
             display: 'flex',
@@ -362,29 +387,39 @@ export default function SignUpPage({ onSwitchToLogin }) {
             overflow: 'hidden'
           }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #1E293B', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ color: '#F8FAFC', margin: 0, fontSize: '16px' }}>
+              <h3 style={{ color: '#F8FAFC', margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
                 {modalContent === 'terms' 
-                  ? (isRtl ? 'الشروط والأحكام' : 'Terms of Service')
-                  : (isRtl ? 'سياسة الخصوصية' : 'Privacy Policy')
+                  ? (isRtl ? 'الشروط والأحكام - الحلقة الذكية' : 'Terms of Service - Smart Halaqa')
+                  : (isRtl ? 'سياسة الخصوصية - الحلقة الذكية' : 'Privacy Policy - Smart Halaqa')
                 }
               </h3>
               <button onClick={() => setModalContent(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
-            <div style={{ padding: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.7', overflowY: 'auto' }}>
+            
+            <div style={{ padding: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.8', overflowY: 'auto' }}>
               {modalContent === 'terms' ? (
-                <p>{isRtl ? 'هنا تنص أحكام وشروط استخدام منصة إدارة الأكاديمية...' : 'Here are the terms and conditions for using the academy management platform...'}</p>
+                <div>
+                  <p style={{ marginTop: 0 }}><strong>1. القبول بالشروط:</strong> بإنشاء حساب في منصة "الحلقة الذكية"، تلتزم بالامتثال لكافة القوانين واللوائح التنظيمية الخاصة بالتطبيق.</p>
+                  <p><strong>2. إدارة الحساب والأكاديميات:</strong> يتعهد المسؤول (Admin) بصحة البيانات المدخلة وتوفير بيئة تعليمية آمنة للطلاب والمعلمين داخل الحلقة.</p>
+                  <p><strong>3. حماية البيانات والملكيات:</strong> يلتزم التطبيق بحفظ السجلات والبيانات التعليمية وتأمينها وفق أعلى معايير التشفير.</p>
+                </div>
               ) : (
-                <p>{isRtl ? 'نحن نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية...' : 'We respect your privacy and are committed to protecting your personal data...'}</p>
+                <div>
+                  <p style={{ marginTop: 0 }}><strong>1. جمع البيانات:</strong> تجمع منصة "الحلقة الذكية" البيانات الأساسية (الاسم، البريد الإلكتروني، بيانات الحلقة) لتشغيل الخدمات وتسهيل التواصل.</p>
+                  <p><strong>2. استخدام البيانات:</strong> لا يتم مشاركة أو بيع بيانات الطلاب والمعلمين مع أي أطراف خارجية، وتُستخدم حصراً لإدارة المنظومة التعليمية.</p>
+                  <p><strong>3. حقوق المستخدم:</strong> يحق لك طلب تصدير بياناتك أو حذف الحساب بشكل كامل في أي وقت.</p>
+                </div>
               )}
             </div>
-            <div style={{ padding: '12px 20px', borderTop: '1px solid #1E293B', textAlign: 'right' }}>
+
+            <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', textAlign: 'right', background: '#090F16' }}>
               <button 
                 onClick={() => setModalContent(null)}
-                style={{ padding: '8px 20px', background: '#D97706', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ padding: '8px 22px', background: '#D97706', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
               >
-                {isRtl ? 'إغلاق' : 'Close'}
+                {isRtl ? 'فهمت وموافق' : 'I Understand'}
               </button>
             </div>
           </div>
