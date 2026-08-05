@@ -318,6 +318,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'badges':
       case 'achievements':
       case 'rewards':
+      case 'streaks':  
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
       case 'payments':
         return <Payments students={students} academyId={academyId} currency={currency} />;
