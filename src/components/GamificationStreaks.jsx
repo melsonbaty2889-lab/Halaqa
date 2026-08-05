@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatName } from '../utils/formatters';
 import { 
-  FaTrophy, FaFire, FaMedal, FaStar, FaCrown, 
-  FaUserGraduate, FaSpinner, FaExclamationTriangle 
-} from 'react-icons/fa';
+  Trophy, Flame, Medal, Star, Crown, 
+  GraduationCap, Loader2, AlertTriangle 
+} from 'lucide-react';
 
 export default function GamificationStreaks({ academyId: propAcademyId, isRtl = true }) {
   const [loading, setLoading] = useState(true);
@@ -19,7 +19,6 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
       setLoading(true);
       let errMsg = '';
       try {
-        // 1️⃣ البحث عن ID الأكاديمية
         let targetAcademyId = propAcademyId;
 
         if (!targetAcademyId) {
@@ -37,7 +36,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
         setDebugInfo({ currentAcademyId: targetAcademyId || 'غير محدد', error: null });
 
-        // 2️⃣ جلب الأوسمة النشطة
+        // 1️⃣ جلب الأوسمة النشطة
         let badgesQuery = supabase.from('badges').select('*');
         if (targetAcademyId) badgesQuery = badgesQuery.eq('academy_id', targetAcademyId);
 
@@ -45,7 +44,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
         if (badgesErr) errMsg += `خطأ الأوسمة: ${badgesErr.message} | `;
         setBadges(badgesData || []);
 
-        // 3️⃣ جلب بيانات التتابع (Streaks) مباشرة من جدول students
+        // 2️⃣ جلب بيانات السلاسل (Streaks)
         let streaksQuery = supabase
           .from('students')
           .select('id, name, current_streak, longest_streak')
@@ -58,7 +57,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
         if (streaksErr) errMsg += `خطأ السلاسل: ${streaksErr.message} | `;
         setStreaks(streaksData || []);
 
-        // 4️⃣ جلب المتصدرين حسب النقاط مباشرة من جدول students
+        // 3️⃣ جلب المتصدرين
         let studentsQuery = supabase
           .from('students')
           .select('id, name, avatar_url, points')
@@ -87,9 +86,11 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px', color: '#F59E0B' }}>
-        <FaSpinner className="fa-spin" style={{ fontSize: '28px' }} />
-        <span style={{ marginRight: '10px', color: '#94A3B8' }}>جاري جلب البيانات...</span>
+      <div className="flex justify-center items-center min-h-[220px] text-amber-600 gap-2">
+        <Loader2 className="animate-spin" size={28} />
+        <span className="text-slate-400 text-sm">
+          {isRtl ? 'جاري جلب البيانات...' : 'Loading data...'}
+        </span>
       </div>
     );
   }
@@ -97,157 +98,133 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
   const lang = isRtl ? 'ar' : 'en';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', direction: isRtl ? 'rtl' : 'ltr', padding: '8px' }}>
-      
-      {/* ⚠️ شريط التشخيص لمعرفة السبب فوراً على الموبايل */}
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'} 
+      className="flex flex-col gap-4 p-3 pb-10 box-border text-start"
+    >
+      {/* ⚠️ شريط التشخيص */}
       {debugInfo.error && (
-        <div style={{ background: '#451A1A', border: '1px solid #EF4444', color: '#FCA5A5', padding: '12px', borderRadius: '10px', fontSize: '0.85rem' }}>
-          <FaExclamationTriangle style={{ marginLeft: '6px', color: '#EF4444' }} />
-          <strong>تنبيه التشخيص:</strong> {debugInfo.error}
+        <div className="bg-red-950/40 border border-red-500 text-red-300 p-3 rounded-xl text-xs flex items-center gap-2">
+          <AlertTriangle size={18} className="text-red-500 shrink-0" />
+          <span><strong>تنبيه التشخيص:</strong> {debugInfo.error}</span>
         </div>
       )}
 
-      {/* 👑 الهيدر والرأس الرئيسي */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)', 
-        padding: '16px', 
-        borderRadius: '16px', 
-        border: '1px solid #334155',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ 
-            width: '44px', height: '44px', borderRadius: '12px', 
-            background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0
-          }}>
-            <FaTrophy />
+      {/* 👑 الهيدر والتنقل الرئيسي */}
+      <div className="bg-[#0F172A] p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-3.5">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-amber-600/15 text-amber-600 flex items-center justify-center shrink-0 border border-amber-600/30">
+            <Trophy size={22} />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFF', margin: 0 }}>
+            <h1 className="text-base font-bold text-slate-100 m-0">
               {isRtl ? 'لوحة الإنجازات والتحديات' : 'Gamification & Streaks'}
             </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
+            <p className="text-slate-400 text-xs mt-0.5 mb-0">
               {isRtl ? 'تحفيز الطلاب وتتبع الأوسمة والسلسلة اليومية' : 'Track student streaks & achievements'}
             </p>
           </div>
         </div>
 
-        {/* أزرار التنقل السريع */}
-        <div style={{ display: 'flex', background: '#090F17', padding: '4px', borderRadius: '10px', border: '1px solid #1E293B', width: '100%' }}>
+        {/* أزرار التبويبات المتناسقة */}
+        <div className="flex bg-[#090F16] p-1 rounded-xl border border-slate-800 w-full">
           <button 
             onClick={() => setActiveTab('leaderboard')}
-            style={{
-              flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
-              background: activeTab === 'leaderboard' ? '#F59E0B' : 'transparent',
-              color: activeTab === 'leaderboard' ? '#000' : '#94A3B8'
-            }}
+            className={`flex-1 py-2 px-1 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1 ${
+              activeTab === 'leaderboard' 
+                ? 'bg-amber-600 text-white shadow-md' 
+                : 'bg-transparent text-slate-400 hover:text-slate-200'
+            }`}
           >
-            🏆 {isRtl ? 'المتصدرين' : 'Leaderboard'}
+            <Crown size={14} />
+            <span>{isRtl ? 'المتصدرين' : 'Leaderboard'}</span>
           </button>
+          
           <button 
             onClick={() => setActiveTab('streaks')}
-            style={{
-              flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
-              background: activeTab === 'streaks' ? '#F59E0B' : 'transparent',
-              color: activeTab === 'streaks' ? '#000' : '#94A3B8'
-            }}
+            className={`flex-1 py-2 px-1 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1 ${
+              activeTab === 'streaks' 
+                ? 'bg-amber-600 text-white shadow-md' 
+                : 'bg-transparent text-slate-400 hover:text-slate-200'
+            }`}
           >
-            🔥 {isRtl ? 'السلسلة' : 'Streaks'}
+            <Flame size={14} />
+            <span>{isRtl ? 'السلسلة' : 'Streaks'}</span>
           </button>
+
           <button 
             onClick={() => setActiveTab('badges')}
-            style={{
-              flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
-              background: activeTab === 'badges' ? '#F59E0B' : 'transparent',
-              color: activeTab === 'badges' ? '#000' : '#94A3B8'
-            }}
+            className={`flex-1 py-2 px-1 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1 ${
+              activeTab === 'badges' 
+                ? 'bg-amber-600 text-white shadow-md' 
+                : 'bg-transparent text-slate-400 hover:text-slate-200'
+            }`}
           >
-            🎖️ {isRtl ? 'الأوسمة' : 'Badges'} ({badges.length})
+            <Medal size={14} />
+            <span>{isRtl ? 'الأوسمة' : 'Badges'} ({badges.length})</span>
           </button>
         </div>
       </div>
 
-      {/* 🥇 المتصدرين (تصميم بطل المراكز وشريط التقدم) */}
+      {/* 🏆 قائمة المتصدرين */}
       {activeTab === 'leaderboard' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
-          <h2 style={{ fontSize: '1rem', color: '#F59E0B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaCrown /> {isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4">
+          <h2 className="text-sm text-amber-500 mb-3.5 flex items-center gap-2 m-0 font-bold">
+            <Crown size={16} />
+            <span>{isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}</span>
           </h2>
 
           {topAchievers.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+            <p className="text-slate-500 text-center py-5 text-xs m-0">
               {isRtl ? 'لا توجد بيانات طلاب حالياً' : 'No top achievers data found'}
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="flex flex-col gap-2.5">
               {topAchievers.map((item, index) => {
                 const pts = item.points || item.total_points || 0;
                 const level = Math.floor(pts / 100) + 1;
                 const progressInLevel = pts % 100;
-                const rankBadges = ['🥇', '🥈', '🥉'];
 
                 return (
-                  <div key={item.id || index} style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    background: index === 0 
-                      ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(30, 41, 59, 1) 100%)' 
-                      : '#1E293B',
-                    border: index === 0 ? '1px solid #F59E0B' : '1px solid #334155',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    boxShadow: index === 0 ? '0 4px 12px rgba(245, 158, 11, 0.12)' : 'none'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: index < 3 ? '1.2rem' : '0.8rem', 
-                          width: '28px', 
-                          height: '28px', 
-                          borderRadius: '50%', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          background: index < 3 ? 'transparent' : '#334155',
-                          color: index < 3 ? 'inherit' : '#94A3B8'
-                        }}>
-                          {index < 3 ? rankBadges[index] : index + 1}
+                  <div 
+                    key={item.id || index} 
+                    className={`flex flex-col gap-2.5 p-3 rounded-xl transition-all border ${
+                      index === 0 
+                        ? 'bg-amber-600/10 border-amber-600/40 shadow-sm' 
+                        : 'bg-[#090F16] border-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center text-white ${
+                          index === 0 ? 'bg-amber-600' : 'bg-slate-800'
+                        }`}>
+                          {index + 1}
                         </span>
 
-                        <FaUserGraduate style={{ color: index === 0 ? '#F59E0B' : '#38BDF8', fontSize: '18px' }} />
+                        <GraduationCap size={20} className={index === 0 ? 'text-amber-500' : 'text-slate-400'} />
 
                         <div>
-                          <span style={{ color: '#FFF', fontWeight: '700', fontSize: '0.92rem', display: 'block' }}>
+                          <span className="text-slate-100 font-bold text-xs block">
                             {formatName(item.name, lang, isRtl ? 'طالب' : 'Student')}
                           </span>
-                          <span style={{ color: '#94A3B8', fontSize: '0.72rem' }}>
+                          <span className="text-slate-500 text-[11px]">
                             {isRtl ? `المستوى ${level}` : `Level ${level}`}
                           </span>
                         </div>
                       </div>
 
-                      <div style={{ 
-                        display: 'flex', alignItems: 'center', gap: '4px', 
-                        background: 'rgba(245, 158, 11, 0.12)', padding: '4px 8px', borderRadius: '8px',
-                        color: '#F59E0B', fontWeight: 'bold', fontSize: '0.85rem', border: '1px solid rgba(245, 158, 11, 0.25)'
-                      }}>
-                        <FaStar />
+                      <div className="flex items-center gap-1 bg-amber-600/15 px-2 py-1 rounded-lg text-amber-500 font-bold text-xs border border-amber-500/20">
+                        <Star size={12} className="fill-amber-500" />
                         <span>{pts}</span>
                       </div>
                     </div>
 
-                    <div style={{ width: '100%', background: '#0F172A', borderRadius: '6px', height: '5px', overflow: 'hidden' }}>
-                      <div style={{ 
-                        width: `${Math.min(progressInLevel, 100)}%`, 
-                        background: 'linear-gradient(90deg, #F59E0B, #10B981)', 
-                        height: '100%',
-                        transition: 'width 0.4s ease'
-                      }} />
+                    <div className="w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+                      <div 
+                        className="bg-amber-600 h-full transition-all duration-500 ease-out"
+                        style={{ width: `${Math.min(progressInLevel, 100)}%` }} 
+                      />
                     </div>
                   </div>
                 );
@@ -259,66 +236,44 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
       {/* 🔥 السلسلة المتتالية - Streaks */}
       {activeTab === 'streaks' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
-          <h2 style={{ fontSize: '1rem', color: '#EF4444', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaFire style={{ filter: 'drop-shadow(0 0 4px #EF4444)' }} /> {isRtl ? 'سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4">
+          <h2 className="text-sm text-red-500 mb-3.5 flex items-center gap-2 m-0 font-bold">
+            <Flame size={16} className="text-red-500" />
+            <span>{isRtl ? 'سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}</span>
           </h2>
 
           {streaks.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+            <p className="text-slate-500 text-center py-5 text-xs m-0">
               {isRtl ? 'لا توجد سجلات مواظبة حتى الآن' : 'No streak records found'}
             </p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+            <div className="grid grid-cols-1 gap-2.5">
               {streaks.map((st, i) => {
                 const currentStreak = st.current_streak || 0;
                 const longestStreak = st.longest_streak || currentStreak;
 
                 return (
-                  <div key={st.id || i} style={{ 
-                    background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)', 
-                    padding: '12px 14px', 
-                    borderRadius: '12px', 
-                    border: '1px solid #334155',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ 
-                        background: 'rgba(239, 68, 68, 0.15)', 
-                        width: '42px', 
-                        height: '42px', 
-                        borderRadius: '10px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        border: '1px solid rgba(239, 68, 68, 0.3)'
-                      }}>
-                        <FaFire style={{ color: '#EF4444', fontSize: '22px', filter: 'drop-shadow(0 0 6px #EF4444)' }} />
+                  <div key={st.id || i} className="bg-[#090F16] p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="bg-red-500/10 w-9 h-9 rounded-lg flex items-center justify-center border border-red-500/20">
+                        <Flame size={20} className="text-red-500" />
                       </div>
 
                       <div>
-                        <h3 style={{ color: '#FFF', fontSize: '0.9rem', fontWeight: '700', margin: '0 0 2px 0' }}>
+                        <h3 className="text-slate-100 text-xs font-bold m-0 mb-0.5">
                           {formatName(st.name, lang, isRtl ? 'طالب' : 'Student')}
                         </h3>
-                        <div style={{ color: '#64748B', fontSize: '0.72rem' }}>
+                        <div className="text-slate-500 text-[11px]">
                           {isRtl ? `أفضل رقم: ${longestStreak} يوم` : `Best: ${longestStreak} days`}
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ 
-                      background: '#090D16', 
-                      padding: '6px 12px', 
-                      borderRadius: '8px', 
-                      border: '1px solid #1E293B',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '0.95rem' }}>
+                    <div className="bg-[#0F172A] px-2.5 py-1.5 rounded-lg border border-slate-800 text-center">
+                      <div className="text-amber-500 font-bold text-xs">
                         {currentStreak} {isRtl ? 'يوم' : 'Days'}
                       </div>
-                      <div style={{ color: '#10B981', fontSize: '0.65rem', fontWeight: '600' }}>
+                      <div className="text-emerald-500 text-[10px] font-bold">
                         ⚡ {isRtl ? 'مستمر' : 'Active'}
                       </div>
                     </div>
@@ -332,75 +287,46 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
       {/* 🎖️ الأوسمة والإنجازات - Badges */}
       {activeTab === 'badges' && (
-        <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid #1F2937', padding: '16px' }}>
-          <h2 style={{ fontSize: '1rem', color: '#38BDF8', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaMedal /> {isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges & Achievements'}
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4">
+          <h2 className="text-sm text-sky-400 mb-3.5 flex items-center gap-2 m-0 font-bold">
+            <Medal size={16} />
+            <span>{isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges'}</span>
           </h2>
 
           {badges.length === 0 ? (
-            <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '16px', fontSize: '0.85rem' }}>
+            <p className="text-slate-500 text-center py-5 text-xs m-0">
               {isRtl ? 'لا توجد أوسمة مضافة لهذه الأكاديمية حالياً' : 'No badges available for this academy'}
             </p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
-              {badges.map((badge, index) => {
-                const isStarred = index === 0;
-
-                return (
-                  <div key={badge.id || index} style={{
-                    background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
-                    border: '1px solid #334155',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '10px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        background: isStarred ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                        border: isStarred ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '22px'
-                      }}>
-                        {isStarred ? '🏅' : '🎖️'}
-                      </div>
-
-                      <div>
-                        <h3 style={{ color: '#FFF', fontSize: '0.88rem', fontWeight: '700', margin: '0 0 2px 0' }}>
-                          {badge.title || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}
-                        </h3>
-                        <p style={{ color: '#94A3B8', fontSize: '0.72rem', margin: 0, lineHeight: '1.2' }}>
-                          {badge.description || (isRtl ? 'وسام تقديري للمواظبة والتفوق' : 'Reward for diligence and progress')}
-                        </p>
-                      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {badges.map((badge, index) => (
+                <div key={badge.id || index} className="bg-[#090F16] border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-lg bg-amber-600/10 border border-amber-600/20 flex items-center justify-center text-amber-600 shrink-0">
+                      <Medal size={20} />
                     </div>
 
-                    <div style={{
-                      background: '#090D16',
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      border: '1px solid #1E293B',
-                      textAlign: 'center',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      <div style={{ color: '#F59E0B', fontWeight: 'bold', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <FaStar style={{ fontSize: '12px' }} />
-                        <span>+{badge.points_rewarded || 50}</span>
-                      </div>
-                      <div style={{ color: '#64748B', fontSize: '0.65rem' }}>
-                        {isRtl ? 'جائزة' : 'Reward'}
-                      </div>
+                    <div>
+                      <h3 className="text-slate-100 text-xs font-bold m-0 mb-0.5">
+                        {badge.title || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}
+                      </h3>
+                      <p className="text-slate-500 text-[11px] m-0 leading-tight">
+                        {badge.description || (isRtl ? 'وسام تقديري للمواظبة والتفوق' : 'Reward for diligence and progress')}
+                      </p>
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="bg-[#0F172A] px-2 py-1.5 rounded-lg border border-slate-800 text-center whitespace-nowrap">
+                    <div className="text-amber-500 font-bold text-xs flex items-center gap-1">
+                      <Star size={12} className="fill-amber-500" />
+                      <span>+{badge.points_rewarded || 50}</span>
+                    </div>
+                    <div className="text-slate-500 text-[10px]">
+                      {isRtl ? 'جائزة' : 'Reward'}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
