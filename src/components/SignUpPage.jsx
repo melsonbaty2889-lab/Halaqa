@@ -168,16 +168,26 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setAcceptedTerms(false);
 
     } catch (err) {
-      let friendlyMessage = err.message;
-      if (err.message?.includes('User already registered') || err.message?.includes('already exists')) {
+      // معالجة الخطأ الآمنة
+      let rawMsg = typeof err === 'string' 
+        ? err 
+        : err?.message || (typeof err === 'object' ? JSON.stringify(err) : '');
+
+      let friendlyMessage = rawMsg;
+
+      if (rawMsg.includes('User already registered') || rawMsg.includes('already exists')) {
         friendlyMessage = isRtl 
           ? 'هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول.' 
           : 'This email is already registered. Please log in.';
+      } else if (rawMsg === '{}' || !rawMsg) {
+        friendlyMessage = isRtl 
+          ? 'حدث خطأ أثناء إنشاء الحساب، يرجى التحقق من البيانات والمحاولة مجدداً.' 
+          : 'An error occurred during signup. Please try again.';
       }
 
       setStatus({
         type: 'error',
-        msg: friendlyMessage || (isRtl ? 'حدث خطأ أثناء إنشاء الحساب' : 'An error occurred during signup')
+        msg: friendlyMessage
       });
     } finally {
       setLoading(false);
@@ -192,7 +202,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
       });
       if (error) throw error;
     } catch (err) {
-      setStatus({ type: 'error', msg: err.message });
+      setStatus({ 
+        type: 'error', 
+        msg: err?.message || (isRtl ? 'فشل تسجيل الدخول عبر Google' : 'Google sign in failed') 
+      });
     }
   };
 
@@ -248,7 +261,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
         .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
 
-      {/* زر تغيير اللغة العائم بالكامل وقابل للرؤية أعلى الشاشة */}
+      {/* زر تغيير اللغة */}
       <button
         type="button"
         onClick={toggleLanguage}
