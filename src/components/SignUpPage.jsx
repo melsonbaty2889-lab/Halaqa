@@ -168,8 +168,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setStatus({
         type: 'success',
         msg: isRtl 
-          ? '✅ تم إنشاء حسابك في الحلقة الذكية بنجاح! تفقد بريدك الإلكتروني للتأكيد.' 
-          : '✅ Account created successfully in Smart Halaqa! Please check your email.'
+          ? '✅ تم إنشاء حسابك في الحلقة الذكية بنجاح!' 
+          : '✅ Account created successfully in Smart Halaqa!'
       });
 
       setFullName('');
@@ -178,9 +178,18 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setAcceptedTerms(false);
 
     } catch (err) {
+      let friendlyMessage = err.message;
+      
+      // ترجمة فرز رسائل الخطأ من Supabase
+      if (err.message?.includes('User already registered') || err.message?.includes('already exists')) {
+        friendlyMessage = isRtl 
+          ? 'هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول.' 
+          : 'This email is already registered. Please log in.';
+      }
+
       setStatus({
         type: 'error',
-        msg: err.message || (isRtl ? 'حدث خطأ أثناء إنشاء الحساب' : 'An error occurred during signup')
+        msg: friendlyMessage || (isRtl ? 'حدث خطأ أثناء إنشاء الحساب' : 'An error occurred during signup')
       });
     } finally {
       setLoading(false);
@@ -383,11 +392,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
               className="form-input-field"
+              dir="ltr"
+              style={{ textAlign: isRtl ? 'right' : 'left' }}
             />
             <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
           </div>
 
-          {/* كلمة المرور */}
+          {/* كلمة المرور - معدل بخصائص LTR */}
           <div style={{ position: 'relative' }}>
             <input 
               type={showPassword ? 'text' : 'password'}
@@ -395,7 +406,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               required
+              dir="ltr"
               className="form-input-field"
+              style={{ textAlign: isRtl ? 'right' : 'left' }}
             />
             <span 
               onClick={() => setShowPassword(!showPassword)}
