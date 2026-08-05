@@ -1,7 +1,5 @@
-/* src/components/CreateAcademy.jsx */
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-// توحيد المكتبة بالكامل إلى lucide-react
 import { 
   GraduationCap, 
   Loader2, 
@@ -71,10 +69,11 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
       const userId = session?.user?.id;
       if (!userId) throw new Error('جلسة المستخدم غير صالحة. يرجى إعادة تسجيل الدخول.');
 
+      // 1. إدراج الأكاديمية (الاسم يمرر كـ JSONB لدعم تعدد اللغات)
       const { data: academy, error: academyError } = await supabase
         .from('academies')
         .insert([{
-          name: formData.name.trim(),
+          name: { ar: formData.name.trim(), en: formData.name.trim() },
           slug: formData.slug.trim().toLowerCase(),
           currency: formData.currency,
           timezone: formData.timezone,
@@ -95,33 +94,46 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
 
       createdAcademyId = academy.id;
 
-      setStatusMessage('جاري ربط حسابكم الإداري بالأكاديمية...');
-      const { error: staffError } = await supabase
-        .from('staff')
-        .upsert({ 
-          user_id: userId, 
-          academy_id: createdAcademyId,
-          role: 'admin',
-          is_active: true
-        }, { onConflict: 'user_id' });
-
-      if (staffError) throw staffError;
-
+      // 2. تحديث البروفايل الأساسي في جدول profiles أولاً
       setStatusMessage('جاري ضبط الصلاحيات والملف الشخصي...');
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           academy_id: createdAcademyId,
-          role: 'admin',
+          role: 'owner',
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
 
       if (profileError) throw profileError;
 
+      // 3. إضافة سجل الإدارة في جدول staff
+      setStatusMessage('جاري ربط حسابكم الإداري بالأكاديمية...');
+      const { error: staffError } = await supabase
+        .from('staff')
+        .upsert({ 
+          user_id: userId, 
+          academy_id: createdAcademyId,
+          name: session?.user?.user_metadata?.full_name || formData.name.trim(),
+          role: 'owner',
+        }, { onConflict: 'id' });
+
+      if (staffError) console.warn('Staff record creation warning:', staffError.message);
+
+      // 4. إنشاء فترة تجريبية تلقائية في جدول saas_subscriptions
+      await supabase.from('saas_subscriptions').insert([{
+        academy_id: createdAcademyId,
+        payer_id: userId,
+        plan_tier: 'trial',
+        status: 'trialing',
+        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        currency: formData.currency
+      }]);
+
+      // 5. تحديث الـ Metadata في Auth Session
       setStatusMessage('جاري إنهاء التأسيس والتحويل للوحة التحكم...');
       await supabase.auth.updateUser({
-        data: { academy_id: createdAcademyId, role: 'admin' }
+        data: { academy_id: createdAcademyId, role: 'owner' }
       });
 
       await supabase.auth.refreshSession();
@@ -129,6 +141,8 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
       if (onAcademyCreated) onAcademyCreated(createdAcademyId);
     } catch (err) {
       console.error('CreateAcademy Process Error:', err);
+      
+      // التراجع وحذف الأكاديمية في حال حدوث خطأ أثناء الخطوات
       if (createdAcademyId) {
         await supabase.from('academies').delete().eq('id', createdAcademyId);
       }
@@ -207,7 +221,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
             تأسيس الأكاديمية
           </h2>
           <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>
-            قم بإعداد المنظومة السحابية وتخصيص هوية أكاديميتك القرأنية
+            قم بإعداد المنظومة السحابية وتخصيص هوية أكاديميتك القرآنية
           </p>
         </div>
 
@@ -283,7 +297,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                 onChange={(e) => setFormData(p => ({ ...p, timezone: e.target.value }))} 
                 className="custom-input"
               >
-                <option value="Africa/Cairo">القاهرة (GMT+3)</option>
+                <option value="Africa/Cairo">القاهرة (GMT+2)</option>
                 <option value="Asia/Riyadh">الرياض (GMT+3)</option>
                 <option value="Asia/Dubai">دبي (GMT+4)</option>
                 <option value="UTC">التوقيت العالمي (UTC)</option>
