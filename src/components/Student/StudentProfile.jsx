@@ -14,7 +14,7 @@ import { formatName } from '../../utils/formatters';
 import { COUNTRIES_LIST } from '../../constants/countries';
 
 // المكونات الفرعية الموجودة مع الملف في نفس المجلد
-import StudentBadges from './StudentBadges';
+import { StudentBadges } from '../Gamification';
 import StudentStatsCard from './StudentStatsCard';
 
 // توحيد الأيقونات بـ Lucide React
