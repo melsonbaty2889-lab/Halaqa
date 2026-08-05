@@ -70,19 +70,21 @@ export default function ForgotPassword({ onBackToLogin }) {
     setStatus({ type: null, msg: '' });
 
     try {
-      // إرسال الرابط مباشرة لعنوان الأصل للرابط الحالي
-      const redirectToUrl = window.location.origin;
-
+      // توجيه المستخدم مباشرة للنطاق الرئيسي المعتمد
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: redirectToUrl,
+        redirectTo: 'https://smart-halaqa.vercel.app/',
       });
 
       if (error) {
         let errorMsg = error.message;
         if (isRtl) {
-          if (error.message.includes('User not found')) errorMsg = 'البريد الإلكتروني غير مسجل لدينا.';
-          else if (error.message.includes('rate limit') || error.status === 429) errorMsg = 'تم تجاوز حد إرسال الرسائل المسموح به (الرجاء الانتظار قليلاً).';
-          else errorMsg = `خطأ: ${error.message}`;
+          if (error.message.includes('User not found')) {
+            errorMsg = 'البريد الإلكتروني غير مسجل لدينا.';
+          } else if (error.message.toLowerCase().includes('rate limit') || error.status === 429) {
+            errorMsg = 'تجاوزت حد إرسال الرسائل المسموح به مجاناً. انتظر دقيقة ثم حاول مجدداً.';
+          } else {
+            errorMsg = `خطأ الخادم: ${error.message}`;
+          }
         }
         setStatus({ type: 'error', msg: errorMsg });
       } else {
