@@ -70,20 +70,19 @@ export default function ForgotPassword({ onBackToLogin }) {
     setStatus({ type: null, msg: '' });
 
     try {
-      // توجيه المستخدم مباشرة للنطاق الرئيسي المعتمد
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'https://smart-halaqa.vercel.app/',
+        redirectTo: `${window.location.origin}/update-password`,
       });
 
       if (error) {
-        let errorMsg = error.message;
+        let errorMsg = error.message || '';
         if (isRtl) {
-          if (error.message.includes('User not found')) {
+          if (errorMsg.includes('User not found')) {
             errorMsg = 'البريد الإلكتروني غير مسجل لدينا.';
-          } else if (error.message.toLowerCase().includes('rate limit') || error.status === 429) {
-            errorMsg = 'تجاوزت حد إرسال الرسائل المسموح به مجاناً. انتظر دقيقة ثم حاول مجدداً.';
+          } else if (errorMsg.toLowerCase().includes('rate limit') || error.status === 429) {
+            errorMsg = 'تجاوزت حد إرسال الرسائل المسموح به. انتظر دقيقة ثم حاول مجدداً.';
           } else {
-            errorMsg = `خطأ الخادم: ${error.message}`;
+            errorMsg = `خطأ الخادم: ${errorMsg}`;
           }
         }
         setStatus({ type: 'error', msg: errorMsg });
@@ -92,7 +91,8 @@ export default function ForgotPassword({ onBackToLogin }) {
         setCooldown(60);
       }
     } catch (err) {
-      setStatus({ type: 'error', msg: err?.message || 'حدث خطأ غير متوقع' });
+      const fallbackMsg = err?.message || (isRtl ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred');
+      setStatus({ type: 'error', msg: fallbackMsg });
     } finally {
       setLoading(false);
     }
@@ -165,7 +165,9 @@ export default function ForgotPassword({ onBackToLogin }) {
                   onChange={(e) => setEmail(e.target.value)} 
                   placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
                   required
+                  dir="ltr"
                   className="form-input-field"
+                  style={{ textAlign: isRtl ? 'right' : 'left' }}
                 />
                 <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B' }} />
               </div>
