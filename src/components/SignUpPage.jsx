@@ -210,7 +210,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
         alignItems: 'center', 
         justifyContent: 'center', 
         background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)', 
-        padding: '20px 16px', 
+        padding: '70px 16px 30px 16px', 
         fontFamily: "'Cairo', sans-serif", 
         position: 'relative',
         boxSizing: 'border-box'
@@ -248,15 +248,16 @@ export default function SignUpPage({ onSwitchToLogin }) {
         .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
 
-      {/* زر اللغة */}
+      {/* زر تغيير اللغة العائم بالكامل وقابل للرؤية أعلى الشاشة */}
       <button
         type="button"
         onClick={toggleLanguage}
         style={{
-          position: 'absolute',
-          top: '16px',
-          [isRtl ? 'left' : 'right']: '16px',
-          background: '#0F172A',
+          position: 'fixed',
+          top: '20px',
+          [isRtl ? 'left' : 'right']: '20px',
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(8px)',
           border: '1px solid #1E293B',
           color: '#CBD5E1',
           padding: '8px 14px',
@@ -267,14 +268,15 @@ export default function SignUpPage({ onSwitchToLogin }) {
           alignItems: 'center',
           gap: '6px',
           cursor: 'pointer',
-          zIndex: 10
+          boxShadow: '0 4px 12px rgba(0,0,0,0.35)',
+          zIndex: 100
         }}
       >
         <Globe size={14} color="#D97706" />
         <span>{isRtl ? 'English' : 'العربية'}</span>
       </button>
 
-      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '32px 24px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', marginTop: '40px' }}>
+      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '32px 24px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', margin: 'auto 0' }}>
         
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
           <SmartHalaqaProLogo size={52} />
@@ -372,7 +374,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               dir="ltr"
               className="form-input-field"
-              style={{ textAlign: 'left' }}
+              style={{ textAlign: isRtl ? 'right' : 'left' }}
             />
             <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B' }} />
           </div>
@@ -387,7 +389,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               dir="ltr"
               className="form-input-field"
-              style={{ textAlign: 'left' }}
+              style={{ textAlign: isRtl ? 'right' : 'left' }}
             />
             <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B' }} />
             <span 
@@ -494,7 +496,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       </div>
 
-      {/* النافذة المنبثقة */}
+      {/* النافذة المنبثقة للشروط والسياسات */}
       {modalContent && policyTexts[modalContent] && (
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
