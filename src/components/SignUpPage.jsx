@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, ShieldCheck, Globe, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, ShieldCheck, Globe, Loader2 } from 'lucide-react';
 
-// 🌟 شعار منصة الحلقة الذكية الرسمي (مع إغلاق الدائرة الذهبية بالكامل)
 const SmartHalaqaProLogo = ({ size = 52 }) => (
   <div style={{
     width: `${size}px`,
@@ -29,7 +28,6 @@ const SmartHalaqaProLogo = ({ size = 52 }) => (
           <stop offset="100%" stopColor="#047857" />
         </linearGradient>
       </defs>
-      {/* الدائرة الذهبية المكتملة */}
       <circle cx="16" cy="16" r="12" stroke="url(#goldGrad)" strokeWidth="1.8" />
       <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
       <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#emeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
@@ -48,9 +46,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
-  const [modalContent, setModalContent] = useState(null); // 'terms' | 'privacy' | null
+  const [modalContent, setModalContent] = useState(null);
 
-  // التبديل السريع بين اللغات
   const toggleLanguage = () => {
     const nextLang = isRtl ? 'en' : 'ar';
     if (i18n?.changeLanguage) {
@@ -58,7 +55,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
     }
   };
 
-  // فحص شروط كلمة المرور
   const rules = {
     length: password.length >= 8,
     capital: /[A-Z]/.test(password),
@@ -77,14 +73,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
           <p style={{ marginTop: 0 }}><strong>1. القبول بالشروط:</strong> بإنشاء حساب في منصة "الحلقة الذكية"، تلتزم بالامتثال لكافة القوانين واللوائح التنظيمية الخاصة بالتطبيق.</p>
           <p><strong>2. إدارة الحساب والأكاديميات:</strong> يتعهد المسؤول (Admin) بصحة البيانات المدخلة وتوفير بيئة تعليمية آمنة للطلاب والمعلمين داخل الحلقة.</p>
           <p><strong>3. حماية البيانات والملكيات:</strong> يلتزم التطبيق بحفظ السجلات والبيانات التعليمية وتأمينها وفق أعلى معايير التشفير الإلكتروني.</p>
-          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>آخر تحديث: أغسطس 2026</em></p>
         </>
       ) : (
         <>
           <p style={{ marginTop: 0 }}><strong>1. Acceptance of Terms:</strong> By creating an account on Smart Halaqa, you agree to comply with all applicable policies and regulations.</p>
           <p><strong>2. Account & Academy Management:</strong> Administrators undertake to provide accurate data and foster a secure learning environment for students and teachers.</p>
           <p><strong>3. Data Protection:</strong> The platform is committed to safeguarding educational records and user data using industry-standard encryption.</p>
-          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>Last updated: August 2026</em></p>
         </>
       )
     },
@@ -94,15 +88,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
         <>
           <p style={{ marginTop: 0 }}><strong>1. جمع البيانات:</strong> تجمع منصة "الحلقة الذكية" البيانات الأساسية (الاسم، البريد الإلكتروني، بيانات الحلقة) لتشغيل الخدمات وتسهيل التواصل.</p>
           <p><strong>2. حماية واستخدام البيانات:</strong> لا يتم مشاركة أو بيع بيانات الطلاب والمعلمين لأي أطراف خارجية، وتُستخدم حصراً لإدارة المنظومة التعليمية.</p>
-          <p><strong>3. حقوق المستخدم:</strong> يحق لك طلب تصدير بياناتك أو طلب حذف الحساب نهائياً في أي وقت.</p>
-          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>آخر تحديث: أغسطس 2026</em></p>
         </>
       ) : (
         <>
           <p style={{ marginTop: 0 }}><strong>1. Data Collection:</strong> Smart Halaqa collects essential details (Name, Email, Academy info) strictly to operate and facilitate learning services.</p>
           <p><strong>2. Data Usage & Protection:</strong> Student and teacher information is never shared or sold to third parties, used solely for system management.</p>
-          <p><strong>3. User Rights:</strong> You reserve the right to export your data or request complete account deletion at any time.</p>
-          <p style={{ fontSize: '11px', color: '#64748B', marginTop: '16px', marginBottom: 0 }}><em>Last updated: August 2026</em></p>
         </>
       )
     }
@@ -168,8 +158,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setStatus({
         type: 'success',
         msg: isRtl 
-          ? '✅ تم إنشاء حسابك في الحلقة الذكية بنجاح!' 
-          : '✅ Account created successfully in Smart Halaqa!'
+          ? '✅ تم إنشاء حسابك بنجاح!' 
+          : '✅ Account created successfully!'
       });
 
       setFullName('');
@@ -179,8 +169,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     } catch (err) {
       let friendlyMessage = err.message;
-      
-      // ترجمة فرز رسائل الخطأ من Supabase
       if (err.message?.includes('User already registered') || err.message?.includes('already exists')) {
         friendlyMessage = isRtl 
           ? 'هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول.' 
@@ -200,9 +188,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
+        options: { redirectTo: window.location.origin }
       });
       if (error) throw error;
     } catch (err) {
@@ -224,14 +210,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
         alignItems: 'center', 
         justifyContent: 'center', 
         background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)', 
-        padding: '60px 20px 40px 20px', 
+        padding: '20px 16px', 
         fontFamily: "'Cairo', sans-serif", 
         position: 'relative',
         boxSizing: 'border-box'
       }} 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      
       <style>{`
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
@@ -242,7 +227,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
         }
         .form-input-field {
           width: 100%;
-          padding: 14px 42px;
+          padding: 14px 44px;
           border-radius: 10px;
           border: 1px solid #223147;
           background: #090F16;
@@ -260,19 +245,17 @@ export default function SignUpPage({ onSwitchToLogin }) {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        .spin-icon {
-          animation: spin 1s linear infinite;
-        }
+        .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
 
-      {/* زر اللغة العائم الثابت */}
+      {/* زر اللغة */}
       <button
         type="button"
         onClick={toggleLanguage}
         style={{
-          position: 'fixed',
-          top: '20px',
-          [isRtl ? 'left' : 'right']: '20px',
+          position: 'absolute',
+          top: '16px',
+          [isRtl ? 'left' : 'right']: '16px',
           background: '#0F172A',
           border: '1px solid #1E293B',
           color: '#CBD5E1',
@@ -284,17 +267,15 @@ export default function SignUpPage({ onSwitchToLogin }) {
           alignItems: 'center',
           gap: '6px',
           cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          zIndex: 50
+          zIndex: 10
         }}
       >
         <Globe size={14} color="#D97706" />
         <span>{isRtl ? 'English' : 'العربية'}</span>
       </button>
 
-      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px 30px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', margin: 'auto 0' }}>
+      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '32px 24px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', marginTop: '40px' }}>
         
-        {/* الشعار والهوية البصرية */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
           <SmartHalaqaProLogo size={52} />
           <h1 style={{ color: '#F8FAFC', fontSize: '22px', fontWeight: 'bold', margin: '12px 0 4px 0' }}>
@@ -312,7 +293,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
           {isRtl ? 'ابدأ في إدارة حلقتك التعليمية بذكاء وسهولة' : 'Start managing your academy effortlessly'}
         </p>
 
-        {/* التسجيل عبر Google */}
         <button
           type="button"
           onClick={handleGoogleSignUp}
@@ -330,8 +310,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             justifyContent: 'center',
             gap: '10px',
             cursor: 'pointer',
-            marginBottom: '18px',
-            transition: 'all 0.2s'
+            marginBottom: '18px'
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
@@ -380,7 +359,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               className="form-input-field"
             />
-            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: fullName ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
+            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: fullName ? '#D97706' : '#64748B' }} />
           </div>
 
           {/* البريد الإلكتروني */}
@@ -391,14 +370,14 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
-              className="form-input-field"
               dir="ltr"
-              style={{ textAlign: isRtl ? 'right' : 'left' }}
+              className="form-input-field"
+              style={{ textAlign: 'left' }}
             />
-            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
+            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B' }} />
           </div>
 
-          {/* كلمة المرور - معدل بخصائص LTR */}
+          {/* كلمة المرور */}
           <div style={{ position: 'relative' }}>
             <input 
               type={showPassword ? 'text' : 'password'}
@@ -408,29 +387,23 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               dir="ltr"
               className="form-input-field"
-              style={{ textAlign: isRtl ? 'right' : 'left' }}
+              style={{ textAlign: 'left' }}
             />
+            <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B' }} />
             <span 
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: password ? '#D97706' : '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: password ? '#D97706' : '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </span>
           </div>
 
-          {/* مؤشر وشروط كلمة المرور الحية */}
+          {/* شروط كلمة المرور */}
           {password && (
             <div style={{ background: '#090F16', padding: '12px', borderRadius: '10px', border: '1px solid #1E293B', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              
               <div style={{ height: '4px', width: '100%', background: '#1E293B', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ 
-                  height: '100%', 
-                  width: `${(validRulesCount / 4) * 100}%`, 
-                  background: getStrengthColor(), 
-                  transition: 'all 0.3s ease' 
-                }} />
+                <div style={{ height: '100%', width: `${(validRulesCount / 4) * 100}%`, background: getStrengthColor(), transition: 'all 0.3s ease' }} />
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
                 <div style={{ color: rules.length ? '#34D399' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {rules.length ? <CheckCircle2 size={14} /> : <XCircle size={14} />} {isRtl ? '8+ أحرف' : '8+ Characters'}
@@ -448,7 +421,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
             </div>
           )}
 
-          {/* مربع الموافقة على الشروط والسياسات */}
+          {/* الموافقة على الشروط */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#94A3B8' }}>
             <input 
               type="checkbox" 
@@ -474,11 +447,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
               >
                 {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}
               </button>
-              {isRtl ? ' لمنصة الحلقة الذكية' : ' for Smart Halaqa'}
             </label>
           </div>
 
-          {/* زر التسجيل */}
           <button 
             type="submit" 
             disabled={loading}
@@ -492,8 +463,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
               fontSize: '15px',
               cursor: loading ? 'not-allowed' : 'pointer', 
               marginTop: '6px',
-              transition: 'background 0.2s ease',
-              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -511,16 +480,9 @@ export default function SignUpPage({ onSwitchToLogin }) {
           </button>
         </form>
 
-        {/* شارة الأمان */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '16px' }}>
           <ShieldCheck size={14} color="#10B981" />
-          <span>
-            {isRtl ? (
-              <>بياناتك مشفرة ومحمية وفق معايير <span dir="ltr">256-bit</span></>
-            ) : (
-              '256-bit SSL encrypted & secure data'
-            )}
-          </span>
+          <span>{isRtl ? 'بياناتك مشفرة ومحمية وفق معايير 256-bit' : '256-bit SSL encrypted & secure data'}</span>
         </div>
 
         <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
@@ -532,16 +494,13 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
       </div>
 
-      {/* النافذة المنبثقة للشروط والسياسات */}
+      {/* النافذة المنبثقة */}
       {modalContent && policyTexts[modalContent] && (
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.8)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
@@ -560,44 +519,28 @@ export default function SignUpPage({ onSwitchToLogin }) {
             maxHeight: '80vh',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+            overflow: 'hidden'
           }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #1E293B', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ color: '#F8FAFC', margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
                 {policyTexts[modalContent].title}
               </h3>
-              <button 
-                onClick={() => setModalContent(null)} 
-                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', display: 'flex' }}
-              >
+              <button onClick={() => setModalContent(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
             
-            <div style={{ padding: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.8', overflowY: 'auto', textAlign: isRtl ? 'right' : 'left' }}>
+            <div style={{ padding: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.8', overflowY: 'auto' }}>
               {policyTexts[modalContent].content}
             </div>
 
-            {/* زر الموافقة والتأكيد مع التحديد التلقائي لمربع الموافقة */}
             <div style={{ padding: '14px 20px', borderTop: '1px solid #1E293B', background: '#090F16' }}>
               <button 
                 onClick={() => {
                   setAcceptedTerms(true);
                   setModalContent(null);
                 }}
-                style={{ 
-                  width: '100%', 
-                  padding: '12px 22px', 
-                  background: '#D97706', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: '10px', 
-                  cursor: 'pointer', 
-                  fontWeight: 'bold', 
-                  fontSize: '14px',
-                  textAlign: 'center'
-                }}
+                style={{ width: '100%', padding: '12px', background: '#D97706', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 {isRtl ? 'فهمت وموافق' : 'I Understand'}
               </button>
