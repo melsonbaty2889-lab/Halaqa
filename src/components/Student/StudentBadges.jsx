@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { Award, Flame, Star, Crown } from 'lucide-react';
+import { Award, Flame, Star, Crown, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function StudentBadges({ student = {}, weeklyData = [], isRtl = true }) {
-  // حساب الأوسمة بأداء عالي دون إعادة رندر زائد
+  // حساب الأوسمة بشكل متطابق دون تكرار أو رندر زائد
   const badges = useMemo(() => {
     const streak = student?.current_streak || 0;
     const quarterIndex = student?.current_quarter_index || 0;
@@ -13,12 +13,9 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         id: 'streak',
         titleAr: 'شعلة الحفظ',
         titleEn: 'Hifz Spark',
-        descAr: 'استمرار لـ 3 أيام',
+        descAr: 'استمرار لـ 3 أيام متتالية',
         descEn: '3 Days Streak',
-        icon: <Flame className="w-6 h-6 text-red-400" />,
-        bg: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.15))',
-        border: '#EF4444',
-        badgeColor: 'bg-red-500',
+        icon: <Flame size={20} className="text-amber-500" />,
         unlocked: streak >= 3,
         count: Math.floor(streak / 3)
       },
@@ -26,12 +23,9 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         id: 'juz_master',
         titleAr: 'مُتقن الأجزاء',
         titleEn: 'Juz Mastery',
-        descAr: 'إتمام جزء كامل',
+        descAr: 'إتمام حفظ جزء كامل بنجاح',
         descEn: 'Completed 1 Juz',
-        icon: <Star className="w-6 h-6 text-amber-400 fill-amber-400/20" />,
-        bg: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.15))',
-        border: '#3B82F6',
-        badgeColor: 'bg-blue-500',
+        icon: <Star size={20} className="text-amber-400" />,
         unlocked: quarterIndex >= 8,
         count: Math.floor(quarterIndex / 8)
       },
@@ -39,12 +33,9 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         id: 'weekly_achiever',
         titleAr: 'المثابر الأسبوعي',
         titleEn: 'Weekly Achiever',
-        descAr: 'التزام أسبوعي منتظم',
+        descAr: 'التزام وحضور منتظم',
         descEn: 'Consistent Active Week',
-        icon: <Crown className="w-6 h-6 text-purple-400" />,
-        bg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15))',
-        border: '#8B5CF6',
-        badgeColor: 'bg-purple-500',
+        icon: <Crown size={20} className="text-amber-500" />,
         unlocked: activeWeeks >= 4,
         count: 1
       }
@@ -54,51 +45,137 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
   const unlockedCount = useMemo(() => badges.filter(b => b.unlocked).length, [badges]);
 
   return (
-    <div className="bg-[#0F172A] p-3.5 rounded-xl border border-slate-700 text-start shadow-sm">
-      
-      {/* الهيدر العلوي */}
-      <div className="text-xs color-[#F59E0B] font-bold mb-3 flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-amber-400">
-          <Award className="w-4 h-4" /> 
-          <span>{isRtl ? 'شارات التميز والإتقان' : 'Mastery & Achievement Badges'}</span>
-        </span>
-        <span className="text-[11px] text-slate-400 font-normal">
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'}
+      style={{
+        background: '#0F172A',
+        borderRadius: '16px',
+        border: '1px solid #1E293B',
+        padding: '16px',
+        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+        boxSizing: 'border-box',
+        marginBottom: '20px'
+      }}
+    >
+      {/* رأس المكون */}
+      <div 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '14px',
+          paddingBottom: '10px',
+          borderBottom: '1px solid #1E293B'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            background: 'rgba(217, 119, 6, 0.15)',
+            padding: '6px',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Award size={18} color="#D97706" />
+          </div>
+          <span style={{ color: '#F8FAFC', fontSize: '14px', fontWeight: 'bold' }}>
+            {isRtl ? 'شارات التميز والإتقان' : 'Mastery Badges'}
+          </span>
+        </div>
+
+        <span style={{
+          fontSize: '11px',
+          fontWeight: 'bold',
+          color: '#F59E0B',
+          background: '#090F16',
+          padding: '4px 10px',
+          borderRadius: '20px',
+          border: '1px solid rgba(245, 158, 11, 0.2)'
+        }}>
           {unlockedCount} / {badges.length}
         </span>
       </div>
 
-      {/* شبكة الأوسمة متجاوبة */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      {/* قائمة الشارات والأوسمة */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+        gap: '10px'
+      }}>
         {badges.map((badge) => (
           <div 
             key={badge.id}
             style={{
-              background: badge.unlocked ? badge.bg : 'rgba(30, 41, 59, 0.4)',
-              border: `1px solid ${badge.unlocked ? badge.border : '#334155'}`,
+              position: 'relative',
+              background: badge.unlocked ? 'rgba(9, 15, 22, 0.8)' : 'rgba(15, 23, 42, 0.4)',
+              border: badge.unlocked ? '1px solid #D97706' : '1px solid #1E293B',
+              borderRadius: '12px',
+              padding: '12px 8px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              opacity: badge.unlocked ? 1 : 0.45,
+              transition: 'all 0.2s ease',
+              boxShadow: badge.unlocked ? '0 4px 14px rgba(217, 119, 6, 0.12)' : 'none'
             }}
-            className={`relative p-2.5 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-300 ${
-              badge.unlocked ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'
-            }`}
           >
-            {/* عداد التكرار */}
-            {badge.unlocked && badge.count > 1 && (
-              <span 
-                style={{ backgroundColor: badge.border }}
-                className={`absolute -top-1.5 ${isRtl ? '-left-1.5' : '-right-1.5'} text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm`}
-              >
-                x{badge.count}
+            {/* مؤشر التكرار أو القفل */}
+            {badge.unlocked ? (
+              badge.count > 1 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  [isRtl ? 'left' : 'right']: '-6px',
+                  background: '#D97706',
+                  color: '#FFFFFF',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.4)'
+                }}>
+                  x{badge.count}
+                </span>
+              )
+            ) : (
+              <span style={{
+                position: 'absolute',
+                top: '6px',
+                [isRtl ? 'left' : 'right']: '6px',
+                color: '#64748B'
+              }}>
+                <Lock size={12} />
               </span>
             )}
 
-            <div className="mb-1">
+            <div style={{
+              marginBottom: '6px',
+              background: badge.unlocked ? 'rgba(217, 119, 6, 0.1)' : '#090F16',
+              padding: '8px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
               {badge.icon}
             </div>
-            
-            <div className={`text-[11px] font-bold mb-0.5 ${badge.unlocked ? 'text-slate-100' : 'text-slate-400'}`}>
+
+            <div style={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: badge.unlocked ? '#F8FAFC' : '#64748B',
+              marginBottom: '3px'
+            }}>
               {isRtl ? badge.titleAr : badge.titleEn}
             </div>
 
-            <div className={`text-[9px] ${badge.unlocked ? 'text-slate-300' : 'text-slate-500'}`}>
+            <div style={{
+              fontSize: '9.5px',
+              color: badge.unlocked ? '#94A3B8' : '#475569',
+              lineHeight: '1.3'
+            }}>
               {isRtl ? badge.descAr : badge.descEn}
             </div>
           </div>
