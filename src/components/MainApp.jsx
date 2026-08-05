@@ -3,11 +3,13 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspens
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { ROLES } from '../constants/roles';
+
+// استيراد المكونات الثابتة
 import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 import SubscriptionPage from './SubscriptionPage';
-// استيراد الأيقونات من lucide-react
+
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 const safeLazy = (importFn) => {
@@ -24,6 +26,7 @@ const safeLazy = (importFn) => {
   );
 };
 
+// الاستيرادات الديناميكية المعيارية للمكونات
 const Students = safeLazy(() => import('./Student/StudentProfile.jsx'));
 const Teachers = safeLazy(() => import('./Teachers.jsx')); 
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
@@ -50,28 +53,12 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          padding: '24px', 
-          background: '#152332', 
-          borderRadius: '16px', 
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: '#f87171', 
-          margin: '20px', 
-          direction: 'rtl' 
-        }}>
+        <div style={{ padding: '24px', background: '#152332', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', margin: '20px', direction: 'rtl' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <AlertTriangle size={22} />
             <h3 style={{ margin: 0, color: '#f87171', fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre style={{ 
-            background: '#0c1520', 
-            padding: '12px', 
-            borderRadius: '8px', 
-            color: '#cbd5e1', 
-            fontSize: '12px', 
-            overflowX: 'auto', 
-            direction: 'ltr' 
-          }}>
+          <pre style={{ background: '#0c1520', padding: '12px', borderRadius: '8px', color: '#cbd5e1', fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -79,19 +66,7 @@ class ErrorBoundaryInner extends React.Component {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ 
-              padding: '10px 18px', 
-              background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', 
-              color: '#0c1520', 
-              border: 'none', 
-              borderRadius: '8px', 
-              cursor: 'pointer', 
-              fontWeight: '800', 
-              marginTop: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
+            style={{ padding: '10px 18px', background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#0c1520', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
@@ -314,11 +289,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'exams':
         return <Exams students={students} academyId={academyId} />;
       case 'gamification':
-        case 'gamification-streaks':
-        case 'badges':
-        case 'achievements':
-        case 'rewards':
-        case 'streaks':
+      case 'gamification-streaks':
+      case 'badges':
+      case 'achievements':
+      case 'rewards':
+      case 'streaks':
          return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
       case 'payments':
         return <Payments students={students} academyId={academyId} currency={currency} />;
