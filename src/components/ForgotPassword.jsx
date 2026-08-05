@@ -69,27 +69,31 @@ export default function ForgotPassword({ onBackToLogin }) {
     setLoading(true);
     setStatus({ type: null, msg: '' });
 
-    // 🌟 1. نحصل على رمز اللغة الحالية
-    const currentLang = i18n?.language || 'ar';
+    try {
+      // إرسال الرابط مباشرة لعنوان الأصل للرابط الحالي
+      const redirectToUrl = window.location.origin;
 
-    // 🌟 2. نرسل رابط التوجيه لمسار تحديث كلمة المرور مع برامتر اللغة
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/update-password?lang=${currentLang}`,
-    });
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: redirectToUrl,
+      });
 
-    if (error) {
-      let errorMsg = error.message;
-      if (isRtl) {
-        if (error.message.includes('User not found')) errorMsg = 'البريد الإلكتروني غير مسجل لدينا.';
-        else if (error.message.includes('Rate limit')) errorMsg = 'تم إرسال طلبات كثيرة، يرجى الانتظار قليلاً.';
-        else errorMsg = 'حدث خطأ أثناء الاتصال بالخادم.';
+      if (error) {
+        let errorMsg = error.message;
+        if (isRtl) {
+          if (error.message.includes('User not found')) errorMsg = 'البريد الإلكتروني غير مسجل لدينا.';
+          else if (error.message.includes('rate limit') || error.status === 429) errorMsg = 'تم تجاوز حد إرسال الرسائل المسموح به (الرجاء الانتظار قليلاً).';
+          else errorMsg = `خطأ: ${error.message}`;
+        }
+        setStatus({ type: 'error', msg: errorMsg });
+      } else {
+        setIsSubmitted(true);
+        setCooldown(60);
       }
-      setStatus({ type: 'error', msg: errorMsg });
-    } else {
-      setIsSubmitted(true);
-      setCooldown(60);
+    } catch (err) {
+      setStatus({ type: 'error', msg: err?.message || 'حدث خطأ غير متوقع' });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
