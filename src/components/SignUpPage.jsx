@@ -102,6 +102,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
 
+    const cleanEmail = email.trim().toLowerCase();
+
     if (!acceptedTerms) {
       setStatus({
         type: 'error',
@@ -126,7 +128,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: cleanEmail,
         password: password,
         options: {
           data: {
@@ -168,7 +170,6 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setAcceptedTerms(false);
 
     } catch (err) {
-      // معالجة الخطأ الآمنة
       let rawMsg = typeof err === 'string' 
         ? err 
         : err?.message || (typeof err === 'object' ? JSON.stringify(err) : '');
@@ -240,12 +241,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
         }
         .form-input-field {
           width: 100%;
-          padding: 14px 44px;
+          padding: 14px 40px;
           border-radius: 10px;
           border: 1px solid #223147;
           background: #090F16;
           color: #ffffff;
-          font-size: 14px;
+          font-size: 13px;
           outline: none;
           box-sizing: border-box;
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -253,6 +254,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
         .form-input-field:focus {
           border-color: #D97706 !important;
           box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important;
+        }
+        .email-input-field {
+          direction: ltr !important;
+          text-align: left !important;
+          font-size: 12px !important;
         }
         @keyframes spin {
           from { transform: rotate(0deg); }
@@ -374,7 +380,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               required
               className="form-input-field"
             />
-            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: fullName ? '#D97706' : '#64748B' }} />
+            <User size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '12px', color: fullName ? '#D97706' : '#64748B' }} />
           </div>
 
           {/* البريد الإلكتروني */}
@@ -382,14 +388,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
             <input 
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
-              dir="ltr"
-              className="form-input-field"
-              style={{ textAlign: isRtl ? 'right' : 'left' }}
+              className="form-input-field email-input-field"
             />
-            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B' }} />
+            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '12px', color: email ? '#D97706' : '#64748B' }} />
           </div>
 
           {/* كلمة المرور */}
@@ -400,14 +404,12 @@ export default function SignUpPage({ onSwitchToLogin }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               required
-              dir="ltr"
-              className="form-input-field"
-              style={{ textAlign: isRtl ? 'right' : 'left' }}
+              className="form-input-field email-input-field"
             />
-            <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B' }} />
+            <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '12px', color: password ? '#D97706' : '#64748B' }} />
             <span 
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: password ? '#D97706' : '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '12px', color: password ? '#D97706' : '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </span>
