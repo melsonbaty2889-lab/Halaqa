@@ -43,7 +43,6 @@ export default function UpdatePassword({ onSuccess }) {
   const [isDone, setIsDone] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
-  // 🌟 1. قراءة اللغة من رابط الـ URL بمجرد فتح الصفحة وتغيير لغة التطبيق بناءً عليها
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const langParam = searchParams.get('lang');
@@ -87,20 +86,28 @@ export default function UpdatePassword({ onSuccess }) {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
 
-    if (error) {
+      if (error) {
+        setStatus({
+          type: 'error',
+          msg: error.message || (isRtl ? 'فشل تحديث كلمة المرور' : 'Failed to update password')
+        });
+      } else {
+        setIsDone(true);
+        setTimeout(() => {
+          if (onSuccess) onSuccess();
+        }, 2500);
+      }
+    } catch (err) {
       setStatus({
         type: 'error',
-        msg: error.message || (isRtl ? 'فشل تحديث كلمة المرور' : 'Failed to update password')
+        msg: err?.message || (isRtl ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
       });
-    } else {
-      setIsDone(true);
-      setTimeout(() => {
-        if (onSuccess) onSuccess();
-      }, 2500);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -170,6 +177,7 @@ export default function UpdatePassword({ onSuccess }) {
                   onChange={(e) => setPassword(e.target.value)} 
                   placeholder={isRtl ? 'كلمة المرور الجديدة' : 'New Password'}
                   required
+                  dir="ltr"
                   className="form-input-field"
                 />
                 <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B' }} />
@@ -182,6 +190,7 @@ export default function UpdatePassword({ onSuccess }) {
                   onChange={(e) => setConfirmPassword(e.target.value)} 
                   placeholder={isRtl ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password'}
                   required
+                  dir="ltr"
                   className="form-input-field"
                 />
                 <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: confirmPassword ? '#D97706' : '#64748B' }} />
