@@ -21,7 +21,7 @@ export const AcademyProvider = ({ children }) => {
 
     try {
       setUser(currentUser);
-      
+
       // 1. جلب بيانات الحساب من جدول profiles
       const { data: profData, error: profError } = await supabase
         .from('profiles')
@@ -30,28 +30,28 @@ export const AcademyProvider = ({ children }) => {
         .maybeSingle();
 
       if (profError || !profData) {
-        console.error("🚨 خطأ في جلب البروفايل أو الحساب غير موجود في الجدول:", profError);
+        console.error("🚨 خطأ في جلب البروفايل:", profError);
         setAppState('UNAUTHENTICATED');
         return;
       }
 
       setProfile(profData);
 
-      // 2. إذا كان الحساب هو السوبر أدمن العام للمنصة
+      // 2. السوبر أدمن العام
       if (profData.role === 'super_admin') {
         setAcademy(null);
         setAppState('SUPER_ADMIN');
         return;
       }
 
-      // 3. الحماية المشتركة: إذا كان الحساب غير مفعل من الإدارة
+      // 3. الحسابات المعلقة من الإدارة
       if (profData.is_activated === false) {
         setAcademy(null);
         setAppState('PENDING_APPROVAL');
         return;
       }
 
-      // 4. إذا كان الحساب مفعل ودوره مدير أكاديمية (admin)
+      // 4. مدير الأكاديمية
       if (profData.role === 'admin') {
         const { data: acadData } = await supabase
           .from('academies')
@@ -69,68 +69,81 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 5. إذا كان الحساب مفعل ودوره (طالب، معلم، ولي أمر)
+      // 5. باقي الأدوار (طالب، معلم، ولي أمر)
       if (['student', 'teacher', 'parent'].includes(profData.role)) {
-        // جلب الأكاديمية التابع لها إذا كانت مسجلة في البروفايل
         if (profData.academy_id) {
           const { data: userAcademy } = await supabase
             .from('academies')
             .select('*')
             .eq('id', profData.academy_id)
             .maybeSingle();
-            
+
           setAcademy(userAcademy || null);
         } else {
           setAcademy(null);
         }
 
-        setAppState('FULLY_ACTIVE'); 
+        setAppState('FULLY_ACTIVE');
         return;
       }
 
       setAppState('UNAUTHENTICATED');
-
     } catch (e) {
-      console.error("🚨 خطأ غير متوقع أثناء معالجة الصلاحيات:", e);
+      console.error("🚨 خطأ في معالجة الصلاحيات:", e);
       setAppState('UNAUTHENTICATED');
     }
   }, []);
 
-  // دالة جلب الحالة الحية فوراً
   const refreshStatus = useCallback(async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     await fetchUserStatus(currentUser);
   }, [fetchUserStatus]);
 
   useEffect(() => {
-    // 1. التحقق المباشر عند بدء تشغيل المكون
+    // التحقق عند البدء
     supabase.auth.getSession().then(({ data: { session } }) => {
       fetchUserStatus(session?.user);
     });
 
-    // 2. الاستماع لتغيرات الجلسة والتأكد من التحديث
+    // الاستماع لتغيرات الجلسة
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       fetchUserStatus(session?.user);
     });
-    
+
     return () => subscription.unsubscribe();
   }, [fetchUserStatus]);
 
+  // Realtime subscription للتغييرات في البروفايل تلقائياً
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`profile_changes_${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${user.id}`
+      }, () => {
+        refreshStatus();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, refreshStatus]);
+
   const logout = async () => {
     try {
-      // 1. مسح التخزين المؤقت
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('block_splash');
         localStorage.removeItem('app_splash_seen_v4');
       }
-
-      // 2. تصفير الـ States
       setAcademy(null);
       setUser(null);
       setProfile(null);
       setAppState('UNAUTHENTICATED');
-
-      // 3. الخروج من Supabase
       await supabase.auth.signOut();
     } catch (error) {
       console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
@@ -138,13 +151,13 @@ export const AcademyProvider = ({ children }) => {
   };
 
   return (
-    <AcademyContext.Provider value={{ 
-      user, 
-      profile, 
-      academy, 
-      appState, 
-      logout, 
-      refreshStatus 
+    <AcademyContext.Provider value={{
+      user,
+      profile,
+      academy,
+      appState,
+      logout,
+      refreshStatus
     }}>
       {children}
     </AcademyContext.Provider>
