@@ -1,10 +1,11 @@
+/* src/components/Student/StudentProfile.jsx */
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { C } from "../../constants/colors";
 
-// الرجوع خطوة للخلف جغرافياً للوصول للمكونات العامة
+// استيراد المكونات العامة عبر الانتقال للمجلد الأب
 import { Btn, Card, Input, Select, PageHeader } from '../UI'; 
 import QuranProgressSelector from '../QuranProgressSelector';
 import QuranProgressBar from '../QuranProgressBar';
@@ -13,11 +14,10 @@ import { getQuranProgress } from '../../utils/quranUtils';
 import { formatName } from '../../utils/formatters';
 import { COUNTRIES_LIST } from '../../constants/countries';
 
-// المكونات الفرعية الموجودة مع الملف في نفس المجلد
-import { StudentBadges } from '../Gamification';
+// استيراد المكونات الفرعية التابعة للطالب
 import StudentStatsCard from './StudentStatsCard';
+import StudentBadges from './StudentBadges';
 
-// توحيد الأيقونات بـ Lucide React
 import { 
   ArrowLeft, ArrowRight, Save, X, Edit3, 
   CheckCircle, AlertCircle, GraduationCap,
@@ -43,13 +43,11 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const [weeklyData, setWeeklyData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
-  // التنبيهات المباشرة Toast
   const triggerToast = useCallback((text, type = 'success') => {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
   }, []);
 
-  // 1. جلب بيانات الطالب الموحدة
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -80,7 +78,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     if (id) fetchStudent();
   }, [id, t, isRtl, triggerToast]);
 
-  // 2. جلب بيانات جدول المتابعة اليومية
   useEffect(() => {
     const fetchWeeklyAchievement = async () => {
       if (!id) return;
@@ -137,7 +134,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     fetchWeeklyAchievement();
   }, [id]);
 
-  // حساب العمر
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -149,7 +145,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
     return age;
   };
 
-  // 💾 تحديث الملف الشخصي للطالب
   const handleUpdate = async (e) => {
     if (e) e.preventDefault();
     setSaving(true);
@@ -260,7 +255,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
       
-      {/* Toast Notification */}
       {inlineMessage.text && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '12px 20px', borderRadius: '30px', zIndex: 1200, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', fontSize: '14px', fontWeight: 'bold' }}>
           {inlineMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -278,7 +272,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         }
       />
 
-      {/* البطاقة العلوية للطالب */}
       <Card style={{ borderRadius: '16px 16px 0 0', display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', borderBottom: 'none', background: '#1E293B', border: '1px solid #334155' }}>
         
         <div style={{ position: 'absolute', top: '16px', left: isRtl ? '16px' : 'auto', right: isRtl ? 'auto' : '16px' }}>
@@ -296,7 +289,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           )}
         </div>
 
-        {/* رمز الطالب الشخصي */}
         <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
           {genderPolicy === 'separated' && student.gender === 'female' ? (
             <UserCheck style={{ color: '#EC4899' }} className="w-6 h-6" />
@@ -327,7 +319,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         </div>
       </Card>
 
-      {/* التبويبات الداخلية */}
       <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid #334155`, borderRight: `1px solid #334155`, padding: '4px' }}>
         {[
           { id: 'quran', label: t('tab_quran_track') || (isRtl ? 'مسار القرآن' : 'Quran Track'), icon: <BookOpen className="w-3.5 h-3.5" /> },
@@ -345,20 +336,15 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         ))}
       </div>
 
-      {/* جسم البطاقة الرئيسي */}
       <Card style={{ borderRadius: '0 0 16px 16px', borderTop: 'none', background: '#1E293B', border: '1px solid #334155', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
-        {/* تبويب مسار القرآن والإنجاز */}
         {activeTab === 'quran' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
-            {/* 1. مكون كارت السلسلة والنقاط المطور */}
             <StudentStatsCard student={student} isRtl={isRtl} />
 
-            {/* 2. مكون شبكة الأوسمة المطور */}
             <StudentBadges student={student} weeklyData={weeklyData} isRtl={isRtl} />
 
-            {/* شريط التقدم والسورة */}
             <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155` }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', textAlign: 'start' }}>
                 <span style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -374,7 +360,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
               </div>
             </div>
 
-            {/* رسم بياني للإنجاز */}
             <div className="w-full">
               {chartLoading ? (
                 <div style={{ background: '#0F172A', padding: '24px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'center', fontSize: '12px', color: '#94A3B8' }}>
@@ -401,7 +386,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           </div>
         )}
 
-        {/* تبويب البيانات والتواصل */}
         {activeTab === 'personal' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -466,7 +450,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           </div>
         )}
 
-        {/* تبويب المالية والملاحظات */}
         {activeTab === 'financial' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <Select 
@@ -489,7 +472,6 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           </div>
         )}
 
-        {/* أزرار الحفظ والتعديل */}
         <div style={{ marginTop: '4px' }}>
           {isEditing ? (
             <div style={{ display: 'flex', gap: '10px' }}>
