@@ -7,6 +7,8 @@ import Sidebar from './Sidebar.jsx';
 import Header from './header/Header';
 import Dashboard from './Dashboard.jsx'; 
 import SubscriptionPage from './SubscriptionPage';
+// استيراد الأيقونات من lucide-react
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 const safeLazy = (importFn) => {
   return lazy(() =>
@@ -22,7 +24,7 @@ const safeLazy = (importFn) => {
   );
 };
 
-const Students = safeLazy(() => import('./Student/StudentProfile.jsx'))
+const Students = safeLazy(() => import('./Student/StudentProfile.jsx'));
 const Teachers = safeLazy(() => import('./Teachers.jsx')); 
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
 const Exams = safeLazy(() => import('./Exams.jsx')); 
@@ -37,31 +39,61 @@ const GamificationStreaks = safeLazy(() => import('./GamificationStreaks.jsx'));
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
     console.error("🚨 Error Logged in Boundary:", error, errorInfo);
-    this.setState({ errorInfo });
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', color: '#EF4444', margin: '20px', direction: 'ltr', textAlign: 'left' }}>
-          <h3 style={{ marginBottom: '8px', color: '#F87171' }}>⚠️ Component Render Error</h3>
-          <pre style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+        <div style={{ 
+          padding: '24px', 
+          background: '#152332', 
+          borderRadius: '16px', 
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          color: '#f87171', 
+          margin: '20px', 
+          direction: 'rtl' 
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <AlertTriangle size={22} />
+            <h3 style={{ margin: 0, color: '#f87171', fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
+          </div>
+          <pre style={{ 
+            background: '#0c1520', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            color: '#cbd5e1', 
+            fontSize: '12px', 
+            overflowX: 'auto', 
+            direction: 'ltr' 
+          }}>
             {this.state.error?.toString()}
           </pre>
           <button 
             onClick={() => {
-              this.setState({ hasError: false, error: null, errorInfo: null });
+              this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ padding: '8px 16px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}
+            style={{ 
+              padding: '10px 18px', 
+              background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', 
+              color: '#0c1520', 
+              border: 'none', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontWeight: '800', 
+              marginTop: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            Reload Page
+            <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
         </div>
       );
@@ -294,11 +326,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const skeletonLoader = (
     <div style={{ padding: '24px', opacity: 0.6, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ height: '35px', width: '220px', backgroundColor: '#1e293b', borderRadius: '8px' }}></div>
+      <div style={{ height: '35px', width: '220px', backgroundColor: '#152332', borderRadius: '8px' }}></div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
-        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.1)' }}></div>
-        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.1)' }}></div>
-        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.1)' }}></div>
+        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.15)' }}></div>
+        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.15)' }}></div>
+        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.15)' }}></div>
       </div>
     </div>
   );
