@@ -313,8 +313,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} />;
       case 'exams':
         return <Exams students={students} academyId={academyId} />;
-      case 'gamification-streaks':
-        return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
+      case 'gamification':
+case 'gamification-streaks':
+  return <GamificationStreaks academyId={academyId} isRtl={isRtl} />;
       case 'payments':
         return <Payments students={students} academyId={academyId} currency={currency} />;
       case 'settings':
