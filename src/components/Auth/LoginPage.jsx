@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { handleAuthError } from '../utils/errorHandler';
-import { loginSchema, validateFormData } from '../schemas/auth';
+
+// ✅ استدعاء مباشر من مجلد lib
+import { supabase } from '@/lib/supabase';
+
+// ✅ استدعاء مباشر من مجلدي utils و schemas (حسب موقع المجلدات الحالي داخل src)
+import { handleAuthError } from '@/utils/errorHandler';
+import { loginSchema, validateFormData } from '@/schemas/auth';
 import { 
   Mail, 
   Lock, 
