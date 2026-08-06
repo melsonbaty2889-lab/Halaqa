@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, ShieldCheck, Globe, Loader2 } from 'lucide-react';
 
