@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { C, g } from "../constants/colors";
+import { C, g } from "../../constants/colors";
 
 // 1. الميدالية / الشارة (Badge)
 const Badge = forwardRef(({ children, color = C.success, className = "", style = {}, ...props }, ref) => (
