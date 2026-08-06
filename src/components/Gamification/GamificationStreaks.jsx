@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { formatName } from '../utils/formatters';
+import { supabase } from '@/lib/supabase';
+import { formatName } from '@/utils/formatters';
 import { 
   Trophy, Flame, Medal, Star, Crown, 
   GraduationCap, Loader2, AlertTriangle 
