@@ -1,23 +1,24 @@
 /* src/components/Student/StudentProfile.jsx */
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
-import { C } from "../../constants/colors";
 
-// استيراد المكونات العامة عبر الانتقال للمجلد الأب
-import { Btn, Card, Input, Select, PageHeader } from '../UI'; 
-import QuranProgressSelector from '../QuranProgressSelector';
-import QuranProgressBar from '../QuranProgressBar';
-import AchievementChart from '../AchievementChart'; 
-import { getQuranProgress } from '../../utils/quranUtils';
-import { formatName } from '../../utils/formatters';
-import { COUNTRIES_LIST } from '../../constants/countries';
+// 🛠️ الخدمات والثوابت والأدوات المساعدة
+import { supabase } from "@/lib/supabase";
+import { C } from "@/constants/colors";
+import { COUNTRIES_LIST } from "@/constants/countries";
+import { getQuranProgress } from "@/utils/quranUtils";
+import { formatName } from "@/utils/formatters";
 
-// استيراد المكونات الفرعية التابعة للطالب
-import StudentStatsCard from './StudentStatsCard';
-import StudentBadges from './StudentBadges';
+// 🧩 المكونات العامة والمجاورة
+import { Btn, Card, Input, Select, PageHeader } from "@/components/UI"; 
+import QuranProgressSelector from "@/components/QuranProgress/QuranProgressSelector";
+import QuranProgressBar from "@/components/QuranProgress/QuranProgressBar";
+import AchievementChart from "@/components/Gamification/AchievementChart"; 
 
+// 🎓 المكونات الفرعية التابعة للطالب
+import StudentStatsCard from "@/components/Student/StudentStatsCard";
+import StudentBadges from "@/components/Gamification/StudentBadges";
 import { 
   ArrowLeft, ArrowRight, Save, X, Edit3, 
   CheckCircle, AlertCircle, GraduationCap,
