@@ -1,9 +1,9 @@
 /* src/components/Dashboard.jsx */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
-import { getDashboardStats } from '../lib/dashboardService';
-import AdminDashboard from './AdminDashboard';
+import { supabase } from '@/lib/supabase';
+import { getDashboardStats } from '@/lib/dashboardService';
+import AdminDashboard from '@/components/AdminDashboard'; // عدّل اسم المجلد حسب موقع المكون لديك
 import styles from './Dashboard.module.css';
 import { 
   GraduationCap, 
