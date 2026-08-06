@@ -1,14 +1,14 @@
 /* src/components/Student/StudentsList.jsx */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { 
   UserPlus, FileSpreadsheet, Archive, 
   GraduationCap, Layers, Eye, BookOpen, RotateCcw,
   Flame, Star, Search, X, MessageSquare
 } from 'lucide-react';
-import QuranProgressBar from '../QuranProgressBar';
+import QuranProgressBar from '@/components/QuranProgress/QuranProgressBar';
 
 export default function StudentsList({ 
   academyId, 
