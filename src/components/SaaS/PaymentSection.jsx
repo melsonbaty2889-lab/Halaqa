@@ -1,4 +1,4 @@
-// src/components/PaymentSection.jsx
+// src/components/SaaS/PaymentSection.jsx
 import React, { useState, useEffect } from 'react';
 
 // حاوية قياسية موحدة الحجم والشكل لجميع اللوجوهات الرسمية
