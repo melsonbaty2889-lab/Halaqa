@@ -1,7 +1,7 @@
 // src/components/SubscriptionPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { processAndUploadReceipt } from '../lib/uploadHelper';
 import { useAcademy } from '../context/AcademyContext';
 import { 
@@ -9,7 +9,7 @@ import {
   detectUserRegion, 
   validateCoupon, 
   calculateFinalPrice 
-} from '../constants/subscriptionData';
+} from '../../constants/subscriptionData';
 import PaymentSection from './PaymentSection';
 
 export default function SubscriptionPage({ session: propSession, academyId: propAcademyId, onBack }) {
