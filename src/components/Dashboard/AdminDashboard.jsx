@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './Dashboard.module.css';
 import { supabase } from '../../lib/supabase';
-import EmptyState from './EmptyState'; 
+import EmptyState from '../UI/EmptyState'; 
 
 // ✨ استيراد الأيقونات
 import { 
