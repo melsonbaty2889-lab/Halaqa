@@ -1,4 +1,4 @@
-/* src/components/EmptyState.jsx */
+/* src/components/UI/EmptyState.jsx */
 import React from 'react';
 
 export default function EmptyState({ 
