@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { C } from '../constants/colors';
+import { supabase } from '../../lib/supabase';
+import { C } from '../../constants/colors';
 import { Card, PageHeader, TH, TD, Badge, Btn } from './UI';
 import { useTranslation } from 'react-i18next';
 
