@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { handleAuthError } from '../utils/errorHandler';
 import { loginSchema, validateFormData } from '../schemas/auth';
