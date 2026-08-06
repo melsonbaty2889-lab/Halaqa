@@ -12,7 +12,7 @@ import {
   FaTrashAlt
 } from 'react-icons/fa';
 
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export default function Header({ 
   activeTab, 
