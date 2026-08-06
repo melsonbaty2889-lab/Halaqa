@@ -1,5 +1,5 @@
 import React from 'react';
-import { getQuranProgress } from '../utils/quranUtils';
+import { getQuranProgress } from '../../utils/quranUtils';
 
 const QuranProgressBar = ({ currentQuarterIndex }) => {
   // تحويل الرقم القادم من قاعدة البيانات إلى تفاصيل ونسبة مئوية
