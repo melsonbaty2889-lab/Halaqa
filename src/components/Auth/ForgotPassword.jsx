@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+// ✅ استخدام Alias للوصول المباشر لمجلد lib من أي مكان
+import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { Mail, ArrowRight, ArrowLeft, AlertCircle, ShieldCheck, Loader2, Globe, CheckCircle2, RefreshCw } from 'lucide-react';
+import { 
+  Mail, ArrowRight, ArrowLeft, AlertCircle, 
+  ShieldCheck, Loader2, Globe, CheckCircle2, RefreshCw 
+} from 'lucide-react';
 
 const SmartHalaqaProLogo = ({ size = 52 }) => (
   <div style={{
