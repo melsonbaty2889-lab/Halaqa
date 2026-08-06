@@ -11,7 +11,7 @@ import {
   MessageCircle,
   Sparkles
 } from 'lucide-react';
-import { sendWhatsAppAttendanceReport } from '../utils/whatsappUtils';
+import { sendWhatsAppAttendanceReport } from '@/utils/whatsappUtils';
 
 // 🛠️ دالة مساعدة لفك واستخراج اسم الطالب أو السورة بأمان (دعم JSONB والنصوص)
 const formatName = (nameData, isRtl) => {
