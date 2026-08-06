@@ -8,15 +8,13 @@ import {
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock 
 } from 'lucide-react';
 
-import SplashScreen from './components/SplashScreen';
-import LoginPage from './components/LoginPage';
-import SignUpPage from './components/SignUpPage';
-import ForgotPassword from './components/ForgotPassword';
-import UpdatePassword from './components/UpdatePassword';
+// 🔄 الاستدعاءات المحدثة من مجلد المكونات ومجلداته الفرعية الجديدة
+import { SplashScreen } from './components/UI';
+import { LoginPage, SignUpPage, ForgotPassword, UpdatePassword } from './components/Auth';
 import MainApp from './components/MainApp';
 import CreateAcademy from './components/CreateAcademy';
 
-const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const AdminDashboard = lazy(() => import('./components/Dashboard/AdminDashboard'));
 
 // 🛡️ مكون حماية المسارات المدمج المحسّن (ProtectedRoute)
 const ProtectedRoute = ({ allowedRoles, children }) => {
@@ -285,7 +283,6 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 🌟 التعديل هنا: إضافة onSuccess للتوجيه بعد نجاح تحديث كلمة المرور
   if (authView === 'update_password') {
     return (
       <UpdatePassword 
