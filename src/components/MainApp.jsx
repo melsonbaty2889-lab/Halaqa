@@ -4,11 +4,13 @@ import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { ROLES } from '../constants/roles';
 
-// استيراد المكونات الثابتة
-import Sidebar from './Sidebar.jsx';
-import Header from './header/Header';
-import Dashboard from './Dashboard.jsx'; 
-import SubscriptionPage from './SubscriptionPage';
+// استيراد المكونات الثابتة عبر التصدير التجميعي الموحد (index.js)
+import { 
+  Sidebar, 
+  Header, 
+  Dashboard, 
+  SubscriptionPage 
+} from './index';
 
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
@@ -26,18 +28,18 @@ const safeLazy = (importFn) => {
   );
 };
 
-// الاستيرادات الديناميكية المعيارية للمكونات
+// الاستيرادات الديناميكية المسندة إلى الهيكلية والمجلدات الجديدة
 const Students = safeLazy(() => import('./Student/StudentProfile.jsx'));
 const Teachers = safeLazy(() => import('./Teachers.jsx')); 
 const Attendance = safeLazy(() => import('./Attendance.jsx'));
 const Exams = safeLazy(() => import('./Exams.jsx')); 
-const Payments = safeLazy(() => import('./Payments.jsx'));
+const Payments = safeLazy(() => import('./Payments/StudentPayments.jsx'));
 const Settings = safeLazy(() => import('./Settings.jsx')); 
 const Reports = safeLazy(() => import('./Reports.jsx'));
 const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
 const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx'));
-const GamificationStreaks = safeLazy(() => import('./GamificationStreaks.jsx'));
+const GamificationStreaks = safeLazy(() => import('./Gamification/GamificationStreaks.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
