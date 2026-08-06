@@ -1,6 +1,5 @@
-/* src/components/AcademyDashboard.jsx */
+/* src/components/Dashboard/AcademyDashboard.jsx */
 import React from 'react';
-import styles from './Dashboard.module.css';
 import { 
   BookOpen, 
   Award, 
@@ -10,8 +9,11 @@ import {
   Landmark, 
   CheckCircle2 
 } from 'lucide-react';
-import ActiveHalaqas from './ActiveHalaqas';
-import AchievementChart from './AchievementChart';
+
+// ✅ استدراج ملف الـ CSS والملفات المجاورة عبر الـ Alias الثابت
+import styles from '@/components/Dashboard/Dashboard.module.css';
+import ActiveHalaqas from '@/components/Dashboard/ActiveHalaqas';
+import AchievementChart from '@/components/Gamification/AchievementChart'; // أو مكان المكون حسب مجلده
 
 export default function AcademyDashboard({ 
   isRtl, 
