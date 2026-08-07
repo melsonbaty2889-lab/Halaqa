@@ -10,7 +10,7 @@ import { ROLES } from '@/constants/roles';
 // 🧩 استيراد المكونات المباشرة من أماكنها الصحيحة (حل مشكلة ./index)
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header/Header'; 
-import Dashboard from '@/components/Dashboard';
+import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 
 const safeLazy = (importFn) => {
