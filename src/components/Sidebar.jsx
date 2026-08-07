@@ -3,7 +3,16 @@ import React, { useState, useEffect } from "react";
 import { formatHijriDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { getMenuSections } from '../constants/sidebarMenu';
-import SmartHalaqaProLogo from './SmartHalaqaProLogo';
+
+// ✅ تصحيح الاستيراد بإنشاء مكون SVG داخلي سريع لتفادي أي خطأ مسار أو ملف مفقود
+const SmartHalaqaProLogo = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2 17L12 22L22 17" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2 12L12 17L22 12" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 import { 
   Search, X, ChevronDown, ChevronUp, 
   Cloud, LogOut, Zap, Clock 
@@ -596,7 +605,7 @@ export default function Sidebar({
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-              justifycontent: 'center',
+              justifyContent: 'center',
               gap: '6px',
               padding: '7px',
               background: 'rgba(239, 68, 68, 0.08)',
