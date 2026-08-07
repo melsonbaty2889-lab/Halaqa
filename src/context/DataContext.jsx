@@ -1,7 +1,7 @@
 /* src/context/DataContext.jsx */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAcademy } from './AcademyContext'; // لجلب بيانات الأكاديمية وحالة الحساب
+import { useAcademy } from './AcademyContext.jsx'; // لجلب بيانات الأكاديمية وحالة الحساب
 
 const DataContext = createContext({});
 
