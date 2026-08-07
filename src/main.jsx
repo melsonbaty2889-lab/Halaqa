@@ -1,20 +1,20 @@
+/* src/main.jsx */
+
 // مكتبات خارجية
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'; // 👈 إضافة BrowserRouter
+import { BrowserRouter } from 'react-router-dom';
 
-// ملفات CSS
-import './index.css';
+// ملفات CSS والإعدادات (باستخدام @/)
+import '@/index.css';
+import '@/locales/i18n';
 
-// ملفات الإعداد
-import './locales/i18n';
+// Components (باستخدام @/)
+import App from '@/App';
 
-// Components
-import App from './App.jsx';
-
-// Providers
-import { AcademyProvider } from './context/AcademyContext';
-import { DataProvider } from './context/DataContext';
+// Providers / Context (باستخدام @/)
+import { AcademyProvider } from '@/context/AcademyContext';
+import { DataProvider } from '@/context/DataContext';
 
 // =====================================================
 // Global Error Handler
@@ -35,7 +35,7 @@ const InitialLoader = () => (
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter> {/* 👈 تغليف التطبيق هنا يحل المشكلة جذرياً */}
+    <BrowserRouter>
       <AcademyProvider>
         <DataProvider>
           <Suspense fallback={<InitialLoader />}>
