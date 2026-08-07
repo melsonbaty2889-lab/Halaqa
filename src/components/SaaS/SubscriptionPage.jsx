@@ -1,16 +1,16 @@
 // src/components/SubscriptionPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
-import { processAndUploadReceipt } from '../lib/uploadHelper';
-import { useAcademy } from '../context/AcademyContext';
+import { supabase } from '@/lib/supabase';
+import { processAndUploadReceipt } from '@/lib/uploadHelper';
+import { useAcademy } from '@/context/AcademyContext';
 import { 
   getPrices, 
   detectUserRegion, 
   validateCoupon, 
   calculateFinalPrice 
-} from '../../constants/subscriptionData';
-import PaymentSection from './PaymentSection';
+} from '@/constants/subscriptionData';
+import PaymentSection from '@/components/SaaS/PaymentSection';
 
 export default function SubscriptionPage({ session: propSession, academyId: propAcademyId, onBack }) {
   const { t, i18n } = useTranslation();
