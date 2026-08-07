@@ -52,5 +52,20 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('i18next') || id.includes('react-i18next')) return 'vendor-i18n';
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 });
