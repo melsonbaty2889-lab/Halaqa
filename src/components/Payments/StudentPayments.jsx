@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { C } from '@/constants/colors';
-import { Card, PageHeader, TH, TD, Badge, Btn } from '@/components/UI';
+import { Card, PageHeader, TH, TD, Badge, Btn } from '@/components/UI/UI.jsx';
 
 const DEFAULT_SUBSCRIPTION_AMOUNT = 150;
 
