@@ -1,7 +1,7 @@
 /* src/components/QuranProgress/DisplayDate.jsx */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatHijriDate, formatGregorianDate } from '../../utils/dateUtils';
+import { formatHijriDate, formatGregorianDate } from '@/utils/dateUtils';
 
 export default function DisplayDate({ 
   date = new Date(), 
