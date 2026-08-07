@@ -12,8 +12,8 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-import { useAttendance } from '../hooks/useAttendance';
-import StudentAttendanceCard from './StudentAttendanceCard';
+import { useAttendance } from '@/hooks/useAttendance';
+import StudentAttendanceCard from '@/components/Student/StudentAttendanceCard';
 
 export default function Attendance({ 
   students = [], 
