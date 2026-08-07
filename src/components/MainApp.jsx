@@ -1,18 +1,17 @@
 /* src/components/MainApp.jsx */
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
-import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { ROLES } from '../constants/roles';
-
-// استيراد المكونات الثابتة عبر التصدير التجميعي الموحد (index.js)
-import { 
-  Sidebar, 
-  Header, 
-  Dashboard, 
-  SubscriptionPage 
-} from './index';
-
 import { RefreshCw, AlertTriangle } from 'lucide-react';
+
+// 🛠️ خدمات وثوابت المشروع (باستخدام @/)
+import { supabase } from '@/lib/supabase';
+import { ROLES } from '@/constants/roles';
+
+// 🧩 استيراد المكونات المباشرة من أماكنها الصحيحة (حل مشكلة ./index)
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import Dashboard from '@/components/Dashboard';
+import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 
 const safeLazy = (importFn) => {
   return lazy(() =>
@@ -28,18 +27,18 @@ const safeLazy = (importFn) => {
   );
 };
 
-// الاستيرادات الديناميكية المسندة إلى الهيكلية والمجلدات الجديدة
-const Students = safeLazy(() => import('./Student/StudentProfile.jsx'));
-const Teachers = safeLazy(() => import('./Teachers.jsx')); 
-const Attendance = safeLazy(() => import('./Attendance.jsx'));
-const Exams = safeLazy(() => import('./Exams.jsx')); 
-const Payments = safeLazy(() => import('./Payments/StudentPayments.jsx'));
-const Settings = safeLazy(() => import('./Settings.jsx')); 
-const Reports = safeLazy(() => import('./Reports.jsx'));
-const ActiveHalaqas = safeLazy(() => import('./ActiveHalaqas.jsx'));
-const RealtimeAudit = safeLazy(() => import('./RealtimeAudit.jsx'));
-const CommunicationHub = safeLazy(() => import('./CommunicationHub.jsx'));
-const GamificationStreaks = safeLazy(() => import('./Gamification/GamificationStreaks.jsx'));
+// 🔄 الاستيرادات الديناميكية باستخدام المسار الموحد (@/)
+const Students = safeLazy(() => import('@/components/Student/StudentProfile.jsx'));
+const Teachers = safeLazy(() => import('@/components/Teachers.jsx')); 
+const Attendance = safeLazy(() => import('@/components/Attendance.jsx'));
+const Exams = safeLazy(() => import('@/components/Exams.jsx')); 
+const Payments = safeLazy(() => import('@/components/Payments/StudentPayments.jsx'));
+const Settings = safeLazy(() => import('@/components/Settings.jsx')); 
+const Reports = safeLazy(() => import('@/components/Reports.jsx'));
+const ActiveHalaqas = safeLazy(() => import('@/components/ActiveHalaqas.jsx'));
+const RealtimeAudit = safeLazy(() => import('@/components/RealtimeAudit.jsx'));
+const CommunicationHub = safeLazy(() => import('@/components/CommunicationHub.jsx'));
+const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
