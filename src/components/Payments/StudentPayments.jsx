@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { C } from '@/constants/colors';
-import { Card, PageHeader, TH, TD, Badge, Btn } from '@/UI';
-import { useTranslation } from 'react-i18next';
+import { Card, PageHeader, TH, TD, Badge, Btn } from '@/components/UI';
 
 const DEFAULT_SUBSCRIPTION_AMOUNT = 150;
 
