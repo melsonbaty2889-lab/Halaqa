@@ -5,13 +5,13 @@ import {
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock 
 } from 'lucide-react';
 
-// 🛠️ الخدمات والثوابت والسياقات (باستخدام @/)
+// 🛠️ الخدمات والثوابت والسياقات
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES, getRouteForRole } from '@/constants/roles';
 
-// 🔄 المكونات العامة واستدعاءاتها من المجلدات الفرعية
-import SplashScreen from '@/components/UI/SplashScreen';
+// 🔄 المكونات العامة (استيرادات مباشرة ومحددة لكل مكون)
+import SplashScreen from '@/components/UI/SplashScreen'; 
 import LoginPage from '@/components/Auth/LoginPage';
 import SignUpPage from '@/components/Auth/SignUpPage';
 import ForgotPassword from '@/components/Auth/ForgotPassword';
@@ -37,7 +37,6 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   const cleanRole = profile?.role?.toLowerCase()?.trim();
   const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
 
-  // 🔒 حظر الوصول الفعلي للحسابات غير المصرح لها
   if (!isAllowed) {
     const targetRoute = getRouteForRole ? getRouteForRole(cleanRole) : '/';
     console.warn(`🔒 تم منع الوصول غير المصرح به لدور: ${cleanRole} -> توجيه إلى: ${targetRoute}`);
