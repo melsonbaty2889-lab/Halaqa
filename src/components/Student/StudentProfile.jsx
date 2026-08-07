@@ -11,7 +11,7 @@ import { getQuranProgress } from "@/utils/quranUtils";
 import { formatName } from "@/utils/formatters";
 
 // 🧩 المكونات العامة والمجاورة
-import { Btn, Card, Input, Select, PageHeader } from "@/components/UI"; 
+import { Btn, Card, Input, Select, PageHeader } from "@/components/UI/UI.jsx"; 
 import QuranProgressSelector from "@/components/QuranProgress/QuranProgressSelector";
 import QuranProgressBar from "@/components/QuranProgress/QuranProgressBar";
 import AchievementChart from "@/components/Gamification/AchievementChart"; 
