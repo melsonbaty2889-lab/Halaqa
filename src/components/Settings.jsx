@@ -1,4 +1,4 @@
-import { Card } from './UI';
+import { Card } from '@/UI';
 
 export default function Settings({ teacher, setTeacher }) {
   return (
