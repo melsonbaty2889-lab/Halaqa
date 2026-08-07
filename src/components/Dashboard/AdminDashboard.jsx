@@ -1,7 +1,10 @@
+/* src/components/Dashboard/AdminDashboard.jsx */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styles from '@/components/Dashboard/Dashboard.module.css';
 import { supabase } from '@/lib/supabase';
-import EmptyState from '@/UI/EmptyState'; 
+
+// 🛠️ تصحيح المسار المسبب لخطأ Vercel Build (استبدال @/UI بـ @/components/UI)
+import EmptyState from '@/components/UI/EmptyState'; 
 
 // ✨ استيراد الأيقونات
 import { 
@@ -63,7 +66,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   const [toast, setToast] = useState(null);
 
   // 📱 حالة نافذة إدخال رقم الهاتف
-  const [phoneModalData, setPhoneModalData] = useState(null); // { ownerId, academyName, currentPhone }
+  const [phoneModalData, setPhoneModalData] = useState(null);
   const [inputPhone, setInputPhone] = useState('');
 
   // 🔍 حالات البحث والفلترة والفرز والصفحات
@@ -93,7 +96,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
-  // 💾 دالة حفظ رقم الهاتف من الـ Modal مع رصد الأخطاء بدقة
+  // 💾 دالة حفظ رقم الهاتف من الـ Modal
   const handleSavePhone = async () => {
     if (!inputPhone.trim() || !phoneModalData) return;
     
@@ -101,9 +104,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     
     setProcessingId('save-phone');
     try {
-      console.log("Updating phone for user:", phoneModalData.ownerId, "with phone:", cleanPhone);
-
-      // محاولة التحديث في جدول profiles
       const { data, error } = await supabase
         .from('profiles')
         .update({ phone: cleanPhone })
@@ -111,11 +111,9 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         .select();
 
       if (error) {
-        console.error("Supabase update error:", error);
         throw new Error(error.message);
       }
 
-      console.log("Update success response:", data);
       showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح! 🎉" : "Phone saved successfully!");
       
       if (selectedAcademyDetails && selectedAcademyDetails.owner_id === phoneModalData.ownerId) {
@@ -129,7 +127,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       setInputPhone('');
       fetchDashboardData(true);
     } catch (err) {
-      console.error("Catch error saving phone:", err);
       showToast(isRtl ? `فشل الحفظ: ${err.message}` : `Failed to save: ${err.message}`, "error");
     } finally {
       setProcessingId(null);
