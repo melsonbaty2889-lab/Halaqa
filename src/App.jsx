@@ -1,20 +1,23 @@
 /* src/App.jsx */
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
-import { supabase } from './lib/supabase';
-import { useAcademy } from './context/AcademyContext';
-import { ROLES, getRouteForRole } from './constants/roles';
 import { 
   Loader2, Clock, LogOut, Wifi, 
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock 
 } from 'lucide-react';
 
-// 🔄 الاستدعاءات المحدثة من مجلد المكونات ومجلداته الفرعية الجديدة
-import { SplashScreen } from './components/UI';
-import { LoginPage, SignUpPage, ForgotPassword, UpdatePassword } from './components/Auth';
-import MainApp from './components/MainApp';
-import CreateAcademy from './components/CreateAcademy';
+// 🛠️ الخدمات والثوابت والسياقات (باستخدام @/)
+import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext';
+import { ROLES, getRouteForRole } from '@/constants/roles';
 
-const AdminDashboard = lazy(() => import('./components/Dashboard/AdminDashboard'));
+// 🔄 المكونات العامة واستدعاءاتها من المجلدات الفرعية
+import { SplashScreen } from '@/components/UI';
+import { LoginPage, SignUpPage, ForgotPassword, UpdatePassword } from '@/components/Auth';
+import MainApp from '@/components/MainApp';
+import CreateAcademy from '@/components/CreateAcademy';
+
+// 📊 التحميل الكسول (Lazy Load) للوحة تحكم السوبر أدمن
+const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 // 🛡️ مكون حماية المسارات المدمج المحسّن (ProtectedRoute)
 const ProtectedRoute = ({ allowedRoles, children }) => {
