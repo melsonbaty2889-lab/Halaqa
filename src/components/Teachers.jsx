@@ -1,7 +1,7 @@
 /* src/components/Teachers.jsx */
 import React, { useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import AddStaffModal from '@/AddStaffModal.jsx';
+import AddStaffModal from './AddStaffModal.jsx';
 import { 
   FaUserTie, FaPlus, FaSearch, FaTrash, 
   FaPhone, FaEnvelope, FaChalkboardTeacher, FaExclamationTriangle, FaSpinner 
