@@ -4,8 +4,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 // 1. استيراد ملفات اللغات
-import arTranslation from './ar.json';
-import enTranslation from './en.json';
+import arTranslation from '@/locales/ar.json';
+import enTranslation from '@/locales/en.json';
 
 // قائمة اللغات التي تكتب من اليمين إلى اليسار (RTL)
 const RTL_LANGUAGES = ['ar', 'ur', 'fa', 'he', 'arc'];
