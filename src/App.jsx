@@ -11,7 +11,7 @@ import { useAcademy } from '@/context/AcademyContext';
 import { ROLES, getRouteForRole } from '@/constants/roles';
 
 // 🔄 المكونات العامة واستدعاءاتها من المجلدات الفرعية
-import { SplashScreen } from '@/components/UI';
+import SplashScreen from '@/components/UI/SplashScreen';
 import { LoginPage, SignUpPage, ForgotPassword, UpdatePassword } from '@/components/Auth';
 import MainApp from '@/components/MainApp';
 import CreateAcademy from '@/components/CreateAcademy';
