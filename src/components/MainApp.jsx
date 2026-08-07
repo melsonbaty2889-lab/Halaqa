@@ -9,7 +9,7 @@ import { ROLES } from '@/constants/roles';
 
 // 🧩 استيراد المكونات المباشرة من أماكنها الصحيحة (حل مشكلة ./index)
 import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
+import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 
