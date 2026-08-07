@@ -1,9 +1,8 @@
 /* src/components/Dashboard.jsx */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { getDashboardStats } from '@/lib/dashboardService';
-import AdminDashboard from '@/components/Dashboard/AdminDashboard';
 import styles from '@/components/Dashboard/Dashboard.module.css';
 import { 
   GraduationCap, 
@@ -19,6 +18,9 @@ import {
   RefreshCw, 
   Landmark 
 } from 'lucide-react';
+
+// ✅ تحميل ديناميكي متوافق مع App.jsx
+const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 export default function Dashboard({ 
   session, 
@@ -44,7 +46,6 @@ export default function Dashboard({
   
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
-  // 🛡️ دالة آمنة لاستخراج النصوص ومنع React Error #31
   const safeText = useCallback((val, fallback = '') => {
     if (!val) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -86,16 +87,13 @@ export default function Dashboard({
     }
   }, [userRole, academyId, currentLang]);
 
-  // ⚡ الإضافة الجديدة: تحسين الـ Realtime بالفلترة وحماية الأداء بـ Debounce
   useEffect(() => {
     fetchDashboardData(true);
 
     if (!academyId) return;
 
-    // 1. تحديد الفلتر الخاص بأكاديمية المستخدم لحظر التنبيهات من أكاديميات أخرى
     const filterCondition = `academy_id=eq.${academyId}`;
 
-    // 2. معالج التغيير المباشر مع Debounce لمنع تكرار الطلبات
     let debounceTimer = null;
     const handleRealtimeChange = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
@@ -132,13 +130,17 @@ export default function Dashboard({
   }
 
   if (isSuperAdmin) {
-    return <AdminDashboard isRtl={isRtl} academyName={displayName} onLogout={() => supabase.auth.signOut()} />;
+    return (
+      <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center', color: '#94A3B8' }}>⏳ Loading Admin Panel...</div>}>
+        <AdminDashboard isRtl={isRtl} academyName={displayName} onLogout={() => supabase.auth.signOut()} />
+      </Suspense>
+    );
   }
 
   return (
     <div className={styles.dashboardContainer} style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1️⃣ الترويسة الأنيقة والمزدوجة للتجاوب */}
+      {/* 1️⃣ الترويسة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', lineHeight: '1.3' }}>
@@ -156,7 +158,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* 2️⃣ شريط الوصول السريع (Quick Actions) */}
+      {/* 2️⃣ شريط الوصول السريع */}
       <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px', scrollbarWidth: 'none' }}>
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
@@ -178,15 +180,11 @@ export default function Dashboard({
         </button>
       </div>
 
-      {/* 3️⃣ البطاقات الرئيسية التفاعلية */}
+      {/* 3️⃣ البطاقات الرئيسية */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
-        
-        {/* إجمالي الدارسين */}
         <div 
           onClick={() => setActiveTab && setActiveTab('students')}
-          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
-          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'}
-          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'إجمالي الدارسين' : 'Total Students'}</span>
@@ -198,12 +196,9 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* نسبة الحضور اليومي */}
         <div 
           onClick={() => setActiveTab && setActiveTab('attendance')}
-          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
-          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'}
-          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'نسبة الحضور اليومي' : 'Daily Attendance'}</span>
@@ -215,12 +210,9 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* جلسات التسميع اليوم */}
         <div 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
-          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
-          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)'}
-          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'جلسات التسميع اليوم' : 'Recitation Sessions'}</span>
@@ -234,12 +226,9 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* المتأخرات المعلقة */}
         <div 
           onClick={() => setActiveTab && setActiveTab('payments')}
-          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
-          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.4)'}
-          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'المتأخرات المعلقة' : 'Pending Overdues'}</span>
@@ -252,10 +241,9 @@ export default function Dashboard({
             {isArabic ? 'اشتراكات تحتاج متابعة' : 'Requires Follow-up'}
           </div>
         </div>
-
       </div>
 
-      {/* 4️⃣ حلقات اليوم المباشرة والتنبيهات */}
+      {/* 4️⃣ الحلقات المباشرة والتنبيهات */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
