@@ -12,7 +12,10 @@ import { ROLES, getRouteForRole } from '@/constants/roles';
 
 // 🔄 المكونات العامة واستدعاءاتها من المجلدات الفرعية
 import SplashScreen from '@/components/UI/SplashScreen';
-import { LoginPage, SignUpPage, ForgotPassword, UpdatePassword } from '@/components/Auth';
+import LoginPage from '@/components/Auth/LoginPage';
+import SignUpPage from '@/components/Auth/SignUpPage';
+import ForgotPassword from '@/components/Auth/ForgotPassword';
+import UpdatePassword from '@/components/Auth/UpdatePassword';
 import MainApp from '@/components/MainApp';
 import CreateAcademy from '@/components/CreateAcademy';
 
