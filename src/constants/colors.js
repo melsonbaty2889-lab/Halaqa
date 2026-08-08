@@ -3,54 +3,54 @@
 export const colors = {
   // الألوان الأساسية والتأكيدية (Amber / Gold)
   primary: {
-    DEFAULT: '#D97706', // اللون البرتقالي العنبري للتركيز والأزرار الرئيسية
-    hover: '#B45309',   // درجة أغمق لحالات التمرير (Hover)
-    light: '#F59E0B',   // روابط استعادة كلمة المرور والتنبيهات الفرعية
-    focusRing: 'rgba(217, 119, 6, 0.2)', // هالة حقول الإدخال عند التركيز
-    shadow: 'rgba(217, 119, 6, 0.25)',   // ظلال الأزرار الرئيسية
+    DEFAULT: '#D97706',
+    hover: '#B45309',
+    light: '#F59E0B',
+    focusRing: 'rgba(217, 119, 6, 0.2)',
+    shadow: 'rgba(217, 119, 6, 0.25)',
   },
 
   // ألوان النجاح والأمان (Emerald / Green)
   success: {
-    DEFAULT: '#10B981', // شارات الأمان والأيقونات المكتملة
-    light: '#34D399',   // نصوص رسائل النجاح
-    bg: 'rgba(16, 185, 129, 0.1)',      // خلفية تنبيهات النجاح
-    border: 'rgba(16, 185, 129, 0.25)',  // حدود تنبيهات النجاح
+    DEFAULT: '#10B981',
+    light: '#34D399',
+    bg: 'rgba(16, 185, 129, 0.1)',
+    border: 'rgba(16, 185, 129, 0.25)',
   },
 
   // ألوان الأخطاء والتنبيهات (Red)
   error: {
-    DEFAULT: '#EF4444', // حدود الحقول عند وجود خطأ ومؤشر كلمة المرور الضعيفة
-    light: '#F87171',   // نصوص رسائل الخطأ
-    bg: 'rgba(239, 68, 68, 0.1)',       // خلفية صندوق الأخطاء
-    border: 'rgba(239, 68, 68, 0.25)',   // حدود صندوق الأخطاء
+    DEFAULT: '#EF4444',
+    light: '#F87171',
+    bg: 'rgba(239, 68, 68, 0.1)',
+    border: 'rgba(239, 68, 68, 0.25)',
   },
 
   // ألوان الخلفيات والمساحات الداكنة (Dark / Slate)
   dark: {
-    pageBgStart: 'rgba(15, 118, 110, 0.18)', // مركز التدرج الشعاعي للخلفية
-    pageBgEnd: '#070C12',                    // أطراف خلفية الصفحة
-    cardBg: '#0F172A',                       // خلفية الكروت الرئيسية (Slate 900)
-    inputBg: '#090F16',                      // خلفية حقول الإدخال
-    buttonBg: '#1E293B',                     // خلفية زر Google واللغة (Slate 800)
+    pageBgStart: 'rgba(15, 118, 110, 0.18)',
+    pageBgEnd: '#070C12',
+    cardBg: '#0F172A',
+    inputBg: '#090F16',
+    buttonBg: '#1E293B',
   },
 
   // ألوان النصوص (Typography)
   text: {
-    title: '#F8FAFC',       // العناوين الرئيسية (Slate 50)
-    heading: '#E2E8F0',     // العناوين الفرعية (Slate 200)
-    body: '#CBD5E1',        // النصوص العامة (Slate 300)
-    muted: '#94A3B8',       // النصوص التوضيحية الباهتة (Slate 400)
-    placeholder: '#64748B', // نصوص الحقول التوضيحية (Slate 500)
-    highlight: '#38BDF8',   // تمييز البريد الإلكتروني (Sky 400)
+    title: '#F8FAFC',
+    heading: '#E2E8F0',
+    body: '#CBD5E1',
+    muted: '#94A3B8',
+    placeholder: '#64748B',
+    highlight: '#38BDF8',
   },
 
   // ألوان الحدود والتفاصيل (Borders & Dividers)
   border: {
-    card: '#1E293B',                     // حدود الكروت والأزرار العائمة
-    input: '#223147',                    // حدود حقول الإدخال الافتراضية
-    divider: '#334155',                  // الفواصل الأفريقية وحدود زر Google
-    logoBorder: 'rgba(45, 212, 191, 0.35)', // حدود الشعار الزمردية
+    card: '#1E293B',
+    input: '#223147',
+    divider: '#334155',
+    logoBorder: 'rgba(45, 212, 191, 0.35)',
   },
 
   // التدرجات اللونية الخاصة للشعار والرسوم البيانية (Gradients)
@@ -68,3 +68,8 @@ export const colors = {
     }
   }
 };
+
+// 🔄 التوافق مع المكونات التي تستورد C و g
+export const C = colors;
+export const g = colors.gradients;
+export default colors;
