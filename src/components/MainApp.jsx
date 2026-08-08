@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
 
 // 🧩 استيراد المكونات المباشرة من أماكنها الصحيحة (حل مشكلة ./index)
-import Sidebar from '@/components/Sidebar';
+import Sidebar from './Sidebar/Sidebar';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
