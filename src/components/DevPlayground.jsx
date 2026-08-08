@@ -2,7 +2,7 @@
 import React from 'react';
 import Logo from '@/components/UI/SmartHalaqaProLogo'; // الاسم الصحيح للملف
 
-export defaultون function DevPlayground() {
+export default function DevPlayground() {
   return (
     <div style={{ 
       background: '#090F17', 
