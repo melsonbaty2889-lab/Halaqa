@@ -1,6 +1,6 @@
 import React from 'react';
 // استدعِ هنا المكون الذي تريد تجريبه (مثل اللوجو أو زر أو جدول)
-import Logo from '@/components/UI/Logo';
+import Logo from '@/components/UI/SmartHalaqaProLogo';
 
 export default function DevPlayground() {
   return (
