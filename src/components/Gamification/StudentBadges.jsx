@@ -14,7 +14,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         titleEn: 'Hifz Spark',
         descAr: 'استمرار لـ 3 أيام متتالية',
         descEn: '3 Days Streak',
-        icon: <Flame size={20} className="text-amber-500" />,
+        icon: <Flame size={20} className="text-amber-400" />,
         unlocked: streak >= 3,
         count: Math.floor(streak / 3)
       },
@@ -34,7 +34,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         titleEn: 'Weekly Achiever',
         descAr: 'التزام وحضور منتظم',
         descEn: 'Consistent Active Week',
-        icon: <Crown size={20} className="text-amber-500" />,
+        icon: <Crown size={20} className="text-amber-400" />,
         unlocked: activeWeeks >= 4,
         count: 1
       }
@@ -68,14 +68,15 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            background: 'rgba(217, 119, 6, 0.15)',
+            background: 'rgba(245, 158, 11, 0.12)',
             padding: '6px',
             borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            border: '1px solid rgba(245, 158, 11, 0.2)'
           }}>
-            <Award size={18} color="#D97706" />
+            <Award size={18} color="#F59E0B" />
           </div>
           <span style={{ color: '#F8FAFC', fontSize: '14px', fontWeight: 'bold' }}>
             {isRtl ? 'شارات التميز والإتقان' : 'Mastery Badges'}
@@ -105,8 +106,8 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
             key={badge.id}
             style={{
               position: 'relative',
-              background: badge.unlocked ? 'rgba(9, 15, 22, 0.8)' : 'rgba(15, 23, 42, 0.4)',
-              border: badge.unlocked ? '1px solid #D97706' : '1px solid #1E293B',
+              background: badge.unlocked ? 'rgba(9, 15, 22, 0.9)' : 'rgba(15, 23, 42, 0.4)',
+              border: badge.unlocked ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid #1E293B',
               borderRadius: '12px',
               padding: '12px 8px',
               display: 'flex',
@@ -115,7 +116,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
               textAlign: 'center',
               opacity: badge.unlocked ? 1 : 0.45,
               transition: 'all 0.2s ease',
-              boxShadow: badge.unlocked ? '0 4px 14px rgba(217, 119, 6, 0.12)' : 'none'
+              boxShadow: badge.unlocked ? '0 4px 14px rgba(245, 158, 11, 0.08)' : 'none'
             }}
           >
             {badge.unlocked ? (
@@ -124,8 +125,8 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
                   position: 'absolute',
                   top: '-6px',
                   [isRtl ? 'left' : 'right']: '-6px',
-                  background: '#D97706',
-                  color: '#FFFFFF',
+                  background: '#F59E0B',
+                  color: '#0F172A',
                   fontSize: '9px',
                   fontWeight: 'bold',
                   padding: '2px 6px',
@@ -148,7 +149,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
 
             <div style={{
               marginBottom: '6px',
-              background: badge.unlocked ? 'rgba(217, 119, 6, 0.1)' : '#090F16',
+              background: badge.unlocked ? 'rgba(245, 158, 11, 0.12)' : '#090F16',
               padding: '8px',
               borderRadius: '50%',
               display: 'flex',
