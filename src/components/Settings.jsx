@@ -75,37 +75,36 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-  // رفع اللوجو مباشرة إلى Supabase Storage
   const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const file = e.target.files[0];
+  if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      showToast('يرجى اختيار صورة صالحة', 'error');
-      return;
+  try {
+    setUploadingLogo(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
+    const filePath = `logos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('academies')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      if (uploadError.message.includes('Bucket not found')) {
+        throw new Error('مجلد التخزين غير مجهز في Supabase. يرجى إنشاء Bucket باسم "academies"');
+      }
+      throw uploadError;
     }
 
-    try {
-      setUploadingLogo(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('academies')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('academies').getPublicUrl(filePath);
-      setFormData((prev) => ({ ...prev, logo_url: data.publicUrl }));
-      showToast('تم رفع الشعار بنجاح');
-    } catch (err) {
-      showToast('فشل رفع الشعار: ' + err.message, 'error');
-    } finally {
-      setUploadingLogo(false);
-    }
-  };
+    const { data } = supabase.storage.from('academies').getPublicUrl(filePath);
+    setFormData((prev) => ({ ...prev, logo_url: data.publicUrl }));
+    showToast('تم رفع الشعار بنجاح');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    setUploadingLogo(false);
+  }
+};
 
   // التحقق من صحة المدخلات
   const validateForm = () => {
