@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input } from './UI/UI.jsx';
 import { Building2, Save, Globe, Clock, Calendar, Mail, Phone, ShieldCheck, Database, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../supabaseClient'; // تأكد من ضبط مسار العميل لديك
+import { supabase } from '../lib/supabase';
 
 export default function Settings({ currentAcademyId, isRtl = true }) {
   const [loading, setLoading] = useState(false);
