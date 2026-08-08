@@ -25,7 +25,11 @@ export const SmartHalaqaProLogo = ({ size = 52 }) => (
           <stop offset="100%" stopColor="#047857" />
         </linearGradient>
       </defs>
-      <circle cx="16" cy="16" r="12" stroke="url(#smartHalaqaGoldGrad)" strokeWidth="1.8" />
+
+      {/* 🟡 الحلقة الذهبية مغلقة بالكامل (360 درجة) */}
+      <circle cx="16" cy="16" r="12" stroke="url(#smartHalaqaGoldGrad)" strokeWidth="1.8" fill="none" />
+
+      {/* 📖 الكتاب/المصحف داخل الحلقة */}
       <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#smartHalaqaEmeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
       <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#smartHalaqaEmeraldGrad)" stroke="#fef08a" strokeWidth="0.8" />
     </svg>
