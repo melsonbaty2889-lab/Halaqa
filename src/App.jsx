@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES, getRouteForRole } from '@/constants/roles';
 
-// 🔄 المكونات العامة (استيرادات مباشرة ومحددة لكل مكون)
+// 🔄 المكونات العامة
 import SplashScreen from '@/components/UI/SplashScreen'; 
 import LoginPage from '@/components/Auth/LoginPage';
 import SignUpPage from '@/components/Auth/SignUpPage';
@@ -18,6 +18,7 @@ import ForgotPassword from '@/components/Auth/ForgotPassword';
 import UpdatePassword from '@/components/Auth/UpdatePassword';
 import MainApp from '@/components/MainApp';
 import CreateAcademy from '@/components/CreateAcademy';
+import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
 // 📊 التحميل الكسول (Lazy Load) للوحة تحكم السوبر أدمن
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
@@ -263,6 +264,11 @@ function MainContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
+  // 🎓 0. صفحة التحقق العامة من الشهادات (تعمل فوراً للجميع بدون تسجيل دخول)
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/verify/')) {
+    return <CertificateVerify />;
+  }
+
   const goldColor = '#C9A84C';
 
   useEffect(() => {
@@ -346,7 +352,7 @@ function MainContent() {
   // 3. حالة الحساب قيد المراجعة
   if (appState === 'PENDING_APPROVAL') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+      <div style={{ minHeight: '100vh', display: 'flex', items: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
         <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '1px solid #1E293B' }}>
           <Clock size={40} style={{ color: goldColor, marginBottom: '20px' }} />
           <h2 style={{ color: '#fff', marginBottom: '15px' }}>طلبك قيد المراجعة</h2>
