@@ -1,31 +1,43 @@
-/* 1. استدعاء الخطوط العالمية */
+/* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* 2. موجهات تيلويند الأساسية */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 3. القواعد المتغيرة والشاملة */
 @layer base {
   :root {
-    --bg: #0C1520;
-    --surface: #111C2A;
+    /* الخلفيات والأسطح الداكنة */
+    --bg-dark: #0C1520;
+    --surface-dark: #111C2A;
+    --surface-card: #0F172A;
+    --surface-input: #090F16;
+
+    /* الهوية البصرية والتدرج الذهبي الموحد */
     --gold: #C9A84C;
-    --text: #FFFFFF;
+    --gold-hover: #A58230;
+    --gold-glow: rgba(201, 168, 76, 0.2);
+
+    /* النصوص والحدود */
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --border-light: rgba(255, 255, 255, 0.08);
+    --border-input: #223147;
+    
+    /* ألوان الحالة */
+    --success: #10B981;
     --danger: #EF4444;
-    --shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    --shadow-main: 0 10px 25px rgba(0, 0, 0, 0.4);
   }
 
-  /* إصلاحات التجاوب الشاملة للموبايل */
   html, body {
     width: 100%;
     max-width: 100vw;
     margin: 0;
     padding: 0;
     overflow-x: hidden !important;
-    background-color: var(--bg);
-    color: var(--text);
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     font-family: 'Cairo', sans-serif;
     direction: rtl;
     -webkit-font-smoothing: antialiased;
@@ -33,7 +45,6 @@
     scroll-behavior: smooth;
   }
 
-  /* إجبار جميع العناصر والحقول على استدعاء الخط الموحد */
   button, input, select, textarea {
     font-family: 'Cairo', sans-serif !important;
   }
@@ -49,7 +60,6 @@
     flex-direction: column;
   }
 
-  /* التفعيل التلقائي للخط في الواجهة الإنجليزية */
   [dir="ltr"] body,
   [dir="ltr"] button,
   [dir="ltr"] input,
@@ -58,13 +68,12 @@
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
-  /* تخصيص شريط التمرير */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: var(--bg);
+    background: var(--bg-dark);
   }
   ::-webkit-scrollbar-thumb {
     background: #162030;
@@ -75,30 +84,27 @@
   }
 }
 
-/* 4. فئات المكونات الموحدة والإصلاحات البصرية */
 @layer components {
-  /* كروت السطح الموحدة والتأثير الزجاجي */
   .card-surface {
-    background: var(--surface);
+    background: var(--surface-dark);
     border-radius: 12px;
     padding: 20px;
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--shadow-main);
+    border: 1px solid var(--border-light);
   }
 
   .glass-card {
-    background: rgba(17, 28, 42, 0.75);
+    background: rgba(17, 28, 42, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(201, 168, 76, 0.15);
+    border: 1px solid var(--border-light);
   }
 
-  /* حقول الإدخال الخاصة بالنظام وشاشات الدخول */
   .auth-input {
     width: 100%;
-    background-color: #090F16;
-    border: 1px solid #223147;
-    color: #F8FAFC;
+    background-color: var(--surface-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
     border-radius: 0.75rem;
     padding: 0.75rem 1rem;
     transition: all 0.2s ease-in-out;
@@ -106,19 +112,18 @@
 
   .auth-input:focus {
     outline: none;
-    border-color: #C9A84C;
-    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--gold-glow);
   }
 
   .auth-input-error {
-    border-color: #EF4444 !important;
+    border-color: var(--danger) !important;
   }
 
   .auth-input-error:focus {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
   }
 
-  /* النوافذ المنبثقة */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -137,14 +142,13 @@
   .modal-content {
     width: 100%;
     max-width: 420px;
-    background-color: var(--surface);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--surface-dark);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-main);
   }
 
-  /* القائمة المنسدلة للبحث */
   .search-wrapper {
     position: relative;
     width: 100%;
@@ -156,7 +160,7 @@
     right: 0;
     left: 0;
     width: 100%;
-    background-color: #0F172A;
+    background-color: var(--surface-card);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     max-height: 220px;
@@ -178,7 +182,6 @@
   }
 }
 
-/* حركات التحميل */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
