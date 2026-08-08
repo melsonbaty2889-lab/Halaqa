@@ -3,11 +3,13 @@ import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
+import { X } from "lucide-react";
 
-import { 
-  Search, X, ChevronDown, ChevronUp, 
-  Cloud, LogOut, Zap, Clock 
-} from "lucide-react";
+import AcademySelector from './AcademySelector';
+import SidebarWidget from './SidebarWidget';
+import SidebarSearch from './SidebarSearch';
+import SidebarMenu from './SidebarMenu';
+import SidebarFooter from './SidebarFooter';
 
 export default function Sidebar({
   currentAcademyId,
@@ -31,7 +33,6 @@ export default function Sidebar({
   const menuSections = getMenuSections(isRtl);
   const [openSectionId, setOpenSectionId] = useState(null);
 
-  // 🛡️ دالة مساعدة معالجة لاستخراج النص بأمان ومنع خطأ React #31
   const getText = (val) => {
     if (!val) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -41,7 +42,6 @@ export default function Sidebar({
     return '';
   };
 
-  // 🖱️ إغلاق قائمة الأكاديميات عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -75,38 +75,31 @@ export default function Sidebar({
 
       let list = [];
 
-      // 1. تجربة جلب عبر RPC
       const { data: rpcAcademyId, error: rpcError } = await supabase.rpc('get_user_academy_id');
-
       if (rpcAcademyId && !rpcError) {
         const { data: academyData } = await supabase
           .from('academies')
           .select('id, name, trial_ends_at, is_active')
           .eq('id', rpcAcademyId)
           .single();
-
         if (academyData) list.push(academyData);
       }
 
-      // 2. البحث في جدول staff
       if (list.length === 0) {
         const { data: staffData } = await supabase
           .from('staff')
           .select('academy_id, academies(id, name, trial_ends_at, is_active)')
           .eq('user_id', user.id);
-
         if (staffData && staffData.length > 0) {
           list = staffData.map(s => s.academies).filter(Boolean);
         }
       }
 
-      // 3. البحث في جدول academies كـ Owner
       if (list.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
           .select('id, name, trial_ends_at, is_active')
           .eq('owner_id', user.id);
-
         if (ownedAcademies && ownedAcademies.length > 0) {
           list = ownedAcademies;
         }
@@ -129,7 +122,6 @@ export default function Sidebar({
 
   useEffect(() => {
     loadAcademies();
-
     const channel = supabase
       .channel('sidebar-academy-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
@@ -229,7 +221,7 @@ export default function Sidebar({
     bottom: 0,
     [isRtl ? 'right' : 'left']: 0,
     width: isMobile ? 'min(300px, 84vw)' : '280px',
-    backgroundColor: '#0b1320', // توحيد مع خلفية التطبيق panel.bg
+    backgroundColor: '#0b1320',
     borderLeft: isRtl && !isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
     borderRight: !isRtl && !isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
     display: 'flex',
@@ -262,7 +254,6 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
         <div style={{ padding: '12px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 🌟 1️⃣ اللوجو الموحد مع اسم المنظومة */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -293,340 +284,51 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 🔴 2️⃣ اختيار الأكاديمية مع شارة الحساب */}
-          <div ref={dropdownRef} style={{ marginBottom: '10px', position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: '600' }}>
-                {isRtl ? 'الأكاديمية' : 'Academy'}
-              </span>
-              <span style={{
-                padding: '2px 8px',
-                borderRadius: '6px',
-                fontSize: '0.62rem',
-                fontWeight: '700',
-                ...statusBadge.style
-              }}>
-                {getText(statusBadge.text)}
-              </span>
-            </div>
+          <AcademySelector
+            academiesList={academiesList}
+            currentAcademyId={currentAcademyId}
+            currentAcademyName={currentAcademyName}
+            dropdownOpen={dropdownOpen}
+            setDropdownOpen={setDropdownOpen}
+            dropdownRef={dropdownRef}
+            statusBadge={statusBadge}
+            onSwitchAcademy={onSwitchAcademy}
+            getText={getText}
+            isRtl={isRtl}
+          />
 
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                background: '#0f172a',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '8px',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                fontWeight: '600',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {currentAcademyName}
-              </span>
-              <ChevronDown size={14} style={{ color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
-            </button>
+          <SidebarWidget
+            academyTime={academyTime}
+            hijri={hijri}
+            setActiveTab={setActiveTab}
+            setShowEarlyUpgrade={setShowEarlyUpgrade}
+            isMobile={isMobile}
+            setSidebarOpen={setSidebarOpen}
+            isRtl={isRtl}
+          />
 
-            {dropdownOpen && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: '4px',
-                background: '#0f172a',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: '0 12px 28px rgba(0, 0, 0, 0.65)',
-                zIndex: 100,
-                overflow: 'hidden'
-              }}>
-                {academiesList.map(acc => (
-                  <button
-                    key={acc.id}
-                    onClick={() => {
-                      if (onSwitchAcademy) onSwitchAcademy(acc.id);
-                      setDropdownOpen(false);
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '9px 12px',
-                      border: 'none',
-                      background: acc.id === currentAcademyId ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
-                      color: acc.id === currentAcademyId ? '#fbbf24' : '#e2e8f0',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      transition: 'background 0.15s ease'
-                    }}
-                  >
-                    <span dir="auto">{getText(acc.name)}</span>
-                    <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#f59e0b' }} />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <SidebarSearch
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            isRtl={isRtl}
+          />
 
-          {/* 📅 3️⃣ الوقت والتقويم والترقية */}
-          <div style={{
-            background: '#0f172a',
-            padding: '8px 10px',
-            borderRadius: '8px',
-            marginBottom: '10px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '6px'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: '#38bdf8',
-              fontSize: '0.72rem',
-              fontWeight: 'bold',
-              fontFamily: 'monospace',
-              flexShrink: 0
-            }}>
-              <Clock size={14} style={{ color: '#38bdf8' }} />
-              <span>{academyTime || '12:24 PM'}</span>
-            </div>
+          <SidebarMenu
+            filteredMenuSections={filteredMenuSections}
+            openSectionId={openSectionId}
+            toggleSection={toggleSection}
+            searchQuery={searchQuery}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isMobile={isMobile}
+            setSidebarOpen={setSidebarOpen}
+            getText={getText}
+            isRtl={isRtl}
+          />
 
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '1px',
-              minWidth: 0
-            }}>
-              <span style={{
-                fontSize: '0.65rem',
-                color: '#38bdf8',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                lineHeight: '1.2'
-              }}>
-                {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
-
-              <span style={{
-                fontSize: '0.62rem',
-                color: '#94a3b8',
-                fontWeight: '500',
-                whiteSpace: 'nowrap',
-                lineHeight: '1.2'
-              }}>
-                {hijri}
-              </span>
-            </div>
-
-            <button
-              onClick={() => {
-                setActiveTab('subscriptions');
-                if (typeof setShowEarlyUpgrade === 'function') setShowEarlyUpgrade(false);
-                if (isMobile) setSidebarOpen(false);
-              }}
-              style={{
-                padding: '5px 9px',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: '#000',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: '700',
-                fontSize: '0.68rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                flexShrink: 0,
-                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
-                transition: 'transform 0.15s ease'
-              }}
-            >
-              <Zap size={12} fill="#000" />
-              <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
-            </button>
-          </div>
-          
-          {/* 🔍 4️⃣ شريط البحث */}
-          <div style={{
-            position: 'relative',
-            marginBottom: '10px',
-            background: '#0f172a',
-            borderRadius: '8px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 10px'
-          }}>
-            <Search size={14} style={{ color: '#64748b' }} />
-            <input 
-              type="text"
-              placeholder={isRtl ? 'بحث سريع...' : 'Quick search...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: '#fff',
-                fontSize: '0.78rem'
-              }}
-            />
-          </div>
-
-          {/* 📑 5️⃣ القوائم بنظام الأكورديون الأحادي */}
-          <nav style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            flex: 1
-          }}>
-            {filteredMenuSections.length > 0 ? (
-              filteredMenuSections.map((section) => {
-                const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
-
-                return (
-                  <div key={section.id} style={{ marginBottom: '4px' }}>
-                    <button
-                      onClick={() => toggleSection(section.id)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '7px 10px',
-                        background: isExpanded ? 'rgba(30, 41, 59, 0.4)' : 'transparent',
-                        borderRadius: '6px',
-                        border: 'none',
-                        color: isExpanded ? '#38bdf8' : '#94a3b8',
-                        fontSize: '0.75rem',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <span>{getText(section.title)}</span>
-
-                      {isExpanded ? (
-                        <ChevronUp size={14} />
-                      ) : (
-                        <ChevronDown size={14} />
-                      )}
-                    </button>
-
-                    {isExpanded && (
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '2px',
-                        marginTop: '3px',
-                        paddingRight: isRtl ? '6px' : 0,
-                        paddingLeft: !isRtl ? '6px' : 0
-                      }}>
-                        {section.items.map((item) => {
-                          const Icon = item.icon;
-                          const isActive = activeTab === item.id;
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => {
-                                setActiveTab(item.id);
-                                if (isMobile) setSidebarOpen(false);
-                              }}
-                              style={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: isActive 
-                                  ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.05) 100%)' 
-                                  : 'transparent',
-                                borderRight: isActive && isRtl ? '3px solid #f59e0b' : 'none',
-                                borderLeft: isActive && !isRtl ? '3px solid #f59e0b' : 'none',
-                                color: isActive ? '#fbbf24' : '#cbd5e1',
-                                fontWeight: isActive ? '700' : 'normal',
-                                cursor: 'pointer',
-                                textAlign: isRtl ? 'right' : 'left',
-                                transition: 'all 0.15s ease'
-                              }}
-                            >
-                              <Icon style={{ color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
-                              
-                              <span style={{ fontSize: '0.8rem' }}>
-                                {getText(item.label)}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '12px 8px',
-                color: '#64748b',
-                fontSize: '0.75rem',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.05)'
-              }}>
-                {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
-              </div>
-            )}
-          </nav>
         </div>
 
-        {/* 🔒 6️⃣ إنهاء الجلسة */}
-        <div style={{ padding: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#070d18' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.72rem', color: '#64748b' }}>
-            <Cloud size={14} style={{ color: '#10b981' }} />
-            <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
-          </div>
-
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '8px',
-              background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              borderRadius: '6px',
-              color: '#f87171',
-              fontWeight: '700',
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-              transition: 'background 0.15s ease'
-            }}
-          >
-            <LogOut size={16} />
-            <span>{isRtl ? 'إنهاء الجلسة وتأكيد الخروج' : 'Logout'}</span>
-          </button>
-        </div>
+        <SidebarFooter isRtl={isRtl} />
       </aside>
     </>
   );
