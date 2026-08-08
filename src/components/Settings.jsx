@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input } from './UI/UI.jsx';
+import { Card, Input } from './UI/UI.jsx';
 import { Building2, Save, Globe, Clock, Calendar, Mail, Phone, ShieldCheck, Database, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -280,9 +280,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </div>
         </Card>
 
-        {/* Submit Actions */}
+                {/* Submit Actions */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' }}>
-          <Button
+          <button
             type="submit"
             disabled={saving}
             style={{
@@ -300,7 +300,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           >
             {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
             {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-          </Button>
+          </button>
         </div>
 
       </form>
