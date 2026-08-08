@@ -1,18 +1,18 @@
 // src/components/Exams.jsx
 import React, { useState, useEffect, useCallback } from 'react'; 
-import { supabase } from '../lib/supabase';
-import { sessionService } from '../lib/sessionService'; 
+import { supabase } from '@/lib/supabase';
+import { sessionService } from '@/lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
 import { 
-  FaAward, 
-  FaMinus, 
-  FaPlus, 
-  FaCheckCircle, 
-  FaSearch, 
-  FaGraduationCap, 
-  FaSpinner,
-  FaPrint
-} from 'react-icons/fa';
+  Award, 
+  Minus, 
+  Plus, 
+  CheckCircle2, 
+  Search, 
+  GraduationCap, 
+  Loader2,
+  Printer
+} from 'lucide-react';
 
 export default function Exams({ students = [], academyId }) {
   const { t, i18n } = useTranslation();
@@ -157,14 +157,58 @@ export default function Exams({ students = [], academyId }) {
     }
   };
 
-  // محاكي طباعة الشهادة للطالب المتفوق
-  const handlePrintCertificate = (log) => {
-    const studentName = formatStudentName(log.students?.name) || (isRtl ? 'الطالب' : 'Student');
-    const target = log.exam_target || log.notes || (isRtl ? 'الاختبار القرآن' : 'Quran Exam');
-    alert(isRtl 
-      ? `جاري تجهيز شهادة التقدير الكبرى للطالب: ${studentName} لنجاحه في اختبار ${target} بمعدل ${log.final_score}%` 
-      : `Generating formal certificate for ${studentName} for passing ${target} with score ${log.final_score}%`
-    );
+  // 🎓 دالة إصدار وتوثيق الشهادة الفعلية في Supabase
+  const handlePrintCertificate = async (log) => {
+    try {
+      const studentName = formatStudentName(log.students?.name) || (isRtl ? 'الطالب' : 'Student');
+      const studentId = log.student_id;
+      const curriculumId = log.curriculum_id;
+
+      if (!studentId || !curriculumId) {
+        alert(isRtl 
+          ? 'تعذر إصدار الشهادة: معرف الطالب أو المنهج غير مكتمِل في سجل هذا الاختبار.' 
+          : 'Cannot issue certificate: Missing student or curriculum ID.'
+        );
+        return;
+      }
+
+      // 1. التحقق مما إذا كانت الشهادة مسجلة مسبقاً لهذا الطالب في هذا المنهج
+      const { data: existingCert, error: fetchError } = await supabase
+        .from('certificates')
+        .select('verification_code')
+        .eq('student_id', studentId)
+        .eq('curriculum_id', curriculumId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      let certCode = existingCert?.verification_code;
+
+      // 2. إن لم تكن موجودة، يتم توليد رمز فريد وحفظ الشهادة جديدة في Supabase
+      if (!certCode) {
+        certCode = `CERT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+        const { error: insertError } = await supabase
+          .from('certificates')
+          .insert([{
+            student_id: studentId,
+            curriculum_id: curriculumId,
+            verification_code: certCode
+          }]);
+
+        if (insertError) throw insertError;
+      }
+
+      // 3. إشعار المستخدم برمز التحقق المعتمد
+      alert(isRtl 
+        ? `تم توثيق الشهادة بنجاح للطالب: ${studentName}\nرمز التحقق المعتمد: ${certCode}` 
+        : `Certificate issued for ${studentName}!\nVerification code: ${certCode}`
+      );
+
+    } catch (err) {
+      console.error('🚨 خطأ أثناء إصدار الشهادة:', err);
+      alert(isRtl ? `حدث خطأ أثناء حفظ الشهادة: ${err.message}` : `Error: ${err.message}`);
+    }
   };
 
   const filteredLogs = examLogs.filter(log => {
@@ -180,7 +224,7 @@ export default function Exams({ students = [], academyId }) {
       {/* هيدر اللوحة التوضيحي */}
       <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md mb-6">
         <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-3 m-0">
-          <FaAward className="text-amber-500" /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية الرسمية' : 'Quranic Exams & Milestones Panel'}
+          <Award className="text-amber-500 w-6 h-6" /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية الرسمية' : 'Quranic Exams & Milestones Panel'}
         </h2>
         <p className="text-xs text-slate-400 mt-2 font-medium">
           {isRtl 
@@ -193,7 +237,7 @@ export default function Exams({ students = [], academyId }) {
       {/* نموذج إجراء الاختبار الحي */}
       <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/20 backdrop-blur-md">
         <h3 className="text-base font-bold text-white mb-5 flex items-center gap-2">
-          <FaGraduationCap className="text-amber-400 text-lg" /> {isRtl ? 'عقد لجنة اختبار وإصدار تقييم موثق' : 'Conduct Official Live Exam'}
+          <GraduationCap className="text-amber-400 w-5 h-5" /> {isRtl ? 'عقد لجنة اختبار وإصدار تقييم موثق' : 'Conduct Official Live Exam'}
         </h3>
 
         {/* رسائل التغذية الراجعة */}
@@ -258,9 +302,9 @@ export default function Exams({ students = [], academyId }) {
           <div className="p-4 rounded-xl border border-red-500/10 bg-slate-950/40 text-center">
             <span className="block text-xs font-bold text-red-400 mb-3">{isRtl ? 'الخطأ الكامل (نسيان/تبديل كلمة)' : 'Full Errors (Deductions)'}</span>
             <div className="flex items-center justify-center gap-4">
-              <button type="button" onClick={() => setFullErrors(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer"><FaMinus size={11} /></button>
+              <button type="button" onClick={() => setFullErrors(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer"><Minus className="w-3.5 h-3.5" /></button>
               <span className="text-xl font-extrabold text-white min-w-[24px]">{fullErrors}</span>
-              <button type="button" onClick={() => setFullErrors(prev => prev + 1)} className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors cursor-pointer"><FaPlus size={11} /></button>
+              <button type="button" onClick={() => setFullErrors(prev => prev + 1)} className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors cursor-pointer"><Plus className="w-3.5 h-3.5" /></button>
             </div>
             <span className="block text-[10px] text-slate-500 mt-2">(-{mistakeWeight} {isRtl ? 'درجات للخطأ' : 'pts each'})</span>
           </div>
@@ -268,9 +312,9 @@ export default function Exams({ students = [], academyId }) {
           <div className="p-4 rounded-xl border border-amber-500/10 bg-slate-950/40 text-center">
             <span className="block text-xs font-bold text-amber-400 mb-3">{isRtl ? 'الردة / التنبيه (مساعدة الفتح للشيخ)' : 'Warnings / Prompts Given'}</span>
             <div className="flex items-center justify-center gap-4">
-              <button type="button" onClick={() => setWarnings(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer"><FaMinus size={11} /></button>
+              <button type="button" onClick={() => setWarnings(prev => Math.max(0, prev - 1))} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer"><Minus className="w-3.5 h-3.5" /></button>
               <span className="text-xl font-extrabold text-white min-w-[24px]">{warnings}</span>
-              <button type="button" onClick={() => setWarnings(prev => prev + 1)} className="w-9 h-9 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center transition-colors cursor-pointer"><FaPlus size={11} /></button>
+              <button type="button" onClick={() => setWarnings(prev => prev + 1)} className="w-9 h-9 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center transition-colors cursor-pointer"><Plus className="w-3.5 h-3.5" /></button>
             </div>
             <span className="block text-[10px] text-slate-500 mt-2">(-{promptWeight} {isRtl ? 'درجات للتنبيه' : 'pts each'})</span>
           </div>
@@ -331,7 +375,7 @@ export default function Exams({ students = [], academyId }) {
           disabled={isSubmitting}
           className="w-full p-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/5 active:scale-[0.99] transition-all cursor-pointer"
         >
-          <FaCheckCircle /> {isSubmitting ? (isRtl ? 'جاري توثيق الدرجة...' : 'Certifying...') : (isRtl ? 'اعتماد نتيجة الاختبار الحالية وإدراجها بلوحة الشرف 🚀' : 'Certify Official Exam & Log to Registry 🚀')}
+          <CheckCircle2 className="w-5 h-5" /> {isSubmitting ? (isRtl ? 'جاري توثيق الدرجة...' : 'Certifying...') : (isRtl ? 'اعتماد نتيجة الاختبار الحالية وإدراجها بلوحة الشرف 🚀' : 'Certify Official Exam & Log to Registry 🚀')}
         </button>
       </div>
 
@@ -340,7 +384,7 @@ export default function Exams({ students = [], academyId }) {
         
         {/* محرك البحث السريع */}
         <div className="relative mb-4 flex items-center">
-          <FaSearch className={`absolute ${isRtl ? 'right-4' : 'left-4'} text-slate-500 text-xs`} />
+          <Search className={`absolute ${isRtl ? 'right-4' : 'left-4'} text-slate-500 w-4 h-4`} />
           <input 
             type="text" 
             value={searchQuery}
@@ -352,7 +396,7 @@ export default function Exams({ students = [], academyId }) {
 
         {loadingLogs ? (
           <div className="text-center text-amber-400 py-6 text-xs font-bold flex items-center justify-center gap-2">
-            <FaSpinner className="animate-spin" /> {isRtl ? 'جاري تحميل سجل اللجان والشهادات...' : 'Loading matrix logs...'}
+            <Loader2 className="animate-spin w-4 h-4" /> {isRtl ? 'جاري تحميل سجل اللجان والشهادات...' : 'Loading matrix logs...'}
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="text-center text-slate-500 py-8 text-xs">
@@ -405,7 +449,7 @@ export default function Exams({ students = [], academyId }) {
                           }`}
                           title={isRtl ? "طباعة شهادة التقدير الرسمية" : "Print Official Milestone Certificate"}
                         >
-                          <FaPrint size={11} />
+                          <Printer className="w-3 h-3" />
                           <span>{isRtl ? 'الشهادة' : 'Cert'}</span>
                         </button>
                       </td>
