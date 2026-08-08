@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
@@ -26,9 +26,9 @@ export default function Sidebar({
   const [academiesList, setAcademiesList] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef(null);
 
   const menuSections = getMenuSections(isRtl);
-
   const [openSectionId, setOpenSectionId] = useState(null);
 
   // 🛡️ دالة مساعدة معالجة لاستخراج النص بأمان ومنع خطأ React #31
@@ -40,6 +40,17 @@ export default function Sidebar({
     }
     return '';
   };
+
+  // 🖱️ إغلاق قائمة الأكاديميات عند النقر خارجها
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items.some(item => item.id === activeTab));
@@ -218,9 +229,9 @@ export default function Sidebar({
     bottom: 0,
     [isRtl ? 'right' : 'left']: 0,
     width: isMobile ? 'min(300px, 84vw)' : '280px',
-    backgroundColor: '#0b1329',
-    borderLeft: isRtl && !isMobile ? '1px solid #1e293b' : 'none',
-    borderRight: !isRtl && !isMobile ? '1px solid #1e293b' : 'none',
+    backgroundColor: '#0b1320', // توحيد مع خلفية التطبيق panel.bg
+    borderLeft: isRtl && !isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
+    borderRight: !isRtl && !isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -241,7 +252,7 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(4px)',
             zIndex: 999
           }}
@@ -256,14 +267,14 @@ export default function Sidebar({
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between', 
-            marginBottom: '10px', 
-            paddingBottom: '8px', 
-            borderBottom: '1px solid #1e293b' 
+            marginBottom: '12px', 
+            paddingBottom: '10px', 
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)' 
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <SmartHalaqaProLogo size={36} />
               <div>
-                <h2 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: '#fff', lineHeight: '1.2' }}>
+                <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#f8fafc', lineHeight: '1.2' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
                 <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: '500' }}>
@@ -283,14 +294,14 @@ export default function Sidebar({
           </div>
 
           {/* 🔴 2️⃣ اختيار الأكاديمية مع شارة الحساب */}
-          <div style={{ marginBottom: '8px', position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.7rem', color: '#cbd5e1', fontWeight: '600' }}>
+          <div ref={dropdownRef} style={{ marginBottom: '10px', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: '600' }}>
                 {isRtl ? 'الأكاديمية' : 'Academy'}
               </span>
               <span style={{
-                padding: '2px 6px',
-                borderRadius: '4px',
+                padding: '2px 8px',
+                borderRadius: '6px',
                 fontSize: '0.62rem',
                 fontWeight: '700',
                 ...statusBadge.style
@@ -303,17 +314,18 @@ export default function Sidebar({
               onClick={() => setDropdownOpen(!dropdownOpen)}
               style={{
                 width: '100%',
-                padding: '7px 10px',
-                background: '#131f37',
-                border: '1px solid #1e293b',
-                borderRadius: '6px',
+                padding: '8px 12px',
+                background: '#0f172a',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '8px',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: '600'
+                fontSize: '0.82rem',
+                fontWeight: '600',
+                transition: 'all 0.2s ease'
               }}
             >
               <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -330,9 +342,9 @@ export default function Sidebar({
                 right: 0,
                 marginTop: '4px',
                 background: '#0f172a',
-                borderRadius: '7px',
-                border: '1px solid #334155',
-                boxShadow: '0 12px 28px rgba(0, 0, 0, 0.75)',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 12px 28px rgba(0, 0, 0, 0.65)',
                 zIndex: 100,
                 overflow: 'hidden'
               }}>
@@ -348,16 +360,17 @@ export default function Sidebar({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '8px 10px',
+                      padding: '9px 12px',
                       border: 'none',
-                      background: acc.id === currentAcademyId ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                      color: acc.id === currentAcademyId ? '#60a5fa' : '#e2e8f0',
+                      background: acc.id === currentAcademyId ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
+                      color: acc.id === currentAcademyId ? '#fbbf24' : '#e2e8f0',
                       cursor: 'pointer',
-                      fontSize: '0.78rem'
+                      fontSize: '0.8rem',
+                      transition: 'background 0.15s ease'
                     }}
                   >
                     <span dir="auto">{getText(acc.name)}</span>
-                    <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#3b82f6' }} />
+                    <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#f59e0b' }} />
                   </button>
                 ))}
               </div>
@@ -366,11 +379,11 @@ export default function Sidebar({
 
           {/* 📅 3️⃣ الوقت والتقويم والترقية */}
           <div style={{
-            background: '#131f37',
-            padding: '7px 10px',
-            borderRadius: '6px',
+            background: '#0f172a',
+            padding: '8px 10px',
+            borderRadius: '8px',
             marginBottom: '10px',
-            border: '1px solid #1e293b',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -380,8 +393,8 @@ export default function Sidebar({
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#ffffff',
-              fontSize: '0.7rem',
+              color: '#38bdf8',
+              fontSize: '0.72rem',
               fontWeight: 'bold',
               fontFamily: 'monospace',
               flexShrink: 0
@@ -395,11 +408,11 @@ export default function Sidebar({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '2px',
+              gap: '1px',
               minWidth: 0
             }}>
               <span style={{
-                fontSize: '0.64rem',
+                fontSize: '0.65rem',
                 color: '#38bdf8',
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
@@ -410,7 +423,7 @@ export default function Sidebar({
 
               <span style={{
                 fontSize: '0.62rem',
-                color: '#38bdf8',
+                color: '#94a3b8',
                 fontWeight: '500',
                 whiteSpace: 'nowrap',
                 lineHeight: '1.2'
@@ -426,22 +439,23 @@ export default function Sidebar({
                 if (isMobile) setSidebarOpen(false);
               }}
               style={{
-                padding: '5px 8px',
+                padding: '5px 9px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#000',
                 border: 'none',
-                borderRadius: '5px',
-                fontWeight: 'bold',
-                fontSize: '0.65rem',
+                borderRadius: '6px',
+                fontWeight: '700',
+                fontSize: '0.68rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '4px',
                 flexShrink: 0,
-                boxShadow: '0 2px 4px rgba(245, 158, 11, 0.15)'
+                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+                transition: 'transform 0.15s ease'
               }}
             >
-              <Zap size={12} />
+              <Zap size={12} fill="#000" />
               <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
             </button>
           </div>
@@ -450,12 +464,12 @@ export default function Sidebar({
           <div style={{
             position: 'relative',
             marginBottom: '10px',
-            background: '#131f37',
-            borderRadius: '6px',
-            border: '1px solid #1e293b',
+            background: '#0f172a',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
-            padding: '0 8px'
+            padding: '0 10px'
           }}>
             <Search size={14} style={{ color: '#64748b' }} />
             <input 
@@ -465,12 +479,12 @@ export default function Sidebar({
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '5px 6px',
+                padding: '6px 8px',
                 background: 'transparent',
                 border: 'none',
                 outline: 'none',
                 color: '#fff',
-                fontSize: '0.75rem'
+                fontSize: '0.78rem'
               }}
             />
           </div>
@@ -487,7 +501,7 @@ export default function Sidebar({
                 const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
 
                 return (
-                  <div key={section.id} style={{ marginBottom: '6px' }}>
+                  <div key={section.id} style={{ marginBottom: '4px' }}>
                     <button
                       onClick={() => toggleSection(section.id)}
                       style={{
@@ -495,15 +509,15 @@ export default function Sidebar({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '6px 8px',
-                        background: isExpanded ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.02)',
-                        borderRadius: '5px',
+                        padding: '7px 10px',
+                        background: isExpanded ? 'rgba(30, 41, 59, 0.4)' : 'transparent',
+                        borderRadius: '6px',
                         border: 'none',
                         color: isExpanded ? '#38bdf8' : '#94a3b8',
-                        fontSize: '0.72rem',
+                        fontSize: '0.75rem',
                         fontWeight: '700',
                         cursor: 'pointer',
-                        transition: '0.15s ease'
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       <span>{getText(section.title)}</span>
@@ -538,12 +552,12 @@ export default function Sidebar({
                                 width: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px',
-                                padding: '7px 10px',
-                                borderRadius: '5px',
+                                gap: '10px',
+                                padding: '8px 12px',
+                                borderRadius: '6px',
                                 border: 'none',
                                 background: isActive 
-                                  ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.08) 100%)' 
+                                  ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.05) 100%)' 
                                   : 'transparent',
                                 borderRight: isActive && isRtl ? '3px solid #f59e0b' : 'none',
                                 borderLeft: isActive && !isRtl ? '3px solid #f59e0b' : 'none',
@@ -554,9 +568,9 @@ export default function Sidebar({
                                 transition: 'all 0.15s ease'
                               }}
                             >
-                              <Icon style={{ fontSize: '0.82rem', color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
+                              <Icon style={{ color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
                               
-                              <span style={{ fontSize: '0.78rem' }}>
+                              <span style={{ fontSize: '0.8rem' }}>
                                 {getText(item.label)}
                               </span>
                             </button>
@@ -574,8 +588,8 @@ export default function Sidebar({
                 color: '#64748b',
                 fontSize: '0.75rem',
                 background: 'rgba(255,255,255,0.02)',
-                borderRadius: '5px',
-                border: '1px solid #1e293b'
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
               }}>
                 {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
               </div>
@@ -584,8 +598,8 @@ export default function Sidebar({
         </div>
 
         {/* 🔒 6️⃣ إنهاء الجلسة */}
-        <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', background: '#080d1a' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px', fontSize: '0.68rem', color: '#64748b' }}>
+        <div style={{ padding: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#070d18' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.72rem', color: '#64748b' }}>
             <Cloud size={14} style={{ color: '#10b981' }} />
             <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
           </div>
@@ -597,15 +611,16 @@ export default function Sidebar({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '7px',
+              gap: '8px',
+              padding: '8px',
               background: 'rgba(239, 68, 68, 0.08)',
               border: '1px solid rgba(239, 68, 68, 0.2)',
               borderRadius: '6px',
               color: '#f87171',
-              fontWeight: 'bold',
-              fontSize: '0.75rem',
-              cursor: 'pointer'
+              fontWeight: '700',
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              transition: 'background 0.15s ease'
             }}
           >
             <LogOut size={16} />
