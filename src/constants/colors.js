@@ -1,7 +1,7 @@
-// src/constants/colors.js
+// src/constants/colors.js - الهوية الرسمية لمنصة الحلقة الذكية
 
 export const colors = {
-  // الألوان الأساسية والتأكيدية (Amber / Gold)
+  // اللون البرتقالي العنبري (الأزرار والروابط المفعلة)
   primary: {
     DEFAULT: '#D97706',
     hover: '#B45309',
@@ -10,7 +10,7 @@ export const colors = {
     shadow: 'rgba(217, 119, 6, 0.25)',
   },
 
-  // ألوان النجاح والأمان (Emerald / Green)
+  // الأخضر الزمردي (الأيقونات ورموز الأمان والنجاح)
   success: {
     DEFAULT: '#10B981',
     light: '#34D399',
@@ -18,7 +18,7 @@ export const colors = {
     border: 'rgba(16, 185, 129, 0.25)',
   },
 
-  // ألوان الأخطاء والتنبيهات (Red)
+  // الأحمر للتنبيهات والأخطاء
   error: {
     DEFAULT: '#EF4444',
     light: '#F87171',
@@ -26,26 +26,25 @@ export const colors = {
     border: 'rgba(239, 68, 68, 0.25)',
   },
 
-  // ألوان الخلفيات والمساحات الداكنة (Dark / Slate)
+  // الألوان الداكنة والخلفيات
   dark: {
-    pageBgStart: 'rgba(15, 118, 110, 0.18)',
-    pageBgEnd: '#070C12',
-    cardBg: '#0F172A',
-    inputBg: '#090F16',
-    buttonBg: '#1E293B',
+    pageBgStart: 'rgba(15, 118, 110, 0.18)', // مركز التدرج الزمردي
+    pageBgEnd: '#070C12',                    // أطراف الشاشة الداكنة
+    cardBg: '#0F172A',                       // خلفية البطاقة الكبيرة
+    inputBg: '#090F16',                      // خلفية حقول الإدخال
+    buttonBg: '#1E293B',                     // زر Google وزر اللغة
   },
 
-  // ألوان النصوص (Typography)
+  // درجات النصوص
   text: {
-    title: '#F8FAFC',
-    heading: '#E2E8F0',
-    body: '#CBD5E1',
-    muted: '#94A3B8',
-    placeholder: '#64748B',
-    highlight: '#38BDF8',
+    title: '#F8FAFC',       // العناوين البيضاء
+    heading: '#E2E8F0',     // الفرعية
+    body: '#CBD5E1',        // النصوص العادية
+    muted: '#94A3B8',       // النصوص التوضيحية
+    placeholder: '#64748B', // نصوص الحقول التوضيحية
   },
 
-  // ألوان الحدود والتفاصيل (Borders & Dividers)
+  // الحدود والفواصل
   border: {
     card: '#1E293B',
     input: '#223147',
@@ -53,23 +52,14 @@ export const colors = {
     logoBorder: 'rgba(45, 212, 191, 0.35)',
   },
 
-  // التدرجات اللونية الخاصة للشعار والرسوم البيانية (Gradients)
+  // التدرجات
   gradients: {
     background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)',
     logoRadial: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
-    gold: {
-      stop1: '#FEF08A',
-      stop2: '#F59E0B',
-      stop3: '#B45309',
-    },
-    emerald: {
-      stop1: '#10B981',
-      stop2: '#047857',
-    }
   }
 };
 
-// 🔄 التوافق مع المكونات التي تستورد C و g
+// 🔄 تصدير المتغيرات لضمان التوافق مع كافة الاستيرادات في المشروع
 export const C = colors;
 export const g = colors.gradients;
 export default colors;
