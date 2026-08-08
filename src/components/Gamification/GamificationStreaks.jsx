@@ -86,7 +86,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[220px] text-amber-600 gap-2">
+      <div className="flex justify-center items-center min-h-[220px] text-amber-500 gap-2">
         <Loader2 className="animate-spin" size={28} />
         <span className="text-slate-400 text-sm">
           {isRtl ? 'جاري جلب البيانات...' : 'Loading data...'}
@@ -104,16 +104,16 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
     >
       {/* ⚠️ شريط التشخيص */}
       {debugInfo.error && (
-        <div className="bg-red-950/40 border border-red-500 text-red-300 p-3 rounded-xl text-xs flex items-center gap-2">
-          <AlertTriangle size={18} className="text-red-500 shrink-0" />
+        <div className="bg-red-950/40 border border-red-500/30 text-red-300 p-3 rounded-xl text-xs flex items-center gap-2">
+          <AlertTriangle size={18} className="text-red-400 shrink-0" />
           <span><strong>تنبيه التشخيص:</strong> {debugInfo.error}</span>
         </div>
       )}
 
-      {/* 👑 الهيدر والتنقل الرئيسي */}
-      <div className="bg-[#0F172A] p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-3.5">
+      {/* 👑 الهيدر والتنقل الرئيسي - الهوية القرآنية الحديثة */}
+      <div className="bg-[#0F172A] p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col gap-3.5">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-amber-600/15 text-amber-600 flex items-center justify-center shrink-0 border border-amber-600/30">
+          <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
             <Trophy size={22} />
           </div>
           <div>
@@ -126,14 +126,14 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
           </div>
         </div>
 
-        {/* أزرار التبويبات المتناسقة */}
-        <div className="flex bg-[#090F16] p-1 rounded-xl border border-slate-800 w-full">
+        {/* أزرار التبويبات المتناسقة (زجاجية ومطفأة بذكاء) */}
+        <div className="flex bg-[#090F16] p-1 rounded-xl border border-slate-800/80 w-full gap-1">
           <button 
             onClick={() => setActiveTab('leaderboard')}
-            className={`flex-1 py-2 px-1 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2 px-1 rounded-lg cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
               activeTab === 'leaderboard' 
-                ? 'bg-amber-600 text-white shadow-md' 
-                : 'bg-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.12)]' 
+                : 'bg-transparent text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <Crown size={14} />
@@ -142,10 +142,10 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
           
           <button 
             onClick={() => setActiveTab('streaks')}
-            className={`flex-1 py-2 px-1 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2 px-1 rounded-lg cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
               activeTab === 'streaks' 
-                ? 'bg-amber-600 text-white shadow-md' 
-                : 'bg-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.12)]' 
+                : 'bg-transparent text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <Flame size={14} />
@@ -154,10 +154,10 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
           <button 
             onClick={() => setActiveTab('badges')}
-            className={`flex-1 py-2 px-1 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2 px-1 rounded-lg cursor-pointer font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
               activeTab === 'badges' 
-                ? 'bg-amber-600 text-white shadow-md' 
-                : 'bg-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.12)]' 
+                : 'bg-transparent text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <Medal size={14} />
@@ -168,8 +168,8 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
       {/* 🏆 قائمة المتصدرين */}
       {activeTab === 'leaderboard' && (
-        <div className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4">
-          <h2 className="text-sm text-amber-500 mb-3.5 flex items-center gap-2 m-0 font-bold">
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
+          <h2 className="text-sm text-amber-400 mb-3.5 flex items-center gap-2 m-0 font-bold">
             <Crown size={16} />
             <span>{isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}</span>
           </h2>
@@ -190,39 +190,39 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
                     key={item.id || index} 
                     className={`flex flex-col gap-2.5 p-3 rounded-xl transition-all border ${
                       index === 0 
-                        ? 'bg-amber-600/10 border-amber-600/40 shadow-sm' 
-                        : 'bg-[#090F16] border-slate-800'
+                        ? 'bg-amber-500/10 border-amber-500/30 shadow-sm' 
+                        : 'bg-[#090F16] border-slate-800/80'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span className={`font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center text-white ${
-                          index === 0 ? 'bg-amber-600' : 'bg-slate-800'
+                        <span className={`font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center ${
+                          index === 0 ? 'bg-amber-500 text-slate-950 font-extrabold' : 'bg-slate-800 text-slate-300'
                         }`}>
                           {index + 1}
                         </span>
 
-                        <GraduationCap size={20} className={index === 0 ? 'text-amber-500' : 'text-slate-400'} />
+                        <GraduationCap size={20} className={index === 0 ? 'text-amber-400' : 'text-slate-400'} />
 
                         <div>
                           <span className="text-slate-100 font-bold text-xs block">
                             {formatName(item.name, lang, isRtl ? 'طالب' : 'Student')}
                           </span>
-                          <span className="text-slate-500 text-[11px]">
+                          <span className="text-slate-400 text-[11px]">
                             {isRtl ? `المستوى ${level}` : `Level ${level}`}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 bg-amber-600/15 px-2 py-1 rounded-lg text-amber-500 font-bold text-xs border border-amber-500/20">
-                        <Star size={12} className="fill-amber-500" />
+                      <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg text-amber-400 font-bold text-xs border border-amber-500/20">
+                        <Star size={12} className="fill-amber-400" />
                         <span>{pts}</span>
                       </div>
                     </div>
 
-                    <div className="w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+                    <div className="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden">
                       <div 
-                        className="bg-amber-600 h-full transition-all duration-500 ease-out"
+                        className="bg-amber-400 h-full transition-all duration-500 ease-out"
                         style={{ width: `${Math.min(progressInLevel, 100)}%` }} 
                       />
                     </div>
@@ -236,9 +236,9 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
       {/* 🔥 السلسلة المتتالية - Streaks */}
       {activeTab === 'streaks' && (
-        <div className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4">
-          <h2 className="text-sm text-red-500 mb-3.5 flex items-center gap-2 m-0 font-bold">
-            <Flame size={16} className="text-red-500" />
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
+          <h2 className="text-sm text-emerald-400 mb-3.5 flex items-center gap-2 m-0 font-bold">
+            <Flame size={16} className="text-emerald-400" />
             <span>{isRtl ? 'سلاسل المواظبة والالتزام' : 'Highest Daily Streaks'}</span>
           </h2>
 
@@ -253,27 +253,27 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
                 const longestStreak = st.longest_streak || currentStreak;
 
                 return (
-                  <div key={st.id || i} className="bg-[#090F16] p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                  <div key={st.id || i} className="bg-[#090F16] p-3 rounded-xl border border-slate-800/80 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="bg-red-500/10 w-9 h-9 rounded-lg flex items-center justify-center border border-red-500/20">
-                        <Flame size={20} className="text-red-500" />
+                      <div className="bg-amber-500/10 w-9 h-9 rounded-lg flex items-center justify-center border border-amber-500/20">
+                        <Flame size={20} className="text-amber-400" />
                       </div>
 
                       <div>
                         <h3 className="text-slate-100 text-xs font-bold m-0 mb-0.5">
                           {formatName(st.name, lang, isRtl ? 'طالب' : 'Student')}
                         </h3>
-                        <div className="text-slate-500 text-[11px]">
+                        <div className="text-slate-400 text-[11px]">
                           {isRtl ? `أفضل رقم: ${longestStreak} يوم` : `Best: ${longestStreak} days`}
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-[#0F172A] px-2.5 py-1.5 rounded-lg border border-slate-800 text-center">
-                      <div className="text-amber-500 font-bold text-xs">
+                      <div className="text-amber-400 font-bold text-xs">
                         {currentStreak} {isRtl ? 'يوم' : 'Days'}
                       </div>
-                      <div className="text-emerald-500 text-[10px] font-bold">
+                      <div className="text-emerald-400 text-[10px] font-bold">
                         ⚡ {isRtl ? 'مستمر' : 'Active'}
                       </div>
                     </div>
@@ -287,7 +287,7 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
       {/* 🎖️ الأوسمة والإنجازات - Badges */}
       {activeTab === 'badges' && (
-        <div className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4">
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
           <h2 className="text-sm text-sky-400 mb-3.5 flex items-center gap-2 m-0 font-bold">
             <Medal size={16} />
             <span>{isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges'}</span>
@@ -300,9 +300,9 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {badges.map((badge, index) => (
-                <div key={badge.id || index} className="bg-[#090F16] border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2.5">
+                <div key={badge.id || index} className="bg-[#090F16] border border-slate-800/80 rounded-xl p-3 flex items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-lg bg-amber-600/10 border border-amber-600/20 flex items-center justify-center text-amber-600 shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
                       <Medal size={20} />
                     </div>
 
@@ -310,18 +310,18 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
                       <h3 className="text-slate-100 text-xs font-bold m-0 mb-0.5">
                         {badge.title || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}
                       </h3>
-                      <p className="text-slate-500 text-[11px] m-0 leading-tight">
+                      <p className="text-slate-400 text-[11px] m-0 leading-tight">
                         {badge.description || (isRtl ? 'وسام تقديري للمواظبة والتفوق' : 'Reward for diligence and progress')}
                       </p>
                     </div>
                   </div>
 
                   <div className="bg-[#0F172A] px-2 py-1.5 rounded-lg border border-slate-800 text-center whitespace-nowrap">
-                    <div className="text-amber-500 font-bold text-xs flex items-center gap-1">
-                      <Star size={12} className="fill-amber-500" />
+                    <div className="text-amber-400 font-bold text-xs flex items-center gap-1">
+                      <Star size={12} className="fill-amber-400" />
                       <span>+{badge.points_rewarded || 50}</span>
                     </div>
-                    <div className="text-slate-500 text-[10px]">
+                    <div className="text-slate-400 text-[10px]">
                       {isRtl ? 'جائزة' : 'Reward'}
                     </div>
                   </div>
@@ -334,4 +334,4 @@ export default function GamificationStreaks({ academyId: propAcademyId, isRtl = 
 
     </div>
   );
-}
+            }
