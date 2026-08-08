@@ -12,6 +12,7 @@ import { ROLES, getRouteForRole } from '@/constants/roles';
 
 // 🔄 المكونات العامة
 import SplashScreen from '@/components/UI/SplashScreen'; 
+import Logo from '@/components/UI/Logo';
 import LoginPage from '@/components/Auth/LoginPage';
 import SignUpPage from '@/components/Auth/SignUpPage';
 import ForgotPassword from '@/components/Auth/ForgotPassword';
@@ -443,6 +444,22 @@ function MainContent() {
 export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
+
+  // 📱 وضع المعاينة السريعة للموبايل عبر الرابط
+  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const view = urlParams.get('view');
+
+  if (view === 'logo') {
+    return (
+      <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Logo size={140} />
+      </div>
+    );
+  }
+
+  if (view === 'splash') {
+    return <SplashScreen lang="ar" onFinish={() => alert('انتهى عرض الشاشة الافتتاحية')} />;
+  }
 
   // العرض مرة واحدة فقط لكل جلسة متصفح (Session)
   const [showSplash, setShowSplash] = useState(() => {
