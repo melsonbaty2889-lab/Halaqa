@@ -13,6 +13,7 @@ import { ROLES, getRouteForRole } from '@/constants/roles';
 // 🔄 المكونات العامة
 import SplashScreen from '@/components/UI/SplashScreen'; 
 import Logo from '@/components/UI/Logo';
+import DevPlayground from '@/components/DevPlayground'; // 🧪 استدعاء المختبر
 import LoginPage from '@/components/Auth/LoginPage';
 import SignUpPage from '@/components/Auth/SignUpPage';
 import ForgotPassword from '@/components/Auth/ForgotPassword';
@@ -21,16 +22,28 @@ import MainApp from '@/components/MainApp';
 import CreateAcademy from '@/components/CreateAcademy';
 import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
-// 📊 التحميل الكسول (Lazy Load) للوحة تحكم السوبر أدمن
+// 📊 التحميل الكسول لوحة تحكم السوبر أدمن
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
-// 🛡️ مكون حماية المسارات المدمج المحسّن (ProtectedRoute)
+// 🎨 ثوابت التصميم الموحدة
+const THEME = {
+  bgDark: '#090F17',
+  bgCard: '#111C2A',
+  bgCardHover: '#1E293B',
+  gold: '#C9A84C',
+  textMuted: '#94A3B8',
+  textLight: '#FFFFFF',
+  border: '#334155',
+  fontFamily: "'Cairo', system-ui, sans-serif"
+};
+
+// 🛡️ مكون حماية المسارات (ProtectedRoute)
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { profile, appState, logout } = useAcademy();
 
   if (appState === 'LOADING') {
     return (
-      <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#C9A84C' }}>
+      <div style={{ background: THEME.bgDark, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: THEME.gold }}>
         <Loader2 className="fa-spin" size={28} />
       </div>
     );
@@ -41,34 +54,32 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
 
   if (!isAllowed) {
     const targetRoute = getRouteForRole ? getRouteForRole(cleanRole) : '/';
-    console.warn(`🔒 تم منع الوصول غير المصرح به لدور: ${cleanRole} -> توجيه إلى: ${targetRoute}`);
-
     return (
       <div style={{
-        background: '#090F17',
+        background: THEME.bgDark,
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#FFF',
+        color: THEME.textLight,
         padding: '20px',
         textAlign: 'center',
-        fontFamily: "'Cairo', system-ui, sans-serif",
+        fontFamily: THEME.fontFamily,
         direction: 'rtl'
       }}>
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '20px', borderRadius: '50%', marginBottom: '16px', color: '#EF4444' }}>
           <Lock size={40} />
         </div>
         <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>غير مصرح لك بالوصول لهذه الشاشة</h2>
-        <p style={{ color: '#94A3B8', fontSize: '14px', maxWidth: '400px', marginBottom: '24px' }}>
+        <p style={{ color: THEME.textMuted, fontSize: '14px', maxWidth: '400px', marginBottom: '24px' }}>
           دور حسابك الحقيقي ({profile?.role || 'غير معروف'}) لا يمتلك الصلاحية الكافية لعرض هذا القسم.
         </p>
         <button
           onClick={logout}
           style={{
             padding: '10px 20px',
-            background: '#C9A84C',
+            background: THEME.gold,
             color: '#000',
             border: 'none',
             borderRadius: '8px',
@@ -85,7 +96,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return children;
 };
 
-// 🛡️ درع الأمان: اصطياد أخطاء التحديثات ووحدات الشبكة
+// 🛡️ درع الأمان: اصطياد أخطاء الشبكة
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -113,11 +124,11 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
       zIndex: 10000,
       padding: '20px',
       direction: 'rtl',
-      fontFamily: "'Cairo', system-ui, sans-serif"
+      fontFamily: THEME.fontFamily
     }}>
       <div style={{
-        background: '#111C2A',
-        border: '1px solid #334155',
+        background: THEME.bgCard,
+        border: `1px solid ${THEME.border}`,
         borderRadius: '16px',
         maxWidth: '480px',
         width: '100%',
@@ -133,7 +144,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             left: '16px',
             background: 'none',
             border: 'none',
-            color: '#94A3B8',
+            color: THEME.textMuted,
             fontSize: '1.2rem',
             cursor: 'pointer'
           }}
@@ -155,16 +166,16 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           }}>
             <Zap size={24} />
           </div>
-          <h2 style={{ color: '#FFF', fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
+          <h2 style={{ color: THEME.textLight, fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
             ترقية حساب الأكاديمية
           </h2>
-          <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
+          <p style={{ color: THEME.textMuted, fontSize: '0.85rem', margin: 0 }}>
             احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك ({academyName || ''})
           </p>
         </div>
 
         <div style={{
-          background: '#1E293B',
+          background: THEME.bgCardHover,
           borderRadius: '10px',
           padding: '14px',
           marginBottom: '20px',
@@ -211,8 +222,8 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             style={{
               padding: '12px 18px',
               background: 'transparent',
-              color: '#94A3B8',
-              border: '1px solid #334155',
+              color: THEME.textMuted,
+              border: `1px solid ${THEME.border}`,
               borderRadius: '8px',
               fontSize: '0.9rem',
               cursor: 'pointer'
@@ -226,7 +237,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   );
 }
 
-// 🛡️ حارس المكونات البرمجية (Error Boundary)
+// 🛡️ حارس المكونات البرمجية العام (Global Error Boundary)
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -236,15 +247,15 @@ class GlobalErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+        <div style={{ color: '#fff', textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: THEME.fontFamily }}>
           <AlertTriangle size={48} style={{ color: '#EF4444', marginBottom: '15px' }} />
           <h2 style={{ color: '#EF4444', marginBottom: '10px' }}>حدث خطأ تقني في النظام</h2>
-          <div style={{ background: '#1E293B', padding: '15px', borderRadius: '8px', border: '1px solid #334155', maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: '#F87171', overflowX: 'auto' }}>
+          <div style={{ background: THEME.bgCardHover, padding: '15px', borderRadius: '8px', border: `1px solid ${THEME.border}`, maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: '#F87171', overflowX: 'auto' }}>
             {this.state.error?.toString()}
           </div>
           <button 
             onClick={() => window.location.reload()} 
-            style={{ padding: '10px 20px', background: '#C9A84C', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ padding: '10px 20px', background: THEME.gold, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
           >
             إعادة تحميل الصفحة
           </button>
@@ -265,12 +276,10 @@ function MainContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  // 🎓 0. صفحة التحقق العامة من الشهادات (تعمل فوراً للجميع بدون تسجيل دخول)
+  // 🎓 التحقق الفوري العام من الشهادات
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/verify/')) {
     return <CertificateVerify />;
   }
-
-  const goldColor = '#C9A84C';
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -306,21 +315,12 @@ function MainContent() {
     );
   }
 
-  // 1. حالة تحميل البيانات
+  // 1. حالة التحميل
   if (appState === 'LOADING') {
     return (
-      <div style={{
-        background: '#090F17',
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: goldColor,
-        gap: '12px'
-      }}>
+      <div style={{ background: THEME.bgDark, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: THEME.gold, gap: '12px' }}>
         <Loader2 className="fa-spin" size={28} />
-        <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: "'Cairo', system-ui, sans-serif" }}>جاري تحميل المنظومة...</span>
+        <span style={{ fontSize: '0.85rem', color: THEME.textMuted, fontFamily: THEME.fontFamily }}>جاري تحميل المنظومة...</span>
       </div>
     );
   }
@@ -328,7 +328,7 @@ function MainContent() {
   // 2. حالة غير المسجلين
   if (appState === 'UNAUTHENTICATED') {
     return (
-      <div style={{ background: '#090F17', minHeight: '100vh', direction: 'rtl' }}>
+      <div style={{ background: THEME.bgDark, minHeight: '100vh', direction: 'rtl' }}>
         {authView === 'login' && (
           <LoginPage 
             onSwitchToSignUp={() => setAuthView('signup')} 
@@ -337,14 +337,10 @@ function MainContent() {
           />
         )}
         {authView === 'signup' && (
-          <SignUpPage 
-            onSwitchToLogin={() => setAuthView('login')} 
-          />
+          <SignUpPage onSwitchToLogin={() => setAuthView('login')} />
         )}
         {authView === 'forgot' && (
-          <ForgotPassword 
-            onBackToLogin={() => setAuthView('login')} 
-          />
+          <ForgotPassword onBackToLogin={() => setAuthView('login')} />
         )}
       </div>
     );
@@ -353,11 +349,11 @@ function MainContent() {
   // 3. حالة الحساب قيد المراجعة
   if (appState === 'PENDING_APPROVAL') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', items: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-        <div style={{ width: '100%', maxWidth: '500px', background: '#111C2A', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '1px solid #1E293B' }}>
-          <Clock size={40} style={{ color: goldColor, marginBottom: '20px' }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0C1520', padding: '20px', direction: 'rtl', fontFamily: THEME.fontFamily }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: THEME.bgCard, padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${THEME.border}` }}>
+          <Clock size={40} style={{ color: THEME.gold, marginBottom: '20px' }} />
           <h2 style={{ color: '#fff', marginBottom: '15px' }}>طلبك قيد المراجعة</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '25px', lineHeight: '1.6' }}>
+          <p style={{ color: THEME.textMuted, marginBottom: '25px', lineHeight: '1.6' }}>
             حسابك ({profile?.full_name || 'المستخدم'}) وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.
           </p>
 
@@ -365,7 +361,7 @@ function MainContent() {
             <button 
               onClick={handleManualRefresh} 
               disabled={isRefreshing}
-              style={{ padding: '10px 20px', background: goldColor, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', background: THEME.gold, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <RefreshCw size={16} className={isRefreshing ? 'fa-spin' : ''} />
               {isRefreshing ? 'جاري الفحص...' : 'تحديث حالة الطلب'}
@@ -389,7 +385,7 @@ function MainContent() {
     return (
       <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
         <Suspense fallback={
-          <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: goldColor }}>
+          <div style={{ background: THEME.bgDark, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: THEME.gold }}>
             <Loader2 className="fa-spin" size={32} />
           </div>
         }>
@@ -430,12 +426,12 @@ function MainContent() {
   }
 
   return (
-    <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px', textAlign: 'center' }}>
+    <div style={{ background: THEME.bgDark, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', fontFamily: THEME.fontFamily, padding: '20px', textAlign: 'center' }}>
       <AlertTriangle size={40} style={{ color: '#EF4444', marginBottom: '15px' }} />
       <h2 style={{ marginBottom: '10px' }}>عذراً، حالة النظام غير معرفة</h2>
-      <p style={{ color: '#9CA3AF', marginBottom: '5px' }}>App State: <strong style={{ color: goldColor }}>{appState || 'NULL'}</strong></p>
+      <p style={{ color: '#9CA3AF', marginBottom: '5px' }}>App State: <strong style={{ color: THEME.gold }}>{appState || 'NULL'}</strong></p>
       <p style={{ color: '#9CA3AF', marginBottom: '20px' }}>إذا ظهرت هذه الرسالة، فهذا يعني أن النظام لا يستطيع تصنيف حسابك حالياً.</p>
-      <button onClick={logout} style={{ background: goldColor, color: '#000', padding: '10px 25px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>تسجيل الخروج</button>
+      <button onClick={logout} style={{ background: THEME.gold, color: '#000', padding: '10px 25px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>تسجيل الخروج</button>
     </div>
   );
 }
@@ -445,13 +441,18 @@ export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
-  // 📱 وضع المعاينة السريعة للموبايل عبر الرابط
+  // 📱 وضع المعاينة السريعة والمختبر عبر الرابط
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const view = urlParams.get('view');
 
+  // 🧪 فتح مختبر التجارب المستقل عند طلب ?view=test
+  if (view === 'test') {
+    return <DevPlayground />;
+  }
+
   if (view === 'logo') {
     return (
-      <div style={{ background: '#090F17', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: THEME.bgDark, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Logo size={140} />
       </div>
     );
@@ -461,7 +462,6 @@ export default function App() {
     return <SplashScreen lang="ar" onFinish={() => alert('انتهى عرض الشاشة الافتتاحية')} />;
   }
 
-  // العرض مرة واحدة فقط لكل جلسة متصفح (Session)
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     return !sessionStorage.getItem('app_splash_seen');
@@ -477,7 +477,7 @@ export default function App() {
   };
 
   if (!isAllowed) {
-    return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: "'Cairo', system-ui, sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
+    return <div style={{ padding: '30px', color: '#EF4444', textAlign: 'center', fontFamily: THEME.fontFamily }}>🔒 نطاق غير مصرح به.</div>;
   }
 
   if (showSplash) {
