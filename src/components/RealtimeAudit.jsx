@@ -1,4 +1,4 @@
-/* src/components/RealtimeAudit.jsx - النسخة الاحترافية المبسطة للمستخدم */
+/* src/components/RealtimeAudit.jsx - النسخة الاحترافية المحسنة بالكامل */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -17,9 +17,7 @@ import {
   ChevronDown, 
   ChevronUp,
   Calendar,
-  Code,
-  CheckCircle2,
-  AlertCircle
+  Code
 } from 'lucide-react';
 
 export default function RealtimeAudit({ session, userRole }) {
@@ -35,7 +33,7 @@ export default function RealtimeAudit({ session, userRole }) {
     daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
   };
 
-  // قاموس ترجمة مفاتيح البيانات وقيمها للحقول المشهورة
+  // قاموس شامل لترجمة مفاتيح وقيم قاعدة البيانات
   const fieldLabels = {
     status: isArabic ? 'الحالة' : 'Status',
     notes: isArabic ? 'الملاحظات' : 'Notes',
@@ -43,16 +41,30 @@ export default function RealtimeAudit({ session, userRole }) {
     juz: isArabic ? 'الجزء' : 'Juz',
     amount: isArabic ? 'المبلغ' : 'Amount',
     full_name: isArabic ? 'الاسم الكامل' : 'Full Name',
+    name: isArabic ? 'الاسم' : 'Name',
     phone: isArabic ? 'رقم الهاتف' : 'Phone',
     quarter_index: isArabic ? 'الربع' : 'Quarter',
-    session_grade: isArabic ? 'الدرجة' : 'Grade'
+    quarter_in_hizb: isArabic ? 'الربع في الحزب' : 'Quarter in Hizb',
+    session_grade: isArabic ? 'الدرجة' : 'Grade',
+    gender: isArabic ? 'النوع' : 'Gender',
+    points: isArabic ? 'النقاط' : 'Points',
+    country: isArabic ? 'الدولة' : 'Country',
+    current_juz: isArabic ? 'الجزء الحالي' : 'Current Juz',
+    is_archived: isArabic ? 'الأرشيف' : 'Archived',
+    level_score: isArabic ? 'تقييم المستوى' : 'Level Score'
   };
 
   const valueTranslations = {
     present: isArabic ? 'حاضر' : 'Present',
     absent: isArabic ? 'غائب' : 'Absent',
     late: isArabic ? 'متأخر' : 'Late',
-    excused: isArabic ? 'مستأذن' : 'Excused'
+    excused: isArabic ? 'مستأذن' : 'Excused',
+    male: isArabic ? 'ذكر' : 'Male',
+    female: isArabic ? 'أنثى' : 'Female',
+    active: isArabic ? 'نشط' : 'Active',
+    false: isArabic ? 'نشط' : 'Active',
+    true: isArabic ? 'مؤرشف' : 'Archived',
+    EG: isArabic ? 'مصر 🇪🇬' : 'Egypt 🇪🇬'
   };
 
   const [logs, setLogs] = useState([]);
@@ -62,7 +74,7 @@ export default function RealtimeAudit({ session, userRole }) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
-  const [showRawJson, setShowRawJson] = useState({}); // حالة لكل بطاقة لعرض الـ Raw JSON
+  const [showRawJson, setShowRawJson] = useState({});
 
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
@@ -190,15 +202,23 @@ export default function RealtimeAudit({ session, userRole }) {
     return `${rawTable} ${operation} ${userName}`.includes(query);
   });
 
-  // تنسيق عرض القيم المفهومة
+  // معالجة النصوص والكائنات لحل مشكلة [object Object] وتأمين الترجمة
   const formatValue = (key, val) => {
     if (val === null || val === undefined || val === '') return <span style={{ color: '#64748B' }}>—</span>;
+    
+    if (typeof val === 'object') {
+      if (val.ar && isArabic) return val.ar;
+      if (val.en && !isArabic) return val.en;
+      if (val.name) return typeof val.name === 'object' ? formatValue(key, val.name) : val.name;
+      if (val.full_name) return val.full_name;
+      return JSON.stringify(val);
+    }
+
     const strVal = String(val);
-    if (valueTranslations[strVal]) return valueTranslations[strVal];
+    if (valueTranslations[strVal] !== undefined) return valueTranslations[strVal];
     return strVal;
   };
 
-  // العرض الاحترافي والمبسط للـ Payload
   const renderFriendlyPayload = (log) => {
     const isRaw = showRawJson[log.id];
     const oldData = log.old_data || {};
@@ -212,7 +232,6 @@ export default function RealtimeAudit({ session, userRole }) {
       );
     }
 
-    // الفلترة لاستبعاد المرفقات المعقدة والـ IDs الطويلة
     const keysToDisplay = Object.keys(newData).filter(k => 
       !k.endsWith('_id') && k !== 'id' && !k.endsWith('_at') && newData[k] !== null
     );
@@ -220,8 +239,7 @@ export default function RealtimeAudit({ session, userRole }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {log.operation === 'UPDATE' && Object.keys(oldData).length > 0 ? (
-          /* عرض حالة التعديل Diff View */
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
             {Object.keys(newData).map(key => {
               if (JSON.stringify(oldData[key]) === JSON.stringify(newData[key])) return null;
               if (key.endsWith('_id') || key === 'id' || key.endsWith('_at')) return null;
@@ -241,8 +259,7 @@ export default function RealtimeAudit({ session, userRole }) {
             })}
           </div>
         ) : (
-          /* عرض الإضافة والتفاصيل العادية */
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
             {keysToDisplay.map(key => (
               <div key={key} style={{ background: '#0F172A', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ color: '#94A3B8', fontSize: '0.7rem', marginBottom: '2px' }}>
@@ -323,7 +340,7 @@ export default function RealtimeAudit({ session, userRole }) {
           </select>
         </div>
 
-        {/* منقي النطاق الزمني */}
+        {/* أدوات تصفية النطاق الزمني */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#1E293B', padding: '8px 12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94A3B8', fontSize: '0.78rem' }}>
             <Calendar size={14} style={{ color: '#38BDF8' }} />
@@ -411,7 +428,6 @@ export default function RealtimeAudit({ session, userRole }) {
                         {isArabic ? 'تفاصيل العملية:' : 'Payload Details:'}
                       </span>
                       
-                      {/* زر للتحويل بين العرض البسيط المنسق أو الـ JSON البرمجي الخام */}
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
