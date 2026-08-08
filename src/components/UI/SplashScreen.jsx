@@ -1,4 +1,4 @@
-/* src/components/SplashScreen.jsx */
+/* src/components/UI/SplashScreen.jsx */
 import React, { useState, useEffect } from 'react';
 import { FaBookOpen } from 'react-icons/fa';
 
