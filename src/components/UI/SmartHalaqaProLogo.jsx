@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const SmartHalaqaProLogo = ({ size = 52 }) => (
   <div style={{
     width: `${size}px`,
