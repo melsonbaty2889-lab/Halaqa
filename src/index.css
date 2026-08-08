@@ -1,13 +1,12 @@
-/* 1. استدعاء الخطوط العالمية أولاً */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* 1. استدعاء الخطوط العالمية */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* 2. موجهات تيلويند الأساسية */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 3. ربط المتغيرات وتنسيقات العناصر الأساسية بقاعدة تيلويند */
+/* 3. القواعد المتغيرة والشاملة */
 @layer base {
   :root {
     --bg: #0C1520;
@@ -18,13 +17,13 @@
     --shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   }
 
-  /* 📱 إصلاحات التجاوب الشاملة للموبايل والأجهزة المختلفة (الخطوة 2) */
+  /* إصلاحات التجاوب الشاملة للموبايل */
   html, body {
     width: 100%;
     max-width: 100vw;
     margin: 0;
     padding: 0;
-    overflow-x: hidden !important; /* إغلاق التمدد الأفقي تماماً */
+    overflow-x: hidden !important;
     background-color: var(--bg);
     color: var(--text);
     font-family: 'Cairo', sans-serif;
@@ -33,11 +32,12 @@
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
   }
-  /* إجبار جميع العناصر والحقول على استدعاء خط Cairo الموحد */
-button, input, select, textarea {
-  font-family: 'Cairo', sans-serif !important;
-}
-  /* ضبط سلوك الصناديق لمنع خروج العناصر عن حواف الشاشة */
+
+  /* إجبار جميع العناصر والحقول على استدعاء الخط الموحد */
+  button, input, select, textarea {
+    font-family: 'Cairo', sans-serif !important;
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -49,7 +49,7 @@ button, input, select, textarea {
     flex-direction: column;
   }
 
-  /* التفعيل التلقائي للخط العالمي في الواجهة الإنجليزية دون تداخل */
+  /* التفعيل التلقائي للخط في الواجهة الإنجليزية */
   [dir="ltr"] body,
   [dir="ltr"] button,
   [dir="ltr"] input,
@@ -58,7 +58,7 @@ button, input, select, textarea {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
-  /* 🎨 تخصيص شريط التمرير */
+  /* تخصيص شريط التمرير */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -75,9 +75,9 @@ button, input, select, textarea {
   }
 }
 
-/* 4. فئات المكونات الموحدة والإصلاحات البصرية (الخطوات 3، 4، 5) */
+/* 4. فئات المكونات الموحدة والإصلاحات البصرية */
 @layer components {
-  /* 🃏 كروت السطح الموحدة */
+  /* كروت السطح الموحدة والتأثير الزجاجي */
   .card-surface {
     background: var(--surface);
     border-radius: 12px;
@@ -86,7 +86,39 @@ button, input, select, textarea {
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  /* 🪟 النافذة المنبثقة للتمديد (Modal Popup) - إصلاح انكماش الشاشة */
+  .glass-card {
+    background: rgba(17, 28, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+  }
+
+  /* حقول الإدخال الخاصة بالنظام وشاشات الدخول */
+  .auth-input {
+    width: 100%;
+    background-color: #090F16;
+    border: 1px solid #223147;
+    color: #F8FAFC;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .auth-input:focus {
+    outline: none;
+    border-color: #C9A84C;
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+  }
+
+  .auth-input-error {
+    border-color: #EF4444 !important;
+  }
+
+  .auth-input-error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+  }
+
+  /* النوافذ المنبثقة */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -112,7 +144,7 @@ button, input, select, textarea {
     box-shadow: var(--shadow);
   }
 
-  /* 🔍 القائمة المنسدلة للبحث - رفع القائمة فوق بقية العناصر */
+  /* القائمة المنسدلة للبحث */
   .search-wrapper {
     position: relative;
     width: 100%;
@@ -133,7 +165,6 @@ button, input, select, textarea {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
   }
 
-  /* 🔘 محاذاة أزرار بطاقة الأكاديمية (تمديد + حظر) */
   .card-actions-row {
     display: flex;
     align-items: center;
@@ -147,7 +178,7 @@ button, input, select, textarea {
   }
 }
 
-/* 🚀 حركات التحميل */
+/* حركات التحميل */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
