@@ -1,11 +1,11 @@
 /* src/components/UI/SplashScreen.jsx */
 import React, { useState, useEffect } from 'react';
-import { FaBookOpen } from 'react-icons/fa';
+import { BookOpen } from 'lucide-react';
 
 export default function SplashScreen({ 
   lang = 'ar',
   t,
-  onFinish // 👈 دالة اختيارية يتم استدعاؤها فور انتهاء التحميل والإغلاق
+  onFinish 
 }) {
   const [progress, setProgress] = useState(0);
   const [randomAya, setRandomAya] = useState('');
@@ -39,27 +39,20 @@ export default function SplashScreen({
   const isRtl = lang === 'ar';
 
   useEffect(() => {
-    // 1. اختيار آية عشوائية
     const selectedAyat = currentT.ayat;
     const selected = selectedAyat[Math.floor(Math.random() * selectedAyat.length)];
     setRandomAya(selected);
 
-    // 2. ضبط الوقت ليكون حوالي 3.5 ثانية (70ms * 50 steps = 3500ms)
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          
-          // 🌟 3. بدء تأثير الاختفاء التدريجي (Fade-Out) عند الاكتمال
           setTimeout(() => {
             setIsFadingOut(true);
-            
-            // استدعاء دالة النهاية بعد اكتمال تأثير الاختفاء (0.5s)
             setTimeout(() => {
               if (onFinish) onFinish();
             }, 500);
           }, 200);
-
           return 100;
         }
         return prev + 2;
@@ -83,14 +76,11 @@ export default function SplashScreen({
       direction: isRtl ? 'rtl' : 'ltr',
       overflow: 'hidden',
       userSelect: 'none',
-
-      // 🌟 تأثير الانتقال والاختفاء السلس
       opacity: isFadingOut ? 0 : 1,
       visibility: isFadingOut ? 'hidden' : 'visible',
       transition: 'opacity 0.5s ease-in-out, visibility 0.5s ease-in-out'
     }}>
 
-      {/* 🌟 1. نمط إسلامي خفيف في الخلفية */}
       <div style={{
         position: 'absolute',
         inset: 0,
@@ -100,7 +90,6 @@ export default function SplashScreen({
         pointerEvents: 'none'
       }} />
 
-      {/* 🌟 2. المربع الأخضر واللوجو الأصلي الدقيق */}
       <div style={{
         position: 'relative',
         width: '100px',
@@ -114,7 +103,6 @@ export default function SplashScreen({
         border: '1px solid rgba(255, 255, 255, 0.1)',
         marginBottom: '24px'
       }}>
-        {/* الحلقة الذهبية الدوارة الأصلية حول المصحف */}
         <div style={{
           position: 'relative',
           width: '64px',
@@ -134,11 +122,11 @@ export default function SplashScreen({
             animation: 'spin 2.5s linear infinite'
           }} />
 
-          <FaBookOpen style={{ color: '#FCD34D', fontSize: '32px', zIndex: 2 }} />
+          {/* استخدام أيقونة BookOpen من مكتبة lucide-react */}
+          <BookOpen size={32} color="#FCD34D" style={{ zIndex: 2 }} />
         </div>
       </div>
 
-      {/* 🌟 3. اسم المنصة المترجم */}
       <h1 style={{
         color: '#FFFFFF',
         fontSize: '1.8rem',
@@ -158,7 +146,6 @@ export default function SplashScreen({
         {t ? t('app_subtitle') : currentT.subtitle}
       </p>
 
-      {/* 🌟 4. الآية/القول المترجم */}
       <div style={{
         background: 'rgba(30, 41, 59, 0.5)',
         backdropFilter: 'blur(8px)',
@@ -174,7 +161,6 @@ export default function SplashScreen({
         </span>
       </div>
 
-      {/* 🌟 5. شريط التحميل المترجم */}
       <div style={{ width: '220px', position: 'relative' }}>
         <div style={{
           display: 'flex',
@@ -205,7 +191,6 @@ export default function SplashScreen({
         </div>
       </div>
 
-      {/* 🌟 6. الإصدار */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
