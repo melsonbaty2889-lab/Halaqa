@@ -1,4 +1,4 @@
-/* src/components/SmartHalaqaProLogo.jsx */
+/* src/components/UI/SmartHalaqaProLogo.jsx */
 import React from 'react';
 
 export const SmartHalaqaProLogo = ({ size = 52 }) => (
