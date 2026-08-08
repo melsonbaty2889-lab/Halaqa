@@ -1,6 +1,6 @@
 /* src/components/UI/SplashScreen.jsx */
 import React, { useState, useEffect } from 'react';
-import { BookOpen } from 'lucide-react';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo'; // 👈 استدعاء الشعار الموحد
 
 export default function SplashScreen({ 
   lang = 'ar',
@@ -90,41 +90,9 @@ export default function SplashScreen({
         pointerEvents: 'none'
       }} />
 
-      <div style={{
-        position: 'relative',
-        width: '100px',
-        height: '100px',
-        borderRadius: '26px',
-        background: 'linear-gradient(145deg, #0E7490 0%, #047857 50%, #064E3B 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 0 30px rgba(16, 185, 129, 0.25)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        marginBottom: '24px'
-      }}>
-        <div style={{
-          position: 'relative',
-          width: '64px',
-          height: '64px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            border: '2.5px solid transparent',
-            borderTopColor: '#F59E0B',
-            borderRightColor: '#F59E0B',
-            borderBottomColor: '#F59E0B',
-            animation: 'spin 2.5s linear infinite'
-          }} />
-
-          {/* استخدام أيقونة BookOpen من مكتبة lucide-react */}
-          <BookOpen size={32} color="#FCD34D" style={{ zIndex: 2 }} />
-        </div>
+      {/* 🟢 استبدال التصميم القديم بمكون اللوجو الموحد بالحجم المناسب */}
+      <div style={{ marginBottom: '24px', filter: 'drop-shadow(0 0 20px rgba(16, 185, 129, 0.3))' }}>
+        <SmartHalaqaProLogo size={100} />
       </div>
 
       <h1 style={{
@@ -200,13 +168,6 @@ export default function SplashScreen({
       }}>
         SMART HALAQA • v2.4
       </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
