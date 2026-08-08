@@ -1,13 +1,5 @@
 /* src/components/MainApp.module.css */
 
-:root {
-  --bg-dark: #0c1520;
-  --surface-dark: #152332;
-  --gold-primary: #C9A84C;
-  --gold-glow: rgba(201, 168, 76, 0.15);
-  --border-light: rgba(255, 255, 255, 0.05);
-}
-
 .appContainer {
   min-height: 100vh;
   display: flex;
@@ -36,7 +28,7 @@
 }
 
 .sidebarTitle {
-  color: var(--gold-primary);
+  color: var(--gold);
   margin-bottom: 4px;
   text-align: center;
   font-size: 1.35rem;
@@ -48,7 +40,7 @@
 
 .sidebarNavBtn {
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-muted);
   padding: 12px 16px;
   border-radius: 10px;
   border: none;
@@ -64,13 +56,13 @@
 }
 
 .sidebarNavBtn:hover:not(.sidebarNavBtnSelected) {
-  background: rgba(255, 255, 255, 0.03);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
 }
 
 .sidebarNavBtnSelected {
-  background: linear-gradient(135deg, #C9A84C 0%, #A58230 100%) !important;
-  color: #000 !important;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%) !important;
+  color: #000000 !important;
   font-weight: 800;
   box-shadow: 0 4px 15px var(--gold-glow);
 }
