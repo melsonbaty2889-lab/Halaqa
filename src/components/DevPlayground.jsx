@@ -1,109 +1,130 @@
 /* src/components/DevPlayground.jsx */
 import React, { useState } from 'react';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
+import { 
+  CheckCircle, AlertTriangle, User, BookOpen, Award, 
+  Settings, LogOut, Shield, Bell, Search, Zap, Loader2 
+} from 'lucide-react';
 
 export default function DevPlayground() {
-  // 🎛️ متغيرات تفاعلية لتغيير الشكل مباشرة من الشاشة دون الحاجة لتعديل الكود
-  const [logoSize, setLogoSize] = useState(100);
-  const [buttonText, setButtonText] = useState('اضغط للاختبار');
-  const [bgColor, setBgColor] = useState('#090F17');
+  const [activeTab, setActiveTab] = useState('all');
 
   return (
     <div style={{ 
-      background: bgColor, 
+      background: '#090F17', 
       minHeight: '100vh', 
       padding: '20px', 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center', 
-      justifyContent: 'center',
       direction: 'rtl',
       color: '#FFF',
-      fontFamily: "'Cairo', system-ui, sans-serif",
-      transition: 'background 0.3s'
+      fontFamily: "'Cairo', system-ui, sans-serif"
     }}>
-      <h3 style={{ color: '#C9A84C', marginBottom: '15px' }}>🧪 المختبر التفاعلي المباشر</h3>
-      
-      {/* 📦 العنصر التجريبي الذي يتأثر بالتحكم بالأسفل */}
-      <div style={{ 
-        background: '#111C2A', 
-        padding: '24px', 
-        borderRadius: '16px', 
-        marginBottom: '20px', 
-        textAlign: 'center', 
-        border: '1px solid #334155',
-        width: '100%',
-        maxWidth: '350px'
-      }}>
-        <SmartHalaqaProLogo size={logoSize} />
-        <br />
-        <button 
-          onClick={() => alert("تم التفاعل مع الزر بنجاح!")}
-          style={{
-            marginTop: '15px',
-            background: 'linear-gradient(135deg, #C9A84C, #9A7B30)',
-            color: '#000',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            width: '100%'
-          }}
-        >
-          {buttonText}
-        </button>
-      </div>
-
-      {/* 🎚️ لوحة تحكم مصغرة تتفاعل فوريًا على الموبايل */}
-      <div style={{ 
-        background: '#1E293B', 
-        padding: '15px', 
-        borderRadius: '12px', 
-        width: '100%', 
-        maxWidth: '350px',
-        border: '1px solid #334155'
-      }}>
-        <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '10px', textAlign: 'center' }}>
-          تحكم بالعنصر في الأعلى فوراً دون إعادة تحميل:
-        </p>
-
-        {/* التحكم بالحجم */}
-        <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>حجم الشعار: {logoSize}px</label>
-        <input 
-          type="range" 
-          min="50" 
-          max="180" 
-          value={logoSize} 
-          onChange={(e) => setLogoSize(Number(e.target.value))}
-          style={{ width: '100%', marginBottom: '12px', cursor: 'pointer' }}
-        />
-
-        {/* التحكم بنص الزر */}
-        <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>تعديل نص الزر:</label>
-        <input 
-          type="text" 
-          value={buttonText} 
-          onChange={(e) => setButtonText(e.target.value)}
-          style={{ 
-            width: '100%', 
-            padding: '8px', 
-            borderRadius: '6px', 
-            border: '1px solid #334155', 
-            background: '#090F17', 
-            color: '#FFF', 
-            marginBottom: '12px',
-            fontSize: '14px'
-          }}
-        />
-
-        {/* التحكم بلون الخلفية */}
-        <label style={{ display: 'block', fontSize: '12px', marginBottom: '6px' }}>لون خلفية المختبر:</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setBgColor('#090F17')} style={{ flex: 1, background: '#090F17', border: '1px solid #334155', color: '#fff', padding: '6px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>داكن</button>
-          <button onClick={() => setBgColor('#111C2A')} style={{ flex: 1, background: '#111C2A', border: '1px solid #334155', color: '#fff', padding: '6px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>أزرق</button>
-          <button onClick={() => setBgColor('#1E293B')} style={{ flex: 1, background: '#1E293B', border: '1px solid #334155', color: '#fff', padding: '6px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>فاتح</button>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        
+        {/* رأس الصفحة */}
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h2 style={{ color: '#C9A84C', marginBottom: '8px' }}>🎨 مختبر العناصر الشامل</h2>
+          <p style={{ color: '#94A3B8', fontSize: '14px' }}>معاينة الألوان، الأيقونات، والأزرار الخاصة بالمنظومة في مكان واحد</p>
         </div>
+
+        {/* 1️⃣ قسم الألوان (Color Palette) */}
+        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
+          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>1. لوحة الألوان الأساسية</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            <div style={{ background: '#090F17', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ background: '#090F17', height: '30px', borderRadius: '4px', marginBottom: '8px', border: '1px solid #555' }}></div>
+              <span style={{ fontSize: '12px', color: '#94A3B8' }}>الخلفية الداكنة (#090F17)</span>
+            </div>
+            <div style={{ background: '#111C2A', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ background: '#C9A84C', height: '30px', borderRadius: '4px', marginBottom: '8px' }}></div>
+              <span style={{ fontSize: '12px', color: '#94A3B8' }}>لون التميز الذهبي (#C9A84C)</span>
+            </div>
+            <div style={{ background: '#111C2A', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ background: '#10B981', height: '30px', borderRadius: '4px', marginBottom: '8px' }}></div>
+              <span style={{ fontSize: '12px', color: '#94A3B8' }}>لون النجاح (#10B981)</span>
+            </div>
+            <div style={{ background: '#111C2A', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ background: '#EF4444', height: '30px', borderRadius: '4px', marginBottom: '8px' }}></div>
+              <span style={{ fontSize: '12px', color: '#94A3B8' }}>لون التنبيه (#EF4444)</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 2️⃣ قسم الأيقونات (Icons) */}
+        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
+          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>2. مكتبة الأيقونات المستخدمة</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', textAlign: 'center' }}>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><User size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>مستخدم</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><BookOpen size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>حلقة</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Award size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>شهادة</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Shield size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>أمان</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Bell size={24} color="#10B981" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>تنبيه</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Settings size={24} color="#94A3B8" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>إعدادات</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Zap size={24} color="#F59E0B" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>ترقية</span></div>
+            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><CheckCircle size={24} color="#10B981" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>تأكيد</span></div>
+          </div>
+        </section>
+
+        {/* 3️⃣ قسم الأزرار والحالات (Buttons & States) */}
+        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
+          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>3. الأزرار والعناصر التفاعلية</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            
+            <button 
+              onClick={() => alert("تم النقر على الزر الرئيسي")}
+              style={{
+                background: 'linear-gradient(135deg, #C9A84C, #9A7B30)',
+                color: '#000',
+                border: 'none',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              زر رئيسي (Primary Button)
+            </button>
+
+            <button 
+              onClick={() => alert("تم النقر على الزر الثانوي")}
+              style={{
+                background: '#1E293B',
+                color: '#FFF',
+                border: '1px solid #334155',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              زر ثانوي (Secondary Button)
+            </button>
+
+            <button 
+              style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#EF4444',
+                border: '1px solid #EF4444',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <LogOut size={16} /> زر خروج / خطر (Danger)
+            </button>
+
+          </div>
+        </section>
+
       </div>
     </div>
   );
