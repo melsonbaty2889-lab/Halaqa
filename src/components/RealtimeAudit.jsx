@@ -33,7 +33,7 @@ export default function RealtimeAudit({ session, userRole }) {
     daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
   };
 
-  // قاموس شامل لترجمة مفاتيح وقيم قاعدة البيانات
+  // 1. قاموس شامل لترجمة مفاتيح وقيم قاعدة البيانات
   const fieldLabels = {
     status: isArabic ? 'الحالة' : 'Status',
     notes: isArabic ? 'الملاحظات' : 'Notes',
@@ -51,9 +51,16 @@ export default function RealtimeAudit({ session, userRole }) {
     country: isArabic ? 'الدولة' : 'Country',
     current_juz: isArabic ? 'الجزء الحالي' : 'Current Juz',
     is_archived: isArabic ? 'الأرشيف' : 'Archived',
-    level_score: isArabic ? 'تقييم المستوى' : 'Level Score'
+    level_score: isArabic ? 'تقييم المستوى' : 'Level Score',
+    student_code: isArabic ? 'كود الطالب' : 'Student Code',
+    payment_status: isArabic ? 'حالة الدفع' : 'Payment Status',
+    last_test_score: isArabic ? 'آخر اختبار' : 'Last Test Score',
+    current_quarter: isArabic ? 'الربع الحالي' : 'Current Quarter',
+    current_quarter_index: isArabic ? 'مؤشر الربع' : 'Quarter Index',
+    subscription_system: isArabic ? 'نظام الاشتراك' : 'Subscription System'
   };
 
+  // 2. قاموس ترجمة القيم المخزنة بالإنجليزية
   const valueTranslations = {
     present: isArabic ? 'حاضر' : 'Present',
     absent: isArabic ? 'غائب' : 'Absent',
@@ -62,7 +69,11 @@ export default function RealtimeAudit({ session, userRole }) {
     male: isArabic ? 'ذكر' : 'Male',
     female: isArabic ? 'أنثى' : 'Female',
     active: isArabic ? 'نشط' : 'Active',
-    false: isArabic ? 'نشط' : 'Active',
+    unpaid: isArabic ? 'غير مدفوع' : 'Unpaid',
+    paid: isArabic ? 'مدفوع' : 'Paid',
+    monthly: isArabic ? 'شهري' : 'Monthly',
+    yearly: isArabic ? 'سنوي' : 'Yearly',
+    false: isArabic ? 'غير مؤرشف' : 'Not Archived',
     true: isArabic ? 'مؤرشف' : 'Archived',
     EG: isArabic ? 'مصر 🇪🇬' : 'Egypt 🇪🇬'
   };
@@ -202,11 +213,12 @@ export default function RealtimeAudit({ session, userRole }) {
     return `${rawTable} ${operation} ${userName}`.includes(query);
   });
 
-  // معالجة النصوص والكائنات لحل مشكلة [object Object] وتأمين الترجمة
+  // 3. معالجة النصوص والكائنات لحل مشكلة [object Object] وعرض الكائنات الفارغة {}
   const formatValue = (key, val) => {
     if (val === null || val === undefined || val === '') return <span style={{ color: '#64748B' }}>—</span>;
     
     if (typeof val === 'object') {
+      if (Object.keys(val).length === 0) return <span style={{ color: '#64748B' }}>—</span>;
       if (val.ar && isArabic) return val.ar;
       if (val.en && !isArabic) return val.en;
       if (val.name) return typeof val.name === 'object' ? formatValue(key, val.name) : val.name;
