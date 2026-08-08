@@ -28,7 +28,7 @@ const Badge = forwardRef(({ children, color = C.success, className = "", style =
 ));
 Badge.displayName = 'Badge';
 
-// 2. الزر الاحترافي مع دعم الـ Hover (Btn)
+// 2. الزر الاحترافي (Btn)
 const Btn = forwardRef(({ children, onClick, variant = "primary", style = {}, disabled = false, type = "button", className = "", ...props }, ref) => {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -106,11 +106,11 @@ const Input = forwardRef(({ label, value, onChange, type = "text", placeholder =
 
   const baseStyle = { 
     width: "100%", 
-    background: C.surface, 
+    background: C.surface || "#0f172a", 
     border: isFocused ? `1px solid ${C.gold}` : `1px solid ${C.border}`, 
     borderRadius: 10, 
     padding: "12px 14px", 
-    color: C.text, 
+    color: C.text || "#f8fafc", 
     fontFamily: "inherit", 
     fontSize: "0.85rem", 
     outline: "none", 
@@ -118,6 +118,7 @@ const Input = forwardRef(({ label, value, onChange, type = "text", placeholder =
     textAlign: "start",
     boxShadow: isFocused ? `0 0 0 3px ${C.gold}15` : "none",
     transition: "all 0.2s ease",
+    colorScheme: "dark",
     ...style
   };
 
@@ -149,11 +150,11 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         className={`ui-select ${className}`}
         style={{ 
           width: "100%", 
-          background: C.surface, 
+          background: C.surface || "#0f172a", 
           border: isFocused ? `1px solid ${C.gold}` : `1px solid ${C.border}`, 
           borderRadius: 10, 
           padding: "12px 14px", 
-          color: C.text, 
+          color: C.text || "#f8fafc", 
           fontFamily: "inherit", 
           fontSize: "0.85rem", 
           outline: "none", 
@@ -162,11 +163,12 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           textAlign: "start",
           boxShadow: isFocused ? `0 0 0 3px ${C.gold}15` : "none",
           transition: "all 0.2s ease",
+          colorScheme: "dark",
           ...style 
         }}
         {...props}
       >
-        {options.map(o => <option key={o.value} value={o.value} style={{ background: C.surface, color: C.text }}>{o.label}</option>)}
+        {options.map(o => <option key={o.value} value={o.value} style={{ background: C.surface || "#0f172a", color: C.text || "#f8fafc" }}>{o.label}</option>)}
       </select>
     </div>
   );
@@ -192,7 +194,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
       <div 
         className={`ui-modal ${className}`}
         style={{ 
-          background: C.surface, 
+          background: C.surface || "#0f172a", 
           border: `1px solid ${C.border}`, 
           borderRadius: 20, 
           padding: 24, 
@@ -274,4 +276,5 @@ const TD = forwardRef(({ children, style = {}, className = "", ...props }, ref) 
 ));
 TD.displayName = 'TD';
 
-export { Badge, Btn, Card, Input, Select, Modal, PageHeader, TH, TD };
+// تم إضافة Btn as Button لحل مشكلة الاستيراد في الملفات الأخرى
+export { Badge, Btn, Btn as Button, Card, Input, Select, Modal, PageHeader, TH, TD };
