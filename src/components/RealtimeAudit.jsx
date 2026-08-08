@@ -1,22 +1,24 @@
-/* src/components/RealtimeAudit.jsx - النسخة النهائية المكتملة والمحمية */
+/* src/components/RealtimeAudit.jsx - النسخة المحدثة والمطورة */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { 
-  FaHistory, 
-  FaSearch, 
-  FaSyncAlt, 
-  FaClock, 
-  FaDatabase, 
-  FaPlusCircle, 
-  FaEdit, 
-  FaTrashAlt, 
-  FaUserCheck,
-  FaTimes,
-  FaFileDownload,
-  FaChevronDown,
-  FaChevronUp
-} from 'react-icons/fa';
+  History, 
+  Search, 
+  RefreshCw, 
+  Clock, 
+  Database, 
+  PlusCircle, 
+  Edit, 
+  Trash2, 
+  UserCheck, 
+  X, 
+  Download, 
+  ChevronDown, 
+  ChevronUp,
+  Calendar,
+  Filter
+} from 'lucide-react';
 
 export default function RealtimeAudit({ session, userRole }) {
   const { i18n } = useTranslation();
@@ -43,13 +45,14 @@ export default function RealtimeAudit({ session, userRole }) {
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
 
-  // 1️⃣ جلب البيانات مع خطة طوارئ مدمجة لمنع الاختفاء
+  // 1️⃣ جلب البيانات مع خطة طوارئ
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
-      // المحاولة الأولى: جلب البيانات مع أسماء المستخدمين
       let query = supabase
         .from('audit_logs')
         .select(`
@@ -69,7 +72,6 @@ export default function RealtimeAudit({ session, userRole }) {
 
       let { data, error } = await query;
 
-      // خطة الطوارئ: إذا حدث أي تعارض في جلب الأسماء، يتم جلب السجلات مباشرة
       if (error) {
         console.warn('Audit logs join notice:', error.message);
         let fallbackQuery = supabase
@@ -97,7 +99,6 @@ export default function RealtimeAudit({ session, userRole }) {
   useEffect(() => {
     fetchAuditLogs();
 
-    // الاستماع للبث المباشر
     const channel = supabase
       .channel('realtime-audit-logs')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, () => {
@@ -119,7 +120,7 @@ export default function RealtimeAudit({ session, userRole }) {
     return isArabic ? 'النظام التلقائي' : 'System Automated';
   };
 
-  // 3️⃣ تصدير السجلات لملف CSV متوافق مع اللغة العربية
+  // 3️⃣ تصدير السجلات לملف CSV
   const exportToCSV = () => {
     if (filteredLogs.length === 0) return;
     
@@ -154,18 +155,32 @@ export default function RealtimeAudit({ session, userRole }) {
   const getOperationBadge = (operation) => {
     switch (operation?.toUpperCase()) {
       case 'INSERT':
-        return { icon: FaPlusCircle, color: '#34D399', bg: 'rgba(52, 211, 153, 0.15)', label: isArabic ? 'إضافة' : 'Insert' };
+        return { icon: PlusCircle, color: '#34D399', bg: 'rgba(52, 211, 153, 0.15)', label: isArabic ? 'إضافة' : 'Insert' };
       case 'UPDATE':
-        return { icon: FaEdit, color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)', label: isArabic ? 'تعديل' : 'Update' };
+        return { icon: Edit, color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)', label: isArabic ? 'تعديل' : 'Update' };
       case 'DELETE':
-        return { icon: FaTrashAlt, color: '#F87171', bg: 'rgba(248, 113, 113, 0.15)', label: isArabic ? 'حذف' : 'Delete' };
+        return { icon: Trash2, color: '#F87171', bg: 'rgba(248, 113, 113, 0.15)', label: isArabic ? 'حذف' : 'Delete' };
       default:
-        return { icon: FaDatabase, color: '#FBBF24', bg: 'rgba(251, 191, 36, 0.15)', label: operation || 'Op' };
+        return { icon: Database, color: '#FBBF24', bg: 'rgba(251, 191, 36, 0.15)', label: operation || 'Op' };
     }
   };
 
-  // 4️⃣ الفلترة الذكية
+  // 4️⃣ الفلترة الذكية والزمنية
   const filteredLogs = logs.filter((log) => {
+    const logDate = new Date(log.created_at);
+    
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      if (logDate < start) return false;
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      if (logDate > end) return false;
+    }
+
     if (!searchQuery.trim()) return true;
 
     const query = searchQuery.toLowerCase().trim();
@@ -178,6 +193,41 @@ export default function RealtimeAudit({ session, userRole }) {
     return `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${userName}`.includes(query);
   });
 
+  // مكون عرض الفروقات الذكي (Diff Viewer)
+  const renderDiffView = (log) => {
+    const oldData = log.old_data || {};
+    const newData = log.new_data || log.record_data || {};
+
+    if (log.operation === 'UPDATE' && Object.keys(oldData).length > 0) {
+      const changedKeys = Object.keys(newData).filter(key => JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]));
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ color: '#94A3B8', fontWeight: '600' }}>{isArabic ? 'التغيرات المستحدثة:' : 'Changed Values:'}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
+            {changedKeys.map(key => (
+              <div key={key} style={{ background: '#0F172A', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: '#38BDF8', fontWeight: 'bold', marginBottom: '4px' }}>{key}</div>
+                <div style={{ color: '#F87171', textDecoration: 'line-through', fontSize: '0.7rem' }}>
+                  {JSON.stringify(oldData[key])}
+                </div>
+                <div style={{ color: '#34D399', fontWeight: 'bold' }}>
+                  {JSON.stringify(newData[key])}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <pre style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', color: '#34D399', overflowX: 'auto', margin: 0, fontSize: '0.7rem', fontFamily: 'monospace' }}>
+        {JSON.stringify(newData || oldData, null, 2)}
+      </pre>
+    );
+  };
+
   return (
     <div style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
@@ -185,7 +235,7 @@ export default function RealtimeAudit({ session, userRole }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaHistory style={{ color: '#38BDF8' }} />
+            <History size={20} style={{ color: '#38BDF8' }} />
             <span>{isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}</span>
           </h2>
           <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: 0 }}>
@@ -199,61 +249,91 @@ export default function RealtimeAudit({ session, userRole }) {
           <button 
             onClick={exportToCSV}
             style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaFileDownload size={12} />
+            <Download size={14} />
             <span>{isArabic ? 'تصدير Tsv/CSV' : 'Export Report'}</span>
           </button>
 
           <button 
             onClick={fetchAuditLogs}
             style={{ background: '#1E293B', color: '#CBD5E1', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FaSyncAlt size={12} className={loading ? 'spinning' : ''} />
+            <RefreshCw size={14} className={loading ? 'spinning' : ''} />
             <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
-      {/* 2️⃣ حقل البحث والفلترة */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
-          <FaSearch style={{ position: 'absolute', [isRtl ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B', fontSize: '0.85rem' }} />
-          
-          <input 
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isArabic ? 'ابحث باسم الطالب، المشرف، أو العملية...' : 'Search table, user, or operation...'}
-            style={{ 
-              width: '100%', 
-              padding: '10px 32px', 
-              paddingRight: isRtl ? '36px' : '32px', 
-              paddingLeft: isRtl ? '32px' : '36px', 
-              background: '#1E293B', 
-              border: '1px solid rgba(255,255,255,0.08)', 
-              borderRadius: '12px', 
-              color: '#FFF', 
-              fontSize: '0.82rem', 
-              outline: 'none' 
-            }}
-          />
+      {/* 2️⃣ حقول البحث والفلترة بالنطاق الزمني والجداول */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
+            <Search size={16} style={{ position: 'absolute', [isRtl ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+            
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={isArabic ? 'ابحث باسم الطالب، المشرف، أو العملية...' : 'Search table, user, or operation...'}
+              style={{ 
+                width: '100%', 
+                padding: '10px 32px', 
+                paddingRight: isRtl ? '36px' : '32px', 
+                paddingLeft: isRtl ? '32px' : '36px', 
+                background: '#1E293B', 
+                border: '1px solid rgba(255,255,255,0.08)', 
+                borderRadius: '12px', 
+                color: '#FFF', 
+                fontSize: '0.82rem', 
+                outline: 'none' 
+              }}
+            />
 
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              style={{ position: 'absolute', [isRtl ? 'left' : 'right']: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}>
-              <FaTimes size={12} />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ position: 'absolute', [isRtl ? 'left' : 'right']: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <select
+            value={selectedTable}
+            onChange={(e) => setSelectedTable(e.target.value)}
+            style={{ background: '#1E293B', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '12px', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}>
+            <option value="all">{isArabic ? 'جميع الجداول' : 'All Tables'}</option>
+            {Object.entries(tableDisplayNames).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* منقي النطاق الزمني */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#1E293B', padding: '8px 12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94A3B8', fontSize: '0.78rem' }}>
+            <Calendar size={14} style={{ color: '#38BDF8' }} />
+            <span>{isArabic ? 'تاريخ:' : 'Date:'}</span>
+          </div>
+          <input 
+            type="date" 
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', outline: 'none' }}
+          />
+          <span style={{ color: '#64748B', fontSize: '0.75rem' }}>{isArabic ? 'إلى' : 'to'}</span>
+          <input 
+            type="date" 
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', outline: 'none' }}
+          />
+          {(startDate || endDate) && (
+            <button 
+              onClick={() => { setStartDate(''); setEndDate(''); }}
+              style={{ background: 'none', border: 'none', color: '#F87171', fontSize: '0.75rem', cursor: 'pointer', padding: '2px 6px' }}>
+              {isArabic ? 'إلغاء الفلترة' : 'Clear'}
             </button>
           )}
         </div>
-
-        <select
-          value={selectedTable}
-          onChange={(e) => setSelectedTable(e.target.value)}
-          style={{ background: '#1E293B', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '12px', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}>
-          <option value="all">{isArabic ? 'جميع الجداول' : 'All Tables'}</option>
-          {Object.entries(tableDisplayNames).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
-          ))}
-        </select>
       </div>
 
       {/* 3️⃣ عرض البيانات */}
@@ -267,7 +347,7 @@ export default function RealtimeAudit({ session, userRole }) {
         </div>
       ) : filteredLogs.length === 0 ? (
         <div style={{ background: '#1E293B', padding: '30px', borderRadius: '16px', textAlign: 'center', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.05)' }}>
-          {isArabic ? `لا توجد نتائج تطابق "${searchQuery}"` : `No results matching "${searchQuery}"`}
+          {isArabic ? 'لا توجد نتائج تطابق خيارات البحث' : 'No results matching search filters'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -290,7 +370,7 @@ export default function RealtimeAudit({ session, userRole }) {
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Icon style={{ color: badge.color, fontSize: '1.1rem' }} />
+                      <Icon size={18} style={{ color: badge.color }} />
                     </div>
 
                     <div>
@@ -302,7 +382,7 @@ export default function RealtimeAudit({ session, userRole }) {
                       </div>
                       
                       <div style={{ color: '#94A3B8', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FaUserCheck size={11} style={{ color: '#38BDF8' }} />
+                        <UserCheck size={12} style={{ color: '#38BDF8' }} />
                         <span>{isArabic ? 'بواسطة:' : 'By:'} <strong style={{ color: '#CBD5E1' }}>{userName}</strong></span>
                       </div>
                     </div>
@@ -311,7 +391,7 @@ export default function RealtimeAudit({ session, userRole }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ textAlign: isRtl ? 'left' : 'right' }}>
                       <div style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <FaClock size={10} />
+                        <Clock size={12} />
                         <span>{timeFormatted}</span>
                       </div>
                       <div style={{ color: '#64748B', fontSize: '0.7rem', marginTop: '2px' }}>
@@ -319,18 +399,13 @@ export default function RealtimeAudit({ session, userRole }) {
                       </div>
                     </div>
 
-                    {isExpanded ? <FaChevronUp size={12} color="#94A3B8" /> : <FaChevronDown size={12} color="#94A3B8" />}
+                    {isExpanded ? <ChevronUp size={16} color="#94A3B8" /> : <ChevronDown size={16} color="#94A3B8" />}
                   </div>
                 </div>
 
                 {isExpanded && (
                   <div style={{ padding: '12px 14px', background: 'rgba(15, 23, 42, 0.6)', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem' }}>
-                    <div style={{ color: '#94A3B8', marginBottom: '6px', fontWeight: '600' }}>
-                      {isArabic ? 'بيانات العملية المسجلة:' : 'Payload Details:'}
-                    </div>
-                    <pre style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', color: '#34D399', overflowX: 'auto', margin: 0, fontSize: '0.7rem', fontFamily: 'monospace' }}>
-                      {JSON.stringify(log.new_data || log.old_data || log.record_data || { id: log.id, action: log.operation }, null, 2)}
-                    </pre>
+                    {renderDiffView(log)}
                   </div>
                 )}
 
