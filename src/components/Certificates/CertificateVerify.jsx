@@ -5,7 +5,10 @@ import { supabase } from '../../lib/supabase';
 import { ShieldCheck, ShieldAlert, Award, Calendar, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function CertificateVerify() {
-  const { code } = useParams();
+  // 1. استخراج الرمز من useParams أو من رابط window المباشر
+  const { code: routeCode } = useParams();
+  const code = routeCode || (typeof window !== 'undefined' ? window.location.pathname.split('/verify/')[1] : '');
+
   const [loading, setLoading] = useState(true);
   const [cert, setCert] = useState(null);
   const [error, setError] = useState(null);
@@ -41,7 +44,8 @@ export default function CertificateVerify() {
       } catch (err) {
         console.error('🚨 خطأ أثناء التحقق من الشهادة:', err);
         setError('حدث خطأ أثناء الاتصال بقاعدة البيانات للتحقق من الشهادة.');
-      } font-medium
+      } finally {
+        // 2. تصحيح الهيكل البرمجي هنا بدلاً من font-medium الخاطئة
         setLoading(false);
       }
     }
@@ -93,7 +97,7 @@ export default function CertificateVerify() {
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <ShieldCheck className="w-3.5 h-3.5" /> شهادة موثوقة ومسجلة
               </span>
-              <span className="text-[10px] font-mono text-slate-400">ID: {cert.verification_code}</span>
+              <span className="text-[10px] font-mono text-slate-400">ID: {cert?.verification_code}</span>
             </div>
 
             {/* تفاصيل الشهادة */}
@@ -101,14 +105,14 @@ export default function CertificateVerify() {
               <div>
                 <span className="text-slate-400 block text-[10px] mb-1">اسم الطالب المعتمد:</span>
                 <p className="text-base font-extrabold text-amber-400">
-                  {typeof cert.students?.name === 'object' ? (cert.students?.name?.ar || cert.students?.name?.en) : cert.students?.name || 'طالب الأكاديمية'}
+                  {typeof cert?.students?.name === 'object' ? (cert?.students?.name?.ar || cert?.students?.name?.en) : cert?.students?.name || 'طالب الأكاديمية'}
                 </p>
               </div>
 
               <div>
                 <span className="text-slate-400 block text-[10px] mb-1">المجال / المنهج الاجتيازي:</span>
                 <p className="font-bold text-slate-200 text-sm">
-                  {cert.curriculums?.title || 'اختبار المنهج القرآني'}
+                  {cert?.curriculums?.title || 'اختبار المنهج القرآني'}
                 </p>
               </div>
 
@@ -117,7 +121,7 @@ export default function CertificateVerify() {
                   <span className="text-slate-400 block text-[10px] mb-1">تاريخ التوثيق:</span>
                   <p className="font-bold text-slate-300 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    {new Date(cert.issued_at || cert.created_at).toLocaleDateString('ar-EG')}
+                    {new Date(cert?.issued_at || cert?.created_at).toLocaleDateString('ar-EG')}
                   </p>
                 </div>
                 <div>
@@ -139,4 +143,4 @@ export default function CertificateVerify() {
       </div>
     </div>
   );
-}
+              }
