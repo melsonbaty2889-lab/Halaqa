@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
-import SmartHalaqaProLogo from './SmartHalaqaProLogo';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 
 import { 
   Search, X, ChevronDown, ChevronUp, 
