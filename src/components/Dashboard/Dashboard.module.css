@@ -1,9 +1,13 @@
-/* src/components/Dashboard.module.css */
+/* src/components/Dashboard/Dashboard.module.css */
 
-/* 🌌 تأثير الظهور الانسيابي */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .dashboardContainer {
@@ -13,11 +17,11 @@
   padding: 16px;
   box-sizing: border-box;
   direction: rtl;
-  overflow-x: hidden; /* يمنع التمدد الأفقي نهائياً */
+  overflow-x: hidden;
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* 👑 واجهة السوبر أدمن (Header Section) */
+/* الهيدر */
 .adminHeader {
   display: flex;
   justify-content: space-between;
@@ -26,11 +30,11 @@
   gap: 12px;
   padding-bottom: 16px;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .adminTitle {
-  color: #ffffff;
+  color: var(--text-main);
   font-size: clamp(1.1rem, 3.5vw, 1.5rem);
   font-weight: 800;
   margin: 0;
@@ -41,17 +45,16 @@
 }
 
 .adminTitle svg {
-  color: var(--gold, #FBBF24);
+  color: var(--gold);
   flex-shrink: 0;
 }
 
 .adminSubtitle {
-  color: #8A99A8;
+  color: var(--text-muted);
   font-size: 0.85rem;
   margin: 4px 0 0 0;
 }
 
-/* 🔘 شريط أزرار الهيدر (CSV / مزامنة / خروج) */
 .headerActions {
   display: flex;
   align-items: center;
@@ -76,17 +79,17 @@
 
 .refreshBtn {
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-light);
   color: #cbd5e1;
 }
 
 .exportBtn {
-  background: #059669;
+  background: var(--success);
   color: #ffffff;
 }
 
 .logoutBtn {
-  background: #ef4444;
+  background: var(--danger);
   color: #ffffff;
 }
 
@@ -95,15 +98,10 @@
   color: #3b82f6 !important;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* 📊 كروت الإحصائيات (حل مشكلة تمدد الـ Grid بالكامل) */
+/* شبكة الإحصائيات */
 .statsGrid, .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)); /* يمنع الكروت من التمدد خارج العرض */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 20px;
   width: 100%;
@@ -112,7 +110,7 @@
 
 .summaryCard, .premiumStatBox {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
   padding: 12px 8px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
@@ -120,12 +118,12 @@
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
-  min-width: 0; /* منع خروج النصوص من الحدود */
+  min-width: 0;
   text-align: center;
 }
 
 .summaryCardLabel, .statLabel {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
   margin: 0 0 6px 0;
@@ -137,13 +135,12 @@
 .summaryCardValue, .statNumber {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--gold, #FBBF24);
+  color: var(--gold);
   margin: 0;
   line-height: 1;
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* 🗂️ التبويبات للتصفية السريعة */
+/* التبويبات والبحث */
 .tabsContainer, .tabsBar {
   display: flex;
   align-items: center;
@@ -161,7 +158,6 @@
   display: none;
 }
 
-/* 🔍 مربع البحث والقائمة المنسدلة */
 .searchWrapper {
   position: relative !important;
   width: 100%;
@@ -173,10 +169,10 @@
   width: 100%;
   box-sizing: border-box;
   background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
   border-radius: 10px;
   padding: 10px 14px;
-  color: #fff;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -187,16 +183,16 @@
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: #0F172A;
+  background: var(--surface-card);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   max-height: 220px;
   overflow-y: auto;
-  z-index: 1000 !important; /* لرفع القائمة فوق باقي البطاقات */
+  z-index: 1000 !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
 }
 
-/* 🏫 بطاقات الأكاديميات */
+/* بطاقات العرض */
 .requestsGrid {
   display: flex;
   flex-direction: column;
@@ -206,8 +202,8 @@
 
 .requestCard, .academyCard {
   background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-inline-start: 4px solid #10b981;
+  border: 1px solid var(--border-light);
+  border-inline-start: 4px solid var(--success);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -226,12 +222,12 @@
 }
 
 .requestEmail, .academyOwner {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.82rem;
   margin: 0;
 }
 
-/* 🟢 صف أزرار التفاعل داخل البطاقة (تمديد + حظر) */
+/* أزرار البطاقة */
 .cardActionsRow {
   display: flex !important;
   flex-direction: row !important;
@@ -244,8 +240,8 @@
 
 .extendBtn {
   background: transparent;
-  border: 1px solid var(--gold, #FBBF24);
-  color: var(--gold, #FBBF24);
+  border: 1px solid var(--gold);
+  color: var(--gold);
   padding: 0 14px;
   height: 36px;
   border-radius: 8px;
@@ -261,7 +257,7 @@
 }
 
 .blockBtn {
-  background: #ef4444;
+  background: var(--danger);
   color: #ffffff;
   border: none;
   width: 36px;
@@ -275,7 +271,7 @@
   box-sizing: border-box;
 }
 
-/* 🪟 النافذة المنبثقة للتمديد (Modal Popup) */
+/* النافذة المنبثقة */
 .modalOverlay {
   position: fixed !important;
   top: 0;
@@ -296,14 +292,14 @@
   width: 100% !important;
   max-width: 420px;
   background: #151d2a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
 }
 
-/* 📱 شاشات الهواتف الشديدة الضيق (أقل من 480px) */
+/* التجاوب للشاشات الصغيرة */
 @media (max-width: 480px) {
   .dashboardContainer {
     padding: 12px 10px;
