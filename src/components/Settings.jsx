@@ -4,8 +4,8 @@ import {
   ShieldCheck, Database, RefreshCw, CheckCircle2, Upload, 
   Download, Image, AlertCircle 
 } from 'lucide-react';
-import { Card, Input, Select, Btn as Button } from './UI/UI.jsx';
-import { supabase } from '../lib/supabase';
+import { Card, Input, Select, Btn as Button } from '@/components/UI/UI.jsx';
+import { supabase } from '@/lib/supabase.js';
 
 export default function Settings({ currentAcademyId, isRtl = true }) {
   const [formData, setFormData] = useState({
@@ -80,19 +80,32 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // التحقق من نوع الملف وحجمه قبل الرفع
+    if (!file.type.startsWith('image/')) {
+      showToast('يرجى اختيار ملف صورة صالح', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('حجم الصورة يجب ألا يتجاوز 2 ميجابايت', 'error');
+      return;
+    }
+
     try {
       setUploadingLogo(true);
       const fileExt = file.name.split('.').pop();
       const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
+      // الرفع إلى Bucket باسم avatars داخل المجلد الفرعي logos
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
+      // جلب الرابط العام المباشر للصورة
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      
       setFormData((prev) => ({ ...prev, logo_url: data.publicUrl }));
       showToast('تم رفع الشعار بنجاح');
     } catch (err) {
@@ -218,7 +231,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <h1 style={{ color: '#f59e0b', fontSize: '1.8rem', fontWeight: '800', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+        <h1 style={{ color: '#f59e0b', fontSize: '1.8rem', fontWeight: '800', marginBottom: '6px', display: 'flex', items: 'center', justifyContent: 'center', gap: '10px' }}>
           إعدادات المنظومة وحفظ البيانات <Building2 size={24} />
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
