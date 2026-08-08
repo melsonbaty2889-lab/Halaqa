@@ -12,7 +12,7 @@ import { ROLES, getRouteForRole } from '@/constants/roles';
 
 // 🔄 المكونات العامة
 import SplashScreen from '@/components/UI/SplashScreen'; 
-import Logo from '@/components/UI/Logo';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import DevPlayground from '@/components/DevPlayground'; // 🧪 استدعاء المختبر
 import LoginPage from '@/components/Auth/LoginPage';
 import SignUpPage from '@/components/Auth/SignUpPage';
