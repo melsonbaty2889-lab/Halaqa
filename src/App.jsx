@@ -444,43 +444,15 @@ export default function App() {
   const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
   const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
 
-  const hasExistingSupabaseToken = () => {
-    if (typeof window === 'undefined') return false;
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.includes('sb-') && key.includes('-auth-token')) {
-          const val = localStorage.getItem(key);
-          if (val && val.includes('access_token')) return true;
-        }
-      }
-    } catch (e) {
-      console.warn(e);
-    }
-    return false;
-  };
-
+  // العرض مرة واحدة فقط لكل جلسة متصفح (Session)
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
-    
-    const seenBefore = localStorage.getItem('app_splash_seen_v4') === 'true';
-    const hasToken = hasExistingSupabaseToken();
-
-    if (seenBefore || hasToken) {
-      try {
-        localStorage.setItem('app_splash_seen_v4', 'true');
-      } catch (e) {
-        console.warn(e);
-      }
-      return false;
-    }
-
-    return true;
+    return !sessionStorage.getItem('app_splash_seen');
   });
 
   const handleSplashFinish = () => {
     try {
-      localStorage.setItem('app_splash_seen_v4', 'true');
+      sessionStorage.setItem('app_splash_seen', 'true');
     } catch (e) {
       console.warn(e);
     }
