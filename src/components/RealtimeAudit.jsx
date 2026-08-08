@@ -1,4 +1,4 @@
-/* src/components/RealtimeAudit.jsx - النسخة المحدثة والمطورة */
+/* src/components/RealtimeAudit.jsx - النسخة الاحترافية المبسطة للمستخدم */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -17,7 +17,9 @@ import {
   ChevronDown, 
   ChevronUp,
   Calendar,
-  Filter
+  Code,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 export default function RealtimeAudit({ session, userRole }) {
@@ -33,12 +35,24 @@ export default function RealtimeAudit({ session, userRole }) {
     daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
   };
 
-  const searchKeywordsMap = {
-    attendance: 'attendance الحضور والتسميع حضور تسميع',
-    payments: 'payments الاشتراكات والمالية دفع مالية اشتراكات',
-    halaqas: 'halaqas الحلقات والمقارئ حلقة مقارئ',
-    students: 'students شؤون الطلاب الطلاب طالب طالبة',
-    daily_progress: 'daily_progress الإنجاز اليومي انجاز إنجاز'
+  // قاموس ترجمة مفاتيح البيانات وقيمها للحقول المشهورة
+  const fieldLabels = {
+    status: isArabic ? 'الحالة' : 'Status',
+    notes: isArabic ? 'الملاحظات' : 'Notes',
+    date: isArabic ? 'التاريخ' : 'Date',
+    juz: isArabic ? 'الجزء' : 'Juz',
+    amount: isArabic ? 'المبلغ' : 'Amount',
+    full_name: isArabic ? 'الاسم الكامل' : 'Full Name',
+    phone: isArabic ? 'رقم الهاتف' : 'Phone',
+    quarter_index: isArabic ? 'الربع' : 'Quarter',
+    session_grade: isArabic ? 'الدرجة' : 'Grade'
+  };
+
+  const valueTranslations = {
+    present: isArabic ? 'حاضر' : 'Present',
+    absent: isArabic ? 'غائب' : 'Absent',
+    late: isArabic ? 'متأخر' : 'Late',
+    excused: isArabic ? 'مستأذن' : 'Excused'
   };
 
   const [logs, setLogs] = useState([]);
@@ -48,8 +62,8 @@ export default function RealtimeAudit({ session, userRole }) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
+  const [showRawJson, setShowRawJson] = useState({}); // حالة لكل بطاقة لعرض الـ Raw JSON
 
-  // 1️⃣ جلب البيانات مع خطة طوارئ
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -57,11 +71,7 @@ export default function RealtimeAudit({ session, userRole }) {
         .from('audit_logs')
         .select(`
           *,
-          performer:profiles(
-            full_name,
-            name,
-            email
-          )
+          performer:profiles(full_name, name, email)
         `)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -73,7 +83,6 @@ export default function RealtimeAudit({ session, userRole }) {
       let { data, error } = await query;
 
       if (error) {
-        console.warn('Audit logs join notice:', error.message);
         let fallbackQuery = supabase
           .from('audit_logs')
           .select('*')
@@ -98,7 +107,6 @@ export default function RealtimeAudit({ session, userRole }) {
 
   useEffect(() => {
     fetchAuditLogs();
-
     const channel = supabase
       .channel('realtime-audit-logs')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, () => {
@@ -111,7 +119,6 @@ export default function RealtimeAudit({ session, userRole }) {
     };
   }, [fetchAuditLogs]);
 
-  // 2️⃣ استخراج اسم المستخدم
   const getUserDisplayName = (log) => {
     if (log.performer?.full_name) return log.performer.full_name;
     if (log.performer?.name) return log.performer.name;
@@ -120,10 +127,8 @@ export default function RealtimeAudit({ session, userRole }) {
     return isArabic ? 'النظام التلقائي' : 'System Automated';
   };
 
-  // 3️⃣ تصدير السجلات לملف CSV
   const exportToCSV = () => {
     if (filteredLogs.length === 0) return;
-    
     const headers = [
       isArabic ? "المعرف" : "ID", 
       isArabic ? "الجدول" : "Table", 
@@ -143,7 +148,6 @@ export default function RealtimeAudit({ session, userRole }) {
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", `Audit_Report_${new Date().toISOString().slice(0,10)}.csv`);
@@ -165,66 +169,93 @@ export default function RealtimeAudit({ session, userRole }) {
     }
   };
 
-  // 4️⃣ الفلترة الذكية والزمنية
   const filteredLogs = logs.filter((log) => {
     const logDate = new Date(log.created_at);
-    
     if (startDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
       if (logDate < start) return false;
     }
-
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
       if (logDate > end) return false;
     }
-
     if (!searchQuery.trim()) return true;
 
     const query = searchQuery.toLowerCase().trim();
     const rawTable = (log.table_name || '').toLowerCase();
-    const tableKeywords = (searchKeywordsMap[log.table_name] || rawTable).toLowerCase();
     const operation = (log.operation || '').toLowerCase();
-    const opArabic = operation === 'insert' ? 'إضافة' : operation === 'update' ? 'تعديل' : operation === 'delete' ? 'حذف' : '';
     const userName = getUserDisplayName(log).toLowerCase();
-
-    return `${rawTable} ${tableKeywords} ${operation} ${opArabic} ${userName}`.includes(query);
+    return `${rawTable} ${operation} ${userName}`.includes(query);
   });
 
-  // مكون عرض الفروقات الذكي (Diff Viewer)
-  const renderDiffView = (log) => {
+  // تنسيق عرض القيم المفهومة
+  const formatValue = (key, val) => {
+    if (val === null || val === undefined || val === '') return <span style={{ color: '#64748B' }}>—</span>;
+    const strVal = String(val);
+    if (valueTranslations[strVal]) return valueTranslations[strVal];
+    return strVal;
+  };
+
+  // العرض الاحترافي والمبسط للـ Payload
+  const renderFriendlyPayload = (log) => {
+    const isRaw = showRawJson[log.id];
     const oldData = log.old_data || {};
     const newData = log.new_data || log.record_data || {};
 
-    if (log.operation === 'UPDATE' && Object.keys(oldData).length > 0) {
-      const changedKeys = Object.keys(newData).filter(key => JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]));
-
+    if (isRaw) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ color: '#94A3B8', fontWeight: '600' }}>{isArabic ? 'التغيرات المستحدثة:' : 'Changed Values:'}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-            {changedKeys.map(key => (
-              <div key={key} style={{ background: '#0F172A', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ color: '#38BDF8', fontWeight: 'bold', marginBottom: '4px' }}>{key}</div>
-                <div style={{ color: '#F87171', textDecoration: 'line-through', fontSize: '0.7rem' }}>
-                  {JSON.stringify(oldData[key])}
+        <pre style={{ background: '#0F172A', padding: '12px', borderRadius: '8px', color: '#34D399', overflowX: 'auto', margin: 0, fontSize: '0.72rem', fontFamily: 'monospace' }}>
+          {JSON.stringify(newData || oldData, null, 2)}
+        </pre>
+      );
+    }
+
+    // الفلترة لاستبعاد المرفقات المعقدة والـ IDs الطويلة
+    const keysToDisplay = Object.keys(newData).filter(k => 
+      !k.endsWith('_id') && k !== 'id' && !k.endsWith('_at') && newData[k] !== null
+    );
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {log.operation === 'UPDATE' && Object.keys(oldData).length > 0 ? (
+          /* عرض حالة التعديل Diff View */
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
+            {Object.keys(newData).map(key => {
+              if (JSON.stringify(oldData[key]) === JSON.stringify(newData[key])) return null;
+              if (key.endsWith('_id') || key === 'id' || key.endsWith('_at')) return null;
+
+              return (
+                <div key={key} style={{ background: '#0F172A', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ color: '#94A3B8', fontSize: '0.7rem', marginBottom: '4px' }}>
+                    {fieldLabels[key] || key}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: '#F87171', textDecoration: 'line-through' }}>{formatValue(key, oldData[key])}</span>
+                    <span style={{ color: '#64748B' }}>➔</span>
+                    <span style={{ color: '#34D399', fontWeight: 'bold' }}>{formatValue(key, newData[key])}</span>
+                  </div>
                 </div>
-                <div style={{ color: '#34D399', fontWeight: 'bold' }}>
-                  {JSON.stringify(newData[key])}
+              );
+            })}
+          </div>
+        ) : (
+          /* عرض الإضافة والتفاصيل العادية */
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
+            {keysToDisplay.map(key => (
+              <div key={key} style={{ background: '#0F172A', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: '#94A3B8', fontSize: '0.7rem', marginBottom: '2px' }}>
+                  {fieldLabels[key] || key}
+                </div>
+                <div style={{ color: '#F8FAFC', fontWeight: '600', fontSize: '0.78rem' }}>
+                  {formatValue(key, newData[key])}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      );
-    }
-
-    return (
-      <pre style={{ background: '#0F172A', padding: '10px', borderRadius: '8px', color: '#34D399', overflowX: 'auto', margin: 0, fontSize: '0.7rem', fontFamily: 'monospace' }}>
-        {JSON.stringify(newData || oldData, null, 2)}
-      </pre>
+        )}
+      </div>
     );
   };
 
@@ -262,35 +293,20 @@ export default function RealtimeAudit({ session, userRole }) {
         </div>
       </div>
 
-      {/* 2️⃣ حقول البحث والفلترة بالنطاق الزمني والجداول */}
+      {/* 2️⃣ أدوات البحث والفلترة */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
             <Search size={16} style={{ position: 'absolute', [isRtl ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-            
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isArabic ? 'ابحث باسم الطالب، المشرف، أو العملية...' : 'Search table, user, or operation...'}
-              style={{ 
-                width: '100%', 
-                padding: '10px 32px', 
-                paddingRight: isRtl ? '36px' : '32px', 
-                paddingLeft: isRtl ? '32px' : '36px', 
-                background: '#1E293B', 
-                border: '1px solid rgba(255,255,255,0.08)', 
-                borderRadius: '12px', 
-                color: '#FFF', 
-                fontSize: '0.82rem', 
-                outline: 'none' 
-              }}
+              placeholder={isArabic ? 'ابحث باسم المشرف، أو الجدول، أو العملية...' : 'Search table, user, or operation...'}
+              style={{ width: '100%', padding: '10px 32px', paddingRight: isRtl ? '36px' : '32px', paddingLeft: isRtl ? '32px' : '36px', background: '#1E293B', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#FFF', fontSize: '0.82rem', outline: 'none' }}
             />
-
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                style={{ position: 'absolute', [isRtl ? 'left' : 'right']: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}>
+              <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', [isRtl ? 'left' : 'right']: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
                 <X size={14} />
               </button>
             )}
@@ -313,30 +329,18 @@ export default function RealtimeAudit({ session, userRole }) {
             <Calendar size={14} style={{ color: '#38BDF8' }} />
             <span>{isArabic ? 'تاريخ:' : 'Date:'}</span>
           </div>
-          <input 
-            type="date" 
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', outline: 'none' }}
-          />
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', outline: 'none' }} />
           <span style={{ color: '#64748B', fontSize: '0.75rem' }}>{isArabic ? 'إلى' : 'to'}</span>
-          <input 
-            type="date" 
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', outline: 'none' }}
-          />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', outline: 'none' }} />
           {(startDate || endDate) && (
-            <button 
-              onClick={() => { setStartDate(''); setEndDate(''); }}
-              style={{ background: 'none', border: 'none', color: '#F87171', fontSize: '0.75rem', cursor: 'pointer', padding: '2px 6px' }}>
+            <button onClick={() => { setStartDate(''); setEndDate(''); }} style={{ background: 'none', border: 'none', color: '#F87171', fontSize: '0.75rem', cursor: 'pointer' }}>
               {isArabic ? 'إلغاء الفلترة' : 'Clear'}
             </button>
           )}
         </div>
       </div>
 
-      {/* 3️⃣ عرض البيانات */}
+      {/* 3️⃣ قائمة السجلات */}
       {loading ? (
         <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
           {isArabic ? 'جاري تحميل سجل التغييرات...' : 'Loading audit logs...'}
@@ -360,10 +364,7 @@ export default function RealtimeAudit({ session, userRole }) {
             const dateFormatted = new Date(log.created_at).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
 
             return (
-              <div 
-                key={log.id} 
-                style={{ background: '#1E293B', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                
+              <div key={log.id} style={{ background: '#1E293B', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 <div 
                   onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
                   style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', cursor: 'pointer' }}>
@@ -405,7 +406,24 @@ export default function RealtimeAudit({ session, userRole }) {
 
                 {isExpanded && (
                   <div style={{ padding: '12px 14px', background: 'rgba(15, 23, 42, 0.6)', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem' }}>
-                    {renderDiffView(log)}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ color: '#94A3B8', fontWeight: '600' }}>
+                        {isArabic ? 'تفاصيل العملية:' : 'Payload Details:'}
+                      </span>
+                      
+                      {/* زر للتحويل بين العرض البسيط المنسق أو الـ JSON البرمجي الخام */}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRawJson(prev => ({ ...prev, [log.id]: !prev[log.id] }));
+                        }}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#38BDF8', borderRadius: '6px', padding: '2px 8px', fontSize: '0.68rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Code size={12} />
+                        <span>{showRawJson[log.id] ? (isArabic ? 'عرض كارت مبسط' : 'View Friendly') : (isArabic ? 'عرض كود JSON' : 'View Raw JSON')}</span>
+                      </button>
+                    </div>
+
+                    {renderFriendlyPayload(log)}
                   </div>
                 )}
 
