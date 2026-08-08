@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { formatHijriDate } from '../utils/dateUtils';
 import { supabase } from '@/lib/supabase';
-import { getMenuSections } from '../constants/sidebarMenu';
+import { getMenuSections } from '@/constants/sidebarMenu';
 
 // 🌟 اللوجو الأصلي الاحترافي للمنظومة
 const SmartHalaqaProLogo = () => (
