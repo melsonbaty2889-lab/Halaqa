@@ -21,7 +21,80 @@ import {
   MessageSquare
 } from 'lucide-react';
 
+
+// 1. المكون الجديد المساعد للتاريخ (ضع هذا الجزء أعلى الملف)
+function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
+  const [useHijri, setUseHijri] = React.useState(false);
+
+  const formattedDisplayDate = React.useMemo(() => {
+    if (!selectedDate) return '';
+    const dateObj = new Date(selectedDate);
+
+    if (useHijri) {
+      return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-uma' : 'en-US-u-ca-islamic-uma', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(dateObj);
+    }
+
+    return new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }).format(dateObj);
+  }, [selectedDate, isRtl, useHijri]);
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between', 
+      background: '#1e293b', 
+      border: '1px solid #334155', 
+      borderRadius: '10px', 
+      padding: '8px 12px',
+      gap: '8px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Calendar size={16} style={{ color: '#38bdf8' }} />
+        <input 
+          type="date" 
+          value={selectedDate} 
+          onChange={(e) => setSelectedDate(e.target.value)}
+          style={{ background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>
+          {formattedDisplayDate}
+        </span>
+        <button
+          type="button"
+          onClick={() => setUseHijri(!useHijri)}
+          style={{
+            background: useHijri ? 'rgba(56, 189, 248, 0.2)' : '#0f172a',
+            color: useHijri ? '#38bdf8' : '#94a3b8',
+            border: `1px solid ${useHijri ? '#38bdf8' : '#334155'}`,
+            borderRadius: '6px',
+            padding: '3px 8px',
+            fontSize: '10px',
+            fontWeight: '700',
+            cursor: 'pointer'
+          }}
+        >
+          {useHijri ? (isRtl ? 'هجري' : 'Hijri') : (isRtl ? 'ميلادي' : 'Gregorian')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// 2. المكون الرئيسي الخاص بك
 export default function Reports({ students = [], academyId }) {
+  // ... باقي كود الصفحة الخاص بك ...
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
