@@ -11,7 +11,7 @@ export const colors = {
   },
 
   // الأخضر الزمردي/التركواز (لون اللوجو، الأيقونات، ورموز الأمان)
-  brand Emerald: {
+  brandEmerald: {
     DEFAULT: '#10B981',
     teal: '#0F766E',
     light: '#34D399',
