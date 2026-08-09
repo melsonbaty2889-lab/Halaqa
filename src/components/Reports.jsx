@@ -40,10 +40,10 @@ export default function Reports({ students = [], academyId }) {
     if (typeof val === 'string') return val;
     if (typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      return val.ar || val.en || Object.values(val).find(v => typeof v === 'string') || '';
+      return val[currentLang] || val.ar || val.en || Object.values(val).find(v => typeof v === 'string') || '';
     }
     return String(val);
-  }, []);
+  }, [currentLang]);
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [reportsData, setReportsData] = useState({});
@@ -54,20 +54,44 @@ export default function Reports({ students = [], academyId }) {
   const [copiedId, setCopiedId] = useState(null);
   const [sentLogs, setSentLogs] = useState({});
   
-  // التحكم بفتح وغلق المحرر والمعاينة
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // تعديل الرقم السريع
   const [editingPhoneStudentId, setEditingPhoneStudentId] = useState(null);
   const [tempPhoneValue, setTempPhoneValue] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
   const [localPhoneMap, setLocalPhoneMap] = useState({});
 
+  // الوسوم الديناميكية بناءً على اللغة المحددة
+  const dynamicTags = useMemo(() => {
+    if (isRtl) {
+      return [
+        { label: '+ [اسم_الطالب]', tag: '[اسم_الطالب]' },
+        { label: '+ [التاريخ]', tag: '[التاريخ]' },
+        { label: '+ [الحالة]', tag: '[الحالة]' },
+        { label: '+ [الحفظ]', tag: '[الحفظ]' },
+        { label: '+ [المراجعة]', tag: '[المراجعة]' },
+        { label: '+ [الماضي]', tag: '[الماضي]' },
+        { label: '+ [التقييم]', tag: '[التقييم]' },
+        { label: '+ [الملاحظات]', tag: '[الملاحظات]' },
+      ];
+    }
+    return [
+      { label: '+ [Student_Name]', tag: '[Student_Name]' },
+      { label: '+ [Date]', tag: '[Date]' },
+      { label: '+ [Status]', tag: '[Status]' },
+      { label: '+ [Memorization]', tag: '[Memorization]' },
+      { label: '+ [Revision]', tag: '[Revision]' },
+      { label: '+ [Distant_Revision]', tag: '[Distant_Revision]' },
+      { label: '+ [Grade]', tag: '[Grade]' },
+      { label: '+ [Notes]', tag: '[Notes]' },
+    ];
+  }, [isRtl]);
+
   const defaultTemplate = useMemo(() => {
     return isRtl 
       ? `السلام عليكم ورحمة الله وبركاته، تحية طيبة من أكاديميتنا. 🌸\n\nنود إطلاعكم على تقرير أداء الابن(ة) *[اسم_الطالب]* ليوم [التاريخ]:\n\n📌 الحالة: [الحالة]\n📖 الحفظ الجديد: [الحفظ]\n🔄 المراجعة القريبة: [المراجعة]\n📚 المراجعة البعيدة: [الماضي]\n🌟 التقييم اليومي: [التقييم]\n📝 ملاحظات الحلقة: [الملاحظات]\n\nنسأل الله أن يبارك فيه وينبته نباتاً حسناً. 🤲✨`
-      : `Peace be upon you. Warm greetings from our academy. 🌸\n\nDaily report for *[اسم_الطالب]* on [التاريخ]:\n\n📌 Status: [الحالة]\n📖 New Memorization: [الحفظ]\n🔄 Revision: [المراجعة]\n📚 Distant Revision: [الماضي]\n🌟 Daily Grade: [التقييم]\n📝 Notes: [الملاحظات]\n\nMay Allah bless their Quranic journey. 🤲✨`;
+      : `Peace be upon you. Warm greetings from our academy. 🌸\n\nDaily performance report for *[Student_Name]* on [Date]:\n\n📌 Status: [Status]\n📖 New Memorization: [Memorization]\n🔄 Revision: [Revision]\n📚 Distant Revision: [Distant_Revision]\n🌟 Daily Grade: [Grade]\n📝 Class Notes: [Notes]\n\nMay Allah bless their journey. 🤲✨`;
   }, [isRtl]);
 
   const [messageTemplate, setMessageTemplate] = useState(defaultTemplate);
@@ -172,12 +196,11 @@ export default function Reports({ students = [], academyId }) {
     }
   };
 
-  // تنسيق تاريخ عربي آمن للرسائل بدون مشاكل الاتجاهات
   const formattedDateString = useMemo(() => {
     if (!selectedDate) return '';
     try {
       const d = new Date(selectedDate);
-      return d.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+      return d.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
     } catch {
       return selectedDate;
     }
@@ -208,18 +231,20 @@ export default function Reports({ students = [], academyId }) {
       if (grade >= 10) return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
       if (grade >= 8)  return isRtl ? 'جيد جداً ⭐⭐' : 'Very Good ⭐⭐';
       if (grade >= 6)  return isRtl ? 'يحتاج مزيد من التركيز 🎯' : 'Needs Focus 🎯';
-      return isRtl ? 'ضعيف ⚠️' : 'Weak ⚠️';
+      return isRtl ? 'ضعيف ⚠️' : 'Needs Improvement ⚠️';
     };
 
     let parsed = messageTemplate;
-    parsed = parsed.replace(/\[اسم_الطالب\]/g, studentName || (isRtl ? "اسم الطالب" : "Student Name"));
-    parsed = parsed.replace(/\[التاريخ\]/g, formattedDateString);
-    parsed = parsed.replace(/\[الحالة\]/g, getStatusText());
-    parsed = parsed.replace(/\[الحفظ\]/g, safeString(record?.new_memorization) || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')));
-    parsed = parsed.replace(/\[المراجعة\]/g, safeString(record?.review) || '---');
-    parsed = parsed.replace(/\[الماضي\]/g, '---');
-    parsed = parsed.replace(/\[التقييم\]/g, getGradeText());
-    parsed = parsed.replace(/\[الملاحظات\]/g, safeString(record?.session_notes) || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
+    
+    // استبدال الأوسمة باللغتين لمنع أي تعارض
+    parsed = parsed.replace(/\[اسم_الطالب\]|\[Student_Name\]/g, studentName || (isRtl ? "اسم الطالب" : "Student Name"));
+    parsed = parsed.replace(/\[التاريخ\]|\[Date\]/g, formattedDateString);
+    parsed = parsed.replace(/\[الحالة\]|\[Status\]/g, getStatusText());
+    parsed = parsed.replace(/\[الحفظ\]|\[Memorization\]/g, safeString(record?.new_memorization) || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')));
+    parsed = parsed.replace(/\[المراجعة\]|\[Revision\]/g, safeString(record?.review) || '---');
+    parsed = parsed.replace(/\[الماضي\]|\[Distant_Revision\]/g, '---');
+    parsed = parsed.replace(/\[التقييم\]|\[Grade\]/g, getGradeText());
+    parsed = parsed.replace(/\[الملاحظات\]|\[Notes\]/g, safeString(record?.session_notes) || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
 
     return parsed;
   }, [messageTemplate, formattedDateString, isRtl, safeString]);
@@ -274,7 +299,6 @@ export default function Reports({ students = [], academyId }) {
     });
   }, [students, reportsData, activeTab, searchTerm, sentLogs, safeString, localPhoneMap]);
 
-  // الطلاب غير المرسل لهم ولديهم رقم هاتف
   const unsentStudents = useMemo(() => {
     return (students || []).filter(student => {
       const phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone);
@@ -282,7 +306,6 @@ export default function Reports({ students = [], academyId }) {
     });
   }, [students, sentLogs, localPhoneMap, safeString]);
 
-  // إرسال جماعي متتابع للطلاب غير المرسل لهم
   const handleBulkSendNext = () => {
     if (unsentStudents.length === 0) return;
     const nextStudent = unsentStudents[0];
@@ -302,95 +325,86 @@ export default function Reports({ students = [], academyId }) {
   const previewText = getParsedMessage(sampleStudent, sampleRecord);
 
   return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '14px 10px', background: '#0a0f1d', minHeight: '100vh', color: '#f8fafc' }}>
+    <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '16px 12px', background: '#090d16', minHeight: '100vh', color: '#f1f5f9', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* 1. الترويسة الرئيسية */}
-      <div style={{ marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
-              border: '1px solid rgba(245, 158, 11, 0.4)'
-            }}>
-              <BookOpen size={18} style={{ color: '#f59e0b' }} />
-            </div>
-
-            <div>
-              <h1 style={{ fontSize: '17px', fontWeight: '800', color: '#ffffff', margin: 0, letterSpacing: '-0.3px' }}>
-                {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
-              </h1>
-              <p style={{ fontSize: '10.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
-                {isRtl ? "إرسال النتائج القرآنية عبر الواتساب بهوية رسمية" : "Send Quranic achievements via WhatsApp"}
-              </p>
-            </div>
+      {/* 1. Header Area */}
+      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            background: 'rgba(16, 185, 129, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid rgba(16, 185, 129, 0.25)'
+          }}>
+            <BookOpen size={18} style={{ color: '#10b981' }} />
           </div>
 
-          <ReportDateSelector 
-            selectedDate={selectedDate} 
-            setSelectedDate={setSelectedDate} 
-          />
+          <div>
+            <h1 style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff', margin: 0 }}>
+              {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
+            </h1>
+            <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0 0' }}>
+              {isRtl ? "إرسال النتائج عبر الواتساب" : "Send achievements via WhatsApp"}
+            </p>
+          </div>
+        </div>
+
+        <ReportDateSelector 
+          selectedDate={selectedDate} 
+          setSelectedDate={setSelectedDate} 
+        />
+      </div>
+
+      {/* 2. Clean Metric Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: '500' }}>{isRtl ? "الإجمالي" : "Total"}</span>
+          <span style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', marginTop: '2px', display: 'block' }}>{totalCount}</span>
+        </div>
+
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: '500' }}>{isRtl ? "المرسل" : "Sent"}</span>
+          <span style={{ fontSize: '16px', fontWeight: '700', color: '#10b981', marginTop: '2px', display: 'block' }}>{completionPercentage}%</span>
+        </div>
+
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: '500' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
+          <span style={{ fontSize: '16px', fontWeight: '700', color: '#f59e0b', marginTop: '2px', display: 'block' }}>{remainingCount}</span>
         </div>
       </div>
 
-      {/* 2. بطاقات الإحصائيات + زر الإرسال الجماعي */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '10px' }}>
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
-          <Users size={15} style={{ color: '#10b981', marginBottom: '2px' }} />
-          <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الإجمالي" : "Total"}</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff' }}>{totalCount}</span>
-        </div>
-
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
-          <TrendingUp size={15} style={{ color: '#22c55e', marginBottom: '2px' }} />
-          <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المرسل" : "Sent"}</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#22c55e' }}>{completionPercentage}%</span>
-        </div>
-
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
-          <Clock size={15} style={{ color: '#f59e0b', marginBottom: '2px' }} />
-          <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#f59e0b' }}>{remainingCount}</span>
-        </div>
-      </div>
-
-      {/* زر الإرسال المتتابع لغير المرسل لهم */}
+      {/* Batch Send Button */}
       {unsentStudents.length > 0 && (
         <button
           onClick={handleBulkSendNext}
           style={{
             width: '100%',
             marginBottom: '14px',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: '#ffffff',
+            background: '#10b981',
+            color: '#090d16',
             border: 'none',
-            padding: '8px 12px',
-            borderRadius: '10px',
-            fontWeight: '800',
-            fontSize: '11.5px',
+            padding: '9px 12px',
+            borderRadius: '8px',
+            fontWeight: '700',
+            fontSize: '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)'
+            cursor: 'pointer'
           }}
         >
-          <SendHorizontal size={14} />
-          {isRtl ? `بدء الإرسال المتتابع للمتبقين (${unsentStudents.length})` : `Start Batch Send Unsent (${unsentStudents.length})`}
+          <SendHorizontal size={15} />
+          {isRtl ? `بدء الإرسال المتتابع للمتبقين (${unsentStudents.length})` : `Batch Send Unsent (${unsentStudents.length})`}
         </button>
       )}
 
-      {/* 3. محرر القوالب القابل للطي مع تمرير أفقي للأوسمة */}
-      <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', marginBottom: '14px', overflow: 'hidden' }}>
-        
+      {/* 3. Collapsible Template Editor */}
+      <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', marginBottom: '14px', overflow: 'hidden' }}>
         <div 
           onClick={() => setIsEditorOpen(!isEditorOpen)}
           style={{ 
@@ -399,20 +413,14 @@ export default function Reports({ students = [], academyId }) {
             justifyContent: 'space-between', 
             alignItems: 'center', 
             cursor: 'pointer',
-            background: isEditorOpen ? '#16233b' : 'transparent',
-            transition: 'background 0.2s'
+            background: isEditorOpen ? '#1e293b50' : 'transparent'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={15} style={{ color: '#f59e0b' }} />
-            <span style={{ fontSize: '12px', fontWeight: '700', color: '#ffffff' }}>
-              {isRtl ? "إعدادات قالب الرسالة" : "Template Settings"}
+            <Sparkles size={14} style={{ color: '#f59e0b' }} />
+            <span style={{ fontSize: '12px', fontWeight: '600', color: '#f8fafc' }}>
+              {isRtl ? "إعدادات القالب" : "Template Settings"}
             </span>
-            {!isEditorOpen && (
-              <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                {isRtl ? "اضغط للتعديل" : "Click to edit"}
-              </span>
-            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -422,17 +430,17 @@ export default function Reports({ students = [], academyId }) {
                   e.stopPropagation();
                   setShowPreview(!showPreview);
                 }} 
-                style={{ background: '#1e293b', border: '1px solid #334155', color: '#cbd5e1', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                style={{ background: '#1e293b', border: 'none', color: '#94a3b8', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
               >
-                <Smartphone size={11} /> {showPreview ? (isRtl ? "إخفاء المعاينة" : "Hide") : (isRtl ? "المعاينة" : "Preview")}
+                <Smartphone size={11} /> {showPreview ? (isRtl ? "إخفاء" : "Hide") : (isRtl ? "المعاينة" : "Preview")}
               </button>
             )}
-            {isEditorOpen ? <ChevronUp size={16} style={{ color: '#94a3b8' }} /> : <ChevronDown size={16} style={{ color: '#94a3b8' }} />}
+            {isEditorOpen ? <ChevronUp size={15} style={{ color: '#64748b' }} /> : <ChevronDown size={15} style={{ color: '#64748b' }} />}
           </div>
         </div>
 
         {isEditorOpen && (
-          <div style={{ padding: '12px', borderTop: '1px solid #1e293b', background: '#0b1320' }}>
+          <div style={{ padding: '12px', borderTop: '1px solid #1e293b', background: '#090d16' }}>
             <textarea 
               ref={textareaRef}
               rows={4}
@@ -441,12 +449,12 @@ export default function Reports({ students = [], academyId }) {
               dir="auto"
               style={{ 
                 width: '100%', 
-                background: '#111c2e', 
+                background: '#0f172a', 
                 border: '1px solid #1e293b', 
                 color: '#f8fafc', 
-                borderRadius: '8px', 
-                padding: '10px', 
-                fontSize: '11.5px', 
+                borderRadius: '6px', 
+                padding: '8px 10px', 
+                fontSize: '11px', 
                 outline: 'none', 
                 resize: 'vertical', 
                 lineHeight: '1.5',
@@ -454,50 +462,49 @@ export default function Reports({ students = [], academyId }) {
               }}
             />
 
-            {/* شريط الأوسمة بالتمرير الأفقي */}
+            {/* Dynamic Tags with Scroll */}
             <div style={{ display: 'flex', gap: '6px', marginTop: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-              {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
+              {dynamicTags.map(item => (
                 <span 
-                  key={tag} 
-                  onClick={() => insertTagAtCursor(tag)} 
+                  key={item.tag} 
+                  onClick={() => insertTagAtCursor(item.tag)} 
                   style={{ 
                     cursor: 'pointer', 
-                    background: 'rgba(16, 185, 129, 0.1)', 
+                    background: 'rgba(16, 185, 129, 0.08)', 
                     color: '#10b981', 
-                    border: '1px solid rgba(16, 185, 129, 0.25)', 
+                    border: '1px solid rgba(16, 185, 129, 0.2)', 
                     padding: '3px 8px', 
-                    borderRadius: '6px', 
+                    borderRadius: '4px', 
                     fontSize: '10px', 
-                    fontWeight: '600',
+                    fontWeight: '500',
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  + {tag}
+                  {item.label}
                 </span>
               ))}
             </div>
 
             {showPreview && (
-              <div style={{ marginTop: '12px', background: '#111c2e', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px' }}>
+              <div style={{ marginTop: '10px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '6px', padding: '8px 10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  <MessageSquare size={13} style={{ color: '#22c55e' }} />
-                  <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#94a3b8' }}>
-                    {isRtl ? "معاينة الرسالة الحية" : "Live Preview"}
+                  <MessageSquare size={12} style={{ color: '#10b981' }} />
+                  <span style={{ fontSize: '10px', fontWeight: '600', color: '#64748b' }}>
+                    {isRtl ? "معاينة الرسالة" : "Live Preview"}
                   </span>
                 </div>
                 
                 <div 
                   dir="auto"
                   style={{ 
-                    background: '#0b141a', 
-                    border: '1px solid #1f2c34', 
+                    background: '#070a12', 
+                    border: '1px solid #1e293b', 
                     borderRadius: '6px', 
-                    padding: '8px 10px', 
+                    padding: '8px', 
                     fontSize: '11px', 
                     lineHeight: '1.5', 
                     whiteSpace: 'pre-wrap', 
-                    color: '#e9edef',
-                    textAlign: isRtl ? 'right' : 'left'
+                    color: '#cbd5e1'
                   }}
                 >
                   {previewText}
@@ -508,17 +515,17 @@ export default function Reports({ students = [], academyId }) {
         )}
       </div>
 
-      {/* 4. البحث والتصفية */}
+      {/* 4. Controls & Filters */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
         <input 
           type="text"
-          placeholder={isRtl ? "بحث باسم الطالب أو رقم الهاتف..." : "Search student..."}
+          placeholder={isRtl ? "بحث باسم الطالب أو الرقم..." : "Search student or phone..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: '100%', background: '#111c2e', border: '1px solid #1e293b', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
+          style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', padding: '8px 10px', borderRadius: '6px', fontSize: '11.5px', outline: 'none', boxSizing: 'border-box' }}
         />
 
-        <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
+        <div style={{ display: 'flex', gap: '4px', overflowX: 'auto' }}>
           {[
             { id: 'all', label: isRtl ? "الكل" : "All", icon: Users },
             { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: Clock },
@@ -535,13 +542,13 @@ export default function Reports({ students = [], academyId }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  background: isActive ? '#10b981' : '#111c2e',
-                  color: isActive ? '#0a0f1d' : '#94a3b8',
+                  background: isActive ? '#10b981' : '#0f172a',
+                  color: isActive ? '#090d16' : '#94a3b8',
                   border: '1px solid #1e293b',
-                  padding: '6px 12px',
+                  padding: '5px 10px',
                   borderRadius: '6px',
                   fontSize: '11px',
-                  fontWeight: '700',
+                  fontWeight: '600',
                   whiteSpace: 'nowrap',
                   cursor: 'pointer'
                 }}
@@ -554,17 +561,17 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. بطاقات الطلاب */}
+      {/* 5. Clean Student List */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '30px', color: '#10b981' }}>
-          <Loader2 size={22} style={{ animation: 'spin 1s linear infinite' }} />
+        <div style={{ textAlign: 'center', padding: '24px', color: '#10b981' }}>
+          <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredStudents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px', background: '#111c2e', borderRadius: '10px', border: '1px solid #1e293b', color: '#94a3b8', fontSize: '12px' }}>
-              <AlertCircle size={16} style={{ display: 'block', margin: '0 auto 4px auto' }} />
-              {isRtl ? "لا يوجد طلاب يطابقون خيار البحث." : "No matching students found."}
+            <div style={{ textAlign: 'center', padding: '16px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b', color: '#64748b', fontSize: '11px' }}>
+              <AlertCircle size={15} style={{ display: 'block', margin: '0 auto 4px auto' }} />
+              {isRtl ? "لا يوجد نتائج مطابقة." : "No matching records found."}
             </div>
           ) : (
             filteredStudents.map(student => {
@@ -578,9 +585,9 @@ export default function Reports({ students = [], academyId }) {
                 <div 
                   key={student.id} 
                   style={{ 
-                    background: '#111c2e', 
-                    border: `1px solid ${isSent ? '#22c55e40' : '#1e293b'}`, 
-                    borderRadius: '12px', 
+                    background: '#0f172a', 
+                    border: `1px solid ${isSent ? 'rgba(16, 185, 129, 0.25)' : '#1e293b'}`, 
+                    borderRadius: '8px', 
                     padding: '10px 12px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -590,17 +597,17 @@ export default function Reports({ students = [], academyId }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: '700', fontSize: '13px', color: '#ffffff' }}>{studentName}</span>
+                        <span style={{ fontWeight: '600', fontSize: '12.5px', color: '#ffffff' }}>{studentName}</span>
                         {isSent && (
-                          <span style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                            <CheckCircle2 size={9} /> {isRtl ? "تم الإرسال" : "Sent"}
+                          <span style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                            <CheckCircle2 size={9} /> {isRtl ? "مرسل" : "Sent"}
                           </span>
                         )}
                       </div>
 
-                      {/* تعديل هاتف الطالب */}
+                      {/* Phone Number Display / Edit */}
                       {isEditingThisPhone ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                           <input 
                             type="tel"
                             placeholder="010xxxxxxx"
@@ -608,42 +615,42 @@ export default function Reports({ students = [], academyId }) {
                             onChange={(e) => setTempPhoneValue(e.target.value)}
                             autoFocus
                             style={{ 
-                              background: '#0b1320', 
+                              background: '#090d16', 
                               border: '1px solid #10b981', 
                               color: '#ffffff', 
-                              padding: '3px 8px', 
-                              borderRadius: '6px', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px', 
                               fontSize: '11px', 
                               outline: 'none', 
-                              width: '130px' 
+                              width: '120px' 
                             }}
                           />
                           <button 
                             onClick={() => handleSavePhone(student.id)} 
                             disabled={savingPhone}
-                            style={{ background: '#10b981', border: 'none', color: '#0a0f1d', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                            style={{ background: '#10b981', border: 'none', color: '#090d16', padding: '3px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
                           >
-                            {savingPhone ? <Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={10} />}
+                            {savingPhone ? <Loader2 size={9} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={9} />}
                             {isRtl ? "حفظ" : "Save"}
                           </button>
                           <button 
                             onClick={() => setEditingPhoneStudentId(null)} 
-                            style={{ background: '#1e293b', border: 'none', color: '#cbd5e1', padding: '4px 6px', borderRadius: '6px', cursor: 'pointer' }}
+                            style={{ background: '#1e293b', border: 'none', color: '#94a3b8', padding: '3px 5px', borderRadius: '4px', cursor: 'pointer' }}
                           >
-                            <X size={11} />
+                            <X size={10} />
                           </button>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                          <span style={{ fontSize: '10.5px', color: parentPhone ? '#94a3b8' : '#f59e0b', fontWeight: parentPhone ? 'normal' : '600' }}>
-                            {parentPhone || (isRtl ? 'لا يوجد رقم مسجل' : 'No Phone')}
+                          <span style={{ fontSize: '10px', color: parentPhone ? '#64748b' : '#f59e0b' }}>
+                            {parentPhone || (isRtl ? 'لا يوجد رقم' : 'No Phone')}
                           </span>
                           <button 
                             onClick={() => {
                               setEditingPhoneStudentId(student.id);
                               setTempPhoneValue(parentPhone || '');
                             }}
-                            style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#f59e0b', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                            style={{ background: 'transparent', border: 'none', color: '#f59e0b', padding: 0, fontSize: '9px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
                           >
                             <Edit size={9} />
                             {parentPhone ? (isRtl ? "تعديل" : "Edit") : (isRtl ? "+ إضافة" : "+ Add")}
@@ -653,24 +660,24 @@ export default function Reports({ students = [], academyId }) {
                     </div>
 
                     {isSent && (
-                      <button onClick={() => resetSentLog(student.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}>
-                        <RotateCcw size={12} />
+                      <button onClick={() => resetSentLog(student.id)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px' }}>
+                        <RotateCcw size={11} />
                       </button>
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#0b1320', padding: '6px', borderRadius: '8px', textAlign: 'center', fontSize: '10px' }}>
-                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#ffffff', fontWeight: '600' }}>{safeString(record?.new_memorization) || '---'}</span></div>
-                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#ffffff', fontWeight: '600' }}>{safeString(record?.review) || '---'}</span></div>
-                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#f59e0b', fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#090d16', padding: '5px 8px', borderRadius: '6px', textAlign: 'center', fontSize: '10px' }}>
+                    <div><span style={{ color: '#64748b', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#f8fafc', fontWeight: '500' }}>{safeString(record?.new_memorization) || '---'}</span></div>
+                    <div><span style={{ color: '#64748b', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#f8fafc', fontWeight: '500' }}>{safeString(record?.review) || '---'}</span></div>
+                    <div><span style={{ color: '#64748b', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#f59e0b', fontWeight: '600' }}>{safeString(record?.session_grade) || '---'}</span></div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button 
                       onClick={() => handleCopyToClipboard(student, record)}
-                      style={{ background: '#1e293b', border: 'none', color: '#ffffff', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ background: '#1e293b', border: 'none', color: '#cbd5e1', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {copiedId === student.id ? <Check size={13} style={{ color: '#22c55e' }} /> : <Copy size={13} />}
+                      {copiedId === student.id ? <Check size={12} style={{ color: '#10b981' }} /> : <Copy size={12} />}
                     </button>
 
                     {parentPhone ? (
@@ -683,21 +690,20 @@ export default function Reports({ students = [], academyId }) {
                       >
                         <button style={{ 
                           width: '100%', 
-                          background: isSent ? '#1e293b' : 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', 
-                          color: isSent ? '#94a3b8' : '#0a0f1d', 
+                          background: isSent ? '#1e293b' : '#f59e0b', 
+                          color: isSent ? '#64748b' : '#090d16', 
                           border: 'none', 
-                          padding: '7px 10px', 
+                          padding: '6px 10px', 
                           borderRadius: '6px', 
-                          fontWeight: '800', 
+                          fontWeight: '700', 
                           fontSize: '11px', 
                           display: 'flex', 
                           alignItems: 'center', 
                           justifyContent: 'center', 
                           gap: '6px', 
-                          cursor: 'pointer',
-                          boxShadow: isSent ? 'none' : '0 2px 10px rgba(245, 158, 11, 0.2)'
+                          cursor: 'pointer'
                         }}>
-                          <Send size={12} />
+                          <Send size={11} />
                           {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال عبر الواتساب" : "Send WhatsApp")}
                         </button>
                       </a>
@@ -709,13 +715,13 @@ export default function Reports({ students = [], academyId }) {
                         }}
                         style={{ 
                           flex: 1, 
-                          background: '#1e293b', 
+                          background: '#1e293b50', 
                           color: '#f59e0b', 
-                          border: '1px dashed #f59e0b60', 
-                          padding: '7px 10px', 
+                          border: '1px dashed #f59e0b40', 
+                          padding: '6px 10px', 
                           borderRadius: '6px', 
-                          fontWeight: '700', 
-                          fontSize: '11px', 
+                          fontWeight: '600', 
+                          fontSize: '10.5px', 
                           display: 'flex', 
                           alignItems: 'center', 
                           justifyContent: 'center', 
@@ -723,8 +729,8 @@ export default function Reports({ students = [], academyId }) {
                           cursor: 'pointer' 
                         }}
                       >
-                        <PhoneCall size={12} />
-                        {isRtl ? "أضف رقم الهاتف للإرسال" : "Add Phone to Send"}
+                        <PhoneCall size={11} />
+                        {isRtl ? "أضف رقم الهاتف" : "Add Phone"}
                       </button>
                     )}
                   </div>
