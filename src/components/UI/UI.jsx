@@ -1,8 +1,9 @@
+// src/components/UI/UI.jsx
 import React, { useState, useEffect, forwardRef } from 'react';
-import { C, g } from "../../constants/colors";
+import { C, g } from "@/constants/colors";
 
 // 1. الميدالية / الشارة (Badge)
-const Badge = forwardRef(({ children, color = C.success, className = "", style = {}, ...props }, ref) => (
+const Badge = forwardRef(({ children, color = C.primary, className = "", style = {}, ...props }, ref) => (
   <span 
     ref={ref}
     className={`ui-badge ${className}`}
@@ -33,15 +34,15 @@ const Btn = forwardRef(({ children, onClick, variant = "primary", style = {}, di
   const [isHovered, setIsHovered] = useState(false);
   
   const styles = {
-    primary: { background: g.gold, color: "#0C1520" },
-    secondary: { background: `${C.gold}15`, color: C.gold, border: `1px solid ${C.gold}30` },
+    primary: { background: g.gold || g.emerald, color: "#ffffff", fontWeight: "bold" },
+    secondary: { background: `${C.primary}15`, color: C.primary, border: `1px solid ${C.primary}30` },
     ghost: { background: "rgba(255,255,255,0.04)", color: C.text, border: "1px solid rgba(255,255,255,0.08)" },
     danger: { background: `${C.danger}15`, color: C.danger, border: `1px solid ${C.danger}30` },
-    success: { background: C.success, color: "#0C1520", fontWeight: "bold" },
-    failed: { background: C.danger, color: "#fff", fontWeight: "bold" }
+    success: { background: C.success, color: "#ffffff", fontWeight: "bold" },
+    failed: { background: C.danger, color: "#ffffff", fontWeight: "bold" }
   };
 
-  const hoverStyle = isHovered && !disabled ? { filter: "brightness(1.15)", transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" } : {};
+  const hoverStyle = isHovered && !disabled ? { filter: "brightness(1.12)", transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" } : {};
 
   return (
     <button
@@ -84,7 +85,7 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
     ref={ref}
     className={`ui-card ${className}`}
     style={{ 
-      background: C.card, 
+      background: C.card || C.surface, 
       border: `1px solid ${C.border}`, 
       borderRadius: 16, 
       padding: 20, 
@@ -107,7 +108,7 @@ const Input = forwardRef(({ label, value, onChange, type = "text", placeholder =
   const baseStyle = { 
     width: "100%", 
     background: C.surface || "#0f172a", 
-    border: isFocused ? `1px solid ${C.gold}` : `1px solid ${C.border}`, 
+    border: isFocused ? `1px solid ${C.primary}` : `1px solid ${C.border}`, 
     borderRadius: 10, 
     padding: "12px 14px", 
     color: C.text || "#f8fafc", 
@@ -116,7 +117,7 @@ const Input = forwardRef(({ label, value, onChange, type = "text", placeholder =
     outline: "none", 
     boxSizing: "border-box",
     textAlign: "start",
-    boxShadow: isFocused ? `0 0 0 3px ${C.gold}15` : "none",
+    boxShadow: isFocused ? `0 0 0 3px ${C.primary}15` : "none",
     transition: "all 0.2s ease",
     colorScheme: "dark",
     ...style
@@ -124,7 +125,7 @@ const Input = forwardRef(({ label, value, onChange, type = "text", placeholder =
 
   return (
     <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box" }}>
-      {label && <label style={{ fontSize: "0.8rem", color: C.gold, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}>{label}</label>}
+      {label && <label style={{ fontSize: "0.8rem", color: C.primary, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}>{label}</label>}
       {as === "textarea"
         ? <textarea ref={ref} value={value} onChange={onChange} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={placeholder} className={`ui-textarea ${className}`} style={{ ...baseStyle, resize: "vertical", minHeight: 80 }} {...props} />
         : <input ref={ref} type={type} value={value} onChange={onChange} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={placeholder} className={`ui-input ${className}`} style={baseStyle} {...props} />
@@ -140,7 +141,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
 
   return (
     <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box" }}>
-      {label && <label style={{ fontSize: "0.8rem", color: C.gold, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}>{label}</label>}
+      {label && <label style={{ fontSize: "0.8rem", color: C.primary, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}>{label}</label>}
       <select 
         ref={ref}
         value={value} 
@@ -151,7 +152,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         style={{ 
           width: "100%", 
           background: C.surface || "#0f172a", 
-          border: isFocused ? `1px solid ${C.gold}` : `1px solid ${C.border}`, 
+          border: isFocused ? `1px solid ${C.primary}` : `1px solid ${C.border}`, 
           borderRadius: 10, 
           padding: "12px 14px", 
           color: C.text || "#f8fafc", 
@@ -161,7 +162,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           cursor: "pointer", 
           boxSizing: "border-box",
           textAlign: "start",
-          boxShadow: isFocused ? `0 0 0 3px ${C.gold}15` : "none",
+          boxShadow: isFocused ? `0 0 0 3px ${C.primary}15` : "none",
           transition: "all 0.2s ease",
           colorScheme: "dark",
           ...style 
@@ -209,7 +210,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h3 style={{ fontWeight: 800, color: C.gold, fontSize: "1.05rem", margin: 0 }}>{title}</h3>
+          <h3 style={{ fontWeight: 800, color: C.primary, fontSize: "1.05rem", margin: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", color: C.textSub, fontSize: 28, cursor: "pointer", padding: 0, lineHeight: 1 }}>×</button>
         </div>
         {children}
@@ -226,7 +227,7 @@ const PageHeader = forwardRef(({ title, sub, action, className = "", style = {} 
     style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 24, ...style }}
   >
     <div style={{ textAlign: "start" }}>
-      <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: C.gold, margin: 0 }}>{title}</h2>
+      <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: C.primary, margin: 0 }}>{title}</h2>
       {sub && <p style={{ fontSize: "0.82rem", color: C.textSub, marginTop: 4, margin: 0 }}>{sub}</p>}
     </div>
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>{action}</div>
@@ -243,7 +244,7 @@ const TH = forwardRef(({ children, style = {}, className = "", ...props }, ref) 
       padding: "14px 12px", 
       textAlign: "start", 
       fontSize: "0.75rem", 
-      color: C.gold, 
+      color: C.primary, 
       fontWeight: 700, 
       borderBottom: `2px solid ${C.border}`, 
       whiteSpace: "nowrap", 
@@ -276,5 +277,4 @@ const TD = forwardRef(({ children, style = {}, className = "", ...props }, ref) 
 ));
 TD.displayName = 'TD';
 
-// تم إضافة Btn as Button لحل مشكلة الاستيراد في الملفات الأخرى
 export { Badge, Btn, Btn as Button, Card, Input, Select, Modal, PageHeader, TH, TD };
