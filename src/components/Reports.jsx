@@ -1,9 +1,7 @@
 // src/components/Reports.jsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
-import { Btn, Card, Input, Badge, PageHeader } from './UI/UI.jsx';
 import { 
   Calendar, 
   CheckCircle2, 
@@ -20,8 +18,7 @@ import {
   Clock,
   Send,
   AlertCircle,
-  MessageSquare,
-  XCircle
+  MessageSquare
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
@@ -91,9 +88,7 @@ export default function Reports({ students = [], academyId }) {
       if (viewData) {
         viewData.forEach(rec => {
           mappedData[rec.student_id] = rec;
-          if (rec.is_sent) {
-            logsMap[rec.student_id] = true;
-          }
+          if (rec.is_sent) logsMap[rec.student_id] = true;
         });
       }
 
@@ -113,22 +108,17 @@ export default function Reports({ students = [], academyId }) {
 
   const markAsSentInDB = async (studentId, reportText) => {
     setSentLogs(prev => ({ ...prev, [studentId]: true }));
-
     try {
-      await supabase
-        .from('notification_logs')
-        .insert([
-          {
-            academy_id: academyId,
-            recipient_user_id: studentId,
-            channel_used: 'whatsapp',
-            status: 'sent',
-            sent_text: reportText,
-            template_id: templateId
-          }
-        ]);
+      await supabase.from('notification_logs').insert([{
+        academy_id: academyId,
+        recipient_user_id: studentId,
+        channel_used: 'whatsapp',
+        status: 'sent',
+        sent_text: reportText,
+        template_id: templateId
+      }]);
     } catch (err) {
-      console.error("Error logging sent notification:", err);
+      console.error("Error logging notification:", err);
     }
   };
 
@@ -160,30 +150,23 @@ export default function Reports({ students = [], academyId }) {
       if (!record || rawGrade === null || rawGrade === undefined) {
         return isRtl ? 'لم يحدد' : 'Not specified';
       }
-      
       const grade = Number(rawGrade);
       if (isNaN(grade)) return safeString(rawGrade);
-      
       if (grade >= 10) return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
       if (grade >= 8)  return isRtl ? 'جيد جداً ⭐⭐' : 'Very Good ⭐⭐';
       if (grade >= 6)  return isRtl ? 'يحتاج مزيد من التركيز 🎯' : 'Needs Focus 🎯';
-      
       return isRtl ? 'ضعيف ⚠️' : 'Weak ⚠️';
     };
-
-    const newMemorization = safeString(record?.new_memorization || record?.memorization);
-    const retention = safeString(record?.review || record?.retention_assignment || record?.revision);
-    const notes = safeString(record?.session_notes || record?.notes);
 
     let parsed = messageTemplate;
     parsed = parsed.replace(/\[اسم_الطالب\]/g, studentName || (isRtl ? "عاصم محمد السنباطي" : "Student Name"));
     parsed = parsed.replace(/\[التاريخ\]/g, selectedDate);
     parsed = parsed.replace(/\[الحالة\]/g, getStatusText());
-    parsed = parsed.replace(/\[الحفظ\]/g, newMemorization || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')));
-    parsed = parsed.replace(/\[المراجعة\]/g, retention || '---');
+    parsed = parsed.replace(/\[الحفظ\]/g, safeString(record?.new_memorization) || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')));
+    parsed = parsed.replace(/\[المراجعة\]/g, safeString(record?.review) || '---');
     parsed = parsed.replace(/\[الماضي\]/g, '---');
     parsed = parsed.replace(/\[التقييم\]/g, getGradeText());
-    parsed = parsed.replace(/\[الملاحظات\]/g, notes || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
+    parsed = parsed.replace(/\[الملاحظات\]/g, safeString(record?.session_notes) || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
 
     return parsed;
   }, [messageTemplate, selectedDate, isRtl, safeString]);
@@ -192,10 +175,7 @@ export default function Reports({ students = [], academyId }) {
     const parsedMessage = getParsedMessage(student, record);
     let phone = safeString(student?.parent_phone || student?.phone || record?.parent_phone);
     phone = phone.replace(/\s+/g, '').replace(/[+\-]/g, '');
-    
-    if (phone.startsWith('01') && phone.length === 11) {
-      phone = '20' + phone;
-    }
+    if (phone.startsWith('01') && phone.length === 11) phone = '20' + phone;
     return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(parsedMessage)}`;
   };
 
@@ -213,14 +193,10 @@ export default function Reports({ students = [], academyId }) {
       setMessageTemplate(prev => prev + " " + tag);
       return;
     }
-
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = messageTemplate;
-    const newText = text.substring(0, start) + tag + text.substring(end);
-    
-    setMessageTemplate(newText);
-
+    setMessageTemplate(text.substring(0, start) + tag + text.substring(end));
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + tag.length, start + tag.length);
@@ -229,7 +205,6 @@ export default function Reports({ students = [], academyId }) {
 
   const filteredStudents = useMemo(() => {
     const cleanSearch = safeString(searchTerm).toLowerCase().trim();
-
     return (students || []).filter(student => {
       const rec = reportsData[student.id];
       const status = rec?.attendance_status || rec?.status || 'present';
@@ -256,71 +231,69 @@ export default function Reports({ students = [], academyId }) {
   const previewText = getParsedMessage(sampleStudent, sampleRecord);
 
   return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "inherit" }}>
+    <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '12px 8px' }}>
       
-      {/* 1. الترويسة الرئيسية بدون أي رموز تعبيرية */}
-      <PageHeader 
-        title={isRtl ? "مركز تقارير أولياء الأمور" : "Parent Reporting Center"}
-        sub={isRtl ? "توليد وإرسال حصاد اليوم القرآني والأكاديمي عبر الواتساب" : "Generate and send daily Quranic results via WhatsApp"}
-        action={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: C.surface, padding: '6px 12px', borderRadius: '10px', border: `1px solid ${C.border}` }}>
-            <Calendar size={15} strokeWidth={1.8} style={{ color: C.primary }} />
+      {/* 1. ترويسة رئيسية عصرية ومتجاوبة مع الجوال */}
+      <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#f8fafc', margin: 0, lineHeight: '1.3' }}>
+              {isRtl ? "مركز تقارير أولياء الأمور" : "Parent Reporting Center"}
+            </h1>
+            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>
+              {isRtl ? "توليد وإرسال حصاد اليوم القرآني والأكاديمي عبر الواتساب" : "Generate and send daily Quranic results via WhatsApp"}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#1e293b', padding: '6px 10px', borderRadius: '8px', border: '1px solid #334155' }}>
+            <Calendar size={14} style={{ color: '#38bdf8' }} />
             <input 
               type="date" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}
+              style={{ background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
             />
           </div>
-        }
-      />
-
-      {/* 2. بطاقات الإحصائيات بأيقونات رسمية موحدة */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-        <Card style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: `${C.primary}15`, color: C.primary }}>
-            <Users size={18} strokeWidth={1.8} />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', color: C.textSub, display: 'block' }}>{isRtl ? "إجمالي الطلاب" : "Total"}</span>
-            <span style={{ fontSize: '16px', fontWeight: '800', color: C.text }}>{totalCount}</span>
-          </div>
-        </Card>
-
-        <Card style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: `${C.success}15`, color: C.success }}>
-            <TrendingUp size={18} strokeWidth={1.8} />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', color: C.textSub, display: 'block' }}>{isRtl ? "نسبة الإرسال" : "Sent"}</span>
-            <span style={{ fontSize: '16px', fontWeight: '800', color: C.success }}>{completionPercentage}%</span>
-          </div>
-        </Card>
-
-        <Card style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: `${C.warning || '#f59e0b'}15`, color: C.warning || '#f59e0b' }}>
-            <Clock size={18} strokeWidth={1.8} />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', color: C.textSub, display: 'block' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
-            <span style={{ fontSize: '16px', fontWeight: '800', color: C.text }}>{remainingCount}</span>
-          </div>
-        </Card>
+        </div>
       </div>
 
-      {/* 3. محرر القالب والمعاينة المباشرة */}
-      <div style={{ display: 'grid', gridTemplateColumns: showPreview ? 'repeat(auto-fit, minmax(290px, 1fr))' : '1fr', gap: '14px', marginBottom: '20px' }}>
+      {/* 2. كروت الإحصائيات - منظم بشكل أفقي ممتاز للشاشات الصغيرة */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+          <Users size={16} style={{ color: '#38bdf8', marginBottom: '4px' }} />
+          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الجمالي" : "Total"}</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc' }}>{totalCount}</span>
+        </div>
+
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+          <TrendingUp size={16} style={{ color: '#22c55e', marginBottom: '4px' }} />
+          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المرسل" : "Sent"}</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#22c55e' }}>{completionPercentage}%</span>
+        </div>
+
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+          <Clock size={16} style={{ color: '#f59e0b', marginBottom: '4px' }} />
+          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#f59e0b' }}>{remainingCount}</span>
+        </div>
+      </div>
+
+      {/* 3. محرر القوالب والمعاينة */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
         
-        {/* محرّر النصوص */}
-        <Card style={{ background: C.surface, border: `1px solid ${C.border}`, padding: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: C.primary, fontWeight: 700, fontSize: '13px' }}>
-              <Sparkles size={16} strokeWidth={1.8} />
-              <span>{isRtl ? "محرر قوالب التقارير" : "Report Template Editor"}</span>
+        {/* صندوق التعديل */}
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8', fontWeight: '700', fontSize: '12px' }}>
+              <Sparkles size={14} />
+              <span>{isRtl ? "محرر القوالب" : "Template Editor"}</span>
             </div>
-            <Btn onClick={() => setShowPreview(!showPreview)} variant="ghost" style={{ fontSize: '11px', padding: '4px 8px' }}>
-              <Smartphone size={13} strokeWidth={1.8} /> {showPreview ? (isRtl ? "إخفاء المعاينة" : "Hide") : (isRtl ? "معاينة" : "Preview")}
-            </Btn>
+            <button 
+              onClick={() => setShowPreview(!showPreview)} 
+              style={{ background: '#334155', border: 'none', color: '#f8fafc', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+            >
+              <Smartphone size={12} /> {showPreview ? (isRtl ? "إخفاء" : "Hide") : (isRtl ? "معاينة" : "Preview")}
+            </button>
           </div>
 
           <textarea 
@@ -330,171 +303,193 @@ export default function Reports({ students = [], academyId }) {
             onChange={(e) => setMessageTemplate(e.target.value)}
             style={{ 
               width: '100%', 
-              background: '#0d1322', 
-              border: `1px solid ${C.border}`, 
-              color: C.text, 
+              background: '#0f172a', 
+              border: '1px solid #334155', 
+              color: '#f8fafc', 
               borderRadius: '8px', 
-              padding: '10px', 
-              fontSize: '13px', 
+              padding: '8px', 
+              fontSize: '12px', 
               outline: 'none', 
               resize: 'vertical', 
-              lineHeight: '1.5', 
-              boxSizing: 'border-box' 
+              lineHeight: '1.5',
+              boxSizing: 'border-box'
             }}
           />
 
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', marginTop: '8px' }}>
+          {/* الوسوم التفاف مرن */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
             {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
-              <Badge key={tag} onClick={() => insertTagAtCursor(tag)} style={{ cursor: 'pointer', whiteSpace: 'nowrap', background: `${C.primary}18`, color: C.primary, fontSize: '11px' }}>
+              <span 
+                key={tag} 
+                onClick={() => insertTagAtCursor(tag)} 
+                style={{ cursor: 'pointer', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}
+              >
                 + {tag}
-              </Badge>
+              </span>
             ))}
           </div>
-        </Card>
+        </div>
 
-        {/* محاكي المعاينة بأيقونة MessageSquare احترافية */}
+        {/* المعاينة الحية بتنسيق فقرة واتساب حقيقية */}
         {showPreview && (
-          <Card style={{ background: C.surface, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', padding: '14px' }}>
-            <div style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: '8px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MessageSquare size={14} strokeWidth={1.8} style={{ color: C.success }} />
-              <span style={{ fontSize: '12px', fontWeight: '700', color: C.textSub }}>
-                {isRtl ? "معاينة الرسالة الحية" : "Live Parent Message Preview"}
+          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>
+              <MessageSquare size={14} style={{ color: '#22c55e' }} />
+              <span style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8' }}>
+                {isRtl ? "معاينة رسالة الواتساب" : "WhatsApp Live Preview"}
               </span>
             </div>
             
             <div 
               dir="auto"
               style={{ 
-                background: '#0d1912', 
-                border: `1px solid ${C.success}30`, 
+                background: '#0b141a', 
+                border: '1px solid #1f2c34', 
                 borderRadius: '8px', 
-                padding: '12px', 
-                fontSize: '12.5px', 
-                lineHeight: '1.6', 
+                padding: '10px', 
+                fontSize: '11.5px', 
+                lineHeight: '1.5', 
                 whiteSpace: 'pre-wrap', 
-                color: C.text,
-                textAlign: isRtl ? 'right' : 'left',
-                flex: 1
+                color: '#e9edef',
+                textAlign: isRtl ? 'right' : 'left'
               }}
             >
               {previewText}
             </div>
-          </Card>
+          </div>
         )}
       </div>
 
-      {/* 4. تصفية وبحث */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexDirection: 'column' }}>
-        <Input 
+      {/* 4. البحث وفلترة القائمة */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+        <input 
           type="text"
-          placeholder={isRtl ? "بحث باسم الطالب أو الهاتف..." : "Search student or phone..."}
+          placeholder={isRtl ? "بحث باسم الطالب..." : "Search student..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: '100%', background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
         />
 
-        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-          <Btn onClick={() => setActiveTab('all')} variant={activeTab === 'all' ? "primary" : "ghost"} style={{ fontSize: '12px', padding: '6px 10px' }}>
-            <Users size={13} strokeWidth={1.8} />
-            {isRtl ? "الكل" : "All"} ({students.length})
-          </Btn>
-          <Btn onClick={() => setActiveTab('unsent')} variant={activeTab === 'unsent' ? "primary" : "ghost"} style={{ fontSize: '12px', padding: '6px 10px' }}>
-            <Clock size={13} strokeWidth={1.8} />
-            {isRtl ? "غير مرسل" : "Unsent"} ({remainingCount})
-          </Btn>
-          <Btn onClick={() => setActiveTab('present')} variant={activeTab === 'present' ? "primary" : "ghost"} style={{ fontSize: '12px', padding: '6px 10px' }}>
-            <UserCheck size={13} strokeWidth={1.8} />
-            {isRtl ? "حاضر" : "Present"}
-          </Btn>
-          <Btn onClick={() => setActiveTab('absent')} variant={activeTab === 'absent' ? "primary" : "ghost"} style={{ fontSize: '12px', padding: '6px 10px' }}>
-            <UserX size={13} strokeWidth={1.8} />
-            {isRtl ? "غائب" : "Absent"}
-          </Btn>
+        <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
+          {[
+            { id: 'all', label: isRtl ? "الكل" : "All", icon: Users },
+            { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: Clock },
+            { id: 'present', label: isRtl ? "حاضر" : "Present", icon: UserCheck },
+            { id: 'absent', label: isRtl ? "غائب" : "Absent", icon: UserX }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: isActive ? '#38bdf8' : '#1e293b',
+                  color: isActive ? '#0f172a' : '#94a3b8',
+                  border: '1px solid #334155',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
+                }}
+              >
+                <Icon size={12} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 5. قائمة الطلاب بأزرار وأيقونات متناسقة */}
+      {/* 5. قائمة الطلاب كروت مرتبة */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '30px 0', color: C.textSub }}>
-          <Loader2 size={20} className="spin-icon" style={{ margin: '0 auto 8px auto', display: 'block' }} />
-          <span style={{ fontSize: '13px' }}>{isRtl ? "جاري تحميل البيانات..." : "Loading report data..."}</span>
+        <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+          <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredStudents.length === 0 ? (
-            <Card style={{ textAlign: 'center', color: C.textSub, padding: '20px' }}>
-              <AlertCircle size={20} strokeWidth={1.8} style={{ margin: '0 auto 6px auto', display: 'block', opacity: 0.5 }} />
-              <span style={{ fontSize: '13px' }}>{isRtl ? "لا يوجد طلاب يطابقون خيار البحث." : "No matching students found."}</span>
-            </Card>
+            <div style={{ textAlignment: 'center', padding: '20px', background: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#94a3b8', fontSize: '12px' }}>
+              <AlertCircle size={16} style={{ display: 'block', margin: '0 auto 4px auto' }} />
+              {isRtl ? "لا يوجد طلاب يطابقون خيار البحث." : "No matching students found."}
+            </div>
           ) : (
             filteredStudents.map(student => {
               const record = reportsData[student.id];
               const isSent = !!sentLogs[student.id];
               const studentName = safeString(student?.name || student?.student_name);
               const parentPhone = safeString(student?.parent_phone || student?.phone || record?.parent_phone);
-              const messageText = getParsedMessage(student, record);
 
               return (
-                <Card 
+                <div 
                   key={student.id} 
                   style={{ 
-                    display: 'flex', 
+                    background: '#1e293b', 
+                    border: `1px solid ${isSent ? '#22c55e40' : '#334155'}`, 
+                    borderRadius: '10px', 
+                    padding: '10px 12px',
+                    display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px',
-                    opacity: isSent ? 0.75 : 1,
-                    padding: '12px 14px',
-                    borderRight: isRtl && isSent ? `3px solid ${C.success}` : undefined,
-                    borderLeft: !isRtl && isSent ? `3px solid ${C.success}` : undefined,
+                    gap: '8px'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: '700', fontSize: '14px', color: C.text }}>{studentName}</span>
+                        <span style={{ fontWeight: '700', fontSize: '13px', color: '#f8fafc' }}>{studentName}</span>
                         {isSent && (
-                          <Badge color={C.success} style={{ fontSize: '10px' }}>
-                            <CheckCircle2 size={10} strokeWidth={1.8} /> {isRtl ? "تم الإرسال" : "Sent"}
-                          </Badge>
+                          <span style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                            <CheckCircle2 size={9} /> {isRtl ? "تم الإرسال" : "Sent"}
+                          </span>
                         )}
                       </div>
-                      <span style={{ fontSize: '11px', color: C.textSub }}>{parentPhone || (isRtl ? 'الهاتف غير مسجل' : 'No Phone')}</span>
+                      <span style={{ fontSize: '10px', color: parentPhone ? '#94a3b8' : '#ef4444' }}>
+                        {parentPhone || (isRtl ? 'الهاتف غير مسجل' : 'No Phone')}
+                      </span>
                     </div>
 
                     {isSent && (
-                      <Btn onClick={() => resetSentLog(student.id)} variant="ghost" style={{ padding: '4px' }} title={isRtl ? "إعادة تعيين" : "Reset"}>
-                        <RotateCcw size={13} strokeWidth={1.8} />
-                      </Btn>
+                      <button onClick={() => resetSentLog(student.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}>
+                        <RotateCcw size={12} />
+                      </button>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: C.textSub, background: `${C.border}20`, padding: '6px 10px', borderRadius: '6px' }}>
-                    <div>{isRtl ? "حفظ:" : "Mem:"} <span style={{ color: C.text }}>{safeString(record?.new_memorization || record?.memorization) || '---'}</span></div>
-                    <div>{isRtl ? "مراجعة:" : "Rev:"} <span style={{ color: C.text }}>{safeString(record?.review || record?.revision) || '---'}</span></div>
-                    <div>{isRtl ? "تقييم:" : "Grade:"} <span style={{ color: C.primary, fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
+                  {/* تفاصيل الدرجات والتسميع */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#0f172a', padding: '6px', borderRadius: '6px', textAlign: 'center', fontSize: '10px' }}>
+                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.new_memorization) || '---'}</span></div>
+                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.review) || '---'}</span></div>
+                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#38bdf8', fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                    <Btn 
-                      onClick={() => handleCopyToClipboard(student, record)} 
-                      variant={copiedId === student.id ? "success" : "ghost"}
-                      style={{ padding: '6px 10px', fontSize: '12px' }}
+                  {/* أزرار الإجراءات */}
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button 
+                      onClick={() => handleCopyToClipboard(student, record)}
+                      style={{ background: '#334155', border: 'none', color: '#f8fafc', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {copiedId === student.id ? <Check size={13} strokeWidth={1.8} /> : <Copy size={13} strokeWidth={1.8} />}
-                    </Btn>
-                    
+                      {copiedId === student.id ? <Check size={13} style={{ color: '#22c55e' }} /> : <Copy size={13} />}
+                    </button>
+
                     <a 
                       href={generateWhatsAppLink(student, record)}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      onClick={() => markAsSentInDB(student.id, messageText)}
+                      onClick={() => markAsSentInDB(student.id, getParsedMessage(student, record))}
                       style={{ textDecoration: 'none', flex: 1 }}
                     >
-                      <Btn variant={isSent ? "secondary" : "success"} style={{ width: '100%', justifyContent: 'center', fontSize: '12px', padding: '6px 10px' }}>
-                        <Send size={13} strokeWidth={1.8} /> 
+                      <button style={{ width: '100%', background: isSent ? '#334155' : '#22c55e', color: isSent ? '#94a3b8' : '#ffffff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '700', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <Send size={12} />
                         {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال الواتساب" : "Send WhatsApp")}
-                      </Btn>
+                      </button>
                     </a>
                   </div>
-                </Card>
+                </div>
               );
             })
           )}
