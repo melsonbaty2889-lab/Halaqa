@@ -21,31 +21,38 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-// 1. مكون التقويم المطور (حل مشكلة الهجري + DatePicker داكن مخصص)
-function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
-  const [useHijri, setUseHijri] = React.useState(false);
-  const [isOpen, setIsOpen] = React.useState(false);
+// 1. مكون التقويم المطور الداعم للتدويل والتاريخ الهجري المعتمد على Intl
+function DateHeader({ selectedDate, setSelectedDate }) {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
+  const isRtl = currentLang.startsWith('ar');
 
-  // معالجة التاريخ لتفادي أخطاء المنطقة الزمنية ISO
+  const [useHijri, setUseHijri] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // معالجة التاريخ لتفادي إزاحة المنطقة الزمنية UTC
   const parseLocalDate = (dateStr) => {
     if (!dateStr) return new Date();
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day);
   };
 
-  const formattedDisplayDate = React.useMemo(() => {
+  const dateObj = useMemo(() => parseLocalDate(selectedDate), [selectedDate]);
+
+  // تنسيق التاريخ الهجري أو الميلادي بلغة التطبيق الحالية
+  const formattedDisplayDate = useMemo(() => {
     if (!selectedDate) return '';
-    const dateObj = parseLocalDate(selectedDate);
 
     if (useHijri) {
+      const locale = isRtl ? 'ar-SA-u-ca-islamic-uma' : 'en-US-u-ca-islamic-uma';
       try {
-        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {
+        return new Intl.DateTimeFormat(locale, {
           day: 'numeric',
           month: 'long',
           year: 'numeric'
         }).format(dateObj);
       } catch (e) {
-        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+        return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', {
           day: 'numeric',
           month: 'long',
           year: 'numeric'
@@ -53,15 +60,14 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
       }
     }
 
-    return new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
+    return new Intl.DateTimeFormat(currentLang, {
       weekday: 'short',
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     }).format(dateObj);
-  }, [selectedDate, isRtl, useHijri]);
+  }, [selectedDate, currentLang, isRtl, useHijri, dateObj]);
 
-  const dateObj = parseLocalDate(selectedDate);
   const currentYear = dateObj.getFullYear();
   const currentMonth = dateObj.getMonth();
 
@@ -78,11 +84,25 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
-  const monthNamesAr = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-  const weekDaysAr = ["أحد", "ثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+  // اسم الشهر والأسنة ديناميكياً
+  const monthName = useMemo(() => {
+    return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(new Date(currentYear, currentMonth, 1));
+  }, [currentYear, currentMonth, currentLang]);
+
+  // أسماء الأيام ديناميكياً حسب لغة التطبيق
+  const weekDays = useMemo(() => {
+    const days = [];
+    const refDate = new Date(2026, 7, 2); // 2026-08-02 (A Sunday)
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(refDate);
+      d.setDate(refDate.getDate() + i);
+      days.push(new Intl.DateTimeFormat(currentLang, { weekday: 'narrow' }).format(d));
+    }
+    return days;
+  }, [currentLang]);
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div style={{ position: 'relative', display: 'inline-block', direction: isRtl ? 'rtl' : 'ltr' }}>
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -92,7 +112,6 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
         borderRadius: '10px', 
         padding: '6px 12px' 
       }}>
-        {/* زر فتح نافذة التقويم المخصصة */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -115,12 +134,10 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
 
         <span style={{ color: '#475569' }}>|</span>
 
-        {/* عرض التاريخ المنسق (هجري / ميلادي) */}
         <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>
           {formattedDisplayDate}
         </span>
 
-        {/* زر التحويل الهجري / الميلادي */}
         <button
           type="button"
           onClick={() => setUseHijri(!useHijri)}
@@ -135,11 +152,12 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
             cursor: 'pointer'
           }}
         >
-          {useHijri ? (isRtl ? 'هجري' : 'Hijri') : (isRtl ? 'ميلادي' : 'Gregorian')}
+          {useHijri 
+            ? (isRtl ? 'هجري' : 'Hijri') 
+            : (isRtl ? 'ميلادي' : 'Gregorian')}
         </button>
       </div>
 
-      {/* نافذة اختيار التاريخ المخصصة الداكنة */}
       {isOpen && (
         <div style={{
           position: 'absolute',
@@ -152,18 +170,23 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
           borderRadius: '12px',
           padding: '12px',
           boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
-          width: '260px'
+          width: '260px',
+          direction: isRtl ? 'rtl' : 'ltr'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <button onClick={handlePrevMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '2px 8px' }}>‹</button>
+            <button onClick={handlePrevMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '2px 8px' }}>
+              {isRtl ? '›' : '‹'}
+            </button>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-              {monthNamesAr[currentMonth]} {currentYear}
+              {monthName}
             </span>
-            <button onClick={handleNextMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '2px 8px' }}>›</button>
+            <button onClick={handleNextMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '2px 8px' }}>
+              {isRtl ? '‹' : '›'}
+            </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center', marginBottom: '6px' }}>
-            {weekDaysAr.map((d, i) => (
+            {weekDays.map((d, i) => (
               <span key={i} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>{d}</span>
             ))}
           </div>
@@ -203,7 +226,7 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
 
           <button 
             onClick={() => setIsOpen(false)} 
-            style={{ width: '100%', marginTop: '10px', background: '#334155', border: 'none', color: '#f8fafc', borderRadius: '6px', padding: '4px', fontSize: '10px', cursor: 'pointer' }}
+            style={{ width: '100%', marginTop: '10px', background: '#334155', border: 'none', color: '#f8fafc', borderRadius: '6px', padding: '5px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
           >
             {isRtl ? 'إغلاق' : 'Close'}
           </button>
@@ -248,6 +271,10 @@ export default function Reports({ students = [], academyId }) {
 
   const [messageTemplate, setMessageTemplate] = useState(defaultTemplate);
 
+  useEffect(() => {
+    setMessageTemplate(defaultTemplate);
+  }, [defaultTemplate]);
+
   const fetchReportsAndTemplate = useCallback(async () => {
     if (!academyId) return;
     setLoading(true);
@@ -264,8 +291,6 @@ export default function Reports({ students = [], academyId }) {
       if (tmplData && tmplData.template_body) {
         setTemplateId(tmplData.id);
         setMessageTemplate(tmplData.template_body);
-      } else {
-        setMessageTemplate(defaultTemplate);
       }
 
       const { data: viewData, error: viewError } = await supabase
@@ -293,7 +318,7 @@ export default function Reports({ students = [], academyId }) {
     } finally {
       setLoading(false);
     }
-  }, [academyId, defaultTemplate]);
+  }, [academyId]);
 
   useEffect(() => {
     fetchReportsAndTemplate();
@@ -419,14 +444,14 @@ export default function Reports({ students = [], academyId }) {
   const remainingCount = Math.max(0, totalCount - sentCount);
   const completionPercentage = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
 
-  const sampleStudent = students[0] || { id: 'demo', name: 'عاصم محمد السنباطي', parent_phone: '01000000000' };
+  const sampleStudent = students[0] || { id: 'demo', name: isRtl ? 'عاصم محمد السنباطي' : 'Student Name', parent_phone: '01000000000' };
   const sampleRecord = reportsData[sampleStudent.id] || {};
   const previewText = getParsedMessage(sampleStudent, sampleRecord);
 
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '12px 8px' }}>
       
-      {/* 1. الترويسة الرئيسية واستدعاء التقويم المطور */}
+      {/* 1. الترويسة وأداة اختيار التاريخ */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
           <div>
@@ -441,16 +466,15 @@ export default function Reports({ students = [], academyId }) {
           <DateHeader 
             selectedDate={selectedDate} 
             setSelectedDate={setSelectedDate} 
-            isRtl={isRtl} 
           />
         </div>
       </div>
 
-      {/* 2. كروت الإحصائيات */}
+      {/* 2. بطاقات الإحصائيات المترجمة */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
           <Users size={16} style={{ color: '#38bdf8', marginBottom: '4px' }} />
-          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الجمالي" : "Total"}</span>
+          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الإجمالي" : "Total"}</span>
           <span style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc' }}>{totalCount}</span>
         </div>
 
@@ -546,7 +570,7 @@ export default function Reports({ students = [], academyId }) {
         )}
       </div>
 
-      {/* 4. البحث والفلترة */}
+      {/* 4. إدخال البحث وأزرار التصفية */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
         <input 
           type="text"
@@ -592,7 +616,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. قائمة الطلاب */}
+      {/* 5. عرض قائمة الطلاب */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
           <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
