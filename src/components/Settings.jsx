@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, Save, Globe, Clock, Calendar, Mail, Phone, 
   ShieldCheck, Database, RefreshCw, CheckCircle2, Upload, 
-  Download, Image, AlertCircle 
+  Download, Image as ImageIcon, AlertCircle, Trash2, ExternalLink, Palette
 } from 'lucide-react';
 import { Card, Input, Select, Btn as Button } from '@/components/UI/UI.jsx';
 import { supabase } from '@/lib/supabase.js';
@@ -15,12 +15,14 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     website: '',
     email: '',
     phone: '',
+    brand_color: '#f59e0b',
     currency: 'EGP',
     timezone: 'Africa/Cairo',
     calendar_type: 'gregorian',
     weekend_days: ['friday', 'saturday']
   });
 
+  const [initialData, setInitialData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -29,13 +31,13 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
-  // إظهار التنبيهات الشفافة (Toast)
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // جلب البيانات من Supabase عند تحميل الصفحة
   useEffect(() => {
     if (currentAcademyId) {
       fetchAcademySettings();
@@ -55,18 +57,21 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
-        setFormData({
+        const fetched = {
           name: data.name || '',
           slug: data.slug || '',
           logo_url: data.logo_url || '',
           website: data.website || '',
           email: data.email || '',
           phone: data.phone || '',
+          brand_color: data.brand_color || '#f59e0b',
           currency: data.currency || 'EGP',
           timezone: data.timezone || 'Africa/Cairo',
           calendar_type: data.calendar_type || 'gregorian',
           weekend_days: data.weekend_days || ['friday', 'saturday']
-        });
+        };
+        setFormData(fetched);
+        setInitialData(fetched);
       }
     } catch (err) {
       showToast('حدث خطأ أثناء جلب البيانات: ' + err.message, 'error');
@@ -75,7 +80,18 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-      const handleLogoUpload = async (e) => {
+  // توليد Slug تلقائي عند تغيير اسم الأكاديمية
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    const generatedSlug = val.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
+    setFormData(prev => ({
+      ...prev,
+      name: val,
+      slug: prev.slug === '' || prev.slug === initialData.slug ? generatedSlug : prev.slug
+    }));
+  };
+
+  const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -94,30 +110,24 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
-      // 1. رفع الملف إلى Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // 2. استخراج الرابط العام
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const publicUrl = data?.publicUrl;
 
       if (!publicUrl) throw new Error('تعذر الحصول على رابط الصورة العام');
 
-      // 3. تحديث الـ State المحلية
       setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
 
-      // 4. حفظ الرابط مباشرة في جدول الأكاديميات بقاعدة البيانات لضمان عدم ضياعه عند الرفريش
       if (currentAcademyId) {
-        const { error: dbError } = await supabase
+        await supabase
           .from('academies')
           .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
           .eq('id', currentAcademyId);
-
-        if (dbError) throw dbError;
       }
 
       showToast('تم رفع الشعار وحفظه بنجاح');
@@ -128,7 +138,17 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-  // التحقق من صحة المدخلات
+  const handleRemoveLogo = async () => {
+    setFormData(prev => ({ ...prev, logo_url: '' }));
+    if (currentAcademyId) {
+      await supabase
+        .from('academies')
+        .update({ logo_url: '', updated_at: new Date().toISOString() })
+        .eq('id', currentAcademyId);
+    }
+    showToast('تم حذف الشعار بنجاح');
+  };
+
   const validateForm = () => {
     if (!formData.name.trim()) {
       showToast('اسم الأكاديمية مطلوب', 'error');
@@ -141,9 +161,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     return true;
   };
 
-  // حفظ الإعدادات
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!validateForm()) return;
 
     try {
@@ -158,6 +177,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         .upsert({ id: currentAcademyId, ...payload });
 
       if (error) throw error;
+      setInitialData(formData);
       showToast('تم حفظ كافة الإعدادات بنجاح');
     } catch (err) {
       showToast('حدث خطأ أثناء الحفظ: ' + err.message, 'error');
@@ -166,7 +186,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-  // تصدير النسخة الاحتياطية (JSON)
   const handleExport = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(formData, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -178,7 +197,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     showToast('تم تصدير الإعدادات بنجاح');
   };
 
-  // استيراد النسخة الاحتياطية (JSON)
   const handleImport = (e) => {
     const fileReader = new FileReader();
     if (e.target.files[0]) {
@@ -187,7 +205,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         try {
           const parsed = JSON.parse(event.target.result);
           setFormData((prev) => ({ ...prev, ...parsed }));
-          showToast('تم استيراد الإعدادات إلى النموذج، اضغط حفظ لتطبيقها');
+          showToast('تم استيراد الإعدادات بنجاح، اضغط حفظ لتأكيدها');
         } catch (err) {
           showToast('ملف JSON غير صالح', 'error');
         }
@@ -195,7 +213,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-  // تبديل أيام العطلة الأسبوعية
   const toggleWeekendDay = (day) => {
     setFormData((prev) => {
       const exists = prev.weekend_days.includes(day);
@@ -208,91 +225,124 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px', color: '#f8fafc' }}>
-        <RefreshCw className="animate-spin" size={32} />
+      <div className="flex justify-center items-center min-h-[350px] text-slate-100">
+        <RefreshCw className="animate-spin text-amber-500" size={32} />
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '16px', direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div className={`max-w-4xl mx-auto p-4 md:p-6 text-slate-100 ${isRtl ? 'rtl' : 'ltr'}`}>
       
-      {/* Toast Notification */}
+      {/* Toast Alert */}
       {toast && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            zIndex: 9999,
-            padding: '12px 20px',
-            borderRadius: '10px',
-            background: toast.type === 'error' ? '#ef4444' : '#10b981',
-            color: '#ffffff',
-            fontWeight: '600',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            animation: 'fadeIn 0.3s ease'
-          }}
-        >
-          {toast.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+        <div className={`fixed bottom-6 right-6 z-[9999] px-5 py-3 rounded-xl text-white font-semibold shadow-2xl flex items-center gap-2 transition-all animate-bounce ${toast.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'}`}>
+          {toast.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
           {toast.message}
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <h1 style={{ color: '#f59e0b', fontSize: '1.8rem', fontWeight: '800', marginBottom: '6px', display: 'flex', items: 'center', justifyContent: 'center', gap: '10px' }}>
-          إعدادات المنظومة وحفظ البيانات <Building2 size={24} />
+      {/* Main Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl md:text-3xl font-black text-amber-500 mb-2 flex items-center justify-center gap-3">
+          <Building2 size={28} /> إعدادات المنظومة وحفظ البيانات
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-          إدارة ترخيص الأكاديمية، البيانات التأسيسية، وخيارات التزامن السحابي للغرفة الأكاديمية.
+        <p className="text-slate-400 text-sm md:text-base">
+          إدارة ترخيص الأكاديمية، الهوية البصرية، والخيارات الإقليمية والتزامن السحابي.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Live Preview Card (مزية تنافسية) */}
+      <div className="mb-6 p-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl border border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden">
+            {formData.logo_url ? (
+              <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
+            ) : (
+              <Building2 className="text-slate-500" size={24} />
+            )}
+          </div>
+          <div>
+            <span className="text-xs text-amber-500 font-bold uppercase tracking-wider">معاينة هوية الطلاب</span>
+            <h3 className="text-lg font-bold text-white">{formData.name || 'اسم الأكاديمية'}</h3>
+            <p className="text-xs text-slate-400">
+              {formData.slug ? `https://${formData.slug}.academy.com` : 'لم يتم تحديد المعرّف'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+            العملة: {formData.currency}
+          </span>
+          <span className="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+            نشط
+          </span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Basic Identity Section */}
         <Card>
-          <h2 style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 className="text-sky-400 text-lg font-bold mb-5 flex items-center gap-2">
             <Building2 size={20} /> الهوية والبيانات الأساسية
           </h2>
 
-          <Input
-            label="اسم الأكاديمية / المقرأة *"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="أكاديمية الفرقان التجريبية"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="اسم الأكاديمية / المقرأة *"
+              value={formData.name}
+              onChange={handleNameChange}
+              placeholder="أكاديمية الفرقان التجريبية"
+            />
 
-          <Input
-            label="المعرّف الفريد (Slug)"
-            value={formData.slug}
-            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-            placeholder="al-furquan"
-          />
+            <Input
+              label="المعرّف الفريد (Slug)"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              placeholder="al-furquan"
+            />
+          </div>
 
-          {/* Direct Logo Upload */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '6px', display: 'block', fontWeight: '600', textAlign: 'start' }}>
+          {/* Interactive Logo Upload Area */}
+          <div className="my-4">
+            <label className="text-xs text-amber-500 font-bold block mb-2 text-start">
               شعار الأكاديمية (Logo)
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              {formData.logo_url && (
-                <img
-                  src={formData.logo_url}
-                  alt="Logo"
-                  style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #334155' }}
-                />
-              )}
+            <div className="border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-2xl p-4 bg-slate-900/40 transition-all flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {formData.logo_url ? (
+                  <div className="relative group">
+                    <img
+                      src={formData.logo_url}
+                      alt="Logo"
+                      className="w-16 h-16 rounded-xl object-cover border border-slate-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="absolute -top-2 -right-2 bg-rose-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500">
+                    <ImageIcon size={28} />
+                  </div>
+                )}
+                <div className="text-start">
+                  <p className="text-sm font-semibold text-slate-200">اختر صورة الشعار الرسمية</p>
+                  <p className="text-xs text-slate-400">يدعم PNG, JPG حتى 2 ميجابايت</p>
+                </div>
+              </div>
+
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleLogoUpload}
-                style={{ display: 'none' }}
+                className="hidden"
               />
               <Button
                 type="button"
@@ -314,72 +364,95 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           />
         </Card>
 
+        {/* Branding Color (تخصيص الثيم) */}
+        <Card>
+          <h2 className="text-sky-400 text-lg font-bold mb-4 flex items-center gap-2">
+            <Palette size={20} /> لون الهوية الرسمية (Branding)
+          </h2>
+          <div className="flex items-center gap-4">
+            <input 
+              type="color" 
+              value={formData.brand_color} 
+              onChange={(e) => setFormData({ ...formData, brand_color: e.target.value })}
+              className="w-12 h-12 rounded-xl border-0 cursor-pointer bg-transparent"
+            />
+            <div>
+              <p className="text-sm font-semibold text-slate-200">اللون الرئيسي للواجهة</p>
+              <p className="text-xs text-slate-400">سيتم تطبيق هذا اللون على أزرار وواجهات الطلاب</p>
+            </div>
+          </div>
+        </Card>
+
         {/* Contact Channels */}
         <Card>
-          <h2 style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 className="text-sky-400 text-lg font-bold mb-5 flex items-center gap-2">
             <Mail size={20} /> قنوات التواصل والروابط
           </h2>
 
-          <Input
-            label="البريد الإلكتروني للتواصل"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="info@academy.com"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="البريد الإلكتروني للتواصل"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="info@academy.com"
+            />
 
-          <Input
-            label="رقم الهاتف / الواتساب"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="+201000000000"
-          />
+            <Input
+              label="رقم الهاتف / الواتساب"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+201000000000"
+            />
+          </div>
         </Card>
 
         {/* Regional Preferences */}
         <Card>
-          <h2 style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 className="text-sky-400 text-lg font-bold mb-5 flex items-center gap-2">
             <Globe size={20} /> التفضيلات والإعدادات الإقليمية
           </h2>
 
-          <Select
-            label="العملة الرئيسية"
-            value={formData.currency}
-            onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-            options={[
-              { value: 'EGP', label: 'جنيه مصري (EGP)' },
-              { value: 'USD', label: 'دولار أمريكي (USD)' },
-              { value: 'SAR', label: 'ريال سعودي (SAR)' },
-              { value: 'AED', label: 'درهم إماراتي (AED)' }
-            ]}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <Select
+              label="العملة الرئيسية"
+              value={formData.currency}
+              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+              options={[
+                { value: 'EGP', label: 'جنيه مصري (EGP)' },
+                { value: 'USD', label: 'دولار أمريكي (USD)' },
+                { value: 'SAR', label: 'ريال سعودي (SAR)' },
+                { value: 'AED', label: 'درهم إماراتي (AED)' }
+              ]}
+            />
 
-          <Select
-            label="المنطقة الزمنية"
-            value={formData.timezone}
-            onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-            options={[
-              { value: 'Africa/Cairo', label: 'توقيت القاهرة (GMT+2/3)' },
-              { value: 'Asia/Riyadh', label: 'توقيت مكة المكرمة (GMT+3)' },
-              { value: 'UTC', label: 'التوقيت العالمي (UTC)' }
-            ]}
-          />
+            <Select
+              label="المنطقة الزمنية"
+              value={formData.timezone}
+              onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+              options={[
+                { value: 'Africa/Cairo', label: 'توقيت القاهرة (GMT+2/3)' },
+                { value: 'Asia/Riyadh', label: 'توقيت مكة المكرمة (GMT+3)' },
+                { value: 'UTC', label: 'التوقيت العالمي (UTC)' }
+              ]}
+            />
 
-          <Select
-            label="نوع التقويم"
-            value={formData.calendar_type}
-            onChange={(e) => setFormData({ ...formData, calendar_type: e.target.value })}
-            options={[
-              { value: 'gregorian', label: 'ميلادي' },
-              { value: 'hijri', label: 'هجري' }
-            ]}
-          />
+            <Select
+              label="نوع التقويم"
+              value={formData.calendar_type}
+              onChange={(e) => setFormData({ ...formData, calendar_type: e.target.value })}
+              options={[
+                { value: 'gregorian', label: 'ميلادي' },
+                { value: 'hijri', label: 'هجري' }
+              ]}
+            />
+          </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '8px', display: 'block', fontWeight: '600', textAlign: 'start' }}>
+          <div>
+            <label className="text-xs text-amber-500 font-bold block mb-3 text-start">
               أيام العطلة الأسبوعية
             </label>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div className="flex gap-2 flex-wrap">
               {[
                 { key: 'thursday', label: 'الخميس' },
                 { key: 'friday', label: 'الجمعة' },
@@ -392,17 +465,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                     key={day.key}
                     type="button"
                     onClick={() => toggleWeekendDay(day.key)}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      border: active ? '1px solid #f59e0b' : '1px solid #334155',
-                      background: active ? 'rgba(245, 158, 11, 0.15)' : '#0f172a',
-                      color: active ? '#f59e0b' : '#94a3b8',
-                      cursor: 'pointer',
-                      fontSize: '0.82rem',
-                      fontWeight: '600',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      active 
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-500' 
+                        : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                    }`}
                   >
                     {day.label}
                   </button>
@@ -414,10 +481,10 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
         {/* Backup & Restore Tools */}
         <Card>
-          <h2 style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 className="text-sky-400 text-lg font-bold mb-4 flex items-center gap-2">
             <Database size={20} /> النسخ الاحتياطي واستعادة الإعدادات
           </h2>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="flex gap-3 flex-wrap">
             <Button type="button" variant="ghost" onClick={handleExport}>
               <Download size={16} /> تصدير ملف الإعدادات (JSON)
             </Button>
@@ -426,7 +493,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
               type="file"
               accept=".json"
               onChange={handleImport}
-              style={{ display: 'none' }}
+              className="hidden"
             />
             <Button type="button" variant="ghost" onClick={() => importInputRef.current?.click()}>
               <Upload size={16} /> استيراد من ملف (JSON)
@@ -434,13 +501,16 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </div>
         </Card>
 
-        {/* Submit Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-          <Button type="submit" disabled={saving} style={{ padding: '12px 32px', fontSize: '0.95rem' }}>
-            {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
-            {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-          </Button>
-        </div>
+        {/* Floating Save Bar (يظهر فقط عند وجود تعديلات غير محفوظة) */}
+        {isDirty && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-amber-500/40 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 z-50 animate-fade-in">
+            <span className="text-xs text-amber-400 font-medium">هناك تغييرات غير محفوظة!</span>
+            <Button type="submit" disabled={saving} className="px-6 py-2 text-sm bg-amber-500 hover:bg-amber-600 text-black font-bold">
+              {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
+              {saving ? 'جاري الحفظ...' : 'حفظ التغيرات الآن'}
+            </Button>
+          </div>
+        )}
 
       </form>
     </div>
