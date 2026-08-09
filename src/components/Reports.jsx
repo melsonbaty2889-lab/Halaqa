@@ -21,8 +21,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-
-// 1. المكون الجديد المساعد للتاريخ (ضع هذا الجزء أعلى الملف)
+// 1. المكون المطور للتاريخ والتقويم (هجري / ميلادي)
 function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
   const [useHijri, setUseHijri] = React.useState(false);
 
@@ -50,25 +49,35 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
     <div style={{ 
       display: 'flex', 
       alignItems: 'center', 
-      justifyContent: 'space-between', 
+      justify: 'space-between', 
       background: '#1e293b', 
       border: '1px solid #334155', 
       borderRadius: '10px', 
-      padding: '8px 12px',
-      gap: '8px'
+      padding: '6px 10px',
+      gap: '8px',
+      marginTop: '6px'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Calendar size={16} style={{ color: '#38bdf8' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Calendar size={14} style={{ color: '#38bdf8' }} />
         <input 
           type="date" 
           value={selectedDate} 
           onChange={(e) => setSelectedDate(e.target.value)}
-          style={{ background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            color: '#f8fafc', 
+            outline: 'none', 
+            fontSize: '12px', 
+            fontWeight: '600', 
+            cursor: 'pointer',
+            colorScheme: 'dark'
+          }}
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '600' }}>
           {formattedDisplayDate}
         </span>
         <button
@@ -79,7 +88,7 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
             color: useHijri ? '#38bdf8' : '#94a3b8',
             border: `1px solid ${useHijri ? '#38bdf8' : '#334155'}`,
             borderRadius: '6px',
-            padding: '3px 8px',
+            padding: '2px 6px',
             fontSize: '10px',
             fontWeight: '700',
             cursor: 'pointer'
@@ -92,9 +101,8 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
   );
 }
 
-// 2. المكون الرئيسي الخاص بك
+// 2. المكون الرئيسي للصفحة
 export default function Reports({ students = [], academyId }) {
-  // ... باقي كود الصفحة الخاص بك ...
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
@@ -306,7 +314,7 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '12px 8px' }}>
       
-      {/* 1. ترويسة رئيسية عصرية ومتجاوبة مع الجوال */}
+      {/* 1. الترويسة الرئيسية واستدعاء مكون التاريخ المطور */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
           <div>
@@ -318,19 +326,16 @@ export default function Reports({ students = [], academyId }) {
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#1e293b', padding: '6px 10px', borderRadius: '8px', border: '1px solid #334155' }}>
-            <Calendar size={14} style={{ color: '#38bdf8' }} />
-            <input 
-              type="date" 
-              value={selectedDate} 
-              onChange={(e) => setSelectedDate(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-            />
-          </div>
+          {/* استدعاء المكون الجديد المطور بدلاً من الحقل القديم */}
+          <DateHeader 
+            selectedDate={selectedDate} 
+            setSelectedDate={setSelectedDate} 
+            isRtl={isRtl} 
+          />
         </div>
       </div>
 
-      {/* 2. كروت الإحصائيات - منظم بشكل أفقي ممتاز للشاشات الصغيرة */}
+      {/* 2. كروت الإحصائيات */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
           <Users size={16} style={{ color: '#38bdf8', marginBottom: '4px' }} />
@@ -374,6 +379,7 @@ export default function Reports({ students = [], academyId }) {
             rows={5}
             value={messageTemplate}
             onChange={(e) => setMessageTemplate(e.target.value)}
+            dir="auto"
             style={{ 
               width: '100%', 
               background: '#0f172a', 
@@ -389,7 +395,7 @@ export default function Reports({ students = [], academyId }) {
             }}
           />
 
-          {/* الوسوم التفاف مرن */}
+          {/* الوسوم */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
             {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
               <span 
@@ -403,7 +409,7 @@ export default function Reports({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* المعاينة الحية بتنسيق فقرة واتساب حقيقية */}
+        {/* المعاينة الحية */}
         {showPreview && (
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>
@@ -433,7 +439,7 @@ export default function Reports({ students = [], academyId }) {
         )}
       </div>
 
-      {/* 4. البحث وفلترة القائمة */}
+      {/* 4. البحث والفلترة */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
         <input 
           type="text"
@@ -479,7 +485,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. قائمة الطلاب كروت مرتبة */}
+      {/* 5. قائمة الطلاب */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
           <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
@@ -487,7 +493,7 @@ export default function Reports({ students = [], academyId }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredStudents.length === 0 ? (
-            <div style={{ textAlignment: 'center', padding: '20px', background: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#94a3b8', fontSize: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '20px', background: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#94a3b8', fontSize: '12px' }}>
               <AlertCircle size={16} style={{ display: 'block', margin: '0 auto 4px auto' }} />
               {isRtl ? "لا يوجد طلاب يطابقون خيار البحث." : "No matching students found."}
             </div>
@@ -533,14 +539,14 @@ export default function Reports({ students = [], academyId }) {
                     )}
                   </div>
 
-                  {/* تفاصيل الدرجات والتسميع */}
+                  {/* تفاصيل التسميع */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#0f172a', padding: '6px', borderRadius: '6px', textAlign: 'center', fontSize: '10px' }}>
                     <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.new_memorization) || '---'}</span></div>
                     <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.review) || '---'}</span></div>
                     <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#38bdf8', fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
                   </div>
 
-                  {/* أزرار الإجراءات */}
+                  {/* الأزرار */}
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button 
                       onClick={() => handleCopyToClipboard(student, record)}
