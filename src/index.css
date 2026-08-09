@@ -7,27 +7,30 @@
 
 @layer base {
   :root {
-    /* الخلفيات والأسطح الداكنة */
-    --bg-dark: #0C1520;
+    /* الخلفيات والأسطح الداكنة (مطابقة لـ colors.js) */
+    --bg-dark: #070C12;
     --surface-dark: #111C2A;
     --surface-card: #0F172A;
     --surface-input: #090F16;
 
-    /* الهوية البصرية والتدرج الذهبي الموحد */
-    --gold: #C9A84C;
-    --gold-hover: #A58230;
-    --gold-glow: rgba(201, 168, 76, 0.2);
+    /* الهوية البصرية (البرتقالي العنبري والزمردي) */
+    --primary: #D97706;
+    --primary-hover: #B45309;
+    --primary-glow: rgba(217, 119, 6, 0.25);
+
+    --emerald: #10B981;
+    --emerald-teal: #0F766E;
 
     /* النصوص والحدود */
     --text-main: #F8FAFC;
     --text-muted: #94A3B8;
-    --border-light: rgba(255, 255, 255, 0.08);
+    --border-light: #1E293B;
     --border-input: #223147;
     
     /* ألوان الحالة */
     --success: #10B981;
     --danger: #EF4444;
-    --shadow-main: 0 10px 25px rgba(0, 0, 0, 0.4);
+    --shadow-main: 0 10px 25px rgba(0, 0, 0, 0.5);
   }
 
   html, body {
@@ -76,17 +79,17 @@
     background: var(--bg-dark);
   }
   ::-webkit-scrollbar-thumb {
-    background: #162030;
+    background: #1E293B;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--gold);
+    background: var(--primary);
   }
 }
 
 @layer components {
   .card-surface {
-    background: var(--surface-dark);
+    background: var(--surface-card);
     border-radius: 12px;
     padding: 20px;
     box-shadow: var(--shadow-main);
@@ -94,7 +97,7 @@
   }
 
   .glass-card {
-    background: rgba(17, 28, 42, 0.85);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-light);
@@ -112,8 +115,8 @@
 
   .auth-input:focus {
     outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px var(--gold-glow);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
   }
 
   .auth-input-error {
