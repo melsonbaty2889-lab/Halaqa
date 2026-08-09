@@ -45,7 +45,7 @@
 }
 
 .adminTitle svg {
-  color: var(--gold);
+  color: var(--primary);
   flex-shrink: 0;
 }
 
@@ -80,7 +80,7 @@
 .refreshBtn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-light);
-  color: #cbd5e1;
+  color: var(--text-main);
 }
 
 .exportBtn {
@@ -95,7 +95,7 @@
 
 .spinning svg {
   animation: spin 0.8s linear infinite;
-  color: #3b82f6 !important;
+  color: var(--primary) !important;
 }
 
 /* شبكة الإحصائيات */
@@ -109,7 +109,7 @@
 }
 
 .summaryCard, .premiumStatBox {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+  background: var(--surface-card);
   border: 1px solid var(--border-light);
   padding: 12px 8px;
   border-radius: 12px;
@@ -135,7 +135,7 @@
 .summaryCardValue, .statNumber {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--gold);
+  color: var(--primary);
   margin: 0;
   line-height: 1;
 }
@@ -168,11 +168,11 @@
 .searchInputBox {
   width: 100%;
   box-sizing: border-box;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid var(--border-light);
+  background: var(--surface-input);
+  border: 1px solid var(--border-input);
   border-radius: 10px;
   padding: 10px 14px;
-  color: #ffffff;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -201,7 +201,7 @@
 }
 
 .requestCard, .academyCard {
-  background: rgba(30, 41, 59, 0.8);
+  background: var(--surface-dark);
   border: 1px solid var(--border-light);
   border-inline-start: 4px solid var(--success);
   border-radius: 12px;
@@ -216,7 +216,7 @@
 .requestName, .academyTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-main);
   margin: 0 0 4px 0;
   text-decoration: none !important;
 }
@@ -240,8 +240,8 @@
 
 .extendBtn {
   background: transparent;
-  border: 1px solid var(--gold);
-  color: var(--gold);
+  border: 1px solid var(--primary);
+  color: var(--primary);
   padding: 0 14px;
   height: 36px;
   border-radius: 8px;
@@ -291,7 +291,7 @@
 .modalContent {
   width: 100% !important;
   max-width: 420px;
-  background: #151d2a;
+  background: var(--surface-dark);
   border: 1px solid var(--border-light);
   border-radius: 16px;
   padding: 20px;
