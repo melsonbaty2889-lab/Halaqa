@@ -1,18 +1,27 @@
-/* src/components/Teachers.jsx */
+// src/components/Teachers.jsx
 import React, { useState, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
 import AddStaffModal from './AddStaffModal.jsx';
+import { C } from '../constants/colors';
+import { Btn, Card, Input, Badge, PageHeader } from './UI/UI.jsx';
 import { 
-  FaUserTie, FaPlus, FaSearch, FaTrash, 
-  FaPhone, FaEnvelope, FaChalkboardTeacher, FaExclamationTriangle, FaSpinner 
-} from 'react-icons/fa';
+  UserCheck, 
+  Plus, 
+  Search, 
+  Trash2, 
+  Phone, 
+  Mail, 
+  BookOpen, 
+  AlertTriangle, 
+  Loader2 
+} from 'lucide-react';
 
 export default function Teachers({ teachers = [], setTeachers, academyId, halaqas = [] }) {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
-  // تصفية قالمة المعلمين بناءً على كلمة البحث
+  // تصفية قائمة المعلمين بناءً على كلمة البحث
   const filteredTeachers = useMemo(() => {
     if (!searchTerm.trim()) return teachers;
     const query = searchTerm.toLowerCase();
@@ -66,71 +75,33 @@ export default function Teachers({ teachers = [], setTeachers, academyId, halaqa
   };
 
   return (
-    <div style={{ padding: '20px', color: '#fff', maxWidth: '1100px', margin: '0 auto', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', fontFamily: "inherit" }}>
       
-      {/* 1. هيدر الصفحة والإحصائيات */}
-      <div style={{ 
-        background: '#1E293B', 
-        padding: '24px', 
-        borderRadius: '16px', 
-        border: '1px solid #334155',
-        marginBottom: '20px',
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: '16px'
-      }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '22px', color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FaUserTie /> الكادر التعليمي والمقرئين
-          </h2>
-          <p style={{ margin: '8px 0 0 0', color: '#94A3B8', fontSize: '14px' }}>
-            إجمالي المقرئين والمعلمين النشطين: <strong style={{ color: '#C9A84C' }}>{teachers.length}</strong>
-          </p>
-        </div>
-
-        {/* زر إضافة معلم جديد */}
-        <button 
-          onClick={() => setIsAddStaffOpen(true)}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '10px',
-            border: 'none',
-            background: 'linear-gradient(135deg, #C9A84C, #A88934)',
-            color: '#0F172A',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(201, 168, 76, 0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <FaPlus /> إضافة معلم / مدير جديد
-        </button>
-      </div>
+      {/* 1. ترويسة الصفحة والإحصائيات */}
+      <PageHeader 
+        title={
+          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <UserCheck size={24} /> الكادر التعليمي والمقرئين
+          </span>
+        }
+        sub={
+          <>إجمالي المقرئين والمعلمين النشطين: <strong style={{ color: C.primary }}>{teachers.length}</strong></>
+        }
+        action={
+          <Btn onClick={() => setIsAddStaffOpen(true)} variant="primary">
+            <Plus size={16} /> إضافة معلم / مدير جديد
+          </Btn>
+        }
+      />
 
       {/* 2. شريط البحث */}
-      <div style={{ marginBottom: '20px', position: 'relative' }}>
-        <FaSearch style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '16px', color: '#94A3B8' }} />
-        <input 
+      <div style={{ marginBottom: '20px' }}>
+        <Input 
           type="text"
           placeholder="ابحث باسم المعلم، البريد، أو رقم الهاتف..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px 45px 12px 16px',
-            borderRadius: '10px',
-            border: '1px solid #334155',
-            background: '#111C2A',
-            color: '#FFF',
-            fontSize: '14px',
-            outline: 'none',
-            boxSizing: 'border-box'
-          }}
+          style={{ marginBottom: 0 }}
         />
       </div>
 
@@ -146,17 +117,12 @@ export default function Teachers({ teachers = [], setTeachers, academyId, halaqa
             const teacherName = teacher.name || teacher.full_name || 'معلم بدون اسم';
 
             return (
-              <div 
+              <Card 
                 key={teacher.id}
                 style={{
-                  background: '#111C2A',
-                  border: '1px solid #1E293B',
-                  borderRadius: '14px',
-                  padding: '20px',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+                  justifyContent: 'space-between'
                 }}
               >
                 <div>
@@ -167,8 +133,8 @@ export default function Teachers({ teachers = [], setTeachers, academyId, halaqa
                         width: '44px',
                         height: '44px',
                         borderRadius: '50%',
-                        background: 'rgba(56, 189, 248, 0.15)',
-                        color: '#38BDF8',
+                        background: `${C.primary}20`,
+                        color: C.primary,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -178,10 +144,10 @@ export default function Teachers({ teachers = [], setTeachers, academyId, halaqa
                         {teacherName.charAt(0)}
                       </div>
                       <div>
-                        <h3 style={{ margin: 0, fontSize: '16px', color: '#FFF' }}>{teacherName}</h3>
-                        <span style={{ fontSize: '12px', color: '#C9A84C', fontWeight: 'bold' }}>
+                        <h3 style={{ margin: 0, fontSize: '16px', color: C.text, fontWeight: 700 }}>{teacherName}</h3>
+                        <Badge color={teacher.role === 'admin' ? C.primary : C.success}>
                           {teacher.role === 'admin' ? 'مدير أكاديمية' : 'مقرئ / معلم'}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
 
@@ -192,29 +158,30 @@ export default function Teachers({ teachers = [], setTeachers, academyId, halaqa
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#EF4444',
+                        color: C.danger,
                         cursor: 'pointer',
                         padding: '6px',
                         borderRadius: '6px',
-                        opacity: deletingId === teacher.id ? 0.5 : 1
+                        opacity: deletingId === teacher.id ? 0.5 : 1,
+                        transition: 'all 0.2s'
                       }}
                       title="حذف المعلم"
                     >
-                      {deletingId === teacher.id ? <FaSpinner className="fa-spin" /> : <FaTrash />}
+                      {deletingId === teacher.id ? <Loader2 size={18} className="spin-icon" /> : <Trash2 size={18} />}
                     </button>
                   </div>
 
                   {/* معلومات التواصل */}
-                  <div style={{ fontSize: '13px', color: '#94A3B8', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '13px', color: C.textSub, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                     {teacher.email && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FaEnvelope style={{ color: '#64748B' }} />
+                        <Mail size={14} style={{ color: C.textSub }} />
                         <span style={{ direction: 'ltr' }}>{teacher.email}</span>
                       </div>
                     )}
                     {teacher.phone && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FaPhone style={{ color: '#64748B' }} />
+                        <Phone size={14} style={{ color: C.textSub }} />
                         <span style={{ direction: 'ltr' }}>{teacher.phone}</span>
                       </div>
                     )}
@@ -223,40 +190,33 @@ export default function Teachers({ teachers = [], setTeachers, academyId, halaqa
 
                 {/* قدم البطاقة - الحلقات المسندة */}
                 <div style={{
-                  borderTop: '1px solid #1E293B',
+                  borderTop: `1px solid ${C.border}`,
                   paddingTop: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   fontSize: '13px'
                 }}>
-                  <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaChalkboardTeacher style={{ color: '#38BDF8' }} /> الحلقات المسندة:
+                  <span style={{ color: C.textSub, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <BookOpen size={16} style={{ color: C.primary }} /> الحلقات المسندة:
                   </span>
-                  <span style={{ background: '#1E293B', padding: '2px 10px', borderRadius: '12px', color: '#FFF', fontWeight: 'bold' }}>
+                  <Badge color={C.primary}>
                     {assignedHalaqasCount}
-                  </span>
+                  </Badge>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
       ) : (
         /* 4. الحالة الفارغة */
-        <div style={{
-          background: '#111C2A',
-          border: '1px dashed #334155',
-          borderRadius: '16px',
-          padding: '40px 20px',
-          textAlign: 'center',
-          color: '#94A3B8'
-        }}>
-          <FaExclamationTriangle style={{ fontSize: '36px', color: '#F59E0B', marginBottom: '12px' }} />
-          <h3 style={{ color: '#FFF', margin: '0 0 8px 0' }}>لا يوجد معلمون</h3>
+        <Card style={{ padding: '40px 20px', textAlign: 'center', color: C.textSub }}>
+          <AlertTriangle size={36} style={{ color: C.warning || '#f59e0b', marginBottom: '12px' }} />
+          <h3 style={{ color: C.text, margin: '0 0 8px 0' }}>لا يوجد معلمون</h3>
           <p style={{ margin: 0, fontSize: '14px' }}>
             {searchTerm ? 'لم نجد أي نتائج تطابق بحثك.' : 'لم يتم إضافة أي معلمين إلى الأكاديمية بعد.'}
           </p>
-        </div>
+        </Card>
       )}
 
       {/* 5. مودال إضافة معلم جديد */}
