@@ -25,7 +25,8 @@ import {
   PhoneCall,
   Edit,
   Save,
-  X
+  X,
+  SendHorizontal
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
@@ -53,11 +54,11 @@ export default function Reports({ students = [], academyId }) {
   const [copiedId, setCopiedId] = useState(null);
   const [sentLogs, setSentLogs] = useState({});
   
-  // طي المحرر المعاينة
+  // التحكم بفتح وغلق المحرر والمعاينة
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // حالات تعديل الرقم السريع
+  // تعديل الرقم السريع
   const [editingPhoneStudentId, setEditingPhoneStudentId] = useState(null);
   const [tempPhoneValue, setTempPhoneValue] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
@@ -65,8 +66,8 @@ export default function Reports({ students = [], academyId }) {
 
   const defaultTemplate = useMemo(() => {
     return isRtl 
-      ? `السلام عليكم ورحمة الله وبركاته، تحية طيبة من أسرَة الحلقة الذكية. 🌸\n\nنود إطلاعكم على تقرير أداء الابن(ة) *[اسم_الطالب]* ليوم [التاريخ]:\n\n📌 الحالة: [الحالة]\n📖 الحفظ الجديد: [الحفظ]\n🔄 المراجعة القريبة: [المراجعة]\n📚 المراجعة البعيدة: [الماضي]\n🌟 التقييم اليومي: [التقييم]\n📝 ملاحظات الحلقة: [الملاحظات]\n\n( خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ ) 🤲✨`
-      : `Peace be upon you. Warm greetings from Smart Halaqa. 🌸\n\nDaily report for *[اسم_الطالب]* on [التاريخ]:\n\n📌 Status: [الحالة]\n📖 New Memorization: [الحفظ]\n🔄 Revision: [المراجعة]\n📚 Distant Revision: [الماضي]\n🌟 Daily Grade: [التقييم]\n📝 Notes: [الملاحظات]\n\nMay Allah bless their journey. 🤲✨`;
+      ? `السلام عليكم ورحمة الله وبركاته، تحية طيبة من أكاديميتنا. 🌸\n\nنود إطلاعكم على تقرير أداء الابن(ة) *[اسم_الطالب]* ليوم [التاريخ]:\n\n📌 الحالة: [الحالة]\n📖 الحفظ الجديد: [الحفظ]\n🔄 المراجعة القريبة: [المراجعة]\n📚 المراجعة البعيدة: [الماضي]\n🌟 التقييم اليومي: [التقييم]\n📝 ملاحظات الحلقة: [الملاحظات]\n\nنسأل الله أن يبارك فيه وينبته نباتاً حسناً. 🤲✨`
+      : `Peace be upon you. Warm greetings from our academy. 🌸\n\nDaily report for *[اسم_الطالب]* on [التاريخ]:\n\n📌 Status: [الحالة]\n📖 New Memorization: [الحفظ]\n🔄 Revision: [المراجعة]\n📚 Distant Revision: [الماضي]\n🌟 Daily Grade: [التقييم]\n📝 Notes: [الملاحظات]\n\nMay Allah bless their Quranic journey. 🤲✨`;
   }, [isRtl]);
 
   const [messageTemplate, setMessageTemplate] = useState(defaultTemplate);
@@ -148,7 +149,6 @@ export default function Reports({ students = [], academyId }) {
     });
   };
 
-  // دالة حفظ رقم الهاتف السريع في داتابيز Supabase
   const handleSavePhone = async (studentId) => {
     if (!tempPhoneValue.trim()) return;
     setSavingPhone(true);
@@ -161,7 +161,6 @@ export default function Reports({ students = [], academyId }) {
 
       if (error) throw error;
 
-      // تحديث الحالة المحلية فوراً
       setLocalPhoneMap(prev => ({ ...prev, [studentId]: tempPhoneValue.trim() }));
       setEditingPhoneStudentId(null);
       setTempPhoneValue('');
@@ -172,6 +171,17 @@ export default function Reports({ students = [], academyId }) {
       setSavingPhone(false);
     }
   };
+
+  // تنسيق تاريخ عربي آمن للرسائل بدون مشاكل الاتجاهات
+  const formattedDateString = useMemo(() => {
+    if (!selectedDate) return '';
+    try {
+      const d = new Date(selectedDate);
+      return d.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return selectedDate;
+    }
+  }, [selectedDate, isRtl]);
 
   const getParsedMessage = useCallback((student, record) => {
     const studentName = safeString(student?.name || student?.student_name || record?.student_name);
@@ -202,8 +212,8 @@ export default function Reports({ students = [], academyId }) {
     };
 
     let parsed = messageTemplate;
-    parsed = parsed.replace(/\[اسم_الطالب\]/g, studentName || (isRtl ? "عاصم محمد السنباطي" : "Student Name"));
-    parsed = parsed.replace(/\[التاريخ\]/g, selectedDate);
+    parsed = parsed.replace(/\[اسم_الطالب\]/g, studentName || (isRtl ? "اسم الطالب" : "Student Name"));
+    parsed = parsed.replace(/\[التاريخ\]/g, formattedDateString);
     parsed = parsed.replace(/\[الحالة\]/g, getStatusText());
     parsed = parsed.replace(/\[الحفظ\]/g, safeString(record?.new_memorization) || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')));
     parsed = parsed.replace(/\[المراجعة\]/g, safeString(record?.review) || '---');
@@ -212,7 +222,7 @@ export default function Reports({ students = [], academyId }) {
     parsed = parsed.replace(/\[الملاحظات\]/g, safeString(record?.session_notes) || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
 
     return parsed;
-  }, [messageTemplate, selectedDate, isRtl, safeString]);
+  }, [messageTemplate, formattedDateString, isRtl, safeString]);
 
   const generateWhatsAppLink = (student, record) => {
     const parsedMessage = getParsedMessage(student, record);
@@ -264,12 +274,30 @@ export default function Reports({ students = [], academyId }) {
     });
   }, [students, reportsData, activeTab, searchTerm, sentLogs, safeString, localPhoneMap]);
 
+  // الطلاب غير المرسل لهم ولديهم رقم هاتف
+  const unsentStudents = useMemo(() => {
+    return (students || []).filter(student => {
+      const phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone);
+      return !sentLogs[student.id] && phone;
+    });
+  }, [students, sentLogs, localPhoneMap, safeString]);
+
+  // إرسال جماعي متتابع للطلاب غير المرسل لهم
+  const handleBulkSendNext = () => {
+    if (unsentStudents.length === 0) return;
+    const nextStudent = unsentStudents[0];
+    const rec = reportsData[nextStudent.id] || {};
+    const link = generateWhatsAppLink(nextStudent, rec);
+    markAsSentInDB(nextStudent.id, getParsedMessage(nextStudent, rec));
+    window.open(link, '_blank');
+  };
+
   const totalCount = students.length;
   const sentCount = Object.keys(sentLogs).length;
   const remainingCount = Math.max(0, totalCount - sentCount);
   const completionPercentage = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
 
-  const sampleStudent = students[0] || { id: 'demo', name: isRtl ? 'عاصم محمد السنباطي' : 'Student Name', parent_phone: '01000000000' };
+  const sampleStudent = students[0] || { id: 'demo', name: isRtl ? 'عاصم محمد مصطفى السنباطي' : 'Student Name', parent_phone: '01000000000' };
   const sampleRecord = reportsData[sampleStudent.id] || {};
   const previewText = getParsedMessage(sampleStudent, sampleRecord);
 
@@ -312,8 +340,8 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 2. بطاقات الإحصائيات */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
+      {/* 2. بطاقات الإحصائيات + زر الإرسال الجماعي */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '10px' }}>
         <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
           <Users size={15} style={{ color: '#10b981', marginBottom: '2px' }} />
           <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الإجمالي" : "Total"}</span>
@@ -333,7 +361,34 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 3. محرر القوالب القابل للطي */}
+      {/* زر الإرسال المتتابع لغير المرسل لهم */}
+      {unsentStudents.length > 0 && (
+        <button
+          onClick={handleBulkSendNext}
+          style={{
+            width: '100%',
+            marginBottom: '14px',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: '#ffffff',
+            border: 'none',
+            padding: '8px 12px',
+            borderRadius: '10px',
+            fontWeight: '800',
+            fontSize: '11.5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)'
+          }}
+        >
+          <SendHorizontal size={14} />
+          {isRtl ? `بدء الإرسال المتتابع للمتبقين (${unsentStudents.length})` : `Start Batch Send Unsent (${unsentStudents.length})`}
+        </button>
+      )}
+
+      {/* 3. محرر القوالب القابل للطي مع تمرير أفقي للأوسمة */}
       <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', marginBottom: '14px', overflow: 'hidden' }}>
         
         <div 
@@ -399,12 +454,23 @@ export default function Reports({ students = [], academyId }) {
               }}
             />
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+            {/* شريط الأوسمة بالتمرير الأفقي */}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
               {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
                 <span 
                   key={tag} 
                   onClick={() => insertTagAtCursor(tag)} 
-                  style={{ cursor: 'pointer', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: '600' }}
+                  style={{ 
+                    cursor: 'pointer', 
+                    background: 'rgba(16, 185, 129, 0.1)', 
+                    color: '#10b981', 
+                    border: '1px solid rgba(16, 185, 129, 0.25)', 
+                    padding: '3px 8px', 
+                    borderRadius: '6px', 
+                    fontSize: '10px', 
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap'
+                  }}
                 >
                   + {tag}
                 </span>
@@ -488,7 +554,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. بطاقات الطلاب مع تعديل الرقم السريع */}
+      {/* 5. بطاقات الطلاب */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '30px', color: '#10b981' }}>
           <Loader2 size={22} style={{ animation: 'spin 1s linear infinite' }} />
@@ -532,7 +598,7 @@ export default function Reports({ students = [], academyId }) {
                         )}
                       </div>
 
-                      {/* قسم رقم الهاتف وعناصر التعديل السريع */}
+                      {/* تعديل هاتف الطالب */}
                       {isEditingThisPhone ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
                           <input 
