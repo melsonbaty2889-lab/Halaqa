@@ -28,7 +28,7 @@
 }
 
 .sidebarTitle {
-  color: var(--gold);
+  color: var(--primary);
   margin-bottom: 4px;
   text-align: center;
   font-size: 1.35rem;
@@ -61,8 +61,8 @@
 }
 
 .sidebarNavBtnSelected {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%) !important;
-  color: #000000 !important;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+  color: #ffffff !important;
   font-weight: 800;
-  box-shadow: 0 4px 15px var(--gold-glow);
+  box-shadow: 0 4px 15px var(--primary-glow);
 }
