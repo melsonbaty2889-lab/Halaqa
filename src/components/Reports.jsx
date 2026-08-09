@@ -1,5 +1,5 @@
 // src/components/Reports.jsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { C } from '../constants/colors';
 import { useTranslation } from 'react-i18next';
@@ -16,13 +16,20 @@ import {
   Copy, 
   Search,
   Check,
-  Loader2
+  Loader2,
+  Sparkles,
+  Smartphone,
+  TrendingUp,
+  Clock,
+  Send,
+  AlertCircle
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
+  const textareaRef = useRef(null);
 
   const safeString = useCallback((val) => {
     if (val === null || val === undefined) return '';
@@ -35,12 +42,14 @@ export default function Reports({ students = [], academyId }) {
   }, []);
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendanceRecords, setAttendanceRecords] = useState({});
+  const [reportsData, setReportsData] = useState({});
+  const [templateId, setTemplateId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [sentLogs, setSentLogs] = useState({});
+  const [showPreview, setShowPreview] = useState(true);
 
   const defaultTemplate = useMemo(() => {
     return isRtl 
@@ -50,74 +59,101 @@ export default function Reports({ students = [], academyId }) {
 
   const [messageTemplate, setMessageTemplate] = useState(defaultTemplate);
 
-  useEffect(() => {
-    setMessageTemplate(defaultTemplate);
-  }, [defaultTemplate]);
+  // 1. جلب البيانات والقالب المفعل من Supabase
+  const fetchReportsAndTemplate = useCallback(async () => {
+    if (!academyId) return;
+    setLoading(true);
 
-  useEffect(() => {
-    async function fetchDayAttendance() {
-      if (!academyId || !selectedDate) return;
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('attendance')
-          .select('*')
-          .eq('academy_id', academyId)
-          .eq('date', selectedDate);
+    try {
+      // جلب القالب المفعل للأكاديمية
+      const { data: tmplData } = await supabase
+        .from('notification_templates')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('trigger_event', 'daily_report')
+        .eq('is_active', true)
+        .maybeSingle();
 
-        if (error) throw error;
-
-        const mapped = {};
-        if (data) {
-          data.forEach(rec => {
-            mapped[rec.student_id] = rec;
-          });
-        }
-        setAttendanceRecords(mapped);
-      } catch (err) {
-        console.error("🚨 خطأ أثناء جلب سجلات التقارير:", err);
-      } finally {
-        setLoading(false);
+      if (tmplData && tmplData.template_body) {
+        setTemplateId(tmplData.id);
+        setMessageTemplate(tmplData.template_body);
+      } else {
+        setMessageTemplate(defaultTemplate);
       }
+
+      // جلب سجل التقارير من الـ View
+      const { data: viewData, error: viewError } = await supabase
+        .from('v_daily_reports_status')
+        .select('*')
+        .eq('academy_id', academyId);
+
+      if (viewError) throw viewError;
+
+      const mappedData = {};
+      const logsMap = {};
+
+      if (viewData) {
+        viewData.forEach(rec => {
+          mappedData[rec.student_id] = rec;
+          if (rec.is_sent) {
+            logsMap[rec.student_id] = true;
+          }
+        });
+      }
+
+      setReportsData(mappedData);
+      setSentLogs(logsMap);
+
+    } catch (err) {
+      console.error("🚨 خطأ أثناء جلب البيانات من Supabase:", err);
+    } finally {
+      setLoading(false);
     }
-    fetchDayAttendance();
-  }, [selectedDate, academyId]);
+  }, [academyId, defaultTemplate]);
 
   useEffect(() => {
-    const storageKey = `sent_logs_${academyId}_${selectedDate}`;
-    const savedLogs = localStorage.getItem(storageKey);
-    if (savedLogs) {
-      try {
-        setSentLogs(JSON.parse(savedLogs));
-      } catch (e) {
-        setSentLogs({});
-      }
-    } else {
-      setSentLogs({});
-    }
-  }, [selectedDate, academyId]);
+    fetchReportsAndTemplate();
+  }, [fetchReportsAndTemplate, selectedDate]);
 
-  const markAsSent = (studentId) => {
-    const storageKey = `sent_logs_${academyId}_${selectedDate}`;
-    const updated = { ...sentLogs, [studentId]: true };
-    setSentLogs(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
+  // 2. تسجيل الإرسال الحقيقي في قاعدة البيانات (notification_logs)
+  const markAsSentInDB = async (studentId, reportText) => {
+    // تحديث الواجهة فوراً (Optimistic UI)
+    setSentLogs(prev => ({ ...prev, [studentId]: true }));
+
+    try {
+      await supabase
+        .from('notification_logs')
+        .insert([
+          {
+            academy_id: academyId,
+            recipient_user_id: studentId,
+            channel_used: 'whatsapp',
+            status: 'sent',
+            sent_text: reportText,
+            template_id: templateId
+          }
+        ]);
+    } catch (err) {
+      console.error("🚨 خطأ أثناء حفظ السجل في قاعدة البيانات:", err);
+    }
   };
 
   const resetSentLog = (studentId) => {
-    const storageKey = `sent_logs_${academyId}_${selectedDate}`;
-    const updated = { ...sentLogs };
-    delete updated[studentId];
-    setSentLogs(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
+    setSentLogs(prev => {
+      const copy = { ...prev };
+      delete copy[studentId];
+      return copy;
+    });
   };
 
-  const getParsedMessage = (student, record) => {
-    const studentName = safeString(student?.name || student?.student_name);
-    
+  // 3. بناء نص الرسالة الديناميكي
+  const getParsedMessage = useCallback((student, record) => {
+    const studentName = safeString(student?.name || student?.student_name || record?.student_name);
+    const statusVal = record?.attendance_status || record?.status;
+
     const statusText = () => {
-      if (!record) return isRtl ? 'حاضر ✅' : 'Present ✅';
-      switch (record.status) {
+      if (!record || !statusVal) return isRtl ? 'حاضر ✅' : 'Present ✅';
+      switch (statusVal) {
         case 'present': return isRtl ? 'حاضر ✅' : 'Present ✅';
         case 'absent': return isRtl ? 'غائب ❌' : 'Absent ❌';
         case 'late': return isRtl ? 'متأخر ⏳' : 'Late ⏳';
@@ -127,12 +163,13 @@ export default function Reports({ students = [], academyId }) {
     };
 
     const gradeText = () => {
-      if (!record || record.session_grade === null || record.session_grade === undefined) {
+      const rawGrade = record?.session_grade;
+      if (!record || rawGrade === null || rawGrade === undefined) {
         return isRtl ? 'لم يحدد' : 'Not specified';
       }
       
-      const grade = Number(record.session_grade);
-      if (isNaN(grade)) return safeString(record.session_grade);
+      const grade = Number(rawGrade);
+      if (isNaN(grade)) return safeString(rawGrade);
       
       if (grade >= 10) return isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐';
       if (grade >= 8)  return isRtl ? 'جيد جداً ⭐⭐' : 'Very Good ⭐⭐';
@@ -142,23 +179,23 @@ export default function Reports({ students = [], academyId }) {
     };
 
     const newMemorization = safeString(record?.new_memorization || record?.memorization);
-    const retention = safeString(record?.retention_assignment || record?.revision);
-    const notes = safeString(record?.notes);
+    const retention = safeString(record?.review || record?.retention_assignment || record?.revision);
+    const notes = safeString(record?.session_notes || record?.notes);
 
     return messageTemplate
-      .replace(/\[اسم_الطالب\]/g, studentName)
+      .replace(/\[اسم_الطالب\]/g, studentName || (isRtl ? "اسم الطالب" : "Student Name"))
       .replace(/\[التاريخ\]/g, selectedDate)
       .replace(/\[الحالة\]/g, statusText())
-      .replace(/\[الحفظ\]/g, newMemorization || (record?.status === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')))
+      .replace(/\[الحفظ\]/g, newMemorization || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')))
       .replace(/\[المراجعة\]/g, retention || '---')
       .replace(/\[الماضي\]/g, '---')
       .replace(/\[التقييم\]/g, gradeText())
       .replace(/\[الملاحظات\]/g, notes || (isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.'));
-  };
+  }, [messageTemplate, selectedDate, isRtl, safeString]);
 
   const generateWhatsAppLink = (student, record) => {
     const parsedMessage = getParsedMessage(student, record);
-    let phone = safeString(student?.parent_phone || student?.phone);
+    let phone = safeString(student?.parent_phone || student?.phone || record?.parent_phone);
     phone = phone.replace(/\s+/g, '').replace(/[+\-]/g, '');
     
     if (phone.startsWith('01') && phone.length === 11) {
@@ -171,24 +208,43 @@ export default function Reports({ students = [], academyId }) {
     const text = getParsedMessage(student, record);
     navigator.clipboard.writeText(text);
     setCopiedId(student.id);
-    markAsSent(student.id);
+    markAsSentInDB(student.id, text);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleTagClick = (tag) => {
-    setMessageTemplate(prev => prev + " " + tag);
+  // 4. إدراج المتغيرات عند موضع المؤشر
+  const insertTagAtCursor = (tag) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setMessageTemplate(prev => prev + " " + tag);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = messageTemplate;
+    const newText = text.substring(0, start) + tag + text.substring(end);
+    
+    setMessageTemplate(newText);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + tag.length, start + tag.length);
+    }, 0);
   };
 
+  // 5. التصفية والإحصائيات
   const filteredStudents = useMemo(() => {
     const cleanSearch = safeString(searchTerm).toLowerCase().trim();
 
     return (students || []).filter(student => {
-      const rec = attendanceRecords[student.id];
-      const status = rec?.status || 'present';
+      const rec = reportsData[student.id];
+      const status = rec?.attendance_status || rec?.status || 'present';
 
       let matchesTab = true;
       if (activeTab === 'present') matchesTab = (status === 'present' || status === 'late');
       else if (activeTab === 'absent') matchesTab = (status === 'absent' || status === 'excused');
+      else if (activeTab === 'unsent') matchesTab = !sentLogs[student.id];
 
       const studentName = safeString(student?.name || student?.student_name).toLowerCase();
       const parentPhone = safeString(student?.parent_phone || student?.phone).toLowerCase();
@@ -197,11 +253,16 @@ export default function Reports({ students = [], academyId }) {
 
       return matchesTab && matchesSearch;
     });
-  }, [students, attendanceRecords, activeTab, searchTerm, safeString]);
+  }, [students, reportsData, activeTab, searchTerm, sentLogs, safeString]);
 
-  const totalInCurrentTab = filteredStudents.length;
-  const sentInCurrentTab = filteredStudents.filter(s => sentLogs[s.id]).length;
-  const completionPercentage = totalInCurrentTab > 0 ? Math.round((sentInCurrentTab / totalInCurrentTab) * 100) : 0;
+  const totalCount = students.length;
+  const sentCount = Object.keys(sentLogs).length;
+  const remainingCount = Math.max(0, totalCount - sentCount);
+  const completionPercentage = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
+
+  const sampleStudent = students[0] || { name: 'عمر أحمد', parent_phone: '01000000000' };
+  const sampleRecord = reportsData[sampleStudent.id] || {};
+  const previewText = getParsedMessage(sampleStudent, sampleRecord);
 
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: "inherit" }}>
@@ -223,91 +284,158 @@ export default function Reports({ students = [], academyId }) {
         }
       />
 
-      {/* 2. تخصيص قالب الرسالة */}
-      <Card style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', color: C.primary, fontWeight: 700, fontSize: '14px' }}>
-          <Edit3 size={16} />
-          <span>{isRtl ? "تخصيص صيغة رسالة التقرير الافتراضية" : "Customize Default Report Template"}</span>
-        </div>
-        <textarea 
-          rows={4}
-          value={messageTemplate}
-          onChange={(e) => setMessageTemplate(e.target.value)}
-          style={{ 
-            width: '100%', 
-            background: C.surface, 
-            border: `1px solid ${C.border}`, 
-            color: C.text, 
-            borderRadius: '10px', 
-            padding: '12px', 
-            fontSize: '13px', 
-            outline: 'none', 
-            resize: 'vertical', 
-            lineHeight: '1.6', 
-            boxSizing: 'border-box' 
-          }}
-        />
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
-          {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
-            <Badge key={tag} onClick={() => handleTagClick(tag)} style={{ cursor: 'pointer' }}>
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      </Card>
-
-      {/* 3. شريط البحث */}
-      <Input 
-        type="text"
-        placeholder={isRtl ? "بحث سريع باسم الطالب أو رقم الهاتف..." : "Quick search by name or phone..."}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      {/* 4. شريط نسبة الإنجاز */}
-      {totalInCurrentTab > 0 && (
-        <Card style={{ padding: '12px 16px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', fontWeight: '700' }}>
-            <span style={{ color: C.textSub }}>📈 {isRtl ? "معدل إنجاز إرسال تقارير القائمة الحالية:" : "Current List Reporting Progress:"}</span>
-            <span style={{ color: C.primary }}>{sentInCurrentTab} {isRtl ? "من" : "of"} {totalInCurrentTab} ({completionPercentage}%)</span>
+      {/* 2. بطاقات الإحصائيات السريعة (KPI Mini-Cards) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+        <Card style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '10px', borderRadius: '10px', background: `${C.primary}15`, color: C.primary }}>
+            <Users size={20} />
           </div>
-          <div style={{ width: '100%', height: '6px', background: C.surface, borderRadius: '10px', overflow: 'hidden' }}>
-            <div style={{ width: `${completionPercentage}%`, height: '100%', background: C.primary, transition: 'width 0.4s ease-out' }} />
+          <div>
+            <span style={{ fontSize: '12px', color: C.textSub, display: 'block' }}>{isRtl ? "إجمالي الطلاب اليوم" : "Total Students Today"}</span>
+            <span style={{ fontSize: '18px', fontWeight: '800', color: C.text }}>{totalCount}</span>
           </div>
         </Card>
-      )}
 
-      {/* 5. أزرار التصفية */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        <Btn onClick={() => setActiveTab('all')} variant={activeTab === 'all' ? "primary" : "ghost"} style={{ flex: 1 }}>
-          <Users size={16} /> {isRtl ? "كل الطلاب" : "All"} ({students.length})
-        </Btn>
-        <Btn onClick={() => setActiveTab('present')} variant={activeTab === 'present' ? "primary" : "ghost"} style={{ flex: 1 }}>
-          <UserCheck size={16} /> {isRtl ? "الحاضرين" : "Present"}
-        </Btn>
-        <Btn onClick={() => setActiveTab('absent')} variant={activeTab === 'absent' ? "primary" : "ghost"} style={{ flex: 1 }}>
-          <UserX size={16} /> {isRtl ? "الغائبين" : "Absent"}
-        </Btn>
+        <Card style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '10px', borderRadius: '10px', background: `${C.success}15`, color: C.success }}>
+            <TrendingUp size={20} />
+          </div>
+          <div>
+            <span style={{ fontSize: '12px', color: C.textSub, display: 'block' }}>{isRtl ? "نسبة الإرسال" : "Sent Progress"}</span>
+            <span style={{ fontSize: '18px', fontWeight: '800', color: C.success }}>{completionPercentage}% ({sentCount})</span>
+          </div>
+        </Card>
+
+        <Card style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '10px', borderRadius: '10px', background: `${C.warning || '#f59e0b'}15`, color: C.warning || '#f59e0b' }}>
+            <Clock size={20} />
+          </div>
+          <div>
+            <span style={{ fontSize: '12px', color: C.textSub, display: 'block' }}>{isRtl ? "المتبقي للإرسال" : "Remaining"}</span>
+            <span style={{ fontSize: '18px', fontWeight: '800', color: C.text }}>{remainingCount}</span>
+          </div>
+        </Card>
       </div>
 
-      {/* 6. قائمة الطلاب */}
+      {/* 3. تخصيص محرر القالب والمعاينة المباشرة للواتساب */}
+      <div style={{ display: 'grid', gridTemplateColumns: showPreview ? '1fr 340px' : '1fr', gap: '16px', marginBottom: '20px' }}>
+        
+        {/* محرر القالب */}
+        <Card>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: C.primary, fontWeight: 700, fontSize: '14px' }}>
+              <Sparkles size={18} />
+              <span>{isRtl ? "محرر قوالب التقارير الذكي" : "Smart Report Template Editor"}</span>
+            </div>
+            <Btn onClick={() => setShowPreview(!showPreview)} variant="ghost" style={{ fontSize: '12px', padding: '4px 8px' }}>
+              <Smartphone size={14} /> {showPreview ? (isRtl ? "إخفاء المعاينة" : "Hide Preview") : (isRtl ? "معاينة الواتساب" : "WhatsApp Preview")}
+            </Btn>
+          </div>
+
+          <textarea 
+            ref={textareaRef}
+            rows={5}
+            value={messageTemplate}
+            onChange={(e) => setMessageTemplate(e.target.value)}
+            style={{ 
+              width: '100%', 
+              background: C.surface, 
+              border: `1px solid ${C.border}`, 
+              color: C.text, 
+              borderRadius: '10px', 
+              padding: '12px', 
+              fontSize: '13px', 
+              outline: 'none', 
+              resize: 'vertical', 
+              lineHeight: '1.6', 
+              boxSizing: 'border-box' 
+            }}
+          />
+
+          {/* متغيرات تفاعلية تُحقن عند موقع المؤشر */}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+            {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
+              <Badge key={tag} onClick={() => insertTagAtCursor(tag)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                + {tag}
+              </Badge>
+            ))}
+          </div>
+        </Card>
+
+        {/* محاكي المعاينة المباشرة للواتساب (Live WhatsApp Mockup) */}
+        {showPreview && (
+          <Card style={{ background: '#0b141a', borderColor: '#222d34', color: '#e9edef', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ borderBottom: '1px solid #222d34', paddingBottom: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#25d366' }} />
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#8696a0' }}>
+                {isRtl ? "معاينة الرسالة الحية للولي الأمر" : "Live Parent WhatsApp Preview"}
+              </span>
+            </div>
+            
+            <div style={{ 
+              background: '#005c4b', 
+              borderRadius: '8px', 
+              padding: '12px', 
+              fontSize: '12px', 
+              lineHeight: '1.6', 
+              whiteSpace: 'pre-wrap', 
+              boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
+              color: '#e9edef',
+              flex: 1
+            }}>
+              {previewText}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {/* 4. البحث والتصفية */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '240px' }}>
+          <Input 
+            type="text"
+            placeholder={isRtl ? "بحث باسم الطالب أو رقم الهاتف..." : "Search by student name or phone..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <Btn onClick={() => setActiveTab('all')} variant={activeTab === 'all' ? "primary" : "ghost"}>
+            <Users size={14} /> {isRtl ? "الكل" : "All"} ({students.length})
+          </Btn>
+          <Btn onClick={() => setActiveTab('unsent')} variant={activeTab === 'unsent' ? "primary" : "ghost"}>
+            <Clock size={14} /> {isRtl ? "غير مرسل" : "Unsent"} ({remainingCount})
+          </Btn>
+          <Btn onClick={() => setActiveTab('present')} variant={activeTab === 'present' ? "primary" : "ghost"}>
+            <UserCheck size={14} /> {isRtl ? "الحاضرون" : "Present"}
+          </Btn>
+          <Btn onClick={() => setActiveTab('absent')} variant={activeTab === 'absent' ? "primary" : "ghost"}>
+            <UserX size={14} /> {isRtl ? "الغائبون" : "Absent"}
+          </Btn>
+        </div>
+      </div>
+
+      {/* 5. قائمة الطلاب والتقارير */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: C.textSub }}>
           <Loader2 size={24} className="spin-icon" style={{ margin: '0 auto 10px auto', display: 'block' }} />
-          <span>{isRtl ? "جاري تجهيز التقارير الحية..." : "Preparing live reports..."}</span>
+          <span>{isRtl ? "جاري جلب بيانات التقارير من السحابة..." : "Fetching live report data..."}</span>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filteredStudents.length === 0 ? (
-            <Card style={{ textAlign: 'center', color: C.textSub, padding: '20px' }}>
-              {isRtl ? "لا يوجد طلاب يطابقون خيار التصفية المختار حالياً." : "No students match the current filter selection."}
+            <Card style={{ textAlign: 'center', color: C.textSub, padding: '24px' }}>
+              <AlertCircle size={24} style={{ margin: '0 auto 8px auto', display: 'block', opacity: 0.5 }} />
+              {isRtl ? "لا يوجد طلاب يطابقون خيار التصفية والبحث حالياً." : "No students match current search or filter."}
             </Card>
           ) : (
             filteredStudents.map(student => {
-              const record = attendanceRecords[student.id];
-              const isSent = sentLogs[student.id];
+              const record = reportsData[student.id];
+              const isSent = !!sentLogs[student.id];
               const studentName = safeString(student?.name || student?.student_name);
-              const parentPhone = safeString(student?.parent_phone || student?.phone);
+              const parentPhone = safeString(student?.parent_phone || student?.phone || record?.parent_phone);
+              const messageText = getParsedMessage(student, record);
 
               return (
                 <Card 
@@ -318,11 +446,13 @@ export default function Reports({ students = [], academyId }) {
                     justifyContent: 'space-between', 
                     alignItems: 'center', 
                     gap: '14px',
-                    opacity: isSent ? 0.65 : 1,
-                    padding: '16px'
+                    opacity: isSent ? 0.75 : 1,
+                    padding: '14px 16px',
+                    borderRight: isRtl && isSent ? `4px solid ${C.success}` : undefined,
+                    borderLeft: !isRtl && isSent ? `4px solid ${C.success}` : undefined,
                   }}
                 >
-                  <div style={{ textAlign: isRtl ? 'right' : 'left' }}>
+                  <div style={{ textAlign: isRtl ? 'right' : 'left', minWidth: '180px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontWeight: '700', fontSize: '15px', color: C.text }}>{studentName}</span>
                       {isSent && (
@@ -332,19 +462,19 @@ export default function Reports({ students = [], academyId }) {
                       )}
                     </div>
                     <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: C.textSub }}>
-                      {isRtl ? "رقم ولي الأمر:" : "Parent Phone:"} <span style={{ color: C.text }}>{parentPhone || (isRtl ? 'غير مسجل' : 'Not registered')}</span>
+                      {isRtl ? "الهاتف:" : "Phone:"} <span style={{ color: C.text }}>{parentPhone || (isRtl ? 'غير مسجل' : 'N/A')}</span>
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: C.textSub, flexWrap: 'wrap' }}>
-                    <div>{isRtl ? "حفظ جديد:" : "New Memorization:"} <span style={{ color: C.text, fontWeight: '600' }}>{safeString(record?.new_memorization || record?.memorization) || '---'}</span></div>
-                    <div>{isRtl ? "مراجعة:" : "Revision:"} <span style={{ color: C.text, fontWeight: '600' }}>{safeString(record?.retention_assignment || record?.revision) || '---'}</span></div>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: C.textSub, flexWrap: 'wrap' }}>
+                    <div>{isRtl ? "حفظ:" : "Memorization:"} <span style={{ color: C.text, fontWeight: '600' }}>{safeString(record?.new_memorization || record?.memorization) || '---'}</span></div>
+                    <div>{isRtl ? "مراجعة:" : "Revision:"} <span style={{ color: C.text, fontWeight: '600' }}>{safeString(record?.review || record?.retention_assignment || record?.revision) || '---'}</span></div>
                     <div>{isRtl ? "تقييم:" : "Grade:"} <span style={{ color: C.primary, fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                     {isSent && (
-                      <Btn onClick={() => resetSentLog(student.id)} variant="ghost" style={{ padding: '8px' }}>
+                      <Btn onClick={() => resetSentLog(student.id)} variant="ghost" style={{ padding: '8px' }} title={isRtl ? "إعادة تعيين" : "Reset"}>
                         <RotateCcw size={14} />
                       </Btn>
                     )}
@@ -355,19 +485,19 @@ export default function Reports({ students = [], academyId }) {
                       style={{ padding: '8px 12px' }}
                     >
                       {copiedId === student.id ? <Check size={14} /> : <Copy size={14} />}
-                      {copiedId === student.id && <span style={{ fontSize: '10px', marginRight: '4px', marginLeft: '4px' }}>{isRtl ? "تم!" : "Copied!"}</span>}
+                      {copiedId === student.id && <span style={{ fontSize: '10px', marginRight: '4px', marginLeft: '4px' }}>{isRtl ? "نسخ!" : "Copied!"}</span>}
                     </Btn>
                     
                     <a 
                       href={generateWhatsAppLink(student, record)}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      onClick={() => markAsSent(student.id)}
+                      onClick={() => markAsSentInDB(student.id, messageText)}
                       style={{ textDecoration: 'none' }}
                     >
                       <Btn variant={isSent ? "secondary" : "success"}>
-                        <MessageCircle size={16} /> 
-                        {isSent ? (isRtl ? "تكرار الإرسال" : "Resend") : (isRtl ? "إرسال التقرير" : "Send Report")}
+                        <Send size={15} /> 
+                        {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال الواتساب" : "Send WhatsApp")}
                       </Btn>
                     </a>
                   </div>
