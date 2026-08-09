@@ -14,11 +14,6 @@ import {
   Loader2,
   Sparkles,
   Smartphone,
-  TrendingUp,
-  Clock,
-  Send,
-  AlertCircle,
-  MessageSquare,
   BookOpen,
   ChevronDown,
   ChevronUp,
@@ -26,7 +21,8 @@ import {
   Edit,
   Save,
   X,
-  SendHorizontal
+  SendHorizontal,
+  PartyPopper
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
@@ -53,8 +49,11 @@ export default function Reports({ students = [], academyId }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [sentLogs, setSentLogs] = useState({});
+  const [toastMessage, setToastMessage] = useState('');
   
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(() => {
+    return localStorage.getItem('reports_editor_open') === 'true';
+  });
   const [showPreview, setShowPreview] = useState(false);
 
   const [editingPhoneStudentId, setEditingPhoneStudentId] = useState(null);
@@ -62,7 +61,19 @@ export default function Reports({ students = [], academyId }) {
   const [savingPhone, setSavingPhone] = useState(false);
   const [localPhoneMap, setLocalPhoneMap] = useState({});
 
-  // الوسوم الديناميكية بناءً على اللغة المحددة
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 2500);
+  };
+
+  const toggleEditor = () => {
+    setIsEditorOpen(prev => {
+      const nextState = !prev;
+      localStorage.setItem('reports_editor_open', String(nextState));
+      return nextState;
+    });
+  };
+
   const dynamicTags = useMemo(() => {
     if (isRtl) {
       return [
@@ -188,6 +199,7 @@ export default function Reports({ students = [], academyId }) {
       setLocalPhoneMap(prev => ({ ...prev, [studentId]: tempPhoneValue.trim() }));
       setEditingPhoneStudentId(null);
       setTempPhoneValue('');
+      showToast(isRtl ? "تم حفظ الرقم بنجاح" : "Phone saved successfully");
     } catch (err) {
       console.error("Failed to update phone:", err);
       alert(isRtl ? "حدث خطأ أثناء حفظ الرقم" : "Error saving phone number");
@@ -236,7 +248,6 @@ export default function Reports({ students = [], academyId }) {
 
     let parsed = messageTemplate;
     
-    // استبدال الأوسمة باللغتين لمنع أي تعارض
     parsed = parsed.replace(/\[اسم_الطالب\]|\[Student_Name\]/g, studentName || (isRtl ? "اسم الطالب" : "Student Name"));
     parsed = parsed.replace(/\[التاريخ\]|\[Date\]/g, formattedDateString);
     parsed = parsed.replace(/\[الحالة\]|\[Status\]/g, getStatusText());
@@ -262,6 +273,7 @@ export default function Reports({ students = [], academyId }) {
     navigator.clipboard.writeText(text);
     setCopiedId(student.id);
     markAsSentInDB(student.id, text);
+    showToast(isRtl ? "تم نسخ التقرير بنجاح" : "Report copied to clipboard");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -327,6 +339,26 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '16px 12px', background: '#090d16', minHeight: '100vh', color: '#f1f5f9', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#10b981',
+          color: '#090d16',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '11px',
+          fontWeight: '700',
+          zIndex: 9999,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}>
+          {toastMessage}
+        </div>
+      )}
+
       {/* 1. Header Area */}
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -344,7 +376,7 @@ export default function Reports({ students = [], academyId }) {
           </div>
 
           <div>
-            <h1 style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff', margin: 0 }}>
+            <h1 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', margin: 0 }}>
               {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
             </h1>
             <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0 0' }}>
@@ -359,21 +391,21 @@ export default function Reports({ students = [], academyId }) {
         />
       </div>
 
-      {/* 2. Clean Metric Cards */}
+      {/* 2. Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
         <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
           <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: '500' }}>{isRtl ? "الإجمالي" : "Total"}</span>
-          <span style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', marginTop: '2px', display: 'block' }}>{totalCount}</span>
+          <span style={{ fontSize: '15px', fontWeight: '700', color: '#f8fafc', marginTop: '2px', display: 'block' }}>{totalCount}</span>
         </div>
 
         <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
           <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: '500' }}>{isRtl ? "المرسل" : "Sent"}</span>
-          <span style={{ fontSize: '16px', fontWeight: '700', color: '#10b981', marginTop: '2px', display: 'block' }}>{completionPercentage}%</span>
+          <span style={{ fontSize: '15px', fontWeight: '700', color: '#10b981', marginTop: '2px', display: 'block' }}>{completionPercentage}%</span>
         </div>
 
         <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
           <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: '500' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
-          <span style={{ fontSize: '16px', fontWeight: '700', color: '#f59e0b', marginTop: '2px', display: 'block' }}>{remainingCount}</span>
+          <span style={{ fontSize: '15px', fontWeight: '700', color: '#f59e0b', marginTop: '2px', display: 'block' }}>{remainingCount}</span>
         </div>
       </div>
 
@@ -406,7 +438,7 @@ export default function Reports({ students = [], academyId }) {
       {/* 3. Collapsible Template Editor */}
       <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', marginBottom: '14px', overflow: 'hidden' }}>
         <div 
-          onClick={() => setIsEditorOpen(!isEditorOpen)}
+          onClick={toggleEditor}
           style={{ 
             padding: '10px 12px', 
             display: 'flex', 
@@ -456,13 +488,12 @@ export default function Reports({ students = [], academyId }) {
                 padding: '8px 10px', 
                 fontSize: '11px', 
                 outline: 'none', 
-                resize: 'vertical', 
+                resize: 'none', 
                 lineHeight: '1.5',
                 boxSizing: 'border-box'
               }}
             />
 
-            {/* Dynamic Tags with Scroll */}
             <div style={{ display: 'flex', gap: '6px', marginTop: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
               {dynamicTags.map(item => (
                 <span 
@@ -488,7 +519,6 @@ export default function Reports({ students = [], academyId }) {
             {showPreview && (
               <div style={{ marginTop: '10px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '6px', padding: '8px 10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  <MessageSquare size={12} style={{ color: '#10b981' }} />
                   <span style={{ fontSize: '10px', fontWeight: '600', color: '#64748b' }}>
                     {isRtl ? "معاينة الرسالة" : "Live Preview"}
                   </span>
@@ -515,7 +545,7 @@ export default function Reports({ students = [], academyId }) {
         )}
       </div>
 
-      {/* 4. Controls & Filters */}
+      {/* 4. Search & Filters */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
         <input 
           type="text"
@@ -528,7 +558,7 @@ export default function Reports({ students = [], academyId }) {
         <div style={{ display: 'flex', gap: '4px', overflowX: 'auto' }}>
           {[
             { id: 'all', label: isRtl ? "الكل" : "All", icon: Users },
-            { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: Clock },
+            { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: RotateCcw },
             { id: 'present', label: isRtl ? "حاضر" : "Present", icon: UserCheck },
             { id: 'absent', label: isRtl ? "غائب" : "Absent", icon: UserX }
           ].map(tab => {
@@ -561,7 +591,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. Clean Student List */}
+      {/* 5. Student List or Empty State */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '24px', color: '#10b981' }}>
           <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
@@ -569,9 +599,19 @@ export default function Reports({ students = [], academyId }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredStudents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '16px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b', color: '#64748b', fontSize: '11px' }}>
-              <AlertCircle size={15} style={{ display: 'block', margin: '0 auto 4px auto' }} />
-              {isRtl ? "لا يوجد نتائج مطابقة." : "No matching records found."}
+            <div style={{ textAlign: 'center', padding: '20px 12px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b', color: '#94a3b8' }}>
+              {activeTab === 'unsent' && sentCount > 0 && remainingCount === 0 ? (
+                <>
+                  <PartyPopper size={22} style={{ color: '#10b981', display: 'block', margin: '0 auto 6px auto' }} />
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#f8fafc', display: 'block' }}>
+                    {isRtl ? "تم إرسال جميع تقارير اليوم بنجاح! 🎉" : "All daily reports sent successfully! 🎉"}
+                  </span>
+                </>
+              ) : (
+                <span style={{ fontSize: '11px' }}>
+                  {isRtl ? "لا يوجد نتائج مطابقة." : "No matching records found."}
+                </span>
+              )}
             </div>
           ) : (
             filteredStudents.map(student => {
@@ -597,7 +637,7 @@ export default function Reports({ students = [], academyId }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: '600', fontSize: '12.5px', color: '#ffffff' }}>{studentName}</span>
+                        <span style={{ fontWeight: '600', fontSize: '12px', color: '#ffffff' }}>{studentName}</span>
                         {isSent && (
                           <span style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px' }}>
                             <CheckCircle2 size={9} /> {isRtl ? "مرسل" : "Sent"}
@@ -605,7 +645,6 @@ export default function Reports({ students = [], academyId }) {
                         )}
                       </div>
 
-                      {/* Phone Number Display / Edit */}
                       {isEditingThisPhone ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                           <input 
@@ -650,9 +689,9 @@ export default function Reports({ students = [], academyId }) {
                               setEditingPhoneStudentId(student.id);
                               setTempPhoneValue(parentPhone || '');
                             }}
-                            style={{ background: 'transparent', border: 'none', color: '#f59e0b', padding: 0, fontSize: '9px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
+                            style={{ background: 'transparent', border: 'none', color: '#f59e0b', padding: 0, fontSize: '9px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
                           >
-                            <Edit size={9} />
+                            <Edit size={8} />
                             {parentPhone ? (isRtl ? "تعديل" : "Edit") : (isRtl ? "+ إضافة" : "+ Add")}
                           </button>
                         </div>
@@ -703,7 +742,6 @@ export default function Reports({ students = [], academyId }) {
                           gap: '6px', 
                           cursor: 'pointer'
                         }}>
-                          <Send size={11} />
                           {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال عبر الواتساب" : "Send WhatsApp")}
                         </button>
                       </a>
