@@ -19,7 +19,11 @@ import {
   Send,
   AlertCircle,
   MessageSquare,
-  BookOpen
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Sliders,
+  Edit3
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
@@ -46,7 +50,10 @@ export default function Reports({ students = [], academyId }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [sentLogs, setSentLogs] = useState({});
-  const [showPreview, setShowPreview] = useState(true);
+  
+  // التحكم في ظهور المحرر والمعاينة (طي افتراضي لتوفير المساحة)
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const defaultTemplate = useMemo(() => {
     return isRtl 
@@ -236,15 +243,14 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '14px 10px', background: '#0a0f1d', minHeight: '100vh', color: '#f8fafc' }}>
       
-      {/* 1. الترويسة الرئيسية بهوية الشعار والزمرد/الذهب */}
-      <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {/* 1. الترويسة الرئيسية */}
+      <div style={{ marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* أيقونة المصحف الشريف المتوهجة */}
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
               background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
               display: 'flex',
@@ -253,14 +259,14 @@ export default function Reports({ students = [], academyId }) {
               boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
               border: '1px solid rgba(245, 158, 11, 0.4)'
             }}>
-              <BookOpen size={20} style={{ color: '#f59e0b' }} />
+              <BookOpen size={18} style={{ color: '#f59e0b' }} />
             </div>
 
             <div>
-              <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', margin: 0, letterSpacing: '-0.3px' }}>
+              <h1 style={{ fontSize: '17px', fontWeight: '800', color: '#ffffff', margin: 0, letterSpacing: '-0.3px' }}>
                 {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
               </h1>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0 0' }}>
+              <p style={{ fontSize: '10.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
                 {isRtl ? "إرسال النتائج القرآنية عبر الواتساب بهوية رسمية" : "Send Quranic achievements via WhatsApp"}
               </p>
             </div>
@@ -273,102 +279,136 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 2. بطاقات الإحصائيات (الزمردي، الذهبي، والداكن) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '10px 8px', textAlign: 'center' }}>
-          <Users size={16} style={{ color: '#10b981', marginBottom: '4px' }} />
-          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الإجمالي" : "Total"}</span>
-          <span style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>{totalCount}</span>
+      {/* 2. بطاقات الإحصائيات */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
+          <Users size={15} style={{ color: '#10b981', marginBottom: '2px' }} />
+          <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الإجمالي" : "Total"}</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff' }}>{totalCount}</span>
         </div>
 
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '10px 8px', textAlign: 'center' }}>
-          <TrendingUp size={16} style={{ color: '#22c55e', marginBottom: '4px' }} />
-          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المرسل" : "Sent"}</span>
-          <span style={{ fontSize: '16px', fontWeight: '800', color: '#22c55e' }}>{completionPercentage}%</span>
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
+          <TrendingUp size={15} style={{ color: '#22c55e', marginBottom: '2px' }} />
+          <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المرسل" : "Sent"}</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#22c55e' }}>{completionPercentage}%</span>
         </div>
 
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '10px 8px', textAlign: 'center' }}>
-          <Clock size={16} style={{ color: '#f59e0b', marginBottom: '4px' }} />
-          <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
-          <span style={{ fontSize: '16px', fontWeight: '800', color: '#f59e0b' }}>{remainingCount}</span>
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '8px 6px', textAlign: 'center' }}>
+          <Clock size={15} style={{ color: '#f59e0b', marginBottom: '2px' }} />
+          <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#f59e0b' }}>{remainingCount}</span>
         </div>
       </div>
 
-      {/* 3. محرر القوالب والمعاينة بطابع الواجهة الداكنة */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontWeight: '700', fontSize: '12px' }}>
-              <Sparkles size={14} style={{ color: '#10b981' }} />
-              <span>{isRtl ? "محرر قالب التقرير" : "Report Template Editor"}</span>
-            </div>
-            <button 
-              onClick={() => setShowPreview(!showPreview)} 
-              style={{ background: '#1e293b', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-            >
-              <Smartphone size={12} /> {showPreview ? (isRtl ? "إخفاء المعاينة" : "Hide") : (isRtl ? "معاينة الرسالة" : "Preview")}
-            </button>
+      {/* 3. محرر القوالب القابل للطي (Collapsible Template Editor) */}
+      <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', marginBottom: '14px', overflow: 'hidden' }}>
+        
+        {/* شريط التحكم القابل للضغط */}
+        <div 
+          onClick={() => setIsEditorOpen(!isEditorOpen)}
+          style={{ 
+            padding: '10px 12px', 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            cursor: 'pointer',
+            background: isEditorOpen ? '#16233b' : 'transparent',
+            transition: 'background 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkles size={15} style={{ color: '#f59e0b' }} />
+            <span style={{ fontSize: '12px', fontWeight: '700', color: '#ffffff' }}>
+              {isRtl ? "إعدادات قالب الرسالة" : "Template Settings"}
+            </span>
+            {!isEditorOpen && (
+              <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                {isRtl ? "اضغط للتعديل" : "Click to edit"}
+              </span>
+            )}
           </div>
 
-          <textarea 
-            ref={textareaRef}
-            rows={5}
-            value={messageTemplate}
-            onChange={(e) => setMessageTemplate(e.target.value)}
-            dir="auto"
-            style={{ 
-              width: '100%', 
-              background: '#0b1320', 
-              border: '1px solid #1e293b', 
-              color: '#f8fafc', 
-              borderRadius: '8px', 
-              padding: '10px', 
-              fontSize: '12px', 
-              outline: 'none', 
-              resize: 'vertical', 
-              lineHeight: '1.6',
-              boxSizing: 'border-box'
-            }}
-          />
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
-            {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
-              <span 
-                key={tag} 
-                onClick={() => insertTagAtCursor(tag)} 
-                style={{ cursor: 'pointer', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: '600' }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isEditorOpen && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPreview(!showPreview);
+                }} 
+                style={{ background: '#1e293b', border: '1px solid #334155', color: '#cbd5e1', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
               >
-                + {tag}
-              </span>
-            ))}
+                <Smartphone size={11} /> {showPreview ? (isRtl ? "إخفاء المعاينة" : "Hide") : (isRtl ? "المعاينة" : "Preview")}
+              </button>
+            )}
+            {isEditorOpen ? <ChevronUp size={16} style={{ color: '#94a3b8' }} /> : <ChevronDown size={16} style={{ color: '#94a3b8' }} />}
           </div>
         </div>
 
-        {showPreview && (
-          <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '6px' }}>
-              <MessageSquare size={14} style={{ color: '#22c55e' }} />
-              <span style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8' }}>
-                {isRtl ? "معاينة الرسالة الفعلية" : "WhatsApp Live Preview"}
-              </span>
-            </div>
-            
-            <div 
+        {/* جسم المحرر والمعاينة (يظهر فقط عند الفتح) */}
+        {isEditorOpen && (
+          <div style={{ padding: '12px', borderTop: '1px solid #1e293b', background: '#0b1320' }}>
+            <textarea 
+              ref={textareaRef}
+              rows={4}
+              value={messageTemplate}
+              onChange={(e) => setMessageTemplate(e.target.value)}
               dir="auto"
               style={{ 
-                background: '#0b141a', 
-                border: '1px solid #1f2c34', 
+                width: '100%', 
+                background: '#111c2e', 
+                border: '1px solid #1e293b', 
+                color: '#f8fafc', 
                 borderRadius: '8px', 
                 padding: '10px', 
                 fontSize: '11.5px', 
-                lineHeight: '1.5', 
-                whiteSpace: 'pre-wrap', 
-                color: '#e9edef',
-                textAlign: isRtl ? 'right' : 'left'
+                outline: 'none', 
+                resize: 'vertical', 
+                lineHeight: '1.5',
+                boxSizing: 'border-box'
               }}
-            >
-              {previewText}
+            />
+
+            {/* شريط الأوسمة */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+              {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
+                <span 
+                  key={tag} 
+                  onClick={() => insertTagAtCursor(tag)} 
+                  style={{ cursor: 'pointer', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: '600' }}
+                >
+                  + {tag}
+                </span>
+              ))}
             </div>
+
+            {/* المعاينة المباشرة */}
+            {showPreview && (
+              <div style={{ marginTop: '12px', background: '#111c2e', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <MessageSquare size={13} style={{ color: '#22c55e' }} />
+                  <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#94a3b8' }}>
+                    {isRtl ? "معاينة الرسالة الحية" : "Live Preview"}
+                  </span>
+                </div>
+                
+                <div 
+                  dir="auto"
+                  style={{ 
+                    background: '#0b141a', 
+                    border: '1px solid #1f2c34', 
+                    borderRadius: '6px', 
+                    padding: '8px 10px', 
+                    fontSize: '11px', 
+                    lineHeight: '1.5', 
+                    whiteSpace: 'pre-wrap', 
+                    color: '#e9edef',
+                    textAlign: isRtl ? 'right' : 'left'
+                  }}
+                >
+                  {previewText}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -419,7 +459,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. بطاقات الطلاب بتفاصيل الهوية والزر الذهبي */}
+      {/* 5. بطاقات الطلاب */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '30px', color: '#10b981' }}>
           <Loader2 size={22} style={{ animation: 'spin 1s linear infinite' }} />
