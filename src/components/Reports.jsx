@@ -6,15 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { Btn, Card, Input, Badge, PageHeader } from './UI/UI.jsx';
 import { 
   Calendar, 
-  MessageCircle, 
   CheckCircle2, 
   Users, 
   UserCheck, 
   UserX, 
-  Edit3, 
   RotateCcw, 
   Copy, 
-  Search,
   Check,
   Loader2,
   Sparkles,
@@ -117,7 +114,6 @@ export default function Reports({ students = [], academyId }) {
 
   // 2. تسجيل الإرسال الحقيقي في قاعدة البيانات (notification_logs)
   const markAsSentInDB = async (studentId, reportText) => {
-    // تحديث الواجهة فوراً (Optimistic UI)
     setSentLogs(prev => ({ ...prev, [studentId]: true }));
 
     try {
@@ -317,11 +313,16 @@ export default function Reports({ students = [], academyId }) {
         </Card>
       </div>
 
-      {/* 3. تخصيص محرر القالب والمعاينة المباشرة للواتساب */}
-      <div style={{ display: 'grid', gridTemplateColumns: showPreview ? '1fr 340px' : '1fr', gap: '16px', marginBottom: '20px' }}>
+      {/* 3. تخصيص محرر القالب والمعاينة المباشرة للواتساب (تعديل التجاوب والألوان) */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: showPreview ? 'repeat(auto-fit, minmax(280px, 1fr))' : '1fr', 
+        gap: '16px', 
+        marginBottom: '20px' 
+      }}>
         
         {/* محرر القالب */}
-        <Card>
+        <Card style={{ background: C.surface, border: `1px solid ${C.border}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: C.primary, fontWeight: 700, fontSize: '14px' }}>
               <Sparkles size={18} />
@@ -334,14 +335,14 @@ export default function Reports({ students = [], academyId }) {
 
           <textarea 
             ref={textareaRef}
-            rows={5}
+            rows={6}
             value={messageTemplate}
             onChange={(e) => setMessageTemplate(e.target.value)}
             style={{ 
               width: '100%', 
-              background: C.surface, 
+              background: '#131b2e', 
               border: `1px solid ${C.border}`, 
-              color: C.text, 
+              color: '#ffffff', 
               borderRadius: '10px', 
               padding: '12px', 
               fontSize: '13px', 
@@ -352,37 +353,41 @@ export default function Reports({ students = [], academyId }) {
             }}
           />
 
-          {/* متغيرات تفاعلية تُحقن عند موقع المؤشر */}
+          {/* متغيرات تفاعلية */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
             {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
-              <Badge key={tag} onClick={() => insertTagAtCursor(tag)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              <Badge key={tag} onClick={() => insertTagAtCursor(tag)} style={{ cursor: 'pointer', userSelect: 'none', background: `${C.primary}20`, color: C.primary }}>
                 + {tag}
               </Badge>
             ))}
           </div>
         </Card>
 
-        {/* محاكي المعاينة المباشرة للواتساب (Live WhatsApp Mockup) */}
+        {/* محاكي المعاينة المباشرة للواتساب */}
         {showPreview && (
           <Card style={{ background: '#0b141a', borderColor: '#222d34', color: '#e9edef', display: 'flex', flexDirection: 'column' }}>
             <div style={{ borderBottom: '1px solid #222d34', paddingBottom: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#25d366' }} />
               <span style={{ fontSize: '12px', fontWeight: '700', color: '#8696a0' }}>
-                {isRtl ? "معاينة الرسالة الحية للولي الأمر" : "Live Parent WhatsApp Preview"}
+                {isRtl ? "معاينة الرسالة الحية لولي الأمر" : "Live Parent WhatsApp Preview"}
               </span>
             </div>
             
-            <div style={{ 
-              background: '#005c4b', 
-              borderRadius: '8px', 
-              padding: '12px', 
-              fontSize: '12px', 
-              lineHeight: '1.6', 
-              whiteSpace: 'pre-wrap', 
-              boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
-              color: '#e9edef',
-              flex: 1
-            }}>
+            <div 
+              dir="auto"
+              style={{ 
+                background: '#005c4b', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: '12.5px', 
+                lineHeight: '1.6', 
+                whiteSpace: 'pre-wrap', 
+                boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
+                color: '#e9edef',
+                textAlign: isRtl ? 'right' : 'left',
+                flex: 1
+              }}
+            >
               {previewText}
             </div>
           </Card>
@@ -400,7 +405,7 @@ export default function Reports({ students = [], academyId }) {
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           <Btn onClick={() => setActiveTab('all')} variant={activeTab === 'all' ? "primary" : "ghost"}>
             <Users size={14} /> {isRtl ? "الكل" : "All"} ({students.length})
           </Btn>
