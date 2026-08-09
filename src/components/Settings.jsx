@@ -75,8 +75,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-    // معالجة رفع الشعار واستعراضه فوراً
-  const handleLogoUpload = async (e) => {
+      const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -95,23 +94,33 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
+      // 1. رفع الملف إلى Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // الحصول على الرابط العام بشكل دقيق
+      // 2. استخراج الرابط العام
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const publicUrl = data?.publicUrl;
 
-      if (!publicUrl) {
-        throw new Error('تعذر الحصول على رابط الصورة العام');
+      if (!publicUrl) throw new Error('تعذر الحصول على رابط الصورة العام');
+
+      // 3. تحديث الـ State المحلية
+      setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
+
+      // 4. حفظ الرابط مباشرة في جدول الأكاديميات بقاعدة البيانات لضمان عدم ضياعه عند الرفريش
+      if (currentAcademyId) {
+        const { error: dbError } = await supabase
+          .from('academies')
+          .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+          .eq('id', currentAcademyId);
+
+        if (dbError) throw dbError;
       }
 
-      // تحديث الواجهة فوراً برابط الصورة الجديد
-      setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
-      showToast('تم رفع الشعار بنجاح، اضغط حفظ لتأكيد التغييرات');
+      showToast('تم رفع الشعار وحفظه بنجاح');
     } catch (err) {
       showToast('فشل رفع الشعار: ' + err.message, 'error');
     } finally {
