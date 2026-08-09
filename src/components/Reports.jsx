@@ -21,65 +21,106 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-// 1. المكون المطور للتاريخ والتقويم (هجري / ميلادي)
+// 1. مكون التقويم المطور (حل مشكلة الهجري + DatePicker داكن مخصص)
 function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
   const [useHijri, setUseHijri] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  // معالجة التاريخ لتفادي أخطاء المنطقة الزمنية ISO
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   const formattedDisplayDate = React.useMemo(() => {
     if (!selectedDate) return '';
-    const dateObj = new Date(selectedDate);
+    const dateObj = parseLocalDate(selectedDate);
 
     if (useHijri) {
-      return new Intl.DateTimeFormat(isRtl ? 'ar-SA-u-ca-islamic-uma' : 'en-US-u-ca-islamic-uma', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      }).format(dateObj);
+      try {
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(dateObj);
+      } catch (e) {
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(dateObj);
+      }
     }
 
     return new Intl.DateTimeFormat(isRtl ? 'ar-EG' : 'en-US', {
       weekday: 'short',
       day: 'numeric',
-      month: 'short',
+      month: 'long',
       year: 'numeric'
     }).format(dateObj);
   }, [selectedDate, isRtl, useHijri]);
 
-  return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      justify: 'space-between', 
-      background: '#1e293b', 
-      border: '1px solid #334155', 
-      borderRadius: '10px', 
-      padding: '6px 10px',
-      gap: '8px',
-      marginTop: '6px'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <Calendar size={14} style={{ color: '#38bdf8' }} />
-        <input 
-          type="date" 
-          value={selectedDate} 
-          onChange={(e) => setSelectedDate(e.target.value)}
-          style={{ 
-            background: 'transparent', 
-            border: 'none', 
-            color: '#f8fafc', 
-            outline: 'none', 
-            fontSize: '12px', 
-            fontWeight: '600', 
-            cursor: 'pointer',
-            colorScheme: 'dark'
-          }}
-        />
-      </div>
+  const dateObj = parseLocalDate(selectedDate);
+  const currentYear = dateObj.getFullYear();
+  const currentMonth = dateObj.getMonth();
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '600' }}>
+  const handlePrevMonth = () => {
+    const prev = new Date(currentYear, currentMonth - 1, 1);
+    setSelectedDate(prev.toISOString().split('T')[0]);
+  };
+
+  const handleNextMonth = () => {
+    const next = new Date(currentYear, currentMonth + 1, 1);
+    setSelectedDate(next.toISOString().split('T')[0]);
+  };
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+
+  const monthNamesAr = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const weekDaysAr = ["أحد", "ثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '10px', 
+        background: '#1e293b', 
+        border: '1px solid #334155', 
+        borderRadius: '10px', 
+        padding: '6px 12px' 
+      }}>
+        {/* زر فتح نافذة التقويم المخصصة */}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'transparent',
+            border: 'none',
+            color: '#38bdf8',
+            cursor: 'pointer',
+            fontSize: '12px',
+            fontWeight: '600',
+            padding: 0
+          }}
+        >
+          <Calendar size={15} />
+          <span style={{ color: '#f8fafc' }}>{selectedDate}</span>
+        </button>
+
+        <span style={{ color: '#475569' }}>|</span>
+
+        {/* عرض التاريخ المنسق (هجري / ميلادي) */}
+        <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>
           {formattedDisplayDate}
         </span>
+
+        {/* زر التحويل الهجري / الميلادي */}
         <button
           type="button"
           onClick={() => setUseHijri(!useHijri)}
@@ -88,7 +129,7 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
             color: useHijri ? '#38bdf8' : '#94a3b8',
             border: `1px solid ${useHijri ? '#38bdf8' : '#334155'}`,
             borderRadius: '6px',
-            padding: '2px 6px',
+            padding: '3px 8px',
             fontSize: '10px',
             fontWeight: '700',
             cursor: 'pointer'
@@ -97,6 +138,77 @@ function DateHeader({ selectedDate, setSelectedDate, isRtl }) {
           {useHijri ? (isRtl ? 'هجري' : 'Hijri') : (isRtl ? 'ميلادي' : 'Gregorian')}
         </button>
       </div>
+
+      {/* نافذة اختيار التاريخ المخصصة الداكنة */}
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '110%',
+          right: isRtl ? 0 : 'auto',
+          left: isRtl ? 'auto' : 0,
+          zIndex: 999,
+          background: '#0f172a',
+          border: '1px solid #334155',
+          borderRadius: '12px',
+          padding: '12px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+          width: '260px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <button onClick={handlePrevMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '2px 8px' }}>‹</button>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
+              {monthNamesAr[currentMonth]} {currentYear}
+            </span>
+            <button onClick={handleNextMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '2px 8px' }}>›</button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center', marginBottom: '6px' }}>
+            {weekDaysAr.map((d, i) => (
+              <span key={i} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>{d}</span>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const dayNum = i + 1;
+              const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+              const isSelected = dateStr === selectedDate;
+
+              return (
+                <button
+                  key={dayNum}
+                  onClick={() => {
+                    setSelectedDate(dateStr);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    background: isSelected ? '#38bdf8' : '#1e293b',
+                    color: isSelected ? '#0f172a' : '#f8fafc',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 0',
+                    fontSize: '11px',
+                    fontWeight: isSelected ? '800' : '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {dayNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <button 
+            onClick={() => setIsOpen(false)} 
+            style={{ width: '100%', marginTop: '10px', background: '#334155', border: 'none', color: '#f8fafc', borderRadius: '6px', padding: '4px', fontSize: '10px', cursor: 'pointer' }}
+          >
+            {isRtl ? 'إغلاق' : 'Close'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -314,7 +426,7 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '12px 8px' }}>
       
-      {/* 1. الترويسة الرئيسية واستدعاء مكون التاريخ المطور */}
+      {/* 1. الترويسة الرئيسية واستدعاء التقويم المطور */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
           <div>
@@ -326,7 +438,6 @@ export default function Reports({ students = [], academyId }) {
             </p>
           </div>
 
-          {/* استدعاء المكون الجديد المطور بدلاً من الحقل القديم */}
           <DateHeader 
             selectedDate={selectedDate} 
             setSelectedDate={setSelectedDate} 
@@ -358,8 +469,6 @@ export default function Reports({ students = [], academyId }) {
 
       {/* 3. محرر القوالب والمعاينة */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-        
-        {/* صندوق التعديل */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8', fontWeight: '700', fontSize: '12px' }}>
@@ -395,7 +504,6 @@ export default function Reports({ students = [], academyId }) {
             }}
           />
 
-          {/* الوسوم */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
             {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
               <span 
@@ -409,7 +517,6 @@ export default function Reports({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* المعاينة الحية */}
         {showPreview && (
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>
@@ -539,14 +646,12 @@ export default function Reports({ students = [], academyId }) {
                     )}
                   </div>
 
-                  {/* تفاصيل التسميع */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#0f172a', padding: '6px', borderRadius: '6px', textAlign: 'center', fontSize: '10px' }}>
                     <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.new_memorization) || '---'}</span></div>
                     <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.review) || '---'}</span></div>
                     <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#38bdf8', fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
                   </div>
 
-                  {/* الأزرار */}
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button 
                       onClick={() => handleCopyToClipboard(student, record)}
