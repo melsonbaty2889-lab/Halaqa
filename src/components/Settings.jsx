@@ -75,12 +75,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-  // معالجة رفع الشعار داخل مجلد logos في avatars
+    // معالجة رفع الشعار واستعراضه فوراً
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // التحقق من نوع الملف وحجمه قبل الرفع
     if (!file.type.startsWith('image/')) {
       showToast('يرجى اختيار ملف صورة صالح', 'error');
       return;
@@ -96,18 +95,23 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
-      // الرفع إلى Bucket باسم avatars داخل المجلد الفرعي logos
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // جلب الرابط العام المباشر للصورة
+      // الحصول على الرابط العام بشكل دقيق
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      
-      setFormData((prev) => ({ ...prev, logo_url: data.publicUrl }));
-      showToast('تم رفع الشعار بنجاح');
+      const publicUrl = data?.publicUrl;
+
+      if (!publicUrl) {
+        throw new Error('تعذر الحصول على رابط الصورة العام');
+      }
+
+      // تحديث الواجهة فوراً برابط الصورة الجديد
+      setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
+      showToast('تم رفع الشعار بنجاح، اضغط حفظ لتأكيد التغييرات');
     } catch (err) {
       showToast('فشل رفع الشعار: ' + err.message, 'error');
     } finally {
