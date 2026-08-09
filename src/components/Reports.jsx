@@ -22,8 +22,10 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  Sliders,
-  Edit3
+  PhoneCall,
+  Edit,
+  Save,
+  X
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
@@ -51,9 +53,15 @@ export default function Reports({ students = [], academyId }) {
   const [copiedId, setCopiedId] = useState(null);
   const [sentLogs, setSentLogs] = useState({});
   
-  // التحكم في ظهور المحرر والمعاينة (طي افتراضي لتوفير المساحة)
+  // طي المحرر المعاينة
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  // حالات تعديل الرقم السريع
+  const [editingPhoneStudentId, setEditingPhoneStudentId] = useState(null);
+  const [tempPhoneValue, setTempPhoneValue] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [localPhoneMap, setLocalPhoneMap] = useState({});
 
   const defaultTemplate = useMemo(() => {
     return isRtl 
@@ -140,6 +148,31 @@ export default function Reports({ students = [], academyId }) {
     });
   };
 
+  // دالة حفظ رقم الهاتف السريع في داتابيز Supabase
+  const handleSavePhone = async (studentId) => {
+    if (!tempPhoneValue.trim()) return;
+    setSavingPhone(true);
+
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ parent_phone: tempPhoneValue.trim() })
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      // تحديث الحالة المحلية فوراً
+      setLocalPhoneMap(prev => ({ ...prev, [studentId]: tempPhoneValue.trim() }));
+      setEditingPhoneStudentId(null);
+      setTempPhoneValue('');
+    } catch (err) {
+      console.error("Failed to update phone:", err);
+      alert(isRtl ? "حدث خطأ أثناء حفظ الرقم" : "Error saving phone number");
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
   const getParsedMessage = useCallback((student, record) => {
     const studentName = safeString(student?.name || student?.student_name || record?.student_name);
     const statusVal = record?.attendance_status || record?.status;
@@ -183,7 +216,7 @@ export default function Reports({ students = [], academyId }) {
 
   const generateWhatsAppLink = (student, record) => {
     const parsedMessage = getParsedMessage(student, record);
-    let phone = safeString(student?.parent_phone || student?.phone || record?.parent_phone);
+    let phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone || record?.parent_phone);
     phone = phone.replace(/\s+/g, '').replace(/[+\-]/g, '');
     if (phone.startsWith('01') && phone.length === 11) phone = '20' + phone;
     return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(parsedMessage)}`;
@@ -225,11 +258,11 @@ export default function Reports({ students = [], academyId }) {
       else if (activeTab === 'unsent') matchesTab = !sentLogs[student.id];
 
       const studentName = safeString(student?.name || student?.student_name).toLowerCase();
-      const parentPhone = safeString(student?.parent_phone || student?.phone).toLowerCase();
+      const parentPhone = (localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone)).toLowerCase();
 
       return matchesTab && (!cleanSearch || studentName.includes(cleanSearch) || parentPhone.includes(cleanSearch));
     });
-  }, [students, reportsData, activeTab, searchTerm, sentLogs, safeString]);
+  }, [students, reportsData, activeTab, searchTerm, sentLogs, safeString, localPhoneMap]);
 
   const totalCount = students.length;
   const sentCount = Object.keys(sentLogs).length;
@@ -300,10 +333,9 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 3. محرر القوالب القابل للطي (Collapsible Template Editor) */}
+      {/* 3. محرر القوالب القابل للطي */}
       <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', marginBottom: '14px', overflow: 'hidden' }}>
         
-        {/* شريط التحكم القابل للضغط */}
         <div 
           onClick={() => setIsEditorOpen(!isEditorOpen)}
           style={{ 
@@ -344,7 +376,6 @@ export default function Reports({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* جسم المحرر والمعاينة (يظهر فقط عند الفتح) */}
         {isEditorOpen && (
           <div style={{ padding: '12px', borderTop: '1px solid #1e293b', background: '#0b1320' }}>
             <textarea 
@@ -368,7 +399,6 @@ export default function Reports({ students = [], academyId }) {
               }}
             />
 
-            {/* شريط الأوسمة */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
               {['[اسم_الطالب]', '[التاريخ]', '[الحالة]', '[الحفظ]', '[المراجعة]', '[الماضي]', '[التقييم]', '[الملاحظات]'].map(tag => (
                 <span 
@@ -381,7 +411,6 @@ export default function Reports({ students = [], academyId }) {
               ))}
             </div>
 
-            {/* المعاينة المباشرة */}
             {showPreview && (
               <div style={{ marginTop: '12px', background: '#111c2e', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -459,7 +488,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. بطاقات الطلاب */}
+      {/* 5. بطاقات الطلاب مع تعديل الرقم السريع */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '30px', color: '#10b981' }}>
           <Loader2 size={22} style={{ animation: 'spin 1s linear infinite' }} />
@@ -476,7 +505,8 @@ export default function Reports({ students = [], academyId }) {
               const record = reportsData[student.id];
               const isSent = !!sentLogs[student.id];
               const studentName = safeString(student?.name || student?.student_name);
-              const parentPhone = safeString(student?.parent_phone || student?.phone || record?.parent_phone);
+              const parentPhone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone || record?.parent_phone);
+              const isEditingThisPhone = editingPhoneStudentId === student.id;
 
               return (
                 <div 
@@ -491,8 +521,8 @@ export default function Reports({ students = [], academyId }) {
                     gap: '8px'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontWeight: '700', fontSize: '13px', color: '#ffffff' }}>{studentName}</span>
                         {isSent && (
@@ -501,9 +531,59 @@ export default function Reports({ students = [], academyId }) {
                           </span>
                         )}
                       </div>
-                      <span style={{ fontSize: '10px', color: parentPhone ? '#94a3b8' : '#ef4444' }}>
-                        {parentPhone || (isRtl ? 'الهاتف غير مسجل' : 'No Phone')}
-                      </span>
+
+                      {/* قسم رقم الهاتف وعناصر التعديل السريع */}
+                      {isEditingThisPhone ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                          <input 
+                            type="tel"
+                            placeholder="010xxxxxxx"
+                            value={tempPhoneValue}
+                            onChange={(e) => setTempPhoneValue(e.target.value)}
+                            autoFocus
+                            style={{ 
+                              background: '#0b1320', 
+                              border: '1px solid #10b981', 
+                              color: '#ffffff', 
+                              padding: '3px 8px', 
+                              borderRadius: '6px', 
+                              fontSize: '11px', 
+                              outline: 'none', 
+                              width: '130px' 
+                            }}
+                          />
+                          <button 
+                            onClick={() => handleSavePhone(student.id)} 
+                            disabled={savingPhone}
+                            style={{ background: '#10b981', border: 'none', color: '#0a0f1d', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                          >
+                            {savingPhone ? <Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={10} />}
+                            {isRtl ? "حفظ" : "Save"}
+                          </button>
+                          <button 
+                            onClick={() => setEditingPhoneStudentId(null)} 
+                            style={{ background: '#1e293b', border: 'none', color: '#cbd5e1', padding: '4px 6px', borderRadius: '6px', cursor: 'pointer' }}
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                          <span style={{ fontSize: '10.5px', color: parentPhone ? '#94a3b8' : '#f59e0b', fontWeight: parentPhone ? 'normal' : '600' }}>
+                            {parentPhone || (isRtl ? 'لا يوجد رقم مسجل' : 'No Phone')}
+                          </span>
+                          <button 
+                            onClick={() => {
+                              setEditingPhoneStudentId(student.id);
+                              setTempPhoneValue(parentPhone || '');
+                            }}
+                            style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#f59e0b', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                          >
+                            <Edit size={9} />
+                            {parentPhone ? (isRtl ? "تعديل" : "Edit") : (isRtl ? "+ إضافة" : "+ Add")}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {isSent && (
@@ -527,33 +607,60 @@ export default function Reports({ students = [], academyId }) {
                       {copiedId === student.id ? <Check size={13} style={{ color: '#22c55e' }} /> : <Copy size={13} />}
                     </button>
 
-                    <a 
-                      href={generateWhatsAppLink(student, record)}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={() => markAsSentInDB(student.id, getParsedMessage(student, record))}
-                      style={{ textDecoration: 'none', flex: 1 }}
-                    >
-                      <button style={{ 
-                        width: '100%', 
-                        background: isSent ? '#1e293b' : 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', 
-                        color: isSent ? '#94a3b8' : '#0a0f1d', 
-                        border: 'none', 
-                        padding: '7px 10px', 
-                        borderRadius: '6px', 
-                        fontWeight: '800', 
-                        fontSize: '11px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        gap: '6px', 
-                        cursor: 'pointer',
-                        boxShadow: isSent ? 'none' : '0 2px 10px rgba(245, 158, 11, 0.2)'
-                      }}>
-                        <Send size={12} />
-                        {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال عبر الواتساب" : "Send WhatsApp")}
+                    {parentPhone ? (
+                      <a 
+                        href={generateWhatsAppLink(student, record)}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={() => markAsSentInDB(student.id, getParsedMessage(student, record))}
+                        style={{ textDecoration: 'none', flex: 1 }}
+                      >
+                        <button style={{ 
+                          width: '100%', 
+                          background: isSent ? '#1e293b' : 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', 
+                          color: isSent ? '#94a3b8' : '#0a0f1d', 
+                          border: 'none', 
+                          padding: '7px 10px', 
+                          borderRadius: '6px', 
+                          fontWeight: '800', 
+                          fontSize: '11px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '6px', 
+                          cursor: 'pointer',
+                          boxShadow: isSent ? 'none' : '0 2px 10px rgba(245, 158, 11, 0.2)'
+                        }}>
+                          <Send size={12} />
+                          {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال عبر الواتساب" : "Send WhatsApp")}
+                        </button>
+                      </a>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setEditingPhoneStudentId(student.id);
+                          setTempPhoneValue('');
+                        }}
+                        style={{ 
+                          flex: 1, 
+                          background: '#1e293b', 
+                          color: '#f59e0b', 
+                          border: '1px dashed #f59e0b60', 
+                          padding: '7px 10px', 
+                          borderRadius: '6px', 
+                          fontWeight: '700', 
+                          fontSize: '11px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '6px', 
+                          cursor: 'pointer' 
+                        }}
+                      >
+                        <PhoneCall size={12} />
+                        {isRtl ? "أضف رقم الهاتف للإرسال" : "Add Phone to Send"}
                       </button>
-                    </a>
+                    )}
                   </div>
                 </div>
               );
