@@ -18,7 +18,8 @@ import {
   Clock,
   Send,
   AlertCircle,
-  MessageSquare
+  MessageSquare,
+  BookOpen
 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
@@ -49,8 +50,8 @@ export default function Reports({ students = [], academyId }) {
 
   const defaultTemplate = useMemo(() => {
     return isRtl 
-      ? `السلام عليكم ورحمة الله وبركاته، تحية طيبة من أكاديميتنا. 🌸\n\nنود إطلاعكم على تقرير أداء الابن(ة) *[اسم_الطالب]* ليوم [التاريخ]:\n\n📌 الحالة: [الحالة]\n📖 الحفظ الجديد: [الحفظ]\n🔄 المراجعة القريبة: [المراجعة]\n📚 المراجعة البعيدة: [الماضي]\n🌟 التقييم اليومي: [التقييم]\n📝 ملاحظات الحلقة: [الملاحظات]\n\nنسأل الله أن يبارك فيه وينبته نباتاً حسناً. 🤲✨`
-      : `Peace be upon you. Standard update from our academy. 🌸\n\nPerformance report for *[اسم_الطالب]* on [التاريخ]:\n\n📌 Status: [الحالة]\n📖 New Memorization: [الحفظ]\n🔄 Revision: [المراجعة]\n📚 Distant Revision: [الماضي]\n🌟 Daily Grade: [التقييم]\n📝 Notes: [الملاحظات]\n\nMay Allah bless them. 🤲✨`;
+      ? `السلام عليكم ورحمة الله وبركاته، تحية طيبة من أسرَة الحلقة الذكية. 🌸\n\nنود إطلاعكم على تقرير أداء الابن(ة) *[اسم_الطالب]* ليوم [التاريخ]:\n\n📌 الحالة: [الحالة]\n📖 الحفظ الجديد: [الحفظ]\n🔄 المراجعة القريبة: [المراجعة]\n📚 المراجعة البعيدة: [الماضي]\n🌟 التقييم اليومي: [التقييم]\n📝 ملاحظات الحلقة: [الملاحظات]\n\n( خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ ) 🤲✨`
+      : `Peace be upon you. Warm greetings from Smart Halaqa. 🌸\n\nDaily report for *[اسم_الطالب]* on [التاريخ]:\n\n📌 Status: [الحالة]\n📖 New Memorization: [الحفظ]\n🔄 Revision: [المراجعة]\n📚 Distant Revision: [الماضي]\n🌟 Daily Grade: [التقييم]\n📝 Notes: [الملاحظات]\n\nMay Allah bless their journey. 🤲✨`;
   }, [isRtl]);
 
   const [messageTemplate, setMessageTemplate] = useState(defaultTemplate);
@@ -233,18 +234,36 @@ export default function Reports({ students = [], academyId }) {
   const previewText = getParsedMessage(sampleStudent, sampleRecord);
 
   return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '12px 8px' }}>
+    <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', boxSizing: 'border-box', padding: '14px 10px', background: '#0a0f1d', minHeight: '100vh', color: '#f8fafc' }}>
       
-      {/* 1. الترويسة وأداة اختيار التاريخ */}
-      <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#f8fafc', margin: 0, lineHeight: '1.3' }}>
-              {isRtl ? "مركز تقارير أولياء الأمور" : "Parent Reporting Center"}
-            </h1>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>
-              {isRtl ? "توليد وإرسال حصاد اليوم القرآني والأكاديمي عبر الواتساب" : "Generate and send daily Quranic results via WhatsApp"}
-            </p>
+      {/* 1. الترويسة الرئيسية بهوية الشعار والزمرد/الذهب */}
+      <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* أيقونة المصحف الشريف المتوهجة */}
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
+              border: '1px solid rgba(245, 158, 11, 0.4)'
+            }}>
+              <BookOpen size={20} style={{ color: '#f59e0b' }} />
+            </div>
+
+            <div>
+              <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', margin: 0, letterSpacing: '-0.3px' }}>
+                {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
+              </h1>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0 0' }}>
+                {isRtl ? "إرسال النتائج القرآنية عبر الواتساب بهوية رسمية" : "Send Quranic achievements via WhatsApp"}
+              </p>
+            </div>
           </div>
 
           <ReportDateSelector 
@@ -254,40 +273,40 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 2. بطاقات الإحصائيات المترجمة */}
+      {/* 2. بطاقات الإحصائيات (الزمردي، الذهبي، والداكن) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
-          <Users size={16} style={{ color: '#38bdf8', marginBottom: '4px' }} />
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '10px 8px', textAlign: 'center' }}>
+          <Users size={16} style={{ color: '#10b981', marginBottom: '4px' }} />
           <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "الإجمالي" : "Total"}</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc' }}>{totalCount}</span>
+          <span style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>{totalCount}</span>
         </div>
 
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '10px 8px', textAlign: 'center' }}>
           <TrendingUp size={16} style={{ color: '#22c55e', marginBottom: '4px' }} />
           <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المرسل" : "Sent"}</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#22c55e' }}>{completionPercentage}%</span>
+          <span style={{ fontSize: '16px', fontWeight: '800', color: '#22c55e' }}>{completionPercentage}%</span>
         </div>
 
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '10px 8px', textAlign: 'center' }}>
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '12px', padding: '10px 8px', textAlign: 'center' }}>
           <Clock size={16} style={{ color: '#f59e0b', marginBottom: '4px' }} />
           <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{isRtl ? "المتبقي" : "Remaining"}</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#f59e0b' }}>{remainingCount}</span>
+          <span style={{ fontSize: '16px', fontWeight: '800', color: '#f59e0b' }}>{remainingCount}</span>
         </div>
       </div>
 
-      {/* 3. محرر القوالب والمعاينة */}
+      {/* 3. محرر القوالب والمعاينة بطابع الواجهة الداكنة */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
+        <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8', fontWeight: '700', fontSize: '12px' }}>
-              <Sparkles size={14} />
-              <span>{isRtl ? "محرر القوالب" : "Template Editor"}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontWeight: '700', fontSize: '12px' }}>
+              <Sparkles size={14} style={{ color: '#10b981' }} />
+              <span>{isRtl ? "محرر قالب التقرير" : "Report Template Editor"}</span>
             </div>
             <button 
               onClick={() => setShowPreview(!showPreview)} 
-              style={{ background: '#334155', border: 'none', color: '#f8fafc', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+              style={{ background: '#1e293b', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
             >
-              <Smartphone size={12} /> {showPreview ? (isRtl ? "إخفاء" : "Hide") : (isRtl ? "معاينة" : "Preview")}
+              <Smartphone size={12} /> {showPreview ? (isRtl ? "إخفاء المعاينة" : "Hide") : (isRtl ? "معاينة الرسالة" : "Preview")}
             </button>
           </div>
 
@@ -299,15 +318,15 @@ export default function Reports({ students = [], academyId }) {
             dir="auto"
             style={{ 
               width: '100%', 
-              background: '#0f172a', 
-              border: '1px solid #334155', 
+              background: '#0b1320', 
+              border: '1px solid #1e293b', 
               color: '#f8fafc', 
               borderRadius: '8px', 
-              padding: '8px', 
+              padding: '10px', 
               fontSize: '12px', 
               outline: 'none', 
               resize: 'vertical', 
-              lineHeight: '1.5',
+              lineHeight: '1.6',
               boxSizing: 'border-box'
             }}
           />
@@ -317,7 +336,7 @@ export default function Reports({ students = [], academyId }) {
               <span 
                 key={tag} 
                 onClick={() => insertTagAtCursor(tag)} 
-                style={{ cursor: 'pointer', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}
+                style={{ cursor: 'pointer', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: '600' }}
               >
                 + {tag}
               </span>
@@ -326,11 +345,11 @@ export default function Reports({ students = [], academyId }) {
         </div>
 
         {showPreview && (
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>
+          <div style={{ background: '#111c2e', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '6px' }}>
               <MessageSquare size={14} style={{ color: '#22c55e' }} />
               <span style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8' }}>
-                {isRtl ? "معاينة رسالة الواتساب" : "WhatsApp Live Preview"}
+                {isRtl ? "معاينة الرسالة الفعلية" : "WhatsApp Live Preview"}
               </span>
             </div>
             
@@ -354,14 +373,14 @@ export default function Reports({ students = [], academyId }) {
         )}
       </div>
 
-      {/* 4. إدخال البحث وأزرار التصفية */}
+      {/* 4. البحث والتصفية */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
         <input 
           type="text"
-          placeholder={isRtl ? "بحث باسم الطالب..." : "Search student..."}
+          placeholder={isRtl ? "بحث باسم الطالب أو رقم الهاتف..." : "Search student..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: '100%', background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
+          style={{ width: '100%', background: '#111c2e', border: '1px solid #1e293b', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
         />
 
         <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
@@ -381,13 +400,13 @@ export default function Reports({ students = [], academyId }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  background: isActive ? '#38bdf8' : '#1e293b',
-                  color: isActive ? '#0f172a' : '#94a3b8',
-                  border: '1px solid #334155',
-                  padding: '6px 10px',
+                  background: isActive ? '#10b981' : '#111c2e',
+                  color: isActive ? '#0a0f1d' : '#94a3b8',
+                  border: '1px solid #1e293b',
+                  padding: '6px 12px',
                   borderRadius: '6px',
                   fontSize: '11px',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   whiteSpace: 'nowrap',
                   cursor: 'pointer'
                 }}
@@ -400,15 +419,15 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* 5. عرض قائمة الطلاب */}
+      {/* 5. بطاقات الطلاب بتفاصيل الهوية والزر الذهبي */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
-          <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+        <div style={{ textAlign: 'center', padding: '30px', color: '#10b981' }}>
+          <Loader2 size={22} style={{ animation: 'spin 1s linear infinite' }} />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredStudents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px', background: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#94a3b8', fontSize: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '20px', background: '#111c2e', borderRadius: '10px', border: '1px solid #1e293b', color: '#94a3b8', fontSize: '12px' }}>
               <AlertCircle size={16} style={{ display: 'block', margin: '0 auto 4px auto' }} />
               {isRtl ? "لا يوجد طلاب يطابقون خيار البحث." : "No matching students found."}
             </div>
@@ -423,9 +442,9 @@ export default function Reports({ students = [], academyId }) {
                 <div 
                   key={student.id} 
                   style={{ 
-                    background: '#1e293b', 
-                    border: `1px solid ${isSent ? '#22c55e40' : '#334155'}`, 
-                    borderRadius: '10px', 
+                    background: '#111c2e', 
+                    border: `1px solid ${isSent ? '#22c55e40' : '#1e293b'}`, 
+                    borderRadius: '12px', 
                     padding: '10px 12px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -435,7 +454,7 @@ export default function Reports({ students = [], academyId }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: '700', fontSize: '13px', color: '#f8fafc' }}>{studentName}</span>
+                        <span style={{ fontWeight: '700', fontSize: '13px', color: '#ffffff' }}>{studentName}</span>
                         {isSent && (
                           <span style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '2px' }}>
                             <CheckCircle2 size={9} /> {isRtl ? "تم الإرسال" : "Sent"}
@@ -454,16 +473,16 @@ export default function Reports({ students = [], academyId }) {
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#0f172a', padding: '6px', borderRadius: '6px', textAlign: 'center', fontSize: '10px' }}>
-                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.new_memorization) || '---'}</span></div>
-                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#f8fafc', fontWeight: '600' }}>{safeString(record?.review) || '---'}</span></div>
-                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#38bdf8', fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#0b1320', padding: '6px', borderRadius: '8px', textAlign: 'center', fontSize: '10px' }}>
+                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#ffffff', fontWeight: '600' }}>{safeString(record?.new_memorization) || '---'}</span></div>
+                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#ffffff', fontWeight: '600' }}>{safeString(record?.review) || '---'}</span></div>
+                    <div><span style={{ color: '#94a3b8', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#f59e0b', fontWeight: '700' }}>{safeString(record?.session_grade) || '---'}</span></div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button 
                       onClick={() => handleCopyToClipboard(student, record)}
-                      style={{ background: '#334155', border: 'none', color: '#f8fafc', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ background: '#1e293b', border: 'none', color: '#ffffff', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       {copiedId === student.id ? <Check size={13} style={{ color: '#22c55e' }} /> : <Copy size={13} />}
                     </button>
@@ -475,9 +494,24 @@ export default function Reports({ students = [], academyId }) {
                       onClick={() => markAsSentInDB(student.id, getParsedMessage(student, record))}
                       style={{ textDecoration: 'none', flex: 1 }}
                     >
-                      <button style={{ width: '100%', background: isSent ? '#334155' : '#22c55e', color: isSent ? '#94a3b8' : '#ffffff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '700', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                      <button style={{ 
+                        width: '100%', 
+                        background: isSent ? '#1e293b' : 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', 
+                        color: isSent ? '#94a3b8' : '#0a0f1d', 
+                        border: 'none', 
+                        padding: '7px 10px', 
+                        borderRadius: '6px', 
+                        fontWeight: '800', 
+                        fontSize: '11px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        gap: '6px', 
+                        cursor: 'pointer',
+                        boxShadow: isSent ? 'none' : '0 2px 10px rgba(245, 158, 11, 0.2)'
+                      }}>
                         <Send size={12} />
-                        {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال الواتساب" : "Send WhatsApp")}
+                        {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال عبر الواتساب" : "Send WhatsApp")}
                       </button>
                     </a>
                   </div>
