@@ -1,3 +1,4 @@
+// src/components/Settings.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, Save, Globe, Clock, Calendar, Mail, Phone, 
@@ -15,7 +16,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     website: '',
     email: '',
     phone: '',
-    brand_color: '#f59e0b',
+    brand_color: '#d97706',
     currency: 'EGP',
     timezone: 'Africa/Cairo',
     calendar_type: 'gregorian',
@@ -64,7 +65,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           website: data.website || '',
           email: data.email || '',
           phone: data.phone || '',
-          brand_color: data.brand_color || '#f59e0b',
+          brand_color: data.brand_color || '#d97706',
           currency: data.currency || 'EGP',
           timezone: data.timezone || 'Africa/Cairo',
           calendar_type: data.calendar_type || 'gregorian',
@@ -80,7 +81,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
-  // توليد Slug تلقائي عند تغيير اسم الأكاديمية
   const handleNameChange = (e) => {
     const val = e.target.value;
     const generatedSlug = val.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
@@ -226,7 +226,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[350px] text-slate-100">
-        <RefreshCw className="animate-spin text-amber-500" size={32} />
+        <RefreshCw className="animate-spin text-amber-600" size={32} />
       </div>
     );
   }
@@ -244,7 +244,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
       {/* Main Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl md:text-3xl font-black text-amber-500 mb-2 flex items-center justify-center gap-3">
+        <h1 className="text-2xl md:text-3xl font-black text-amber-600 mb-2 flex items-center justify-center gap-3">
           <Building2 size={28} /> إعدادات المنظومة وحفظ البيانات
         </h1>
         <p className="text-slate-400 text-sm md:text-base">
@@ -252,7 +252,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         </p>
       </div>
 
-      {/* Live Preview Card (مزية تنافسية) */}
+      {/* Live Preview Card */}
       <div className="mb-6 p-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl border border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden">
@@ -263,7 +263,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
             )}
           </div>
           <div>
-            <span className="text-xs text-amber-500 font-bold uppercase tracking-wider">معاينة هوية الطلاب</span>
+            <span className="text-xs text-amber-600 font-bold uppercase tracking-wider">معاينة هوية الطلاب</span>
             <h3 className="text-lg font-bold text-white">{formData.name || 'اسم الأكاديمية'}</h3>
             <p className="text-xs text-slate-400">
               {formData.slug ? `https://${formData.slug}.academy.com` : 'لم يتم تحديد المعرّف'}
@@ -274,7 +274,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           <span className="text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
             العملة: {formData.currency}
           </span>
-          <span className="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+          <span className="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
             نشط
           </span>
         </div>
@@ -284,7 +284,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         
         {/* Basic Identity Section */}
         <Card>
-          <h2 className="text-sky-400 text-lg font-bold mb-5 flex items-center gap-2">
+          <h2 className="text-emerald-500 text-lg font-bold mb-5 flex items-center gap-2">
             <Building2 size={20} /> الهوية والبيانات الأساسية
           </h2>
 
@@ -306,7 +306,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
           {/* Interactive Logo Upload Area */}
           <div className="my-4">
-            <label className="text-xs text-amber-500 font-bold block mb-2 text-start">
+            <label className="text-xs text-amber-600 font-bold block mb-2 text-start">
               شعار الأكاديمية (Logo)
             </label>
             <div className="border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-2xl p-4 bg-slate-900/40 transition-all flex flex-col md:flex-row items-center justify-between gap-4">
@@ -364,9 +364,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           />
         </Card>
 
-        {/* Branding Color (تخصيص الثيم) */}
+        {/* Branding Color */}
         <Card>
-          <h2 className="text-sky-400 text-lg font-bold mb-4 flex items-center gap-2">
+          <h2 className="text-emerald-500 text-lg font-bold mb-4 flex items-center gap-2">
             <Palette size={20} /> لون الهوية الرسمية (Branding)
           </h2>
           <div className="flex items-center gap-4">
@@ -385,7 +385,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
         {/* Contact Channels */}
         <Card>
-          <h2 className="text-sky-400 text-lg font-bold mb-5 flex items-center gap-2">
+          <h2 className="text-emerald-500 text-lg font-bold mb-5 flex items-center gap-2">
             <Mail size={20} /> قنوات التواصل والروابط
           </h2>
 
@@ -409,7 +409,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
         {/* Regional Preferences */}
         <Card>
-          <h2 className="text-sky-400 text-lg font-bold mb-5 flex items-center gap-2">
+          <h2 className="text-emerald-500 text-lg font-bold mb-5 flex items-center gap-2">
             <Globe size={20} /> التفضيلات والإعدادات الإقليمية
           </h2>
 
@@ -449,7 +449,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </div>
 
           <div>
-            <label className="text-xs text-amber-500 font-bold block mb-3 text-start">
+            <label className="text-xs text-amber-600 font-bold block mb-3 text-start">
               أيام العطلة الأسبوعية
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -467,7 +467,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                     onClick={() => toggleWeekendDay(day.key)}
                     className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                       active 
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-500' 
+                        ? 'border-amber-600 bg-amber-500/10 text-amber-600' 
                         : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
                     }`}
                   >
@@ -481,7 +481,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
         {/* Backup & Restore Tools */}
         <Card>
-          <h2 className="text-sky-400 text-lg font-bold mb-4 flex items-center gap-2">
+          <h2 className="text-emerald-500 text-lg font-bold mb-4 flex items-center gap-2">
             <Database size={20} /> النسخ الاحتياطي واستعادة الإعدادات
           </h2>
           <div className="flex gap-3 flex-wrap">
@@ -501,11 +501,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </div>
         </Card>
 
-        {/* Floating Save Bar (يظهر فقط عند وجود تعديلات غير محفوظة) */}
+        {/* Floating Save Bar */}
         {isDirty && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-amber-500/40 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 z-50 animate-fade-in">
-            <span className="text-xs text-amber-400 font-medium">هناك تغييرات غير محفوظة!</span>
-            <Button type="submit" disabled={saving} className="px-6 py-2 text-sm bg-amber-500 hover:bg-amber-600 text-black font-bold">
+            <span className="text-xs text-amber-500 font-medium">هناك تغييرات غير محفوظة!</span>
+            <Button type="submit" disabled={saving} className="px-6 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white font-bold">
               {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
               {saving ? 'جاري الحفظ...' : 'حفظ التغيرات الآن'}
             </Button>
