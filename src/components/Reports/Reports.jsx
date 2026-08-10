@@ -5,7 +5,7 @@ import ReportDateSelector from '../UI/ReportDateSelector';
 import TemplateSettings from './TemplateSettings';
 import ReportMetrics from './ReportMetrics';
 import StudentReportCard from './StudentReportCard';
-import { getParsedMessage, generateWhatsAppLink } from './reportHelpers';
+import { getParsedMessage, generateWhatsAppLink } from './ReportHelpers';
 import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
