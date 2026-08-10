@@ -23,7 +23,7 @@ export default function Sidebar({
   t,
   trialDaysLeft = 0,
   setShowEarlyUpgrade,
-  academyTime
+  academyTime,
   userRole = 'admin' // 1. استلام صلاحية المستخدم من المكون الأب
   }) {
   const [academiesList, setAcademiesList] = useState([]);
