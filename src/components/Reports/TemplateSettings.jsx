@@ -1,39 +1,32 @@
-/* src/components/Reports/TemplateSettings.jsx */
 import React, { useState } from 'react';
 import { Sparkles, Eye, Code, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { REPORT_TEMPLATES, AVAILABLE_VARIABLES } from '../../data/reportTemplates';
+import { REPORT_TEMPLATES = [], AVAILABLE_VARIABLES = [] } from '../../data/reportTemplates';
 
 export default function TemplateSettings({ templateText, setTemplateText }) {
   const { i18n } = useTranslation();
   const isRtl = (i18n.language || 'ar').startsWith('ar');
   const [showPreview, setShowPreview] = useState(false);
 
-  // إدراج المتغير في مكان المؤشر أو نهاية النص
   const handleInsertVariable = (varId) => {
     if (!templateText.includes(varId)) {
       setTemplateText((prev) => `${prev} ${varId}`);
     }
   };
 
-  // نص المعاينة الحية ببيانات تجريبية
   const getPreviewText = () => {
-    return templateText
-      .replace(/\[Student_Name\]/g, isRtl ? 'أحمد محمد' : 'Ahmed Mohamed')
-      .replace(/\[Date\]/g, isRtl ? '27 صفر 1448 هـ' : 'Safar 27, 1448 AH')
-      .replace(/\[Status\]/g, isRtl ? 'حاضر' : 'Present')
-      .replace(/\[New_Mem\]/g, isRtl ? 'سورة النبأ (1-15)' : 'Surah An-Naba (1-15)')
-      .replace(/\[Review\]/g, isRtl ? 'جزء عم' : 'Juz Amma')
-      .replace(/\[Rating\]/g, 'ممتاز ⭐⭐⭐⭐⭐')
-      .replace(/\[Test_Name\]/g, isRtl ? 'اختبار جزء عم' : 'Juz Amma Exam')
-      .replace(/\[Score\]/g, '98%')
-      .replace(/\[Teacher_Notes\]/g, isRtl ? 'مكثف وممتاز' : 'Excellent work');
+    return (templateText || '')
+      .replace(/\[Student_Name\]|\[اسم_الطالب\]/g, isRtl ? 'أحمد محمد' : 'Ahmed Mohamed')
+      .replace(/\[Date\]|\[التاريخ\]/g, isRtl ? '27 صفر 1448 هـ' : 'Safar 27, 1448 AH')
+      .replace(/\[Status\]|\[الحالة\]/g, isRtl ? 'حاضر ✅' : 'Present ✅')
+      .replace(/\[Memorization\]|\[الحفظ\]/g, isRtl ? 'سورة النبأ (1-15)' : 'Surah An-Naba (1-15)')
+      .replace(/\[Revision\]|\[المراجعة\]/g, isRtl ? 'جزء عم' : 'Juz Amma')
+      .replace(/\[Grade\]|\[التقييم\]/g, isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐')
+      .replace(/\[Notes\]|\[الملاحظات\]/g, isRtl ? 'ممتاز ومجتهد' : 'Excellent work');
   };
 
   return (
     <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
-      
-      {/* الهيدر العلوي */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8', fontSize: '13px', fontWeight: '700' }}>
           <Sparkles size={16} />
@@ -62,7 +55,6 @@ export default function TemplateSettings({ templateText, setTemplateText }) {
         </button>
       </div>
 
-      {/* قائمة النماذج الجاهزة Quick Presets */}
       <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '10px' }}>
         {REPORT_TEMPLATES.map((tmpl) => (
           <button
@@ -86,7 +78,6 @@ export default function TemplateSettings({ templateText, setTemplateText }) {
         ))}
       </div>
 
-      {/* محرر النص أو شاشة المعاينة */}
       {!showPreview ? (
         <>
           <textarea
@@ -109,10 +100,9 @@ export default function TemplateSettings({ templateText, setTemplateText }) {
             }}
           />
 
-          {/* أزرار المتغيرات الذكية لمنع التكرار */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
             {AVAILABLE_VARIABLES.map((v) => {
-              const isUsed = templateText.includes(v.id);
+              const isUsed = (templateText || '').includes(v.id);
               return (
                 <button
                   key={v.id}
@@ -142,7 +132,6 @@ export default function TemplateSettings({ templateText, setTemplateText }) {
           </div>
         </>
       ) : (
-        /* معاينة شاشة الواتساب الحية */
         <div style={{ background: '#0b141a', borderRadius: '8px', padding: '12px', border: '1px solid #1f2c34' }}>
           <div style={{
             background: '#005c4b',
