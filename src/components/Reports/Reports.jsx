@@ -13,7 +13,6 @@ export default function Reports({ students = [], academyId }) {
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
-  // تحصين تحويل المدخلات إلى نصوص آمنة
   const safeString = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string') return val;
@@ -22,7 +21,6 @@ export default function Reports({ students = [], academyId }) {
     return String(val);
   }, [currentLang]);
 
-  // حالات الصفحة
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [reportsData, setReportsData] = useState({});
   const [templateId, setTemplateId] = useState(null);
@@ -33,22 +31,18 @@ export default function Reports({ students = [], academyId }) {
   const [sentLogs, setSentLogs] = useState({});
   const [toastMessage, setToastMessage] = useState('');
   
-  // حالات تعديل أرقام الهواتف
   const [editingPhoneStudentId, setEditingPhoneStudentId] = useState(null);
   const [tempPhoneValue, setTempPhoneValue] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
   const [localPhoneMap, setLocalPhoneMap] = useState({});
 
-  // قالب الرسالة
   const [messageTemplate, setMessageTemplate] = useState('');
 
-  // عرض الإشعارات السريعة (Toast)
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 2500);
   }, []);
 
-  // تنسيق تاريخ اليوم المختار للعرض
   const formattedDateString = useMemo(() => {
     if (!selectedDate) return '';
     try {
@@ -62,12 +56,10 @@ export default function Reports({ students = [], academyId }) {
     }
   }, [selectedDate, isRtl]);
 
-  // جلب بيانات التقارير والقوالب من Supabase مع تحصين ضد القيم الفارغة
   const fetchReportsAndTemplate = useCallback(async () => {
     if (!academyId) return;
     setLoading(true);
     try {
-      // 1. جلب القالب النشط
       const { data: tmplData } = await supabase
         .from('notification_templates')
         .select('*')
@@ -81,7 +73,6 @@ export default function Reports({ students = [], academyId }) {
         setMessageTemplate(tmplData.template_body);
       }
 
-      // 2. جلب تقارير اليوم المحدد
       const { data: viewData, error } = await supabase
         .from('v_daily_reports_status')
         .select('*')
@@ -93,7 +84,7 @@ export default function Reports({ students = [], academyId }) {
       const mappedData = {};
       const logsMap = {};
 
-      // تحصين القائمة المقروءة لتفادي الانهيار
+      // حماية المصفوفة القادمة من الاستعلام
       const safeViewData = Array.isArray(viewData) ? viewData : [];
       safeViewData.forEach(rec => {
         if (rec && rec.student_id) {
@@ -117,7 +108,6 @@ export default function Reports({ students = [], academyId }) {
     fetchReportsAndTemplate();
   }, [fetchReportsAndTemplate]);
 
-  // تسجيل الإرسال في قاعدة البيانات محليًا وسحابيًا
   const markAsSentInDB = async (studentId, reportText) => {
     setSentLogs(prev => ({ ...prev, [studentId]: true }));
     try {
@@ -134,7 +124,6 @@ export default function Reports({ students = [], academyId }) {
     }
   };
 
-  // إرسال التقرير عبر واتساب
   const handleSendWhatsApp = (student, record) => {
     const text = getParsedMessage({ student, record, template: messageTemplate, formattedDate: formattedDateString, isRtl, safeString });
     const phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone || record?.parent_phone);
@@ -143,7 +132,6 @@ export default function Reports({ students = [], academyId }) {
     window.open(link, '_blank');
   };
 
-  // نسخ التقرير إلى الحافظة
   const handleCopyToClipboard = (student, record) => {
     const text = getParsedMessage({ student, record, template: messageTemplate, formattedDate: formattedDateString, isRtl, safeString });
     navigator.clipboard.writeText(text);
@@ -153,10 +141,9 @@ export default function Reports({ students = [], academyId }) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // تحصين مصفوفة الطلاب الأساسية
+  // حماية مصفوفة الطلاب
   const safeStudents = useMemo(() => Array.isArray(students) ? students : [], [students]);
 
-  // تصفية الطلاب حسب التبويب والبحث مع التحصين
   const filteredStudents = useMemo(() => {
     const cleanSearch = safeString(searchTerm).toLowerCase().trim();
     return safeStudents.filter(student => {
@@ -176,7 +163,6 @@ export default function Reports({ students = [], academyId }) {
     });
   }, [safeStudents, reportsData, activeTab, searchTerm, sentLogs, safeString, localPhoneMap]);
 
-  // قائمة الطلاب المتبقيين للإرسال المتتابع
   const unsentStudents = useMemo(() => {
     return safeStudents.filter(student => {
       if (!student) return false;
@@ -185,7 +171,6 @@ export default function Reports({ students = [], academyId }) {
     });
   }, [safeStudents, sentLogs, localPhoneMap, safeString]);
 
-  // الإرسال المتتابع للطالب التالي
   const handleBulkSendNext = () => {
     if (unsentStudents.length === 0) return;
     const nextStudent = unsentStudents[0];
@@ -193,7 +178,6 @@ export default function Reports({ students = [], academyId }) {
     handleSendWhatsApp(nextStudent, rec);
   };
 
-  // الإحصائيات العامة الحالية
   const totalCount = safeStudents.length;
   const sentCount = Object.keys(sentLogs).length;
   const remainingCount = Math.max(0, totalCount - sentCount);
@@ -204,14 +188,12 @@ export default function Reports({ students = [], academyId }) {
       dir={isRtl ? 'rtl' : 'ltr'} 
       className="w-full min-h-screen bg-[#090d16] text-slate-100 p-3 sm:p-5 font-sans"
     >
-      {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-full text-xs shadow-lg z-[9999] animate-fade-in">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-full text-xs shadow-lg z-[9999]">
           {toastMessage}
         </div>
       )}
 
-      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -224,11 +206,9 @@ export default function Reports({ students = [], academyId }) {
           </div>
         </div>
         
-        {/* Date Picker Selector */}
         <ReportDateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
       </div>
 
-      {/* Metrics Banner */}
       <ReportMetrics 
         totalCount={totalCount} 
         completionPercentage={completionPercentage} 
@@ -238,16 +218,14 @@ export default function Reports({ students = [], academyId }) {
         isRtl={isRtl} 
       />
 
-      {/* Dynamic Template Editor Component */}
       <TemplateSettings templateText={messageTemplate} setTemplateText={setMessageTemplate} />
 
-      {/* Search & Filter Bar */}
       <div className="flex flex-col gap-2.5 my-4">
         <div className="relative w-full">
           <Search className={`w-4 h-4 absolute top-3 text-slate-500 ${isRtl ? 'right-3' : 'left-3'}`} />
           <input 
             type="text" 
-            placeholder={isRtl ? "بحث باسم الطالب أو رقم الهاتف..." : "Search by student name or phone..."} 
+            placeholder={isRtl ? "بحث باسم الطالب..." : "Search..."} 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
             className={`w-full bg-slate-900 border border-slate-800 rounded-lg py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
@@ -256,7 +234,6 @@ export default function Reports({ students = [], academyId }) {
           />
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {[
             { id: 'all', label: isRtl ? "الكل" : "All", icon: Users }, 
@@ -284,7 +261,6 @@ export default function Reports({ students = [], academyId }) {
         </div>
       </div>
 
-      {/* Main Content Area */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-12 text-emerald-400">
           <Loader2 className="w-7 h-7 animate-spin mb-2" />
@@ -292,7 +268,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       ) : filteredStudents.length === 0 ? (
         <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-slate-800 text-slate-400 text-xs">
-          {isRtl ? 'لا توجد نتائج مطابقة للبحث أو الفلتر المحدد.' : 'No matching records found.'}
+          {isRtl ? 'لا توجد نتائج مطابقة لليوم المحدد.' : 'No matching records found.'}
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
