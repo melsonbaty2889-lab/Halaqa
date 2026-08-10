@@ -4,7 +4,7 @@ import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe } from 'luci
 import { useTranslation } from 'react-i18next';
 import { HIJRI_MONTHS_AR, HIJRI_MONTHS_EN, getHijriParts, formatHijriDate } from '../../utils/dateUtils';
 
-export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
+export default function ReportDateSelector({ selectedDate, setSelectedDate, hijriOffset = 0 }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
@@ -13,14 +13,12 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // التاريخ المختار كـ Date Object
   const dateObj = useMemo(() => {
     if (!selectedDate) return new Date();
     const [year, month, day] = selectedDate.split('-').map(Number);
     return new Date(year, (month || 1) - 1, day || 1);
   }, [selectedDate]);
 
-  // حالة التنقل بداخل المودال (شهور/سنوات)
   const [viewDate, setViewDate] = useState(dateObj);
 
   useEffect(() => {
@@ -37,12 +35,11 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // نص التاريخ الظاهر في الشريط العلوي
   const formattedDisplayDate = useMemo(() => {
     if (!selectedDate) return '';
     try {
       if (useHijri) {
-        return formatHijriDate(dateObj, isRtl);
+        return formatHijriDate(dateObj, isRtl, hijriOffset);
       }
       return new Intl.DateTimeFormat(currentLang, {
         weekday: 'short',
@@ -53,9 +50,8 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     } catch (e) {
       return selectedDate;
     }
-  }, [selectedDate, currentLang, isRtl, useHijri, dateObj]);
+  }, [selectedDate, currentLang, isRtl, useHijri, dateObj, hijriOffset]);
 
-  // التحكم بالتنقل بين الشهور (ميلادي أو هجري)
   const handlePrevMonth = () => {
     setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   };
@@ -64,17 +60,15 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  // بيانات العنوان بالـ Modal (إصلاح سنة الهجري)
   const headerTitle = useMemo(() => {
     if (useHijri) {
-      const { month, year } = getHijriParts(viewDate);
+      const { month, year } = getHijriParts(viewDate, hijriOffset);
       const monthName = isRtl ? HIJRI_MONTHS_AR[month - 1] : HIJRI_MONTHS_EN[month - 1];
       return isRtl ? `${monthName} ${year} هـ` : `${monthName} ${year} AH`;
     }
     return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
-  }, [viewDate, useHijri, isRtl, currentLang]);
+  }, [viewDate, useHijri, isRtl, currentLang, hijriOffset]);
 
-  // حساب أسبوع وأيام التقويم
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -82,7 +76,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
 
   const weekDays = useMemo(() => {
     const days = [];
-    const refDate = new Date(2026, 7, 2); // الأحد
+    const refDate = new Date(2026, 7, 2);
     for (let i = 0; i < 7; i++) {
       const d = new Date(refDate);
       d.setDate(refDate.getDate() + i);
@@ -93,16 +87,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block', direction: isRtl ? 'rtl' : 'ltr' }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px', 
-        background: '#1e293b', 
-        border: '1px solid #334155', 
-        borderRadius: '10px', 
-        padding: '6px 10px',
-        whiteSpace: 'nowrap'
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '6px 10px', whiteSpace: 'nowrap' }}>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -168,7 +153,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
               const isSelected = dateStr === selectedDate;
               
               const dayObj = new Date(currentYear, currentMonth, dayNum);
-              const displayNum = useHijri ? getHijriParts(dayObj).day : dayNum;
+              const displayNum = useHijri ? getHijriParts(dayObj, hijriOffset).day : dayNum;
 
               return (
                 <button
