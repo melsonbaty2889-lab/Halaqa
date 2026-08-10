@@ -2,100 +2,43 @@
 
 export const MASTER_MENU = [
   {
-    categoryKey: "nav.categories.main", // لوحة التحكم الأساسية
+    id: "ops_center",
+    categoryKey: "1. مركز القيادة والعمليات",
     items: [
-      {
-        id: "dashboard",
-        labelKey: "nav.dashboard",
-        path: "/dashboard",
-        icon: "LayoutDashboard",
-        roles: ["admin", "academy_owner", "teacher", "student"],
-      },
-    ],
+      { id: "dashboard", labelKey: "لوحة التحكم والأداء", icon: "BarChart", roles: ["admin", "teacher", "student"] },
+      { id: "live_activity", labelKey: "السجل الحي للأنشطة", icon: "History", roles: ["admin"] },
+      { id: "communication", labelKey: "مركز التواصل والمراسلات", icon: "Send", roles: ["admin", "teacher"] },
+      { id: "analytics", labelKey: "التقارير والتحليلات", icon: "BarChart3", roles: ["admin", "teacher"] }
+    ]
   },
   {
-    categoryKey: "nav.categories.education", // الشؤون التعليمية
+    id: "quran_affairs",
+    categoryKey: "2. الشؤون القرآنية والأكاديمية",
     items: [
-      {
-        id: "halaqas",
-        labelKey: "nav.halaqas",
-        path: "/halaqas",
-        icon: "BookOpen",
-        roles: ["admin", "academy_owner", "teacher"],
-      },
-      {
-        id: "students",
-        labelKey: "nav.students",
-        path: "/students",
-        icon: "Users",
-        roles: ["admin", "academy_owner", "teacher"],
-      },
-      {
-        id: "teachers",
-        labelKey: "nav.teachers",
-        path: "/teachers",
-        icon: "GraduationCap",
-        roles: ["admin", "academy_owner"],
-      },
-      {
-        id: "quran-progress",
-        labelKey: "nav.quranProgress",
-        path: "/quran-progress",
-        icon: "BookmarkCheck",
-        roles: ["admin", "teacher", "student"],
-      },
-      {
-        id: "exams",
-        labelKey: "nav.exams",
-        path: "/exams",
-        icon: "FileCheck",
-        roles: ["admin", "teacher", "student"],
-      },
-    ],
+      { id: "students", labelKey: "إدارة الدارسين", icon: "GraduationCap", roles: ["admin", "teacher"] },
+      { id: "staff", labelKey: "الكادر والمقرئين", icon: "Users", roles: ["admin"] },
+      { id: "halaqas", labelKey: "المقارئ والحلقات", icon: "BookOpen", roles: ["admin", "teacher"] },
+      { id: "daily_recitation", labelKey: "التسميع والتحضير اليومي", icon: "CheckCircle2", roles: ["admin", "teacher", "student"] },
+      { id: "exams", labelKey: "الاختبارات والتقييم", icon: "Award", roles: ["admin", "teacher", "student"] }
+    ]
   },
   {
-    categoryKey: "nav.categories.performance", // التقييم والتحفيز
+    id: "engagement",
+    categoryKey: "3. تفاعل الدارسين والأسر",
     items: [
-      {
-        id: "reports",
-        labelKey: "nav.reports",
-        path: "/reports",
-        icon: "BarChart3",
-        roles: ["admin", "academy_owner", "teacher"],
-      },
-      {
-        id: "gamification",
-        labelKey: "nav.gamification",
-        path: "/gamification",
-        icon: "Trophy",
-        roles: ["admin", "teacher", "student"],
-      },
-      {
-        id: "certificates",
-        labelKey: "nav.certificates",
-        path: "/certificates",
-        icon: "Award",
-        roles: ["admin", "academy_owner", "teacher", "student"],
-      },
-    ],
+      { id: "families", labelKey: "شبكة أسر الدارسين", icon: "Home", roles: ["admin", "teacher"] },
+      { id: "rewards", labelKey: "الإنجاز والحوافز", icon: "Trophy", roles: ["admin", "teacher", "student"] }
+    ]
   },
   {
-    categoryKey: "nav.categories.management", // الإدارة والمالية
+    id: "governance_finance",
+    categoryKey: "4. الحوكمة والمالية",
     items: [
-      {
-        id: "payments",
-        labelKey: "nav.payments",
-        path: "/payments",
-        icon: "CreditCard",
-        roles: ["admin", "academy_owner"],
-      },
-      {
-        id: "settings",
-        labelKey: "nav.settings",
-        path: "/settings",
-        icon: "Settings",
-        roles: ["admin", "academy_owner"],
-      },
-    ],
-  },
+      { id: "subscriptions", labelKey: "الاشتراكات والترقية", icon: "Zap", roles: ["admin"] },
+      { id: "payments", labelKey: "التحصيل والمعاملات", icon: "CreditCard", roles: ["admin"] },
+      { id: "assets", labelKey: "المستندات والأصول", icon: "Folder", roles: ["admin"] },
+      { id: "referrals", labelKey: "برنامج الإحالة والأرباح", icon: "TrendingUp", roles: ["admin"] },
+      { id: "settings", labelKey: "إعدادات المنظومة", icon: "Sliders", roles: ["admin"] }
+    ]
+  }
 ];
