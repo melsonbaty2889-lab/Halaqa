@@ -34,7 +34,7 @@ const Attendance = safeLazy(() => import('@/components/Attendance.jsx'));
 const Exams = safeLazy(() => import('@/components/Exams.jsx')); 
 const Payments = safeLazy(() => import('@/components/Payments/StudentPayments.jsx'));
 const Settings = safeLazy(() => import('@/components/Settings.jsx')); 
-const Reports = safeLazy(() => import('@/components/Reports.jsx'));
+const Reports = safeLazy(() => import('@/components/Reports/Reports.jsx'));
 const ActiveHalaqas = safeLazy(() => import('@/components/ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('@/components/RealtimeAudit.jsx'));
 const CommunicationHub = safeLazy(() => import('@/components/CommunicationHub.jsx'));
