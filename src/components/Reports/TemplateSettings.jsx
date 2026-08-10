@@ -11,9 +11,8 @@ export default function TemplateSettings({ templateText = '', setTemplateText })
   const [copied, setCopied] = useState(false);
   const textareaRef = useRef(null);
 
-  // إدراج المتغير مع حماية كاملة ضد القيم غير المعرفة (Safe Cursor Insertion)
+  // إدراج المتغير مع منع التكرار إذا كان موجوداً بالفعل
   const handleInsertVariable = (variableObj) => {
-    // جلب المفتاح بأمان حسب هيكل البيانات المتاح
     const varKey = typeof variableObj === 'string' 
       ? variableObj 
       : (isRtl 
@@ -23,6 +22,9 @@ export default function TemplateSettings({ templateText = '', setTemplateText })
     if (!varKey) return;
 
     const safeText = templateText || '';
+
+    // منع الإضافة إذا كان المتغير موجوداً بالفعل في النص
+    if (safeText.includes(varKey)) return;
 
     if (!textareaRef.current) {
       setTemplateText(`${safeText} ${varKey}`);
@@ -38,7 +40,6 @@ export default function TemplateSettings({ templateText = '', setTemplateText })
 
     setTemplateText(newText);
 
-    // إعادة التكيز وضبط موضع المؤشر بأمان
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -137,10 +138,11 @@ export default function TemplateSettings({ templateText = '', setTemplateText })
                 <button
                   key={varKey || idx}
                   type="button"
-                  onClick={() => handleInsertVariable(v)}
+                  disabled={isUsed}
+                  onClick={() => !isUsed && handleInsertVariable(v)}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all ${
                     isUsed
-                      ? 'bg-slate-800/50 text-slate-500 border-slate-800 cursor-default'
+                      ? 'bg-slate-800/40 text-slate-500 border-slate-800/80 cursor-not-allowed opacity-60'
                       : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 active:scale-95'
                   }`}
                 >
