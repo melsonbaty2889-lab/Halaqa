@@ -1,9 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Eye, Code, Check, Copy, Search, BookmarkPlus, Smile, Trash2 } from 'lucide-react';
+import { Sparkles, Eye, Code, Check, Copy, Search, BookmarkPlus, Smile, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { REPORT_TEMPLATES, AVAILABLE_VARIABLES } from '../../data/reportTemplates';
+import { getParsedMessage } from './ReportHelpers';
 
 const QUICK_EMOJIS = ['✨', '⭐', '🌟', '📖', '🔄', '🎯', '✅', '⚠️', '🌸', '👏', '🤲', '🌿'];
+
+// تصنيفات مترجمة لمنع تداخل اللغات في الواجهة
+const CATEGORY_MAP = {
+  all: { ar: 'الكل', en: 'All' },
+  basic: { ar: 'أساسي', en: 'Basic' },
+  academic: { ar: 'أكاديمي', en: 'Academic' },
+  attendance: { ar: 'حضور', en: 'Attendance' },
+  communication: { ar: 'تواصل', en: 'Notes' }
+};
 
 export default function TemplateSettings({ 
   templateText = '', 
@@ -16,6 +26,7 @@ export default function TemplateSettings({
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
   
+  const [isExpanded, setIsExpanded] = useState(false); // التحكم في طي المحرر
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,7 +35,6 @@ export default function TemplateSettings({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef(null);
 
-  // تحميل القوالب المخصصة المحفوظة محلياً
   useEffect(() => {
     const saved = localStorage.getItem('custom_report_templates');
     if (saved) {
@@ -32,7 +42,6 @@ export default function TemplateSettings({
     }
   }, []);
 
-  // إدراج نص (متغير أو إيموجي) في موضع المؤشر
   const insertTextAtCursor = (textToInsert, isVariable = false) => {
     if (!textToInsert) return;
     const safeText = templateText || '';
@@ -58,7 +67,6 @@ export default function TemplateSettings({
     }, 0);
   };
 
-  // حفظ قالب جديد خاص بالمعلم
   const handleSaveCustomTemplate = () => {
     if (!templateText.trim()) return;
     const newTmpl = {
@@ -81,29 +89,14 @@ export default function TemplateSettings({
     localStorage.setItem('custom_report_templates', JSON.stringify(updated));
   };
 
-  // استبدال الوسوم العامة بالحقول الحقيقية
   const getPreviewText = () => {
-    let safeText = templateText || '';
-    const dateStr = formattedDate || new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US');
-
-    const replaceMap = {
-      '{{student_name}}': sampleStudent?.name || (isRtl ? 'أحمد محمد' : 'Ahmed Mohamed'),
-      '{{date}}': dateStr,
-      '{{status}}': sampleRecord?.status || (isRtl ? 'حاضر ✅' : 'Present ✅'),
-      '{{memorization}}': sampleRecord?.memorization || (isRtl ? 'سورة النبأ (1-15)' : 'Surah An-Naba (1-15)'),
-      '{{review}}': sampleRecord?.review || (isRtl ? 'جزء عم' : 'Juz Amma'),
-      '{{rating}}': sampleRecord?.rating || (isRtl ? 'ممتاز ⭐⭐⭐' : 'Excellent ⭐⭐⭐'),
-      '{{test_name}}': sampleRecord?.testName || (isRtl ? 'اختبار جزء عم' : 'Juz Amma Exam'),
-      '{{score}}': sampleRecord?.score || '95/100',
-      '{{notes}}': sampleRecord?.notes || (isRtl ? 'أداء ممتاز ومواظب' : 'Outstanding performance')
-    };
-
-    Object.keys(replaceMap).forEach((key) => {
-      const regex = new RegExp(key.replace(/[{()}]/g, '\\$&'), 'g');
-      safeText = safeText.replace(regex, replaceMap[key]);
+    return getParsedMessage({
+      student: sampleStudent,
+      record: sampleRecord,
+      template: templateText,
+      formattedDate,
+      isRtl
     });
-
-    return safeText;
   };
 
   const handleCopyPreview = () => {
@@ -112,7 +105,6 @@ export default function TemplateSettings({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // تصفية المتغيرات حسب البحث والتبويب
   const filteredVariables = AVAILABLE_VARIABLES.filter(v => {
     const label = isRtl ? v.labelAr : v.labelEn;
     const matchesSearch = label.toLowerCase().includes(searchQuery.toLowerCase()) || v.key.includes(searchQuery);
@@ -123,186 +115,198 @@ export default function TemplateSettings({
   const allTemplates = [...REPORT_TEMPLATES, ...customTemplates];
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4 shadow-xl text-slate-100">
+    <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl mb-3 shadow-md text-slate-100 backdrop-blur-sm transition-all">
       
-      {/* Top Header */}
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
-        <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-          <Sparkles className="w-4 h-4 animate-pulse text-emerald-400" />
+      {/* Header Compact Mode */}
+      <div className="p-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-2 text-emerald-400 font-semibold text-xs sm:text-sm hover:text-emerald-300 transition-colors"
+        >
+          <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
           <span>{isRtl ? 'محرر القوالب الذكي' : 'Smart Template Engine'}</span>
-        </div>
+          {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
 
-        <div className="flex items-center gap-2">
-          {!showPreview && (
+        <div className="flex items-center gap-1.5">
+          {isExpanded && !showPreview && (
             <button
               type="button"
               onClick={handleSaveCustomTemplate}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition-all"
-              title={isRtl ? 'حفظ كقالب مخصص' : 'Save Custom Template'}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/20 transition-all"
             >
               <BookmarkPlus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isRtl ? 'حفظ قالب' : 'Save'}</span>
+              <span className="hidden sm:inline">{isRtl ? 'حفظ' : 'Save'}</span>
             </button>
           )}
 
           <button
             type="button"
-            onClick={() => setShowPreview(!showPreview)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+            onClick={() => {
+              if (!isExpanded) setIsExpanded(true);
+              setShowPreview(!showPreview);
+            }}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all border ${
               showPreview
                 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}
           >
             {showPreview ? <Code className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            <span>{showPreview ? (isRtl ? 'المحرر' : 'Editor') : (isRtl ? 'معاينة الرسالة' : 'Preview')}</span>
+            <span>{showPreview ? (isRtl ? 'المحرر' : 'Editor') : (isRtl ? 'معاينة' : 'Preview')}</span>
           </button>
         </div>
       </div>
 
-      {/* Templates Slider */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none snap-x">
-        {allTemplates.map((tmpl) => (
-          <div key={tmpl.id} className="relative group snap-start flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setTemplateText(isRtl ? (tmpl.textAr || tmpl.text) : (tmpl.textEn || tmpl.text))}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all flex items-center gap-1.5"
-            >
-              <span>{isRtl ? tmpl.nameAr : tmpl.nameEn}</span>
-              {tmpl.isCustom && (
-                <Trash2 
-                  className="w-3 h-3 text-rose-400 hover:text-rose-300 ml-1" 
-                  onClick={(e) => handleDeleteCustomTemplate(tmpl.id, e)}
-                />
-              )}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {!showPreview ? (
-        <>
-          {/* Main Editor */}
-          <div className="relative">
-            <textarea
-              ref={textareaRef}
-              value={templateText || ''}
-              onChange={(e) => setTemplateText(e.target.value)}
-              rows={4}
-              dir="auto"
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs leading-relaxed text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all resize-y"
-              placeholder={isRtl ? 'صمم نص القالب هنا واستخدم المتغيرات...' : 'Design template text using variables...'}
-            />
-
-            {/* Quick Emoji Bar Trigger */}
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="absolute left-2.5 bottom-3 text-slate-400 hover:text-amber-400 p-1 rounded-md bg-slate-900/80 border border-slate-800 transition-colors"
-            >
-              <Smile className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Quick Emojis Drawer */}
-          {showEmojiPicker && (
-            <div className="flex flex-wrap gap-1.5 p-2 mt-2 bg-slate-950/80 border border-slate-800 rounded-lg animate-fadeIn">
-              {QUICK_EMOJIS.map((emoji) => (
+      {/* Accordion Content */}
+      {isExpanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-slate-800/60 animate-fadeIn">
+          
+          {/* Templates Horizontal List */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2.5 scrollbar-none snap-x">
+            {allTemplates.map((tmpl) => (
+              <div key={tmpl.id} className="snap-start flex-shrink-0">
                 <button
-                  key={emoji}
                   type="button"
-                  onClick={() => insertTextAtCursor(emoji, false)}
-                  className="w-7 h-7 flex items-center justify-center text-sm rounded bg-slate-800 hover:bg-slate-700 active:scale-90 transition-transform"
+                  onClick={() => setTemplateText(isRtl ? (tmpl.textAr || tmpl.text) : (tmpl.textEn || tmpl.text))}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-all flex items-center gap-1"
                 >
-                  {emoji}
+                  <span>{isRtl ? tmpl.nameAr : tmpl.nameEn}</span>
+                  {tmpl.isCustom && (
+                    <Trash2 
+                      className="w-3 h-3 text-rose-400 hover:text-rose-300 mr-0.5" 
+                      onClick={(e) => handleDeleteCustomTemplate(tmpl.id, e)}
+                    />
+                  )}
                 </button>
-              ))}
+              </div>
+            ))}
+          </div>
+
+          {!showPreview ? (
+            <>
+              {/* Textarea */}
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={templateText || ''}
+                  onChange={(e) => setTemplateText(e.target.value)}
+                  rows={3}
+                  dir="auto"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs leading-relaxed text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 transition-all resize-y"
+                  placeholder={isRtl ? 'صمم نص القالب هنا واستخدم المتغيرات...' : 'Design template text using variables...'}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="absolute left-2 bottom-2 text-slate-400 hover:text-amber-400 p-1 rounded bg-slate-900 border border-slate-800 transition-colors"
+                >
+                  <Smile className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Emoji Drawer */}
+              {showEmojiPicker && (
+                <div className="flex flex-wrap gap-1 p-2 mt-1.5 bg-slate-950/90 border border-slate-800 rounded-md">
+                  {QUICK_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => insertTextAtCursor(emoji, false)}
+                      className="w-6 h-6 flex items-center justify-center text-xs rounded hover:bg-slate-800 active:scale-90 transition-transform"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Categories & Search */}
+              <div className="mt-2.5 pt-2 border-t border-slate-800/50">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-1 overflow-x-auto text-[10px] scrollbar-none">
+                    {Object.keys(CATEGORY_MAP).map((catKey) => (
+                      <button
+                        key={catKey}
+                        type="button"
+                        onClick={() => setSelectedCategory(catKey)}
+                        className={`px-2 py-0.5 rounded-md whitespace-nowrap transition-all ${
+                          selectedCategory === catKey 
+                            ? 'bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30' 
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        {isRtl ? CATEGORY_MAP[catKey].ar : CATEGORY_MAP[catKey].en}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative w-24 sm:w-32">
+                    <Search className="w-3 h-3 absolute right-2 top-1.5 text-slate-500" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={isRtl ? 'بحث...' : 'Search...'}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-md pr-6 pl-1.5 py-0.5 text-[10px] text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Variables List */}
+                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto scrollbar-thin">
+                  {filteredVariables.map((v) => {
+                    const varLabel = isRtl ? v.labelAr : v.labelEn;
+                    const isUsed = (templateText || '').includes(v.key);
+
+                    return (
+                      <button
+                        key={v.key}
+                        type="button"
+                        disabled={isUsed}
+                        onClick={() => insertTextAtCursor(v.key, true)}
+                        className={`flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                          isUsed
+                            ? 'bg-slate-800/30 text-slate-600 border border-transparent cursor-not-allowed'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 active:scale-95'
+                        }`}
+                      >
+                        {isUsed ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <span className="text-[10px]">+</span>}
+                        <span>{varLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          ) : (
+            /* WhatsApp Preview Card */
+            <div className="bg-[#0b141a] rounded-lg p-2.5 border border-slate-800 relative mt-1">
+              <div className="flex justify-between items-center mb-1.5 px-1">
+                <span className="text-[9px] text-slate-400 font-mono">WhatsApp Web Preview</span>
+                <button
+                  onClick={handleCopyPreview}
+                  className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 transition-colors"
+                >
+                  {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copied ? (isRtl ? 'تم النسخ' : 'Copied') : (isRtl ? 'نسخ' : 'Copy')}</span>
+                </button>
+              </div>
+
+              <div
+                dir="auto"
+                className="bg-[#005c4b] text-[#e9edef] rounded-lg p-2.5 max-w-[90%] text-[11px] leading-relaxed whitespace-pre-wrap shadow-md border border-[#004d3e]"
+              >
+                {getPreviewText()}
+                <div className="flex items-center justify-end gap-1 text-[8px] text-emerald-200/60 mt-1">
+                  <span>{new Date().toLocaleTimeString(isRtl ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                  <span className="text-sky-300 font-bold">✓✓</span>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Variables Filter & Search Bar */}
-          <div className="mt-3 pt-2 border-t border-slate-800/60">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-1 overflow-x-auto text-[11px] scrollbar-none">
-                {['all', 'basic', 'academic', 'attendance', 'communication'].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-2 py-0.5 rounded-md whitespace-nowrap transition-all ${
-                      selectedCategory === cat 
-                        ? 'bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' 
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    {cat === 'all' ? (isRtl ? 'الكل' : 'All') : cat}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative w-28 sm:w-36">
-                <Search className="w-3 h-3 absolute right-2 top-2 text-slate-500" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={isRtl ? 'بحث...' : 'Search...'}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-md pr-6 pl-2 py-1 text-[10px] text-slate-200 focus:outline-none focus:border-slate-700"
-                />
-              </div>
-            </div>
-
-            {/* Dynamic Variables Buttons */}
-            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1 scrollbar-thin">
-              {filteredVariables.map((v) => {
-                const varLabel = isRtl ? v.labelAr : v.labelEn;
-                const isUsed = (templateText || '').includes(v.key);
-
-                return (
-                  <button
-                    key={v.key}
-                    type="button"
-                    disabled={isUsed}
-                    onClick={() => insertTextAtCursor(v.key, true)}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all ${
-                      isUsed
-                        ? 'bg-slate-800/40 text-slate-500 border-slate-800/80 cursor-not-allowed opacity-60'
-                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 active:scale-95'
-                    }`}
-                  >
-                    {isUsed ? <Check className="w-3 h-3 text-emerald-500" /> : <span className="text-xs">+</span>}
-                    <span>{varLabel}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      ) : (
-        /* WhatsApp Real Preview */
-        <div className="bg-[#0b141a] rounded-lg p-3 border border-slate-800 relative">
-          <div className="flex justify-between items-center mb-2 px-1">
-            <span className="text-[10px] text-slate-400 font-mono">WhatsApp Web Client Preview</span>
-            <button
-              onClick={handleCopyPreview}
-              className="flex items-center gap-1 text-[11px] text-slate-300 hover:text-emerald-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 transition-colors"
-            >
-              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              <span>{copied ? (isRtl ? 'تم النسخ' : 'Copied') : (isRtl ? 'نسخ النص' : 'Copy')}</span>
-            </button>
-          </div>
-
-          <div
-            dir="auto"
-            className="bg-[#005c4b] text-[#e9edef] rounded-lg p-3 max-w-[88%] text-xs leading-relaxed whitespace-pre-wrap shadow-md border border-[#004d3e] relative"
-          >
-            {getPreviewText()}
-            <div className="flex items-center justify-end gap-1 text-[9px] text-emerald-200/60 mt-1">
-              <span>{new Date().toLocaleTimeString(isRtl ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-              <span className="text-sky-300 font-bold">✓✓</span>
-            </div>
-          </div>
         </div>
       )}
     </div>
