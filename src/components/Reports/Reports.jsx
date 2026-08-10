@@ -1,11 +1,10 @@
-// src/components/Reports/Reports.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import ReportDateSelector from './UI/ReportDateSelector';
-import TemplateSettings from './Reports/TemplateSettings';
-import ReportMetrics from './Reports/ReportMetrics';
-import StudentReportCard from './Reports/StudentReportCard';
+import ReportDateSelector from '../UI/ReportDateSelector';
+import TemplateSettings from './TemplateSettings';
+import ReportMetrics from './ReportMetrics';
+import StudentReportCard from './StudentReportCard';
 import { getParsedMessage, generateWhatsAppLink } from './reportHelpers';
 import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2 } from 'lucide-react';
 
@@ -55,8 +54,7 @@ export default function Reports({ students = [], academyId }) {
     if (!academyId) return;
     setLoading(true);
     try {
-      // 1. جلب قالب الإشعار النشط للأكاديمية
-      const { data: tmplData, error: tmplError } = await supabase
+      const { data: tmplData } = await supabase
         .from('notification_templates')
         .select('*')
         .eq('academy_id', academyId)
@@ -64,21 +62,16 @@ export default function Reports({ students = [], academyId }) {
         .eq('is_active', true)
         .maybeSingle();
 
-      if (tmplError) console.error('Error fetching template:', tmplError);
-      
       if (tmplData && tmplData.template_body) {
         setTemplateId(tmplData.id);
         setMessageTemplate(tmplData.template_body);
       }
 
-      // 2. جلب بيانات تقارير الطلاب بالفلترة للتاريخ المحدد لمنع استهلاك البيانات
-      const { data: viewData, error: viewError } = await supabase
+      const { data: viewData } = await supabase
         .from('v_daily_reports_status')
         .select('*')
         .eq('academy_id', academyId)
         .eq('date', selectedDate);
-
-      if (viewError) console.error('Error fetching daily reports status:', viewError);
 
       const mappedData = {};
       const logsMap = {};
@@ -91,7 +84,7 @@ export default function Reports({ students = [], academyId }) {
       setReportsData(mappedData);
       setSentLogs(logsMap);
     } catch (err) {
-      console.error('Unexpected error fetching report data:', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -104,7 +97,7 @@ export default function Reports({ students = [], academyId }) {
   const markAsSentInDB = async (studentId, reportText) => {
     setSentLogs(prev => ({ ...prev, [studentId]: true }));
     try {
-      const { error } = await supabase.from('notification_logs').insert([{ 
+      await supabase.from('notification_logs').insert([{ 
         academy_id: academyId, 
         recipient_user_id: studentId, 
         channel_used: 'whatsapp', 
@@ -112,8 +105,6 @@ export default function Reports({ students = [], academyId }) {
         sent_text: reportText, 
         template_id: templateId 
       }]);
-      
-      if (error) console.error('Error inserting notification log:', error);
     } catch (err) { console.error(err); }
   };
 
@@ -262,8 +253,7 @@ export default function Reports({ students = [], academyId }) {
               onStartEditPhone={(id, p) => { setEditingPhoneStudentId(id); setTempPhoneValue(p || ''); }}
               onSavePhone={async (id) => {
                 setSavingPhone(true);
-                const { error } = await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
-                if (error) console.error('Error updating phone:', error);
+                await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
                 setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
                 setEditingPhoneStudentId(null);
                 setSavingPhone(false);
