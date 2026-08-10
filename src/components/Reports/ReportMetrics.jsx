@@ -1,5 +1,3 @@
-
-// src/components/Reports/ReportMetrics.jsx
 import React from 'react';
 import { SendHorizontal } from 'lucide-react';
 
