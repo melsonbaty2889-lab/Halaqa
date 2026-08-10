@@ -1,16 +1,24 @@
 // src/components/UI/ReportDateSelector.jsx
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { HIJRI_MONTHS_AR, HIJRI_MONTHS_EN, getHijriParts, formatHijriDate } from '../../utils/dateUtils';
+import { 
+  HIJRI_MONTHS_AR, 
+  HIJRI_MONTHS_EN, 
+  getHijriParts, 
+  formatHijriDate, 
+  getSavedHijriOffset, 
+  setSavedHijriOffset 
+} from '../../utils/dateUtils';
 
-export default function ReportDateSelector({ selectedDate, setSelectedDate, hijriOffset = 0 }) {
+export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
   const [useHijri, setUseHijri] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [hijriOffset, setHijriOffsetState] = useState(getSavedHijriOffset());
   const dropdownRef = useRef(null);
 
   const dateObj = useMemo(() => {
@@ -34,6 +42,11 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate, hijr
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleOffsetChange = (newOffset) => {
+    setHijriOffsetState(newOffset);
+    setSavedHijriOffset(newOffset);
+  };
 
   const formattedDisplayDate = useMemo(() => {
     if (!selectedDate) return '';
@@ -176,6 +189,36 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate, hijr
               );
             })}
           </div>
+
+          {/* شريط ضبط الرؤية الشرعية عند تغير رؤية الهلال */}
+          {useHijri && (
+            <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Settings2 size={11} /> {isRtl ? 'تعديل الرؤية:' : 'Sight Adjustment:'}
+              </span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {[-1, 0, 1].map((offset) => (
+                  <button
+                    key={offset}
+                    type="button"
+                    onClick={() => handleOffsetChange(offset)}
+                    style={{
+                      background: hijriOffset === offset ? '#38bdf8' : '#1e293b',
+                      color: hijriOffset === offset ? '#0f172a' : '#94a3b8',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {offset > 0 ? `+${offset}` : offset}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <button
             type="button"
