@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { HIJRI_MONTHS_AR, HIJRI_MONTHS_EN } from '../../utils/dateUtils';
 
 export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const { i18n } = useTranslation();
@@ -11,6 +12,21 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const [useHijri, setUseHijri] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // تاريخ العرض والتصفح الحالي داخل التقويم
+  const [viewDate, setViewDate] = useState(() => {
+    if (!selectedDate) return new Date();
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  });
+
+  // مزامنة تاريخ العرض عند تغيير selectedDate من الخارج
+  useEffect(() => {
+    if (selectedDate) {
+      const [y, m, d] = selectedDate.split('-').map(Number);
+      setViewDate(new Date(y, (m || 1) - 1, d || 1));
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -22,57 +38,81 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const dateObj = useMemo(() => {
+  const selectedDateObj = useMemo(() => {
     if (!selectedDate) return new Date();
     const [year, month, day] = selectedDate.split('-').map(Number);
     return new Date(year, (month || 1) - 1, day || 1);
   }, [selectedDate]);
 
+  // استخراج تفاصيل التاريخ الهجري بـ Intl
+  const getHijriDetails = (date) => {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric'
+      });
+      const parts = formatter.formatToParts(date);
+      const day = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+      const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
+      const year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
+      return { day, month, year };
+    } catch {
+      return { day: 1, month: 1, year: 1448 };
+    }
+  };
+
+  // تفاصيل التاريخ المختار حالياً
   const formattedDisplayDate = useMemo(() => {
     if (!selectedDate) return '';
     try {
       if (useHijri) {
-        const locale = isRtl ? 'ar-SA-u-ca-islamic-uma' : 'en-US-u-ca-islamic-uma';
-        return new Intl.DateTimeFormat(locale, {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }).format(dateObj);
+        const { day, month, year } = getHijriDetails(selectedDateObj);
+        const monthsArr = isRtl ? HIJRI_MONTHS_AR : HIJRI_MONTHS_EN;
+        const monthName = monthsArr[month - 1] || '';
+        return isRtl ? `${day} ${monthName} ${year} هـ` : `${monthName} ${day}, ${year} AH`;
       }
       return new Intl.DateTimeFormat(currentLang, {
         weekday: 'short',
         day: 'numeric',
         month: 'long',
         year: 'numeric'
-      }).format(dateObj);
+      }).format(selectedDateObj);
     } catch (e) {
       return selectedDate;
     }
-  }, [selectedDate, currentLang, isRtl, useHijri, dateObj]);
+  }, [selectedDate, currentLang, isRtl, useHijri, selectedDateObj]);
 
-  const currentYear = dateObj.getFullYear();
-  const currentMonth = dateObj.getMonth();
+  // التحكم بشهر التقويم المفتوح حالياً
+  const currentYear = viewDate.getFullYear();
+  const currentMonth = viewDate.getMonth();
 
   const handlePrevMonth = () => {
-    const prev = new Date(currentYear, currentMonth - 1, 1);
-    setSelectedDate(prev.toISOString().split('T')[0]);
+    setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   };
 
   const handleNextMonth = () => {
-    const next = new Date(currentYear, currentMonth + 1, 1);
-    setSelectedDate(next.toISOString().split('T')[0]);
+    setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
+  // اسم الشهر أعلى المودال
+  const headerMonthName = useMemo(() => {
+    if (useHijri) {
+      const { month, year } = getHijriDetails(viewDate);
+      const monthsArr = isRtl ? HIJRI_MONTHS_AR : HIJRI_MONTHS_EN;
+      const monthName = monthsArr[month - 1] || '';
+      return isRtl ? `${monthName} ${year}` : `${monthName} ${year}`;
+    }
+    return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
+  }, [viewDate, currentLang, useHijri, isRtl]);
+
+  // حساب أيام الشهر وبداية الأسبوع
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
-  const monthName = useMemo(() => {
-    return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(new Date(currentYear, currentMonth, 1));
-  }, [currentYear, currentMonth, currentLang]);
-
   const weekDays = useMemo(() => {
     const days = [];
-    const refDate = new Date(2026, 7, 2);
+    const refDate = new Date(2026, 7, 2); // Sunday
     for (let i = 0; i < 7; i++) {
       const d = new Date(refDate);
       d.setDate(refDate.getDate() + i);
@@ -80,6 +120,14 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     }
     return days;
   }, [currentLang]);
+
+  const handleSelectDay = (dayNum) => {
+    const y = currentYear;
+    const m = String(currentMonth + 1).padStart(2, '0');
+    const d = String(dayNum).padStart(2, '0');
+    setSelectedDate(`${y}-${m}-${d}`);
+    setIsOpen(false);
+  };
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block', direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -127,7 +175,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
             <button type="button" onClick={handlePrevMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
               {isRtl ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
             </button>
-            <span style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>{monthName}</span>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>{headerMonthName}</span>
             <button type="button" onClick={handleNextMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
               {isRtl ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
             </button>
@@ -147,11 +195,18 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
               const dayNum = i + 1;
               const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
               const isSelected = dateStr === selectedDate;
+              
+              let displayDayNumber = dayNum;
+              if (useHijri) {
+                const dayObj = new Date(currentYear, currentMonth, dayNum);
+                displayDayNumber = getHijriDetails(dayObj).day;
+              }
+
               return (
                 <button
                   key={dayNum}
                   type="button"
-                  onClick={() => { setSelectedDate(dateStr); setIsOpen(false); }}
+                  onClick={() => handleSelectDay(dayNum)}
                   style={{
                     background: isSelected ? '#38bdf8' : '#1e293b',
                     color: isSelected ? '#0f172a' : '#f8fafc',
@@ -163,7 +218,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
                     cursor: 'pointer'
                   }}
                 >
-                  {dayNum}
+                  {displayDayNumber}
                 </button>
               );
             })}
