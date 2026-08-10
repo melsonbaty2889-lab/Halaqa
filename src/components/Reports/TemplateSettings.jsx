@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Eye, Code, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { REPORT_TEMPLATES = [], AVAILABLE_VARIABLES = [] } from '../../data/reportTemplates';
+import { REPORT_TEMPLATES, AVAILABLE_VARIABLES } from '../../data/reportTemplates';
 
 export default function TemplateSettings({ templateText, setTemplateText }) {
   const { i18n } = useTranslation();
