@@ -1,5 +1,3 @@
-// src/components/Reports/reportHelpers.js
-
 /**
  * تحويل متغيرات القالب إلى نص التقرير النهائي للطلب
  */
