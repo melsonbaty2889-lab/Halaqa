@@ -13,32 +13,51 @@ export const HIJRI_MONTHS_EN = [
 ];
 
 /**
- * استخراج تفاصيل التاريخ الهجري الحقيقي (اليوم، الشهر، السنة الهجرية)
+ * خوارزمية دقيقة لتحويل التاريخ الميلادي إلى هجري (Kuwaiti Algorithm)
  */
-export const getHijriParts = (dateObj) => {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-uma', {
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric'
-    });
-    const parts = formatter.formatToParts(dateObj);
-    
-    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
-    const year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
+export const getHijriParts = (dateObj, offsetDays = 0) => {
+  const date = new Date(dateObj);
+  date.setDate(date.getDate() + offsetDays);
 
-    return { day, month, year };
-  } catch (e) {
-    return { day: 1, month: 1, year: 1448 };
+  let day = date.getDate();
+  let month = date.getMonth();
+  let year = date.getFullYear();
+
+  let m = month + 1;
+  let y = year;
+  if (m < 3) {
+    y -= 1;
+    m += 12;
   }
+
+  let a = Math.floor(y / 100);
+  let b = 2 - a + Math.floor(a / 4);
+
+  let jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + b - 1524.5;
+
+  let z = Math.floor(jd + 0.5);
+  let f = (jd + 0.5) - z;
+
+  let l = z - 1948440 + 10632;
+  let n = Math.floor((l - 1) / 10631);
+  l = l - 10631 * n + 354;
+
+  let j = (Math.floor((10985 - l) / 5316)) * (Math.floor((50 * l) / 17719)) + (Math.floor(l / 5670)) * (Math.floor((43 * l) / 15238));
+  l = l - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50)) - (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
+
+  let hMonth = Math.floor((24 * l) / 709);
+  let hDay = l - Math.floor((709 * hMonth) / 24);
+  let hYear = 30 * n + j - 30;
+
+  return {
+    day: hDay,
+    month: hMonth, // 1 - 12
+    year: hYear
+  };
 };
 
-/**
- * تنسيق التاريخ الهجري المكتوب بلغة الموفر
- */
-export const formatHijriDate = (dateObj, isArabic = true) => {
-  const { day, month, year } = getHijriParts(dateObj);
+export const formatHijriDate = (dateObj, isArabic = true, offsetDays = 0) => {
+  const { day, month, year } = getHijriParts(dateObj, offsetDays);
   const monthName = isArabic ? HIJRI_MONTHS_AR[month - 1] : HIJRI_MONTHS_EN[month - 1];
   return isArabic ? `${day} ${monthName} ${year} هـ` : `${monthName} ${day}, ${year} AH`;
 };
