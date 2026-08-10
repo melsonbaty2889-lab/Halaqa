@@ -24,7 +24,8 @@ export default function Sidebar({
   trialDaysLeft = 0,
   setShowEarlyUpgrade,
   academyTime
-}) {
+  userRole = 'admin' // 1. استلام صلاحية المستخدم من المكون الأب
+  }) {
   const [academiesList, setAcademiesList] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
