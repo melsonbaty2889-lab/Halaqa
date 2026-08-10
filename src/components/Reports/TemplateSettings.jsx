@@ -2,18 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Eye, Code, Check, Copy, Search, BookmarkPlus, Smile, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { REPORT_TEMPLATES, AVAILABLE_VARIABLES } from '../../data/reportTemplates';
-import { getParsedMessage } from './ReportHelpers';
+import { getParsedMessage } from '../../utils/ReportHelpers';
 
 const QUICK_EMOJIS = ['✨', '⭐', '🌟', '📖', '🔄', '🎯', '✅', '⚠️', '🌸', '👏', '🤲', '🌿'];
-
-// تصنيفات مترجمة لمنع تداخل اللغات في الواجهة
-const CATEGORY_MAP = {
-  all: { ar: 'الكل', en: 'All' },
-  basic: { ar: 'أساسي', en: 'Basic' },
-  academic: { ar: 'أكاديمي', en: 'Academic' },
-  attendance: { ar: 'حضور', en: 'Attendance' },
-  communication: { ar: 'تواصل', en: 'Notes' }
-};
 
 export default function TemplateSettings({ 
   templateText = '', 
@@ -26,11 +17,10 @@ export default function TemplateSettings({
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
   
-  const [isExpanded, setIsExpanded] = useState(false); // التحكم في طي المحرر
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [customTemplates, setCustomTemplates] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef(null);
@@ -107,9 +97,7 @@ export default function TemplateSettings({
 
   const filteredVariables = AVAILABLE_VARIABLES.filter(v => {
     const label = isRtl ? v.labelAr : v.labelEn;
-    const matchesSearch = label.toLowerCase().includes(searchQuery.toLowerCase()) || v.key.includes(searchQuery);
-    const matchesCategory = selectedCategory === 'all' || v.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return label.toLowerCase().includes(searchQuery.toLowerCase()) || v.key.includes(searchQuery);
   });
 
   const allTemplates = [...REPORT_TEMPLATES, ...customTemplates];
@@ -223,27 +211,14 @@ export default function TemplateSettings({
                 </div>
               )}
 
-              {/* Categories & Search */}
+              {/* Variables Header & Search Bar */}
               <div className="mt-2.5 pt-2 border-t border-slate-800/50">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1 overflow-x-auto text-[10px] scrollbar-none">
-                    {Object.keys(CATEGORY_MAP).map((catKey) => (
-                      <button
-                        key={catKey}
-                        type="button"
-                        onClick={() => setSelectedCategory(catKey)}
-                        className={`px-2 py-0.5 rounded-md whitespace-nowrap transition-all ${
-                          selectedCategory === catKey 
-                            ? 'bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30' 
-                            : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        {isRtl ? CATEGORY_MAP[catKey].ar : CATEGORY_MAP[catKey].en}
-                      </button>
-                    ))}
-                  </div>
+                  <span className="text-[10px] font-semibold text-slate-400">
+                    {isRtl ? 'المتغيرات المتاحة:' : 'Available Variables:'}
+                  </span>
 
-                  <div className="relative w-24 sm:w-32">
+                  <div className="relative w-28 sm:w-36">
                     <Search className="w-3 h-3 absolute right-2 top-1.5 text-slate-500" />
                     <input
                       type="text"
@@ -255,7 +230,7 @@ export default function TemplateSettings({
                   </div>
                 </div>
 
-                {/* Variables List */}
+                {/* Variables Buttons */}
                 <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto scrollbar-thin">
                   {filteredVariables.map((v) => {
                     const varLabel = isRtl ? v.labelAr : v.labelEn;
