@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
+import { formatHijriDate } from '../../utils/dateUtils'; // تأكد من ضبط مسار الملف
 
 export default function SidebarWidget({
   academyTime,
@@ -10,6 +11,9 @@ export default function SidebarWidget({
   setSidebarOpen,
   isRtl
 }) {
+  // حساب التاريخ الهجري بدقة بناءً على لغة الواجهة (isRtl)
+  const formattedHijri = formatHijriDate(new Date(), isRtl);
+
   return (
     <div style={{
       background: '#0f172a',
@@ -61,7 +65,7 @@ export default function SidebarWidget({
           whiteSpace: 'nowrap',
           lineHeight: '1.2'
         }}>
-          {hijri}
+          {formattedHijri}
         </span>
       </div>
 
