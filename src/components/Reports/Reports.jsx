@@ -1,3 +1,4 @@
+// src/components/Reports/Reports.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +7,7 @@ import TemplateSettings from './Reports/TemplateSettings';
 import ReportMetrics from './Reports/ReportMetrics';
 import StudentReportCard from './Reports/StudentReportCard';
 import { getParsedMessage, generateWhatsAppLink } from './reportHelpers';
-import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2, PartyPopper } from 'lucide-react';
+import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2 } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
   const { i18n } = useTranslation();
@@ -54,13 +55,31 @@ export default function Reports({ students = [], academyId }) {
     if (!academyId) return;
     setLoading(true);
     try {
-      const { data: tmplData } = await supabase.from('notification_templates').select('*').eq('academy_id', academyId).eq('trigger_event', 'daily_report').eq('is_active', true).maybeSingle();
+      // 1. جلب قالب الإشعار النشط للأكاديمية
+      const { data: tmplData, error: tmplError } = await supabase
+        .from('notification_templates')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('trigger_event', 'daily_report')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (tmplError) console.error('Error fetching template:', tmplError);
+      
       if (tmplData && tmplData.template_body) {
         setTemplateId(tmplData.id);
         setMessageTemplate(tmplData.template_body);
       }
 
-      const { data: viewData } = await supabase.from('v_daily_reports_status').select('*').eq('academy_id', academyId);
+      // 2. جلب بيانات تقارير الطلاب بالفلترة للتاريخ المحدد لمنع استهلاك البيانات
+      const { data: viewData, error: viewError } = await supabase
+        .from('v_daily_reports_status')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('date', selectedDate);
+
+      if (viewError) console.error('Error fetching daily reports status:', viewError);
+
       const mappedData = {};
       const logsMap = {};
       if (viewData) {
@@ -72,20 +91,29 @@ export default function Reports({ students = [], academyId }) {
       setReportsData(mappedData);
       setSentLogs(logsMap);
     } catch (err) {
-      console.error(err);
+      console.error('Unexpected error fetching report data:', err);
     } finally {
       setLoading(false);
     }
-  }, [academyId]);
+  }, [academyId, selectedDate]);
 
   useEffect(() => {
     fetchReportsAndTemplate();
-  }, [fetchReportsAndTemplate, selectedDate]);
+  }, [fetchReportsAndTemplate]);
 
   const markAsSentInDB = async (studentId, reportText) => {
     setSentLogs(prev => ({ ...prev, [studentId]: true }));
     try {
-      await supabase.from('notification_logs').insert([{ academy_id: academyId, recipient_user_id: studentId, channel_used: 'whatsapp', status: 'sent', sent_text: reportText, template_id: templateId }]);
+      const { error } = await supabase.from('notification_logs').insert([{ 
+        academy_id: academyId, 
+        recipient_user_id: studentId, 
+        channel_used: 'whatsapp', 
+        status: 'sent', 
+        sent_text: reportText, 
+        template_id: templateId 
+      }]);
+      
+      if (error) console.error('Error inserting notification log:', error);
     } catch (err) { console.error(err); }
   };
 
@@ -144,7 +172,11 @@ export default function Reports({ students = [], academyId }) {
 
   return (
     <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', padding: '16px 12px', background: '#090d16', minHeight: '100vh', color: '#f1f5f9' }}>
-      {toastMessage && <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#090d16', padding: '8px 16px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', zIndex: 9999 }}>{toastMessage}</div>}
+      {toastMessage && (
+        <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#090d16', padding: '8px 16px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', zIndex: 9999 }}>
+          {toastMessage}
+        </div>
+      )}
 
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -152,27 +184,63 @@ export default function Reports({ students = [], academyId }) {
             <BookOpen size={18} style={{ color: '#10b981' }} />
           </div>
           <div>
-            <h1 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', margin: 0 }}>{isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}</h1>
+            <h1 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', margin: 0 }}>
+              {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
+            </h1>
           </div>
         </div>
         <ReportDateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
       </div>
 
-      <ReportMetrics totalCount={totalCount} completionPercentage={completionPercentage} remainingCount={remainingCount} unsentCount={unsentStudents.length} onBulkSend={handleBulkSendNext} isRtl={isRtl} />
+      <ReportMetrics 
+        totalCount={totalCount} 
+        completionPercentage={completionPercentage} 
+        remainingCount={remainingCount} 
+        unsentCount={unsentStudents.length} 
+        onBulkSend={handleBulkSendNext} 
+        isRtl={isRtl} 
+      />
 
       <TemplateSettings templateText={messageTemplate} setTemplateText={setMessageTemplate} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-        <input type="text" placeholder={isRtl ? "بحث باسم الطالب..." : "Search..."} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', padding: '8px 10px', borderRadius: '6px', fontSize: '11.5px', outline: 'none' }} />
+        <input 
+          type="text" 
+          placeholder={isRtl ? "بحث باسم الطالب..." : "Search..."} 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+          style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', padding: '8px 10px', borderRadius: '6px', fontSize: '11.5px', outline: 'none' }} 
+        />
         <div style={{ display: 'flex', gap: '4px' }}>
-          {[{ id: 'all', label: isRtl ? "الكل" : "All", icon: Users }, { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: RotateCcw }, { id: 'present', label: isRtl ? "حاضر" : "Present", icon: UserCheck }, { id: 'absent', label: isRtl ? "غائب" : "Absent", icon: UserX }].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ background: activeTab === tab.id ? '#10b981' : '#0f172a', color: activeTab === tab.id ? '#090d16' : '#94a3b8', border: '1px solid #1e293b', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>{tab.label}</button>
+          {[
+            { id: 'all', label: isRtl ? "الكل" : "All", icon: Users }, 
+            { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: RotateCcw }, 
+            { id: 'present', label: isRtl ? "حاضر" : "Present", icon: UserCheck }, 
+            { id: 'absent', label: isRtl ? "غائب" : "Absent", icon: UserX }
+          ].map(tab => (
+            <button 
+              key={tab.id} 
+              onClick={() => setActiveTab(tab.id)} 
+              style={{ 
+                background: activeTab === tab.id ? '#10b981' : '#0f172a', 
+                color: activeTab === tab.id ? '#090d16' : '#94a3b8', 
+                border: '1px solid #1e293b', 
+                padding: '5px 10px', 
+                borderRadius: '6px', 
+                fontSize: '11px', 
+                cursor: 'pointer' 
+              }}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: '#10b981' }}><Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <div style={{ textAlign: 'center', padding: '24px', color: '#10b981' }}>
+          <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredStudents.map(student => (
@@ -194,7 +262,8 @@ export default function Reports({ students = [], academyId }) {
               onStartEditPhone={(id, p) => { setEditingPhoneStudentId(id); setTempPhoneValue(p || ''); }}
               onSavePhone={async (id) => {
                 setSavingPhone(true);
-                await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
+                const { error } = await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
+                if (error) console.error('Error updating phone:', error);
                 setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
                 setEditingPhoneStudentId(null);
                 setSavingPhone(false);
