@@ -11,6 +11,7 @@ export const REPORT_TEMPLATES = [
 📖 الحفظ الجديد: [New_Mem]
 🔄 المراجعة: [Review]
 ⭐️ التقييم: [Rating]
+📝 الملاحظات: [Notes]
 
 شاكرين لكم حسن المتابعة!`
   },
@@ -21,6 +22,7 @@ export const REPORT_TEMPLATES = [
     text: `السلام عليكم ورحمة الله وبركاته، ولي أمر الطالب(ة) [Student_Name] المحترم.
 
 نفيدكم بعدم حضور الابن(ة) لحلقة اليوم [Date].
+حالة الحضور: [Status]
 نرجو الاطمئنان عليه(ا) والتواصل معنا في حال وجود أي عذر.
 
 دمتم بخير.`
@@ -33,7 +35,7 @@ export const REPORT_TEMPLATES = [
 
 تهانينا! أتم الطالب(ة) [Student_Name] اختبار [Test_Name] بنجاح.
 🎯 الدرجة: [Score]
-📝 ملاحظات المعلم: [Teacher_Notes]
+📝 ملاحظات المعلم: [Notes]
 
 بارك الله في جهوده ونفع به!`
   },
@@ -56,6 +58,7 @@ export const AVAILABLE_VARIABLES = [
   { id: '[New_Mem]', labelAr: 'الحفظ', labelEn: 'Memorization' },
   { id: '[Review]', labelAr: 'المراجعة', labelEn: 'Review' },
   { id: '[Rating]', labelAr: 'التقييم', labelEn: 'Rating' },
+  { id: '[Notes]', labelAr: 'الملاحظات', labelEn: 'Notes' },
   { id: '[Test_Name]', labelAr: 'اسم الاختبار', labelEn: 'Test Name' },
   { id: '[Score]', labelAr: 'الدرجة', labelEn: 'Score' }
 ];
