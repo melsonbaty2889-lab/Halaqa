@@ -5,6 +5,15 @@ export const getParsedMessage = ({ student, record, template, formattedDate, isR
   const studentName = safeString(student?.name || student?.student_name || record?.student_name);
   const statusVal = record?.attendance_status || record?.status;
 
+  // معالجة صيغة التاريخ لضمان القبول المباشر للنصوص أو كائنات Date
+  const getDateDisplay = () => {
+    if (!formattedDate) return new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US');
+    if (formattedDate instanceof Date) {
+      return formattedDate.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US');
+    }
+    return formattedDate;
+  };
+
   const getStatusText = () => {
     if (!record || !statusVal) return isRtl ? 'حاضر ✅' : 'Present ✅';
     switch (statusVal) {
@@ -34,7 +43,7 @@ export const getParsedMessage = ({ student, record, template, formattedDate, isR
   // خريطة الوسوم العالمية الموحدة
   const replaceMap = {
     '{{student_name}}': studentName || (isRtl ? 'اسم الطالب' : 'Student Name'),
-    '{{date}}': formattedDate || new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US'),
+    '{{date}}': getDateDisplay(),
     '{{status}}': getStatusText(),
     '{{memorization}}': safeString(record?.new_memorization || record?.memorization) || (statusVal === 'absent' ? '---' : (isRtl ? 'لم يتم التسميع' : 'No recitation')),
     '{{review}}': safeString(record?.review) || '---',
