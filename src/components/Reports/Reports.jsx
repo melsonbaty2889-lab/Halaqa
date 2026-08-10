@@ -218,7 +218,11 @@ export default function Reports({ students = [], academyId }) {
         isRtl={isRtl} 
       />
 
-      <TemplateSettings templateText={messageTemplate} setTemplateText={setMessageTemplate} />
+      <TemplateSettings 
+        templateText={messageTemplate} 
+        setTemplateText={setMessageTemplate} 
+        formattedDate={formattedDateString} 
+      />
 
       <div className="flex flex-col gap-2.5 my-4">
         <div className="relative w-full">
