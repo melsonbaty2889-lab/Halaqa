@@ -6,13 +6,14 @@ import TemplateSettings from './TemplateSettings';
 import ReportMetrics from './ReportMetrics';
 import StudentReportCard from './StudentReportCard';
 import { getParsedMessage, generateWhatsAppLink } from './ReportHelpers';
-import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2 } from 'lucide-react';
+import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2, Search } from 'lucide-react';
 
 export default function Reports({ students = [], academyId }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
+  // تحصين تحويل المدخلات إلى نصوص آمنة
   const safeString = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string') return val;
@@ -21,7 +22,8 @@ export default function Reports({ students = [], academyId }) {
     return String(val);
   }, [currentLang]);
 
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // حالات الصفحة
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [reportsData, setReportsData] = useState({});
   const [templateId, setTemplateId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,29 +33,41 @@ export default function Reports({ students = [], academyId }) {
   const [sentLogs, setSentLogs] = useState({});
   const [toastMessage, setToastMessage] = useState('');
   
+  // حالات تعديل أرقام الهواتف
   const [editingPhoneStudentId, setEditingPhoneStudentId] = useState(null);
   const [tempPhoneValue, setTempPhoneValue] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
   const [localPhoneMap, setLocalPhoneMap] = useState({});
 
+  // قالب الرسالة
   const [messageTemplate, setMessageTemplate] = useState('');
 
-  const showToast = (msg) => {
+  // عرض الإشعارات السريعة (Toast)
+  const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 2500);
-  };
+  }, []);
 
+  // تنسيق تاريخ اليوم المختار للعرض
   const formattedDateString = useMemo(() => {
     if (!selectedDate) return '';
     try {
-      return new Date(selectedDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch { return selectedDate; }
+      return new Date(selectedDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    } catch { 
+      return selectedDate; 
+    }
   }, [selectedDate, isRtl]);
 
+  // جلب بيانات التقارير والقوالب من Supabase مع تحصين ضد القيم الفارغة
   const fetchReportsAndTemplate = useCallback(async () => {
     if (!academyId) return;
     setLoading(true);
     try {
+      // 1. جلب القالب النشط
       const { data: tmplData } = await supabase
         .from('notification_templates')
         .select('*')
@@ -67,24 +81,33 @@ export default function Reports({ students = [], academyId }) {
         setMessageTemplate(tmplData.template_body);
       }
 
-      const { data: viewData } = await supabase
+      // 2. جلب تقارير اليوم المحدد
+      const { data: viewData, error } = await supabase
         .from('v_daily_reports_status')
         .select('*')
         .eq('academy_id', academyId)
         .eq('date', selectedDate);
 
+      if (error) throw error;
+
       const mappedData = {};
       const logsMap = {};
-      if (viewData) {
-        viewData.forEach(rec => {
+
+      // تحصين القائمة المقروءة لتفادي الانهيار
+      const safeViewData = Array.isArray(viewData) ? viewData : [];
+      safeViewData.forEach(rec => {
+        if (rec && rec.student_id) {
           mappedData[rec.student_id] = rec;
           if (rec.is_sent) logsMap[rec.student_id] = true;
-        });
-      }
+        }
+      });
+
       setReportsData(mappedData);
       setSentLogs(logsMap);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching reports data:', err);
+      setReportsData({});
+      setSentLogs({});
     } finally {
       setLoading(false);
     }
@@ -94,6 +117,7 @@ export default function Reports({ students = [], academyId }) {
     fetchReportsAndTemplate();
   }, [fetchReportsAndTemplate]);
 
+  // تسجيل الإرسال في قاعدة البيانات محليًا وسحابيًا
   const markAsSentInDB = async (studentId, reportText) => {
     setSentLogs(prev => ({ ...prev, [studentId]: true }));
     try {
@@ -105,9 +129,12 @@ export default function Reports({ students = [], academyId }) {
         sent_text: reportText, 
         template_id: templateId 
       }]);
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error('Error recording notification log:', err); 
+    }
   };
 
+  // إرسال التقرير عبر واتساب
   const handleSendWhatsApp = (student, record) => {
     const text = getParsedMessage({ student, record, template: messageTemplate, formattedDate: formattedDateString, isRtl, safeString });
     const phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone || record?.parent_phone);
@@ -116,20 +143,27 @@ export default function Reports({ students = [], academyId }) {
     window.open(link, '_blank');
   };
 
+  // نسخ التقرير إلى الحافظة
   const handleCopyToClipboard = (student, record) => {
     const text = getParsedMessage({ student, record, template: messageTemplate, formattedDate: formattedDateString, isRtl, safeString });
     navigator.clipboard.writeText(text);
     setCopiedId(student.id);
     markAsSentInDB(student.id, text);
-    showToast(isRtl ? "تم نسخ التقرير بنجاح" : "Report copied");
+    showToast(isRtl ? "تم نسخ التقرير بنجاح" : "Report copied to clipboard");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // تحصين مصفوفة الطلاب الأساسية
+  const safeStudents = useMemo(() => Array.isArray(students) ? students : [], [students]);
+
+  // تصفية الطلاب حسب التبويب والبحث مع التحصين
   const filteredStudents = useMemo(() => {
     const cleanSearch = safeString(searchTerm).toLowerCase().trim();
-    return (students || []).filter(student => {
+    return safeStudents.filter(student => {
+      if (!student) return false;
       const rec = reportsData[student.id];
       const status = rec?.attendance_status || rec?.status || 'present';
+      
       let matchesTab = true;
       if (activeTab === 'present') matchesTab = (status === 'present' || status === 'late');
       else if (activeTab === 'absent') matchesTab = (status === 'absent' || status === 'excused');
@@ -140,15 +174,18 @@ export default function Reports({ students = [], academyId }) {
 
       return matchesTab && (!cleanSearch || studentName.includes(cleanSearch) || parentPhone.includes(cleanSearch));
     });
-  }, [students, reportsData, activeTab, searchTerm, sentLogs, safeString, localPhoneMap]);
+  }, [safeStudents, reportsData, activeTab, searchTerm, sentLogs, safeString, localPhoneMap]);
 
+  // قائمة الطلاب المتبقيين للإرسال المتتابع
   const unsentStudents = useMemo(() => {
-    return (students || []).filter(student => {
+    return safeStudents.filter(student => {
+      if (!student) return false;
       const phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone);
       return !sentLogs[student.id] && phone;
     });
-  }, [students, sentLogs, localPhoneMap, safeString]);
+  }, [safeStudents, sentLogs, localPhoneMap, safeString]);
 
+  // الإرسال المتتابع للطالب التالي
   const handleBulkSendNext = () => {
     if (unsentStudents.length === 0) return;
     const nextStudent = unsentStudents[0];
@@ -156,33 +193,42 @@ export default function Reports({ students = [], academyId }) {
     handleSendWhatsApp(nextStudent, rec);
   };
 
-  const totalCount = students.length;
+  // الإحصائيات العامة الحالية
+  const totalCount = safeStudents.length;
   const sentCount = Object.keys(sentLogs).length;
   const remainingCount = Math.max(0, totalCount - sentCount);
   const completionPercentage = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
 
   return (
-    <div style={{ direction: isRtl ? 'rtl' : 'ltr', width: '100%', padding: '16px 12px', background: '#090d16', minHeight: '100vh', color: '#f1f5f9' }}>
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'} 
+      className="w-full min-h-screen bg-[#090d16] text-slate-100 p-3 sm:p-5 font-sans"
+    >
+      {/* Toast Notification */}
       {toastMessage && (
-        <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#090d16', padding: '8px 16px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', zIndex: 9999 }}>
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-full text-xs shadow-lg z-[9999] animate-fade-in">
           {toastMessage}
         </div>
       )}
 
-      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <BookOpen size={18} style={{ color: '#10b981' }} />
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <BookOpen className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h1 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', margin: 0 }}>
+            <h1 className="text-base font-bold text-white leading-tight">
               {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
             </h1>
           </div>
         </div>
+        
+        {/* Date Picker Selector */}
         <ReportDateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
       </div>
 
+      {/* Metrics Banner */}
       <ReportMetrics 
         totalCount={totalCount} 
         completionPercentage={completionPercentage} 
@@ -192,48 +238,64 @@ export default function Reports({ students = [], academyId }) {
         isRtl={isRtl} 
       />
 
+      {/* Dynamic Template Editor Component */}
       <TemplateSettings templateText={messageTemplate} setTemplateText={setMessageTemplate} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-        <input 
-          type="text" 
-          placeholder={isRtl ? "بحث باسم الطالب..." : "Search..."} 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)} 
-          style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', padding: '8px 10px', borderRadius: '6px', fontSize: '11.5px', outline: 'none' }} 
-        />
-        <div style={{ display: 'flex', gap: '4px' }}>
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col gap-2.5 my-4">
+        <div className="relative w-full">
+          <Search className={`w-4 h-4 absolute top-3 text-slate-500 ${isRtl ? 'right-3' : 'left-3'}`} />
+          <input 
+            type="text" 
+            placeholder={isRtl ? "بحث باسم الطالب أو رقم الهاتف..." : "Search by student name or phone..."} 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            className={`w-full bg-slate-900 border border-slate-800 rounded-lg py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
+              isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
+            }`}
+          />
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {[
             { id: 'all', label: isRtl ? "الكل" : "All", icon: Users }, 
             { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: RotateCcw }, 
             { id: 'present', label: isRtl ? "حاضر" : "Present", icon: UserCheck }, 
             { id: 'absent', label: isRtl ? "غائب" : "Absent", icon: UserX }
-          ].map(tab => (
-            <button 
-              key={tab.id} 
-              onClick={() => setActiveTab(tab.id)} 
-              style={{ 
-                background: activeTab === tab.id ? '#10b981' : '#0f172a', 
-                color: activeTab === tab.id ? '#090d16' : '#94a3b8', 
-                border: '1px solid #1e293b', 
-                padding: '5px 10px', 
-                borderRadius: '6px', 
-                fontSize: '11px', 
-                cursor: 'pointer' 
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+          ].map(tab => {
+            const IconComponent = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id)} 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border ${
+                  isActive
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <IconComponent className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* Main Content Area */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: '#10b981' }}>
-          <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
+        <div className="flex flex-col items-center justify-center py-12 text-emerald-400">
+          <Loader2 className="w-7 h-7 animate-spin mb-2" />
+          <span className="text-xs text-slate-400">{isRtl ? 'جاري تحميل التقارير...' : 'Loading reports...'}</span>
+        </div>
+      ) : filteredStudents.length === 0 ? (
+        <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-slate-800 text-slate-400 text-xs">
+          {isRtl ? 'لا توجد نتائج مطابقة للبحث أو الفلتر المحدد.' : 'No matching records found.'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="flex flex-col gap-2.5">
           {filteredStudents.map(student => (
             <StudentReportCard
               key={student.id}
@@ -249,14 +311,20 @@ export default function Reports({ students = [], academyId }) {
               safeString={safeString}
               onCopy={handleCopyToClipboard}
               onSendWhatsApp={handleSendWhatsApp}
-              onResetSent={(id) => setSentLogs(p => { const c = {...p}; delete c[id]; return c; })}
+              onResetSent={(id) => setSentLogs(p => { const c = { ...p }; delete c[id]; return c; })}
               onStartEditPhone={(id, p) => { setEditingPhoneStudentId(id); setTempPhoneValue(p || ''); }}
               onSavePhone={async (id) => {
                 setSavingPhone(true);
-                await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
-                setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
-                setEditingPhoneStudentId(null);
-                setSavingPhone(false);
+                try {
+                  await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
+                  setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
+                  setEditingPhoneStudentId(null);
+                  showToast(isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated");
+                } catch (err) {
+                  console.error('Failed to update phone number:', err);
+                } finally {
+                  setSavingPhone(false);
+                }
               }}
               onCancelEditPhone={() => setEditingPhoneStudentId(null)}
               setTempPhoneValue={setTempPhoneValue}
