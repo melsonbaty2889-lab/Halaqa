@@ -1,5 +1,5 @@
 /* src/components/ActiveHalaqas.jsx */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   User, 
@@ -13,14 +13,14 @@ import {
   X,
   Video,
   Radio,
-  Users
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 
 export default function ActiveHalaqas({ 
   halaqas = [], 
   teachers = [], 
   isLoading = false, 
-  error = null, 
   isMobile = false,
   onCreateHalaqa, 
   onToggleArchiveHalaqa,
@@ -34,32 +34,41 @@ export default function ActiveHalaqas({
   const [viewMode, setViewMode] = useState('active'); 
   const [searchQuery, setSearchQuery] = useState('');
 
+  // تحديد المنطقة الزمنية التلقائية للمستخدم
+  const userTimezone = useMemo(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    } catch {
+      return 'UTC';
+    }
+  }, []);
+
   const [formData, setFormData] = useState({
     name_ar: '', 
     name_en: '', 
     teacher_id: '', 
     start_time: '16:00', 
-    end_time: '18:00', 
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    end_time: '17:15', 
+    timezone: userTimezone,
     status: 'active',
     educational_track: 'hifz',
     teaching_type: 'online',
     max_students: 15
   });
 
-  const getLocalizedText = (val, fallback = '') => {
+  const getLocalizedText = useCallback((val, fallback = '') => {
     if (!val) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
       return val[currentLang] || val['ar'] || val['en'] || Object.values(val)[0] || fallback;
     }
     return String(val);
-  };
+  }, [currentLang]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name_ar && !formData.name_en) {
-      alert(t('errRequired', 'يرجى إدخال اسم الحلقة وتعيين المحفظ'));
+      alert(t('errRequired', 'يرجى إدخال اسم الحلقة وتعيين المعلم المسؤول'));
       return;
     }
     
@@ -74,9 +83,8 @@ export default function ActiveHalaqas({
     if (onCreateHalaqa) {
       onCreateHalaqa(payload);
       setFormData({
-        name_ar: '', name_en: '', teacher_id: '', start_time: '16:00', end_time: '18:00', 
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        status: 'active', educational_track: 'hifz', teaching_type: 'online', max_students: 15
+        name_ar: '', name_en: '', teacher_id: '', start_time: '16:00', end_time: '17:15', 
+        timezone: userTimezone, status: 'active', educational_track: 'hifz', teaching_type: 'online', max_students: 15
       });
       setShowForm(false);
     }
@@ -90,13 +98,13 @@ export default function ActiveHalaqas({
       const teacherName = getLocalizedText(h.teacher_name || h.teacher).toLowerCase();
       return matchesView && (!query || circleName.includes(query) || teacherName.includes(query));
     });
-  }, [halaqas, viewMode, searchQuery, currentLang]);
+  }, [halaqas, viewMode, searchQuery, getLocalizedText]);
 
   if (isLoading) {
     return (
       <div className="p-6 rounded-2xl border border-slate-800 bg-[#0b1329] animate-pulse flex flex-col gap-4">
         <div className="h-6 bg-slate-800 rounded w-1/3"></div>
-        <div className="h-20 bg-slate-800/50 rounded-xl"></div>
+        <div className="h-24 bg-slate-800/40 rounded-xl"></div>
       </div>
     );
   }
@@ -104,18 +112,19 @@ export default function ActiveHalaqas({
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} className={`p-5 md:p-6 rounded-2xl border border-slate-800/80 bg-[#0b1329] text-slate-100 shadow-2xl transition-all duration-300 ${isRtl ? 'text-right' : 'text-left'}`}>
       
-      {/* 🟢 الهيدر الرئيسي التفاعلي */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center pb-4 border-b border-slate-800/80">
+      {/* 🟢 الهيدر الرئيسي الحديث */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center pb-5 border-b border-slate-800/80">
         <div>
-          <h3 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2">
-            <Radio className="text-amber-400 animate-pulse" size={20} />
-            {t('halaqasManager', 'منظومة إدارة الحلقات القرآنية والتعليمية')}
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 font-mono">
-              {currentLang.toUpperCase()}
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
+              <Radio size={18} className="animate-pulse" />
             </span>
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">
-            {t('halaqaSub', 'إدارة الصفوف، ربط المحفظين، ومتابعة هيكلة الحلقات عبر السحابة')}
+            <h3 className="text-lg md:text-xl font-bold text-white tracking-wide">
+              {t('halaqasManager', 'منصة إدارة الحلقات القرآنية والأكاديمية')}
+            </h3>
+          </div>
+          <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            {t('halaqaSub', 'إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً')}
           </p>
         </div>
 
@@ -123,7 +132,7 @@ export default function ActiveHalaqas({
           <button
             onClick={() => setShowForm(!showForm)}
             className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              showForm ? 'bg-slate-800 text-slate-300' : 'bg-amber-400 text-slate-950 hover:bg-amber-500 shadow-lg shadow-amber-400/10'
+              showForm ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-amber-400 text-slate-950 hover:bg-amber-500 shadow-lg shadow-amber-400/10'
             }`}
           >
             {showForm ? <X size={14} /> : <Plus size={14} />}
@@ -139,28 +148,28 @@ export default function ActiveHalaqas({
             }`}
           >
             <Archive size={14} />
-            {viewMode === 'active' ? t('viewArchived', 'أرشيف الحلقات') : t('viewActive', 'الحلقات النشطة')}
+            {viewMode === 'active' ? t('viewArchived', 'الأرشيف') : t('viewActive', 'الحلقات النشطة')}
           </button>
         </div>
       </div>
 
-      {/* 📝 نموذج إنشاء حلقة جديدة مع دعم المناطق الزمنية */}
+      {/* 📝 نموذج إنشاء حلقة مخصص كلياً */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="p-5 my-4 rounded-xl border border-amber-400/20 bg-slate-900/90 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-5 my-5 rounded-2xl border border-amber-400/20 bg-slate-900/90 grid grid-cols-1 md:grid-cols-2 gap-4 shadow-xl">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('nameAr', 'اسم الحلقة (بالعربية)')}</label>
-            <input type="text" required placeholder={t('exAr', 'حلقة الإمام عاصم')} value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400" />
+            <label className="text-xs font-medium text-slate-300">{t('nameAr', 'اسم الحلقة (بالعربية)')}</label>
+            <input type="text" required placeholder="مثال: حلقة الإمام الشاطبي" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400 transition-colors" />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('nameEn', 'اسم الحلقة (بالإنجليزية)')}</label>
-            <input type="text" placeholder={t('exEn', 'Al-Asim Quran Circle')} value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400" />
+            <label className="text-xs font-medium text-slate-300">{t('nameEn', 'اسم الحلقة (بالإنجليزية)')}</label>
+            <input type="text" placeholder="e.g. Al-Shatibi Quran Circle" value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400 transition-colors" />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('assignTeacher', 'تعيين المعلم / المحفظ المسؤول')}</label>
+            <label className="text-xs font-medium text-slate-300">{t('assignTeacher', 'تعيين المعلم المسؤول')}</label>
             <select required value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="">{t('selectTeacher', '-- اختر المعلم من الأكاديمية --')}</option>
+              <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
               {teachers.map(teacher => (
                 <option key={teacher.id} value={teacher.id}>{getLocalizedText(teacher.name || teacher.full_name)}</option>
               ))}
@@ -168,54 +177,58 @@ export default function ActiveHalaqas({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('track', 'المسار التعليمي')}</label>
+            <label className="text-xs font-medium text-slate-300">{t('track', 'المسار التعليمي')}</label>
             <select value={formData.educational_track} onChange={e => setFormData({...formData, educational_track: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="hifz">{t('trackHifz', 'تحفيظ وتجويد (Hifz)')}</option>
-              <option value="tilawah">{t('trackTilawah', 'تلاوة وتصحيح (Tilawah)')}</option>
+              <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
+              <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
+              <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300">{t('startTime', 'وقت البدء')}</label>
-              <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono" />
+              <label className="text-xs font-medium text-slate-300">{t('startTime', 'وقت البدء')}</label>
+              <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono outline-none focus:border-amber-400" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300">{t('endTime', 'وقت الانتهاء')}</label>
-              <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono" />
+              <label className="text-xs font-medium text-slate-300">{t('endTime', 'وقت الانتهاء')}</label>
+              <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono outline-none focus:border-amber-400" />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('timezone', 'المنطقة الزمنية للحلقة')}</label>
-            <input type="text" readOnly value={formData.timezone} className="p-3 text-sm rounded-xl bg-slate-950/50 border border-slate-800/80 text-slate-400 font-mono text-xs" />
+            <label className="text-xs font-medium text-slate-300">{t('timezone', 'المنطقة الزمنية النظامية')}</label>
+            <div className="p-3 text-xs rounded-xl bg-slate-950/60 border border-slate-800 text-slate-400 font-mono flex items-center gap-2">
+              <Globe size={14} className="text-amber-400" />
+              <span>{formData.timezone}</span>
+            </div>
           </div>
 
           <div className="md:col-span-2 pt-2">
-            <button type="submit" className="w-full p-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-500 transition-all shadow-lg">
-              {t('btnSave', 'اعتماد الحلقة وحفظ البيانات')}
+            <button type="submit" className="w-full p-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-500 transition-all shadow-lg shadow-amber-400/10">
+              {t('btnSave', 'اعتماد الحلقة وتأكيد الجدولة')}
             </button>
           </div>
         </form>
       )}
 
-      {/* 🔍 شريط البحث العالمي */}
-      <div className="relative my-4">
+      {/* 🔍 شريط البحث الاحترافي */}
+      <div className="relative my-5">
         <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-4' : 'left-4'}`} size={16} />
         <input 
           type="text" 
-          placeholder={t('searchPh', 'ابحث باسم الحلقة أو اسم المحفظ المكلف...')}
+          placeholder={t('searchPh', 'ابحث باسم الحلقة أو اسم المعلم المكلف...')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className={`w-full p-3.5 ${isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-sm rounded-xl bg-slate-900/60 border border-slate-800 text-white outline-none focus:border-amber-400/40 transition-colors placeholder:text-slate-500`}
         />
       </div>
 
-      {/* 📊 عرض شبكي عالمي للحلقات (Cards Grid) */}
+      {/* 📊 عرض شبكي متجاوب ومصمم عالمياً (Cards System) */}
       {filteredHalaqas.length === 0 ? (
-        <div className="py-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/20">
+        <div className="py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
           <FolderOpen className="mx-auto text-slate-600 mb-2" size={32} />
-          <p className="text-slate-400 text-xs font-medium">{t('noData', 'لا توجد حلقات مسجلة تطابق البحث حالياً')}</p>
+          <p className="text-slate-400 text-xs font-medium">{t('noData', 'لا توجد جلسات تعليمية مسجلة طابق بحثك حالياً')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -225,19 +238,19 @@ export default function ActiveHalaqas({
               <div>
                 <div className="flex justify-between items-start gap-2 mb-2">
                   <h4 className="text-sm font-bold text-white leading-snug">{getLocalizedText(halaqa.name)}</h4>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium whitespace-nowrap">
-                    {t('live', 'نشطة')}
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium whitespace-nowrap">
+                    {t('activeSession', 'جلسة نشطة')}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
                   <User size={13} className="text-amber-400 shrink-0" />
-                  <span className="truncate">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'غير معين'))}</span>
+                  <span className="truncate">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'بانتظار تعيين معتمد'))}</span>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
-                  <Clock size={12} className="shrink-0" />
-                  <span>{halaqa.start_time || '16:00'} - {halaqa.end_time || '18:00'}</span>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                  <Clock size={12} className="shrink-0 text-slate-500" />
+                  <span>{halaqa.start_time || '16:00'} - {halaqa.end_time || '17:15'}</span>
                   <span className="text-[9px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">
                     {halaqa.timezone || 'UTC'}
                   </span>
@@ -247,15 +260,15 @@ export default function ActiveHalaqas({
               <div className="flex items-center gap-2 border-t border-slate-800/80 pt-3">
                 <button 
                   onClick={() => onNavigateToAttendance?.(halaqa.id)} 
-                  className="flex-1 py-2 px-3 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-500 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-500 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-400/5"
                 >
-                  <Video size={13} />
-                  {t('goToAttendance', 'غرفة التسميع الحي')}
+                  <Video size={14} />
+                  {t('goToAttendance', 'الانضمام للجلسة المباشرة')}
                 </button>
 
                 <button 
                   onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} 
-                  className="px-2.5 py-2 rounded-lg border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 text-xs transition-all"
+                  className="px-3 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 text-xs transition-all"
                 >
                   {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
                 </button>
