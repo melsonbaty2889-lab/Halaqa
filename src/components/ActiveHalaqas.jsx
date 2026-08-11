@@ -10,7 +10,10 @@ import {
   Search, 
   BookOpen, 
   Globe, 
-  X 
+  X,
+  Video,
+  Radio,
+  Users
 } from 'lucide-react';
 
 export default function ActiveHalaqas({ 
@@ -23,20 +26,9 @@ export default function ActiveHalaqas({
   onToggleArchiveHalaqa,
   onNavigateToAttendance 
 }) {
-  // 🌍 ربط المكون مباشرة بمحرك i18next العام للمشروع
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = i18n.dir(currentLang) === 'rtl' || currentLang === 'ar';
-
-  // 🛡️ استخلاص الاسم المطلوب طبقاً للغة الحالية من كائن JSONB أو النص
-  const getLocalizedText = (val, fallback = '') => {
-    if (!val) return fallback;
-    if (typeof val === 'string' || typeof val === 'number') return String(val);
-    if (typeof val === 'object') {
-      return val[currentLang] || val['ar'] || val['en'] || Object.values(val)[0] || fallback;
-    }
-    return String(val);
-  };
 
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState('active'); 
@@ -48,11 +40,21 @@ export default function ActiveHalaqas({
     teacher_id: '', 
     start_time: '16:00', 
     end_time: '18:00', 
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     status: 'active',
     educational_track: 'hifz',
     teaching_type: 'online',
     max_students: 15
   });
+
+  const getLocalizedText = (val, fallback = '') => {
+    if (!val) return fallback;
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object') {
+      return val[currentLang] || val['ar'] || val['en'] || Object.values(val)[0] || fallback;
+    }
+    return String(val);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -73,6 +75,7 @@ export default function ActiveHalaqas({
       onCreateHalaqa(payload);
       setFormData({
         name_ar: '', name_en: '', teacher_id: '', start_time: '16:00', end_time: '18:00', 
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         status: 'active', educational_track: 'hifz', teaching_type: 'online', max_students: 15
       });
       setShowForm(false);
@@ -99,13 +102,14 @@ export default function ActiveHalaqas({
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className={`p-5 md:p-6 rounded-2xl border border-slate-800 bg-[#0b1329] text-slate-100 shadow-2xl transition-all duration-300 ${isRtl ? 'text-right' : 'text-left'}`}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className={`p-5 md:p-6 rounded-2xl border border-slate-800/80 bg-[#0b1329] text-slate-100 shadow-2xl transition-all duration-300 ${isRtl ? 'text-right' : 'text-left'}`}>
       
-      {/* 🟢 الهيدر الرئيسي المتفاعل مع i18n */}
+      {/* 🟢 الهيدر الرئيسي التفاعلي */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center pb-4 border-b border-slate-800/80">
         <div>
           <h3 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2">
-            <span>🕌</span> {t('halaqasManager', 'منظومة إدارة الحلقات القرآنية والتعليمية')}
+            <Radio className="text-amber-400 animate-pulse" size={20} />
+            {t('halaqasManager', 'منظومة إدارة الحلقات القرآنية والتعليمية')}
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 font-mono">
               {currentLang.toUpperCase()}
             </span>
@@ -140,7 +144,7 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 📝 نموذج الإنشاء */}
+      {/* 📝 نموذج إنشاء حلقة جديدة مع دعم المناطق الزمنية */}
       {showForm && (
         <form onSubmit={handleSubmit} className="p-5 my-4 rounded-xl border border-amber-400/20 bg-slate-900/90 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
@@ -164,15 +168,6 @@ export default function ActiveHalaqas({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('halaqaStatus', 'الحالة التشغيلية الأولية')}</label>
-            <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="active">{t('stLive', 'نشطة / جارية 🟢')}</option>
-              <option value="upcoming">{t('stUpcoming', 'قادمة / مجدولة 🟡')}</option>
-              <option value="finished">{t('stFinished', 'مكتملة ⚪')}</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-300">{t('track', 'المسار التعليمي')}</label>
             <select value={formData.educational_track} onChange={e => setFormData({...formData, educational_track: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
               <option value="hifz">{t('trackHifz', 'تحفيظ وتجويد (Hifz)')}</option>
@@ -191,15 +186,20 @@ export default function ActiveHalaqas({
             </div>
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-300">{t('timezone', 'المنطقة الزمنية للحلقة')}</label>
+            <input type="text" readOnly value={formData.timezone} className="p-3 text-sm rounded-xl bg-slate-950/50 border border-slate-800/80 text-slate-400 font-mono text-xs" />
+          </div>
+
           <div className="md:col-span-2 pt-2">
             <button type="submit" className="w-full p-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-500 transition-all shadow-lg">
-              {t('btnSave', 'اعتماد الحلقة وحفظ البيانات في السحابة 🚀')}
+              {t('btnSave', 'اعتماد الحلقة وحفظ البيانات')}
             </button>
           </div>
         </form>
       )}
 
-      {/* 🔍 البحث */}
+      {/* 🔍 شريط البحث العالمي */}
       <div className="relative my-4">
         <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-4' : 'left-4'}`} size={16} />
         <input 
@@ -207,79 +207,62 @@ export default function ActiveHalaqas({
           placeholder={t('searchPh', 'ابحث باسم الحلقة أو اسم المحفظ المكلف...')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className={`w-full p-3.5 ${isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-sm rounded-xl bg-slate-900/60 border border-slate-800 text-white outline-none focus:border-slate-700 transition-colors placeholder:text-slate-500`}
+          className={`w-full p-3.5 ${isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-sm rounded-xl bg-slate-900/60 border border-slate-800 text-white outline-none focus:border-amber-400/40 transition-colors placeholder:text-slate-500`}
         />
       </div>
 
-      {/* 📊 قائمة الحلقات */}
+      {/* 📊 عرض شبكي عالمي للحلقات (Cards Grid) */}
       {filteredHalaqas.length === 0 ? (
         <div className="py-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/20">
           <FolderOpen className="mx-auto text-slate-600 mb-2" size={32} />
           <p className="text-slate-400 text-xs font-medium">{t('noData', 'لا توجد حلقات مسجلة تطابق البحث حالياً')}</p>
         </div>
-      ) : isMobile ? (
-        <div className="flex flex-col gap-3">
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredHalaqas.map((halaqa) => (
-            <div key={halaqa.id} className="p-4 rounded-xl border border-slate-800 bg-slate-900/40 flex flex-col gap-3">
-              <div className="flex justify-between items-start gap-2">
-                <div>
-                  <h4 className="text-sm font-bold text-white">{getLocalizedText(halaqa.name)}</h4>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
-                    <User size={12} className="text-amber-400" />
-                    <span>{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'غير معين'))}</span>
-                  </div>
+            <div key={halaqa.id} className="p-4 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 transition-all flex flex-col justify-between gap-4">
+              
+              <div>
+                <div className="flex justify-between items-start gap-2 mb-2">
+                  <h4 className="text-sm font-bold text-white leading-snug">{getLocalizedText(halaqa.name)}</h4>
+                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium whitespace-nowrap">
+                    {t('live', 'نشطة')}
+                  </span>
                 </div>
-                <button onClick={() => onNavigateToAttendance?.(halaqa.id)} className="px-3 py-1.5 rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/20 text-xs font-bold flex items-center gap-1">
-                  <BookOpen size={12} /> {t('goToAttendance', 'غرفة التسميع الحي 🚀')}
-                </button>
+
+                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                  <User size={13} className="text-amber-400 shrink-0" />
+                  <span className="truncate">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'غير معين'))}</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
+                  <Clock size={12} className="shrink-0" />
+                  <span>{halaqa.start_time || '16:00'} - {halaqa.end_time || '18:00'}</span>
+                  <span className="text-[9px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">
+                    {halaqa.timezone || 'UTC'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between border-t border-slate-800/60 pt-2 text-[11px] text-slate-400">
-                <span className="font-mono">⏰ {halaqa.start_time || '16:00'} - {halaqa.end_time || '18:00'}</span>
-                <button onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} className="text-xs text-red-400 hover:underline">
+
+              <div className="flex items-center gap-2 border-t border-slate-800/80 pt-3">
+                <button 
+                  onClick={() => onNavigateToAttendance?.(halaqa.id)} 
+                  className="flex-1 py-2 px-3 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-500 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <Video size={13} />
+                  {t('goToAttendance', 'غرفة التسميع الحي')}
+                </button>
+
+                <button 
+                  onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} 
+                  className="px-2.5 py-2 rounded-lg border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 text-xs transition-all"
+                >
                   {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
                 </button>
               </div>
+
             </div>
           ))}
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-800">
-          <table className={`w-full border-collapse bg-slate-900/30 text-xs ${isRtl ? 'text-right' : 'text-left'}`}>
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
-                <th className="p-3.5">{t('tHalaqa', 'الحلقة / المسار')}</th>
-                <th className="p-3.5">{t('tTeach', 'المحفظ المسؤول')}</th>
-                <th className="p-3.5">{t('tTime', 'التوقيت الزمني')}</th>
-                <th className="p-3.5">{t('tStatus', 'الحالة')}</th>
-                <th className="p-3.5 text-center">{t('tAction', 'التحكم')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/50 text-slate-200">
-              {filteredHalaqas.map((halaqa) => (
-                <tr key={halaqa.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="p-3.5 font-bold text-white">
-                    {getLocalizedText(halaqa.name)}
-                    <span className="block text-[10px] text-slate-500 font-normal uppercase">{halaqa.educational_track || 'Hifz'}</span>
-                  </td>
-                  <td className="p-3.5 text-slate-400">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'غير معين'))}</td>
-                  <td className="p-3.5 font-mono text-slate-400">{halaqa.start_time || '16:00'} - {halaqa.end_time || '18:00'}</td>
-                  <td className="p-3.5">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                      {t('live', 'نشطة')}
-                    </span>
-                  </td>
-                  <td className="p-3.5 flex items-center justify-center gap-2">
-                    <button onClick={() => onNavigateToAttendance?.(halaqa.id)} className="px-3 py-1.5 rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/20 font-bold flex items-center gap-1.5">
-                      <BookOpen size={13} /> {t('goToAttendance', 'غرفة التسميع الحي 🚀')}
-                    </button>
-                    <button onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10">
-                      {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
     </div>
