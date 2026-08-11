@@ -102,7 +102,7 @@ export default function ActiveHalaqas({
 
   if (isLoading) {
     return (
-      <div className="p-6 rounded-2xl border border-slate-800 bg-[#0b1329] animate-pulse flex flex-col gap-4">
+      <div className="p-6 rounded-2xl border border-slate-800 bg-dark-bg animate-pulse flex flex-col gap-4">
         <div className="h-6 bg-slate-800 rounded w-1/3"></div>
         <div className="h-24 bg-slate-800/40 rounded-xl"></div>
       </div>
