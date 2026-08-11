@@ -1,5 +1,6 @@
 /* src/components/ActiveHalaqas.jsx */
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   User, 
   Clock, 
@@ -7,9 +8,9 @@ import {
   Plus, 
   Archive, 
   Search, 
-  BookOpen,
-  Globe,
-  X
+  BookOpen, 
+  Globe, 
+  X 
 } from 'lucide-react';
 
 export default function ActiveHalaqas({ 
@@ -17,23 +18,25 @@ export default function ActiveHalaqas({
   teachers = [], 
   isLoading = false, 
   error = null, 
-  currentLang = 'ar', // 'ar' أو 'en'
   isMobile = false,
   onCreateHalaqa, 
   onToggleArchiveHalaqa,
   onNavigateToAttendance 
 }) {
-  const isRtl = currentLang === 'ar' || currentLang === 'ur';
+  // 🌍 ربط المكون مباشرة بمحرك i18next العام للمشروع
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
+  const isRtl = i18n.dir(currentLang) === 'rtl' || currentLang === 'ar';
 
-  // 🛡️ استخلاص النصوص الديناميكية للغات
-  const getLocalizedText = useCallback((val, fallback = '') => {
-    if (val === null || val === undefined) return fallback;
+  // 🛡️ استخلاص الاسم المطلوب طبقاً للغة الحالية من كائن JSONB أو النص
+  const getLocalizedText = (val, fallback = '') => {
+    if (!val) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      return val[currentLang] || val['ar'] || val['en'] || Object.values(val).find(v => typeof v === 'string') || fallback;
+      return val[currentLang] || val['ar'] || val['en'] || Object.values(val)[0] || fallback;
     }
     return String(val);
-  }, [currentLang]);
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState('active'); 
@@ -48,88 +51,13 @@ export default function ActiveHalaqas({
     status: 'active',
     educational_track: 'hifz',
     teaching_type: 'online',
-    max_students: 15,
-    language_code: currentLang
+    max_students: 15
   });
-
-  // 🌐 القاموس الشامل للترجمة الواجهية (عربي / إنجليزي)
-  const dict = {
-    ar: {
-      title: 'منظومة إدارة الحلقات القرآنية والتعليمية',
-      sub: 'إدارة الصفوف، ربط المحفظين، ومتابعة هيكلة الحلقات عبر السحابة',
-      addBtn: 'إنشاء حلقة جديدة',
-      closeBtn: 'إغلاق',
-      archivedBtn: 'أرشيف الحلقات',
-      activeBtn: 'الحلقات النشطة',
-      searchPh: 'ابحث باسم الحلقة أو اسم المحفظ المكلف...',
-      nameArLabel: 'اسم الحلقة (بالعربية)',
-      nameEnLabel: 'اسم الحلقة (بالإنجليزية)',
-      teacherLabel: 'تعيين المعلم / المحفظ المسؤول',
-      selectTeacher: '-- اختر المعلم من الأكاديمية --',
-      statusLabel: 'الحالة التشغيلية الأولية',
-      stLive: 'نشطة / جارية',
-      stUpcoming: 'قادمة / مجدولة',
-      stFinished: 'مكتملة',
-      trackLabel: 'المسار التعليمي',
-      trackHifz: 'تحفيظ وتجويد (Hifz)',
-      trackTilawah: 'تلاوة وتصحيح (Tilawah)',
-      startTime: 'وقت البدء',
-      endTime: 'وقت الانتهاء',
-      saveBtn: 'اعتماد الحلقة وحفظ البيانات في السحابة 🚀',
-      roomBtn: 'غرفة التسميع الحي 🚀',
-      archiveAction: 'أرشفة',
-      activateAction: 'تنشيط',
-      unassigned: 'غير معين',
-      noData: 'لا توجد حلقات مسجلة تطابق البحث حالياً',
-      colHalaqa: 'الحلقة / المسار',
-      colTeacher: 'المحفظ المسؤول',
-      colTime: 'التوقيت الزمني',
-      colStatus: 'الحالة',
-      colAction: 'التحكم',
-      errReq: 'يرجى إدخال اسم الحلقة وتحديد المحفظ'
-    },
-    en: {
-      title: 'Quranic & Educational Circles Management',
-      sub: 'Manage classes, assign reciters, and monitor circle structure via Cloud',
-      addBtn: 'Create New Circle',
-      closeBtn: 'Close',
-      archivedBtn: 'Archived Circles',
-      activeBtn: 'Active Circles',
-      searchPh: 'Search by circle name or assigned teacher...',
-      nameArLabel: 'Circle Name (Arabic)',
-      nameEnLabel: 'Circle Name (English)',
-      teacherLabel: 'Assign Teacher / Reciter',
-      selectTeacher: '-- Select Academy Teacher --',
-      statusLabel: 'Initial Status',
-      stLive: 'Active / Live',
-      stUpcoming: 'Upcoming',
-      stFinished: 'Finished',
-      trackLabel: 'Educational Track',
-      trackHifz: 'Memorization (Hifz)',
-      trackTilawah: 'Recitation (Tilawah)',
-      startTime: 'Start Time',
-      endTime: 'End Time',
-      saveBtn: 'Save & Deploy to Cloud 🚀',
-      roomBtn: 'Live Recitation Room 🚀',
-      archiveAction: 'Archive',
-      activateAction: 'Activate',
-      unassigned: 'Unassigned',
-      noData: 'No learning circles match your query',
-      colHalaqa: 'Circle / Track',
-      colTeacher: 'Teacher',
-      colTime: 'Schedule',
-      colStatus: 'Status',
-      colAction: 'Actions',
-      errReq: 'Please enter circle name and assign a teacher'
-    }
-  };
-
-  const t = (key) => dict[currentLang]?.[key] || dict['en'][key] || key;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name_ar && !formData.name_en) {
-      alert(t('errReq'));
+      alert(t('errRequired', 'يرجى إدخال اسم الحلقة وتعيين المحفظ'));
       return;
     }
     
@@ -144,8 +72,8 @@ export default function ActiveHalaqas({
     if (onCreateHalaqa) {
       onCreateHalaqa(payload);
       setFormData({
-        name_ar: '', name_en: '', teacher_id: '', start_time: '16:00', end_time: '18:00', status: 'active',
-        educational_track: 'hifz', teaching_type: 'online', max_students: 15, language_code: currentLang
+        name_ar: '', name_en: '', teacher_id: '', start_time: '16:00', end_time: '18:00', 
+        status: 'active', educational_track: 'hifz', teaching_type: 'online', max_students: 15
       });
       setShowForm(false);
     }
@@ -159,11 +87,11 @@ export default function ActiveHalaqas({
       const teacherName = getLocalizedText(h.teacher_name || h.teacher).toLowerCase();
       return matchesView && (!query || circleName.includes(query) || teacherName.includes(query));
     });
-  }, [halaqas, viewMode, searchQuery, getLocalizedText]);
+  }, [halaqas, viewMode, searchQuery, currentLang]);
 
   if (isLoading) {
     return (
-      <div className="p-6 rounded-2xl border border-slate-800 bg-[#0f172a] animate-pulse flex flex-col gap-4">
+      <div className="p-6 rounded-2xl border border-slate-800 bg-[#0b1329] animate-pulse flex flex-col gap-4">
         <div className="h-6 bg-slate-800 rounded w-1/3"></div>
         <div className="h-20 bg-slate-800/50 rounded-xl"></div>
       </div>
@@ -171,18 +99,20 @@ export default function ActiveHalaqas({
   }
 
   return (
-    <div className={`p-5 md:p-6 rounded-2xl border border-slate-800 bg-[#0b1329] text-slate-100 shadow-2xl ${isRtl ? 'rtl' : 'ltr'}`}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className={`p-5 md:p-6 rounded-2xl border border-slate-800 bg-[#0b1329] text-slate-100 shadow-2xl transition-all duration-300 ${isRtl ? 'text-right' : 'text-left'}`}>
       
-      {/* 🟢 الهيدر العلوي */}
+      {/* 🟢 الهيدر الرئيسي المتفاعل مع i18n */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center pb-4 border-b border-slate-800/80">
         <div>
           <h3 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2">
-            <span>🕌</span> {t('title')}
+            <span>🕌</span> {t('halaqasManager', 'منظومة إدارة الحلقات القرآنية والتعليمية')}
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 font-mono">
               {currentLang.toUpperCase()}
             </span>
           </h3>
-          <p className="text-xs text-slate-400 mt-1">{t('sub')}</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {t('halaqaSub', 'إدارة الصفوف، ربط المحفظين، ومتابعة هيكلة الحلقات عبر السحابة')}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -193,7 +123,7 @@ export default function ActiveHalaqas({
             }`}
           >
             {showForm ? <X size={14} /> : <Plus size={14} />}
-            {showForm ? t('closeBtn') : t('addBtn')}
+            {showForm ? t('close', 'إغلاق') : t('addHalaqa', 'إنشاء حلقة جديدة')}
           </button>
           
           <button
@@ -205,28 +135,28 @@ export default function ActiveHalaqas({
             }`}
           >
             <Archive size={14} />
-            {viewMode === 'active' ? t('archivedBtn') : t('activeBtn')}
+            {viewMode === 'active' ? t('viewArchived', 'أرشيف الحلقات') : t('viewActive', 'الحلقات النشطة')}
           </button>
         </div>
       </div>
 
-      {/* 📝 نموذج الإنشاء المتوافق مع الإنجليزي والعربي */}
+      {/* 📝 نموذج الإنشاء */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="p-5 my-4 rounded-xl border border-amber-400/20 bg-slate-900/90 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+        <form onSubmit={handleSubmit} className="p-5 my-4 rounded-xl border border-amber-400/20 bg-slate-900/90 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('nameArLabel')}</label>
-            <input type="text" required placeholder="حلقة الإمام عاصم" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400" />
+            <label className="text-xs font-semibold text-slate-300">{t('nameAr', 'اسم الحلقة (بالعربية)')}</label>
+            <input type="text" required placeholder={t('exAr', 'حلقة الإمام عاصم')} value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400" />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('nameEnLabel')}</label>
-            <input type="text" placeholder="Al-Asim Quran Circle" value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400" />
+            <label className="text-xs font-semibold text-slate-300">{t('nameEn', 'اسم الحلقة (بالإنجليزية)')}</label>
+            <input type="text" placeholder={t('exEn', 'Al-Asim Quran Circle')} value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400" />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('teacherLabel')}</label>
+            <label className="text-xs font-semibold text-slate-300">{t('assignTeacher', 'تعيين المعلم / المحفظ المسؤول')}</label>
             <select required value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="">{t('selectTeacher')}</option>
+              <option value="">{t('selectTeacher', '-- اختر المعلم من الأكاديمية --')}</option>
               {teachers.map(teacher => (
                 <option key={teacher.id} value={teacher.id}>{getLocalizedText(teacher.name || teacher.full_name)}</option>
               ))}
@@ -234,35 +164,37 @@ export default function ActiveHalaqas({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('statusLabel')}</label>
+            <label className="text-xs font-semibold text-slate-300">{t('halaqaStatus', 'الحالة التشغيلية الأولية')}</label>
             <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="active">{t('stLive')}</option>
-              <option value="upcoming">{t('stUpcoming')}</option>
-              <option value="finished">{t('stFinished')}</option>
+              <option value="active">{t('stLive', 'نشطة / جارية 🟢')}</option>
+              <option value="upcoming">{t('stUpcoming', 'قادمة / مجدولة 🟡')}</option>
+              <option value="finished">{t('stFinished', 'مكتملة ⚪')}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300">{t('trackLabel')}</label>
+            <label className="text-xs font-semibold text-slate-300">{t('track', 'المسار التعليمي')}</label>
             <select value={formData.educational_track} onChange={e => setFormData({...formData, educational_track: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="hifz">{t('trackHifz')}</option>
-              <option value="tilawah">{t('trackTilawah')}</option>
+              <option value="hifz">{t('trackHifz', 'تحفيظ وتجويد (Hifz)')}</option>
+              <option value="tilawah">{t('trackTilawah', 'تلاوة وتصحيح (Tilawah)')}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300">{t('startTime')}</label>
+              <label className="text-xs font-semibold text-slate-300">{t('startTime', 'وقت البدء')}</label>
               <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300">{t('endTime')}</label>
+              <label className="text-xs font-semibold text-slate-300">{t('endTime', 'وقت الانتهاء')}</label>
               <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono" />
             </div>
           </div>
 
           <div className="md:col-span-2 pt-2">
-            <button type="submit" className="w-full p-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-500 transition-all shadow-lg">{t('saveBtn')}</button>
+            <button type="submit" className="w-full p-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-500 transition-all shadow-lg">
+              {t('btnSave', 'اعتماد الحلقة وحفظ البيانات في السحابة 🚀')}
+            </button>
           </div>
         </form>
       )}
@@ -272,18 +204,18 @@ export default function ActiveHalaqas({
         <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-4' : 'left-4'}`} size={16} />
         <input 
           type="text" 
-          placeholder={t('searchPh')}
+          placeholder={t('searchPh', 'ابحث باسم الحلقة أو اسم المحفظ المكلف...')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className={`w-full p-3.5 ${isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-sm rounded-xl bg-slate-900/60 border border-slate-800 text-white outline-none focus:border-slate-700 transition-colors placeholder:text-slate-500`}
         />
       </div>
 
-      {/* 📊 عرض القائمة (تجاوبي) */}
+      {/* 📊 قائمة الحلقات */}
       {filteredHalaqas.length === 0 ? (
         <div className="py-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/20">
           <FolderOpen className="mx-auto text-slate-600 mb-2" size={32} />
-          <p className="text-slate-400 text-xs font-medium">{t('noData')}</p>
+          <p className="text-slate-400 text-xs font-medium">{t('noData', 'لا توجد حلقات مسجلة تطابق البحث حالياً')}</p>
         </div>
       ) : isMobile ? (
         <div className="flex flex-col gap-3">
@@ -294,17 +226,17 @@ export default function ActiveHalaqas({
                   <h4 className="text-sm font-bold text-white">{getLocalizedText(halaqa.name)}</h4>
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
                     <User size={12} className="text-amber-400" />
-                    <span>{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned'))}</span>
+                    <span>{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'غير معين'))}</span>
                   </div>
                 </div>
                 <button onClick={() => onNavigateToAttendance?.(halaqa.id)} className="px-3 py-1.5 rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/20 text-xs font-bold flex items-center gap-1">
-                  <BookOpen size={12} /> {t('roomBtn')}
+                  <BookOpen size={12} /> {t('goToAttendance', 'غرفة التسميع الحي 🚀')}
                 </button>
               </div>
               <div className="flex items-center justify-between border-t border-slate-800/60 pt-2 text-[11px] text-slate-400">
                 <span className="font-mono">⏰ {halaqa.start_time || '16:00'} - {halaqa.end_time || '18:00'}</span>
                 <button onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} className="text-xs text-red-400 hover:underline">
-                  {viewMode === 'active' ? t('archiveAction') : t('activateAction')}
+                  {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
                 </button>
               </div>
             </div>
@@ -315,11 +247,11 @@ export default function ActiveHalaqas({
           <table className={`w-full border-collapse bg-slate-900/30 text-xs ${isRtl ? 'text-right' : 'text-left'}`}>
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
-                <th className="p-3.5">{t('colHalaqa')}</th>
-                <th className="p-3.5">{t('colTeacher')}</th>
-                <th className="p-3.5">{t('colTime')}</th>
-                <th className="p-3.5">{t('colStatus')}</th>
-                <th className="p-3.5 text-center">{t('colAction')}</th>
+                <th className="p-3.5">{t('tHalaqa', 'الحلقة / المسار')}</th>
+                <th className="p-3.5">{t('tTeach', 'المحفظ المسؤول')}</th>
+                <th className="p-3.5">{t('tTime', 'التوقيت الزمني')}</th>
+                <th className="p-3.5">{t('tStatus', 'الحالة')}</th>
+                <th className="p-3.5 text-center">{t('tAction', 'التحكم')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50 text-slate-200">
@@ -329,19 +261,19 @@ export default function ActiveHalaqas({
                     {getLocalizedText(halaqa.name)}
                     <span className="block text-[10px] text-slate-500 font-normal uppercase">{halaqa.educational_track || 'Hifz'}</span>
                   </td>
-                  <td className="p-3.5 text-slate-400">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned'))}</td>
+                  <td className="p-3.5 text-slate-400">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'غير معين'))}</td>
                   <td className="p-3.5 font-mono text-slate-400">{halaqa.start_time || '16:00'} - {halaqa.end_time || '18:00'}</td>
                   <td className="p-3.5">
                     <span className="px-2.5 py-1 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                      {t('stLive')}
+                      {t('live', 'نشطة')}
                     </span>
                   </td>
                   <td className="p-3.5 flex items-center justify-center gap-2">
                     <button onClick={() => onNavigateToAttendance?.(halaqa.id)} className="px-3 py-1.5 rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/20 font-bold flex items-center gap-1.5">
-                      <BookOpen size={13} /> {t('roomBtn')}
+                      <BookOpen size={13} /> {t('goToAttendance', 'غرفة التسميع الحي 🚀')}
                     </button>
                     <button onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10">
-                      {viewMode === 'active' ? t('archiveAction') : t('activateAction')}
+                      {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
                     </button>
                   </td>
                 </tr>
