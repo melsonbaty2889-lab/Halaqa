@@ -9,6 +9,7 @@ import {
   Flame, Star, Search, X, MessageSquare
 } from 'lucide-react';
 import QuranProgressBar from '@/components/QuranProgress/QuranProgressBar';
+import AddStudentModal from '@/components/Student/AddStudentModal'; // 🚀 استيراد مودال إضافة الطالب
 
 export default function StudentsList({ 
   academyId, 
@@ -24,6 +25,9 @@ export default function StudentsList({
   const [internalHalaqas, setInternalHalaqas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+
+  // 🚀 حالة التحكم في إظهار أو إخفاء مودال إضافة طالب جديد
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const students = propStudents || internalStudents;
   const halaqas = propHalaqas || internalHalaqas;
@@ -216,9 +220,10 @@ export default function StudentsList({
           {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
         </button>
 
+        {/* 🚀 زر فتح مودال إضافة طالب بدل الانتقال لصفحة خارجية */}
         <button
           type="button"
-          onClick={() => navigate('/students/new')}
+          onClick={() => setIsAddModalOpen(true)}
           style={{
             padding: '10px 8px',
             fontSize: '13px',
@@ -582,6 +587,16 @@ export default function StudentsList({
           })}
         </div>
       )}
+
+      {/* 🚀 إدراج نافذة إضافة طالب المنبثقة وتمرير القائمة والحلقات وتحديث حالة الطلاب فوراً */}
+      <AddStudentModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        halaqasList={halaqas}
+        onStudentAdded={(newStudent) => {
+          setStudents(prev => [newStudent, ...prev]);
+        }}
+      />
     </div>
   );
 }
