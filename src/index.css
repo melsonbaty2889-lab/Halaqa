@@ -7,13 +7,13 @@
 
 @layer base {
   :root {
-    /* الخلفيات والأسطح الداكنة (مطابقة لـ colors.js) */
+    /* الخلفيات والأسطح الداكنة الموحدة */
     --bg-dark: #070C12;
     --surface-dark: #111C2A;
     --surface-card: #0F172A;
     --surface-input: #090F16;
 
-    /* الهوية البصرية (البرتقالي العنبري والزمردي) */
+    /* الهوية البصرية الرئيسية */
     --primary: #D97706;
     --primary-hover: #B45309;
     --primary-glow: rgba(217, 119, 6, 0.25);
@@ -21,7 +21,7 @@
     --emerald: #10B981;
     --emerald-teal: #0F766E;
 
-    /* النصوص والحدود */
+    /* النصوص والحدود الموحدة */
     --text-main: #F8FAFC;
     --text-muted: #94A3B8;
     --border-light: #1E293B;
@@ -48,6 +48,7 @@
     scroll-behavior: smooth;
   }
 
+  /* توحيد الخط المعتمد لجميع العناصر التفاعلية */
   button, input, select, textarea {
     font-family: 'Cairo', sans-serif !important;
   }
@@ -63,14 +64,17 @@
     flex-direction: column;
   }
 
+  /* دعم اللغات اللاتينية والإنجليزية تلقائياً */
+  [dir="ltr"],
   [dir="ltr"] body,
   [dir="ltr"] button,
   [dir="ltr"] input,
   [dir="ltr"] textarea,
   [dir="ltr"] select {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   }
 
+  /* شريط التمرير الموحد */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -79,7 +83,7 @@
     background: var(--bg-dark);
   }
   ::-webkit-scrollbar-thumb {
-    background: #1E293B;
+    background: var(--border-light);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -88,10 +92,11 @@
 }
 
 @layer components {
+  /* 📦 1. أسطح البطاقات والحاويات الموحدة */
   .card-surface {
-    background: var(--surface-card);
-    border-radius: 12px;
-    padding: 20px;
+    background-color: var(--surface-card);
+    border-radius: 0.75rem; /* 12px */
+    padding: 1.25rem; /* 20px */
     box-shadow: var(--shadow-main);
     border: 1px solid var(--border-light);
   }
@@ -103,43 +108,89 @@
     border: 1px solid var(--border-light);
   }
 
-  .auth-input {
+  /* ✏️ 2. مدخلات البيانات الموحدة لكافة الصفحات (وليس فقط Login) */
+  .app-input {
     width: 100%;
     background-color: var(--surface-input);
     border: 1px solid var(--border-input);
     color: var(--text-main);
     border-radius: 0.75rem;
     padding: 0.75rem 1rem;
+    font-size: 0.875rem;
     transition: all 0.2s ease-in-out;
   }
 
-  .auth-input:focus {
+  .app-input:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-glow);
   }
 
-  .auth-input-error {
+  .app-input-error {
     border-color: var(--danger) !important;
   }
 
-  .auth-input-error:focus {
+  .app-input-error:focus {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
   }
 
+  /* 🔘 3. الأزرار الموحدة للمشروع */
+  .btn-primary {
+    background-color: var(--primary);
+    color: #070C12;
+    font-weight: 700;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 15px var(--primary-glow);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--surface-dark);
+    color: var(--text-main);
+    border-color: var(--border-input);
+  }
+
+  /* 🏷️ 4. الشارات والحالات (Badges) */
+  .badge-active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--emerald);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* 🖼️ 5. النوافذ المنبثقة والبحث */
   .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.82);
     backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    padding: 16px;
+    padding: 1rem;
   }
 
   .modal-content {
@@ -147,8 +198,8 @@
     max-width: 420px;
     background-color: var(--surface-dark);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
-    padding: 24px;
+    border-radius: 1rem;
+    padding: 1.5rem;
     box-shadow: var(--shadow-main);
   }
 
@@ -160,28 +211,15 @@
   .search-dropdown {
     position: absolute;
     top: calc(100% + 6px);
-    right: 0;
-    left: 0;
+    inset-x: 0;
     width: 100%;
     background-color: var(--surface-card);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    border-radius: 0.625rem;
     max-height: 220px;
     overflow-y: auto;
     z-index: 1000;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-  }
-
-  .card-actions-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .transition-all {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
