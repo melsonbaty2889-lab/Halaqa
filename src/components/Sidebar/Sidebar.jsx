@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { X } from "lucide-react";
-import { colors as C } from '@/constants/colors'; // استيراد الألوان الموحدة
+import { colors as C } from '@/constants/colors';
 
 import AcademySelector from './AcademySelector';
 import SidebarWidget from './SidebarWidget';
@@ -42,6 +42,14 @@ export default function Sidebar({
       return isRtl ? (val.ar || val.en || '') : (val.en || val.ar || '');
     }
     return '';
+  };
+
+  // إغلاق القائمة تلقائياً عند تغيير التبويب في الشاشات الصغيرة
+  const handleSelectTab = (tabId) => {
+    setActiveTab(tabId);
+    if (isMobile && typeof setSidebarOpen === 'function') {
+      setSidebarOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -218,12 +226,13 @@ export default function Sidebar({
   }).filter(section => section.items.length > 0);
 
   const sidebarStyles = {
-    position: isMobile ? 'fixed' : 'relative',
+    position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
+    height: '100vh',
     [isRtl ? 'right' : 'left']: 0,
-    width: isMobile ? 'min(300px, 84vw)' : '280px',
-    backgroundColor: C.dark.surface, // خلفية القائمة الموحدة
+    width: isMobile ? 'min(280px, 80vw)' : '280px',
+    backgroundColor: C.dark.surface,
     borderLeft: isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
     borderRight: !isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
     display: 'flex',
@@ -232,21 +241,22 @@ export default function Sidebar({
     transform: isMobile && !sidebarOpen 
       ? (isRtl ? 'translateX(100%)' : 'translateX(-100%)') 
       : 'translateX(0)',
-    transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: isMobile && sidebarOpen ? '0 0 35px rgba(0,0,0,0.85)' : 'none',
+    transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+    boxShadow: isMobile && sidebarOpen ? '0 0 40px rgba(0,0,0,0.85)' : 'none',
     boxSizing: 'border-box',
     userSelect: 'none'
   };
 
   return (
     <>
+      {/* غطاء خلفي عند فتح القائمة على الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
             backdropFilter: 'blur(4px)',
             zIndex: 999
           }}
@@ -265,12 +275,12 @@ export default function Sidebar({
             borderBottom: `1px solid ${C.dark.border}` 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <SmartHalaqaProLogo size={36} />
+              <SmartHalaqaProLogo size={34} />
               <div>
-                <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: C.text.title, lineHeight: '1.2' }}>
+                <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: C.text.title, lineHeight: '1.2' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
-                <span style={{ fontSize: '0.65rem', color: C.text.muted, fontWeight: '500' }}>
+                <span style={{ fontSize: '0.62rem', color: C.text.muted, fontWeight: '500' }}>
                   {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
               </div>
@@ -279,7 +289,17 @@ export default function Sidebar({
             {isMobile && (
               <button 
                 onClick={() => setSidebarOpen(false)}
-                style={{ background: 'none', border: 'none', color: C.text.muted, cursor: 'pointer', padding: '4px' }}
+                style={{ 
+                  background: 'rgba(255,255,255,0.05)', 
+                  border: `1px solid ${C.dark.border}`, 
+                  borderRadius: '6px',
+                  color: C.text.muted, 
+                  cursor: 'pointer', 
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
                 <X size={18} />
               </button>
@@ -302,7 +322,7 @@ export default function Sidebar({
           <SidebarWidget
             academyTime={academyTime}
             hijri={hijri}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSelectTab}
             setShowEarlyUpgrade={setShowEarlyUpgrade}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
@@ -321,7 +341,7 @@ export default function Sidebar({
             toggleSection={toggleSection}
             searchQuery={searchQuery}
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSelectTab}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
             getText={getText}
