@@ -69,7 +69,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
       const userId = session?.user?.id;
       if (!userId) throw new Error('جلسة المستخدم غير صالحة. يرجى إعادة تسجيل الدخول.');
 
-      // 1. إدراج الأكاديمية (الاسم يمرر كـ JSONB لدعم تعدد اللغات)
+      // 1. إدراج الأكاديمية بنجاح
       const { data: academy, error: academyError } = await supabase
         .from('academies')
         .insert([{
@@ -94,7 +94,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
 
       createdAcademyId = academy.id;
 
-      // 2. تحديث البروفايل الأساسي في جدول profiles أولاً
+      // 2. تحديث ملف المستخدم الأساسي في جدول profiles
       setStatusMessage('جاري ضبط الصلاحيات والملف الشخصي...');
       const { error: profileError } = await supabase
         .from('profiles')
@@ -107,7 +107,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
 
       if (profileError) throw profileError;
 
-      // 3. إضافة سجل الإدارة في جدول staff
+      // 3. إضافة سجل الإدارة في جدول staff بشكل آمن
       setStatusMessage('جاري ربط حسابكم الإداري بالأكاديمية...');
       const { error: staffError } = await supabase
         .from('staff')
@@ -116,21 +116,22 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
           academy_id: createdAcademyId,
           name: session?.user?.user_metadata?.full_name || formData.name.trim(),
           role: 'owner',
-        }, { onConflict: 'id' });
+        }, { onConflict: 'user_id,academy_id' });
 
       if (staffError) console.warn('Staff record creation warning:', staffError.message);
 
-      // 4. إنشاء فترة تجريبية تلقائية في جدول saas_subscriptions
+      // 4. إدراج خطة الاشتراك التجريبية (7 أيام متوافق مع الافتراضي)
+      const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       await supabase.from('saas_subscriptions').insert([{
         academy_id: createdAcademyId,
         payer_id: userId,
         plan_tier: 'trial',
         status: 'trialing',
-        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        trial_ends_at: trialEndDate,
         currency: formData.currency
       }]);
 
-      // 5. تحديث الـ Metadata في Auth Session
+      // 5. تحديث جلسة المستخدم وتطبيق التغييرات
       setStatusMessage('جاري إنهاء التأسيس والتحويل للوحة التحكم...');
       await supabase.auth.updateUser({
         data: { academy_id: createdAcademyId, role: 'owner' }
@@ -142,7 +143,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
     } catch (err) {
       console.error('CreateAcademy Process Error:', err);
       
-      // التراجع وحذف الأكاديمية في حال حدوث خطأ أثناء الخطوات
+      // التراجع وحذف الأكاديمية في حال حدوث أي خطأ أثنار الخطوات
       if (createdAcademyId) {
         await supabase.from('academies').delete().eq('id', createdAcademyId);
       }
