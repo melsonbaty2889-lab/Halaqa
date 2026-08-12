@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, Save, Globe, Mail, 
   Database, RefreshCw, CheckCircle2, Upload, 
-  Download, Image as ImageIcon, AlertCircle, Trash2, Palette
+  Download, Image as ImageIcon, AlertCircle, Trash2, Palette, Phone, Calendar
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase.js';
+import colors from '@/constants/colors.js';
 
 export default function Settings({ currentAcademyId, isRtl = true }) {
   const [activeTab, setActiveTab] = useState('identity');
@@ -15,7 +16,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     website: '',
     email: '',
     phone: '',
-    brand_color: '#C9A84C',
+    brand_color: colors.gold.DEFAULT,
     currency: 'EGP',
     timezone: 'Africa/Cairo',
     calendar_type: 'gregorian',
@@ -68,7 +69,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           website: data.website || '',
           email: data.email || '',
           phone: data.phone || '',
-          brand_color: data.brand_color || '#C9A84C',
+          brand_color: data.brand_color || colors.gold.DEFAULT,
           currency: data.currency || 'EGP',
           timezone: data.timezone || 'Africa/Cairo',
           calendar_type: data.calendar_type || 'gregorian',
@@ -238,7 +239,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #111e2e 0%, #0c1520 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#C9A84C' }}>
+      <div style={{ minHeight: '100vh', background: colors.dark.bg, display: 'flex', justifyContent: 'center', alignItems: 'center', color: colors.primary.DEFAULT }}>
         <RefreshCw className="animate-spin" size={32} />
       </div>
     );
@@ -247,7 +248,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(circle at top, #111e2e 0%, #0c1520 100%)',
+      background: colors.gradients.pageBackground,
       padding: '24px 16px',
       direction: isRtl ? 'rtl' : 'ltr',
       fontFamily: "'Cairo', system-ui, sans-serif"
@@ -255,9 +256,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       <div style={{
         maxWidth: '850px',
         margin: '0 auto',
-        background: 'rgba(21, 35, 50, 0.92)',
+        background: colors.dark.card,
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(201, 168, 76, 0.25)',
+        border: `1px solid ${colors.dark.border}`,
         borderRadius: '24px',
         padding: '28px 24px',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
@@ -265,7 +266,21 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         
         {/* التنبيهات Toast */}
         {toast && (
-          <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, padding: '12px 20px', borderRadius: '12px', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', background: toast.type === 'error' ? '#e11d48' : '#059669', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
+          <div style={{ 
+            position: 'fixed', 
+            bottom: '24px', 
+            right: '24px', 
+            zIndex: 9999, 
+            padding: '12px 20px', 
+            borderRadius: '12px', 
+            color: colors.text.title, 
+            fontWeight: 'bold', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            background: toast.type === 'error' ? colors.error.DEFAULT : colors.brandEmerald.DEFAULT, 
+            boxShadow: '0 10px 25px rgba(0,0,0,0.5)' 
+          }}>
             {toast.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
             {toast.message}
           </div>
@@ -273,44 +288,44 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
         {/* الهيدر الرئيسي */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#fff', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-            <Building2 size={26} color="#C9A84C" /> إعدادات المنظومة
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: colors.text.title, margin: '0 0 6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <Building2 size={26} color={colors.gold.DEFAULT} /> إعدادات المنظومة
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: 0 }}>
+          <p style={{ color: colors.text.muted, fontSize: '0.82rem', margin: 0 }}>
             إدارة هوية الأكاديمية، الخيارات الإقليمية والنسخ الاحتياطي
           </p>
         </div>
 
         {/* كارت المعاينة */}
-        <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '16px', background: '#0c1520', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '16px', background: colors.dark.surface, border: `1px solid ${colors.dark.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '50px', height: '50px', borderRadius: '12px', border: '1px solid #C9A84C', background: 'rgba(21, 35, 50, 0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <div style={{ width: '50px', height: '50px', borderRadius: '12px', border: `1px solid ${colors.brandEmerald.DEFAULT}`, background: colors.dark.input, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               {formData.logo_url ? (
                 <img src={formData.logo_url} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <Building2 color="#64748B" size={24} />
+                <Building2 color={colors.text.placeholder} size={24} />
               )}
             </div>
             <div>
-              <span style={{ fontSize: '0.68rem', fontWeight: '700', color: '#C9A84C', textTransform: 'uppercase' }}>معاينة هوية المنظومة</span>
-              <h3 style={{ fontSize: '1rem', fontWeight: '800', color: '#fff', margin: '2px 0' }}>{formData.name || 'اسم الأكاديمية'}</h3>
-              <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: '700', color: colors.gold.DEFAULT, textTransform: 'uppercase' }}>معاينة هوية المنظومة</span>
+              <h3 style={{ fontSize: '1rem', fontWeight: '800', color: colors.text.title, margin: '2px 0' }}>{formData.name || 'اسم الأكاديمية'}</h3>
+              <p style={{ fontSize: '0.75rem', color: colors.text.muted, margin: 0 }}>
                 {formData.slug ? `https://${formData.slug}.academy.com` : 'لم يتم تحديد المعرّف'}
               </p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <span style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '20px', background: colors.dark.buttonDark, color: colors.text.body, border: `1px solid ${colors.dark.borderLight}` }}>
               العملة: {formData.currency}
             </span>
-            <span style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '20px', background: colors.brandEmerald.bgGlow, color: colors.brandEmerald.DEFAULT, border: `1px solid ${colors.brandEmerald.border}`, fontWeight: '700' }}>
               نشط
             </span>
           </div>
         </div>
 
         {/* تبويبات التنقل */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: `1px solid ${colors.dark.border}`, paddingBottom: '12px', overflowX: 'auto' }}>
           {[
             { id: 'identity', label: 'الهوية والبصريات', icon: Building2 },
             { id: 'regional', label: 'التواصل والإقليمية', icon: Globe },
@@ -333,8 +348,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   gap: '6px',
                   cursor: 'pointer',
                   border: 'none',
-                  background: isActive ? 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)' : '#0c1520',
-                  color: isActive ? '#0c1520' : '#94a3b8'
+                  whiteSpace: 'nowrap',
+                  background: isActive ? colors.primary.DEFAULT : colors.dark.surface,
+                  color: isActive ? colors.text.title : colors.text.muted
                 }}
               >
                 <Icon size={15} />
@@ -348,47 +364,47 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           {/* تبويب الهوية والبصريات */}
           {activeTab === 'identity' && (
             <>
-              <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#C9A84C', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ background: colors.dark.surface, padding: '20px', borderRadius: '16px', border: `1px solid ${colors.dark.border}` }}>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: colors.gold.DEFAULT, margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Building2 size={18} /> البيانات الأساسية
                 </h2>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>اسم الأكاديمية *</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>اسم الأكاديمية *</label>
                     <input type="text" value={formData.name} onChange={handleNameChange} placeholder="أكاديمية الفرقان" className="settings-input" />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>المعرّف الفريد (Slug)</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>المعرّف الفريد (Slug)</label>
                     <input type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} placeholder="alfurqan" className="settings-input" style={{ direction: 'ltr' }} />
                   </div>
                 </div>
 
                 {/* رفع الشعار */}
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#C9A84C', marginBottom: '8px' }}>شعار الأكاديمية (Logo)</label>
-                  <div style={{ border: '1px dashed rgba(201, 168, 76, 0.4)', borderRadius: '14px', padding: '16px', background: 'rgba(21, 35, 50, 0.92)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.gold.DEFAULT, marginBottom: '8px' }}>شعار الأكاديمية (Logo)</label>
+                  <div style={{ border: `1px dashed ${colors.brandEmerald.border}`, borderRadius: '14px', padding: '16px', background: colors.dark.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {formData.logo_url ? (
                         <div style={{ position: 'relative' }}>
-                          <img src={formData.logo_url} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }} />
-                          <button type="button" onClick={handleRemoveLogo} style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer' }}>
+                          <img src={formData.logo_url} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: `1px solid ${colors.dark.border}` }} />
+                          <button type="button" onClick={handleRemoveLogo} style={{ position: 'absolute', top: '-6px', right: '-6px', background: colors.error.DEFAULT, color: colors.text.title, border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer' }}>
                             <Trash2 size={12} />
                           </button>
                         </div>
                       ) : (
-                        <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#0c1520', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                        <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: colors.dark.surface, border: `1px solid ${colors.dark.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.text.placeholder }}>
                           <ImageIcon size={24} />
                         </div>
                       )}
                       <div>
-                        <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '700', color: '#e2e8f0' }}>اختر صورة الشعار الرسمية</p>
-                        <p style={{ margin: '2px 0 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>يدعم PNG, JPG حتى 2 ميجابايت</p>
+                        <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '700', color: colors.text.heading }}>اختر صورة الشعار الرسمية</p>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '0.72rem', color: colors.text.muted }}>يدعم PNG, JPG حتى 2 ميجابايت</p>
                       </div>
                     </div>
 
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingLogo} style={{ padding: '8px 16px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingLogo} style={{ padding: '8px 16px', borderRadius: '10px', background: colors.dark.buttonDark, border: `1px solid ${colors.dark.border}`, color: colors.text.title, fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {uploadingLogo ? <RefreshCw className="animate-spin" size={14} /> : <Upload size={14} />}
                       {uploadingLogo ? 'جاري الرفع...' : 'رفع شعار جديد'}
                     </button>
@@ -396,20 +412,20 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>الموقع الإلكتروني</label>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>الموقع الإلكتروني</label>
                   <input type="text" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://academy.com" className="settings-input" style={{ direction: 'ltr' }} />
                 </div>
               </div>
 
-              <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#C9A84C', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ background: colors.dark.surface, padding: '20px', borderRadius: '16px', border: `1px solid ${colors.dark.border}` }}>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: colors.gold.DEFAULT, margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Palette size={18} /> لون الهوية الرسمية (Branding)
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <input type="color" value={formData.brand_color} onChange={(e) => setFormData({ ...formData, brand_color: e.target.value })} style={{ width: '44px', height: '44px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: 'transparent' }} />
                   <div>
-                    <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '700', color: '#e2e8f0' }}>اللون الرئيسي للواجهة</p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>سيتم تطبيق هذا اللون على أزرار وواجهات المنظومة</p>
+                    <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '700', color: colors.text.heading }}>اللون الرئيسي للواجهة</p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '0.72rem', color: colors.text.muted }}>سيتم تطبيق هذا اللون على أزرار وواجهات المنظومة</p>
                   </div>
                 </div>
               </div>
@@ -419,31 +435,31 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           {/* تبويب التواصل والإقليمية */}
           {activeTab === 'regional' && (
             <>
-              <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#C9A84C', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ background: colors.dark.surface, padding: '20px', borderRadius: '16px', border: `1px solid ${colors.dark.border}` }}>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: colors.gold.DEFAULT, margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Mail size={18} /> قنوات التواصل
                 </h2>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>البريد الإلكتروني للتواصل</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>البريد الإلكتروني للتواصل</label>
                     <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="info@academy.com" className="settings-input" />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>رقم الهاتف / الواتساب</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>رقم الهاتف / الواتساب</label>
                     <input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+201000000000" className="settings-input" style={{ direction: 'ltr' }} />
                   </div>
                 </div>
               </div>
 
-              <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#C9A84C', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ background: colors.dark.surface, padding: '20px', borderRadius: '16px', border: `1px solid ${colors.dark.border}` }}>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: colors.gold.DEFAULT, margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Globe size={18} /> التفضيلات الإقليمية
                 </h2>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>العملة الرئيسية</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>العملة الرئيسية</label>
                     <select value={formData.currency} onChange={(e) => setFormData({ ...formData, currency: e.target.value })} className="settings-input">
                       <option value="EGP">جنيه مصري (EGP)</option>
                       <option value="USD">دولار أمريكي (USD)</option>
@@ -453,7 +469,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>المنطقة الزمنية</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>المنطقة الزمنية</label>
                     <select value={formData.timezone} onChange={(e) => setFormData({ ...formData, timezone: e.target.value })} className="settings-input">
                       <option value="Africa/Cairo">توقيت القاهرة (GMT+2/3)</option>
                       <option value="Asia/Riyadh">توقيت مكة المكرمة (GMT+3)</option>
@@ -462,7 +478,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px' }}>نوع التقويم</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.text.body, marginBottom: '6px' }}>نوع التقويم</label>
                     <select value={formData.calendar_type} onChange={(e) => setFormData({ ...formData, calendar_type: e.target.value })} className="settings-input">
                       <option value="gregorian">ميلادي</option>
                       <option value="hijri">هجري</option>
@@ -471,7 +487,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#C9A84C', marginBottom: '8px' }}>أيام العطلة الأسبوعية</label>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: colors.gold.DEFAULT, marginBottom: '8px' }}>أيام العطلة الأسبوعية</label>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {[
                       { key: 'thursday', label: 'الخميس' },
@@ -490,9 +506,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                             borderRadius: '10px',
                             fontSize: '0.78rem',
                             fontWeight: '700',
-                            border: active ? '1px solid #C9A84C' : '1px solid rgba(255,255,255,0.12)',
-                            background: active ? 'rgba(201, 168, 76, 0.15)' : 'rgba(21, 35, 50, 0.92)',
-                            color: active ? '#C9A84C' : '#94a3b8',
+                            border: active ? `1px solid ${colors.gold.DEFAULT}` : `1px solid ${colors.dark.border}`,
+                            background: active ? colors.gold.glow : colors.dark.card,
+                            color: active ? colors.gold.DEFAULT : colors.text.muted,
                             cursor: 'pointer'
                           }}
                         >
@@ -508,19 +524,19 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
           {/* تبويب النسخ الاحتياطي */}
           {activeTab === 'backup' && (
-            <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#C9A84C', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ background: colors.dark.surface, padding: '20px', borderRadius: '16px', border: `1px solid ${colors.dark.border}` }}>
+              <h2 style={{ fontSize: '0.95rem', fontWeight: '800', color: colors.gold.DEFAULT, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Database size={18} /> النسخ الاحتياطي واستعادة الإعدادات
               </h2>
-              <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '16px' }}>
+              <p style={{ fontSize: '0.78rem', color: colors.text.muted, marginBottom: '16px' }}>
                 يمكنك تصدير إعدادات المنظومة لحفظها احتياطياً أو استيرادها في بيئة أخرى بسهولة.
               </p>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button type="button" onClick={handleExport} style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button type="button" onClick={handleExport} style={{ padding: '10px 16px', borderRadius: '10px', background: colors.dark.buttonDark, border: `1px solid ${colors.dark.border}`, color: colors.text.title, fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Download size={15} /> تصدير ملف الإعدادات (JSON)
                 </button>
                 <input ref={importInputRef} type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-                <button type="button" onClick={() => importInputRef.current?.click()} style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button type="button" onClick={() => importInputRef.current?.click()} style={{ padding: '10px 16px', borderRadius: '10px', background: colors.dark.buttonDark, border: `1px solid ${colors.dark.border}`, color: colors.text.title, fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Upload size={15} /> استيراد من ملف (JSON)
                 </button>
               </div>
@@ -529,9 +545,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
           {/* شريط الحفظ العائم */}
           {isDirty && (
-            <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#0c1520', border: '1px solid #C9A84C', padding: '12px 24px', borderRadius: '16px', boxShadow: '0 15px 35px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: '16px', zIndex: 50 }}>
-              <span style={{ fontSize: '0.82rem', color: '#C9A84C', fontWeight: '700' }}>هناك تغييرات غير محفوظة!</span>
-              <button type="submit" disabled={saving} style={{ padding: '8px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#0c1520', fontWeight: '800', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}>
+            <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: colors.dark.card, border: `1px solid ${colors.primary.DEFAULT}`, padding: '12px 24px', borderRadius: '16px', boxShadow: '0 15px 35px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: '16px', zIndex: 50 }}>
+              <span style={{ fontSize: '0.82rem', color: colors.gold.DEFAULT, fontWeight: '700' }}>هناك تغييرات غير محفوظة!</span>
+              <button type="submit" disabled={saving} style={{ padding: '8px 20px', borderRadius: '10px', background: colors.primary.DEFAULT, color: colors.text.title, fontWeight: '800', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}>
                 <Save size={15} /> {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
               </button>
             </div>
@@ -544,16 +560,17 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           width: 100%;
           padding: 10px 12px;
           border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(21, 35, 50, 0.92);
-          color: #fff;
+          border: 1px solid ${colors.dark.border};
+          background: ${colors.dark.input};
+          color: ${colors.text.title};
           font-size: 0.82rem;
           outline: none;
           box-sizing: border-box;
           font-family: inherit;
         }
         .settings-input:focus {
-          border-color: #C9A84C;
+          border-color: ${colors.primary.DEFAULT};
+          box-shadow: 0 0 0 2px ${colors.primary.focusRing};
         }
       `}</style>
     </div>
