@@ -9,7 +9,7 @@ import {
   Flame, Star, Search, X, MessageSquare
 } from 'lucide-react';
 import QuranProgressBar from '@/components/QuranProgress/QuranProgressBar';
-import AddStudentModal from '@/components/Student/AddStudentModal'; // 🚀 استيراد مودال إضافة الطالب
+import AddStudentModal from '@/components/Student/AddStudentModal';
 
 export default function StudentsList({ 
   academyId, 
@@ -26,7 +26,7 @@ export default function StudentsList({
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
 
-  // 🚀 حالة التحكم في إظهار أو إخفاء مودال إضافة طالب جديد
+  // حالة التحكم في إظهار أو إخفاء مودال إضافة طالب جديد
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const students = propStudents || internalStudents;
@@ -83,14 +83,37 @@ export default function StudentsList({
       if (halaqasErr) throw halaqasErr;
       if (halaqasData) setInternalHalaqas(halaqasData);
 
+      // 🚀 الاستعلام المحدث للجلب عبر الجدول الوسيط student_halaqas
       const { data: studentsData, error: studentsErr } = await supabase
         .from('students')
-        .select(`*, halaqas ( id, name )`)
+        .select(`
+          *,
+          student_halaqas (
+            status,
+            halaqas ( id, name )
+          )
+        `)
         .eq('academy_id', academyId)
         .order('created_at', { ascending: false });
 
       if (studentsErr) throw studentsErr;
-      setInternalStudents(studentsData || []);
+
+      // تحويل واستخراج الحلقة النشطة للطالب لتسهيل التعامل معها داخل المكون
+      const formattedStudents = (studentsData || []).map(student => {
+        const activeStudentHalaqa = Array.isArray(student.student_halaqas)
+          ? student.student_halaqas.find(sh => sh.status === 'active')
+          : null;
+          
+        const linkedHalaqa = activeStudentHalaqa?.halaqas || null;
+
+        return {
+          ...student,
+          halaqa_id: linkedHalaqa?.id || student.halaqa_id || null,
+          halaqas: linkedHalaqa
+        };
+      });
+
+      setInternalStudents(formattedStudents);
 
     } catch (err) {
       console.error('🚨 Error fetching data:', err);
@@ -220,7 +243,6 @@ export default function StudentsList({
           {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
         </button>
 
-        {/* 🚀 زر فتح مودال إضافة طالب بدل الانتقال لصفحة خارجية */}
         <button
           type="button"
           onClick={() => setIsAddModalOpen(true)}
@@ -588,7 +610,7 @@ export default function StudentsList({
         </div>
       )}
 
-      {/* 🚀 إدراج نافذة إضافة طالب المنبثقة وتمرير القائمة والحلقات وتحديث حالة الطلاب فوراً */}
+      {/* نافذة إضافة طالب المنبثقة */}
       <AddStudentModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
