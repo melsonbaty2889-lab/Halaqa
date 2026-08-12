@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, Save, Globe, Mail, 
   Database, RefreshCw, CheckCircle2, Upload, 
-  Download, Image as ImageIcon, AlertCircle, Trash2, Palette, Phone, Calendar
+  Download, Image as ImageIcon, AlertCircle, Trash2, Palette, X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase.js';
 import colors from '@/constants/colors.js';
@@ -200,6 +200,10 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     }
   };
 
+  const handleDiscardChanges = () => {
+    setFormData(initialData);
+  };
+
   const handleExport = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(formData, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -249,7 +253,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     <div style={{
       minHeight: '100vh',
       background: colors.gradients.pageBackground,
-      padding: '24px 16px',
+      padding: '24px 16px 100px 16px',
       direction: isRtl ? 'rtl' : 'ltr',
       fontFamily: "'Cairo', system-ui, sans-serif"
     }}>
@@ -268,8 +272,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         {toast && (
           <div style={{ 
             position: 'fixed', 
-            bottom: '24px', 
-            right: '24px', 
+            top: '24px', 
+            left: '50%',
+            transform: 'translateX(-50%)', 
             zIndex: 9999, 
             padding: '12px 20px', 
             borderRadius: '12px', 
@@ -543,13 +548,74 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
             </div>
           )}
 
-          {/* شريط الحفظ العائم */}
+          {/* شريط الحفظ العائم التفاعلي والمستجيب للهواتف */}
           {isDirty && (
-            <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: colors.dark.card, border: `1px solid ${colors.primary.DEFAULT}`, padding: '12px 24px', borderRadius: '16px', boxShadow: '0 15px 35px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: '16px', zIndex: 50 }}>
-              <span style={{ fontSize: '0.82rem', color: colors.gold.DEFAULT, fontWeight: '700' }}>هناك تغييرات غير محفوظة!</span>
-              <button type="submit" disabled={saving} style={{ padding: '8px 20px', borderRadius: '10px', background: colors.primary.DEFAULT, color: colors.text.title, fontWeight: '800', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}>
-                <Save size={15} /> {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-              </button>
+            <div style={{ 
+              position: 'fixed', 
+              bottom: '16px', 
+              left: '50%', 
+              transform: 'translateX(-50%)', 
+              width: 'calc(100% - 32px)',
+              maxWidth: '600px',
+              backgroundColor: colors.dark.card, 
+              border: `1px solid ${colors.primary.DEFAULT}`, 
+              padding: '12px 18px', 
+              borderRadius: '16px', 
+              boxShadow: '0 20px 40px rgba(0,0,0,0.8)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              gap: '12px', 
+              zIndex: 200,
+              backdropFilter: 'blur(10px)'
+            }}>
+              <span style={{ fontSize: '0.8rem', color: colors.gold.DEFAULT, fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                هناك تغييرات غير محفوظة!
+              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <button 
+                  type="button" 
+                  onClick={handleDiscardChanges}
+                  disabled={saving}
+                  style={{ 
+                    padding: '8px 12px', 
+                    borderRadius: '10px', 
+                    background: colors.dark.buttonDark, 
+                    color: colors.text.muted, 
+                    fontWeight: '700', 
+                    border: `1px solid ${colors.dark.border}`, 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    fontSize: '0.78rem' 
+                  }}
+                >
+                  <X size={14} /> التراجع
+                </button>
+
+                <button 
+                  type="submit" 
+                  disabled={saving} 
+                  style={{ 
+                    padding: '8px 16px', 
+                    borderRadius: '10px', 
+                    background: colors.primary.DEFAULT, 
+                    color: colors.text.title, 
+                    fontWeight: '800', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    fontSize: '0.78rem' 
+                  }}
+                >
+                  {saving ? <RefreshCw className="animate-spin" size={14} /> : <Save size={14} />}
+                  {saving ? 'جاري الحفظ...' : 'حفظ'}
+                </button>
+              </div>
             </div>
           )}
         </form>
