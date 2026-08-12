@@ -15,10 +15,12 @@ import {
   CheckCircle2, 
   Hourglass, 
   RefreshCw, 
-  Landmark 
+  Landmark,
+  Flame,
+  Award
 } from 'lucide-react';
 
-// تحميل ديناميكي للوحة المشرف العام
+// تحميل ديناميكي لوحة المشرف العام
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 export default function Dashboard({ 
@@ -40,7 +42,8 @@ export default function Dashboard({
     attendanceRate: '0%',
     totalSessions: 0,
     overdueCount: 0,
-    activeHalaqasData: []
+    activeHalaqasData: [],
+    avgStreak: 0
   });
   
   const [lastSyncTime, setLastSyncTime] = useState(null);
@@ -107,6 +110,7 @@ export default function Dashboard({
       .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress', filter: filterCondition }, handleRealtimeChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: filterCondition }, handleRealtimeChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas', filter: filterCondition }, handleRealtimeChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_streaks', filter: filterCondition }, handleRealtimeChange)
       .subscribe();
 
     return () => {
@@ -120,7 +124,7 @@ export default function Dashboard({
       <div className={styles.dashboardContainer} style={{ padding: '20px' }}>
         <div style={{ height: '36px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', width: '40%', marginBottom: '20px' }}></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4, 5].map(i => (
             <div key={i} style={{ height: '110px', background: 'rgba(255,255,255,0.06)', borderRadius: '16px' }}></div>
           ))}
         </div>
@@ -146,7 +150,7 @@ export default function Dashboard({
             {isArabic ? 'مرحباً بك' : 'Welcome'}, {displayName} 👋
           </h1>
           <p style={{ color: '#94A3B8', fontSize: '0.82rem', margin: 0 }}>
-            {isArabic ? 'مركز الإدارة والعمليات اليومية المباشرة' : 'Live Daily Management & Analytics Center'}
+            {isArabic ? 'مركز الإدارة والعمليات اليومية المباشرة وأنظمة الحفظ العالمية' : 'Live Daily Management & Global Memorization Center'}
           </p>
         </div>
 
@@ -175,12 +179,14 @@ export default function Dashboard({
           onClick={() => setActiveTab && setActiveTab('students')} 
           style={{ background: '#1E293B', color: '#F8FAFC', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <BookOpen size={16} style={{ color: '#FBBF24' }} />
-          <span>{isArabic ? 'رصد التسميع' : 'Record Recitation'}</span>
+          <span>{isArabic ? 'رصد التسميع (اللوح والراتب)' : 'Record Recitation'}</span>
         </button>
       </div>
 
-      {/* البطاقات الإحصائية */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
+      {/* البطاقات الإحصائية (تمت إضافة بطاقة Streaks) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '20px' }}>
+        
+        {/* إجمالي الدارسين */}
         <div 
           onClick={() => setActiveTab && setActiveTab('students')}
           style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
@@ -191,10 +197,27 @@ export default function Dashboard({
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#FFFFFF' }}>{safeText(stats?.studentsCount, '0')}</div>
           <div style={{ fontSize: '0.75rem', color: '#34D399', marginTop: '4px', fontWeight: '600' }}>
-            {isArabic ? '↑ مسجلون بالحلقات' : '↑ Enrolled'}
+            {isArabic ? '↑ مسجلون بالأكاديمية' : '↑ Enrolled'}
           </div>
         </div>
 
+        {/* متوسط الاستمرارية Streaks */}
+        <div 
+          style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94A3B8', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px' }}>
+            <span>{isArabic ? 'متوسط الاستمرارية' : 'Avg Streak'}</span>
+            <Flame style={{ color: '#F97316' }} size={22} />
+          </div>
+          <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#F97316' }}>
+            {safeText(stats?.avgStreak, '0')} <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: '#CBD5E1' }}>{isArabic ? 'يوم' : 'Days'}</span>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#FB923C', marginTop: '4px', fontWeight: '600' }}>
+            {isArabic ? '🔥 سلاسل الحفظ المتتابعة' : 'Active Streaks'}
+          </div>
+        </div>
+
+        {/* نسبة الحضور اليومي */}
         <div 
           onClick={() => setActiveTab && setActiveTab('attendance')}
           style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
@@ -209,6 +232,7 @@ export default function Dashboard({
           </div>
         </div>
 
+        {/* جلسات التسميع اليوم */}
         <div 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
           style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
@@ -225,6 +249,7 @@ export default function Dashboard({
           </div>
         </div>
 
+        {/* المتأخرات المعلقة */}
         <div 
           onClick={() => setActiveTab && setActiveTab('payments')}
           style={{ background: '#1E293B', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
@@ -240,22 +265,23 @@ export default function Dashboard({
             {isArabic ? 'اشتراكات تحتاج متابعة' : 'Requires Follow-up'}
           </div>
         </div>
+
       </div>
 
-      {/* الحلقات المباشرة */}
+      {/* الحلقات المباشرة مع دعم أنظمة التسميع العالمية والمسارات */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Landmark style={{ color: '#38BDF8' }} size={18} />
-              <span>{isArabic ? 'حلقات اليوم المباشرة' : 'Today Active Halaqas'}</span>
+              <span>{isArabic ? 'حلقات اليوم المباشرة وأنظمة التسميع' : 'Today Active Halaqas & Systems'}</span>
             </h3>
             <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
               {stats.activeHalaqasData.length} {isArabic ? 'حلقة مسجلة' : 'halaqas'}
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
             {stats.activeHalaqasData.map((halaqa, idx) => {
               const isLive = halaqa.status === 'live';
               const isFinished = halaqa.status === 'finished';
@@ -270,9 +296,10 @@ export default function Dashboard({
 
               const StatusIcon = isLive ? RefreshCw : isFinished ? CheckCircle2 : Hourglass;
 
-              const halaqaName = safeText(isArabic ? (halaqa.name_ar || halaqa.name) : (halaqa.name_en || halaqa.name), isArabic ? 'حلقة قرآنيّة' : 'Quran Halaqa');
-              const teacherName = safeText(isArabic ? (halaqa.teacher_name_ar || halaqa.teacher_name) : (halaqa.teacher_name_en || halaqa.teacher_name), isArabic ? 'غير محدد' : 'N/A');
-              const timeDisplay = safeText(isArabic ? (halaqa.time_display_ar || halaqa.time_display) : (halaqa.time_display_en || halaqa.time_display), '');
+              const halaqaName = safeText(isArabic ? halaqa.name_ar : halaqa.name_en, isArabic ? 'حلقة قرآنيّة' : 'Quran Halaqa');
+              const teacherName = safeText(isArabic ? halaqa.teacher_name_ar : halaqa.teacher_name_en, isArabic ? 'غير محدد' : 'N/A');
+              const timeDisplay = safeText(isArabic ? halaqa.time_display_ar : halaqa.time_display_en, '');
+              const teachingType = safeText(halaqa.teaching_type, 'حضوري');
 
               return (
                 <div key={halaqa.id || idx} style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -292,11 +319,19 @@ export default function Dashboard({
                   </div>
 
                   {timeDisplay && (
-                    <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Clock style={{ color: '#94A3B8' }} size={14} />
                       <span>{timeDisplay}</span>
                     </div>
                   )}
+
+                  {/* شارة نظام التسميع والتعليم (اللوح، الراتب، إلخ) */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.12)', color: '#FBBF24', border: '1px solid rgba(245, 158, 11, 0.25)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Award size={11} />
+                      <span>{teachingType}</span>
+                    </span>
+                  </div>
 
                   {halaqa.attendance_rate !== undefined && halaqa.attendance_rate !== null && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#38BDF8' }}>
