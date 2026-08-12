@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { colors as C } from '@/constants/colors'; // استيراد الألوان الموحدة
 
 export default function SidebarMenu({
   filteredMenuSections,
@@ -34,10 +35,10 @@ export default function SidebarMenu({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '7px 10px',
-                  background: isExpanded ? 'rgba(30, 41, 59, 0.4)' : 'transparent',
+                  background: isExpanded ? C.dark.card : 'transparent',
                   borderRadius: '6px',
                   border: 'none',
-                  color: isExpanded ? '#38bdf8' : '#94a3b8',
+                  color: isExpanded ? C.brandEmerald.light : C.text.muted,
                   fontSize: '0.75rem',
                   fontWeight: '700',
                   cursor: 'pointer',
@@ -76,18 +77,18 @@ export default function SidebarMenu({
                           borderRadius: '6px',
                           border: 'none',
                           background: isActive 
-                            ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.05) 100%)' 
+                            ? C.brandEmerald.bgGlow 
                             : 'transparent',
-                          borderRight: isActive && isRtl ? '3px solid #f59e0b' : 'none',
-                          borderLeft: isActive && !isRtl ? '3px solid #f59e0b' : 'none',
-                          color: isActive ? '#fbbf24' : '#cbd5e1',
+                          borderRight: isActive && isRtl ? `3px solid ${C.primary.DEFAULT}` : 'none',
+                          borderLeft: isActive && !isRtl ? `3px solid ${C.primary.DEFAULT}` : 'none',
+                          color: isActive ? C.primary.light : C.text.body,
                           fontWeight: isActive ? '700' : 'normal',
                           cursor: 'pointer',
                           textAlign: isRtl ? 'right' : 'left',
                           transition: 'all 0.15s ease'
                         }}
                       >
-                        <Icon style={{ color: isActive ? '#f59e0b' : '#64748b' }} size={16} />
+                        <Icon style={{ color: isActive ? C.primary.DEFAULT : C.text.placeholder }} size={16} />
                         <span style={{ fontSize: '0.8rem' }}>{getText(item.label)}</span>
                       </button>
                     );
@@ -101,11 +102,11 @@ export default function SidebarMenu({
         <div style={{
           textAlign: 'center',
           padding: '12px 8px',
-          color: '#64748b',
+          color: C.text.placeholder,
           fontSize: '0.75rem',
-          background: 'rgba(255,255,255,0.02)',
+          background: C.dark.card,
           borderRadius: '6px',
-          border: '1px solid rgba(255, 255, 255, 0.05)'
+          border: `1px solid ${C.dark.border}`
         }}>
           {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
         </div>
