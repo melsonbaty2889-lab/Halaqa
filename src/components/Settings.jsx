@@ -550,77 +550,30 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
           {/* شريط الحفظ العائم المحدث والمستجيب تماماً للموبايل */}
 {isDirty && (
-  <div style={{ 
-    position: 'fixed', 
-    bottom: '12px', 
-    left: '12px', 
-    right: '12px',
-    backgroundColor: colors.dark.card, 
-    border: `1px solid ${colors.primary.DEFAULT}`, 
-    padding: '10px 14px', 
-    borderRadius: '14px', 
-    boxShadow: '0 10px 30px rgba(0,0,0,0.8)', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'space-between',
-    gap: '8px', 
-    zIndex: 999,
-    backdropFilter: 'blur(12px)',
-    boxSizing: 'border-box'
-  }}>
-    <span style={{ 
-      fontSize: '0.75rem', 
-      color: colors.gold.DEFAULT, 
-      fontWeight: '700', 
-      whiteSpace: 'nowrap', 
-      overflow: 'hidden', 
-      textOverflow: 'ellipsis',
-      flex: 1
-    }}>
+{isDirty && (
+  <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 z-[999] flex items-center justify-between gap-2 p-2.5 sm:px-4 rounded-xl border border-amber-500/30 bg-slate-900/95 backdrop-blur-md shadow-2xl">
+    <span className="text-xs font-bold text-amber-400 whitespace-nowrap overflow-hidden text-ellipsis shrink">
       تغييرات غير محفوظة!
     </span>
 
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+    <div className="flex items-center gap-1.5 shrink-0">
       <button 
         type="button" 
         onClick={handleDiscardChanges}
         disabled={saving}
-        style={{ 
-          padding: '6px 10px', 
-          borderRadius: '8px', 
-          background: colors.dark.buttonDark, 
-          color: colors.text.muted, 
-          fontWeight: '700', 
-          border: `1px solid ${colors.dark.border}`, 
-          cursor: 'pointer', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '4px', 
-          fontSize: '0.72rem' 
-        }}
+        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors"
       >
-        <X size={13} /> التراجع
+        <X className="w-3.5 h-3.5" />
+        <span>التراجع</span>
       </button>
 
       <button 
         type="submit" 
         disabled={saving} 
-        style={{ 
-          padding: '6px 14px', 
-          borderRadius: '8px', 
-          background: colors.primary.DEFAULT, 
-          color: colors.text.title, 
-          fontWeight: '800', 
-          border: 'none', 
-          cursor: 'pointer', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '4px', 
-          fontSize: '0.72rem' 
-        }}
+        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 rounded-lg transition-colors"
       >
-        {saving ? <RefreshCw className="animate-spin" size={13} /> : <Save size={13} />}
-        {saving ? 'حفظ...' : 'حفظ'}
+        {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+        <span>{saving ? 'حفظ...' : 'حفظ'}</span>
       </button>
     </div>
   </div>
