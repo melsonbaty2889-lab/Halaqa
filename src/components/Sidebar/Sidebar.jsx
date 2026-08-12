@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { X } from "lucide-react";
+import { colors as C } from '@/constants/colors'; // استيراد الألوان الموحدة
 
 import AcademySelector from './AcademySelector';
 import SidebarWidget from './SidebarWidget';
@@ -24,8 +25,8 @@ export default function Sidebar({
   trialDaysLeft = 0,
   setShowEarlyUpgrade,
   academyTime,
-  userRole = 'admin' // 1. استلام صلاحية المستخدم من المكون الأب
-  }) {
+  userRole = 'admin'
+}) {
   const [academiesList, setAcademiesList] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,7 +165,7 @@ export default function Sidebar({
       if (currentAcademy.is_active === false) {
         return {
           text: isRtl ? 'قيد التفعيل' : 'Pending',
-          style: { background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
+          style: { background: C.error.bg, color: C.error.light, border: `1px solid ${C.error.border}` }
         };
       }
       if (effectiveDaysLeft === Infinity) {
@@ -176,23 +177,23 @@ export default function Sidebar({
       if (effectiveDaysLeft > 14) {
         return {
           text: isRtl ? 'اشتراك نشط' : 'Active Plan',
-          style: { background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
+          style: { background: C.brandEmerald.bgGlow, color: C.brandEmerald.light, border: `1px solid ${C.brandEmerald.border}` }
         };
       }
       if (effectiveDaysLeft > 0) {
         return {
           text: isRtl ? 'فترة تجريبية' : 'Free Trial',
-          style: { background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)' }
+          style: { background: 'rgba(245, 158, 11, 0.15)', color: C.primary.light, border: '1px solid rgba(245, 158, 11, 0.3)' }
         };
       }
       return {
         text: isRtl ? 'منتهي الصلاحية' : 'Expired',
-        style: { background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }
+        style: { background: C.error.bg, color: C.error.light, border: `1px solid ${C.error.border}` }
       };
     }
     return {
       text: isRtl ? 'اشتراك نشط' : 'Active Plan',
-      style: { background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }
+      style: { background: C.brandEmerald.bgGlow, color: C.brandEmerald.light, border: `1px solid ${C.brandEmerald.border}` }
     };
   };
 
@@ -222,9 +223,9 @@ export default function Sidebar({
     bottom: 0,
     [isRtl ? 'right' : 'left']: 0,
     width: isMobile ? 'min(300px, 84vw)' : '280px',
-    backgroundColor: '#0b1320',
-    borderLeft: isRtl && !isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
-    borderRight: !isRtl && !isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
+    backgroundColor: C.dark.surface, // خلفية القائمة الموحدة
+    borderLeft: isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
+    borderRight: !isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -261,15 +262,15 @@ export default function Sidebar({
             justifyContent: 'space-between', 
             marginBottom: '12px', 
             paddingBottom: '10px', 
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)' 
+            borderBottom: `1px solid ${C.dark.border}` 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <SmartHalaqaProLogo size={36} />
               <div>
-                <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#f8fafc', lineHeight: '1.2' }}>
+                <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: C.text.title, lineHeight: '1.2' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
-                <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: '500' }}>
+                <span style={{ fontSize: '0.65rem', color: C.text.muted, fontWeight: '500' }}>
                   {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
               </div>
@@ -278,7 +279,7 @@ export default function Sidebar({
             {isMobile && (
               <button 
                 onClick={() => setSidebarOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: C.text.muted, cursor: 'pointer', padding: '4px' }}
               >
                 <X size={18} />
               </button>
