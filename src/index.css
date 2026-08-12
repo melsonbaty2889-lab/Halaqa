@@ -13,7 +13,7 @@
     --surface-card: #0F172A;
     --surface-input: #090F16;
 
-    /* الهوية البصرية الرئيسية */
+    /* الهوية البصرية الرئيسية (Amber/Gold) */
     --primary: #D97706;
     --primary-hover: #B45309;
     --primary-glow: rgba(217, 119, 6, 0.25);
@@ -95,8 +95,8 @@
   /* 📦 1. أسطح البطاقات والحاويات الموحدة */
   .card-surface {
     background-color: var(--surface-card);
-    border-radius: 0.75rem; /* 12px */
-    padding: 1.25rem; /* 20px */
+    border-radius: 0.75rem;
+    padding: 1.25rem;
     box-shadow: var(--shadow-main);
     border: 1px solid var(--border-light);
   }
@@ -108,7 +108,7 @@
     border: 1px solid var(--border-light);
   }
 
-  /* ✏️ 2. مدخلات البيانات الموحدة لكافة الصفحات (وليس فقط Login) */
+  /* ✏️ 2. مدخلات البيانات الموحدة لكافة الصفحات */
   .app-input {
     width: 100%;
     background-color: var(--surface-input);
@@ -146,6 +146,8 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    border: none;
+    cursor: pointer;
   }
 
   .btn-primary:hover {
@@ -161,6 +163,11 @@
     padding: 0.625rem 1.25rem;
     border-radius: 0.75rem;
     transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
   }
 
   .btn-secondary:hover {
