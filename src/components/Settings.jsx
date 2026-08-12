@@ -273,8 +273,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   }
 
   return (
-    <div className={`min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-36 font-sans ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'}`}>
-      <div className="w-full max-w-4xl mx-auto card-surface !p-4 sm:!p-7 border-0 sm:border rounded-none sm:rounded-2xl relative">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-40 font-sans">
+      <div className="w-full max-w-4xl mx-auto card-surface !p-4 sm:!p-7 border-0 sm:border rounded-xl sm:rounded-2xl relative">
         
         {toast && (
           <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-2xl text-xs sm:text-sm text-white transition-all ${
@@ -311,7 +311,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
               <h3 className="text-base font-extrabold text-[var(--text-main)] truncate">
                 {formData.name || (isRtl ? 'أدخل اسم الأكاديمية' : 'Enter Academy Name')}
               </h3>
-              <p className="text-xs text-[var(--text-muted)] truncate dir-ltr text-left">
+              <p className="text-xs text-[var(--text-muted)] truncate dir-ltr text-start">
                 {formData.slug ? `https://${formData.slug}.smart-halaqa.com` : (isRtl ? 'لم يتم تحديد المعرّف الفريد' : 'No slug specified')}
               </p>
             </div>
@@ -381,7 +381,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                       value={formData.slug} 
                       onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} 
                       placeholder="academy-slug" 
-                      className="app-input text-left dir-ltr" 
+                      className="app-input text-start dir-ltr" 
                     />
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                     value={formData.website} 
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })} 
                     placeholder="https://example.com" 
-                    className="app-input text-left dir-ltr" 
+                    className="app-input text-start dir-ltr" 
                   />
                 </div>
               </div>
@@ -486,7 +486,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                       value={formData.email} 
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
                       placeholder="admin@domain.com" 
-                      className="app-input text-left dir-ltr" 
+                      className="app-input text-start dir-ltr" 
                     />
                   </div>
                   <div>
@@ -498,7 +498,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                       value={formData.phone} 
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
                       placeholder="+20 123 456 7890" 
-                      className="app-input text-left dir-ltr" 
+                      className="app-input text-start dir-ltr" 
                     />
                   </div>
                 </div>
@@ -594,7 +594,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           )}
 
           {isDirty && (
-            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-xl bg-[var(--surface-card)] border border-[var(--primary)]/60 p-3 px-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 z-[999] backdrop-blur-xl">
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-lg bg-[var(--surface-card)] border border-[var(--primary)]/60 p-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3 z-[999] backdrop-blur-xl">
               <span className="text-xs text-[var(--primary)] font-bold truncate flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-ping inline-block shrink-0" />
                 {isRtl ? 'تغييرات غير محفوظة!' : 'Unsaved changes!'}
