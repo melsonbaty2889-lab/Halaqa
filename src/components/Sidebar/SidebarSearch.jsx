@@ -1,19 +1,20 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import { colors as C } from '@/constants/colors';
 
 export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl }) {
   return (
     <div style={{
       position: 'relative',
       marginBottom: '10px',
-      background: '#0f172a',
+      background: C.dark.card,
       borderRadius: '8px',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
+      border: `1px solid ${C.dark.border}`,
       display: 'flex',
       alignItems: 'center',
       padding: '0 10px'
     }}>
-      <Search size={14} style={{ color: '#64748b' }} />
+      <Search size={14} style={{ color: C.text.placeholder }} />
       <input 
         type="text"
         placeholder={isRtl ? 'بحث سريع...' : 'Quick search...'}
@@ -25,7 +26,7 @@ export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl }) {
           background: 'transparent',
           border: 'none',
           outline: 'none',
-          color: '#fff',
+          color: C.text.title,
           fontSize: '0.78rem'
         }}
       />
