@@ -573,32 +573,20 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
           {/* شريط الحفظ العائم بـ Tailwind CSS */}
           {isDirty && (
-            <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:w-auto bg-[var(--surface-card)] border border-[var(--primary)]/50 p-2.5 px-4 rounded-xl shadow-2xl flex items-center justify-between gap-3 z-50 backdrop-blur-md">
-              <span className="text-xs text-[var(--primary)] font-bold whitespace-nowrap truncate">
-                تغييرات غير محفوظة!
-              </span>
+  <div className="fixed bottom-4 left-4 right-4 sm:right-[270px] bg-[var(--surface-card)] border border-[var(--primary)]/50 p-3 rounded-xl shadow-2xl flex items-center justify-between gap-3 z-[60] backdrop-blur-md">
+    <span className="text-xs text-[var(--primary)] font-bold truncate">تغييرات غير محفوظة!</span>
+    <div className="flex items-center gap-2 shrink-0">
+      <button type="button" onClick={handleDiscardChanges} disabled={saving} className="btn-secondary text-xs !py-1.5 !px-3">
+        <X size={13} /> التراجع
+      </button>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <button 
-                  type="button" 
-                  onClick={handleDiscardChanges}
-                  disabled={saving}
-                  className="btn-secondary text-xs !py-1.5 !px-3"
-                >
-                  <X size={13} /> التراجع
-                </button>
-
-                <button 
-                  type="submit" 
-                  disabled={saving} 
-                  className="btn-primary text-xs !py-1.5 !px-3"
-                >
-                  {saving ? <RefreshCw className="spin-animation" size={13} /> : <Save size={13} />}
-                  <span>{saving ? 'حفظ...' : 'حفظ'}</span>
-                </button>
-              </div>
-            </div>
-          )}
+      <button type="submit" disabled={saving} className="btn-primary text-xs !py-1.5 !px-3">
+        {saving ? <RefreshCw className="spin-animation" size={13} /> : <Save size={13} />}
+        <span>{saving ? 'حفظ...' : 'حفظ'}</span>
+      </button>
+    </div>
+  </div>
+)}
         </form>
       </div>
     </div>
