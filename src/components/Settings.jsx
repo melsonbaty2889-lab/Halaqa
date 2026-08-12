@@ -564,9 +564,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         {isDirty && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-amber-500/40 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 z-50 animate-fade-in">
             <span className="text-xs text-amber-500 font-medium">هناك تغييرات غير محفوظة!</span>
-            <Button type="submit" disabled={saving} className="px-6 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white font-bold">
+            <Button type="submit" disabled={saving} className="px-6 py-2 text-sm bg-amber-600 hover:bg-amber-700">
               {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
-              {saving ? 'جاري الحفظ...' : 'حفظ التغييرات الآن'}
+              {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
             </Button>
           </div>
         )}
