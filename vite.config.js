@@ -20,7 +20,9 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        cleanupOutdatedCaches: true
+        cleanupOutdatedCaches: true,
+        // منع تخزين index.html في الـ Service Worker كاش نهائياً
+        navigateFallbackDenylist: [/^\/index\.html$/]
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
@@ -57,6 +59,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
+        // إضافة الـ Hash في أسماء الأصول لمنع المتصفح من قراءة النسخ القديمة
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`,
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('@supabase')) return 'vendor-supabase';
