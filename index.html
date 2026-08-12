@@ -4,16 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>الحلقة الذكية | Smart Halaqa</title>
+    <meta name="description" content="منظومة إدارة الحلقة الذكية والأكاديميات" />
 
-    <!-- Google Fonts: Cairo & Tajawal -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- 1. منع إضافات المتصفح (مثل Dark Reader) من تعديل الألوان تلقائياً -->
+    <meta name="darkreader-lock" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- 2. تفريغ الـ Cache تلقائياً عند تحديث رقم الإصدار -->
+    <script>
+      (function () {
+        const CURRENT_VERSION = '1.0.1'; // ارفع هذا الرقم عند كل تحديث جديد للموقع
+        const savedVersion = localStorage.getItem('app_version');
+
+        if (savedVersion !== CURRENT_VERSION) {
+          localStorage.clear();
+          sessionStorage.clear();
+          localStorage.setItem('app_version', CURRENT_VERSION);
+        }
+      })();
+    </script>
+
+    <!-- Google Fonts: Cairo & Tajawal مع تسريع التحميل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-      /* 🌟 إعادة ضبط الأساسيات لمنع انكماش الشاشة أو السكرول الأفقي */
       :root { 
-        --bg-color: #0a0f24; 
+        --bg-color: #070C12; 
         --brand-green: #00c853; 
       }
 
@@ -23,12 +44,13 @@
 
       html, body { 
         background-color: var(--bg-color); 
+        color: #F8FAFC;
         margin: 0; 
         padding: 0;
         width: 100%;
         max-width: 100vw;
         min-height: 100vh;
-        overflow-x: hidden; /* منع التمدد الأفقي */
+        overflow-x: hidden;
         font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
@@ -37,6 +59,7 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        background-color: var(--bg-color);
       }
     </style>
   </head>
