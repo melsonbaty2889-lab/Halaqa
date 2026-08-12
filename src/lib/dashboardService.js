@@ -169,7 +169,7 @@ export async function getDashboardStats(supabase, profile) {
 
     return { studentsCount: 0, academiesCount: 0, attendanceRate: '0%', totalSessions: 0, overdueCount: 0, activeHalaqasData: [], avgStreak: 0 };
 
-  }احضار (error) {
+  } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return { studentsCount: 0, academiesCount: 0, attendanceRate: '0%', totalSessions: 0, overdueCount: 0, activeHalaqasData: [], avgStreak: 0 };
   }
