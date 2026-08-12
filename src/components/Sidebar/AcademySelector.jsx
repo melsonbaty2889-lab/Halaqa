@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
+import { colors as C } from '@/constants/colors';
 
 export default function AcademySelector({
   academiesList,
@@ -16,7 +17,7 @@ export default function AcademySelector({
   return (
     <div ref={dropdownRef} style={{ marginBottom: '10px', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-        <span style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: '600' }}>
+        <span style={{ fontSize: '0.72rem', color: C.text.body, fontWeight: '600' }}>
           {isRtl ? 'الأكاديمية' : 'Academy'}
         </span>
         <span style={{
@@ -35,10 +36,10 @@ export default function AcademySelector({
         style={{
           width: '100%',
           padding: '8px 12px',
-          background: '#0f172a',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: C.dark.card,
+          border: `1px solid ${C.dark.border}`,
           borderRadius: '8px',
-          color: '#fff',
+          color: C.text.title,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -51,7 +52,7 @@ export default function AcademySelector({
         <span dir="auto" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {currentAcademyName}
         </span>
-        <ChevronDown size={14} style={{ color: '#94a3b8', transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+        <ChevronDown size={14} style={{ color: C.text.placeholder, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
       </button>
 
       {dropdownOpen && (
@@ -61,9 +62,9 @@ export default function AcademySelector({
           left: 0,
           right: 0,
           marginTop: '4px',
-          background: '#0f172a',
+          background: C.dark.card,
           borderRadius: '8px',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: `1px solid ${C.dark.border}`,
           boxShadow: '0 12px 28px rgba(0, 0, 0, 0.65)',
           zIndex: 100,
           overflow: 'hidden'
@@ -82,15 +83,15 @@ export default function AcademySelector({
                 justifyContent: 'space-between',
                 padding: '9px 12px',
                 border: 'none',
-                background: acc.id === currentAcademyId ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
-                color: acc.id === currentAcademyId ? '#fbbf24' : '#e2e8f0',
+                background: acc.id === currentAcademyId ? C.brandEmerald.bgGlow : 'transparent',
+                color: acc.id === currentAcademyId ? C.primary.DEFAULT : C.text.body,
                 cursor: 'pointer',
                 fontSize: '0.8rem',
                 transition: 'background 0.15s ease'
               }}
             >
               <span dir="auto">{getText(acc.name)}</span>
-              <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: '#f59e0b' }} />
+              <input type="radio" checked={acc.id === currentAcademyId} readOnly style={{ accentColor: C.primary.DEFAULT }} />
             </button>
           ))}
         </div>
