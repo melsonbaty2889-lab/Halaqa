@@ -569,31 +569,36 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
             </div>
           )}
 
-          {/* شريط الحفظ العائم بـ Tailwind CSS */}
-{isDirty && (
-  <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:w-auto bg-slate-900/95 border border-amber-500/50 p-2.5 px-4 rounded-xl shadow-2xl flex items-center justify-between gap-3 z-50 backdrop-blur-md">
-    <span className="text-xs text-amber-400 font-bold whitespace-nowrap truncate">
-      تغييرات غير محفوظة!
-    </span>
+                    {/* شريط الحفظ العائم بـ Tailwind CSS */}
+          {isDirty && (
+            <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:w-auto bg-slate-900/95 border border-amber-500/50 p-2.5 px-4 rounded-xl shadow-2xl flex items-center justify-between gap-3 z-50 backdrop-blur-md">
+              <span className="text-xs text-amber-400 font-bold whitespace-nowrap truncate">
+                تغييرات غير محفوظة!
+              </span>
 
-    <div className="flex items-center gap-2 shrink-0">
-      <button 
-        type="button" 
-        onClick={handleDiscardChanges}
-        disabled={saving}
-        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 cursor-pointer flex items-center gap-1 text-xs whitespace-nowrap transition-all"
-      >
-        <X size={13} /> التراجع
-      </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button 
+                  type="button" 
+                  onClick={handleDiscardChanges}
+                  disabled={saving}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 cursor-pointer flex items-center gap-1 text-xs whitespace-nowrap transition-all"
+                >
+                  <X size={13} /> التراجع
+                </button>
 
-      <button 
-        type="submit" 
-        disabled={saving} 
-        className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold border-none cursor-pointer flex items-center gap-1 text-xs whitespace-nowrap transition-all shadow-md shadow-amber-500/20"
-      >
-        {saving ? <RefreshCw className="animate-spin" size={13} /> : <Save size={13} />}
-        <span>{saving ? 'حفظ...' : 'حفظ'}</span>
-      </button>
+                <button 
+                  type="submit" 
+                  disabled={saving} 
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold border-none cursor-pointer flex items-center gap-1 text-xs whitespace-nowrap transition-all shadow-md shadow-amber-500/20"
+                >
+                  {saving ? <RefreshCw className="animate-spin" size={13} /> : <Save size={13} />}
+                  <span>{saving ? 'حفظ...' : 'حفظ'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
     </div>
-  </div>
-)}
+  );
+          }
