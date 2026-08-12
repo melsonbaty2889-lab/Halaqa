@@ -135,42 +135,99 @@ const Input = forwardRef(({ label, value, onChange, type = "text", placeholder =
 });
 Input.displayName = 'Input';
 
-// 5. قائمة الاختيارات الذكية (Select)
+// 5. قائمة الاختيارات الذكية المخصصة (Custom Floating Select)
 const Select = forwardRef(({ label, value, onChange, options = [], className = "", style = {}, ...props }, ref) => {
-  const [isFocused, setIsFocused] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find(o => o.value === value) || options[0];
 
   return (
-    <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box" }}>
-      {label && <label style={{ fontSize: "0.8rem", color: C.primary, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}>{label}</label>}
-      <select 
+    <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box", position: "relative" }}>
+      {label && (
+        <label style={{ fontSize: "0.8rem", color: C.primary, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}>
+          {label}
+        </label>
+      )}
+      
+      <button
         ref={ref}
-        value={value} 
-        onChange={onChange} 
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
         className={`ui-select ${className}`}
-        style={{ 
-          width: "100%", 
-          background: C.surface || "#0f172a", 
-          border: isFocused ? `1px solid ${C.primary}` : `1px solid ${C.border}`, 
-          borderRadius: 10, 
-          padding: "12px 14px", 
-          color: C.text || "#f8fafc", 
-          fontFamily: "inherit", 
-          fontSize: "0.85rem", 
-          outline: "none", 
-          cursor: "pointer", 
+        style={{
+          width: "100%",
+          background: C.surface || "#0f172a",
+          border: isOpen ? `1px solid ${C.primary}` : `1px solid ${C.border}`,
+          borderRadius: 10,
+          padding: "12px 14px",
+          color: C.text || "#f8fafc",
+          fontFamily: "inherit",
+          fontSize: "0.85rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          cursor: "pointer",
           boxSizing: "border-box",
-          textAlign: "start",
-          boxShadow: isFocused ? `0 0 0 3px ${C.primary}15` : "none",
+          boxShadow: isOpen ? `0 0 0 3px ${C.primary}15` : "none",
           transition: "all 0.2s ease",
-          colorScheme: "dark",
-          ...style 
+          ...style
         }}
         {...props}
       >
-        {options.map(o => <option key={o.value} value={o.value} style={{ background: C.surface || "#0f172a", color: C.text || "#f8fafc" }}>{o.label}</option>)}
-      </select>
+        <span>{selectedOption?.label || "اختر..."}</span>
+        <span style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", fontSize: "0.7rem", color: C.primary }}>▼</span>
+      </button>
+
+      {isOpen && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setIsOpen(false)} />
+          <ul
+            style={{
+              position: "absolute",
+              top: "100%",
+              right: 0,
+              left: 0,
+              marginTop: 6,
+              background: C.surface || "#0f172a",
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: "6px 0",
+              margin: 0,
+              listStyle: "none",
+              zIndex: 100,
+              maxHeight: 220,
+              overflowY: "auto",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+              backdropFilter: "blur(12px)"
+            }}
+          >
+            {options.map(o => (
+              <li
+                key={o.value}
+                onClick={() => {
+                  onChange({ target: { value: o.value } });
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: "10px 14px",
+                  fontSize: "0.85rem",
+                  color: value === o.value ? C.primary : C.text,
+                  background: value === o.value ? `${C.primary}1A` : "transparent",
+                  cursor: "pointer",
+                  textAlign: "start",
+                  fontWeight: value === o.value ? 700 : 400,
+                  transition: "background 0.15s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}
+              >
+                <span>{o.label}</span>
+                {value === o.value && <span style={{ color: C.primary, fontSize: "0.8rem" }}>✓</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 });
@@ -189,7 +246,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
 
   return (
     <div 
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16 }} 
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16 }} 
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div 
