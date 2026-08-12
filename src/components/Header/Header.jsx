@@ -2,18 +2,18 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  FaBars, 
-  FaBell, 
-  FaGlobe, 
-  FaUserCheck, 
-  FaCoins, 
-  FaCheck, 
-  FaCheckDouble, 
-  FaTrashAlt
-} from 'react-icons/fa';
+  Menu, 
+  Bell, 
+  Globe, 
+  UserCheck, 
+  Coins, 
+  Check, 
+  CheckCheck, 
+  Trash2 
+} from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
-import { colors as C } from '@/constants/colors'; // استيراد الألوان الموحدة
+import { colors as C } from '@/constants/colors';
 
 export default function Header({ 
   activeTab, 
@@ -157,7 +157,7 @@ export default function Header({
   return (
     <header style={{
       minHeight: '60px',
-      backgroundColor: C.dark.surface, // مطابقة لخلفية شاشة الدخول والقوائم
+      backgroundColor: C.dark.surface,
       borderBottom: `1px solid ${C.dark.border}`,
       padding: '8px 12px',
       display: 'flex',
@@ -191,7 +191,7 @@ export default function Header({
           }}
           title={isAr ? "القائمة" : "Menu"}
         >
-          <FaBars />
+          <Menu size={18} />
         </button>
 
         <h1 style={{
@@ -232,7 +232,7 @@ export default function Header({
               cursor: 'pointer'
             }}
           >
-            <FaCoins style={{ fontSize: '0.75rem' }} />
+            <Coins size={14} />
             <span>{selectedCurrency}</span>
           </button>
 
@@ -269,7 +269,7 @@ export default function Header({
                   }}
                 >
                   <span>{curr.name}</span>
-                  {selectedCurrency === curr.code && <FaCheck style={{ fontSize: '0.65rem' }} />}
+                  {selectedCurrency === curr.code && <Check size={12} />}
                 </button>
               ))}
             </div>
@@ -293,7 +293,7 @@ export default function Header({
             cursor: 'pointer'
           }}
         >
-          <FaGlobe style={{ color: C.brandEmerald.light, fontSize: '0.75rem' }} />
+          <Globe size={14} style={{ color: C.brandEmerald.light }} />
           <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
@@ -317,7 +317,7 @@ export default function Header({
               alignItems: 'center'
             }}
           >
-            <FaBell style={{ fontSize: '0.85rem', color: C.primary.DEFAULT }} />
+            <Bell size={15} style={{ color: C.primary.DEFAULT }} />
             {unreadCount > 0 && (
               <span style={{ 
                 position: 'absolute', 
@@ -350,7 +350,7 @@ export default function Header({
             }}>
               <div style={{ 
                 display: 'flex', 
-                justify: 'space-between', 
+                justifyContent: 'space-between', 
                 alignItems: 'center', 
                 marginBottom: '10px', 
                 borderBottom: `1px solid ${C.dark.border}`, 
@@ -364,16 +364,16 @@ export default function Header({
                     <button 
                       onClick={markAllAsRead} 
                       title={isAr ? 'تحديد الكل كمقروء' : 'Mark all read'} 
-                      style={{ background: 'none', border: 'none', color: C.brandEmerald.light, cursor: 'pointer', fontSize: '0.75rem' }}
+                      style={{ background: 'none', border: 'none', color: C.brandEmerald.light, cursor: 'pointer' }}
                     >
-                      <FaCheckDouble />
+                      <CheckCheck size={14} />
                     </button>
                     <button 
                       onClick={clearAll} 
                       title={isAr ? 'مسح القائمة' : 'Clear list'} 
-                      style={{ background: 'none', border: 'none', color: C.error.DEFAULT, cursor: 'pointer', fontSize: '0.75rem' }}
+                      style={{ background: 'none', border: 'none', color: C.error.DEFAULT, cursor: 'pointer' }}
                     >
-                      <FaTrashAlt />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 )}
@@ -451,7 +451,7 @@ export default function Header({
               justifyContent: 'center',
               fontSize: '0.75rem'
             }}>
-              <FaUserCheck />
+              <UserCheck size={14} />
             </div>
           </button>
 
