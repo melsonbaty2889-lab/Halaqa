@@ -1,4 +1,3 @@
-/* src/components/Dashboard.jsx */
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -19,7 +18,7 @@ import {
   Landmark 
 } from 'lucide-react';
 
-// ✅ تحميل ديناميكي متوافق مع App.jsx
+// تحميل ديناميكي للوحة المشرف العام
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 export default function Dashboard({ 
@@ -131,7 +130,7 @@ export default function Dashboard({
 
   if (isSuperAdmin) {
     return (
-      <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center', color: '#94A3B8' }}>⏳ Loading Admin Panel...</div>}>
+      <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center', color: '#94A3B8' }}>⏳ جاري تحميل لوحة التحكم...</div>}>
         <AdminDashboard isRtl={isRtl} academyName={displayName} onLogout={() => supabase.auth.signOut()} />
       </Suspense>
     );
@@ -140,7 +139,7 @@ export default function Dashboard({
   return (
     <div className={styles.dashboardContainer} style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1️⃣ الترويسة */}
+      {/* الترويسة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', lineHeight: '1.3' }}>
@@ -158,7 +157,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* 2️⃣ شريط الوصول السريع */}
+      {/* شريط الوصول السريع */}
       <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px', scrollbarWidth: 'none' }}>
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
@@ -180,7 +179,7 @@ export default function Dashboard({
         </button>
       </div>
 
-      {/* 3️⃣ البطاقات الرئيسية */}
+      {/* البطاقات الإحصائية */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
         <div 
           onClick={() => setActiveTab && setActiveTab('students')}
@@ -243,7 +242,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* 4️⃣ الحلقات المباشرة والتنبيهات */}
+      {/* الحلقات المباشرة */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
         <div style={{ background: '#1E293B', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -308,27 +307,6 @@ export default function Dashboard({
                 </div>
               );
             })}
-          </div>
-        </div>
-      ) : (stats?.overdueCount || 0) > 0 ? (
-        <div style={{ background: '#1E293B', padding: '14px 16px', borderRadius: '14px', border: '1px solid rgba(248, 113, 113, 0.3)', marginBottom: '20px' }}>
-          <div 
-            onClick={() => setActiveTab && setActiveTab('payments')}
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <AlertTriangle style={{ color: '#F87171' }} size={18} />
-              <div>
-                <div style={{ color: '#FFFFFF', fontWeight: '700', fontSize: '0.85rem' }}>
-                  {isArabic ? 'تنبيه: اشتراكات مستحقة التحصيل' : 'Alert: Pending Overdue Payments'}
-                </div>
-                <div style={{ color: '#94A3B8', fontSize: '0.75rem', marginTop: '2px' }}>
-                  {isArabic ? `يوجد ${stats.overdueCount} اشتراكات تحتاج المتابعة اليوم` : `There are ${stats.overdueCount} payments requiring follow up`}
-                </div>
-              </div>
-            </div>
-            <span style={{ color: '#F87171', fontWeight: 'bold', fontSize: '0.8rem' }}>
-              {isArabic ? 'متابعة ←' : 'Review →'}
-            </span>
           </div>
         </div>
       ) : null}
