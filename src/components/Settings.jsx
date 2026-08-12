@@ -549,82 +549,85 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           )}
 
           {/* شريط الحفظ العائم المحدث والمستجيب تماماً للموبايل */}
-{isDirty && (
-  <div style={{ 
-    position: 'fixed', 
-    bottom: '12px', 
-    left: '12px', 
-    right: '12px',
-    backgroundColor: colors.dark.card, 
-    border: `1px solid ${colors.primary.DEFAULT}`, 
-    padding: '10px 14px', 
-    borderRadius: '14px', 
-    boxShadow: '0 10px 30px rgba(0,0,0,0.8)', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'space-between',
-    gap: '8px', 
-    zIndex: 999,
-    backdropFilter: 'blur(12px)',
-    boxSizing: 'border-box'
-  }}>
-    <span style={{ 
-      fontSize: '0.75rem', 
-      color: colors.gold.DEFAULT, 
-      fontWeight: '700', 
-      whiteSpace: 'nowrap', 
-      overflow: 'hidden', 
-      textOverflow: 'ellipsis',
-      flex: 1
-    }}>
-      تغييرات غير محفوظة!
-    </span>
+          {isDirty && (
+            <div style={{ 
+              position: 'fixed', 
+              bottom: '12px', 
+              left: '12px', 
+              right: '12px',
+              backgroundColor: colors.dark.card, 
+              border: `1px solid ${colors.primary.DEFAULT}`, 
+              padding: '10px 12px', 
+              borderRadius: '14px', 
+              boxShadow: '0 10px 30px rgba(0,0,0,0.8)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              gap: '8px', 
+              zIndex: 999,
+              backdropFilter: 'blur(12px)',
+              boxSizing: 'border-box'
+            }}>
+              <span style={{ 
+                fontSize: '0.72rem', 
+                color: colors.gold.DEFAULT, 
+                fontWeight: '700', 
+                whiteSpace: 'nowrap', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis',
+                minWidth: 0,
+                flexShrink: 1
+              }}>
+                تغييرات غير محفوظة!
+              </span>
 
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-      <button 
-        type="button" 
-        onClick={handleDiscardChanges}
-        disabled={saving}
-        style={{ 
-          padding: '6px 10px', 
-          borderRadius: '8px', 
-          background: colors.dark.buttonDark, 
-          color: colors.text.muted, 
-          fontWeight: '700', 
-          border: `1px solid ${colors.dark.border}`, 
-          cursor: 'pointer', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '4px', 
-          fontSize: '0.72rem' 
-        }}
-      >
-        <X size={13} /> التراجع
-      </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <button 
+                  type="button" 
+                  onClick={handleDiscardChanges}
+                  disabled={saving}
+                  style={{ 
+                    padding: '6px 10px', 
+                    borderRadius: '8px', 
+                    background: colors.dark.buttonDark, 
+                    color: colors.text.muted, 
+                    fontWeight: '700', 
+                    border: `1px solid ${colors.dark.border}`, 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    fontSize: '0.72rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <X size={13} /> التراجع
+                </button>
 
-      <button 
-        type="submit" 
-        disabled={saving} 
-        style={{ 
-          padding: '6px 14px', 
-          borderRadius: '8px', 
-          background: colors.primary.DEFAULT, 
-          color: colors.text.title, 
-          fontWeight: '800', 
-          border: 'none', 
-          cursor: 'pointer', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '4px', 
-          fontSize: '0.72rem' 
-        }}
-      >
-        {saving ? <RefreshCw className="animate-spin" size={13} /> : <Save size={13} />}
-        {saving ? 'حفظ...' : 'حفظ'}
-      </button>
-    </div>
-  </div>
-)}
+                <button 
+                  type="submit" 
+                  disabled={saving} 
+                  style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    background: colors.primary.DEFAULT, 
+                    color: colors.text.title, 
+                    fontWeight: '800', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    fontSize: '0.72rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {saving ? <RefreshCw className="animate-spin" size={13} /> : <Save size={13} />}
+                  <span>{saving ? 'حفظ...' : 'حفظ'}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </form>
       </div>
 
