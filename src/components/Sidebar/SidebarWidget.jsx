@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
-import { formatHijriDate } from '../../utils/dateUtils'; // تأكد من ضبط مسار الملف
+import { formatHijriDate } from '../../utils/dateUtils';
+import { colors as C } from '@/constants/colors';
 
 export default function SidebarWidget({
   academyTime,
@@ -11,16 +12,15 @@ export default function SidebarWidget({
   setSidebarOpen,
   isRtl
 }) {
-  // حساب التاريخ الهجري بدقة بناءً على لغة الواجهة (isRtl)
   const formattedHijri = formatHijriDate(new Date(), isRtl);
 
   return (
     <div style={{
-      background: '#0f172a',
+      background: C.dark.card,
       padding: '8px 10px',
       borderRadius: '8px',
       marginBottom: '10px',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
+      border: `1px solid ${C.dark.border}`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -30,13 +30,13 @@ export default function SidebarWidget({
         display: 'flex',
         alignItems: 'center',
         gap: '4px',
-        color: '#38bdf8',
+        color: C.brandEmerald.light,
         fontSize: '0.72rem',
         fontWeight: 'bold',
         fontFamily: 'monospace',
         flexShrink: 0
       }}>
-        <Clock size={14} style={{ color: '#38bdf8' }} />
+        <Clock size={14} style={{ color: C.brandEmerald.light }} />
         <span>{academyTime || '12:24 PM'}</span>
       </div>
 
@@ -50,7 +50,7 @@ export default function SidebarWidget({
       }}>
         <span style={{
           fontSize: '0.65rem',
-          color: '#38bdf8',
+          color: C.brandEmerald.light,
           fontWeight: '600',
           whiteSpace: 'nowrap',
           lineHeight: '1.2'
@@ -60,7 +60,7 @@ export default function SidebarWidget({
 
         <span style={{
           fontSize: '0.62rem',
-          color: '#94a3b8',
+          color: C.text.muted,
           fontWeight: '500',
           whiteSpace: 'nowrap',
           lineHeight: '1.2'
@@ -77,8 +77,8 @@ export default function SidebarWidget({
         }}
         style={{
           padding: '5px 9px',
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-          color: '#000',
+          background: C.primary.gradient,
+          color: C.dark.main,
           border: 'none',
           borderRadius: '6px',
           fontWeight: '700',
@@ -92,7 +92,7 @@ export default function SidebarWidget({
           transition: 'transform 0.15s ease'
         }}
       >
-        <Zap size={12} fill="#000" />
+        <Zap size={12} fill={C.dark.main} />
         <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
       </button>
     </div>
