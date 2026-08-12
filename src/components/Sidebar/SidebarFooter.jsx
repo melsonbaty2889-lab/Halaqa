@@ -1,12 +1,13 @@
 import React from 'react';
 import { Cloud, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { colors as C } from '@/constants/colors';
 
 export default function SidebarFooter({ isRtl }) {
   return (
-    <div style={{ padding: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#070d18' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.72rem', color: '#64748b' }}>
-        <Cloud size={14} style={{ color: '#10b981' }} />
+    <div style={{ padding: '12px', borderTop: `1px solid ${C.dark.border}`, background: C.dark.surface }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.72rem', color: C.text.muted }}>
+        <Cloud size={14} style={{ color: C.brandEmerald.DEFAULT }} />
         <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
       </div>
 
@@ -19,10 +20,10 @@ export default function SidebarFooter({ isRtl }) {
           justifyContent: 'center',
           gap: '8px',
           padding: '8px',
-          background: 'rgba(239, 68, 68, 0.08)',
-          border: '1px solid rgba(239, 68, 68, 0.2)',
+          background: C.error.bgGlow,
+          border: `1px solid ${C.error.border}`,
           borderRadius: '6px',
-          color: '#f87171',
+          color: C.error.light,
           fontWeight: '700',
           fontSize: '0.78rem',
           cursor: 'pointer',
