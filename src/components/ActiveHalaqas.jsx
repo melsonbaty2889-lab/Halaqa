@@ -1,4 +1,3 @@
-/* src/components/ActiveHalaqas.jsx */
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -8,13 +7,10 @@ import {
   Plus, 
   Archive, 
   Search, 
-  BookOpen, 
   Globe, 
   X,
   Video,
-  Radio,
-  CheckCircle2,
-  Calendar
+  Radio
 } from 'lucide-react';
 
 export default function ActiveHalaqas({ 
@@ -34,7 +30,6 @@ export default function ActiveHalaqas({
   const [viewMode, setViewMode] = useState('active'); 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // تحديد المنطقة الزمنية التلقائية للمستخدم
   const userTimezone = useMemo(() => {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -102,182 +97,256 @@ export default function ActiveHalaqas({
 
   if (isLoading) {
     return (
-      <div className="p-6 rounded-2xl border border-slate-800 bg-dark-bg animate-pulse flex flex-col gap-4">
-        <div className="h-6 bg-slate-800 rounded w-1/3"></div>
-        <div className="h-24 bg-slate-800/40 rounded-xl"></div>
+      <div style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle at top, #111e2e 0%, #0c1520 100%)',
+        padding: '24px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ color: '#C9A84C', fontWeight: 'bold' }}>جاري تحميل الحلقات...</div>
       </div>
     );
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className={`p-5 md:p-6 rounded-2xl border border-slate-800/80 bg-[#0b1329] text-slate-100 shadow-2xl transition-all duration-300 ${isRtl ? 'text-right' : 'text-left'}`}>
-      
-      {/* 🟢 الهيدر الرئيسي الحديث */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center pb-5 border-b border-slate-800/80">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
-              <Radio size={18} className="animate-pulse" />
-            </span>
-            <h3 className="text-lg md:text-xl font-bold text-white tracking-wide">
-              {t('halaqasManager', 'منصة إدارة الحلقات القرآنية والأكاديمية')}
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-            {t('halaqaSub', 'إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً')}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              showForm ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-amber-400 text-slate-950 hover:bg-amber-500 shadow-lg shadow-amber-400/10'
-            }`}
-          >
-            {showForm ? <X size={14} /> : <Plus size={14} />}
-            {showForm ? t('close', 'إغلاق') : t('addHalaqa', 'إنشاء حلقة جديدة')}
-          </button>
-          
-          <button
-            onClick={() => setViewMode(viewMode === 'active' ? 'archived' : 'active')}
-            className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 ${
-              viewMode === 'active' 
-                ? 'border-slate-800 bg-slate-900/80 text-slate-400 hover:bg-slate-800' 
-                : 'border-amber-400/30 bg-amber-400/10 text-amber-400'
-            }`}
-          >
-            <Archive size={14} />
-            {viewMode === 'active' ? t('viewArchived', 'الأرشيف') : t('viewActive', 'الحلقات النشطة')}
-          </button>
-        </div>
-      </div>
-
-      {/* 📝 نموذج إنشاء حلقة مخصص كلياً */}
-      {showForm && (
-        <form onSubmit={handleSubmit} className="p-5 my-5 rounded-2xl border border-amber-400/20 bg-slate-900/90 grid grid-cols-1 md:grid-cols-2 gap-4 shadow-xl">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-300">{t('nameAr', 'اسم الحلقة (بالعربية)')}</label>
-            <input type="text" required placeholder="مثال: حلقة الإمام الشاطبي" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400 transition-colors" />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-300">{t('nameEn', 'اسم الحلقة (بالإنجليزية)')}</label>
-            <input type="text" placeholder="e.g. Al-Shatibi Quran Circle" value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400 transition-colors" />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-300">{t('assignTeacher', 'تعيين المعلم المسؤول')}</label>
-            <select required value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
-              {teachers.map(teacher => (
-                <option key={teacher.id} value={teacher.id}>{getLocalizedText(teacher.name || teacher.full_name)}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-300">{t('track', 'المسار التعليمي')}</label>
-            <select value={formData.educational_track} onChange={e => setFormData({...formData, educational_track: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-amber-400">
-              <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
-              <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
-              <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-300">{t('startTime', 'وقت البدء')}</label>
-              <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono outline-none focus:border-amber-400" />
+    <div style={{
+      minHeight: '100vh',
+      background: 'radial-gradient(circle at top, #111e2e 0%, #0c1520 100%)',
+      padding: '24px 16px',
+      direction: isRtl ? 'rtl' : 'ltr',
+      textAlign: isRtl ? 'right' : 'left',
+      fontFamily: "'Cairo', system-ui, sans-serif"
+    }}>
+      <div style={{
+        maxWidth: '1000px',
+        margin: '0 auto',
+        background: 'rgba(21, 35, 50, 0.92)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(201, 168, 76, 0.25)',
+        borderRadius: '24px',
+        padding: '28px 24px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
+      }}>
+        {/* الهيدر الرئيسي */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: '20px', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ padding: '8px', borderRadius: '12px', background: 'rgba(201, 168, 76, 0.15)', color: '#C9A84C', border: '1px solid rgba(201, 168, 76, 0.25)', display: 'inline-flex' }}>
+                <Radio size={20} />
+              </span>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#fff', margin: 0 }}>
+                {t('halaqasManager', 'منصة إدارة الحلقات القرآنية والأكاديمية')}
+              </h3>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-300">{t('endTime', 'وقت الانتهاء')}</label>
-              <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="p-3 text-sm rounded-xl bg-slate-950 border border-slate-800 text-white text-center font-mono outline-none focus:border-amber-400" />
-            </div>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '6px', margin: 0 }}>
+              {t('halaqaSub', 'إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً')}
+            </p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-300">{t('timezone', 'المنطقة الزمنية النظامية')}</label>
-            <div className="p-3 text-xs rounded-xl bg-slate-950/60 border border-slate-800 text-slate-400 font-mono flex items-center gap-2">
-              <Globe size={14} className="text-amber-400" />
-              <span>{formData.timezone}</span>
-            </div>
-          </div>
-
-          <div className="md:col-span-2 pt-2">
-            <button type="submit" className="w-full p-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-500 transition-all shadow-lg shadow-amber-400/10">
-              {t('btnSave', 'اعتماد الحلقة وتأكيد الجدولة')}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '12px',
+                fontSize: '0.82rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: showForm ? '#0c1520' : 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)',
+                color: showForm ? '#cbd5e1' : '#0c1520',
+                border: showForm ? '1px solid rgba(255,255,255,0.12)' : 'none'
+              }}
+            >
+              {showForm ? <X size={16} /> : <Plus size={16} />}
+              {showForm ? t('close', 'إغلاق') : t('addHalaqa', 'إنشاء حلقة جديدة')}
+            </button>
+            
+            <button
+              onClick={() => setViewMode(viewMode === 'active' ? 'archived' : 'active')}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '12px',
+                fontSize: '0.82rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: viewMode === 'active' ? '#0c1520' : 'rgba(201, 168, 76, 0.15)',
+                color: viewMode === 'active' ? '#94a3b8' : '#C9A84C',
+                border: viewMode === 'active' ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(201, 168, 76, 0.3)'
+              }}
+            >
+              <Archive size={16} />
+              {viewMode === 'active' ? t('viewArchived', 'الأرشيف') : t('viewActive', 'الحلقات النشطة')}
             </button>
           </div>
-        </form>
-      )}
-
-      {/* 🔍 شريط البحث الاحترافي */}
-      <div className="relative my-5">
-        <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-4' : 'left-4'}`} size={16} />
-        <input 
-          type="text" 
-          placeholder={t('searchPh', 'ابحث باسم الحلقة أو اسم المعلم المكلف...')}
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className={`w-full p-3.5 ${isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-sm rounded-xl bg-slate-900/60 border border-slate-800 text-white outline-none focus:border-amber-400/40 transition-colors placeholder:text-slate-500`}
-        />
-      </div>
-
-      {/* 📊 عرض شبكي متجاوب ومصمم عالمياً (Cards System) */}
-      {filteredHalaqas.length === 0 ? (
-        <div className="py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
-          <FolderOpen className="mx-auto text-slate-600 mb-2" size={32} />
-          <p className="text-slate-400 text-xs font-medium">{t('noData', 'لا توجد جلسات تعليمية مسجلة طابق بحثك حالياً')}</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredHalaqas.map((halaqa) => (
-            <div key={halaqa.id} className="p-4 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 transition-all flex flex-col justify-between gap-4">
-              
-              <div>
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <h4 className="text-sm font-bold text-white leading-snug">{getLocalizedText(halaqa.name)}</h4>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium whitespace-nowrap">
-                    {t('activeSession', 'جلسة نشطة')}
-                  </span>
-                </div>
 
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
-                  <User size={13} className="text-amber-400 shrink-0" />
-                  <span className="truncate">{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'بانتظار تعيين معتمد'))}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
-                  <Clock size={12} className="shrink-0 text-slate-500" />
-                  <span>{halaqa.start_time || '16:00'} - {halaqa.end_time || '17:15'}</span>
-                  <span className="text-[9px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">
-                    {halaqa.timezone || 'UTC'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 border-t border-slate-800/80 pt-3">
-                <button 
-                  onClick={() => onNavigateToAttendance?.(halaqa.id)} 
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-500 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-400/5"
-                >
-                  <Video size={14} />
-                  {t('goToAttendance', 'الانضمام للجلسة المباشرة')}
-                </button>
-
-                <button 
-                  onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} 
-                  className="px-3 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 text-xs transition-all"
-                >
-                  {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
-                </button>
-              </div>
-
+        {/* نموذج إنشاء حلقة */}
+        {showForm && (
+          <form onSubmit={handleSubmit} style={{ padding: '20px', marginBottom: '20px', borderRadius: '16px', border: '1px solid rgba(201, 168, 76, 0.3)', background: '#0c1520', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('nameAr', 'اسم الحلقة (بالعربية)')}</label>
+              <input type="text" required placeholder="مثال: حلقة الإمام الشاطبي" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} style={{ padding: '10px 12px', fontSize: '0.82rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', outline: 'none' }} />
             </div>
-          ))}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('nameEn', 'اسم الحلقة (بالإنجليزية)')}</label>
+              <input type="text" placeholder="e.g. Al-Shatibi Quran Circle" value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} style={{ padding: '10px 12px', fontSize: '0.82rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', outline: 'none' }} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('assignTeacher', 'تعيين المعلم المسؤول')}</label>
+              <select required value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} style={{ padding: '10px 12px', fontSize: '0.82rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', outline: 'none' }}>
+                <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
+                {teachers.map(teacher => (
+                  <option key={teacher.id} value={teacher.id}>{getLocalizedText(teacher.name || teacher.full_name)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('track', 'المسار التعليمي')}</label>
+              <select value={formData.educational_track} onChange={e => setFormData({...formData, educational_track: e.target.value})} style={{ padding: '10px 12px', fontSize: '0.82rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', outline: 'none' }}>
+                <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
+                <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
+                <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('startTime', 'وقت البدء')}</label>
+                <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} style={{ padding: '10px', fontSize: '0.82rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', textAlign: 'center', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('endTime', 'وقت الانتهاء')}</label>
+                <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} style={{ padding: '10px', fontSize: '0.82rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', textAlign: 'center', outline: 'none' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#cbd5e1' }}>{t('timezone', 'المنطقة الزمنية النظامية')}</label>
+              <div style={{ padding: '10px', fontSize: '0.78rem', borderRadius: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Globe size={15} style={{ color: '#C9A84C' }} />
+                <span>{formData.timezone}</span>
+              </div>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1', paddingTop: '8px' }}>
+              <button type="submit" style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#0c1520', fontWeight: '800', fontSize: '0.88rem', border: 'none', cursor: 'pointer' }}>
+                {t('btnSave', 'اعتماد الحلقة وتأكيد الجدولة')}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* شريط البحث */}
+        <div style={{ position: 'relative', marginBottom: '20px' }}>
+          <Search size={16} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: '#64748B' }} />
+          <input 
+            type="text" 
+            placeholder={t('searchPh', 'ابحث باسم الحلقة أو اسم المعلم المكلف...')}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              paddingRight: isRtl ? '40px' : '14px',
+              paddingLeft: isRtl ? '14px' : '40px',
+              fontSize: '0.85rem',
+              borderRadius: '12px',
+              background: '#0c1520',
+              border: '1px solid rgba(255,255,255,0.12)',
+              color: '#fff',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
         </div>
-      )}
+
+        {/* شبكة الكروت */}
+        {filteredHalaqas.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.12)', borderRadius: '16px', background: '#0c1520' }}>
+            <FolderOpen size={32} style={{ color: '#64748B', margin: '0 auto 8px' }} />
+            <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: 0 }}>{t('noData', 'لا توجد جلسات تعليمية مسجلة طابق بحثك حالياً')}</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            {filteredHalaqas.map((halaqa) => (
+              <div key={halaqa.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', background: '#0c1520', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#fff', margin: 0 }}>{getLocalizedText(halaqa.name)}</h4>
+                    <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.68rem', background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)', fontWeight: '700' }}>
+                      {t('activeSession', 'جلسة نشطة')}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '8px' }}>
+                    <User size={14} style={{ color: '#C9A84C' }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'بانتظار تعيين معتمد'))}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#94a3b8' }}>
+                    <Clock size={13} style={{ color: '#64748B' }} />
+                    <span>{halaqa.start_time || '16:00'} - {halaqa.end_time || '17:15'}</span>
+                    <span style={{ fontSize: '0.68rem', background: 'rgba(21, 35, 50, 0.92)', padding: '2px 6px', borderRadius: '6px', color: '#94a3b8' }}>
+                      {halaqa.timezone || 'UTC'}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
+                  <button 
+                    onClick={() => onNavigateToAttendance?.(halaqa.id)} 
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)',
+                      color: '#0c1520',
+                      border: 'none',
+                      fontSize: '0.78rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Video size={14} />
+                    {t('goToAttendance', 'الانضمام للجلسة المباشرة')}
+                  </button>
+
+                  <button 
+                    onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} 
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'transparent',
+                      color: '#94a3b8',
+                      fontSize: '0.78rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
