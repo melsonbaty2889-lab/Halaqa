@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 
 import { supabase } from '@/lib/supabase';
+import { colors as C } from '@/constants/colors'; // استيراد الألوان الموحدة
 
 export default function Header({ 
   activeTab, 
@@ -104,12 +105,8 @@ export default function Header({
     pathname = '';
   }
 
-  // تنظيف مفتاح الصفحة لاستخراجه بدقة
   const rawKey = activeTab || pathname.replace(/^\//, '') || 'dashboard';
   const activeKey = rawKey.split('/')[0].trim();
-
-  // 🎯 استخراج عنوان الصفحة مباشرة وديناميكياً عبر i18next القياسي
-  // سيبحث عن nav.asset-management مثلاً، وإن لم يجدها سيأخذ النص الافتراضي
   const pageTitle = t(`nav.${activeKey}`, t(`nav.dashboard`, 'Smart Halaqa'));
 
   const toggleLanguage = () => {
@@ -160,8 +157,8 @@ export default function Header({
   return (
     <header style={{
       minHeight: '60px',
-      backgroundColor: '#0b1329',
-      borderBottom: '1px solid #1e293b',
+      backgroundColor: C.dark.surface, // مطابقة لخلفية شاشة الدخول والقوائم
+      borderBottom: `1px solid ${C.dark.border}`,
       padding: '8px 12px',
       display: 'flex',
       alignItems: 'center',
@@ -170,19 +167,19 @@ export default function Header({
       top: 0,
       zIndex: 100,
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      color: '#fff',
+      color: C.text.title,
       direction: activeRtl ? 'rtl' : 'ltr',
       gap: '8px',
       flexWrap: 'nowrap'
     }}>
-      {/* القسم الأيسر: زر السايدبار والعنوان المتجاوب */}
+      {/* القسم الأيسر */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
         <button
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
           style={{
-            background: '#131f37',
-            border: '1px solid #1e293b',
-            color: '#fbbf24',
+            background: C.dark.buttonDark,
+            border: `1px solid ${C.dark.border}`,
+            color: C.primary.DEFAULT,
             padding: '8px',
             borderRadius: '8px',
             cursor: 'pointer',
@@ -197,12 +194,11 @@ export default function Header({
           <FaBars />
         </button>
 
-        {/* عنوان الصفحة المترجم تلقائياً وبأقصى مرونة بدون اقتطاع متصلب */}
         <h1 style={{
           margin: 0,
           fontSize: '0.88rem',
           fontWeight: '700',
-          color: '#ffffff',
+          color: C.text.title,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -212,9 +208,9 @@ export default function Header({
         </h1>
       </div>
 
-      {/* القسم الأيمن: أدوات التحكم والإشعارات */}
+      {/* القسم الأيمن */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-        {/* قائمة العملات */}
+        {/* العملات */}
         <div style={{ position: 'relative' }} ref={currencyRef}>
           <button
             onClick={() => {
@@ -227,10 +223,10 @@ export default function Header({
               alignItems: 'center',
               gap: '4px',
               padding: '6px 8px',
-              background: '#131f37',
-              border: '1px solid #1e293b',
+              background: C.dark.buttonDark,
+              border: `1px solid ${C.dark.border}`,
               borderRadius: '6px',
-              color: '#fbbf24',
+              color: C.primary.DEFAULT,
               fontSize: '0.72rem',
               fontWeight: '600',
               cursor: 'pointer'
@@ -245,8 +241,8 @@ export default function Header({
               position: 'absolute',
               top: '40px',
               ...dropdownPositionStyle,
-              backgroundColor: '#131f37',
-              border: '1px solid #1e293b',
+              backgroundColor: C.dark.card,
+              border: `1px solid ${C.dark.border}`,
               borderRadius: '8px',
               padding: '6px 0',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
@@ -266,7 +262,7 @@ export default function Header({
                     justifyContent: 'space-between',
                     background: 'transparent',
                     border: 'none',
-                    color: selectedCurrency === curr.code ? '#10b981' : '#cbd5e1',
+                    color: selectedCurrency === curr.code ? C.brandEmerald.DEFAULT : C.text.body,
                     fontSize: '0.75rem',
                     cursor: 'pointer',
                     textAlign: isAr ? 'right' : 'left'
@@ -280,7 +276,7 @@ export default function Header({
           )}
         </div>
 
-        {/* زر تبديل اللغة */}
+        {/* اللغة */}
         <button
           onClick={toggleLanguage}
           style={{
@@ -288,20 +284,20 @@ export default function Header({
             alignItems: 'center',
             gap: '4px',
             padding: '6px 8px',
-            background: '#131f37',
-            border: '1px solid #1e293b',
+            background: C.dark.buttonDark,
+            border: `1px solid ${C.dark.border}`,
             borderRadius: '6px',
-            color: '#cbd5e1',
+            color: C.text.body,
             fontSize: '0.72rem',
             fontWeight: '600',
             cursor: 'pointer'
           }}
         >
-          <FaGlobe style={{ color: '#38bdf8', fontSize: '0.75rem' }} />
+          <FaGlobe style={{ color: C.brandEmerald.light, fontSize: '0.75rem' }} />
           <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* زر الإشعارات */}
+        {/* الإشعارات */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button 
             onClick={() => {
@@ -310,9 +306,9 @@ export default function Header({
               setShowProfileMenu(false);
             }}
             style={{ 
-              background: '#131f37', 
-              border: '1px solid #1e293b', 
-              color: '#cbd5e1', 
+              background: C.dark.buttonDark, 
+              border: `1px solid ${C.dark.border}`, 
+              color: C.text.body, 
               padding: '7px 9px', 
               borderRadius: '6px', 
               cursor: 'pointer', 
@@ -321,7 +317,7 @@ export default function Header({
               alignItems: 'center'
             }}
           >
-            <FaBell style={{ fontSize: '0.85rem', color: '#fbbf24' }} />
+            <FaBell style={{ fontSize: '0.85rem', color: C.primary.DEFAULT }} />
             {unreadCount > 0 && (
               <span style={{ 
                 position: 'absolute', 
@@ -330,7 +326,7 @@ export default function Header({
                 width: '7px', 
                 height: '7px', 
                 borderRadius: '50%', 
-                backgroundColor: '#10b981' 
+                backgroundColor: C.brandEmerald.DEFAULT 
               }}></span>
             )}
           </button>
@@ -340,15 +336,15 @@ export default function Header({
               position: 'absolute',
               top: '40px',
               ...dropdownPositionStyle,
-              backgroundColor: '#131f37',
-              border: '1px solid #1e293b',
+              backgroundColor: C.dark.card,
+              border: `1px solid ${C.dark.border}`,
               borderRadius: '8px',
               padding: '12px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
               width: '250px',
               maxWidth: 'calc(100vw - 24px)',
-              color: '#cbd5e1',
+              color: C.text.body,
               fontSize: '0.75rem',
               textAlign: isAr ? 'right' : 'left'
             }}>
@@ -357,10 +353,10 @@ export default function Header({
                 justify: 'space-between', 
                 alignItems: 'center', 
                 marginBottom: '10px', 
-                borderBottom: '1px solid #1e293b', 
+                borderBottom: `1px solid ${C.dark.border}`, 
                 paddingBottom: '6px' 
               }}>
-                <span style={{ fontWeight: 'bold', color: '#fff' }}>
+                <span style={{ fontWeight: 'bold', color: C.text.title }}>
                   {t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
                 </span>
                 {notifications.length > 0 && (
@@ -368,14 +364,14 @@ export default function Header({
                     <button 
                       onClick={markAllAsRead} 
                       title={isAr ? 'تحديد الكل كمقروء' : 'Mark all read'} 
-                      style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.75rem' }}
+                      style={{ background: 'none', border: 'none', color: C.brandEmerald.light, cursor: 'pointer', fontSize: '0.75rem' }}
                     >
                       <FaCheckDouble />
                     </button>
                     <button 
                       onClick={clearAll} 
                       title={isAr ? 'مسح القائمة' : 'Clear list'} 
-                      style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', fontSize: '0.75rem' }}
+                      style={{ background: 'none', border: 'none', color: C.error.DEFAULT, cursor: 'pointer', fontSize: '0.75rem' }}
                     >
                       <FaTrashAlt />
                     </button>
@@ -384,20 +380,20 @@ export default function Header({
               </div>
 
               {loadingNotifs ? (
-                <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
+                <div style={{ padding: '12px 0', color: C.text.muted, textAlign: 'center' }}>
                   {t('common.loading', isAr ? 'جاري التحميل...' : 'Loading...')}
                 </div>
               ) : notifications.length === 0 ? (
-                <div style={{ padding: '12px 0', color: '#94a3b8', textAlign: 'center' }}>
+                <div style={{ padding: '12px 0', color: C.text.muted, textAlign: 'center' }}>
                   {isAr ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
                 </div>
               ) : (
                 notifications.map((item) => (
-                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b55' }}>
+                  <div key={item.id} style={{ padding: '8px 0', borderBottom: `1px solid ${C.dark.border}` }}>
                     <div 
                       dir="auto" 
                       style={{ 
-                        color: item.is_read ? '#94a3b8' : '#ffffff', 
+                        color: item.is_read ? C.text.muted : C.text.title, 
                         fontWeight: item.is_read ? 'normal' : '600', 
                         lineHeight: '1.3',
                         textAlign: 'start'
@@ -409,13 +405,13 @@ export default function Header({
                     {item.message && (
                       <div 
                         dir="auto" 
-                        style={{ color: '#cbd5e1', fontSize: '0.7rem', marginTop: '3px', textAlign: 'start' }}
+                        style={{ color: C.text.body, fontSize: '0.7rem', marginTop: '3px', textAlign: 'start' }}
                       >
                         {item.message}
                       </div>
                     )}
 
-                    <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '4px' }}>
+                    <div style={{ color: C.text.placeholder, fontSize: '0.68rem', marginTop: '4px' }}>
                       {formatTime(item.created_at)}
                     </div>
                   </div>
@@ -425,7 +421,7 @@ export default function Header({
           )}
         </div>
 
-        {/* ملف المستخدم */}
+        {/* الملف الشخصي */}
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button
             onClick={() => {
@@ -436,10 +432,10 @@ export default function Header({
             style={{ 
               display: 'flex', 
               alignItems: 'center', 
-              background: '#131f37', 
+              background: C.dark.buttonDark, 
               padding: '5px', 
               borderRadius: '6px', 
-              border: '1px solid #1e293b',
+              border: `1px solid ${C.dark.border}`,
               cursor: 'pointer'
             }}
             title={t('nav.profile', isAr ? "الملف الشخصي" : "Profile")}
@@ -448,8 +444,8 @@ export default function Header({
               width: '22px', 
               height: '22px', 
               borderRadius: '50%', 
-              background: 'rgba(16, 185, 129, 0.2)', 
-              color: '#34d399', 
+              background: C.brandEmerald.bgGlow, 
+              color: C.brandEmerald.light, 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
@@ -464,31 +460,31 @@ export default function Header({
               position: 'absolute',
               top: '40px',
               ...dropdownPositionStyle,
-              backgroundColor: '#131f37',
-              border: '1px solid #1e293b',
+              backgroundColor: C.dark.card,
+              border: `1px solid ${C.dark.border}`,
               borderRadius: '8px',
               padding: '12px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
               zIndex: 150,
               width: '170px',
               maxWidth: 'calc(100vw - 24px)',
-              color: '#cbd5e1',
+              color: C.text.body,
               fontSize: '0.75rem',
               textAlign: isAr ? 'right' : 'left'
             }}>
-              <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '0.82rem' }}>
+              <div style={{ fontWeight: 'bold', color: C.text.title, fontSize: '0.82rem' }}>
                 {t('header.admin', isAr ? 'صاحب الأكاديمية' : 'Academy Owner')}
               </div>
 
               <div style={{ 
-                color: '#10b981', 
+                color: C.brandEmerald.DEFAULT, 
                 fontSize: '0.68rem', 
                 marginTop: '6px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px'
               }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: C.brandEmerald.DEFAULT, display: 'inline-block' }}></span>
                 <span>{isAr ? 'الجلسة نشطة' : 'Active Session'}</span>
               </div>
             </div>
