@@ -1,20 +1,3 @@
-<select 
-  value={formData.currency} 
-  onChange={(e) => setFormData({ ...formData, currency: e.target.value })} 
-  className="app-input cursor-pointer"
->
-  <option value="SAR">ريال سعودي (SAR)</option>
-  ...
-</select>
-```[span_1](start_span)[span_1](end_span)
-
-هذا هو السبب في ظهور القائمة الافتراضية للهاتف[span_2](start_span)[span_2](end_span).
-
-لحل هذه المشكلة وجعل جميع القوائم عائمة ومخصصة بالكامل (Floating Dropdown) دون تعديل ملفات إضافية، تم ربط مكون `Select` المطور من `UI.jsx` بصفحة الإعدادات مباشرة بدلاً من عناصر `<select>` التقليدية[span_3](start_span)[span_3](end_span).
-
-### الملف المحدث كاملاً (`Settings.jsx`):
-
-```jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, Save, Globe, Mail, 
@@ -22,7 +5,7 @@ import {
   Download, Image as ImageIcon, AlertCircle, Trash2, Palette, X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase.js';
-import { Select } from '@/components/UI/UI.jsx'; // استدعاء مكون القائمة المطور
+import { Select } from '@/components/UI/UI.jsx';
 
 export default function Settings({ currentAcademyId, isRtl = true }) {
   const [activeTab, setActiveTab] = useState('identity');
@@ -258,7 +241,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     });
   };
 
-  // مصفوفات الخيارات للقوائم المنسدلة
   const currencyOptions = [
     { label: 'ريال سعودي (SAR)', value: 'SAR' },
     { label: 'جنيه مصري (EGP)', value: 'EGP' },
@@ -294,7 +276,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     <div className={`min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-36 font-sans ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'}`}>
       <div className="w-full max-w-4xl mx-auto card-surface !p-4 sm:!p-7 border-0 sm:border rounded-none sm:rounded-2xl relative">
         
-        {/* Toast Notification */}
         {toast && (
           <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-2xl text-xs sm:text-sm text-white transition-all ${
             toast.type === 'error' ? 'bg-[var(--danger)]' : 'bg-[var(--emerald)]'
@@ -304,7 +285,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </div>
         )}
 
-        {/* Header Section */}
         <div className="mb-6 border-b border-[var(--border-light)] pb-4">
           <h1 className="text-xl sm:text-2xl font-extrabold flex items-center gap-2 text-[var(--text-main)]">
             <Building2 className="text-[var(--primary)]" size={24} />
@@ -315,7 +295,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </p>
         </div>
 
-        {/* Dynamic Live Preview Card */}
         <div className="glass-card p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="w-12 h-12 rounded-xl border border-[var(--border-light)] bg-[var(--surface-input)] flex items-center justify-center overflow-hidden shrink-0">
@@ -345,7 +324,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
         <div className="flex gap-2 mb-6 border-b border-[var(--border-light)] pb-3 overflow-x-auto scrollbar-none">
           {[
             { id: 'identity', label: isRtl ? 'الهوية والبصريات' : 'Identity & Branding', icon: Building2 },
@@ -372,9 +350,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           })}
         </div>
 
-        {/* Form Content */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Identity Tab */}
           {activeTab === 'identity' && (
             <div className="space-y-6">
               <div className="space-y-4">
@@ -410,7 +386,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   </div>
                 </div>
 
-                {/* Logo Section */}
                 <div>
                   <label className="block text-xs font-bold mb-1.5 text-[var(--text-muted)]">
                     {isRtl ? 'شعار الأكاديمية (Logo)' : 'Academy Logo'}
@@ -470,7 +445,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                 </div>
               </div>
 
-              {/* Branding Color Picker */}
               <div className="pt-4 border-t border-[var(--border-light)] space-y-3">
                 <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
                   <Palette size={16} /> {isRtl ? 'لون الهوية الرسمية (Branding)' : 'Official Brand Color'}
@@ -495,7 +469,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
             </div>
           )}
 
-          {/* Contact & Regional Tab */}
           {activeTab === 'regional' && (
             <div className="space-y-6">
               <div className="space-y-4">
@@ -531,7 +504,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                 </div>
               </div>
 
-              {/* Enterprise Regional Settings */}
               <div className="pt-4 border-t border-[var(--border-light)] space-y-4">
                 <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
                   <Globe size={16} /> {isRtl ? 'التفضيلات الإقليمية والمعاملات' : 'Regional & Financial Settings'}
@@ -591,7 +563,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
             </div>
           )}
 
-          {/* Backup & Data Tab */}
           {activeTab === 'backup' && (
             <div className="space-y-4">
               <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
@@ -622,7 +593,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
             </div>
           )}
 
-          {/* Centered Ultra-Responsive Floating Save Bar */}
           {isDirty && (
             <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-xl bg-[var(--surface-card)] border border-[var(--primary)]/60 p-3 px-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 z-[999] backdrop-blur-xl">
               <span className="text-xs text-[var(--primary)] font-bold truncate flex items-center gap-1.5">
