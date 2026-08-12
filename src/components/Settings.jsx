@@ -407,8 +407,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                     value={formData.website} 
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })} 
                     placeholder="https://academy.com" 
-                    className="app-input dir-ltr" 
-                  />
+                    className="app-input text-left dir-ltr" 
+                   />
+  
                 </div>
               </div>
 
