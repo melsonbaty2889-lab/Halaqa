@@ -45,7 +45,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     } else {
       setLoading(false);
     }
-  }, [currentAcademyId]);
+  }, [currentAcademyId, isRtl]);
 
   const fetchAcademySettings = async () => {
     try {
@@ -58,9 +58,13 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
-        const fetchedName = typeof data.name === 'object' && data.name !== null
-          ? (data.name.ar || data.name.en || '')
-          : (data.name || '');
+        // تحديد اسم الأكاديمية بحسب اللغة الحالية للمستخدم
+        let fetchedName = '';
+        if (typeof data.name === 'object' && data.name !== null) {
+          fetchedName = isRtl ? (data.name.ar || data.name.en || '') : (data.name.en || data.name.ar || '');
+        } else {
+          fetchedName = data.name || '';
+        }
 
         const fetched = {
           name: fetchedName,
@@ -171,6 +175,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
     try {
       setSaving(true);
+      
+      // حفظ الاسم باللغة المحددة داخل Object إذا لزم الأمر
       const payload = {
         name: formData.name.trim(),
         slug: formData.slug.trim(),
@@ -242,20 +248,20 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   };
 
   const currencyOptions = [
-    { label: 'ريال سعودي (SAR)', value: 'SAR' },
-    { label: 'جنيه مصري (EGP)', value: 'EGP' },
-    { label: 'درهم إماراتي (AED)', value: 'AED' },
-    { label: 'دينار كويتي (KWD)', value: 'KWD' },
-    { label: 'ريال قطري (QAR)', value: 'QAR' },
-    { label: 'دولار أمريكي (USD)', value: 'USD' },
-    { label: 'يورو (EUR)', value: 'EUR' }
+    { label: isRtl ? 'ريال سعودي (SAR)' : 'Saudi Riyal (SAR)', value: 'SAR' },
+    { label: isRtl ? 'جنيه مصري (EGP)' : 'Egyptian Pound (EGP)', value: 'EGP' },
+    { label: isRtl ? 'درهم إماراتي (AED)' : 'UAE Dirham (AED)', value: 'AED' },
+    { label: isRtl ? 'دينار كويتي (KWD)' : 'Kuwaiti Dinar (KWD)', value: 'KWD' },
+    { label: isRtl ? 'ريال قطري (QAR)' : 'Qatari Riyal (QAR)', value: 'QAR' },
+    { label: isRtl ? 'دولار أمريكي (USD)' : 'US Dollar (USD)', value: 'USD' },
+    { label: isRtl ? 'يورو (EUR)' : 'Euro (EUR)', value: 'EUR' }
   ];
 
   const timezoneOptions = [
-    { label: 'توقيت مكة المكرمة (GMT+3)', value: 'Asia/Riyadh' },
-    { label: 'توقيت القاهرة (GMT+2/3)', value: 'Africa/Cairo' },
-    { label: 'توقيت دبي (GMT+4)', value: 'Asia/Dubai' },
-    { label: 'التوقيت العالمي الموحد (UTC)', value: 'UTC' }
+    { label: isRtl ? 'توقيت مكة المكرمة (GMT+3)' : 'Makkah Time (GMT+3)', value: 'Asia/Riyadh' },
+    { label: isRtl ? 'توقيت القاهرة (GMT+2/3)' : 'Cairo Time (GMT+2/3)', value: 'Africa/Cairo' },
+    { label: isRtl ? 'توقيت دبي (GMT+4)' : 'Dubai Time (GMT+4)', value: 'Asia/Dubai' },
+    { label: isRtl ? 'التوقيت العالمي الموحد (UTC)' : 'Coordinated Universal Time (UTC)', value: 'UTC' }
   ];
 
   const calendarOptions = [
@@ -273,7 +279,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-40 font-sans">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className={`min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-40 font-sans ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="w-full max-w-4xl mx-auto card-surface !p-4 sm:!p-7 border-0 sm:border rounded-xl sm:rounded-2xl relative">
         
         {toast && (
@@ -616,7 +622,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   className="btn-primary text-xs !py-1.5 !px-3.5"
                 >
                   {saving ? <RefreshCw className="spin-animation" size={13} /> : <Save size={13} />}
-                  <span>{saving ? (isRtl ? 'حفظ...' : 'Saving...') : (isRtl ? 'حفظ' : 'Save')}</span>
+                  <span>{saving ? (isRtl ? 'حفظ...' : 'Saving...') : (isRtl ? 'Save' : 'Save')}</span>
                 </button>
               </div>
             </div>
