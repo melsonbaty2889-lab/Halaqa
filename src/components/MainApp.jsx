@@ -1,13 +1,11 @@
-/* src/components/MainApp.jsx */
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
-// 🛠️ خدمات وثوابت المشروع (باستخدام @/)
 import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
+import { colors as C } from '@/constants/colors';
 
-// 🧩 استيراد المكونات المباشرة من أماكنها الصحيحة (حل مشكلة ./index)
 import Sidebar from './Sidebar/Sidebar';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
@@ -27,7 +25,6 @@ const safeLazy = (importFn) => {
   );
 };
 
-// 🔄 الاستيرادات الديناميكية باستخدام المسار الموحد (@/)
 const Students = safeLazy(() => import('@/components/Student/StudentProfile.jsx'));
 const Teachers = safeLazy(() => import('@/components/Teachers.jsx')); 
 const Attendance = safeLazy(() => import('@/components/Attendance.jsx'));
@@ -54,12 +51,12 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: '#152332', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', margin: '20px', direction: 'rtl' }}>
+        <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <AlertTriangle size={22} />
-            <h3 style={{ margin: 0, color: '#f87171', fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
+            <h3 style={{ margin: 0, color: C.error.light, fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre style={{ background: '#0c1520', padding: '12px', borderRadius: '8px', color: '#cbd5e1', fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
+          <pre style={{ background: C.dark.main, padding: '12px', borderRadius: '8px', color: C.text.body, fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -67,7 +64,7 @@ class ErrorBoundaryInner extends React.Component {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ padding: '10px 18px', background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', color: '#0c1520', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ padding: '10px 18px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
@@ -307,17 +304,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const skeletonLoader = (
     <div style={{ padding: '24px', opacity: 0.6, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ height: '35px', width: '220px', backgroundColor: '#152332', borderRadius: '8px' }}></div>
+      <div style={{ height: '35px', width: '220px', backgroundColor: C.dark.card, borderRadius: '8px' }}></div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
-        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.15)' }}></div>
-        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.15)' }}></div>
-        <div style={{ height: '110px', backgroundColor: '#152332', borderRadius: '12px', border: '1px solid rgba(201, 168, 76, 0.15)' }}></div>
+        <div style={{ height: '110px', backgroundColor: C.dark.card, borderRadius: '12px', border: `1px solid ${C.dark.border}` }}></div>
+        <div style={{ height: '110px', backgroundColor: C.dark.card, borderRadius: '12px', border: `1px solid ${C.dark.border}` }}></div>
+        <div style={{ height: '110px', backgroundColor: C.dark.card, borderRadius: '12px', border: `1px solid ${C.dark.border}` }}></div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#0c1520', color: '#fff', fontFamily: "'Cairo', system-ui, sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: C.dark.main, color: C.text.title, fontFamily: "'Cairo', system-ui, sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
       <Sidebar 
         currentAcademyId={academyId}
         onSwitchAcademy={handleSwitchAcademy}
