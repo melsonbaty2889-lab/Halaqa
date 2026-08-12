@@ -1,3 +1,20 @@
+<select 
+  value={formData.currency} 
+  onChange={(e) => setFormData({ ...formData, currency: e.target.value })} 
+  className="app-input cursor-pointer"
+>
+  <option value="SAR">ريال سعودي (SAR)</option>
+  ...
+</select>
+```[span_1](start_span)[span_1](end_span)
+
+هذا هو السبب في ظهور القائمة الافتراضية للهاتف[span_2](start_span)[span_2](end_span).
+
+لحل هذه المشكلة وجعل جميع القوائم عائمة ومخصصة بالكامل (Floating Dropdown) دون تعديل ملفات إضافية، تم ربط مكون `Select` المطور من `UI.jsx` بصفحة الإعدادات مباشرة بدلاً من عناصر `<select>` التقليدية[span_3](start_span)[span_3](end_span).
+
+### الملف المحدث كاملاً (`Settings.jsx`):
+
+```jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, Save, Globe, Mail, 
@@ -5,6 +22,7 @@ import {
   Download, Image as ImageIcon, AlertCircle, Trash2, Palette, X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase.js';
+import { Select } from '@/components/UI/UI.jsx'; // استدعاء مكون القائمة المطور
 
 export default function Settings({ currentAcademyId, isRtl = true }) {
   const [activeTab, setActiveTab] = useState('identity');
@@ -239,6 +257,30 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       return { ...prev, weekend_days: updated };
     });
   };
+
+  // مصفوفات الخيارات للقوائم المنسدلة
+  const currencyOptions = [
+    { label: 'ريال سعودي (SAR)', value: 'SAR' },
+    { label: 'جنيه مصري (EGP)', value: 'EGP' },
+    { label: 'درهم إماراتي (AED)', value: 'AED' },
+    { label: 'دينار كويتي (KWD)', value: 'KWD' },
+    { label: 'ريال قطري (QAR)', value: 'QAR' },
+    { label: 'دولار أمريكي (USD)', value: 'USD' },
+    { label: 'يورو (EUR)', value: 'EUR' }
+  ];
+
+  const timezoneOptions = [
+    { label: 'توقيت مكة المكرمة (GMT+3)', value: 'Asia/Riyadh' },
+    { label: 'توقيت القاهرة (GMT+2/3)', value: 'Africa/Cairo' },
+    { label: 'توقيت دبي (GMT+4)', value: 'Asia/Dubai' },
+    { label: 'التوقيت العالمي الموحد (UTC)', value: 'UTC' }
+  ];
+
+  const calendarOptions = [
+    { label: isRtl ? 'ميلادي (Gregorian)' : 'Gregorian', value: 'gregorian' },
+    { label: isRtl ? 'هجري - أم القرى' : 'Hijri (Umm al-Qura)', value: 'hijri_ummalqura' },
+    { label: isRtl ? 'هجري - معيار عام' : 'Hijri (Standard)', value: 'hijri' }
+  ];
 
   if (loading) {
     return (
@@ -496,55 +538,26 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold mb-1.5 text-[var(--text-muted)]">
-                      {isRtl ? 'العملة الرسمية' : 'Official Currency'}
-                    </label>
-                    <select 
-                      value={formData.currency} 
-                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })} 
-                      className="app-input cursor-pointer"
-                    >
-                      <option value="SAR">ريال سعودي (SAR)</option>
-                      <option value="EGP">جنيه مصري (EGP)</option>
-                      <option value="AED">درهم إماراتي (AED)</option>
-                      <option value="KWD">دينار كويتي (KWD)</option>
-                      <option value="QAR">ريال قطري (QAR)</option>
-                      <option value="USD">دولار أمريكي (USD)</option>
-                      <option value="EUR">يورو (EUR)</option>
-                    </select>
-                  </div>
+                  <Select 
+                    label={isRtl ? 'العملة الرسمية' : 'Official Currency'}
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    options={currencyOptions}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-bold mb-1.5 text-[var(--text-muted)]">
-                      {isRtl ? 'المنطقة الزمنية' : 'Timezone'}
-                    </label>
-                    <select 
-                      value={formData.timezone} 
-                      onChange={(e) => setFormData({ ...formData, timezone: e.target.value })} 
-                      className="app-input cursor-pointer"
-                    >
-                      <option value="Asia/Riyadh">توقيت مكة المكرمة (GMT+3)</option>
-                      <option value="Africa/Cairo">توقيت القاهرة (GMT+2/3)</option>
-                      <option value="Asia/Dubai">توقيت دبي (GMT+4)</option>
-                      <option value="UTC">التوقيت العالمي الموحد (UTC)</option>
-                    </select>
-                  </div>
+                  <Select 
+                    label={isRtl ? 'المنطقة الزمنية' : 'Timezone'}
+                    value={formData.timezone}
+                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                    options={timezoneOptions}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-bold mb-1.5 text-[var(--text-muted)]">
-                      {isRtl ? 'نوع التقويم المعتمد' : 'Default Calendar'}
-                    </label>
-                    <select 
-                      value={formData.calendar_type} 
-                      onChange={(e) => setFormData({ ...formData, calendar_type: e.target.value })} 
-                      className="app-input cursor-pointer"
-                    >
-                      <option value="gregorian">{isRtl ? 'ميلادي (Gregorian)' : 'Gregorian'}</option>
-                      <option value="hijri_ummalqura">{isRtl ? 'هجري - أم القرى' : 'Hijri (Umm al-Qura)'}</option>
-                      <option value="hijri">{isRtl ? 'هجري - معيار عام' : 'Hijri (Standard)'}</option>
-                    </select>
-                  </div>
+                  <Select 
+                    label={isRtl ? 'نوع التقويم المعتمد' : 'Default Calendar'}
+                    value={formData.calendar_type}
+                    onChange={(e) => setFormData({ ...formData, calendar_type: e.target.value })}
+                    options={calendarOptions}
+                  />
                 </div>
 
                 <div>
