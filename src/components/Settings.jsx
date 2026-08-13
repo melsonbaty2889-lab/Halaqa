@@ -57,8 +57,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
+      
       if (data) {
-        // تحديد اسم الأكاديمية بحسب اللغة الحالية للمستخدم
         let fetchedName = '';
         if (typeof data.name === 'object' && data.name !== null) {
           fetchedName = isRtl ? (data.name.ar || data.name.en || '') : (data.name.en || data.name.ar || '');
@@ -175,8 +175,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
     try {
       setSaving(true);
-      
-      // حفظ الاسم باللغة المحددة داخل Object إذا لزم الأمر
       const payload = {
         name: formData.name.trim(),
         slug: formData.slug.trim(),
@@ -622,7 +620,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   className="btn-primary text-xs !py-1.5 !px-3.5"
                 >
                   {saving ? <RefreshCw className="spin-animation" size={13} /> : <Save size={13} />}
-                  <span>{saving ? (isRtl ? 'حفظ...' : 'Saving...') : (isRtl ? 'Save' : 'Save')}</span>
+                  <span>{saving ? (isRtl ? 'حفظ...' : 'Saving...') : (isRtl ? 'حفظ' : 'Save')}</span>
                 </button>
               </div>
             </div>
