@@ -62,6 +62,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       if (data) {
         setRawAcademyData(data);
         
+        // استخراج الاسم بحسب اللغة من كائن JSONB
         let fetchedName = '';
         if (typeof data.name === 'object' && data.name !== null) {
           fetchedName = isRtl ? (data.name.ar || data.name.en || '') : (data.name.en || data.name.ar || '');
@@ -80,7 +81,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           currency: data.currency || 'EGP',
           timezone: data.timezone || 'Africa/Cairo',
           calendar_type: data.calendar_type || 'gregorian',
-          // حماية أكيدة لضمان أن تكون weekend_days مصفوفة دائماً
           weekend_days: Array.isArray(data.weekend_days) ? data.weekend_days : ['friday', 'saturday']
         };
         setFormData(fetched);
@@ -180,6 +180,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     try {
       setSaving(true);
 
+      // صياغة حقل name المخصص لـ JSONB
       let namePayload = {};
       if (rawAcademyData && typeof rawAcademyData.name === 'object' && rawAcademyData.name !== null) {
         namePayload = {
@@ -193,14 +194,20 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         };
       }
 
-      const payload = {
-        id: currentAcademyId,
+      // معالجة الـ Slug لضمان ألا يكون فارغاً أو مكرراً
+      let formattedSlug = formData.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      if (!formattedSlug) {
+        formattedSlug = `academy-${currentAcademyId ? currentAcademyId.slice(0, 8) : Date.now()}`;
+      }
+
+      // إعداد البيانات وتوزيعها وفقاً لأعمدة جدول academies المعتمدة
+      const updatePayload = {
         name: namePayload,
-        slug: formData.slug.trim(),
-        logo_url: formData.logo_url,
-        website: formData.website,
-        contact_email: formData.email,
-        contact_phone: formData.phone,
+        slug: formattedSlug,
+        logo_url: formData.logo_url || null,
+        website: formData.website || null,
+        contact_email: formData.email || null,
+        contact_phone: formData.phone || null,
         currency: formData.currency,
         timezone: formData.timezone,
         calendar_type: formData.calendar_type,
@@ -209,13 +216,26 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      // الحفظ المباشر عبر UPDATE بشرط ID الأكاديمية الحالي
+      const { data, error } = await supabase
         .from('academies')
-        .upsert(payload);
+        .update(updatePayload)
+        .eq('id', currentAcademyId)
+        .select();
 
       if (error) throw error;
 
-      setInitialData(formData);
+      if (!data || data.length === 0) {
+        throw new Error(isRtl ? 'تعذر التحديث، يرجى التأكد من صلاحيات RLS أو معرّف الأكاديمية' : 'Update failed, check RLS or Academy ID');
+      }
+
+      const updatedState = {
+        ...formData,
+        slug: formattedSlug
+      };
+
+      setFormData(updatedState);
+      setInitialData(updatedState);
       showToast(isRtl ? 'تم حفظ كافة الإعدادات بنجاح' : 'Settings saved successfully');
     } catch (err) {
       showToast((isRtl ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + err.message, 'error');
@@ -301,7 +321,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     );
   }
 
-  // Safe check for active weekend days rendering
   const activeWeekendDays = Array.isArray(formData.weekend_days) ? formData.weekend_days : [];
 
   return (
