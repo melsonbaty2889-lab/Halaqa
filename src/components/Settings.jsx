@@ -62,7 +62,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       if (data) {
         setRawAcademyData(data);
         
-        // استخراج الاسم بحسب اللغة من كائن JSONB
         let fetchedName = '';
         if (typeof data.name === 'object' && data.name !== null) {
           fetchedName = isRtl ? (data.name.ar || data.name.en || '') : (data.name.en || data.name.ar || '');
@@ -81,7 +80,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           currency: data.currency || 'EGP',
           timezone: data.timezone || 'Africa/Cairo',
           calendar_type: data.calendar_type || 'gregorian',
-          weekend_days: data.weekend_days || ['friday', 'saturday']
+          // حماية أكيدة لضمان أن تكون weekend_days مصفوفة دائماً
+          weekend_days: Array.isArray(data.weekend_days) ? data.weekend_days : ['friday', 'saturday']
         };
         setFormData(fetched);
         setInitialData(fetched);
@@ -178,10 +178,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     if (!validateForm()) return;
 
     try {
-      setSaving(false);
       setSaving(true);
 
-      // صياغة حقل name المخصص لـ JSONB
       let namePayload = {};
       if (rawAcademyData && typeof rawAcademyData.name === 'object' && rawAcademyData.name !== null) {
         namePayload = {
@@ -195,19 +193,18 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         };
       }
 
-      // مطابقة كاملة لأسماء الأعمدة في جدول academies
       const payload = {
         id: currentAcademyId,
         name: namePayload,
         slug: formData.slug.trim(),
         logo_url: formData.logo_url,
         website: formData.website,
-        contact_email: formData.email,  // تطابق مع contact_email
-        contact_phone: formData.phone,  // تطابق مع contact_phone
+        contact_email: formData.email,
+        contact_phone: formData.phone,
         currency: formData.currency,
         timezone: formData.timezone,
         calendar_type: formData.calendar_type,
-        weekend_days: formData.weekend_days,
+        weekend_days: Array.isArray(formData.weekend_days) ? formData.weekend_days : ['friday', 'saturday'],
         brand_color: formData.brand_color,
         updated_at: new Date().toISOString()
       };
@@ -250,7 +247,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       fileReader.onload = (event) => {
         try {
           const parsed = JSON.parse(event.target.result);
-          setFormData((prev) => ({ ...prev, ...parsed }));
+          setFormData((prev) => ({ 
+            ...prev, 
+            ...parsed,
+            weekend_days: Array.isArray(parsed.weekend_days) ? parsed.weekend_days : ['friday', 'saturday']
+          }));
           showToast(isRtl ? 'تم استيراد الإعدادات بنجاح، اضغط حفظ لتأكيدها' : 'Settings imported successfully, click save to confirm');
         } catch (err) {
           showToast(isRtl ? 'ملف JSON غير صالح' : 'Invalid JSON file', 'error');
@@ -261,10 +262,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
   const toggleWeekendDay = (day) => {
     setFormData((prev) => {
-      const exists = prev.weekend_days.includes(day);
+      const days = Array.isArray(prev.weekend_days) ? prev.weekend_days : [];
+      const exists = days.includes(day);
       const updated = exists
-        ? prev.weekend_days.filter((d) => d !== day)
-        : [...prev.weekend_days, day];
+        ? days.filter((d) => d !== day)
+        : [...days, day];
       return { ...prev, weekend_days: updated };
     });
   };
@@ -298,6 +300,9 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       </div>
     );
   }
+
+  // Safe check for active weekend days rendering
+  const activeWeekendDays = Array.isArray(formData.weekend_days) ? formData.weekend_days : [];
 
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} className={`min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-40 font-sans ${isRtl ? 'text-right' : 'text-left'}`}>
@@ -487,7 +492,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                   </div>
                   <input 
                     type="color" 
-                    value={formData.brand_color} 
+                    value={formData.brand_color || '#D97706'} 
                     onChange={(e) => setFormData({ ...formData, brand_color: e.target.value })} 
                     className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0" 
                   />
@@ -570,7 +575,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                       { key: 'saturday', label: isRtl ? 'السبت' : 'Saturday' },
                       { key: 'sunday', label: isRtl ? 'الأحد' : 'Sunday' }
                     ].map((day) => {
-                      const active = formData.weekend_days.includes(day.key);
+                      const active = activeWeekendDays.includes(day.key);
                       return (
                         <button
                           key={day.key}
