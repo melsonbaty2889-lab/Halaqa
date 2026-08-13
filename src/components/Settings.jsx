@@ -17,12 +17,13 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     email: '',
     phone: '',
     brand_color: '#D97706',
-    currency: 'USD',
-    timezone: 'UTC',
+    currency: 'EGP',
+    timezone: 'Africa/Cairo',
     calendar_type: 'gregorian',
     weekend_days: ['friday', 'saturday']
   });
 
+  const [rawAcademyData, setRawAcademyData] = useState(null);
   const [initialData, setInitialData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,8 +58,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      
+
       if (data) {
+        setRawAcademyData(data);
+        
+        // استخراج الاسم بحسب اللغة من كائن JSONB
         let fetchedName = '';
         if (typeof data.name === 'object' && data.name !== null) {
           fetchedName = isRtl ? (data.name.ar || data.name.en || '') : (data.name.en || data.name.ar || '');
@@ -71,11 +75,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
           slug: data.slug || '',
           logo_url: data.logo_url || '',
           website: data.website || '',
-          email: data.email || '',
-          phone: data.phone || '',
+          email: data.contact_email || '',
+          phone: data.contact_phone || '',
           brand_color: data.brand_color || '#D97706',
-          currency: data.currency || 'USD',
-          timezone: data.timezone || 'UTC',
+          currency: data.currency || 'EGP',
+          timezone: data.timezone || 'Africa/Cairo',
           calendar_type: data.calendar_type || 'gregorian',
           weekend_days: data.weekend_days || ['friday', 'saturday']
         };
@@ -174,27 +178,46 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     if (!validateForm()) return;
 
     try {
+      setSaving(false);
       setSaving(true);
+
+      // صياغة حقل name المخصص لـ JSONB
+      let namePayload = {};
+      if (rawAcademyData && typeof rawAcademyData.name === 'object' && rawAcademyData.name !== null) {
+        namePayload = {
+          ...rawAcademyData.name,
+          [isRtl ? 'ar' : 'en']: formData.name.trim()
+        };
+      } else {
+        namePayload = {
+          ar: formData.name.trim(),
+          en: formData.name.trim()
+        };
+      }
+
+      // مطابقة كاملة لأسماء الأعمدة في جدول academies
       const payload = {
-        name: formData.name.trim(),
+        id: currentAcademyId,
+        name: namePayload,
         slug: formData.slug.trim(),
         logo_url: formData.logo_url,
         website: formData.website,
-        email: formData.email,
-        phone: formData.phone,
-        brand_color: formData.brand_color,
+        contact_email: formData.email,  // تطابق مع contact_email
+        contact_phone: formData.phone,  // تطابق مع contact_phone
         currency: formData.currency,
         timezone: formData.timezone,
         calendar_type: formData.calendar_type,
         weekend_days: formData.weekend_days,
+        brand_color: formData.brand_color,
         updated_at: new Date().toISOString()
       };
 
       const { error } = await supabase
         .from('academies')
-        .upsert({ id: currentAcademyId, ...payload });
+        .upsert(payload);
 
       if (error) throw error;
+
       setInitialData(formData);
       showToast(isRtl ? 'تم حفظ كافة الإعدادات بنجاح' : 'Settings saved successfully');
     } catch (err) {
@@ -209,10 +232,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   };
 
   const handleExport = () => {
+    const exportSlug = formData.slug && formData.slug !== '-' ? formData.slug : 'academy';
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(formData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `settings-${formData.slug || 'academy'}.json`);
+    downloadAnchor.setAttribute('download', `settings-${exportSlug}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -246,8 +270,8 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   };
 
   const currencyOptions = [
-    { label: isRtl ? 'ريال سعودي (SAR)' : 'Saudi Riyal (SAR)', value: 'SAR' },
     { label: isRtl ? 'جنيه مصري (EGP)' : 'Egyptian Pound (EGP)', value: 'EGP' },
+    { label: isRtl ? 'ريال سعودي (SAR)' : 'Saudi Riyal (SAR)', value: 'SAR' },
     { label: isRtl ? 'درهم إماراتي (AED)' : 'UAE Dirham (AED)', value: 'AED' },
     { label: isRtl ? 'دينار كويتي (KWD)' : 'Kuwaiti Dinar (KWD)', value: 'KWD' },
     { label: isRtl ? 'ريال قطري (QAR)' : 'Qatari Riyal (QAR)', value: 'QAR' },
@@ -256,16 +280,15 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   ];
 
   const timezoneOptions = [
-    { label: isRtl ? 'توقيت مكة المكرمة (GMT+3)' : 'Makkah Time (GMT+3)', value: 'Asia/Riyadh' },
     { label: isRtl ? 'توقيت القاهرة (GMT+2/3)' : 'Cairo Time (GMT+2/3)', value: 'Africa/Cairo' },
+    { label: isRtl ? 'توقيت مكة المكرمة (GMT+3)' : 'Makkah Time (GMT+3)', value: 'Asia/Riyadh' },
     { label: isRtl ? 'توقيت دبي (GMT+4)' : 'Dubai Time (GMT+4)', value: 'Asia/Dubai' },
     { label: isRtl ? 'التوقيت العالمي الموحد (UTC)' : 'Coordinated Universal Time (UTC)', value: 'UTC' }
   ];
 
   const calendarOptions = [
     { label: isRtl ? 'ميلادي (Gregorian)' : 'Gregorian', value: 'gregorian' },
-    { label: isRtl ? 'هجري - أم القرى' : 'Hijri (Umm al-Qura)', value: 'hijri_ummalqura' },
-    { label: isRtl ? 'هجري - معيار عام' : 'Hijri (Standard)', value: 'hijri' }
+    { label: isRtl ? 'هجري (Hijri)' : 'Hijri', value: 'hijri' }
   ];
 
   if (loading) {
@@ -316,7 +339,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
                 {formData.name || (isRtl ? 'أدخل اسم الأكاديمية' : 'Enter Academy Name')}
               </h3>
               <p className="text-xs text-[var(--text-muted)] truncate dir-ltr text-start">
-                {formData.slug ? `https://${formData.slug}.smart-halaqa.com` : (isRtl ? 'لم يتم تحديد المعرّف الفريد' : 'No slug specified')}
+                {formData.slug && formData.slug !== '-' ? `https://${formData.slug}.smart-halaqa.com` : (isRtl ? 'لم يتم تحديد المعرّف الفريد' : 'No slug specified')}
               </p>
             </div>
           </div>
