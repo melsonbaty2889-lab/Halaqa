@@ -10,7 +10,6 @@ export const AcademyProvider = ({ children }) => {
   const [academy, setAcademy] = useState(null);
   const [appState, setAppState] = useState('LOADING');
 
-  // مرجع لمنع تحديث الـ State إذا تم الغاء عرض المكون
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -34,22 +33,31 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات الحساب من جدول profiles
+      // 1. جلب بيانات البروفايل من جدول profiles
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .maybeSingle();
 
-      if (profError || !profData) {
+      if (profError) {
         console.error("🚨 خطأ في جلب البروفايل:", profError);
-        if (isMounted.current) setAppState('UNAUTHENTICATED');
+      }
+
+      // إذا لم يوجد بروفايل للمستخدم في قاعدة البيانات
+      if (!profData) {
+        console.warn("⚠️ لم يتم العثور على بروفايل للمستخدم في جدول profiles");
+        if (isMounted.current) {
+          setProfile(null);
+          setAcademy(null);
+          setAppState('NO_PROFILE'); // أو PENDING_APPROVAL بحسب هيكلة تطبيقك
+        }
         return;
       }
 
       if (isMounted.current) setProfile(profData);
 
-      // 2. السوبر أدمن العام
+      // 2. السوبر أدمن
       if (profData.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
@@ -58,7 +66,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 3. الحسابات المعلقة من الإدارة
+      // 3. الحسابات غير المفعلة
       if (profData.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
@@ -67,7 +75,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 4. مدير الأكاديمية
+      // 4. مدير الأكاديمية (Admin)
       if (profData.role === 'admin') {
         const { data: acadData } = await supabase
           .from('academies')
@@ -105,15 +113,12 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      if (isMounted.current) setAppState('UNAUTHENTICATED');
+      // افتراضي لأي دور آخر
+      if (isMounted.current) setAppState('FULLY_ACTIVE');
+
     } catch (e) {
-      console.error("🚨 خطأ في معالجة الصلاحيات:", e);
+      console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
       if (isMounted.current) setAppState('UNAUTHENTICATED');
-    } finally {
-      // الضمان الحاسم: إذا ظلت الحالة LOADING لأي سبب، تحويلها لـ UNAUTHENTICATED
-      if (isMounted.current && appState === 'LOADING') {
-        setAppState('UNAUTHENTICATED');
-      }
     }
   }, []);
 
@@ -128,18 +133,17 @@ export const AcademyProvider = ({ children }) => {
   }, [fetchUserStatus]);
 
   useEffect(() => {
-    // 💡 مؤقت أمان كحد أقصى (5 ثواني): يمنع علق التطبيق في شاشة LOADING نهائياً
-    const safetyTimer = setTimeout(() => {
-      if (isMounted.current && appState === 'LOADING') {
-        console.warn('⚠️ Safety Timeout: إجبار الخروج من حالة التحميل.');
-        setAppState('UNAUTHENTICATED');
-      }
-    }, 5000);
-
-    // الاستماع للتغيرات في الجلسة (Supabase يرسل INITIAL_SESSION تلقائياً فلا داعي لـ getSession)
+    // الاستماع لإنشاء الجلسة أو تسجيل الدخول
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       fetchUserStatus(session?.user);
     });
+
+    // مؤقت أمان (4 ثوانٍ): يفحص الحالة الفعلية الحالية ولا يلغي الدخول إذا تم بنجاح
+    const safetyTimer = setTimeout(() => {
+      if (isMounted.current) {
+        setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
+      }
+    }, 4000);
 
     return () => {
       clearTimeout(safetyTimer);
@@ -147,7 +151,7 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [fetchUserStatus]);
 
-  // Realtime subscription للتغييرات في البروفايل تلقائياً
+  // التحديث اللحظي للبروفايل
   useEffect(() => {
     if (!user?.id) return;
 
