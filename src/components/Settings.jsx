@@ -144,26 +144,37 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
     try {
       setUploadingLogo(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${currentAcademyId}-${Date.now()}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
+      const fileName = `logo-${currentAcademyId}-${Date.now()}.${fileExt}`;
 
+      // 1. الرفع المباشر إلى Bucket
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage error:', uploadError);
+        throw new Error(`[Storage] ${uploadError.message}`);
+      }
 
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      // 2. استخراج الرابط العام
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
       const publicUrl = data?.publicUrl;
 
       if (!publicUrl) throw new Error(isRtl ? 'تعذر الحصول على رابط الصورة العام' : 'Failed to get public image URL');
 
+      // تحديث حالة الفورم
       setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
 
-      await supabase
+      // 3. تحديث جدول الأكاديميات
+      const { error: dbError } = await supabase
         .from('academies')
         .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', currentAcademyId);
+
+      if (dbError) {
+        console.error('DB error:', dbError);
+        throw new Error(`[Database RLS] ${dbError.message}`);
+      }
 
       showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
     } catch (err) {
