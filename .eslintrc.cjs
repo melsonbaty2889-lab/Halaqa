@@ -10,9 +10,13 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true, // تفعيل دعم JSX لملفات React
+    },
   },
   rules: {
     'no-unused-vars': 'warn',
     'no-console': 'off',
+    'no-useless-escape': 'warn', // تحويل أخطاء الـ Escape إلى تحذير فقط
   },
 };
