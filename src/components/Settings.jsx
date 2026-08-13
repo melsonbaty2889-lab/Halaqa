@@ -6,8 +6,16 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase.js';
 import { Select } from '@/components/UI/UI.jsx';
+import { useAcademy } from '@/context/AcademyContext';
 
-export default function Settings({ currentAcademyId, isRtl = true }) {
+export default function Settings({ currentAcademyId: propAcademyId, isRtl = true }) {
+  // 1. جلب الأكاديمية من الـ Context كخيار احتياطي أساسي
+  const { academy, currentAcademy } = useAcademy();
+  
+  // 2. اعتماد الـ ID المتاح (سواء الممرر عبر Props أو الموجود في Context)
+  const activeAcademy = academy || currentAcademy;
+  const currentAcademyId = propAcademyId || activeAcademy?.id;
+
   const [activeTab, setActiveTab] = useState('identity');
   const [formData, setFormData] = useState({
     name: '',
@@ -191,11 +199,10 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    // صمام أمان لمنع إرسال undefined إلى قاعدة البيانات
     if (!isValidAcademyId) {
       showToast(
         isRtl 
-          ? 'تعذّر الحفظ: لم يتم التعرف على معرّف الأكاديمية الحالية (Academy ID مفقود)' 
+          ? 'تعذّر الحفظ: لم يتم التعرف على معرّف الأكاديمية الحالية' 
           : 'Save failed: Academy ID is missing or invalid', 
         'error'
       );
