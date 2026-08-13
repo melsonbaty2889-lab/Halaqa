@@ -1,0 +1,49 @@
+name: Code Quality & Build Check
+
+# تحديد متى يعمل الفحص الآلي
+on:
+  push:
+    branches: [ main, master, dev, developer ]
+  pull_request:
+    branches: [ main, master, dev, developer ]
+
+jobs:
+  quality-check:
+    name: Lint, Type-Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. سحب الكود من GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. إعداد بيئة Node.js مع تفعيل الـ Caching لسرعة التنفيذ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 3. تثبيت الحزم المطلوبة
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. فحص جودة ونظافة الكود (ESLint)
+      - name: Run ESLint
+        run: npm run lint
+
+      # 5. التثبت من عدم وجود أخطاء في أنواع البيانات (TypeScript)
+      - name: Type Check
+        run: npx tsc --noEmit
+        continue-on-error: false
+
+      # 6. التثبت من تنسيق الكود (Prettier)
+      - name: Check Formatting
+        run: npx prettier --check "."
+
+      # 7. تجربة بناء المشروع لضمان عدم حدوث Crash أثناء الـ Deployment على Vercel
+      - name: Build Project
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: npm run build
