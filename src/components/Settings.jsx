@@ -35,13 +35,21 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
 
+  // التحقق المباشر من صلاحية الـ ID كـ UUID
+  const isValidAcademyId = Boolean(
+    currentAcademyId && 
+    currentAcademyId !== 'undefined' && 
+    typeof currentAcademyId === 'string' &&
+    currentAcademyId.trim() !== ''
+  );
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
   useEffect(() => {
-    if (currentAcademyId) {
+    if (isValidAcademyId) {
       fetchAcademySettings();
     } else {
       setLoading(false);
@@ -49,6 +57,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
   }, [currentAcademyId, isRtl]);
 
   const fetchAcademySettings = async () => {
+    if (!isValidAcademyId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -62,7 +75,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
       if (data) {
         setRawAcademyData(data);
         
-        // استخراج الاسم بحسب اللغة من كائن JSONB
         let fetchedName = '';
         if (typeof data.name === 'object' && data.name !== null) {
           fetchedName = isRtl ? (data.name.ar || data.name.en || '') : (data.name.en || data.name.ar || '');
@@ -107,6 +119,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (!isValidAcademyId) {
+      showToast(isRtl ? 'تعذر رفع الشعار: معرّف الأكاديمية غير صالح' : 'Cannot upload logo: Invalid Academy ID', 'error');
+      return;
+    }
+
     if (!file.type.startsWith('image/')) {
       showToast(isRtl ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file', 'error');
       return;
@@ -119,7 +136,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
     try {
       setUploadingLogo(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${currentAcademyId || 'academy'}-${Date.now()}.${fileExt}`;
+      const fileName = `${currentAcademyId}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -135,12 +152,10 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
       setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
 
-      if (currentAcademyId) {
-        await supabase
-          .from('academies')
-          .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
-          .eq('id', currentAcademyId);
-      }
+      await supabase
+        .from('academies')
+        .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('id', currentAcademyId);
 
       showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
     } catch (err) {
@@ -152,7 +167,7 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
   const handleRemoveLogo = async () => {
     setFormData(prev => ({ ...prev, logo_url: '' }));
-    if (currentAcademyId) {
+    if (isValidAcademyId) {
       await supabase
         .from('academies')
         .update({ logo_url: '', updated_at: new Date().toISOString() })
@@ -175,12 +190,23 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+
+    // صمام أمان لمنع إرسال undefined إلى قاعدة البيانات
+    if (!isValidAcademyId) {
+      showToast(
+        isRtl 
+          ? 'تعذّر الحفظ: لم يتم التعرف على معرّف الأكاديمية الحالية (Academy ID مفقود)' 
+          : 'Save failed: Academy ID is missing or invalid', 
+        'error'
+      );
+      return;
+    }
+
     if (!validateForm()) return;
 
     try {
       setSaving(true);
 
-      // صياغة حقل name المخصص لـ JSONB
       let namePayload = {};
       if (rawAcademyData && typeof rawAcademyData.name === 'object' && rawAcademyData.name !== null) {
         namePayload = {
@@ -194,13 +220,11 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         };
       }
 
-      // معالجة الـ Slug لضمان ألا يكون فارغاً أو مكرراً
       let formattedSlug = formData.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
       if (!formattedSlug) {
-        formattedSlug = `academy-${currentAcademyId ? currentAcademyId.slice(0, 8) : Date.now()}`;
+        formattedSlug = `academy-${currentAcademyId ? String(currentAcademyId).slice(0, 8) : Date.now()}`;
       }
 
-      // إعداد البيانات وتوزيعها وفقاً لأعمدة جدول academies المعتمدة
       const updatePayload = {
         name: namePayload,
         slug: formattedSlug,
@@ -216,7 +240,6 @@ export default function Settings({ currentAcademyId, isRtl = true }) {
         updated_at: new Date().toISOString()
       };
 
-      // الحفظ المباشر عبر UPDATE بشرط ID الأكاديمية الحالي
       const { data, error } = await supabase
         .from('academies')
         .update(updatePayload)
