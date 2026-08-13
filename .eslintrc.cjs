@@ -1,19 +1,18 @@
-
-{
-  "env": {
-    "browser": true,
-    "es2021": true,
-    "node": true
+module.exports = {
+  env: {
+    browser: true,
+    es2021: true,
+    node: true,
   },
-  "extends": [
-    "eslint:recommended"
+  extends: [
+    'eslint:recommended',
   ],
-  "parserOptions": {
-    "ecmaVersion": "latest",
-    "sourceType": "module"
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
   },
-  "rules": {
-    "no-unused-vars": "warn",
-    "no-console": "off"
-  }
-}
+  rules: {
+    'no-unused-vars': 'warn',
+    'no-console': 'off',
+  },
+};
