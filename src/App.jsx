@@ -6,7 +6,7 @@ import {
 
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
-import { ROLES, getRouteForRole } from '@/constants/roles';
+import { ROLES } from '@/constants/roles';
 import { colors as C } from '@/constants/colors';
 
 import SplashScreen from '@/components/UI/SplashScreen'; 
@@ -260,7 +260,9 @@ function MainContent() {
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOffline(false);
+    // ✅ تم التعديل والاستدعاء الصحيح للدالة:
+    const handleOffline = () => setIsOnline(false);
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
