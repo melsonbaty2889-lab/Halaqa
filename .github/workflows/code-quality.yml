@@ -21,7 +21,6 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # تم استبدال npm ci بأمر أسهل يمنع التوقف بسبب تعارض المكتبات
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
@@ -30,6 +29,14 @@ jobs:
 
       - name: Check Formatting
         run: npx prettier --check "." || true
+
+      # --- الخطوة الجديدة المضافة هنا ---
+      - name: Generate Supabase Types
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          mkdir -p src/types
+          npx supabase gen types typescript --project-id "hpaaisyxnscherkrjnas" --schema public > src/types/supabase.ts
 
       - name: Build Project
         env:
