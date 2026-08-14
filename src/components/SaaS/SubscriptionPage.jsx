@@ -1,6 +1,6 @@
 // src/components/SaaS/SubscriptionPage.jsx
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 // استيراد المكونات المقسمة النظيفة
 import RegionSelector from './components/RegionSelector';
