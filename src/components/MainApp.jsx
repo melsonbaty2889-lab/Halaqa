@@ -5,6 +5,7 @@ import { RefreshCw, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
 import { colors as C } from '@/constants/colors';
+import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from './Sidebar/Sidebar';
 import Header from '@/components/Header/Header'; 
@@ -302,14 +303,16 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
+  // واجهة تحميل بـ Skeleton Loader المتموج
   const skeletonLoader = (
-    <div style={{ padding: '24px', opacity: 0.6, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ height: '35px', width: '220px', backgroundColor: C.dark.card, borderRadius: '8px' }}></div>
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <Skeleton width="220px" height="32px" borderRadius="8px" />
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
-        <div style={{ height: '110px', backgroundColor: C.dark.card, borderRadius: '12px', border: `1px solid ${C.dark.border}` }}></div>
-        <div style={{ height: '110px', backgroundColor: C.dark.card, borderRadius: '12px', border: `1px solid ${C.dark.border}` }}></div>
-        <div style={{ height: '110px', backgroundColor: C.dark.card, borderRadius: '12px', border: `1px solid ${C.dark.border}` }}></div>
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
       </div>
+      <Skeleton width="100%" height="240px" borderRadius="16px" />
     </div>
   );
 
