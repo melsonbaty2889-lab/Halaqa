@@ -1,257 +1,176 @@
-// src/components/SaaS/SubscriptionPage.jsx
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-
-// استيراد المكونات المقسمة النظيفة
+import React, { useState } from 'react';
 import RegionSelector from './components/RegionSelector';
 import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
-import SubscriptionStatus from './components/SubscriptionStatus';
-import PaymentSection from '../SaaS/PaymentSection';
+import PaymentSection from './PaymentSection';
+import { supabase } from '@/lib/supabase';
 
-export default function SubscriptionPage({ lang = 'ar' }) {
-  const isRTL = lang === 'ar';
-
-  // الحالات العامة
-  const [selectedPlan, setSelectedPlan] = useState('lifetime');
+export default function SubscriptionPage({ isRTL = true }) {
   const [region, setRegion] = useState('egypt');
-  const [couponInput, setCouponInput] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState('monthly');
+  const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
-  const [couponMessage, setCouponMessage] = useState(null);
-  
-  // حالات الطلب والدفع
+  const [promoError, setPromoError] = useState('');
   const [txId, setTxId] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [userSubscription, setUserSubscription] = useState(null);
 
-  // جلب حالة اشتراك المستخدم الحالية والربط مع Realtime
-  useEffect(() => {
-    let subscriptionChannel;
-
-    const fetchSubscriptionStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // جلب بيانات الاشتراك من جدول profiles أو subscriptions
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('subscription_status, plan_type')
-        .eq('id', user.id)
-        .single();
-
-      if (data) {
-        setUserSubscription(data);
-      }
-
-      // الاستماع للتحديثات اللحظية Realtime
-      subscriptionChannel = supabase
-        .channel(`public:profiles:id=eq.${user.id}`)
-        .on('postgres_changes', { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'profiles', 
-          filter: `id=eq.${user.id}` 
-        }, (payload) => {
-          setUserSubscription(payload.new);
-        })
-        .subscribe();
-    };
-
-    fetchSubscriptionStatus();
-
-    return () => {
-      if (subscriptionChannel) supabase.removeChannel(subscriptionChannel);
-    };
-  }, []);
-
-  // بيانات خطط الأسعار والعملات
-  const currency = region === 'egypt' ? (isRTL ? 'ج.م' : 'EGP') : (region === 'gcc' ? (isRTL ? 'ر.س' : 'SAR') : '$');
-
-  const basePrices = {
-    monthly: region === 'egypt' ? 350 : (region === 'gcc' ? 85 : 25),
-    yearly: region === 'egypt' ? 2900 : (region === 'gcc' ? 750 : 200),
-    lifetime: region === 'egypt' ? 6500 : (region === 'gcc' ? 1600 : 450)
+  // الأسعار والعملات حسب المنطقة المحددة
+  const pricingData = {
+    egypt: { currency: 'ج.م', monthly: 750, yearly: 6000 },
+    gcc: { currency: 'ر.س', monthly: 95, yearly: 750 },
+    global: { currency: 'USD', monthly: 25, yearly: 200 }
   };
+
+  const currentPricing = pricingData[region] || pricingData.egypt;
 
   const plans = [
     {
       id: 'monthly',
       title: isRTL ? 'الاشتراك الشهري' : 'Monthly Plan',
-      price: basePrices.monthly,
-      color: '#3b82f6',
+      description: isRTL ? 'مثالي للمراكز والحلقات الناشئة' : 'Ideal for small or starting academies',
+      period: 'monthly',
+      basePrice: currentPricing.monthly,
       features: [
-        isRTL ? 'دعم فني مباشر على مدار الساعة' : '24/7 Dedicated Support',
-        isRTL ? 'تحديثات النظام المستمرة' : 'Continuous System Updates',
         isRTL ? 'إدارة حتى 100 طالب' : 'Up to 100 Students',
+        isRTL ? 'متابعة وتسميع مباشر' : 'Live Quran Recitation Tracking',
+        isRTL ? 'إصدار الشهادات الرقمية' : 'Digital Verification Certificates',
+        isRTL ? 'دعم فني وتحديثات مستمرة' : 'Direct Technical Support'
       ]
     },
     {
       id: 'yearly',
       title: isRTL ? 'الاشتراك السنوي' : 'Yearly Plan',
-      price: basePrices.yearly,
-      color: '#10b981',
-      badge: isRTL ? 'الأكثر شعبية (توفير 30%)' : 'Most Popular (Save 30%)',
-      badgeBg: '#10b981',
+      badge: isRTL ? 'الأكثر توفيراً (توفير 33%)' : 'Best Value (Save 33%)',
+      description: isRTL ? 'للمؤسسات والمقارئ المتكاملة' : 'For full academies & large organizations',
+      period: 'yearly',
+      basePrice: currentPricing.yearly,
       features: [
-        isRTL ? 'كل مميزات الخطة الشهرية' : 'All Monthly Features',
         isRTL ? 'عدد طلاب غير محدود' : 'Unlimited Students',
-        isRTL ? 'نسخ احتياطي يومي تلقائي' : 'Automatic Daily Backups',
-        isRTL ? 'تقارير أداء متقدمة' : 'Advanced Performance Analytics'
-      ]
-    },
-    {
-      id: 'lifetime',
-      title: isRTL ? 'الترخيص المدى الحياة' : 'Lifetime Access',
-      price: basePrices.lifetime,
-      color: '#f59e0b',
-      badge: isRTL ? 'العرض الأفضل' : 'Best Value',
-      badgeBg: '#f59e0b',
-      features: [
-        isRTL ? 'دفع مرة واحدة ومدى الحياة' : 'One-time Payment, Lifetime Use',
-        isRTL ? 'جميع الميزات الحالية والمستقبلية' : 'All Current & Future Features',
-        isRTL ? 'دعم الأولوية القصوى (VIP)' : 'VIP Priority Support',
-        isRTL ? 'ربط اسم نطاق خاص (Custom Domain)' : 'Custom Domain Integration'
+        isRTL ? 'جميع مميزات الخطة الشهرية' : 'All Monthly Plan Features',
+        isRTL ? 'نظام التقارير المتقدمة للوالدين' : 'Advanced Parent Report System',
+        isRTL ? 'دعم أولوية على مدار 24 ساعة' : '24/7 Priority Support'
       ]
     }
   ];
 
-  // تطبيق كود الخصم
-  const handleApplyCoupon = () => {
-    const code = couponInput.trim().toUpperCase();
-    if (code === 'S20' || code === 'HALAQA20') {
+  const handleApplyPromo = () => {
+    setPromoError('');
+    if (promoCode.trim() === 'HALAQA20') {
       setAppliedDiscount(20);
-      setCouponMessage({ type: 'success', text: isRTL ? 'تم تطبيق خصم 20% بنجاح!' : '20% Discount applied!' });
-    } else if (code === 'VIP50') {
+    } else if (promoCode.trim() === 'PROMO50') {
       setAppliedDiscount(50);
-      setCouponMessage({ type: 'success', text: isRTL ? 'تم تطبيق خصم VIP 50%!' : '50% VIP Discount applied!' });
     } else {
       setAppliedDiscount(0);
-      setCouponMessage({ type: 'error', text: isRTL ? 'كود الخصم غير صحيح أو منتهي' : 'Invalid promo code' });
+      setPromoError(isRTL ? 'كود الخصم غير صحيح أو منتهي الصلاحية' : 'Invalid or expired promo code');
     }
   };
 
-  // رفع الإشعار وإرسال الطلب
-  const handlePaymentSubmit = async (methodId, isManual, receiptFile) => {
+  const handleSubmitSubscription = async (methodId, isManual, receiptFile) => {
     setLoading(true);
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       let receiptUrl = null;
 
-      // 1. رفع الصورة إلى Supabase Storage إذا وُجدت
-      if (isManual && receiptFile && user) {
+      // رفع صورة الإشعار إلى Supabase Storage إن وجدت
+      if (receiptFile) {
         const fileExt = receiptFile.name.split('.').pop();
-        const filePath = `receipts/${user.id}_${Date.now()}.${fileExt}`;
-
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('saas-receipts')
-          .upload(filePath, receiptFile);
+          .upload(fileName, receiptFile);
 
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from('saas-receipts')
-          .getPublicUrl(filePath);
-
-        receiptUrl = urlData.publicUrl;
+        if (!uploadError) {
+          const { data } = supabase.storage.from('saas-receipts').getPublicUrl(fileName);
+          receiptUrl = data?.publicUrl;
+        }
       }
 
-      // 2. تسجيل الطلب في قاعدة البيانات
-      if (user) {
-        await supabase.from('subscriptions').insert([{
-          user_id: user.id,
-          plan_id: selectedPlan,
-          region,
+      // إدراج الطلب في جدول الاشتراكات
+      await supabase.from('subscriptions').insert([
+        {
+          plan_type: selectedPlan,
+          region: region,
           payment_method: methodId,
           transaction_ref: txId,
           receipt_url: receiptUrl,
-          status: isManual ? 'pending_verification' : 'active'
-        }]);
-
-        // تحديث حالة ملف المستخدم
-        await supabase.from('profiles').update({
-          subscription_status: isManual ? 'pending_verification' : 'active',
-          plan_type: selectedPlan
-        }).eq('id', user.id);
-      }
+          discount_percentage: appliedDiscount,
+          status: 'pending'
+        }
+      ]);
 
       setIsSubmitted(true);
     } catch (err) {
-      console.error('Payment Submission Error:', err);
-      alert(isRTL ? 'حدث خطأ أثناء إرسال الطلب، يرجى المحاولة لاحقاً.' : 'Failed to submit request.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-5xl mx-auto">
+    <div 
+      style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)',
+        fontFamily: "'Cairo', sans-serif"
+      }}
+      className="py-12 px-4 text-[#F8FAFC]"
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      <div className="max-w-4xl mx-auto">
         
-        {/* رأس الصفحة */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-100 mb-3 tracking-tight">
-            {isRTL ? 'اختر الخطة المناسبة لمنظومتك' : 'Choose Your Subscription Plan'}
+        {/* الهيدر بدون لوجو */}
+        <div className="flex flex-col items-center text-center mb-10 pt-4">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFC] mb-2">
+            {isRTL ? 'اختر الخطة المناسبة لمنظومتك' : 'Choose Your Academy Plan'}
           </h1>
-          <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-            {isRTL 
-              ? 'احصل على وصول كامل لأدوات إدارة الحلقات، المتابعة المباشرة، والشهادات الرقمية بكل سهولة.' 
-              : 'Unlock full features for academy management, live tracking, and verified certification.'}
+          <p className="text-[#D97706] text-xs font-bold tracking-wider uppercase">
+            {isRTL ? 'احصل على كامل أدوات إدارة المقارئ والشهادات الرقمية' : 'ACADEMY MANAGEMENT & DIGITAL CERTIFICATES'}
           </p>
         </div>
 
-        {/* شريط حالة الاشتراك الحالية */}
-        <SubscriptionStatus 
-          status={userSubscription?.subscription_status} 
-          isRTL={isRTL} 
-        />
-
-        {/* محدد النطاق الجغرافي */}
+        {/* محدد المنطقة والعملة */}
         <RegionSelector 
           region={region} 
           setRegion={setRegion} 
           isRTL={isRTL} 
         />
 
-        {/* حقل كود الخصم */}
+        {/* أدخل كود الخصم */}
         <PromoCodeInput 
-          couponInput={couponInput}
-          setCouponInput={setCouponInput}
-          handleApplyCoupon={handleApplyCoupon}
-          couponMessage={couponMessage}
+          promoCode={promoCode}
+          setPromoCode={setPromoCode}
+          onApply={handleApplyPromo}
+          appliedDiscount={appliedDiscount}
+          error={promoError}
           isRTL={isRTL}
         />
 
-        {/* كروت خطط الأسعار */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {/* كروت الخطط والأسعار */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {plans.map((p) => {
-            const calculatedPrice = appliedDiscount > 0 
-              ? Math.round(p.price * (1 - appliedDiscount / 100)) 
-              : p.price;
-
+            const finalPrice = Math.round(p.basePrice * (1 - appliedDiscount / 100));
             return (
               <PlanCard 
                 key={p.id}
                 plan={p}
                 isSelected={selectedPlan === p.id}
                 onSelect={() => setSelectedPlan(p.id)}
-                finalPrice={calculatedPrice}
-                currency={currency}
+                finalPrice={finalPrice}
+                currency={currentPricing.currency}
                 isRTL={isRTL}
               />
             );
           })}
         </div>
 
-        {/* قسم الدفع وتحويل الأموال */}
+        {/* قسم الدفع والتأكيد */}
         <PaymentSection 
           region={region}
           txId={txId}
           setTxId={setTxId}
           isSubmitted={isSubmitted}
           loading={loading}
-          onSubmit={handlePaymentSubmit}
+          onSubmit={handleSubmitSubscription}
           isRTL={isRTL}
         />
 
