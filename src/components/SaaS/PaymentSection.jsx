@@ -1,136 +1,46 @@
 // src/components/SaaS/PaymentSection.jsx
 import { useState, useEffect } from 'react';
 
-// حاوية قياسية موحدة الحجم والحواف لجميع الشعارات الرسمية
-const LogoSlot = ({ children }) => (
+// حاوية قياسية للشعارات المفرغة وبدون إطارات عريضة
+const LogoSlot = ({ src, alt }) => (
   <div style={{ 
-    width: '54px', 
-    height: '36px', 
+    width: '48px', 
+    height: '32px', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
-    borderRadius: '8px',
-    background: '#ffffff',
-    padding: '3px 5px',
-    boxSizing: 'border-box',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
-    flexShrink: 0,
-    overflow: 'hidden'
+    flexShrink: 0 
   }}>
-    {children}
+    <img 
+      src={src} 
+      alt={alt} 
+      style={{ 
+        maxWidth: '100%', 
+        maxHeight: '100%', 
+        objectFit: 'contain' 
+      }} 
+    />
   </div>
 );
 
-// الشعارات الرسمية الأصلية الدقيقة (Official Vector SVGs)
+// الشعارات الرسمية المفرغة من روابط CDN موثوقة
 const PaymentLogos = {
-  // 🍎 Apple Pay
-  applePay: (
-    <LogoSlot>
-      <svg width="42" height="22" viewBox="0 0 100 40" fill="none">
-        <rect width="100" height="40" rx="6" fill="#000000"/>
-        <path d="M22.5 22.3c0-4.1 3.3-6.1 3.5-6.2-1.9-2.8-4.9-3.2-6-3.2-2.5-0.3-5 1.5-6.3 1.5-1.3 0-3.3-1.4-5.4-1.4-2.8 0-5.3 1.6-6.8 4.2-3 5.2-0.8 12.9 2.1 17.1 1.4 2 3.1 4.3 5.3 4.2 2.1-0.1 2.9-1.3 5.5-1.3 2.5 0 3.3 1.3 5.5 1.3 2.3 0 3.7-2.1 5.1-4.1 1.6-2.3 2.2-4.6 2.3-4.7-0.1-0.1-4.8-1.8-4.8-6.7z" fill="#FFFFFF"/>
-        <path d="M18.5 9.7c1.1-1.4 1.9-3.4 1.7-5.4-1.6 0.1-3.7 1.1-4.8 2.4-1 1.2-1.9 3.2-1.7 5.1 1.9 0.2 3.7-0.8 4.8-2.1z" fill="#FFFFFF"/>
-        <text x="34" y="29" fill="#FFFFFF" fontSize="22" fontWeight="bold" fontFamily="-apple-system, BlinkMacSystemFont, sans-serif">Pay</text>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 🇸🇦 mada مدى
-  mada: (
-    <LogoSlot>
-      <svg width="46" height="24" viewBox="0 0 100 40" fill="none">
-        <rect width="100" height="40" rx="6" fill="#FFFFFF"/>
-        <path d="M12 12c4 0 7 3 7 7s-3 7-7 7-7-3-7-7 3-7 7-7z" fill="#00A859"/>
-        <path d="M28 12c4 0 7 3 7 7s-3 7-7 7-7-3-7-7 3-7 7-7z" fill="#0058A3"/>
-        <text x="42" y="27" fill="#003B64" fontSize="20" fontWeight="900" fontFamily="sans-serif">mada</text>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // ⚡ InstaPay انستا باي
-  instapay: (
-    <LogoSlot>
-      <svg width="46" height="24" viewBox="0 0 120 40" fill="none">
-        <rect width="120" height="40" rx="8" fill="#38085C"/>
-        <path d="M22 8L10 22h10l-2 10 12-14H20l2-10z" fill="#00E5FF"/>
-        <text x="36" y="27" fill="#FFFFFF" fontSize="18" fontWeight="800" fontFamily="system-ui, sans-serif">InstaPay</text>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 📱 Vodafone Cash فودافون كاش
-  vodafone: (
-    <LogoSlot>
-      <svg width="28" height="28" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="48" fill="#E60000"/>
-        <path d="M50 20c-16.5 0-30 13.5-30 30 0 14.5 10.3 26.6 24 29.3v-12.8c-6.8-2.2-11.8-8.6-11.8-16.2 0-9.4 7.6-17 17-17s17 7.6 17 17c0 7.6-5 14-11.8 16.2v12.8c13.7-2.7 24-14.8 24-29.3 0-16.5-13.5-30-30-30z" fill="#FFFFFF"/>
-        <circle cx="50" cy="50" r="10" fill="#FFFFFF"/>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 🟡 Fawry فوري
-  fawry: (
-    <LogoSlot>
-      <svg width="46" height="22" viewBox="0 0 100 35">
-        <rect width="100" height="35" rx="6" fill="#FFCC00"/>
-        <text x="10" y="25" fill="#002B49" fontSize="22" fontWeight="900" fontFamily="sans-serif" fontStyle="italic">fawry</text>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 🟣 STC Pay
-  stcPay: (
-    <LogoSlot>
-      <svg width="46" height="22" viewBox="0 0 100 35">
-        <rect width="100" height="35" rx="6" fill="#4F008C"/>
-        <text x="10" y="24" fill="#FF375F" fontSize="18" fontWeight="900" fontFamily="sans-serif">stc</text>
-        <text x="46" y="24" fill="#FFFFFF" fontSize="18" fontWeight="700" fontFamily="sans-serif">pay</text>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 🅿️ PayPal
-  paypal: (
-    <LogoSlot>
-      <svg width="40" height="22" viewBox="0 0 100 40">
-        <path d="M22 8h15c7 0 12 3 10.5 9.5C46 23 41 26 35 26h-6l-3 12H15L22 8z" fill="#003087"/>
-        <path d="M32 14h15c7 0 12 3 10.5 9.5C56 29 51 32 45 32h-6l-3 12H25L32 14z" fill="#0079C1" opacity="0.9"/>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 💳 Visa & MasterCard
-  card: (
-    <LogoSlot>
-      <svg width="44" height="24" viewBox="0 0 100 60">
-        <rect width="100" height="60" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="2"/>
-        <circle cx="40" cy="30" r="18" fill="#EB001B"/>
-        <circle cx="60" cy="30" r="18" fill="#F79E1B" fillOpacity="0.85"/>
-      </svg>
-    </LogoSlot>
-  ),
-
-  // 🏛️ Bank Transfer / IBAN
+  applePay: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" alt="Apple Pay" />,
+  mada: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mada_Logo.svg" alt="Mada" />,
+  instapay: <LogoSlot src="https://instapay.eg/wp-content/uploads/2022/03/instapay-logo.png" alt="InstaPay" />,
+  vodafone: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Vodafone_icon.svg" alt="Vodafone Cash" />,
+  fawry: <LogoSlot src="https://fawry.com/wp-content/uploads/2022/07/fawry-logo.png" alt="Fawry" />,
+  stcPay: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/e/e6/STC_Pay_logo.svg" alt="STC Pay" />,
+  paypal: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" />,
+  card: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MasterCard / Visa" />,
   bank: (
-    <LogoSlot>
-      <svg width="26" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <div style={{ width: '48px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
       </svg>
-    </LogoSlot>
+    </div>
   ),
-
-  // 🟢 Crypto USDT (Tether)
-  crypto: (
-    <LogoSlot>
-      <svg width="28" height="28" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="48" fill="#26A17B"/>
-        <path d="M30 32h40v10H55v8.5c15 0.8 26 4 26 8s-11 7.2-26 8v16.5H45V66.5c-15-0.8-26-4-26-8s11-7.2 26-8V42H30V32z" fill="#FFFFFF"/>
-        <path d="M50 51.5c11.5 0 20.8-2.5 20.8-5.5S61.5 40.5 50 40.5 29.2 43 29.2 46s9.3 5.5 20.8 5.5z" fill="#26A17B"/>
-      </svg>
-    </LogoSlot>
-  )
+  crypto: <LogoSlot src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=035" alt="USDT" />
 };
 
 export default function PaymentSection({ 
@@ -202,7 +112,7 @@ export default function PaymentSection({
       style={{ 
         background: '#0f172a', 
         border: '1px solid #1e293b', 
-        borderRadius: '24px', 
+        borderRadius: '20px', 
         padding: '24px', 
         maxWidth: '480px', 
         margin: '0 auto', 
@@ -216,15 +126,12 @@ export default function PaymentSection({
         color: '#f59e0b', 
         marginTop: '0', 
         marginBottom: '18px', 
-        fontSize: '1rem', 
+        fontSize: '0.95rem', 
         fontWeight: '700', 
         borderBottom: '1px solid #1e293b', 
-        paddingBottom: '12px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px' 
+        paddingBottom: '12px'
       }}>
-        <span>💳</span> {isRTL ? "اختر وسيلة الدفع المناسبة لك:" : "Select Payment Method:"}
+        {isRTL ? "اختر وسيلة الدفع المناسبة:" : "Select Payment Method:"}
       </h4>
 
       {/* خيارات وسائل الدفع */}
@@ -239,8 +146,8 @@ export default function PaymentSection({
                 display: 'flex',
                 alignItems: 'center',
                 justify: 'space-between',
-                padding: '12px 14px',
-                borderRadius: '14px',
+                padding: '12px 16px',
+                borderRadius: '12px',
                 background: isSelected ? 'rgba(245, 158, 11, 0.08)' : '#162032',
                 border: isSelected ? '2px solid #f59e0b' : '1px solid #243147',
                 cursor: 'pointer',
@@ -248,12 +155,12 @@ export default function PaymentSection({
                 gap: '12px'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
                 {item.logo}
                 <span style={{ 
                   color: '#f8fafc', 
                   fontWeight: '600', 
-                  fontSize: '0.86rem', 
+                  fontSize: '0.88rem', 
                   lineHeight: '1.35',
                   wordBreak: 'break-word'
                 }}>
@@ -268,7 +175,7 @@ export default function PaymentSection({
                     color: '#f59e0b', 
                     fontSize: '0.68rem', 
                     padding: '2px 8px', 
-                    borderRadius: '12px', 
+                    borderRadius: '10px', 
                     fontWeight: '700',
                     whiteSpace: 'nowrap'
                   }}>
@@ -281,8 +188,7 @@ export default function PaymentSection({
                   borderRadius: '50%',
                   border: isSelected ? '5px solid #f59e0b' : '2px solid #475569',
                   boxSizing: 'border-box',
-                  flexShrink: 0,
-                  transition: '0.2s'
+                  flexShrink: 0
                 }} />
               </div>
             </div>
@@ -290,11 +196,11 @@ export default function PaymentSection({
         })}
       </div>
 
-      {/* خيار التحويل اليدوي */}
+      {/* تفاصيل التحويل اليدوي */}
       {currentMethodObj.isManual && (
-        <div style={{ marginTop: '18px', background: '#162032', border: '1px dashed #f59e0b', borderRadius: '16px', padding: '16px' }}>
+        <div style={{ marginTop: '18px', background: '#162032', border: '1px dashed #f59e0b', borderRadius: '14px', padding: '16px' }}>
           <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 10px 0', fontWeight: '600' }}>
-            {isRTL ? 'يرجى تحويل المبلغ إلى الرقم/الحساب التالي:' : 'Please transfer to the following details:'}
+            {isRTL ? 'يرجى تحويل المبلغ إلى الحساب التالي:' : 'Please transfer to the following details:'}
           </p>
           
           <div style={{ 
@@ -303,7 +209,7 @@ export default function PaymentSection({
             gap: '10px', 
             background: '#0f172a', 
             padding: '12px', 
-            borderRadius: '12px', 
+            borderRadius: '10px', 
             border: '1px solid #243147' 
           }}>
             <div style={{ 
@@ -326,7 +232,7 @@ export default function PaymentSection({
                 background: copied ? '#10b981' : '#334155', 
                 border: 'none', 
                 color: '#fff', 
-                borderRadius: '8px', 
+                borderRadius: '6px', 
                 padding: '6px 14px', 
                 cursor: 'pointer', 
                 fontSize: '0.78rem', 
@@ -334,7 +240,7 @@ export default function PaymentSection({
                 transition: '0.2s'
               }}
             >
-              {copied ? (isRTL ? '✓ تم النسخ' : '✓ Copied') : (isRTL ? '📋 نسخ العنوان' : '📋 Copy Address')}
+              {copied ? (isRTL ? 'تم النسخ' : 'Copied') : (isRTL ? 'نسخ العنوان' : 'Copy Address')}
             </button>
           </div>
 
@@ -347,7 +253,7 @@ export default function PaymentSection({
               style={{ 
                 width: '100%', 
                 padding: '10px 12px', 
-                borderRadius: '10px', 
+                borderRadius: '8px', 
                 border: '1px solid #334155', 
                 background: '#0f172a', 
                 color: '#fff', 
@@ -360,16 +266,15 @@ export default function PaymentSection({
 
           <div style={{ marginTop: '12px' }}>
             <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.78rem', marginBottom: '6px', fontWeight: '600' }}>
-              {isRTL ? "📎 إرفاق صورة إشعار التحويل (لتسريع التفعيل):" : "📎 Attach Transfer Receipt (For instant check):"}
+              {isRTL ? "إرفاق صورة إشعار التحويل:" : "Attach Transfer Receipt:"}
             </label>
             
             <label style={{
               display: 'flex',
               alignItems: 'center',
               justify: 'center',
-              gap: '8px',
               padding: '12px',
-              borderRadius: '10px',
+              borderRadius: '8px',
               border: '1px dashed #334155',
               background: '#0f172a',
               color: receiptFile ? '#10b981' : '#94a3b8',
@@ -380,8 +285,8 @@ export default function PaymentSection({
             }}>
               <span>
                 {receiptFile 
-                  ? `📄 ${receiptFile.name}` 
-                  : (isRTL ? '📷 التقاط صورة أو اختيار ملف الإشعار' : '📷 Take photo or select receipt file')}
+                  ? receiptFile.name 
+                  : (isRTL ? 'اختر ملف الإشعار أو التقط صورة' : 'Select receipt file')}
               </span>
               <input 
                 type="file" 
@@ -397,17 +302,17 @@ export default function PaymentSection({
 
       {/* تنبيه الدفع المباشر */}
       {!currentMethodObj.isManual && (
-        <div style={{ marginTop: '18px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+        <div style={{ marginTop: '18px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
           <p style={{ color: '#10b981', margin: '0', fontSize: '0.82rem', fontWeight: '700' }}>
-            ⚡ {isRTL ? "دفع آمن وفوري - سيتم تفعيل الترخيص تلقائياً." : "Instant & Secure Checkout - Immediate License Grant."}
+            {isRTL ? "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً." : "Instant & Secure Checkout - Immediate License Grant."}
           </p>
         </div>
       )}
 
       {/* زر التأكيد أو حالة النجاح */}
       {isSubmitted ? (
-        <div style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '14px', borderRadius: '12px', marginTop: '20px', textAlign: 'center', fontWeight: '700', border: '1px solid #10b981' }}>
-          🎉 {isRTL ? 'تم استلام الطلب وستتم المراجعة فوراً!' : 'Order Processed Successfully!'}
+        <div style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '14px', borderRadius: '10px', marginTop: '20px', textAlign: 'center', fontWeight: '700', border: '1px solid #10b981' }}>
+          {isRTL ? 'تم استلام الطلب وستتم المراجعة فوراً' : 'Order Processed Successfully'}
         </div>
       ) : (
         <button 
@@ -417,20 +322,20 @@ export default function PaymentSection({
             width: '100%', 
             marginTop: '20px', 
             padding: '14px', 
-            borderRadius: '12px', 
+            borderRadius: '10px', 
             background: loading ? '#475569' : 'linear-gradient(135deg, #f59e0b, #d97706)', 
             color: '#0f172a', 
             border: 'none', 
-            fontSize: '0.98rem', 
+            fontSize: '0.92rem', 
             fontWeight: '800', 
             cursor: loading ? 'wait' : 'pointer', 
-            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.25)',
+            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.2)',
             transition: '0.2s'
           }}
         >
           {loading 
             ? (isRTL ? "جاري المعالجة..." : "Processing...") 
-            : (isRTL ? "تأكيد وإتمام الطلب 🚀" : "Proceed to Payment 🚀")}
+            : (isRTL ? "تأكيد وإتمام الطلب" : "Proceed to Payment")}
         </button>
       )}
 
@@ -446,9 +351,9 @@ export default function PaymentSection({
         fontSize: '0.72rem',
         direction: 'ltr'
       }}>
-        <span>🔒 256-Bit SSL Encrypted</span>
+        <span>256-Bit SSL Encrypted</span>
         <span>•</span>
-        <span>⚡ Instant Activation</span>
+        <span>Instant Activation</span>
       </div>
 
     </div>
