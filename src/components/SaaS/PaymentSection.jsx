@@ -68,7 +68,8 @@ const PaymentLogos = {
     <LogoSlot>
       <svg width="42" height="20" viewBox="0 0 100 35">
         <rect width="100" height="35" rx="4" fill="#FFCC00"/>
-        <text x="8" y="25" fill="#002B49" fontSize="22" fontWeight="900" fontFamily="sans-serif" italic="true">fawry</text>
+        {/* 🟢 تم التعديل هنا: استخدام fontStyle="italic" بدلاً من italic="true" */}
+        <text x="8" y="25" fill="#002B49" fontSize="22" fontWeight="900" fontFamily="sans-serif" fontStyle="italic">fawry</text>
       </svg>
     </LogoSlot>
   ),
