@@ -13,11 +13,10 @@ export default function PaymentSection({
   const [copied, setCopied] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
 
-  // وسائل الدفع المقسمة بإيقونات موثوقة ومطابقة للهوية
   const paymentMethods = {
     egypt: [
       { id: 'instapay', name: isRTL ? 'InstaPay (تحويل بنكي فوري)' : 'InstaPay Direct Transfer', isManual: true, number: 'username@instapay', icon: <Banknote size={18} className="text-[#34D399]" /> },
-      { id: 'vodafone', name: isRTL ? 'فودافون كاش / المحافظ الذكية' : 'Smart Wallets / Vodafone Cash', isManual: true, number: '01012345678', icon: <Smartphone size={18} className="text-[#F59E0B]" /> },
+      { id: 'vodafone', name: isRTL ? 'فودافون كاش والمحافظ الذكية' : 'Vodafone Cash & Smart Wallets', isManual: true, number: '01012345678', icon: <Smartphone size={18} className="text-[#F59E0B]" /> },
       { id: 'fawry', name: isRTL ? 'فوري Pay (كود الدفع السريع)' : 'Fawry Pay Code', isManual: true, number: '987654321', icon: <Building2 size={18} className="text-[#D97706]" /> },
       { id: 'card_eg', name: isRTL ? 'بطاقات الفيزا وميزة البنكية' : 'Visa / MasterCard / Meeza', isManual: false, icon: <CreditCard size={18} className="text-[#CBD5E1]" /> },
     ],
@@ -28,7 +27,7 @@ export default function PaymentSection({
       { id: 'iban', name: isRTL ? 'تحويل بنكي مباشر (IBAN)' : 'Direct IBAN Bank Transfer', isManual: true, number: 'SA8200000012345678901234', icon: <Building2 size={18} className="text-[#CBD5E1]" /> },
     ],
     global: [
-      { id: 'card_global', name: isRTL ? 'بطاقات ائتمان دولية' : 'Visa / MasterCard / AMEX', isManual: false, icon: <CreditCard size={18} className="text-[#34D399]" /> },
+      { id: 'card_global', name: isRTL ? 'بطاقات ائتمان دولية Visa / MasterCard' : 'Visa / MasterCard International', isManual: false, icon: <CreditCard size={18} className="text-[#34D399]" /> },
       { id: 'paypal', name: 'PayPal', isManual: false, icon: <Banknote size={18} className="text-[#F59E0B]" /> },
       { id: 'crypto', name: 'USDT (TRC20 Wallet)', isManual: true, number: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq', icon: <Banknote size={18} className="text-[#D97706]" /> },
     ]
@@ -54,7 +53,7 @@ export default function PaymentSection({
 
   return (
     <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 max-w-lg mx-auto text-[#F8FAFC] shadow-2xl">
-      <h4 className="text-[#E2E8F0] font-bold text-sm mb-4 border-b border-[#1E293B] pb-3">
+      <h4 className="text-[#F59E0B] font-bold text-sm mb-4 border-b border-[#1E293B] pb-3 text-center">
         {isRTL ? 'اختر وسيلة الدفع المناسبة:' : 'Select Payment Method:'}
       </h4>
 
@@ -82,7 +81,7 @@ export default function PaymentSection({
 
               <div className="flex items-center gap-2 shrink-0">
                 {item.badge && (
-                  <span className="bg-[rgba(217,119,6,0.15)] text-[#F59E0B] text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-[rgba(217,119,6,0.3)]">
+                  <span className="bg-[rgba(217,119,6,0.2)] text-[#F59E0B] text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-[rgba(217,119,6,0.3)]">
                     {item.badge}
                   </span>
                 )}
@@ -116,7 +115,7 @@ export default function PaymentSection({
               }`}
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
-              <span>{copied ? (isRTL ? 'تم النسخ' : 'Copied') : (isRTL ? 'نسخ' : 'Copy')}</span>
+              <span>{copied ? (isRTL ? 'تم النسخ' : 'Copied') : (isRTL ? 'نسخ العنوان' : 'Copy')}</span>
             </button>
           </div>
 
@@ -153,8 +152,13 @@ export default function PaymentSection({
         </div>
       )}
 
+      {/* تنبيه التفعيل التلقائي الأصلي */}
+      <div className="bg-[rgba(16,185,129,0.08)] text-[#34D399] border border-[rgba(16,185,129,0.2)] p-3 rounded-xl mt-4 text-center text-xs font-semibold">
+        {isRTL ? 'دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.' : 'Instant & Secure Payment - License Auto Activated.'}
+      </div>
+
       {isSubmitted ? (
-        <div className="bg-[rgba(16,185,129,0.1)] text-[#34D399] border border-[rgba(16,185,129,0.25)] p-3.5 rounded-xl mt-5 text-center text-xs font-extrabold flex items-center justify-center gap-2">
+        <div className="bg-[rgba(16,185,129,0.1)] text-[#34D399] border border-[rgba(16,185,129,0.25)] p-3.5 rounded-xl mt-4 text-center text-xs font-extrabold flex items-center justify-center gap-2">
           <ShieldCheck size={18} />
           <span>{isRTL ? 'تم استلام الطلب وستتم المراجعة والتفعيل فوراً' : 'Order Received & Under Verification'}</span>
         </div>
@@ -162,7 +166,7 @@ export default function PaymentSection({
         <button 
           onClick={() => onSubmit(currentMethodObj.id, currentMethodObj.isManual, receiptFile)}
           disabled={loading}
-          className="btn-primary w-full mt-5 py-3.5 text-xs font-bold"
+          className="btn-primary w-full mt-4 py-3.5 text-sm font-black"
         >
           {loading 
             ? (isRTL ? "جاري المعالجة..." : "Processing...") 
@@ -170,9 +174,10 @@ export default function PaymentSection({
         </button>
       )}
 
-      <div className="flex items-center justify-center gap-2 text-[11px] text-[#64748B] mt-4">
-        <ShieldCheck size={14} className="text-[#10B981]" />
-        <span>{isRTL ? 'بياناتك مشفرة ومحمية وفق معايير 256-bit SSL' : '256-bit SSL Encrypted & Secure Payment'}</span>
+      <div className="flex items-center justify-between text-[10px] text-[#64748B] mt-4 px-2">
+        <span>Instant Activation</span>
+        <span>•</span>
+        <span>256-Bit SSL Encrypted</span>
       </div>
     </div>
   );
