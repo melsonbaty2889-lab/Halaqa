@@ -6,6 +6,8 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
   ],
   parserOptions: {
     ecmaVersion: 'latest',
@@ -14,10 +16,16 @@ module.exports = {
       jsx: true,
     },
   },
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
   rules: {
-    // إيقاف إفشال الـ Action بسبب المتغيرات غير المستخدمة
-    'no-unused-vars': 'off',
+    // إظهار تحذيرات فقط بدلاً من إيقاف الـ Build
+    'no-unused-vars': 'warn',
     'no-console': 'off',
     'no-useless-escape': 'off',
+    'react/prop-types': 'off', // لتعطيل فحص prop-types إذا كنت لا تستخدمه
   },
 };
