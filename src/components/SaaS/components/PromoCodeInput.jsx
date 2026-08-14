@@ -1,41 +1,56 @@
-// src/components/SaaS/components/PromoCodeInput.jsx
 import React from 'react';
+import { Tag, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function PromoCodeInput({ 
-  couponInput, 
-  setCouponInput, 
-  handleApplyCoupon, 
-  couponMessage, 
+  promoCode, 
+  setPromoCode, 
+  onApply, 
+  appliedDiscount, 
+  error, 
   isRTL 
 }) {
   return (
-    <div className="max-w-md w-full mx-auto mb-8 bg-slate-900/90 p-4 rounded-2xl border border-dashed border-slate-800">
-      <label className="block text-slate-300 text-xs font-bold mb-2.5 text-center">
-        {isRTL ? "هل لديك كود خصم مخصص؟" : "Have a promo discount code?"}
-      </label>
+    <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl">
+      <div className="flex items-center gap-2 mb-2">
+        <Tag size={16} className="text-[#D97706]" />
+        <span className="text-[#E2E8F0] font-bold text-xs">
+          {isRTL ? 'هل لديك كود خصم مخصص؟' : 'Have a Promo Code?'}
+        </span>
+      </div>
 
-      <div className="flex gap-2 items-center w-full">
+      <div className="flex items-center gap-2">
         <input 
-          type="text" 
-          value={couponInput}
-          onChange={(e) => setCouponInput(e.target.value)}
-          placeholder={isRTL ? "أدخل الكود (مثال: S20)" : "Enter code (e.g. S20)"}
-          className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-100 text-xs font-semibold focus:outline-none focus:border-amber-500 transition-colors"
+          type="text"
+          value={promoCode}
+          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+          placeholder={isRTL ? 'أدخل الكود (مثال: HALAQA20)' : 'Enter code (e.g. HALAQA20)'}
+          className="app-input uppercase font-mono text-xs tracking-wider"
         />
-        <button 
+
+        <button
           type="button"
-          onClick={handleApplyCoupon}
-          className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-bold text-xs whitespace-nowrap shrink-0 transition-colors shadow-sm"
+          onClick={onApply}
+          className="btn-primary shrink-0 text-xs py-2.5 px-5"
         >
-          {isRTL ? "تطبيق" : "Apply"}
+          {isRTL ? 'تطبيق' : 'Apply'}
         </button>
       </div>
 
-      {couponMessage && (
-        <div className={`mt-2.5 text-center text-xs font-bold ${
-          couponMessage.type === 'success' ? 'text-emerald-400' : 'text-rose-500'
-        }`}>
-          {couponMessage.text}
+      {appliedDiscount > 0 && (
+        <div className="mt-2.5 flex items-center gap-1.5 text-[#34D399] text-xs font-semibold bg-[rgba(16,185,129,0.1)] p-2 rounded-lg border border-[rgba(16,185,129,0.25)]">
+          <CheckCircle2 size={14} />
+          <span>
+            {isRTL 
+              ? `تم تطبيق خصم بقيمة ${appliedDiscount}% بنجاح!` 
+              : `${appliedDiscount}% discount applied successfully!`}
+          </span>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-2.5 flex items-center gap-1.5 text-[#F87171] text-xs font-semibold bg-[rgba(239,68,68,0.1)] p-2 rounded-lg border border-[rgba(239,68,68,0.25)]">
+          <AlertCircle size={14} />
+          <span>{error}</span>
         </div>
       )}
     </div>
