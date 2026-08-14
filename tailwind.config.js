@@ -1,5 +1,5 @@
 /* tailwind.config.js */
-import colors from './src/constants/colors.js';
+import colors from './src/theme/colors.js'; 
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -11,10 +11,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ربط جميع الكائنات المحددة في colors.js
+        // ربط جميع الكائنات المحددة في src/theme/colors.js
         primary: colors.primary,
         brandEmerald: colors.brandEmerald,
-        brand: colors.brandEmerald, // اسم بديل لمنع كسر الكود القديم
+        brand: colors.brandEmerald,
         gold: colors.gold,
         error: colors.error,
         dark: colors.dark,
