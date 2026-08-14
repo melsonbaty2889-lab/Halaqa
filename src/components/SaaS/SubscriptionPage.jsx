@@ -4,10 +4,11 @@ import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
+import { ArrowLeft, Globe } from 'lucide-react';
 
-export default function SubscriptionPage({ isRTL = true }) {
+export default function SubscriptionPage({ isRTL = true, onBack }) {
   const [region, setRegion] = useState('egypt');
-  const [selectedPlan, setSelectedPlan] = useState('monthly');
+  const [selectedPlan, setSelectedPlan] = useState('yearly'); // السنوي افتراضي
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
@@ -15,54 +16,68 @@ export default function SubscriptionPage({ isRTL = true }) {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // الأسعار والعملات حسب المنطقة المحددة
+  // الأسعار الأصلية الكاملة بالجمهوريات والعملات
   const pricingData = {
-    egypt: { currency: 'ج.م', monthly: 750, yearly: 6000 },
-    gcc: { currency: 'ر.س', monthly: 95, yearly: 750 },
-    global: { currency: 'USD', monthly: 25, yearly: 200 }
+    egypt: { currency: 'جنيه مصري', monthly: 150, yearly: 1500, lifetime: 3500 },
+    gcc: { currency: 'ريال سعودي', monthly: 95, yearly: 750, lifetime: 1800 },
+    global: { currency: 'دولار', monthly: 25, yearly: 200, lifetime: 500 }
   };
 
   const currentPricing = pricingData[region] || pricingData.egypt;
 
+  // الخطط الثلاث كاملة الأصلية
   const plans = [
     {
       id: 'monthly',
-      title: isRTL ? 'الاشتراك الشهري' : 'Monthly Plan',
-      description: isRTL ? 'مثالي للمراكز والحلقات الناشئة' : 'Ideal for small or starting academies',
-      period: 'monthly',
+      title: isRTL ? 'الوصول المرن (اشتراك شهري)' : 'Flexible Monthly Plan',
+      description: isRTL ? 'مثالي للمراكز والحلقات الناشئة' : 'Ideal for small academies',
+      periodText: isRTL ? 'شهرياً' : 'month',
       basePrice: currentPricing.monthly,
       features: [
-        isRTL ? 'إدارة حتى 100 طالب' : 'Up to 100 Students',
-        isRTL ? 'متابعة وتسميع مباشر' : 'Live Quran Recitation Tracking',
-        isRTL ? 'إصدار الشهادات الرقمية' : 'Digital Verification Certificates',
-        isRTL ? 'دعم فني وتحديثات مستمرة' : 'Direct Technical Support'
+        isRTL ? 'تفعيل فوري لكامل النظام' : 'Instant full access',
+        isRTL ? 'إدارة الطلاب والدورات' : 'Student & Course Management',
+        isRTL ? 'دعم فني قياسي' : 'Standard Support'
       ]
     },
     {
       id: 'yearly',
-      title: isRTL ? 'الاشتراك السنوي' : 'Yearly Plan',
-      badge: isRTL ? 'الأكثر توفيراً (توفير 33%)' : 'Best Value (Save 33%)',
-      description: isRTL ? 'للمؤسسات والمقارئ المتكاملة' : 'For full academies & large organizations',
-      period: 'yearly',
+      title: isRTL ? 'الكفاءة المستدامة (ترخيص سنوي)' : 'Sustainable Yearly Plan',
+      badge: isRTL ? 'توفير شهرين مجاناً 🔥' : '2 Months Free 🔥',
+      badgeBg: 'bg-[#10B981]',
+      description: isRTL ? 'للمؤسسات والمقارئ المتكاملة' : 'For full academies',
+      periodText: isRTL ? 'سنوياً' : 'year',
       basePrice: currentPricing.yearly,
       features: [
-        isRTL ? 'عدد طلاب غير محدود' : 'Unlimited Students',
-        isRTL ? 'جميع مميزات الخطة الشهرية' : 'All Monthly Plan Features',
-        isRTL ? 'نظام التقارير المتقدمة للوالدين' : 'Advanced Parent Report System',
-        isRTL ? 'دعم أولوية على مدار 24 ساعة' : '24/7 Priority Support'
+        isRTL ? 'كل مميزات الاشتراك الشهري' : 'All Monthly Plan features',
+        isRTL ? 'توفير قيمة شهرين كاملين' : 'Save 2 full months value',
+        isRTL ? 'أولوية في الدعم الفني' : 'Priority Technical Support'
+      ]
+    },
+    {
+      id: 'lifetime',
+      title: isRTL ? 'الترخيص الأبدي للمؤسسين (مدى الحياة)' : 'Lifetime Founder License',
+      badge: isRTL ? 'فرصة حصرية للمؤسسين ⚡' : 'Exclusive Founder Offer ⚡',
+      badgeBg: 'bg-[#EF4444]',
+      description: isRTL ? 'ادفع مرة واحدة واحصل على الوصول الدائم' : 'Pay once, access forever',
+      periodText: isRTL ? 'مدى الحياة' : 'lifetime',
+      basePrice: currentPricing.lifetime,
+      features: [
+        isRTL ? 'ترخيص دائم بدون أي رسوم تجديد' : 'Permanent license with no renewal fees',
+        isRTL ? 'جميع التحديثات المستقبلية مجاناً' : 'All future updates included for free',
+        isRTL ? 'دعم VIP خاص وحصري' : 'Exclusive VIP Support'
       ]
     }
   ];
 
   const handleApplyPromo = () => {
     setPromoError('');
-    if (promoCode.trim() === 'HALAQA20') {
+    if (promoCode.trim() === 'S20' || promoCode.trim() === 'HALAQA20') {
       setAppliedDiscount(20);
     } else if (promoCode.trim() === 'PROMO50') {
       setAppliedDiscount(50);
     } else {
       setAppliedDiscount(0);
-      setPromoError(isRTL ? 'كود الخصم غير صحيح أو منتهي الصلاحية' : 'Invalid or expired promo code');
+      setPromoError(isRTL ? 'كود الخصم غير صحيح أو منتهي الصلاحية' : 'Invalid promo code');
     }
   };
 
@@ -71,7 +86,6 @@ export default function SubscriptionPage({ isRTL = true }) {
     try {
       let receiptUrl = null;
 
-      // رفع صورة الإشعار إلى Supabase Storage إن وجدت
       if (receiptFile) {
         const fileExt = receiptFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -85,7 +99,6 @@ export default function SubscriptionPage({ isRTL = true }) {
         }
       }
 
-      // إدراج الطلب في جدول الاشتراكات
       await supabase.from('subscriptions').insert([
         {
           plan_type: selectedPlan,
@@ -113,18 +126,36 @@ export default function SubscriptionPage({ isRTL = true }) {
         background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)',
         fontFamily: "'Cairo', sans-serif"
       }}
-      className="py-12 px-4 text-[#F8FAFC]"
+      className="py-10 px-4 text-[#F8FAFC]"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="max-w-4xl mx-auto">
         
-        {/* الهيدر بدون لوجو */}
-        <div className="flex flex-col items-center text-center mb-10 pt-4">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFC] mb-2">
-            {isRTL ? 'اختر الخطة المناسبة لمنظومتك' : 'Choose Your Academy Plan'}
+        {/* أزرار العودة واللغة بالأعلى (مطابقة للصورة الأصلية) */}
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#1E293B]">
+          <button 
+            onClick={onBack} 
+            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 rounded-xl text-xs font-bold text-[#CBD5E1] transition-all"
+          >
+            <ArrowLeft size={16} />
+            <span>{isRTL ? 'العودة إلى مركز التحكم والتحليلات' : 'Back to Dashboard'}</span>
+          </button>
+
+          <button className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] px-4 py-2.5 rounded-xl text-xs font-bold text-[#F59E0B]">
+            <Globe size={16} />
+            <span>English</span>
+          </button>
+        </div>
+
+        {/* الهيدر الأصلي بكلماته النصية بالكامل */}
+        <div className="flex flex-col items-center text-center mb-10">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#F59E0B] mb-3 leading-tight">
+            {isRTL ? 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية' : 'Get License - Smart Halaqa Platform'}
           </h1>
-          <p className="text-[#D97706] text-xs font-bold tracking-wider uppercase">
-            {isRTL ? 'احصل على كامل أدوات إدارة المقارئ والشهادات الرقمية' : 'ACADEMY MANAGEMENT & DIGITAL CERTIFICATES'}
+          <p className="text-[#CBD5E1] text-xs sm:text-sm max-w-xl leading-relaxed">
+            {isRTL 
+              ? 'اختر خطة الاستثمار الأكاديمي الأنسب لك، وانضم إلى كبرى الأكاديميات والمراكز التعليمية حول العالم.' 
+              : 'Choose the best academic investment plan for your institution.'}
           </p>
         </div>
 
@@ -145,8 +176,8 @@ export default function SubscriptionPage({ isRTL = true }) {
           isRTL={isRTL}
         />
 
-        {/* كروت الخطط والأسعار */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        {/* كروت الخطط الثلاث كاملة (شهري / سنوي / مدى الحياة) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {plans.map((p) => {
             const finalPrice = Math.round(p.basePrice * (1 - appliedDiscount / 100));
             return (
