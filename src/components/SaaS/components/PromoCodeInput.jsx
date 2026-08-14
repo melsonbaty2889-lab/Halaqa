@@ -10,8 +10,8 @@ export default function PromoCodeInput({
   isRTL 
 }) {
   return (
-    <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="bg-[#0F172A] border border-dashed border-[#D97706]/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl">
+      <div className="flex items-center justify-center gap-2 mb-3">
         <Tag size={16} className="text-[#D97706]" />
         <span className="text-[#E2E8F0] font-bold text-xs">
           {isRTL ? 'هل لديك كود خصم مخصص؟' : 'Have a Promo Code?'}
@@ -23,14 +23,14 @@ export default function PromoCodeInput({
           type="text"
           value={promoCode}
           onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-          placeholder={isRTL ? 'أدخل الكود (مثال: HALAQA20)' : 'Enter code (e.g. HALAQA20)'}
+          placeholder={isRTL ? 'أدخل الكود (مثال: S20)' : 'Enter code (e.g. S20)'}
           className="app-input uppercase font-mono text-xs tracking-wider"
         />
 
         <button
           type="button"
           onClick={onApply}
-          className="btn-primary shrink-0 text-xs py-2.5 px-5"
+          className="btn-primary shrink-0 text-xs py-2.5 px-6 font-bold"
         >
           {isRTL ? 'تطبيق' : 'Apply'}
         </button>
