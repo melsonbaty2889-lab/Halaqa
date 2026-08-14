@@ -21,6 +21,10 @@ import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
+const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9')
+  .split(',')
+  .map((s) => s.trim());
+
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { profile, appState, logout } = useAcademy();
 
@@ -245,8 +249,6 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9').split(',').map((s) => s.trim());
-
 function MainContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
@@ -260,7 +262,6 @@ function MainContent() {
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
-    // ✅ تم التعديل والاستدعاء الصحيح للدالة:
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
@@ -432,8 +433,8 @@ export default function App() {
   const handleSplashFinish = () => {
     try {
       sessionStorage.setItem('app_splash_seen', 'true');
-    } catch (e) {
-      console.warn(e);
+    } catch {
+      // Ignored
     }
     setShowSplash(false);
   };
