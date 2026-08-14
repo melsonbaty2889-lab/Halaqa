@@ -4,6 +4,7 @@ import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
+import { colors, UI } from '@/theme';
 import { ArrowLeft, Globe } from 'lucide-react';
 
 export default function SubscriptionPage({ isRTL = true, onBack }) {
