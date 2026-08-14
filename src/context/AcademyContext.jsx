@@ -1,5 +1,4 @@
-/* src/context/AcademyContext.jsx */
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AcademyContext = createContext({});
@@ -50,7 +49,7 @@ export const AcademyProvider = ({ children }) => {
         if (isMounted.current) {
           setProfile(null);
           setAcademy(null);
-          setAppState('NO_PROFILE'); // أو PENDING_APPROVAL بحسب هيكلة تطبيقك
+          setAppState('NO_PROFILE');
         }
         return;
       }
@@ -147,7 +146,7 @@ export const AcademyProvider = ({ children }) => {
 
     return () => {
       clearTimeout(safetyTimer);
-      subscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
     };
   }, [fetchUserStatus]);
 
@@ -168,7 +167,7 @@ export const AcademyProvider = ({ children }) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [user?.id, refreshStatus]);
 
