@@ -606,7 +606,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
                   }}
                 >
                   {isSelected 
-                    ? (isRTL ? 'رخصتك المحشوة حالياً' : 'Current Selected') 
+                    ? (isRTL ? 'رخصتك المحددة حالياً' : 'Current Selected') 
                     : (isRTL ? 'اختيار هذه الخطة' : 'Select Plan')}
                 </button>
               </div>
