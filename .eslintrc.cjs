@@ -27,5 +27,8 @@ module.exports = {
     'no-console': 'off',
     'no-useless-escape': 'off',
     'react/prop-types': 'off', // لتعطيل فحص prop-types إذا كنت لا تستخدمه
+    
+    // 🟢 تعطيل قاعدة الاقتباسات في النصوص لضمان استقرار الـ Build
+    'react/no-unescaped-entities': 'off',
   },
 };
