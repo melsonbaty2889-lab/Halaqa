@@ -1,29 +1,18 @@
 // src/components/SaaS/PaymentSection.jsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-// حاوية قياسية للشعارات المفرغة وبدون إطارات عريضة
+// حاوية قياسية للشعارات المفرغة
 const LogoSlot = ({ src, alt }) => (
-  <div style={{ 
-    width: '48px', 
-    height: '32px', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    flexShrink: 0 
-  }}>
+  <div className="w-12 h-8 flex items-center justify-center shrink-0">
     <img 
       src={src} 
       alt={alt} 
-      style={{ 
-        maxWidth: '100%', 
-        maxHeight: '100%', 
-        objectFit: 'contain' 
-      }} 
+      className="max-w-full max-h-full object-contain" 
     />
   </div>
 );
 
-// الشعارات الرسمية المفرغة من روابط CDN موثوقة
+// الشعارات الرسمية
 const PaymentLogos = {
   applePay: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" alt="Apple Pay" />,
   mada: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mada_Logo.svg" alt="Mada" />,
@@ -34,8 +23,8 @@ const PaymentLogos = {
   paypal: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" />,
   card: <LogoSlot src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MasterCard / Visa" />,
   bank: (
-    <div style={{ width: '48px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="w-12 h-8 flex items-center justify-center">
+      <svg className="w-6 h-6 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
       </svg>
     </div>
@@ -109,87 +98,43 @@ export default function PaymentSection({
   return (
     <div 
       dir={isRTL ? 'rtl' : 'ltr'} 
-      style={{ 
-        background: '#0f172a', 
-        border: '1px solid #1e293b', 
-        borderRadius: '20px', 
-        padding: '24px', 
-        maxWidth: '480px', 
-        margin: '0 auto', 
-        boxSizing: 'border-box', 
-        color: '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-      }}
+      className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md mx-auto text-slate-100 shadow-xl"
     >
       {/* عنوان الوسائل */}
-      <h4 style={{ 
-        color: '#f59e0b', 
-        marginTop: '0', 
-        marginBottom: '18px', 
-        fontSize: '0.95rem', 
-        fontWeight: '700', 
-        borderBottom: '1px solid #1e293b', 
-        paddingBottom: '12px'
-      }}>
+      <h4 className="text-amber-500 font-bold text-sm mb-4 border-b border-slate-800 pb-3">
         {isRTL ? "اختر وسيلة الدفع المناسبة:" : "Select Payment Method:"}
       </h4>
 
       {/* خيارات وسائل الدفع */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div className="flex flex-col gap-2.5">
         {activeMethods.map((item) => {
           const isSelected = selectedMethod === item.id;
           return (
             <div 
               key={item.id}
               onClick={() => setSelectedMethod(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justify: 'space-between',
-                padding: '12px 16px',
-                borderRadius: '12px',
-                background: isSelected ? 'rgba(245, 158, 11, 0.08)' : '#162032',
-                border: isSelected ? '2px solid #f59e0b' : '1px solid #243147',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease-in-out',
-                gap: '12px'
-              }}
+              className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all gap-3 border ${
+                isSelected 
+                  ? 'bg-amber-500/10 border-amber-500' 
+                  : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+              }`}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+              <div className="flex items-center gap-3.5 flex-1 min-w-0">
                 {item.logo}
-                <span style={{ 
-                  color: '#f8fafc', 
-                  fontWeight: '600', 
-                  fontSize: '0.88rem', 
-                  lineHeight: '1.35',
-                  wordBreak: 'break-word'
-                }}>
+                <span className="text-slate-100 font-semibold text-xs leading-snug break-words">
                   {item.name}
                 </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <div className="flex items-center gap-2 shrink-0">
                 {item.badge && (
-                  <span style={{ 
-                    background: 'rgba(245, 158, 11, 0.2)', 
-                    color: '#f59e0b', 
-                    fontSize: '0.68rem', 
-                    padding: '2px 8px', 
-                    borderRadius: '10px', 
-                    fontWeight: '700',
-                    whiteSpace: 'nowrap'
-                  }}>
+                  <span className="bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
                     {item.badge}
                   </span>
                 )}
-                <div style={{
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '50%',
-                  border: isSelected ? '5px solid #f59e0b' : '2px solid #475569',
-                  boxSizing: 'border-box',
-                  flexShrink: 0
-                }} />
+                <div className={`w-4 h-4 rounded-full border-2 transition-all ${
+                  isSelected ? 'border-4 border-amber-500 bg-slate-950' : 'border-slate-600'
+                }`} />
               </div>
             </div>
           );
@@ -198,92 +143,46 @@ export default function PaymentSection({
 
       {/* تفاصيل التحويل اليدوي */}
       {currentMethodObj.isManual && (
-        <div style={{ marginTop: '18px', background: '#162032', border: '1px dashed #f59e0b', borderRadius: '14px', padding: '16px' }}>
-          <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 10px 0', fontWeight: '600' }}>
+        <div className="mt-4 bg-slate-950/80 border border-dashed border-amber-500/60 rounded-xl p-4">
+          <p className="text-slate-400 text-xs font-semibold mb-2.5">
             {isRTL ? 'يرجى تحويل المبلغ إلى الحساب التالي:' : 'Please transfer to the following details:'}
           </p>
           
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            gap: '10px', 
-            background: '#0f172a', 
-            padding: '12px', 
-            borderRadius: '10px', 
-            border: '1px solid #243147' 
-          }}>
-            <div style={{ 
-              color: '#f59e0b', 
-              fontFamily: 'monospace', 
-              fontSize: '0.92rem', 
-              fontWeight: '700', 
-              wordBreak: 'break-all', 
-              direction: 'ltr',
-              textAlign: isRTL ? 'right' : 'left'
-            }}>
+          <div className="flex flex-col gap-2.5 bg-slate-900 p-3 rounded-lg border border-slate-800">
+            <div className="text-amber-400 font-mono text-xs font-bold break-all dir-ltr text-left">
               {currentMethodObj.number}
             </div>
 
             <button 
               type="button"
               onClick={() => handleCopy(currentMethodObj.number)}
-              style={{ 
-                alignSelf: isRTL ? 'flex-start' : 'flex-end',
-                background: copied ? '#10b981' : '#334155', 
-                border: 'none', 
-                color: '#fff', 
-                borderRadius: '6px', 
-                padding: '6px 14px', 
-                cursor: 'pointer', 
-                fontSize: '0.78rem', 
-                fontWeight: '700',
-                transition: '0.2s'
-              }}
+              className={`self-end px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                copied 
+                  ? 'bg-emerald-500 text-slate-950' 
+                  : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+              }`}
             >
               {copied ? (isRTL ? 'تم النسخ' : 'Copied') : (isRTL ? 'نسخ العنوان' : 'Copy Address')}
             </button>
           </div>
 
-          <div style={{ marginTop: '12px' }}>
+          <div className="mt-3">
             <input 
               type="text" 
               value={txId}
               onChange={(e) => setTxId(e.target.value)}
               placeholder={isRTL ? "رقم المعاملة / اسم المحول (اختياري)" : "Transaction Reference / Sender ID (Optional)"}
-              style={{ 
-                width: '100%', 
-                padding: '10px 12px', 
-                borderRadius: '8px', 
-                border: '1px solid #334155', 
-                background: '#0f172a', 
-                color: '#fff', 
-                outline: 'none', 
-                fontSize: '0.82rem', 
-                boxSizing: 'border-box' 
-              }}
+              className="w-full px-3 py-2 rounded-lg border border-slate-800 bg-slate-900 text-slate-100 text-xs outline-none focus:border-amber-500 transition-colors"
             />
           </div>
 
-          <div style={{ marginTop: '12px' }}>
-            <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.78rem', marginBottom: '6px', fontWeight: '600' }}>
+          <div className="mt-3">
+            <label className="block text-slate-400 text-[11px] font-semibold mb-1.5">
               {isRTL ? "إرفاق صورة إشعار التحويل:" : "Attach Transfer Receipt:"}
             </label>
             
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'center',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px dashed #334155',
-              background: '#0f172a',
-              color: receiptFile ? '#10b981' : '#94a3b8',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-              textAlign: 'center'
-            }}>
-              <span>
+            <label className="flex items-center justify-center p-3 rounded-lg border border-dashed border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 cursor-pointer text-xs font-semibold text-center transition-colors">
+              <span className={receiptFile ? 'text-emerald-400 font-bold' : ''}>
                 {receiptFile 
                   ? receiptFile.name 
                   : (isRTL ? 'اختر ملف الإشعار أو التقط صورة' : 'Select receipt file')}
@@ -293,7 +192,7 @@ export default function PaymentSection({
                 accept="image/png, image/jpeg, image/webp" 
                 onClick={(e) => { e.target.value = null; }}
                 onChange={(e) => setReceiptFile(e.target.files[0])} 
-                style={{ display: 'none' }} 
+                className="hidden" 
               />
             </label>
           </div>
@@ -302,8 +201,8 @@ export default function PaymentSection({
 
       {/* تنبيه الدفع المباشر */}
       {!currentMethodObj.isManual && (
-        <div style={{ marginTop: '18px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-          <p style={{ color: '#10b981', margin: '0', fontSize: '0.82rem', fontWeight: '700' }}>
+        <div className="mt-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-center">
+          <p className="text-emerald-400 text-xs font-bold m-0">
             {isRTL ? "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً." : "Instant & Secure Checkout - Immediate License Grant."}
           </p>
         </div>
@@ -311,27 +210,18 @@ export default function PaymentSection({
 
       {/* زر التأكيد أو حالة النجاح */}
       {isSubmitted ? (
-        <div style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '14px', borderRadius: '10px', marginTop: '20px', textAlign: 'center', fontWeight: '700', border: '1px solid #10b981' }}>
+        <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 p-3.5 rounded-xl mt-5 text-center text-xs font-extrabold">
           {isRTL ? 'تم استلام الطلب وستتم المراجعة فوراً' : 'Order Processed Successfully'}
         </div>
       ) : (
         <button 
           onClick={() => onSubmit(currentMethodObj.id, currentMethodObj.isManual, receiptFile)}
           disabled={loading}
-          style={{ 
-            width: '100%', 
-            marginTop: '20px', 
-            padding: '14px', 
-            borderRadius: '10px', 
-            background: loading ? '#475569' : 'linear-gradient(135deg, #f59e0b, #d97706)', 
-            color: '#0f172a', 
-            border: 'none', 
-            fontSize: '0.92rem', 
-            fontWeight: '800', 
-            cursor: loading ? 'wait' : 'pointer', 
-            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.2)',
-            transition: '0.2s'
-          }}
+          className={`w-full mt-5 py-3.5 rounded-xl text-xs font-extrabold transition-all shadow-md ${
+            loading 
+              ? 'bg-slate-800 text-slate-500 cursor-wait' 
+              : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/10'
+          }`}
         >
           {loading 
             ? (isRTL ? "جاري المعالجة..." : "Processing...") 
@@ -340,17 +230,7 @@ export default function PaymentSection({
       )}
 
       {/* تذييل الأمان */}
-      <div style={{ 
-        display: 'flex', 
-        justify: 'center', 
-        gap: '16px', 
-        marginTop: '18px', 
-        paddingTop: '12px', 
-        borderTop: '1px solid #1e293b', 
-        color: '#64748b', 
-        fontSize: '0.72rem',
-        direction: 'ltr'
-      }}>
+      <div className="flex justify-center gap-3 mt-4 pt-3 border-t border-slate-800 text-slate-500 text-[10px] font-mono dir-ltr">
         <span>256-Bit SSL Encrypted</span>
         <span>•</span>
         <span>Instant Activation</span>
