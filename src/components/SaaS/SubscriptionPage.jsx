@@ -39,11 +39,10 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     setRegion(detectUserRegion(userLoc, i18n.language));
   }, [i18n.language]);
 
-  // 🔄 الاستماع اللحظي (Realtime) لتحديث حالة الاشتراك فور موافقة الأدمن
+  // الاستماع اللحظي لتحديث حالة الاشتراك
   useEffect(() => {
     if (!activeAcademyId) return;
 
-    // 1. جلب حالة الاشتراك الحالية عند التحميل
     const fetchCurrentSubscription = async () => {
       const { data } = await supabase
         .from('saas_subscriptions')
@@ -61,7 +60,6 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
 
     fetchCurrentSubscription();
 
-    // 2. تفعيل التنست اللحظي على جدول saas_subscriptions
     const subscriptionChannel = supabase
       .channel(`subscription-status-${activeAcademyId}`)
       .on(
@@ -80,15 +78,15 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
             setIsSubmitted(false);
             showNotification(
               isRTL 
-                ? '🎉 تم قبول طلبك وتفعيل اشتراك الأكاديمية بنجاح!' 
-                : '🎉 Your subscription has been approved and activated!'
+                ? 'تم قبول طلبك وتفعيل اشتراك المنظمة بنجاح' 
+                : 'Your subscription has been approved and activated!'
             );
           } else if (newStatus === 'canceled' || newStatus === 'unpaid') {
             setIsSubmitted(false);
             showNotification(
               isRTL 
-                ? '❌ تعذر تفعيل الاشتراك، يرجى التواصل مع الدعم الفني.' 
-                : '❌ Subscription request was not approved.'
+                ? 'تعذر تفعيل الاشتراك، يرجى التواصل مع الدعم الفني.' 
+                : 'Subscription request was not approved.'
             );
           }
         }
@@ -108,14 +106,14 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
       setAppliedCoupon(code);
       setCouponMessage({ 
         type: 'success', 
-        text: isRTL ? `تم تطبيق خصم ${discount}% بنجاح! 🎉` : `${discount}% Discount applied!` 
+        text: isRTL ? `تم تطبيق خصم ${discount}% بنجاح` : `${discount}% Discount applied!` 
       });
     } else {
       setDiscountPercent(0);
       setAppliedCoupon('');
       setCouponMessage({ 
         type: 'error', 
-        text: isRTL ? 'كود الخصم غير صالح أو منتهي.' : 'Invalid coupon code.' 
+        text: isRTL ? 'كود الخصم غير صالح أو منتهي الصلاحية.' : 'Invalid or expired coupon code.' 
       });
     }
   };
@@ -149,7 +147,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     }
 
     if (!resolvedAcademyId) {
-      showNotification(isRTL ? "⚠️ لم يتم العثور على معرف الأكاديمية." : "⚠️ Academy ID is missing.");
+      showNotification(isRTL ? "لم يتم العثور على معرف الأكاديمية." : "Academy ID is missing.");
       return;
     }
 
@@ -157,7 +155,6 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     try {
       let receiptUrl = null;
 
-      // 1️⃣ ضغط ورفع صورة إشعار التحويل اليدوي بشكل آمن معالَج
       if (isManualTransfer && receiptFile) {
         try {
           const { url } = await processAndUploadReceipt(
@@ -167,14 +164,13 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
           );
           receiptUrl = url;
         } catch (uploadError) {
-          console.error("🚨 Receipt Upload Error:", uploadError);
-          showNotification(`⚠️ ${uploadError.message || (isRTL ? 'فشل رفع صورة الإشعار' : 'Receipt upload failed')}`);
+          console.error("Receipt Upload Error:", uploadError);
+          showNotification(`${uploadError.message || (isRTL ? 'فشل رفع صورة الإشعار' : 'Receipt upload failed')}`);
           setLoading(false);
           return;
         }
       }
 
-      // 2️⃣ احتساب التواريخ الأولية والمبلغ الخصمي
       const startsAt = new Date();
       const expiryDate = new Date();
       if (duration === 'monthly') expiryDate.setDate(expiryDate.getDate() + 30);
@@ -184,7 +180,6 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
       const rawAmount = basePrices[region][duration];
       const finalAmount = calculateFinalPrice(rawAmount, discountPercent);
 
-      // 3️⃣ إدراج / تحديث الطلب في جدول `saas_subscriptions` مع مراعاة القيود المطلوبة (Constraints)
       const { error } = await supabase
         .from('saas_subscriptions')
         .upsert([{
@@ -214,14 +209,14 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
       setSubscriptionStatus('pending_verification');
       showNotification(
         isRTL 
-          ? "✅ تم إرسال طلب الاشتراك بنجاح! وهو قيد المراجعة حالياً." 
-          : "✅ Subscription request submitted successfully and is under review."
+          ? "تم إرسال طلب الاشتراك بنجاح وهو قيد المراجعة حالياً." 
+          : "Subscription request submitted successfully and is under review."
       );
 
     } catch (err) {
-      console.error("🚨 Subscription Error Details:", err);
-      const errorMessage = err?.message || err?.error_description || (isRTL ? "❌ حدث خطأ أثناء معالجة الطلب." : "❌ Network error occurred.");
-      showNotification(`❌ ${errorMessage}`);
+      console.error("Subscription Error Details:", err);
+      const errorMessage = err?.message || err?.error_description || (isRTL ? "حدث خطأ أثناء معالجة الطلب." : "Network error occurred.");
+      showNotification(`${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -230,8 +225,9 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
   const plans = [
     {
       id: 'monthly',
-      title: t('subscription.monthly'),
+      title: isRTL ? 'الوصول المرن (شهرية)' : 'Flexible Monthly Access',
       color: '#f59e0b',
+      badge: null,
       features: [
         isRTL ? 'تفعيل فوري لكامل النظام' : 'Instant full system access',
         isRTL ? 'إدارة الطلاب والدورات' : 'Student & course management',
@@ -240,8 +236,8 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     },
     {
       id: 'yearly',
-      title: t('subscription.yearly'),
-      badge: isRTL ? 'توفير شهرين مجاناً 🔥' : 'Save 2 Months 🔥',
+      title: isRTL ? 'الكفاءة المستدامة (ترخيص سنوي)' : 'Sustainable Annual License',
+      badge: isRTL ? 'توفير شهرين مجاناً' : 'Save 2 Months',
       badgeBg: '#10b981',
       color: '#10b981',
       features: [
@@ -252,8 +248,8 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
     },
     {
       id: 'lifetime',
-      title: t('subscription.lifetime'),
-      badge: isRTL ? 'فرصة حصرية للمؤسسين ⚡' : 'Exclusive Founder Deal ⚡',
+      title: isRTL ? 'الترخيص الأبدي (مدى الحياة)' : 'Lifetime Founder Access',
+      badge: isRTL ? 'عرض المؤسسين الخريجين' : 'Founder Exclusive',
       badgeBg: '#ef4444',
       color: '#ef4444',
       features: [
@@ -265,58 +261,141 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
   ];
 
   return (
-    <div style={{ background: '#0a0f1d', color: '#f8fafc', minHeight: '100vh', padding: '40px 20px', fontFamily: 'system-ui, sans-serif', direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+    <div style={{ 
+      background: '#0a0f1d', 
+      color: '#f8fafc', 
+      minHeight: '100vh', 
+      padding: '40px 20px', 
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 
+      direction: isRTL ? 'rtl' : 'ltr', 
+      textAlign: isRTL ? 'right' : 'left' 
+    }}>
       
+      {/* إشعارات النظام Upper Toast */}
       {notification && (
-        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#1e293b', color: '#f8fafc', padding: '14px 28px', borderRadius: '12px', border: '1px solid #f59e0b', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', fontWeight: '700' }}>
+        <div style={{ 
+          position: 'fixed', 
+          top: '20px', 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          zIndex: 9999, 
+          background: '#1e293b', 
+          color: '#f8fafc', 
+          padding: '14px 28px', 
+          borderRadius: '12px', 
+          border: '1px solid #f59e0b', 
+          boxShadow: '0 10px 25px rgba(0,0,0,0.5)', 
+          fontWeight: '700',
+          fontSize: '0.9rem'
+        }}>
           {notification}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 30px auto', borderBottom: '1px solid #1e293b', paddingBottom: '20px' }}>
-        <button onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} style={{ background: '#1e293b', color: '#f59e0b', border: '1px solid #334155', padding: '10px 22px', borderRadius: '12px', cursor: 'pointer', fontWeight: '700' }}>
-          🌐 {t('subscription.switchLang')}
+      {/* الشريط العلوي */}
+      <div style={{ 
+        display: 'flex', 
+        justify: 'space-between', 
+        alignItems: 'center', 
+        maxWidth: '1100px', 
+        margin: '0 auto 30px auto', 
+        borderBottom: '1px solid #1e293b', 
+        paddingBottom: '20px' 
+      }}>
+        <button 
+          onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')} 
+          style={{ 
+            background: '#1e293b', 
+            color: '#f59e0b', 
+            border: '1px solid #334155', 
+            padding: '8px 18px', 
+            borderRadius: '10px', 
+            cursor: 'pointer', 
+            fontWeight: '700',
+            fontSize: '0.85rem'
+          }}
+        >
+          {isRTL ? 'English' : 'العربية'}
         </button>
+
         {onBack && (
-          <button onClick={onBack} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
-            {t('subscription.backToDashboard')}
+          <button 
+            onClick={onBack} 
+            style={{ 
+              background: 'transparent', 
+              color: '#94a3b8', 
+              border: 'none', 
+              cursor: 'pointer', 
+              fontWeight: '600',
+              fontSize: '0.9rem'
+            }}
+          >
+            {isRTL ? 'العودة إلى لوحة التحكم ←' : '← Back to Dashboard'}
           </button>
         )}
       </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         
-        {/* ⏳ كارت تنبيه في حال وجود طلب اشتراك قيد التنسيق والتحقق */}
+        {/* تنبيه مراجعة الاشتراك */}
         {subscriptionStatus === 'pending_verification' && (
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: '16px', padding: '20px', marginBottom: '30px', textAlign: 'center' }}>
-            <h3 style={{ color: '#f59e0b', margin: '0 0 8px 0', fontSize: '1.2rem' }}>
-              ⏳ {isRTL ? 'طلب الاشتراك قيد المراجعة' : 'Subscription Request Pending Review'}
+          <div style={{ 
+            background: 'rgba(245, 158, 11, 0.08)', 
+            border: '1px solid #f59e0b', 
+            borderRadius: '16px', 
+            padding: '20px', 
+            marginBottom: '30px', 
+            textAlign: 'center' 
+          }}>
+            <h3 style={{ color: '#f59e0b', margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '800' }}>
+              {isRTL ? 'طلب الاشتراك قيد المراجعة والتحقق' : 'Subscription Request Pending Review'}
             </h3>
-            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '0.95rem' }}>
+            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '0.88rem', lineHeight: '1.5' }}>
               {isRTL 
-                ? 'تم استلام إيصال التحويل الخاص بك بنجاح، ويقوم فريق الإدارة بمراجعته الآن. سيتم تفعيل حسابك تلقائياً فور الاعتماد.' 
+                ? 'تم استلام إيصال التحويل الخاص بك بنجاح، ويقوم فريق الإدارة بمراجعته الآن. سيتم تفعيل ترخيص المنظومة فور الاعتماد.' 
                 : 'Your receipt has been received and is being verified by admin. Your account will be activated automatically once approved.'}
             </p>
           </div>
         )}
 
+        {/* الهيدر الرئيسي */}
         <div style={{ textAlign: 'center', marginBottom: '35px' }}>
-          <h1 style={{ color: '#f59e0b', fontSize: '2.5rem', fontWeight: '800', marginBottom: '14px' }}>{t('subscription.title')}</h1>
-          <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>{t('subscription.subtitle')}</p>
+          <h1 style={{ 
+            color: '#f59e0b', 
+            fontSize: '2.2rem', 
+            fontWeight: '800', 
+            marginBottom: '12px',
+            letterSpacing: '-0.5px'
+          }}>
+            {isRTL ? 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية' : 'Acquire System License - Smart Halaqa'}
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '1rem', maxWidth: '650px', margin: '0 auto', lineHeight: '1.6' }}>
+            {isRTL 
+              ? 'اختر خطة الاستثمار الأكاديمي الأنسب لك، وانضم إلى كبرى الأكاديميات والمراكز التعليمية حول العالم.' 
+              : 'Choose the suitable investment plan for your academy and join top institutions worldwide.'}
+          </p>
         </div>
 
+        {/* كارت كود الخصم الاحترافي */}
         <div style={{
-          maxWidth: '500px',
+          maxWidth: '480px',
           width: '100%',
-          margin: '0 auto 30px auto',
-          background: '#111827',
+          margin: '0 auto 35px auto',
+          background: '#0f172a',
           padding: '16px 20px',
           borderRadius: '16px',
-          border: '1px dashed #f59e0b',
+          border: '1px dashed #334155',
           boxSizing: 'border-box'
         }}>
-          <label style={{ display: 'block', color: '#f8fafc', fontSize: '0.9rem', fontWeight: '700', marginBottom: '12px', textAlign: 'center' }}>
-            🏷️ {isRTL ? "هل لديك كود خصم مخصص؟" : "Have a special promo code?"}
+          <label style={{ 
+            display: 'block', 
+            color: '#cbd5e1', 
+            fontSize: '0.85rem', 
+            fontWeight: '700', 
+            marginBottom: '10px', 
+            textAlign: 'center' 
+          }}>
+            {isRTL ? "هل لديك كود خصم مخصص؟" : "Have a promo discount code?"}
           </label>
 
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
@@ -324,12 +403,12 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
               type="text" 
               value={couponInput}
               onChange={(e) => setCouponInput(e.target.value)}
-              placeholder={isRTL ? "أدخل الكود (مثل: FOUNDERS20)" : "Enter code (e.g. FOUNDERS20)"}
+              placeholder={isRTL ? "أدخل الكود (مثال: S20)" : "Enter code (e.g. S20)"}
               style={{ 
                 flex: 1, 
                 minWidth: '0',
                 padding: '10px 14px', 
-                borderRadius: '10px', 
+                borderRadius: '8px', 
                 border: '1px solid #334155', 
                 background: '#0a0f1d', 
                 color: '#fff', 
@@ -344,13 +423,14 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
               style={{ 
                 padding: '10px 18px', 
                 background: '#f59e0b', 
-                color: '#0a0f1d', 
+                color: '#0f172a', 
                 border: 'none', 
-                borderRadius: '10px', 
+                borderRadius: '8px', 
                 fontWeight: '800', 
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                flexShrink: 0 
+                flexShrink: 0,
+                fontSize: '0.85rem'
               }}
             >
               {isRTL ? "تطبيق" : "Apply"}
@@ -361,7 +441,7 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
             <div style={{ 
               marginTop: '10px', 
               textAlign: 'center', 
-              fontSize: '0.85rem', 
+              fontSize: '0.8rem', 
               fontWeight: '700', 
               color: couponMessage.type === 'success' ? '#10b981' : '#ef4444' 
             }}>
@@ -370,18 +450,59 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
           )}
         </div>
 
-        <div style={{ marginBottom: '40px', background: '#111827', padding: '20px', borderRadius: '20px', border: '1px solid #1e293b' }}>
-          <label style={{ display: 'block', color: '#94a3b8', marginBottom: '14px', fontWeight: '700', textAlign: 'center' }}>{t('subscription.regionLabel')}</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
-            {['egypt', 'gcc', 'global'].map((r) => (
-              <button key={r} onClick={() => setRegion(r)} style={{ padding: '12px 22px', borderRadius: '12px', border: region === r ? '2px solid #f59e0b' : '1px solid #334155', background: region === r ? 'rgba(245,158,11,0.08)' : '#1e293b', color: region === r ? '#f59e0b' : '#f8fafc', cursor: 'pointer', fontWeight: '700' }}>
-                {t(`subscription.${r}`)}
+        {/* محدد النطاق الجغرافي */}
+        <div style={{ 
+          marginBottom: '35px', 
+          background: '#0f172a', 
+          padding: '20px', 
+          borderRadius: '18px', 
+          border: '1px solid #1e293b' 
+        }}>
+          <label style={{ 
+            display: 'block', 
+            color: '#94a3b8', 
+            marginBottom: '14px', 
+            fontWeight: '700', 
+            textAlign: 'center',
+            fontSize: '0.88rem'
+          }}>
+            {isRTL ? 'حدد النطاق الجغرافي لتفعيل بروتوكولات الدفع المتوافقة مع منطقتك:' : 'Select Region for Localized Gateways:'}
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
+            {[
+              { id: 'egypt', name: isRTL ? 'جمهورية مصر العربية' : 'Egypt' },
+              { id: 'gcc', name: isRTL ? 'المملكة العربية السعودية والخليج' : 'Saudi Arabia & GCC' },
+              { id: 'global', name: isRTL ? 'النطاق الدولي وباقي العالم' : 'Global / International' }
+            ].map((r) => (
+              <button 
+                key={r.id} 
+                onClick={() => setRegion(r.id)} 
+                style={{ 
+                  padding: '10px 20px', 
+                  borderRadius: '10px', 
+                  border: region === r.id ? '2px solid #f59e0b' : '1px solid #334155', 
+                  background: region === r.id ? 'rgba(245,158,11,0.08)' : '#162032', 
+                  color: region === r.id ? '#f59e0b' : '#f8fafc', 
+                  cursor: 'pointer', 
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  transition: '0.2s'
+                }}
+              >
+                {r.name}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '25px', marginBottom: '50px', alignItems: 'stretch' }}>
+        {/* بطاقات أسعار الخطط الجداول */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '45px', 
+          alignItems: 'stretch' 
+        }}>
           {plans.map((plan) => {
             const isSelected = duration === plan.id;
             const rawPrice = basePrices[region][plan.id];
@@ -392,51 +513,76 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
                 key={plan.id}
                 onClick={() => setDuration(plan.id)}
                 style={{ 
-                  background: isSelected ? '#162032' : '#111827', 
+                  background: isSelected ? '#162032' : '#0f172a', 
                   border: isSelected ? `2px solid ${plan.color}` : '1px solid #1e293b', 
-                  padding: '35px 24px 24px 24px', 
-                  borderRadius: '24px', 
+                  padding: '30px 22px 22px 22px', 
+                  borderRadius: '20px', 
                   cursor: 'pointer', 
                   position: 'relative', 
-                  transition: 'all 0.25s ease',
-                  marginTop: plan.badge ? '12px' : '0',
+                  transition: 'all 0.2s ease-in-out',
+                  marginTop: plan.badge ? '10px' : '0',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxShadow: isSelected ? '0 10px 30px rgba(0,0,0,0.4)' : 'none'
+                  justify: 'space-between',
+                  boxShadow: isSelected ? '0 8px 25px rgba(0,0,0,0.4)' : 'none'
                 }}
               >
                 {plan.badge && (
                   <span style={{ 
                     position: 'absolute', 
-                    top: '-14px', 
+                    top: '-12px', 
                     left: '50%', 
                     transform: 'translateX(-50%)', 
                     background: plan.badgeBg, 
                     color: '#fff', 
-                    padding: '6px 16px', 
-                    borderRadius: '20px', 
-                    fontSize: '0.8rem', 
-                    fontWeight: '700',
+                    padding: '4px 14px', 
+                    borderRadius: '12px', 
+                    fontSize: '0.75rem', 
+                    fontWeight: '800',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
                   }}>
                     {plan.badge}
                   </span>
                 )}
 
                 <div>
-                  <h3 style={{ color: '#f8fafc', fontSize: '1.4rem', fontWeight: '800', margin: '0 0 10px 0', textAlign: 'center' }}>
+                  <h3 style={{ 
+                    color: '#f8fafc', 
+                    fontSize: '1.25rem', 
+                    fontWeight: '800', 
+                    margin: '0 0 10px 0', 
+                    textAlign: 'center' 
+                  }}>
                     {plan.title}
                   </h3>
                   
-                  <div style={{ fontSize: '2.4rem', fontWeight: '900', color: plan.color, margin: '20px 0', textAlign: 'center' }}>
-                    {finalPrice} <span style={{ fontSize: '0.95rem', color: '#94a3b8', fontWeight: '600' }}>/ {basePrices[region].curr}</span>
+                  <div style={{ 
+                    fontSize: '2.2rem', 
+                    fontWeight: '900', 
+                    color: plan.color, 
+                    margin: '16px 0', 
+                    textAlign: 'center' 
+                  }}>
+                    {finalPrice} <span style={{ fontSize: '0.88rem', color: '#94a3b8', fontWeight: '600' }}>/ {basePrices[region].curr}</span>
                   </div>
 
-                  <ul style={{ listStyle: 'none', padding: '0', margin: '20px 0', borderTop: '1px dashed #1e293b', paddingTop: '16px' }}>
+                  <ul style={{ 
+                    listStyle: 'none', 
+                    padding: '0', 
+                    margin: '18px 0', 
+                    borderTop: '1px dashed #1e293b', 
+                    paddingTop: '16px' 
+                  }}>
                     {plan.features.map((feat, idx) => (
-                      <li key={idx} style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <li key={idx} style={{ 
+                        color: '#cbd5e1', 
+                        fontSize: '0.84rem', 
+                        marginBottom: '10px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px' 
+                      }}>
                         <span style={{ color: plan.color, fontWeight: 'bold' }}>✓</span> {feat}
                       </li>
                     ))}
@@ -447,24 +593,28 @@ export default function SubscriptionPage({ session: propSession, academyId: prop
                   type="button"
                   style={{ 
                     width: '100%', 
-                    padding: '14px', 
-                    borderRadius: '12px', 
+                    padding: '12px', 
+                    borderRadius: '10px', 
                     background: isSelected ? plan.color : '#1e293b', 
                     color: isSelected ? (plan.id === 'monthly' ? '#0a0f1d' : '#fff') : '#94a3b8', 
                     border: 'none', 
                     fontWeight: '800', 
                     cursor: 'pointer',
                     transition: '0.2s',
+                    fontSize: '0.85rem',
                     marginTop: '10px'
                   }}
                 >
-                  {isSelected ? t('subscription.selectedPlan') : t('subscription.choosePlan')}
+                  {isSelected 
+                    ? (isRTL ? 'رخصتك المحشوة حالياً' : 'Current Selected') 
+                    : (isRTL ? 'اختيار هذه الخطة' : 'Select Plan')}
                 </button>
               </div>
             );
           })}
         </div>
 
+        {/* قسم وسائل الدفع المعتمد والمنقح */}
         <PaymentSection 
           region={region}
           duration={duration}
