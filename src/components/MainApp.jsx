@@ -261,6 +261,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'subscriptions':
       case 'upgrade':
         return <SubscriptionPage session={session} academyId={academyId} onBack={() => setActiveTab('dashboard')} />;
+      case 'referrals':
+      case 'affiliate-rewards':
+        return <AffiliateRewards />;
       case 'realtime-audit':
         return <RealtimeAudit session={session} userRole={userRole} />;
       case 'communication-hub':
