@@ -38,7 +38,6 @@ const ActiveHalaqas = safeLazy(() => import('@/components/ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('@/components/RealtimeAudit.jsx'));
 const CommunicationHub = safeLazy(() => import('@/components/CommunicationHub.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
-// 📖 إضافة المصحف التفاعلي عبر safeLazy
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
