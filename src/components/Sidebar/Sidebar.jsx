@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { X } from "lucide-react";
-import { colors as C } from '@/constants/colors';
+import { colors as C } from '@/theme/colors';
 
 import AcademySelector from './AcademySelector';
 import SidebarWidget from './SidebarWidget';
