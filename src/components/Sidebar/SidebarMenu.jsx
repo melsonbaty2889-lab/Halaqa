@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { colors as C } from '@/constants/colors'; // استيراد الألوان الموحدة
+import { colors as C } from '@/theme/colors'; // استيراد الألوان الموحدة
 
 export default function SidebarMenu({
   filteredMenuSections,
