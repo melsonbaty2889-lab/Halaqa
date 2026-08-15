@@ -7,30 +7,31 @@
 
 @layer base {
   :root {
-    /* 1. الخلفية العامة والأسطح (مستخرجة من الصور) */
-    --bg-dark: #070B11;         /* خلفية الشاشة الخارجية الشديدة الدكنة */
-    --surface-card: #0F172A;    /* خلفية البطاقات الرئيسية الكحلي الداكن */
-    --surface-input: #0A101D;   /* خلفية مدخلات البريد وكلمة المرور */
-    --surface-google: #162032;  /* خلفية زر المتابعة بواسطة Google */
+    /* 1. الخلفيات والأسطح (مستخرجة بدقة من شاشات الدخول) */
+    --bg-dark: #070B11;         /* خلفية التطبيق العامة */
+    --surface-card: #0F172A;    /* خلفية البطاقات والنوافذ الكحلي الداكن */
+    --surface-input: #0A101D;   /* خلفية حقول الإدخال */
+    --surface-google: #162032;  /* خلفية الأزرار الثانوية وزر Google */
 
-    /* 2. الهوية البصرية الرئيسية (البرتقالي البرتقالي الذهبي) */
-    --primary: #E07A00;         /* لون زر تسجيل الدخول وإرسال رابط الحماية */
-    --primary-hover: #C66B00;   /* لون الزر عند الوقوف عليه */
-    --primary-glow: rgba(224, 122, 0, 0.3);
+    /* 2. الهوية البصرية الرئيسية (Amber/Gold) */
+    --primary: #E07A00;         /* لون زر تسجيل الدخول وإرسال الرابط */
+    --primary-hover: #C66B00;   /* لون البرتقالي عند الوقوف بالماوس (Hover) */
+    --primary-glow: rgba(224, 122, 0, 0.35); /* التوهج عند تركيز الحقل (Focus) */
 
     /* 3. عناصر الشعار والمؤشرات الخضراء */
-    --emerald-icon-bg: #09332C; /* خلفية أيقونة المصحف الشريف الداكنة */
-    --emerald-border: #0D5C4D;  /* حدود أيقونة المصحف الشريف الشفافة */
+    --emerald-bg: #09332C;      /* خلفية أيقونة المصحف الشريف العليا */
+    --emerald-border: #0D5C4D;  /* حدود أيقونة الشعار */
     --emerald-text: #10B981;    /* لون أيقونة الدرع والمؤشرات */
 
-    /* 4. النصوص والحدود */
-    --text-main: #FFFFFF;       /* العناوين الكبيرة والأزرار الرئيسية */
-    --text-sub: #E2E8F0;        /* النصوص الفرعية */
-    --text-muted: #64748B;      /* النص المساعد والـ Placeholders */
-    --border-card: #1E293B;     /* حدود البطاقة الخارجية */
-    --border-input: #1B2738;    /* حدود الحقول والأزرار الثانوية */
-    
-    --shadow-main: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    /* 4. النصوص والحدود الموحدة */
+    --text-main: #FFFFFF;       /* النصوص الرئيسية والأزرار */
+    --text-sub: #94A3B8;        /* النصوص الفرعية والوصف */
+    --text-muted: #475569;      /* نص الـ Placeholder للحقول */
+    --border-card: #1E293B;     /* حدود البطاقات الخارجية */
+    --border-input: #1B2738;    /* حدود الحقول والأزرار */
+    --border-hover: #2E3E56;    /* حدود الحقول عند الوقوف عليها (Hover) */
+
+    --shadow-main: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
   }
 
   html, body {
@@ -80,16 +81,16 @@
 }
 
 @layer components {
-  /* 📦 1. بطاقات العرض والنوافذ (Card Container) */
+  /* 📦 1. بطاقة المحتوى الموحدة (Card) */
   .card-surface {
     background-color: var(--surface-card);
     border: 1px solid var(--border-card);
-    border-radius: 1.25rem; /* 20px مطابق لتدوير زوايا الصور */
+    border-radius: 1.25rem; /* 20px زوايا دائرية */
     padding: 2rem 1.5rem;
     box-shadow: var(--shadow-main);
   }
 
-  /* ✏️ 2. حقول الإدخال الموحدة (Inputs) */
+  /* ✏️ 2. حقول الإدخال مع تأثيرات Hover و Focus */
   .app-input {
     width: 100%;
     background-color: var(--surface-input);
@@ -105,18 +106,22 @@
     color: var(--text-muted);
   }
 
+  .app-input:hover {
+    border-color: var(--border-hover);
+  }
+
   .app-input:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-glow);
   }
 
-  /* 🔘 3. الأزرار الموحدة (Buttons) */
-  /* أ) الزر البرتقالي الرئيسي */
+  /* 🔘 3. الأزرار (Primary & Secondary) */
+  /* الزر البرتقالي الرئيسي */
   .btn-primary {
     width: 100%;
     background-color: var(--primary);
-    color: #FFFFFF; /* نص أبيض صريح ناصع مثل الصورة */
+    color: #FFFFFF;
     font-weight: 700;
     font-size: 1rem;
     padding: 0.875rem 1.25rem;
@@ -128,19 +133,24 @@
     gap: 0.5rem;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(224, 122, 0, 0.25);
+    box-shadow: 0 4px 14px rgba(224, 122, 0, 0.3);
   }
 
   .btn-primary:hover {
     background-color: var(--primary-hover);
-    box-shadow: 0 6px 18px rgba(224, 122, 0, 0.35);
+    box-shadow: 0 6px 20px rgba(224, 122, 0, 0.45);
+    transform: translateY(-1px);
   }
 
-  /* ب) زر Google والأزرار الثانوية */
-  .btn-google {
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* الزر الثانوي (Google والأزرار العادية) */
+  .btn-secondary {
     width: 100%;
     background-color: var(--surface-google);
-    color: var(--text-sub);
+    color: var(--text-main);
     border: 1px solid var(--border-input);
     font-weight: 600;
     padding: 0.875rem 1.25rem;
@@ -153,23 +163,35 @@
     cursor: pointer;
   }
 
-  .btn-google:hover {
+  .btn-secondary:hover {
     background-color: #1C293F;
-    border-color: #2A3B54;
-    color: var(--text-main);
+    border-color: var(--border-hover);
   }
 
-  /* 📖 4. حاوية أيقونة المصحف الشريف العليا */
+  /* 🔗 4. الروابط الملونة (تسجيل جديد / نسيت كلمة المرور) */
+  .link-primary {
+    color: var(--primary);
+    font-weight: 700;
+    transition: color 0.2s ease;
+    text-decoration: none;
+  }
+
+  .link-primary:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+  }
+
+  /* 📖 5. الشعار الأعلى */
   .logo-icon-wrapper {
-    width: 4rem;
-    height: 4rem;
-    background-color: var(--emerald-icon-bg);
+    width: 4.25rem;
+    height: 4.25rem;
+    background-color: var(--emerald-bg);
     border: 1px solid var(--emerald-border);
-    border-radius: 1rem;
+    border-radius: 1.125rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem auto;
-    box-shadow: 0 0 20px rgba(13, 92, 77, 0.3);
+    margin: 0 auto 1.25rem auto;
+    box-shadow: 0 0 25px rgba(13, 92, 77, 0.35);
   }
 }
