@@ -1,5 +1,3 @@
-/* src/main.jsx */
-
 // مكتبات خارجية
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -17,18 +15,16 @@ import { AcademyProvider } from '@/context/AcademyContext';
 import { DataProvider } from '@/context/DataContext';
 
 // =====================================================
-// Global Error Handler
+// Global Error Handler (تحسين للتعامل مع أخطاء الإقلاع فقط)
 // =====================================================
 window.onerror = function (message, source, lineno, colno, error) {
-  const rootEl = document.getElementById('root');
-  if (rootEl) {
-    rootEl.innerHTML = `<div style="padding: 30px; background: #090F17; color: #EF4444; min-height: 100vh; direction: rtl; text-align: right;"><h2>🚨 عطل في الإقلاع</h2><pre>${message}</pre></div>`;
-  }
+  // نطبع الخطأ في الكونسول للتتبع
+  console.error("🚨 Critical Boot Error Detected:", { message, source, lineno, colno, error });
   return false;
 };
 
 const InitialLoader = () => (
-  <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+  <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Cairo', system-ui, sans-serif" }}>
     <div>جاري تحميل النظام...</div>
   </div>
 );
@@ -46,3 +42,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>,
 );
+
+// =====================================================
+// PWA Service Worker Registration
+// =====================================================
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(
+      (registration) => {
+        console.log('✅ PWA ServiceWorker Registered with scope:', registration.scope);
+      },
+      (err) => {
+        console.warn('⚠️ ServiceWorker registration failed:', err);
+      }
+    );
+  });
+}
