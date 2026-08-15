@@ -2,7 +2,7 @@
 import { 
   BarChart3, GraduationCap, Presentation, CheckCircle2, 
   BookOpen, Award, CreditCard, SlidersHorizontal, Zap, 
-  History, Send, Home, Trophy, Folder, TrendingUp
+  History, Send, Home, Trophy, Folder, TrendingUp, BookMarked
 } from "lucide-react";
 
 export const getMenuSections = (isRtl, userRole = 'admin') => {
@@ -21,6 +21,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
       id: 'academic',
       title: isRtl ? '2. الشؤون القرآنية والأكاديمية' : '2. Academic Core',
       items: [
+        { id: 'interactive_quran', label: isRtl ? 'المصحف التفاعلي والروايات' : 'Interactive Quran & Qiraat', icon: BookMarked, roles: ['admin', 'teacher', 'student'] },
         { id: 'students', label: isRtl ? 'إدارة الدارسين' : 'Learner Directory', icon: GraduationCap, roles: ['admin', 'teacher'] },
         { id: 'teachers', label: isRtl ? 'الكادر والمقرئين' : 'Faculty & Reciters', icon: Presentation, roles: ['admin'] },
         { id: 'halaqas', label: isRtl ? 'المقارئ والحلقات' : 'Halaqas & Sanad', icon: BookOpen, roles: ['admin', 'teacher'] },
