@@ -11,7 +11,7 @@ import ReportDateSelector from '@/components/UI/ReportDateSelector';
 import TemplateSettings from '@/components/Reports/TemplateSettings';
 import ReportMetrics from '@/components/Reports/ReportMetrics';
 import StudentReportCard from '@/components/Reports/StudentReportCard';
-import { getParsedMessage, generateWhatsAppLink } from '@/utils/ReportHelpers';
+import { getParsedMessage, generateWhatsAppLink } from './ReportHelpers';
 
 export default function Reports({ students = [], academyId }) {
   const { t, i18n } = useTranslation();
