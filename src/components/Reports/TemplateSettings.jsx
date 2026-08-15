@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
-  Wand2, Eye, BookmarkPlus, Trash2, Check, Sparkles, 
-  MessageSquare, User, Calendar, Award, BookOpen, AlertCircle, FileText, Smile
+  Wand2, Eye, BookmarkPlus, Trash2, Sparkles, 
+  Smile, Search 
 } from 'lucide-react';
-import { getParsedMessage } from './ReportHelpers';
+
+// استيراد المكونات القياسية ونظام الألوان الموحد للمشروع
+import { C } from '@/theme/colors';
+import { Card, Btn, Input } from '@/components/UI/UI';
+import { getParsedMessage } from '@/utils/ReportHelpers';
 
 export default function TemplateSettings({ 
   templateText = '', 
   setTemplateText, 
   formattedDate = '', 
   sampleStudent = null, 
-  sampleRecord = null,
-  isRtl = true 
+  sampleRecord = null 
 }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
+  const isArabic = currentLang.startsWith('ar');
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -41,9 +49,13 @@ export default function TemplateSettings({
   const handleSaveCustomTemplate = () => {
     if (!templateText || !templateText.trim()) return;
 
+    const defaultName = isArabic 
+      ? `قالب ${customTemplates.length + 1}` 
+      : `Template ${customTemplates.length + 1}`;
+
     const customName = window.prompt(
-      isRtl ? "أدخل اسماً للقالب الجديد:" : "Enter template name:",
-      `قالب ${customTemplates.length + 1}`
+      t('reports.template.prompt_name', { defaultValue: isArabic ? "أدخل اسماً للقالب الجديد:" : "Enter template name:" }),
+      defaultName
     );
 
     if (!customName || !customName.trim()) return;
@@ -59,7 +71,7 @@ export default function TemplateSettings({
 
     try {
       localStorage.setItem('custom_halaqa_templates', JSON.stringify(updatedTemplates));
-      showToast(isRtl ? "تم حفظ القالب بنجاح" : "Template saved successfully");
+      showToast(t('reports.template.saved_success', { defaultValue: isArabic ? "تم حفظ القالب بنجاح" : "Template saved successfully" }));
     } catch (err) {
       console.error('Error saving templates:', err);
     }
@@ -72,7 +84,7 @@ export default function TemplateSettings({
     setCustomTemplates(updated);
     try {
       localStorage.setItem('custom_halaqa_templates', JSON.stringify(updated));
-      showToast(isRtl ? "تم حذف القالب" : "Template deleted");
+      showToast(t('reports.template.deleted_success', { defaultValue: isArabic ? "تم حذف القالب" : "Template deleted" }));
     } catch (err) {
       console.error('Error deleting template:', err);
     }
@@ -99,20 +111,20 @@ export default function TemplateSettings({
     }, 50);
   };
 
-  // الرموز التعبيرية القديمة
+  // قائمة الرموز التعبيرية
   const emojis = ['🌸', '⚠️', '✅', '🎯', '🔄', '📖', '🌟', '⭐', '✨', '🌿', '🤲', '👏'];
 
-  // متغيرات القالب التقسيمية القديمة
+  // متغيرات القالب التقسيمية
   const variablesList = [
-    { tag: '{اسم_الطالب}', label: isRtl ? 'اسم الطالب' : 'Student Name', category: 'basic' },
-    { tag: '{التاريخ}', label: isRtl ? 'التاريخ' : 'Date', category: 'basic' },
-    { tag: '{حالة_الحضور}', label: isRtl ? 'حالة الحضور' : 'Attendance Status', category: 'attendance' },
-    { tag: '{الحفظ}', label: isRtl ? 'الحفظ' : 'Memorization', category: 'academy' },
-    { tag: '{المراجعة}', label: isRtl ? 'المراجعة' : 'Revision', category: 'academy' },
-    { tag: '{التقييم}', label: isRtl ? 'التقييم' : 'Evaluation', category: 'academy' },
-    { tag: '{اسم_الاختبار}', label: isRtl ? 'اسم الاختبار' : 'Exam Name', category: 'academy' },
-    { tag: '{الدرجة}', label: isRtl ? 'الدرجة' : 'Score', category: 'academy' },
-    { tag: '{الملاحظات}', label: isRtl ? 'الملاحظات' : 'Notes', category: 'academy' },
+    { tag: '{اسم_الطالب}', label: t('reports.template.var_student_name', { defaultValue: isArabic ? 'اسم الطالب' : 'Student Name' }), category: 'basic' },
+    { tag: '{التاريخ}', label: t('reports.template.var_date', { defaultValue: isArabic ? 'التاريخ' : 'Date' }), category: 'basic' },
+    { tag: '{حالة_الحضور}', label: t('reports.template.var_attendance', { defaultValue: isArabic ? 'حالة الحضور' : 'Attendance Status' }), category: 'attendance' },
+    { tag: '{الحفظ}', label: t('reports.template.var_memorization', { defaultValue: isArabic ? 'الحفظ' : 'Memorization' }), category: 'academy' },
+    { tag: '{المراجعة}', label: t('reports.template.var_revision', { defaultValue: isArabic ? 'المراجعة' : 'Revision' }), category: 'academy' },
+    { tag: '{التقييم}', label: t('reports.template.var_grade', { defaultValue: isArabic ? 'التقييم' : 'Evaluation' }), category: 'academy' },
+    { tag: '{اسم_الاختبار}', label: t('reports.template.var_exam', { defaultValue: isArabic ? 'اسم الاختبار' : 'Exam Name' }), category: 'academy' },
+    { tag: '{الدرجة}', label: t('reports.template.var_score', { defaultValue: isArabic ? 'الدرجة' : 'Score' }), category: 'academy' },
+    { tag: '{الملاحظات}', label: t('reports.template.var_notes', { defaultValue: isArabic ? 'الملاحظات' : 'Notes' }), category: 'academy' },
   ];
 
   const filteredVariables = variablesList.filter(v => {
@@ -127,74 +139,148 @@ export default function TemplateSettings({
     record: sampleRecord,
     template: templateText,
     formattedDate: formattedDate,
-    isRtl: isRtl
+    locale: currentLang
   });
 
   return (
-    <div className="w-full bg-slate-900/90 border border-slate-800 rounded-xl mb-4 overflow-hidden transition-all shadow-lg">
+    <Card style={{ 
+      background: C.card, 
+      borderColor: C.border, 
+      borderRadius: '12px', 
+      marginBottom: '16px', 
+      overflow: 'hidden',
+      padding: 0
+    }}>
+      {/* التنبيهات المنبثقة (Toast) */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold px-4 py-1.5 rounded-full text-xs shadow-xl z-[9999] animate-bounce">
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: C.warning,
+          color: '#000000',
+          fontWeight: 'bold',
+          padding: '6px 16px',
+          borderRadius: '20px',
+          fontSize: '0.75rem',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          zIndex: 9999
+        }}>
           {toastMessage}
         </div>
       )}
 
       {/* الشريط العلوي للمكون */}
-      <div className="p-3.5 flex items-center justify-between border-b border-slate-800/80 bg-slate-900/50">
+      <div style={{ 
+        padding: '12px 16px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        borderBottom: `1px solid ${C.border}`,
+        background: C.bg
+      }}>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-slate-200 hover:text-white transition-colors focus:outline-none"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            background: 'transparent', 
+            border: 'none', 
+            color: C.text, 
+            cursor: 'pointer' 
+          }}
         >
-          <Wand2 className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-bold">{isRtl ? "محرر القوالب الذكي" : "Smart Template Editor"}</span>
-          <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700/50">
-            {isExpanded ? (isRtl ? 'إغلاق' : 'Close') : (isRtl ? 'تعديل' : 'Edit')}
+          <Wand2 style={{ width: '16px', height: '16px', color: C.emerald }} />
+          <span style={{ fontSize: '0.82rem', fontWeight: 'bold' }}>
+            {t('reports.template.title', { defaultValue: isArabic ? "محرر القوالب الذكي" : "Smart Template Editor" })}
+          </span>
+          <span style={{ 
+            fontSize: '0.65rem', 
+            background: C.card, 
+            color: C.textSub, 
+            padding: '2px 8px', 
+            borderRadius: '12px', 
+            border: `1px solid ${C.border}` 
+          }}>
+            {isExpanded 
+              ? t('common.close', { defaultValue: isArabic ? 'إغلاق' : 'Close' }) 
+              : t('common.edit', { defaultValue: isArabic ? 'تعديل' : 'Edit' })}
           </span>
         </button>
 
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* زر المعاينة */}
-          <button
+          <Btn
+            variant={showPreview ? 'primary' : 'outline'}
             onClick={() => setShowPreview(!showPreview)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${
-              showPreview 
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-            }`}
+            style={{ 
+              padding: '4px 10px', 
+              fontSize: '0.72rem',
+              background: showPreview ? `${C.emerald}20` : C.card,
+              color: showPreview ? C.emerald : C.textSub,
+              borderColor: showPreview ? C.emerald : C.border
+            }}
           >
-            <Eye className="w-3.5 h-3.5" />
-            <span>{showPreview ? (isRtl ? 'المحرر' : 'Editor') : (isRtl ? 'معاينة' : 'Preview')}</span>
-          </button>
+            <Eye style={{ width: '14px', height: '14px' }} />
+            <span>
+              {showPreview 
+                ? t('reports.template.editor', { defaultValue: isArabic ? 'المحرر' : 'Editor' }) 
+                : t('reports.template.preview', { defaultValue: isArabic ? 'معاينة' : 'Preview' })}
+            </span>
+          </Btn>
 
           {/* زر الحفظ باسم مخصص */}
-          <button
+          <Btn
+            variant="outline"
             onClick={handleSaveCustomTemplate}
-            title={isRtl ? "حفظ القالب باسم مخصص" : "Save custom template"}
-            className="flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold hover:bg-amber-500/20 transition-all"
+            title={t('reports.template.save_custom', { defaultValue: isArabic ? "حفظ القالب باسم مخصص" : "Save custom template" })}
+            style={{ 
+              padding: '4px 8px', 
+              background: `${C.warning}15`, 
+              color: C.warning, 
+              borderColor: `${C.warning}30` 
+            }}
           >
-            <BookmarkPlus className="w-3.5 h-3.5" />
-          </button>
+            <BookmarkPlus style={{ width: '14px', height: '14px' }} />
+          </Btn>
         </div>
       </div>
 
       {/* المحتوى الفرعي عند الفتح */}
       {isExpanded && (
-        <div className="p-3 sm:p-4 space-y-3.5">
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* شريط القوالب المحفوظة */}
           {customTemplates.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <span className="text-[11px] text-slate-400 whitespace-nowrap">{isRtl ? 'القوالب المحفوظة:' : 'Saved:'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+              <span style={{ fontSize: '0.7rem', color: C.textSub, whiteSpace: 'nowrap' }}>
+                {t('reports.template.saved_label', { defaultValue: isArabic ? 'القوالب المحفوظة:' : 'Saved:' })}
+              </span>
               {customTemplates.map((tmpl) => (
                 <div
                   key={tmpl.id}
                   onClick={() => setTemplateText(tmpl.text)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700/80 text-slate-200 border border-slate-700 rounded-lg text-xs cursor-pointer whitespace-nowrap transition-all group"
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    padding: '4px 10px', 
+                    background: C.bg, 
+                    border: `1px solid ${C.border}`, 
+                    borderRadius: '8px', 
+                    fontSize: '0.72rem', 
+                    color: C.text, 
+                    cursor: 'pointer', 
+                    whiteSpace: 'nowrap' 
+                  }}
                 >
                   <span>{tmpl.name}</span>
                   <button
                     onClick={(e) => handleDeleteCustomTemplate(tmpl.id, e)}
-                    className="text-slate-500 hover:text-red-400 transition-colors p-0.5"
+                    style={{ background: 'transparent', border: 'none', color: C.textSub, cursor: 'pointer', padding: 0 }}
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 style={{ width: '12px', height: '12px' }} />
                   </button>
                 </div>
               ))}
@@ -203,35 +289,71 @@ export default function TemplateSettings({
 
           {/* مساحة التحرير أو المعاينة */}
           {showPreview ? (
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-200 min-h-[120px] whitespace-pre-wrap leading-relaxed">
-              <div className="text-[10px] text-emerald-400 font-bold mb-2 flex items-center gap-1 border-b border-slate-800/80 pb-1">
-                <Sparkles className="w-3 h-3" />
-                <span>{isRtl ? 'معاينة شكل الرسالة:' : 'Message Preview:'}</span>
+            <div style={{ 
+              background: C.bg, 
+              border: `1px solid ${C.border}`, 
+              borderRadius: '10px', 
+              padding: '14px', 
+              fontSize: '0.78rem', 
+              color: C.text, 
+              minHeight: '110px', 
+              whiteSpace: 'pre-wrap', 
+              lineHeight: '1.6' 
+            }}>
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: C.emerald, 
+                fontWeight: 'bold', 
+                marginBottom: '8px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px', 
+                borderBottom: `1px solid ${C.border}`, 
+                paddingBottom: '4px' 
+              }}>
+                <Sparkles style={{ width: '12px', height: '12px' }} />
+                <span>{t('reports.template.preview_label', { defaultValue: isArabic ? 'معاينة شكل الرسالة:' : 'Message Preview:' })}</span>
               </div>
-              {previewMessage || (isRtl ? 'اكتب نصاً في القالب للمعاينة...' : 'Type template text to preview...')}
+              {previewMessage || t('reports.template.preview_placeholder', { defaultValue: isArabic ? 'اكتب نصاً في القالب للمعاينة...' : 'Type template text to preview...' })}
             </div>
           ) : (
-            <div className="relative">
-              <textarea
-                id="template-textarea"
-                value={templateText}
-                onChange={(e) => setTemplateText(e.target.value)}
-                rows={4}
-                dir={isRtl ? 'rtl' : 'ltr'}
-                placeholder={isRtl ? "اكتب قالب الرسالة هنا..." : "Write template here..."}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all resize-none leading-relaxed"
-              />
-            </div>
+            <textarea
+              id="template-textarea"
+              value={templateText}
+              onChange={(e) => setTemplateText(e.target.value)}
+              rows={4}
+              dir={isArabic ? 'rtl' : 'ltr'}
+              placeholder={t('reports.template.placeholder', { defaultValue: isArabic ? "اكتب قالب الرسالة هنا..." : "Write template here..." })}
+              style={{ 
+                width: '100%', 
+                background: C.bg, 
+                border: `1px solid ${C.border}`, 
+                borderRadius: '10px', 
+                padding: '12px', 
+                fontSize: '0.78rem', 
+                color: C.text, 
+                outline: 'none', 
+                resize: 'none', 
+                lineHeight: '1.6' 
+              }}
+            />
           )}
 
-          {/* شريط الرموز التعبيرية القديم */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
-            <Smile className="w-3.5 h-3.5 text-slate-500 ml-1 shrink-0" />
+          {/* شريط الرموز التعبيرية */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
+            <Smile style={{ width: '14px', height: '14px', color: C.textSub, shrink: 0 }} />
             {emojis.map((emoji, idx) => (
               <button
                 key={idx}
                 onClick={() => insertAtCursor(emoji)}
-                className="px-2 py-1 bg-slate-800/60 hover:bg-slate-700 text-sm rounded-lg border border-slate-700/50 transition-all shrink-0"
+                style={{ 
+                  padding: '4px 8px', 
+                  background: C.bg, 
+                  border: `1px solid ${C.border}`, 
+                  borderRadius: '6px', 
+                  fontSize: '0.85rem', 
+                  cursor: 'pointer' 
+                }}
               >
                 {emoji}
               </button>
@@ -239,34 +361,50 @@ export default function TemplateSettings({
           </div>
 
           {/* فلترة ومتغيرات القالب */}
-          <div className="space-y-2 pt-1 border-t border-slate-800/60">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '8px', borderTop: `1px solid ${C.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
               {[
-                { id: 'all', label: isRtl ? 'الكل' : 'All' },
-                { id: 'basic', label: isRtl ? 'أساسي' : 'Basic' },
-                { id: 'academy', label: isRtl ? 'أكاديمي' : 'Academy' },
-                { id: 'attendance', label: isRtl ? 'حضور' : 'Attendance' },
+                { id: 'all', label: t('reports.template.cat_all', { defaultValue: isArabic ? 'الكل' : 'All' }) },
+                { id: 'basic', label: t('reports.template.cat_basic', { defaultValue: isArabic ? 'أساسي' : 'Basic' }) },
+                { id: 'academy', label: t('reports.template.cat_academy', { defaultValue: isArabic ? 'أكاديمي' : 'Academy' }) },
+                { id: 'attendance', label: t('reports.template.cat_attendance', { defaultValue: isArabic ? 'حضور' : 'Attendance' }) },
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    activeTab === tab.id 
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                      : 'bg-slate-800/40 text-slate-400 hover:text-slate-200'
-                  }`}
+                  style={{ 
+                    padding: '4px 10px', 
+                    borderRadius: '6px', 
+                    fontSize: '0.7rem', 
+                    fontWeight: 600, 
+                    cursor: 'pointer',
+                    background: activeTab === tab.id ? `${C.emerald}20` : C.bg,
+                    color: activeTab === tab.id ? C.emerald : C.textSub,
+                    border: `1px solid ${activeTab === tab.id ? `${C.emerald}40` : C.border}`
+                  }}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {filteredVariables.map((v) => (
                 <button
                   key={v.tag}
                   onClick={() => insertAtCursor(v.tag)}
-                  className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 rounded-lg text-xs font-mono transition-all flex items-center gap-1"
+                  style={{ 
+                    padding: '4px 8px', 
+                    background: `${C.emerald}10`, 
+                    color: C.emerald, 
+                    border: `1px solid ${C.emerald}30`, 
+                    borderRadius: '6px', 
+                    fontSize: '0.72rem', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px' 
+                  }}
                 >
                   <span>+</span>
                   <span>{v.label}</span>
@@ -276,6 +414,6 @@ export default function TemplateSettings({
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
