@@ -1,36 +1,21 @@
 import React from 'react';
 import { Cloud, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { colors as C } from '@/constants/colors';
 
 export default function SidebarFooter({ isRtl }) {
   return (
-    <div style={{ padding: '12px', borderTop: `1px solid ${C.dark.border}`, background: C.dark.surface }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.72rem', color: C.text.muted }}>
-        <Cloud size={14} style={{ color: C.brandEmerald.DEFAULT }} />
-        <span>{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
+    <div className="p-3 border-t border-slate-800/80 bg-slate-950/60 shrink-0">
+      <div className="flex items-center gap-1.5 mb-2 text-xs text-slate-400">
+        <Cloud size={14} className="text-emerald-400 shrink-0" />
+        <span className="text-[11px] font-medium">{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
       </div>
 
       <button
+        type="button"
         onClick={() => supabase.auth.signOut()}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          padding: '8px',
-          background: C.error.bgGlow,
-          border: `1px solid ${C.error.border}`,
-          borderRadius: '6px',
-          color: C.error.light,
-          fontWeight: '700',
-          fontSize: '0.78rem',
-          cursor: 'pointer',
-          transition: 'background 0.15s ease'
-        }}
+        className="w-full flex items-center justify-center gap-2 p-2 bg-red-950/30 hover:bg-red-900/40 border border-red-800/50 rounded-lg text-red-400 hover:text-red-300 font-bold text-xs cursor-pointer transition-all duration-150"
       >
-        <LogOut size={16} />
+        <LogOut size={16} className="shrink-0" />
         <span>{isRtl ? 'إنهاء الجلسة وتأكيد الخروج' : 'Logout'}</span>
       </button>
     </div>
