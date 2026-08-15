@@ -37,6 +37,8 @@ const ActiveHalaqas = safeLazy(() => import('@/components/ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('@/components/RealtimeAudit.jsx'));
 const CommunicationHub = safeLazy(() => import('@/components/CommunicationHub.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
+// 📖 إضافة المصحف التفاعلي عبر safeLazy
+const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -254,6 +256,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
+      case 'interactive_quran':
+        return <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
       case 'subscriptions':
       case 'upgrade':
         return <SubscriptionPage session={session} academyId={academyId} onBack={() => setActiveTab('dashboard')} />;
