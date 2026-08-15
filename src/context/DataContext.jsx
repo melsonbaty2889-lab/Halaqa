@@ -1,18 +1,37 @@
 /* src/context/DataContext.jsx */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAcademy } from './AcademyContext.jsx'; // لجلب بيانات الأكاديمية وحالة الحساب
+import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext.jsx'; 
 
 const DataContext = createContext({});
 
+// مفاتيح التخزين المحلي للـ Caching
+const getCacheKey = (academyId, key) => `halaqa_cache_${academyId}_${key}`;
+
 export const DataProvider = ({ children }) => {
-  const { academy, appState } = useAcademy(); // استخراج الأكاديمية والحالة من الحارس الرئيسي
+  const { academy, appState } = useAcademy();
   const [halaqas, setHalaqas] = useState([]);
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  // 1. جلب الحلقات النشطة الخاصة بالأكاديمية
+  // دالة مساعدة لتحميل البيانات المخزنة محلياً فوراً عند الإقلاع
+  const loadCachedData = useCallback((academyId) => {
+    if (!academyId) return;
+    try {
+      const cachedHalaqas = localStorage.getItem(getCacheKey(academyId, 'halaqas'));
+      const cachedStudents = localStorage.getItem(getCacheKey(academyId, 'students'));
+      const cachedTeachers = localStorage.getItem(getCacheKey(academyId, 'teachers'));
+
+      if (cachedHalaqas) setHalaqas(JSON.parse(cachedHalaqas));
+      if (cachedStudents) setStudents(JSON.parse(cachedStudents));
+      if (cachedTeachers) setTeachers(JSON.parse(cachedTeachers));
+    } catch (e) {
+      console.warn('⚠️ تعذر قراءة الكاش المحلي:', e);
+    }
+  }, []);
+
+  // 1. جلب الحلقات النشطة وحفظها في الكاش
   const fetchHalaqas = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -24,13 +43,16 @@ export const DataProvider = ({ children }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHalaqas(data || []);
+      
+      const freshData = data || [];
+      setHalaqas(freshData);
+      localStorage.setItem(getCacheKey(academyId, 'halaqas'), JSON.stringify(freshData));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب الحلقات:", err.message);
     }
   }, []);
 
-  // 2. جلب الطلاب النشطين الخاصين بالأكاديمية
+  // 2. جلب الطلاب النشطين وحفظهم في الكاش
   const fetchStudents = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -42,13 +64,16 @@ export const DataProvider = ({ children }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStudents(data || []);
+
+      const freshData = data || [];
+      setStudents(freshData);
+      localStorage.setItem(getCacheKey(academyId, 'students'), JSON.stringify(freshData));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب الطلاب:", err.message);
     }
   }, []);
 
-  // 3. جلب المدرسين النشطين (استعلام مدمج للربط بطلب واحد بدلاً من طلبين)
+  // 3. جلب المدرسين النشطين وحفظهم في الكاش
   const fetchTeachers = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -63,12 +88,12 @@ export const DataProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // استخراج ملفات تعريف المعلمين من نتائج الربط
       const extractedTeachers = data
         ?.map(item => item.profiles)
         .filter(Boolean) || [];
 
       setTeachers(extractedTeachers);
+      localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(extractedTeachers));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب المدرسين:", err.message);
     }
@@ -86,11 +111,15 @@ export const DataProvider = ({ children }) => {
     setLoadingData(false);
   }, [academy?.id, fetchHalaqas, fetchStudents, fetchTeachers]);
 
-  // مراقبة حالة التطبيق وجلب البيانات عند اكتمال الدخول بنجاح
+  // مراقبة حالة التطبيق واستعراض الكاش فوراً ثم جلب البيانات الحديثة
   useEffect(() => {
     let isMounted = true;
 
     if (appState === 'FULLY_ACTIVE' && academy?.id) {
+      // أ) قراءة الكاش المحلي أولاً للسرعة اللحظية
+      loadCachedData(academy.id);
+
+      // ب) إطلاق التحديث في الخلفية من Supabase
       setLoadingData(true);
       Promise.all([
         fetchHalaqas(academy.id),
@@ -100,7 +129,7 @@ export const DataProvider = ({ children }) => {
         if (isMounted) setLoadingData(false);
       });
     } else {
-      // تفريغ البيانات عند خروج المستخدم أو قفل الحساب لضمان الخصوصية والأمان
+      // تفريغ البيانات والـ Cache للحفاظ على خصوصية الحسابات
       setHalaqas([]);
       setStudents([]);
       setTeachers([]);
@@ -110,7 +139,7 @@ export const DataProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [appState, academy?.id, fetchHalaqas, fetchStudents, fetchTeachers]);
+  }, [appState, academy?.id, loadCachedData, fetchHalaqas, fetchStudents, fetchTeachers]);
 
   return (
     <DataContext.Provider value={{
