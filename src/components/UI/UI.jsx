@@ -1,7 +1,6 @@
 // src/components/UI/UI.jsx
 import React, { useState, useEffect, forwardRef } from 'react';
-import { C, g } from "@/constants/colors";
-
+import { C, g } from "@/theme/colors";
 // 1. الميدالية / الشارة (Badge)
 const Badge = forwardRef(({ children, color = C.primary, className = "", style = {}, ...props }, ref) => (
   <span 
