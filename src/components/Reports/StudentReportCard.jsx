@@ -1,5 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, RotateCcw, Copy, Check, Save, X, Edit, PhoneCall, Loader2 } from 'lucide-react';
+
+// استيراد نظام الألوان والمكونات القياسية للمشروع
+import { C } from '@/theme/colors';
+import { Card, Btn, Input } from '@/components/UI/UI';
 
 export default function StudentReportCard({
   student,
@@ -10,7 +15,6 @@ export default function StudentReportCard({
   tempPhoneValue,
   savingPhone,
   copiedId,
-  isRtl,
   safeString,
   onCopy,
   onSendWhatsApp,
@@ -20,80 +24,212 @@ export default function StudentReportCard({
   onCancelEditPhone,
   setTempPhoneValue
 }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
+  const isArabic = currentLang.startsWith('ar');
+
   const studentName = safeString(student?.name || student?.student_name);
 
   return (
-    <div style={{ background: '#0f172a', border: `1px solid ${isSent ? 'rgba(16, 185, 129, 0.25)' : '#1e293b'}`, borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <Card 
+      style={{ 
+        background: C.card, 
+        border: `1px solid ${isSent ? `${C.emerald}40` : C.border}`, 
+        borderRadius: '10px', 
+        padding: '12px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '10px' 
+      }}
+    >
+      {/* الهيدر: اسم الطالب والرقم وخيارات التعديل */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontWeight: '600', fontSize: '12px', color: '#ffffff' }}>{studentName}</span>
+            <span style={{ fontWeight: '700', fontSize: '0.85rem', color: C.text }}>{studentName}</span>
             {isSent && (
-              <span style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                <CheckCircle2 size={9} /> {isRtl ? "مرسل" : "Sent"}
+              <span style={{ 
+                background: `${C.emerald}15`, 
+                color: C.emerald, 
+                padding: '2px 6px', 
+                borderRadius: '4px', 
+                fontSize: '0.65rem', 
+                fontWeight: '700', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '3px' 
+              }}>
+                <CheckCircle2 size={10} /> 
+                {t('reports.card.sent', { defaultValue: isArabic ? "مرسل" : "Sent" })}
               </span>
             )}
           </div>
 
+          {/* نموذج إدخال/تعديل رقم الهاتف */}
           {isEditingPhone ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-              <input
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+              <Input
                 type="tel"
                 value={tempPhoneValue}
                 onChange={(e) => setTempPhoneValue(e.target.value)}
                 autoFocus
-                style={{ background: '#090d16', border: '1px solid #10b981', color: '#ffffff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', outline: 'none', width: '120px' }}
+                style={{ 
+                  padding: '2px 8px', 
+                  fontSize: '0.75rem', 
+                  width: '130px', 
+                  borderColor: C.emerald 
+                }}
               />
-              <button onClick={() => onSavePhone(student.id)} disabled={savingPhone} style={{ background: '#10b981', border: 'none', color: '#090d16', padding: '3px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                {savingPhone ? <Loader2 size={9} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={9} />}
-                {isRtl ? "حفظ" : "Save"}
-              </button>
-              <button onClick={onCancelEditPhone} style={{ background: '#1e293b', border: 'none', color: '#94a3b8', padding: '3px 5px', borderRadius: '4px', cursor: 'pointer' }}>
-                <X size={10} />
-              </button>
+              <Btn 
+                variant="primary" 
+                onClick={() => onSavePhone(student.id)} 
+                disabled={savingPhone} 
+                style={{ 
+                  padding: '4px 8px', 
+                  fontSize: '0.7rem', 
+                  background: C.emerald,
+                  borderColor: C.emerald,
+                  color: '#ffffff'
+                }}
+              >
+                {savingPhone ? <Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={10} />}
+                {t('common.save', { defaultValue: isArabic ? "حفظ" : "Save" })}
+              </Btn>
+              <Btn 
+                variant="outline" 
+                onClick={onCancelEditPhone} 
+                style={{ padding: '4px 6px' }}
+              >
+                <X size={12} style={{ color: C.textSub }} />
+              </Btn>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-              <span style={{ fontSize: '10px', color: parentPhone ? '#64748b' : '#f59e0b' }}>
-                {parentPhone || (isRtl ? 'لا يوجد رقم' : 'No Phone')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+              <span style={{ fontSize: '0.72rem', color: parentPhone ? C.textSub : C.warning }}>
+                {parentPhone || t('reports.card.no_phone', { defaultValue: isArabic ? 'لا يوجد رقم' : 'No Phone' })}
               </span>
-              <button onClick={() => onStartEditPhone(student.id, parentPhone)} style={{ background: 'transparent', border: 'none', color: '#f59e0b', padding: 0, fontSize: '9px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                <Edit size={8} />
-                {parentPhone ? (isRtl ? "تعديل" : "Edit") : (isRtl ? "+ إضافة" : "+ Add")}
+              <button 
+                onClick={() => onStartEditPhone(student.id, parentPhone)} 
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: C.warning, 
+                  padding: 0, 
+                  fontSize: '0.7rem', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '2px',
+                  fontWeight: 600
+                }}
+              >
+                <Edit size={10} />
+                {parentPhone 
+                  ? t('common.edit', { defaultValue: isArabic ? "تعديل" : "Edit" }) 
+                  : t('common.add', { defaultValue: isArabic ? "+ إضافة" : "+ Add" })}
               </button>
             </div>
           )}
         </div>
 
+        {/* إعادة تعيين حالة الإرسال */}
         {isSent && (
-          <button onClick={() => onResetSent(student.id)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px' }}>
-            <RotateCcw size={11} />
+          <button 
+            onClick={() => onResetSent(student.id)} 
+            title={t('reports.card.reset_sent', { defaultValue: isArabic ? "إعادة تعيين الحالة" : "Reset Status" })}
+            style={{ background: 'transparent', border: 'none', color: C.textSub, cursor: 'pointer', padding: '2px' }}
+          >
+            <RotateCcw size={13} />
           </button>
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#090d16', padding: '5px 8px', borderRadius: '6px', textAlign: 'center', fontSize: '10px' }}>
-        <div><span style={{ color: '#64748b', display: 'block' }}>{isRtl ? "حفظ" : "Mem"}</span><span style={{ color: '#f8fafc', fontWeight: '500' }}>{safeString(record?.new_memorization) || '---'}</span></div>
-        <div><span style={{ color: '#64748b', display: 'block' }}>{isRtl ? "مراجعة" : "Rev"}</span><span style={{ color: '#f8fafc', fontWeight: '500' }}>{safeString(record?.review) || '---'}</span></div>
-        <div><span style={{ color: '#64748b', display: 'block' }}>{isRtl ? "تقييم" : "Grade"}</span><span style={{ color: '#f59e0b', fontWeight: '600' }}>{safeString(record?.session_grade) || '---'}</span></div>
+      {/* تفاصيل السجل والدرجات */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(3, 1fr)', 
+        gap: '6px', 
+        background: C.bg, 
+        padding: '6px 10px', 
+        borderRadius: '6px', 
+        textAlign: 'center', 
+        fontSize: '0.72rem' 
+      }}>
+        <div>
+          <span style={{ color: C.textSub, display: 'block', fontSize: '0.65rem' }}>
+            {t('reports.card.memorization', { defaultValue: isArabic ? "حفظ" : "Mem" })}
+          </span>
+          <span style={{ color: C.text, fontWeight: '600' }}>
+            {safeString(record?.new_memorization) || '---'}
+          </span>
+        </div>
+        <div>
+          <span style={{ color: C.textSub, display: 'block', fontSize: '0.65rem' }}>
+            {t('reports.card.review', { defaultValue: isArabic ? "مراجعة" : "Rev" })}
+          </span>
+          <span style={{ color: C.text, fontWeight: '600' }}>
+            {safeString(record?.review) || '---'}
+          </span>
+        </div>
+        <div>
+          <span style={{ color: C.textSub, display: 'block', fontSize: '0.65rem' }}>
+            {t('reports.card.grade', { defaultValue: isArabic ? "تقييم" : "Grade" })}
+          </span>
+          <span style={{ color: C.warning, fontWeight: '700' }}>
+            {safeString(record?.session_grade) || '---'}
+          </span>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '6px' }}>
-        <button onClick={() => onCopy(student, record)} style={{ background: '#1e293b', border: 'none', color: '#cbd5e1', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer' }}>
-          {copiedId === student.id ? <Check size={12} style={{ color: '#10b981' }} /> : <Copy size={12} />}
-        </button>
+      {/* أزرار الإجراءات (نسخ وإرسال) */}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <Btn 
+          variant="outline" 
+          onClick={() => onCopy(student, record)} 
+          style={{ padding: '8px 12px', borderColor: C.border }}
+        >
+          {copiedId === student.id ? <Check size={14} style={{ color: C.emerald }} /> : <Copy size={14} style={{ color: C.textSub }} />}
+        </Btn>
 
         {parentPhone ? (
-          <button onClick={() => onSendWhatsApp(student, record)} style={{ flex: 1, background: isSent ? '#1e293b' : '#f59e0b', color: isSent ? '#64748b' : '#090d16', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '700', fontSize: '11px', cursor: 'pointer' }}>
-            {isSent ? (isRtl ? "إعادة إرسال" : "Resend") : (isRtl ? "إرسال عبر الواتساب" : "Send WhatsApp")}
-          </button>
+          <Btn 
+            variant="primary" 
+            onClick={() => onSendWhatsApp(student, record)} 
+            style={{ 
+              flex: 1, 
+              background: isSent ? C.card : C.warning, 
+              color: isSent ? C.textSub : '#000000', 
+              borderColor: isSent ? C.border : C.warning, 
+              padding: '8px', 
+              fontWeight: '700', 
+              fontSize: '0.78rem',
+              justifyContent: 'center'
+            }}
+          >
+            {isSent 
+              ? t('reports.card.resend', { defaultValue: isArabic ? "إعادة إرسال" : "Resend" }) 
+              : t('reports.card.send_whatsapp', { defaultValue: isArabic ? "إرسال عبر الواتساب" : "Send WhatsApp" })}
+          </Btn>
         ) : (
-          <button onClick={() => onStartEditPhone(student.id, '')} style={{ flex: 1, background: '#1e293b50', color: '#f59e0b', border: '1px dashed #f59e0b40', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-            <PhoneCall size={11} />
-            {isRtl ? "أضف رقم الهاتف" : "Add Phone"}
-          </button>
+          <Btn 
+            variant="outline" 
+            onClick={() => onStartEditPhone(student.id, '')} 
+            style={{ 
+              flex: 1, 
+              borderColor: `${C.warning}50`, 
+              color: C.warning, 
+              padding: '8px', 
+              fontWeight: '600', 
+              fontSize: '0.75rem', 
+              justifyContent: 'center',
+              borderStyle: 'dashed'
+            }}
+          >
+            <PhoneCall size={12} />
+            <span>{t('reports.card.add_phone', { defaultValue: isArabic ? "أضف رقم الهاتف" : "Add Phone" })}</span>
+          </Btn>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
