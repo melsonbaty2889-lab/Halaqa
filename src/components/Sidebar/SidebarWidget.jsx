@@ -1,7 +1,6 @@
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
 import { formatHijriDate } from '../../utils/dateUtils';
-import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
   academyTime,
@@ -15,84 +14,34 @@ export default function SidebarWidget({
   const formattedHijri = formatHijriDate(new Date(), isRtl);
 
   return (
-    <div style={{
-      background: C.dark.card,
-      padding: '8px 10px',
-      borderRadius: '8px',
-      marginBottom: '10px',
-      border: `1px solid ${C.dark.border}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '6px'
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        color: C.brandEmerald.light,
-        fontSize: '0.72rem',
-        fontWeight: 'bold',
-        fontFamily: 'monospace',
-        flexShrink: 0
-      }}>
-        <Clock size={14} style={{ color: C.brandEmerald.light }} />
+    <div className="bg-slate-900/90 p-2.5 rounded-xl mb-3 border border-slate-800 flex items-center justify-between gap-1.5 shadow-sm">
+      {/* الوقت بتنسيق رقمي زمردي مضيء */}
+      <div className="flex items-center gap-1 text-emerald-400 text-xs font-bold font-mono shrink-0">
+        <Clock size={14} className="text-emerald-400 shrink-0" />
         <span>{academyTime || '12:24 PM'}</span>
       </div>
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '1px',
-        minWidth: 0
-      }}>
-        <span style={{
-          fontSize: '0.65rem',
-          color: C.brandEmerald.light,
-          fontWeight: '600',
-          whiteSpace: 'nowrap',
-          lineHeight: '1.2'
-        }}>
+      {/* التواريخ (ميلادي وهجري) */}
+      <div className="flex flex-col items-center justify-center gap-0.5 min-w-0">
+        <span className="text-[11px] text-emerald-300 font-semibold whitespace-nowrap leading-tight">
           {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
-
-        <span style={{
-          fontSize: '0.62rem',
-          color: C.text.muted,
-          fontWeight: '500',
-          whiteSpace: 'nowrap',
-          lineHeight: '1.2'
-        }}>
+        <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap leading-tight">
           {formattedHijri}
         </span>
       </div>
 
+      {/* زر ترقية الذهبي المضيء */}
       <button
+        type="button"
         onClick={() => {
           setActiveTab('subscriptions');
           if (typeof setShowEarlyUpgrade === 'function') setShowEarlyUpgrade(false);
           if (isMobile) setSidebarOpen(false);
         }}
-        style={{
-          padding: '5px 9px',
-          background: C.primary.gradient,
-          color: C.dark.main,
-          border: 'none',
-          borderRadius: '6px',
-          fontWeight: '700',
-          fontSize: '0.68rem',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          flexShrink: 0,
-          boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
-          transition: 'transform 0.15s ease'
-        }}
+        className="px-2.5 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 border-0 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1 shrink-0 shadow-[0_2px_10px_rgba(245,158,11,0.25)] hover:scale-105 active:scale-95 transition-all duration-150"
       >
-        <Zap size={12} fill={C.dark.main} />
+        <Zap size={12} className="fill-slate-950 shrink-0" />
         <span>{isRtl ? 'ترقية' : 'Upgrade'}</span>
       </button>
     </div>
