@@ -82,10 +82,16 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return children;
 };
 
+// التعامل مع أخطاء التحميل والكاش وتفريغ الكاش القديم تلقائياً
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
-    if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
+    if (/Failed to fetch dynamically imported module|chunk load error|loading chunk|Unexpected token/i.test(errorMsg)) {
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          for (let name of names) caches.delete(name);
+        });
+      }
       window.location.reload();
     }
   };
@@ -166,15 +172,15 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           border: `1px solid ${C.dark.border}`
         }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text.body, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <li style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.brandEmerald.DEFAULT }} />
               <span>إدارة عدد غير محدود من الطلاب والحلقات</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <li style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.brandEmerald.DEFAULT }} />
               <span>تقارير وأداء لحظي وتنبيهات مستمرة</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <li style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.brandEmerald.DEFAULT }} />
               <span>دعم فني وتحديثات مستمرة للباقة الاحترافية</span>
             </li>
@@ -237,7 +243,14 @@ class GlobalErrorBoundary extends Component {
             {this.state.error?.toString()}
           </div>
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={() => {
+              if ('caches' in window) {
+                caches.keys().then((names) => {
+                  for (let name of names) caches.delete(name);
+                });
+              }
+              window.location.reload();
+            }} 
             style={{ padding: '10px 20px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
           >
             إعادة تحميل الصفحة
