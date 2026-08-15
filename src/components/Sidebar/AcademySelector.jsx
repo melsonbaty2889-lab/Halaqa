@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
-import { colors as C } from '@/constants/colors';
+import { colors as C } from '@/theme/colors';
 
 export default function AcademySelector({
   academiesList,
