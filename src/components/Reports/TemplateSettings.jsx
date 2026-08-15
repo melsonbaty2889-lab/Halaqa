@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 import { Card, Btn } from '@/components/UI/UI';
-import { getParsedMessage } from '@/utils/ReportHelpers';
+import { getParsedMessage } from './ReportHelpers';
 
 export default function TemplateSettings({ 
   templateText = '', 
