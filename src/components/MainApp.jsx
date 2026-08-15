@@ -11,6 +11,7 @@ import Sidebar from './Sidebar/Sidebar';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
+import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
 const safeLazy = (importFn) => {
   return lazy(() =>
