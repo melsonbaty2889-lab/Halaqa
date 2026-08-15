@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+// استيراد أيقونات Lucide الاحترافية
 import { 
-  FaPaperPlane, FaBullhorn, FaWhatsapp, FaEnvelope, 
-  FaSms, FaBell, FaCheckCircle, FaSpinner, FaHistory,
-  FaChartLine, FaUsers, FaCheckDouble, FaMagic
-} from 'react-icons/fa';
+  Send, Megaphone, MessageSquare, Mail, 
+  Smartphone, Bell, CheckCircle2, Loader2, History,
+  TrendingUp, Users, ShieldCheck, Wand2 
+} from 'lucide-react';
+
+// استيراد عناصر التصميم الموحدة
+import { Card, Btn, Input, Select, PageHeader, Badge } from '@/components/UI/UI';
+import { C } from '@/theme/colors';
 
 export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl }) {
   const { i18n } = useTranslation();
@@ -105,17 +110,18 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
     }
   };
 
+  // الأيقونات الجديدة مع Lucide
   const channels = [
-    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: FaBell, color: '#C9A84C' },
-    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: FaWhatsapp, color: '#22c55e' },
-    { id: 'sms', label: 'SMS', icon: FaSms, color: '#f59e0b' },
-    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: FaEnvelope, color: '#a855f7' }
+    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: Bell },
+    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: MessageSquare },
+    { id: 'sms', label: 'SMS', icon: Smartphone },
+    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: Mail }
   ];
 
   const recipientOptions = [
-    { id: 'all_students', label: isAr ? 'جميع الطلاب والدارسين' : 'All Students' },
-    { id: 'parents', label: isAr ? 'أولياء الأمور' : 'Parents' },
-    { id: 'teachers', label: isAr ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff' }
+    { value: 'all_students', label: isAr ? 'جميع الطلاب والدارسين' : 'All Students' },
+    { value: 'parents', label: isAr ? 'أولياء الأمور' : 'Parents' },
+    { value: 'teachers', label: isAr ? 'الكادر التعليمي والمعلمين' : 'Teachers & Staff' }
   ];
 
   const applyTemplate = (tpl) => {
@@ -127,11 +133,8 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
   };
 
   const getRecipientLabel = (key) => {
-    const found = recipientOptions.find(r => r.id === key);
-    if (found) return found.label;
-    if (key === 'parents') return isAr ? 'أولياء الأمور' : 'Parents';
-    if (key === 'teachers') return isAr ? 'الكادر التعليمي' : 'Teachers';
-    return isAr ? 'جميع الطلاب' : 'All Students';
+    const found = recipientOptions.find(r => r.value === key);
+    return found ? found.label : (isAr ? 'جميع الطلاب' : 'All Students');
   };
 
   const getChannelLabel = (key) => {
@@ -140,271 +143,164 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(circle at top, #111e2e 0%, #0c1520 100%)',
-      padding: '24px 16px',
-      color: '#fff',
-      direction: isRtl ? 'rtl' : 'ltr',
-      fontFamily: "'Cairo', system-ui, sans-serif"
-    }}>
-      <div style={{
-        maxWidth: '1000px',
-        margin: '0 auto',
-        background: 'rgba(21, 35, 50, 0.92)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(201, 168, 76, 0.25)',
-        borderRadius: '24px',
-        padding: '28px 24px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
-      }}>
-        {/* الهيدر الترحيبي */}
-        <div style={{ 
-          background: '#0c1520',
-          padding: '20px',
-          borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.08)',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ 
-              background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)', 
-              padding: '14px', 
-              borderRadius: '14px',
-              color: '#0c1520',
-              boxShadow: '0 8px 20px rgba(201, 168, 76, 0.2)'
-            }}>
-              <FaPaperPlane style={{ fontSize: '1.4rem' }} />
+    <div style={{ padding: '24px 16px', direction: isRtl ? 'rtl' : 'ltr' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        
+        {/* الترويسة الموحدة */}
+        <PageHeader 
+          title={isAr ? 'مركز التواصل والمراسلات الذكي' : 'Smart Communication Hub'}
+          sub={isAr ? 'إدارة المراسلات والتعاميم الفورية لجميع أطراف الأكاديمية' : 'Broadcast notifications and announcements seamlessly'}
+          action={
+            <div style={{ background: `${C.primary}20`, padding: 12, borderRadius: 12, color: C.primary }}>
+              <Send size={22} />
             </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800' }}>
-                {isAr ? 'مركز التواصل والمراسلات الذكي' : 'Smart Communication Hub'}
-              </h1>
-              <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
-                {isAr ? 'إدارة المراسلات والتعاميم الفورية لجميع أطراف الأكاديمية' : 'Broadcast notifications and announcements seamlessly'}
-              </p>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
-        {/* كروت الإحصائيات */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
-          gap: '12px', 
-          marginBottom: '20px' 
-        }}>
-          <div style={{ background: '#0c1520', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FaChartLine style={{ color: '#C9A84C' }} />
+        {/* إحصائيات سريعة */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+          <Card style={{ padding: 16 }}>
+            <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <TrendingUp size={16} style={{ color: C.primary }} />
               <span>{isAr ? 'إجمالي المراسلات' : 'Total Sent'}</span>
             </div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginTop: '6px' }}>{history.length}</div>
-          </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: C.text, marginTop: 8 }}>{history.length}</div>
+          </Card>
 
-          <div style={{ background: '#0c1520', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FaUsers style={{ color: '#22c55e' }} />
+          <Card style={{ padding: 16 }}>
+            <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Users size={16} style={{ color: C.success }} />
               <span>{isAr ? 'القنوات الفعالة' : 'Active Channels'}</span>
             </div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginTop: '6px' }}>4</div>
-          </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: C.text, marginTop: 8 }}>4</div>
+          </Card>
 
-          <div style={{ background: '#0c1520', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FaCheckDouble style={{ color: '#a855f7' }} />
+          <Card style={{ padding: 16 }}>
+            <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ShieldCheck size={16} style={{ color: C.primary }} />
               <span>{isAr ? 'حالة النظام' : 'System Status'}</span>
             </div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#22c55e', marginTop: '8px' }}>
-              {isAr ? 'نشط ومباشر' : 'Live & Active'}
+            <div style={{ marginTop: 8 }}>
+              <Badge color={C.success}>{isAr ? 'نشط ومباشر' : 'Live & Active'}</Badge>
             </div>
-          </div>
+          </Card>
         </div>
 
-        {/* نموذج الإرسال + السجل */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        {/* جسم الصفحة الرئيسي */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
           
-          {/* نموذج الإرسال */}
-          <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <h2 style={{ fontSize: '0.95rem', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#C9A84C' }}>
-              <FaBullhorn /> {isAr ? 'إنشاء تعميم جديد' : 'New Broadcast'}
+          {/* نموذج الإنشاء */}
+          <Card>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: C.primary, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Megaphone size={18} /> {isAr ? 'إنشاء تعميم جديد' : 'New Broadcast'}
             </h2>
 
             {/* القوالب السريعة */}
-            <div style={{ marginBottom: '16px' }}>
-              <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                <FaMagic style={{ color: '#C9A84C' }} /> {isAr ? 'قوالب سريعة جاهزة:' : 'Quick Templates:'}
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ fontSize: '0.75rem', color: C.textSub, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+                <Wand2 size={14} style={{ color: C.primary }} /> {isAr ? 'قوالب سريعة:' : 'Quick Templates:'}
               </span>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {templates.map((tpl, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => applyTemplate(tpl)}
-                    style={{
-                      padding: '4px 10px',
-                      background: 'rgba(201, 168, 76, 0.1)',
-                      border: '1px solid rgba(201, 168, 76, 0.25)',
-                      borderRadius: '8px',
-                      color: '#C9A84C',
-                      fontSize: '0.7rem',
-                      fontWeight: '700',
-                      cursor: 'pointer'
-                    }}
-                  >
+                  <Btn key={idx} variant="secondary" onClick={() => applyTemplate(tpl)} style={{ padding: '4px 10px', fontSize: '0.72rem' }}>
                     {isAr ? tpl.titleAr : tpl.titleEn}
-                  </button>
+                  </Btn>
                 ))}
               </div>
             </div>
 
             {successMsg && (
-              <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '10px', marginBottom: '15px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaCheckCircle /> {successMsg}
+              <div style={{ background: `${C.success}15`, border: `1px solid ${C.success}40`, color: C.success, padding: 12, borderRadius: 10, marginBottom: 16, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <CheckCircle2 size={16} /> {successMsg}
               </div>
             )}
 
-            <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* قنوات الإرسال */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px', fontWeight: '700' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: C.primary, marginBottom: 8, fontWeight: 600 }}>
                   {isAr ? 'قناة الإرسال' : 'Channel'}
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {channels.map(ch => {
-                    const Icon = ch.icon;
+                    const IconComponent = ch.icon;
                     const active = formData.channel === ch.id;
                     return (
-                      <button
-                        type="button"
+                      <Btn
                         key={ch.id}
+                        variant={active ? 'primary' : 'ghost'}
                         onClick={() => setFormData({ ...formData, channel: ch.id })}
-                        style={{
-                          padding: '10px 4px',
-                          background: active ? 'rgba(201, 168, 76, 0.15)' : 'rgba(21, 35, 50, 0.92)',
-                          border: active ? '1px solid #C9A84C' : '1px solid rgba(255, 255, 255, 0.12)',
-                          borderRadius: '10px',
-                          color: active ? '#C9A84C' : '#94a3b8',
-                          cursor: 'pointer',
-                          fontSize: '0.72rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
+                        style={{ padding: '10px 4px', flexDirection: 'column', fontSize: '0.75rem', gap: 6 }}
                       >
-                        <Icon style={{ fontSize: '1rem' }} />
-                        <span style={{ fontWeight: active ? 'bold' : 'normal' }}>{ch.label}</span>
-                      </button>
+                        <IconComponent size={18} />
+                        <span>{ch.label}</span>
+                      </Btn>
                     );
                   })}
                 </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px', fontWeight: '700' }}>
-                  {isAr ? 'المستهدفون' : 'Recipients'}
-                </label>
-                <select
-                  value={formData.recipient}
-                  onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
-                  style={{ width: '100%', padding: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', color: '#fff', fontSize: '0.8rem', outline: 'none' }}
-                >
-                  {recipientOptions.map(opt => (
-                    <option key={opt.id} value={opt.id}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
+              {/* اختيار المستهدفين */}
+              <Select
+                label={isAr ? 'المستهدفون' : 'Recipients'}
+                value={formData.recipient}
+                options={recipientOptions}
+                onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
+              />
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px', fontWeight: '700' }}>
-                  {isAr ? 'عنوان الموضوع' : 'Title'}
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder={isAr ? 'أدخل عنوان الرسالة...' : 'Enter title...'}
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  style={{ width: '100%', padding: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', color: '#fff', fontSize: '0.8rem', boxSizing: 'border-box', outline: 'none' }}
-                />
-              </div>
+              {/* عنوان وتفاصيل الرسالة */}
+              <Input
+                label={isAr ? 'عنوان الموضوع' : 'Title'}
+                placeholder={isAr ? 'أدخل عنوان الرسالة...' : 'Enter title...'}
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '6px', fontWeight: '700' }}>
-                  {isAr ? 'محتوى الرسالة' : 'Content'}
-                </label>
-                <textarea
-                  rows="4"
-                  required
-                  placeholder={isAr ? 'اكتب الرسالة التفصيلية هنا...' : 'Write message details...'}
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  style={{ width: '100%', padding: '10px', background: 'rgba(21, 35, 50, 0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', color: '#fff', fontSize: '0.8rem', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
-                />
-              </div>
+              <Input
+                as="textarea"
+                label={isAr ? 'محتوى الرسالة' : 'Content'}
+                placeholder={isAr ? 'اكتب الرسالة التفصيلية هنا...' : 'Write message details...'}
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                required
+              />
 
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)',
-                  color: '#0c1520',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontWeight: '800',
-                  fontSize: '0.88rem',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  marginTop: '4px',
-                  boxShadow: '0 4px 12px rgba(201, 168, 76, 0.2)'
-                }}
-              >
-                {loading ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaPaperPlane />}
+              <Btn type="submit" variant="primary" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
+                {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                 <span>{isAr ? 'إرسال التعميم الآن' : 'Send Broadcast'}</span>
-              </button>
+              </Btn>
             </form>
-          </div>
+          </Card>
 
           {/* سجل المراسلات */}
-          <div style={{ background: '#0c1520', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <h2 style={{ fontSize: '0.95rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#C9A84C' }}>
-              <FaHistory /> {isAr ? 'سجل المراسلات' : 'Recent History'}
+          <Card>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: C.primary, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <History size={18} /> {isAr ? 'سجل المراسلات' : 'Recent History'}
             </h2>
 
             {fetching ? (
-              <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
+              <div style={{ textAlign: 'center', color: C.textSub, padding: 20 }}>
                 {isAr ? 'جاري التحميل...' : 'Loading...'}
               </div>
             ) : history.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#64748b', padding: '30px 10px', fontSize: '0.8rem' }}>
+              <div style={{ textAlign: 'center', color: C.textSub, padding: '30px 10px', fontSize: '0.85rem' }}>
                 {isAr ? 'لا توجد مراسلات سابقة' : 'No notification history'}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '460px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 480, overflowY: 'auto' }}>
                 {history.map((item) => (
-                  <div key={item.id} style={{ background: 'rgba(21, 35, 50, 0.92)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span dir="auto" style={{ fontWeight: 'bold', fontSize: '0.82rem', color: '#e2e8f0', textAlign: 'start' }}>
+                  <div key={item.id} style={{ background: C.surface, padding: 14, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: C.text }}>
                         {item.title}
                       </span>
-                      <span style={{ fontSize: '0.68rem', color: '#C9A84C', background: 'rgba(201,168,76,0.1)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(201,168,76,0.2)' }}>
-                        {getChannelLabel(item.channel)}
-                      </span>
+                      <Badge color={C.primary}>{getChannelLabel(item.channel)}</Badge>
                     </div>
-                    <p dir="auto" style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4', textAlign: 'start' }}>
+                    <p style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: C.textSub, lineHeight: 1.5 }}>
                       {item.content || item.message}
                     </p>
-                    <div style={{ fontSize: '0.68rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '0.72rem', color: C.textMuted, display: 'flex', justifyContent: 'space-between' }}>
                       <span>{isAr ? 'المستهدفون:' : 'Recipients:'} {getRecipientLabel(item.recipient)}</span>
                       <span>{new Date(item.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</span>
                     </div>
@@ -412,7 +308,7 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
                 ))}
               </div>
             )}
-          </div>
+          </Card>
 
         </div>
       </div>
