@@ -14,6 +14,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       devOptions: {
         enabled: true
       },
@@ -21,6 +22,7 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        sourcemap: true,
         // منع تخزين index.html في الـ Service Worker كاش نهائياً
         navigateFallbackDenylist: [/^\/index\.html$/]
       },
