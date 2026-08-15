@@ -1,0 +1,23 @@
+{
+  "short_name": "الحلقة الذكية",
+  "name": "منصة الحلقة الذكية - Smart Halaqa",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#090F17",
+  "theme_color": "#090F17",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar"
+}
