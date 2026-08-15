@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
-import { colors as C } from '@/constants/colors';
+import { colors as C } from '@/theme/colors';
 
 export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl }) {
   return (
