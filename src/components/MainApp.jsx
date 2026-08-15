@@ -4,7 +4,7 @@ import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
-import { colors as C } from '@/constants/colors';
+import { colors as C } from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from './Sidebar/Sidebar';
