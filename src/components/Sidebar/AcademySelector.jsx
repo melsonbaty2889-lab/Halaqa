@@ -1,6 +1,5 @@
 import React from 'react';
-import { Building2, ChevronDown, Check } from "lucide-react";
-import { colors as C } from '@/theme/colors';
+import { ChevronDown } from 'lucide-react';
 
 export default function AcademySelector({
   academiesList,
@@ -15,86 +14,63 @@ export default function AcademySelector({
   isRtl
 }) {
   return (
-    <div style={{ position: 'relative', marginBottom: '12px' }} ref={dropdownRef}>
+    <div ref={dropdownRef} className="mb-3 relative">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-slate-300 font-semibold">
+          {isRtl ? 'الأكاديمية' : 'Academy'}
+        </span>
+        <span
+          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${statusBadge?.className || ''}`}
+          style={statusBadge?.style}
+        >
+          {getText(statusBadge?.text)}
+        </span>
+      </div>
+
       <button
+        type="button"
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '8px 10px',
-          borderRadius: '8px',
-          border: `1px solid ${C.dark.border}`,
-          background: C.dark.cardBg,
-          color: C.text.main,
-          cursor: 'pointer',
-          textAlign: isRtl ? 'right' : 'left'
-        }}
+        className="w-full px-3 py-2 bg-slate-900/90 border border-slate-800 rounded-lg text-slate-100 flex items-center justify-between cursor-pointer text-xs font-semibold hover:border-slate-700 transition-all duration-200"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-          <Building2 size={16} color={C.primary.light} style={{ flexShrink: 0 }} />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {currentAcademyName}
-            </div>
-            <span style={{
-              display: 'inline-block',
-              fontSize: '0.6rem',
-              fontWeight: '600',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              marginTop: '2px',
-              ...statusBadge.style
-            }}>
-              {statusBadge.text}
-            </span>
-          </div>
-        </div>
-        <ChevronDown size={14} color={C.text.muted} style={{ flexShrink: 0, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <span dir="auto" className="truncate">
+          {currentAcademyName}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`text-slate-400 shrink-0 transition-transform duration-200 ${
+            dropdownOpen ? 'rotate-180' : ''
+          }`}
+        />
       </button>
 
       {dropdownOpen && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          marginTop: '4px',
-          background: C.dark.cardBg,
-          border: `1px solid ${C.dark.border}`,
-          borderRadius: '8px',
-          zIndex: 100,
-          boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
-          overflow: 'hidden'
-        }}>
-          {academiesList.map((ac) => (
-            <button
-              key={ac.id}
-              onClick={() => {
-                if (typeof onSwitchAcademy === 'function') onSwitchAcademy(ac.id);
-                setDropdownOpen(false);
-              }}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: ac.id === currentAcademyId ? C.dark.surface : 'transparent',
-                border: 'none',
-                color: ac.id === currentAcademyId ? C.primary.light : C.text.main,
-                fontSize: '0.78rem',
-                cursor: 'pointer',
-                textAlign: isRtl ? 'right' : 'left'
-              }}
-            >
-              <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {getText(ac.name)}
-              </span>
-              {ac.id === currentAcademyId && <Check size={14} color={C.primary.light} />}
-            </button>
-          ))}
+        <div className="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl z-50 overflow-hidden divide-y divide-slate-800/50">
+          {academiesList.map((acc) => {
+            const isSelected = acc.id === currentAcademyId;
+            return (
+              <button
+                key={acc.id}
+                type="button"
+                onClick={() => {
+                  if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                  setDropdownOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 border-0 text-xs cursor-pointer transition-colors duration-150 ${
+                  isSelected
+                    ? 'bg-emerald-950/40 text-emerald-400 font-bold'
+                    : 'bg-transparent text-slate-300 hover:bg-slate-800/50'
+                }`}
+              >
+                <span dir="auto" className="truncate">{getText(acc.name)}</span>
+                <input
+                  type="radio"
+                  checked={isSelected}
+                  readOnly
+                  className="accent-emerald-500 cursor-pointer"
+                />
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
