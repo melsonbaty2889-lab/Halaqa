@@ -3,7 +3,7 @@ import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
-import { X } from "lucide-react";
+import { X, ShieldAlert } from "lucide-react";
 import { colors as C } from '@/theme/colors';
 
 import AcademySelector from './AcademySelector';
@@ -35,6 +35,8 @@ export default function Sidebar({
   const menuSections = getMenuSections(isRtl);
   const [openSectionId, setOpenSectionId] = useState(null);
 
+  const isSuperAdmin = userRole === 'super_admin' || userRole === 'Super Admin';
+
   const getText = (val) => {
     if (!val) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -44,7 +46,7 @@ export default function Sidebar({
     return '';
   };
 
-  // إغلاق القائمة تلقائياً عند تغيير التبويب في الشاشات الصغيرة
+  // إغلاق القائمة تلقائياً عند اختيار تبويب في الموبايل
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
     if (isMobile && typeof setSidebarOpen === 'function') {
@@ -249,7 +251,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* غطاء خلفي عند فتح القائمة على الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -305,6 +306,34 @@ export default function Sidebar({
               </button>
             )}
           </div>
+
+          {isSuperAdmin && (
+            <button
+              onClick={() => handleSelectTab('admin-dashboard')}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 12px',
+                marginBottom: '12px',
+                borderRadius: '8px',
+                border: activeTab === 'admin-dashboard' ? '1px solid #FBBF24' : '1px solid rgba(251, 191, 36, 0.3)',
+                background: activeTab === 'admin-dashboard' 
+                  ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)' 
+                  : 'rgba(251, 191, 36, 0.08)',
+                color: '#FBBF24',
+                fontWeight: '700',
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: activeTab === 'admin-dashboard' ? '0 0 12px rgba(251, 191, 36, 0.2)' : 'none'
+              }}
+            >
+              <ShieldAlert size={18} color="#FBBF24" />
+              <span>{isRtl ? 'لوحة Super Admin' : 'Super Admin Terminal'}</span>
+            </button>
+          )}
 
           <AcademySelector
             academiesList={academiesList}
