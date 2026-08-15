@@ -7,7 +7,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
-import { colors as C } from '@/constants/colors';
+import { colors as C } from '@/theme/colors.js';
 
 import SplashScreen from '@/components/UI/SplashScreen'; 
 import DevPlayground from '@/components/DevPlayground';
