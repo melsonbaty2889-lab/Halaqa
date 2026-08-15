@@ -1,16 +1,26 @@
 // src/theme/colors.js
 
 export const colors = {
-  // اللون الأساسي (البرتقالي العنبري للأزرار والإجراءات الرئيسية)
-  primary: {
-    DEFAULT: '#D97706',
-    hover: '#B45309',
-    light: '#F59E0B',
-    focusRing: 'rgba(217, 119, 6, 0.2)',
-    shadow: 'rgba(217, 119, 6, 0.25)',
-  },
+  // 1. الوصول المباشر (Direct Flattened Mapping للمكونات في UI.jsx)
+  primary: '#D97706',          // البرتقالي الرئيسي
+  primaryHover: '#B45309',     // الهوفر البرتقالي
+  bg: '#070C12',               // خلفية التطبيق العامة
+  card: '#0F172A',             // خلفية البطاقة والكروت
+  surface: '#111C2A',          // أسطح القوائم واللوحات
+  input: '#090F16',            // خلفية حقول الإدخال
+  border: '#223147',           // حدود الحقول والبطاقات
+  borderLight: '#1E293B',
+  
+  // النصوص والحالات
+  text: '#F8FAFC',             // النص الرئيسي الناصع
+  textSub: '#E2E8F0',          // النص الفرعي
+  textMuted: '#94A3B8',        // النص المساعد
+  textPlaceholder: '#64748B',  // الـ Placeholder
+  danger: '#EF4444',           // الأحمر للتنبيهات والأخطاء
+  success: '#10B981',          // الأخضر للعمليات الناجحة
+  shadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
 
-  // الأخضر الزمردي/التركواز (لون اللوجو، الأيقونات، ورموز الأمان)
+  // 2. الهيكلية المتداخلة (Nested Object لتوافق Tailwind Config والمميزات المتقدمة)
   brandEmerald: {
     DEFAULT: '#10B981',
     teal: '#0F766E',
@@ -19,14 +29,12 @@ export const colors = {
     bgGlow: 'rgba(15, 118, 110, 0.18)',
   },
 
-  // لمسة ذهبية فرعية (للعناوين الخاصة والتمويجات)
   gold: {
     DEFAULT: '#C9A84C',
     hover: '#A58230',
     glow: 'rgba(201, 168, 76, 0.2)',
   },
 
-  // الأحمر للتنبيهات والأخطاء
   error: {
     DEFAULT: '#EF4444',
     light: '#F87171',
@@ -34,28 +42,20 @@ export const colors = {
     border: 'rgba(239, 68, 68, 0.25)',
   },
 
-  // الألوان الداكنة والأسطح (نفس صفحة الدخول)
   dark: {
-    bg: '#070C12',           // خلفية الصفحة الداكنة
-    card: '#0F172A',         // خلفية البطاقة الرئيسية
-    surface: '#111C2A',      // أسطح القوائم واللوحات
-    input: '#090F16',        // خلفية حقول الإدخال
-    buttonDark: '#1E293B',   // الأزرار الثانوية (مثل Google واللغة)
-    border: '#223147',       // حدود الحقول
+    bg: '#070C12',
+    card: '#0F172A',
+    surface: '#111C2A',
+    input: '#090F16',
+    buttonDark: '#1E293B',
+    border: '#223147',
     borderLight: '#1E293B',
   },
 
-  // درجات النصوص
-  text: {
-    title: '#F8FAFC',
-    heading: '#E2E8F0',
-    body: '#CBD5E1',
-    muted: '#94A3B8',
-    placeholder: '#64748B',
-  },
-
-  // التدرجات الرسمية الخاصة باللوجو وخلفية الدخول
+  // التدرجات
   gradients: {
+    gold: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+    emerald: 'linear-gradient(135deg, #0F766E 0%, #042F2E 100%)',
     pageBackground: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)',
     logoGlow: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
   }
