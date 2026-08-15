@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import ReportDateSelector from '../UI/ReportDateSelector';
-import TemplateSettings from './TemplateSettings';
-import ReportMetrics from './ReportMetrics';
-import StudentReportCard from './StudentReportCard';
-import { getParsedMessage, generateWhatsAppLink } from './ReportHelpers';
 import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2, Search } from 'lucide-react';
 
+// إصلاح مسارات الاستيراد واعتماد النمط المعياري الموحد للمشروع
+import { supabase } from '@/lib/supabase';
+import { C } from '@/theme/colors';
+import { Card, Btn, Input } from '@/components/UI/UI';
+
+import ReportDateSelector from '@/components/UI/ReportDateSelector';
+import TemplateSettings from '@/components/Reports/TemplateSettings';
+import ReportMetrics from '@/components/Reports/ReportMetrics';
+import StudentReportCard from '@/components/Reports/StudentReportCard';
+import { getParsedMessage, generateWhatsAppLink } from '@/utils/ReportHelpers';
+
 export default function Reports({ students = [], academyId }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang.startsWith('ar');
 
+  // دالة الحماية والترجمة الديناميكية للنصوص
   const safeString = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string') return val;
@@ -43,19 +49,21 @@ export default function Reports({ students = [], academyId }) {
     setTimeout(() => setToastMessage(''), 2500);
   }, []);
 
+  // تنسيق التاريخ ديناميكياً بحسب ثقافة المنطقة ولغتها
   const formattedDateString = useMemo(() => {
     if (!selectedDate) return '';
     try {
-      return new Date(selectedDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { 
+      return new Intl.DateTimeFormat(currentLang, { 
         day: 'numeric', 
         month: 'short', 
         year: 'numeric' 
-      });
+      }).format(new Date(selectedDate));
     } catch { 
       return selectedDate; 
     }
-  }, [selectedDate, isRtl]);
+  }, [selectedDate, currentLang]);
 
+  // جلب البيانات مع حماية الاتصال واستعمال استعلامات آمنة
   const fetchReportsAndTemplate = useCallback(async () => {
     if (!academyId) return;
     setLoading(true);
@@ -84,7 +92,6 @@ export default function Reports({ students = [], academyId }) {
       const mappedData = {};
       const logsMap = {};
 
-      // حماية المصفوفة القادمة من الاستعلام
       const safeViewData = Array.isArray(viewData) ? viewData : [];
       safeViewData.forEach(rec => {
         if (rec && rec.student_id) {
@@ -125,7 +132,14 @@ export default function Reports({ students = [], academyId }) {
   };
 
   const handleSendWhatsApp = (student, record) => {
-    const text = getParsedMessage({ student, record, template: messageTemplate, formattedDate: formattedDateString, isRtl, safeString });
+    const text = getParsedMessage({ 
+      student, 
+      record, 
+      template: messageTemplate, 
+      formattedDate: formattedDateString, 
+      locale: currentLang, 
+      safeString 
+    });
     const phone = localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone || record?.parent_phone);
     const link = generateWhatsAppLink(phone, text);
     markAsSentInDB(student.id, text);
@@ -133,15 +147,21 @@ export default function Reports({ students = [], academyId }) {
   };
 
   const handleCopyToClipboard = (student, record) => {
-    const text = getParsedMessage({ student, record, template: messageTemplate, formattedDate: formattedDateString, isRtl, safeString });
+    const text = getParsedMessage({ 
+      student, 
+      record, 
+      template: messageTemplate, 
+      formattedDate: formattedDateString, 
+      locale: currentLang, 
+      safeString 
+    });
     navigator.clipboard.writeText(text);
     setCopiedId(student.id);
     markAsSentInDB(student.id, text);
-    showToast(isRtl ? "تم نسخ التقرير بنجاح" : "Report copied to clipboard");
+    showToast(t('reports.copied_success', { defaultValue: isRtl ? "تم نسخ التقرير بنجاح" : "Report copied to clipboard" }));
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // حماية مصفوفة الطلاب
   const safeStudents = useMemo(() => Array.isArray(students) ? students : [], [students]);
 
   const filteredStudents = useMemo(() => {
@@ -186,22 +206,46 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'} 
-      className="w-full min-h-screen bg-[#090d16] text-slate-100 p-3 sm:p-5 font-sans"
+      style={{ background: C.bg, color: C.text, minHeight: '100vh', padding: '16px' }}
     >
+      {/* التنبيهات المنبثقة (Toast) */}
       {toastMessage && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-full text-xs shadow-lg z-[9999]">
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: C.success,
+          color: '#ffffff',
+          fontWeight: 'bold',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '0.8rem',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 9999
+        }}>
           {toastMessage}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-emerald-400" />
+      {/* الهيدر وعنصر اختيار التاريخ */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            width: '36px', 
+            height: '36px', 
+            borderRadius: '10px', 
+            background: `${C.emerald}15`, 
+            border: `1px solid ${C.emerald}30`, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}>
+            <BookOpen style={{ width: '20px', height: '20px', color: C.emerald }} />
           </div>
           <div>
-            <h1 className="text-base font-bold text-white leading-tight">
-              {isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports"}
+            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, margin: 0 }}>
+              {t('reports.title', { defaultValue: isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports" })}
             </h1>
           </div>
         </div>
@@ -209,73 +253,93 @@ export default function Reports({ students = [], academyId }) {
         <ReportDateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
       </div>
 
+      {/* بطاقات الإحصائيات والمؤشرات */}
       <ReportMetrics 
         totalCount={totalCount} 
         completionPercentage={completionPercentage} 
         remainingCount={remainingCount} 
         unsentCount={unsentStudents.length} 
         onBulkSend={handleBulkSendNext} 
-        isRtl={isRtl} 
       />
 
+      {/* إعدادات وتخصيص قالب الرسائل */}
       <TemplateSettings 
         templateText={messageTemplate} 
         setTemplateText={setMessageTemplate} 
         formattedDate={formattedDateString} 
       />
 
-      <div className="flex flex-col gap-2.5 my-4">
-        <div className="relative w-full">
-          <Search className={`w-4 h-4 absolute top-3 text-slate-500 ${isRtl ? 'right-3' : 'left-3'}`} />
-          <input 
+      {/* شريط البحث وتصفية التبويبات */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '16px 0' }}>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <Search style={{ 
+            width: '16px', 
+            height: '16px', 
+            position: 'absolute', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            color: C.textSub,
+            [isRtl ? 'right' : 'left']: '12px'
+          }} />
+          <Input 
             type="text" 
-            placeholder={isRtl ? "بحث باسم الطالب..." : "Search..."} 
+            placeholder={t('reports.search_placeholder', { defaultValue: isRtl ? "بحث باسم الطالب..." : "Search..." })} 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
-            className={`w-full bg-slate-900 border border-slate-800 rounded-lg py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${
-              isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
-            }`}
+            style={{ 
+              paddingLeft: isRtl ? '12px' : '36px', 
+              paddingRight: isRtl ? '36px' : '12px',
+              fontSize: '0.8rem'
+            }}
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {/* التبويبات التفاعلية */}
+        <div style={{ display: 'flex', itemsCenter: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
           {[
-            { id: 'all', label: isRtl ? "الكل" : "All", icon: Users }, 
-            { id: 'unsent', label: isRtl ? "غير مرسل" : "Unsent", icon: RotateCcw }, 
-            { id: 'present', label: isRtl ? "حاضر" : "Present", icon: UserCheck }, 
-            { id: 'absent', label: isRtl ? "غائب" : "Absent", icon: UserX }
+            { id: 'all', label: t('reports.tabs.all', { defaultValue: isRtl ? "الكل" : "All" }), icon: Users }, 
+            { id: 'unsent', label: t('reports.tabs.unsent', { defaultValue: isRtl ? "غير مرسل" : "Unsent" }), icon: RotateCcw }, 
+            { id: 'present', label: t('reports.tabs.present', { defaultValue: isRtl ? "حاضر" : "Present" }), icon: UserCheck }, 
+            { id: 'absent', label: t('reports.tabs.absent', { defaultValue: isRtl ? "غائب" : "Absent" }), icon: UserX }
           ].map(tab => {
             const IconComponent = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button 
+              <Btn 
                 key={tab.id} 
+                variant={isActive ? 'primary' : 'outline'}
                 onClick={() => setActiveTab(tab.id)} 
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border ${
-                  isActive
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200'
-                }`}
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '0.75rem', 
+                  whiteSpace: 'nowrap',
+                  background: isActive ? C.emerald : C.card,
+                  color: isActive ? '#ffffff' : C.textSub,
+                  borderColor: isActive ? C.emerald : C.border
+                }}
               >
-                <IconComponent className="w-3.5 h-3.5" />
+                <IconComponent style={{ width: '14px', height: '14px' }} />
                 <span>{tab.label}</span>
-              </button>
+              </Btn>
             );
           })}
         </div>
       </div>
 
+      {/* عرض حالات التحميل والنتائج والبطاقات */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-12 text-emerald-400">
-          <Loader2 className="w-7 h-7 animate-spin mb-2" />
-          <span className="text-xs text-slate-400">{isRtl ? 'جاري تحميل التقارير...' : 'Loading reports...'}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', color: C.emerald }}>
+          <Loader2 style={{ width: '28px', height: '28px', animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
+          <span style={{ fontSize: '0.8rem', color: C.textSub }}>
+            {t('reports.loading', { defaultValue: isRtl ? 'جاري تحميل التقارير...' : 'Loading reports...' })}
+          </span>
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-slate-800 text-slate-400 text-xs">
-          {isRtl ? 'لا توجد نتائج مطابقة لليوم المحدد.' : 'No matching records found.'}
-        </div>
+        <Card style={{ textAlign: 'center', padding: '32px', color: C.textSub, fontSize: '0.8rem' }}>
+          {t('reports.no_data', { defaultValue: isRtl ? 'لا توجد نتائج مطابقة لليوم المحدد.' : 'No matching records found.' })}
+        </Card>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filteredStudents.map(student => (
             <StudentReportCard
               key={student.id}
@@ -299,7 +363,7 @@ export default function Reports({ students = [], academyId }) {
                   await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
                   setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
                   setEditingPhoneStudentId(null);
-                  showToast(isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated");
+                  showToast(t('reports.phone_updated', { defaultValue: isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated" }));
                 } catch (err) {
                   console.error('Failed to update phone number:', err);
                 } finally {
