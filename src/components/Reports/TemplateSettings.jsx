@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Wand2, Eye, BookmarkPlus, Trash2, Sparkles, 
-  Smile, Search 
+  Smile
 } from 'lucide-react';
 
-// استيراد المكونات القياسية ونظام الألوان الموحد للمشروع
-import { C } from '@/theme/colors';
-import { Card, Btn, Input } from '@/components/UI/UI';
+import { Card, Btn } from '@/components/UI/UI';
 import { getParsedMessage } from '@/utils/ReportHelpers';
 
 export default function TemplateSettings({ 
@@ -143,87 +141,43 @@ export default function TemplateSettings({
   });
 
   return (
-    <Card style={{ 
-      background: C.card, 
-      borderColor: C.border, 
-      borderRadius: '12px', 
-      marginBottom: '16px', 
-      overflow: 'hidden',
-      padding: 0
-    }}>
+    <Card className="w-full bg-slate-900 border border-slate-800 rounded-xl mb-4 overflow-hidden transition-all shadow-lg p-0">
       {/* التنبيهات المنبثقة (Toast) */}
       {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: C.warning,
-          color: '#000000',
-          fontWeight: 'bold',
-          padding: '6px 16px',
-          borderRadius: '20px',
-          fontSize: '0.75rem',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          zIndex: 9999
-        }}>
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold px-4 py-1.5 rounded-full text-xs shadow-xl z-[9999] animate-bounce">
           {toastMessage}
         </div>
       )}
 
       {/* الشريط العلوي للمكون */}
-      <div style={{ 
-        padding: '12px 16px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        borderBottom: `1px solid ${C.border}`,
-        background: C.bg
-      }}>
+      <div className="p-3.5 flex items-center justify-between border-b border-slate-800 bg-slate-950/50">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            background: 'transparent', 
-            border: 'none', 
-            color: C.text, 
-            cursor: 'pointer' 
-          }}
+          className="flex items-center gap-2 text-slate-200 hover:text-white transition-colors focus:outline-none bg-transparent border-none cursor-pointer"
         >
-          <Wand2 style={{ width: '16px', height: '16px', color: C.emerald }} />
-          <span style={{ fontSize: '0.82rem', fontWeight: 'bold' }}>
+          <Wand2 className="w-4 h-4 text-emerald-400" />
+          <span className="text-xs font-bold">
             {t('reports.template.title', { defaultValue: isArabic ? "محرر القوالب الذكي" : "Smart Template Editor" })}
           </span>
-          <span style={{ 
-            fontSize: '0.65rem', 
-            background: C.card, 
-            color: C.textSub, 
-            padding: '2px 8px', 
-            borderRadius: '12px', 
-            border: `1px solid ${C.border}` 
-          }}>
+          <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">
             {isExpanded 
               ? t('common.close', { defaultValue: isArabic ? 'إغلاق' : 'Close' }) 
               : t('common.edit', { defaultValue: isArabic ? 'تعديل' : 'Edit' })}
           </span>
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="flex items-center gap-2">
           {/* زر المعاينة */}
           <Btn
             variant={showPreview ? 'primary' : 'outline'}
             onClick={() => setShowPreview(!showPreview)}
-            style={{ 
-              padding: '4px 10px', 
-              fontSize: '0.72rem',
-              background: showPreview ? `${C.emerald}20` : C.card,
-              color: showPreview ? C.emerald : C.textSub,
-              borderColor: showPreview ? C.emerald : C.border
-            }}
+            className={`px-2.5 py-1 text-xs font-semibold ${
+              showPreview 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
           >
-            <Eye style={{ width: '14px', height: '14px' }} />
+            <Eye className="w-3.5 h-3.5" />
             <span>
               {showPreview 
                 ? t('reports.template.editor', { defaultValue: isArabic ? 'المحرر' : 'Editor' }) 
@@ -236,51 +190,34 @@ export default function TemplateSettings({
             variant="outline"
             onClick={handleSaveCustomTemplate}
             title={t('reports.template.save_custom', { defaultValue: isArabic ? "حفظ القالب باسم مخصص" : "Save custom template" })}
-            style={{ 
-              padding: '4px 8px', 
-              background: `${C.warning}15`, 
-              color: C.warning, 
-              borderColor: `${C.warning}30` 
-            }}
+            className="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold hover:bg-amber-500/20"
           >
-            <BookmarkPlus style={{ width: '14px', height: '14px' }} />
+            <BookmarkPlus className="w-3.5 h-3.5" />
           </Btn>
         </div>
       </div>
 
       {/* المحتوى الفرعي عند الفتح */}
       {isExpanded && (
-        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div className="p-3 sm:p-4 space-y-3.5">
           {/* شريط القوالب المحفوظة */}
           {customTemplates.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-              <span style={{ fontSize: '0.7rem', color: C.textSub, whiteSpace: 'nowrap' }}>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <span className="text-[11px] text-slate-400 whitespace-nowrap">
                 {t('reports.template.saved_label', { defaultValue: isArabic ? 'القوالب المحفوظة:' : 'Saved:' })}
               </span>
               {customTemplates.map((tmpl) => (
                 <div
                   key={tmpl.id}
                   onClick={() => setTemplateText(tmpl.text)}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px', 
-                    padding: '4px 10px', 
-                    background: C.bg, 
-                    border: `1px solid ${C.border}`, 
-                    borderRadius: '8px', 
-                    fontSize: '0.72rem', 
-                    color: C.text, 
-                    cursor: 'pointer', 
-                    whiteSpace: 'nowrap' 
-                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs cursor-pointer whitespace-nowrap transition-all"
                 >
                   <span>{tmpl.name}</span>
                   <button
                     onClick={(e) => handleDeleteCustomTemplate(tmpl.id, e)}
-                    style={{ background: 'transparent', border: 'none', color: C.textSub, cursor: 'pointer', padding: 0 }}
+                    className="text-slate-500 hover:text-red-400 transition-colors p-0.5 bg-transparent border-none cursor-pointer"
                   >
-                    <Trash2 style={{ width: '12px', height: '12px' }} />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               ))}
@@ -289,29 +226,9 @@ export default function TemplateSettings({
 
           {/* مساحة التحرير أو المعاينة */}
           {showPreview ? (
-            <div style={{ 
-              background: C.bg, 
-              border: `1px solid ${C.border}`, 
-              borderRadius: '10px', 
-              padding: '14px', 
-              fontSize: '0.78rem', 
-              color: C.text, 
-              minHeight: '110px', 
-              whiteSpace: 'pre-wrap', 
-              lineHeight: '1.6' 
-            }}>
-              <div style={{ 
-                fontSize: '0.7rem', 
-                color: C.emerald, 
-                fontWeight: 'bold', 
-                marginBottom: '8px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '4px', 
-                borderBottom: `1px solid ${C.border}`, 
-                paddingBottom: '4px' 
-              }}>
-                <Sparkles style={{ width: '12px', height: '12px' }} />
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-200 min-h-[120px] whitespace-pre-wrap leading-relaxed">
+              <div className="text-[10px] text-emerald-400 font-bold mb-2 flex items-center gap-1 border-b border-slate-800 pb-1">
+                <Sparkles className="w-3 h-3" />
                 <span>{t('reports.template.preview_label', { defaultValue: isArabic ? 'معاينة شكل الرسالة:' : 'Message Preview:' })}</span>
               </div>
               {previewMessage || t('reports.template.preview_placeholder', { defaultValue: isArabic ? 'اكتب نصاً في القالب للمعاينة...' : 'Type template text to preview...' })}
@@ -324,36 +241,18 @@ export default function TemplateSettings({
               rows={4}
               dir={isArabic ? 'rtl' : 'ltr'}
               placeholder={t('reports.template.placeholder', { defaultValue: isArabic ? "اكتب قالب الرسالة هنا..." : "Write template here..." })}
-              style={{ 
-                width: '100%', 
-                background: C.bg, 
-                border: `1px solid ${C.border}`, 
-                borderRadius: '10px', 
-                padding: '12px', 
-                fontSize: '0.78rem', 
-                color: C.text, 
-                outline: 'none', 
-                resize: 'none', 
-                lineHeight: '1.6' 
-              }}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all resize-none leading-relaxed"
             />
           )}
 
           {/* شريط الرموز التعبيرية */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
-            <Smile style={{ width: '14px', height: '14px', color: C.textSub, shrink: 0 }} />
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+            <Smile className="w-3.5 h-3.5 text-slate-500 ml-1 shrink-0" />
             {emojis.map((emoji, idx) => (
               <button
                 key={idx}
                 onClick={() => insertAtCursor(emoji)}
-                style={{ 
-                  padding: '4px 8px', 
-                  background: C.bg, 
-                  border: `1px solid ${C.border}`, 
-                  borderRadius: '6px', 
-                  fontSize: '0.85rem', 
-                  cursor: 'pointer' 
-                }}
+                className="px-2 py-1 bg-slate-800/60 hover:bg-slate-700 text-sm rounded-lg border border-slate-700/50 transition-all shrink-0 cursor-pointer"
               >
                 {emoji}
               </button>
@@ -361,8 +260,8 @@ export default function TemplateSettings({
           </div>
 
           {/* فلترة ومتغيرات القالب */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '8px', borderTop: `1px solid ${C.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+          <div className="space-y-2 pt-1 border-t border-slate-800">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {[
                 { id: 'all', label: t('reports.template.cat_all', { defaultValue: isArabic ? 'الكل' : 'All' }) },
                 { id: 'basic', label: t('reports.template.cat_basic', { defaultValue: isArabic ? 'أساسي' : 'Basic' }) },
@@ -372,39 +271,23 @@ export default function TemplateSettings({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  style={{ 
-                    padding: '4px 10px', 
-                    borderRadius: '6px', 
-                    fontSize: '0.7rem', 
-                    fontWeight: 600, 
-                    cursor: 'pointer',
-                    background: activeTab === tab.id ? `${C.emerald}20` : C.bg,
-                    color: activeTab === tab.id ? C.emerald : C.textSub,
-                    border: `1px solid ${activeTab === tab.id ? `${C.emerald}40` : C.border}`
-                  }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                    activeTab === tab.id 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-slate-800/40 text-slate-400 hover:text-slate-200'
+                  }`}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <div className="flex flex-wrap gap-1.5">
               {filteredVariables.map((v) => (
                 <button
                   key={v.tag}
                   onClick={() => insertAtCursor(v.tag)}
-                  style={{ 
-                    padding: '4px 8px', 
-                    background: `${C.emerald}10`, 
-                    color: C.emerald, 
-                    border: `1px solid ${C.emerald}30`, 
-                    borderRadius: '6px', 
-                    fontSize: '0.72rem', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '4px' 
-                  }}
+                  className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 rounded-lg text-xs font-mono transition-all flex items-center gap-1 cursor-pointer"
                 >
                   <span>+</span>
                   <span>{v.label}</span>
