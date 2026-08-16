@@ -101,8 +101,16 @@ export default function Header({
     { code: 'AED', name: isAr ? 'درهم إماراتي (AED)' : 'AED' },
     { code: 'KWD', name: isAr ? 'دينار كويتي (KWD)' : 'KWD' },
     { code: 'QAR', name: isAr ? 'ريال قطري (QAR)' : 'QAR' },
+    { code: 'OMR', name: isAr ? 'ريال عماني (OMR)' : 'OMR' },
+    { code: 'BHD', name: isAr ? 'دينار بحريني (BHD)' : 'BHD' },
+    { code: 'JOD', name: isAr ? 'دينار أردني (JOD)' : 'JOD' },
+    { code: 'MAD', name: isAr ? 'درهم مغربي (MAD)' : 'MAD' },
     { code: 'USD', name: isAr ? 'دولار أمريكي (USD)' : 'USD' },
     { code: 'EUR', name: isAr ? 'يورو (EUR)' : 'EUR' },
+    { code: 'GBP', name: isAr ? 'جنيه إسترليني (GBP)' : 'GBP' },
+    { code: 'CAD', name: isAr ? 'دولار كندي (CAD)' : 'CAD' },
+    { code: 'TRY', name: isAr ? 'ليرة تركية (TRY)' : 'TRY' },
+    { code: 'AUD', name: isAr ? 'دولار أسترالي (AUD)' : 'AUD' },
   ];
 
   let pathname = '';
