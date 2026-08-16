@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaCoins, FaChevronDown } from 'react-icons/fa';
+import { Coins, ChevronDown } from 'lucide-react';
 
 export default function CurrencySelector({ isRtl, currency, setCurrency }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // قائمة العملات المطابقة تمامًا لما هو موجود في صفحة الإعدادات
   const currencies = [
-    { code: 'USD', symbol: '$', labelAr: 'دولار أمريكي', labelEn: 'US Dollar' },
     { code: 'EGP', symbol: 'ج.م', labelAr: 'جنيه مصري', labelEn: 'EGP' },
     { code: 'SAR', symbol: 'ر.س', labelAr: 'ريال سعودي', labelEn: 'SAR' },
+    { code: 'AED', symbol: 'د.إ', labelAr: 'درهم إماراتي', labelEn: 'AED' },
+    { code: 'KWD', symbol: 'د.ك', labelAr: 'دينار كويتي', labelEn: 'KWD' },
+    { code: 'QAR', symbol: 'ر.ق', labelAr: 'ريال قطري', labelEn: 'QAR' },
+    { code: 'USD', symbol: '$', labelAr: 'دولار أمريكي', labelEn: 'US Dollar' },
     { code: 'EUR', symbol: '€', labelAr: 'يورو', labelEn: 'Euro' },
   ];
 
@@ -34,29 +38,33 @@ export default function CurrencySelector({ isRtl, currency, setCurrency }) {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* زر اختار العملة */}
+      {/* زر اختيار العملة */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg transition-all duration-200 focus:outline-none"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg transition-all duration-200 focus:outline-none cursor-pointer"
       >
-        <FaCoins className="text-amber-400 text-xs" />
+        <Coins className="text-amber-400 w-3.5 h-3.5" />
         <span className="font-semibold">{currentCurrencyObj.code}</span>
-        <FaChevronDown className={`text-[10px] text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* القائمة المنسدلة */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 w-36 bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden text-xs ${
+          className={`absolute top-full mt-2 w-44 bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden text-xs max-h-60 overflow-y-auto scrollbar-thin ${
             isRtl ? 'left-0' : 'right-0'
           }`}
         >
           <div className="py-1 divide-y divide-slate-800/50">
             {currencies.map((item) => (
               <button
+                type="button"
                 key={item.code}
                 onClick={() => handleSelect(item.code)}
-                className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors ${
+                className={`w-full px-3 py-2 flex items-center justify-between transition-colors cursor-pointer ${
+                  isRtl ? 'text-right' : 'text-left'
+                } ${
                   currency === item.code
                     ? 'bg-amber-500/10 text-amber-400 font-semibold'
                     : 'text-slate-300 hover:bg-slate-800/50'
