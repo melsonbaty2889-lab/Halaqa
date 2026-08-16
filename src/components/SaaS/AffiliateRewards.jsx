@@ -29,7 +29,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
   // نصوص الصفحة المحدثة لتعكس الخصم على الاشتراك
   const labels = {
     badge: isEn ? "Referral & Discount Program" : "برنامج الإحالات وخصومات الاشتراك",
-    heroTitle: isEn ? "Invite Academies & Get Discounts on Your Subscription" : "ادعُ المقارئ واصل على خصم مباشر على اشتراكك",
+    heroTitle: isEn ? "Invite Academies & Get Discounts on Your Subscription" : "ادعُ المقارئ واحصل على خصم مباشر على اشتراكك",
     heroDesc: isEn 
       ? "Share your referral link with other academy managers. When they subscribe to Smart Halaqa, you get a discount applied to your next platform renewal." 
       : "شارك رابط الإحالة الخاص بك مع مديري المقارئ والأكاديميات الأخرى. عند تجديد أو اشتراك أي أكاديمية عن طريقك، تحصل على خصم مباشر يُطبّق على فاتورة اشتراكك القادمة.",
