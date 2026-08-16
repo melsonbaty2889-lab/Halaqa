@@ -172,15 +172,15 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           border: `1px solid ${C.dark.border}`
         }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text.body, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <li style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.brandEmerald.DEFAULT }} />
               <span>إدارة عدد غير محدود من الطلاب والحلقات</span>
             </li>
-            <li style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.brandEmerald.DEFAULT }} />
               <span>تقارير وأداء لحظي وتنبيهات مستمرة</span>
             </li>
-            <li style={{ display: 'flex', itemsCenter: 'center', gap: '8px' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.brandEmerald.DEFAULT }} />
               <span>دعم فني وتحديثات مستمرة للباقة الاحترافية</span>
             </li>
