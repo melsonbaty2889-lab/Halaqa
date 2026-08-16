@@ -5,15 +5,23 @@ export default function CurrencySelector({ isRtl, currency, setCurrency }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // قائمة العملات المطابقة تمامًا لما هو موجود في صفحة الإعدادات
+  // قائمة العملات الشاملة المطابقة لصفحة الإعدادات والهيدر
   const currencies = [
     { code: 'EGP', symbol: 'ج.م', labelAr: 'جنيه مصري', labelEn: 'EGP' },
     { code: 'SAR', symbol: 'ر.س', labelAr: 'ريال سعودي', labelEn: 'SAR' },
     { code: 'AED', symbol: 'د.إ', labelAr: 'درهم إماراتي', labelEn: 'AED' },
     { code: 'KWD', symbol: 'د.ك', labelAr: 'دينار كويتي', labelEn: 'KWD' },
     { code: 'QAR', symbol: 'ر.ق', labelAr: 'ريال قطري', labelEn: 'QAR' },
+    { code: 'OMR', symbol: 'ر.ع.', labelAr: 'ريال عماني', labelEn: 'OMR' },
+    { code: 'BHD', symbol: 'د.ب.', labelAr: 'دينار بحريني', labelEn: 'BHD' },
+    { code: 'JOD', symbol: 'د.أ', labelAr: 'دينار أردني', labelEn: 'JOD' },
+    { code: 'MAD', symbol: 'د.م.', labelAr: 'درهم مغربي', labelEn: 'MAD' },
     { code: 'USD', symbol: '$', labelAr: 'دولار أمريكي', labelEn: 'US Dollar' },
     { code: 'EUR', symbol: '€', labelAr: 'يورو', labelEn: 'Euro' },
+    { code: 'GBP', symbol: '£', labelAr: 'جنيه إسترليني', labelEn: 'GBP' },
+    { code: 'CAD', symbol: 'CA$', labelAr: 'دولار كندي', labelEn: 'CAD' },
+    { code: 'TRY', symbol: '₺', labelAr: 'ليرة تركية', labelEn: 'TRY' },
+    { code: 'AUD', symbol: 'A$', labelAr: 'دولار أسترالي', labelEn: 'AUD' },
   ];
 
   // إغلاق القائمة عند الضغط خارجها
