@@ -16,7 +16,7 @@ import SignUpPage from '@/components/Auth/SignUpPage';
 import ForgotPassword from '@/components/Auth/ForgotPassword';
 import UpdatePassword from '@/components/Auth/UpdatePassword';
 import MainApp from '@/components/MainApp';
-import CreateAcademy from '@/components/CreateAcademy';
+import CreateAcademy from '@/components/create-academy/CreateAcademy';
 import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
