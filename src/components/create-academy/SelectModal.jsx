@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, X, Check } from 'lucide-react';
 
-export default function SelectModal({ isOpen, onClose, title, options, selectedValue, onSelect }) {
+export default function SelectModal({ isOpen, onClose, title, options = [], selectedValue, onSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   if (!isOpen) return null;
@@ -23,6 +23,7 @@ export default function SelectModal({ isOpen, onClose, title, options, selectedV
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-[#172033]">
           <h3 className="text-base font-bold text-slate-100">{title}</h3>
           <button 
+            type="button"
             onClick={onClose} 
             className="p-1.5 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-xl transition"
           >
@@ -81,7 +82,7 @@ export default function SelectModal({ isOpen, onClose, title, options, selectedV
               );
             })
           ) : (
-            <div className="p-8 text-center text-slate-500 text-sm">لا توجد نتائج مطابقة لـ "{searchTerm}"</div>
+            <div className="p-8 text-center text-slate-500 text-sm">لا توجد نتائج مطابقة</div>
           )}
         </div>
 
