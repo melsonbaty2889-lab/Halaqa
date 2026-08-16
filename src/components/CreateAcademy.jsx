@@ -22,36 +22,21 @@ import {
 } from 'lucide-react';
 
 // ==========================================
-// 1. الإعدادات المرجعية للتوسع المستقبلي
+// 1. استيراد الثوابت المرجعية الحقيقية
 // ==========================================
-const CONFIGS = {
-  currencies: [
-    { code: 'EGP', symbol: 'EGP', name: 'الجنيه المصري', country: 'مصر' },
-    { code: 'SAR', symbol: 'SAR', name: 'الريال السعودي', country: 'السعودية' },
-    { code: 'USD', symbol: '$', name: 'الدولار الأمريكي', country: 'دولي' },
-    { code: 'AED', symbol: 'AED', name: 'الدرهم الإماراتي', country: 'الإمارات' },
-    { code: 'EUR', symbol: '€', name: 'اليورو الأوروبي', country: 'أوروبا' },
-    { code: 'KWD', symbol: 'KWD', name: 'الدينار الكويتي', country: 'الكويت' },
-    { code: 'QAR', symbol: 'QAR', name: 'الريال القطري', country: 'قطر' },
-  ],
-  languages: [
-    { code: 'ar', name: 'العربية', dir: 'rtl', flag: '🇪🇬' },
-    { code: 'en', name: 'English', dir: 'ltr', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', dir: 'ltr', flag: '🇫🇷' },
-  ],
-  calendars: [
-    { code: 'gregorian', name: 'ميلادي (Gregorian)' },
-    { code: 'hijri', name: 'هجري (Hijri)' },
-  ],
-  timezones: [
-    { code: 'Africa/Cairo', label: 'القاهرة (GMT+2)', offset: '+02:00' },
-    { code: 'Asia/Riyadh', label: 'الرياض (GMT+3)', offset: '+03:00' },
-    { code: 'Asia/Dubai', label: 'دبي (GMT+4)', offset: '+04:00' },
-    { code: 'Europe/London', label: 'لندن (GMT+0)', offset: '+00:00' },
-    { code: 'America/New_York', label: 'نيويورك (GMT-5)', offset: '-05:00' },
-    { code: 'UTC', label: 'التوقيت العالمي (UTC)', offset: '+00:00' },
-  ]
-};
+import { CURRENCIES } from '../constants/currencies';
+import { COUNTRIES } from '../constants/countries';
+
+const LANGUAGES = [
+  { code: 'ar', name: 'العربية', dir: 'rtl', flag: '🇪🇬' },
+  { code: 'en', name: 'English', dir: 'ltr', flag: '🇺🇸' },
+  { code: 'fr', name: 'Français', dir: 'ltr', flag: '🇫🇷' },
+];
+
+const CALENDARS = [
+  { code: 'gregorian', name: 'ميلادي (Gregorian)' },
+  { code: 'hijri', name: 'هجري (Hijri)' },
+];
 
 export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
   const [step, setStep] = useState(1);
@@ -127,26 +112,28 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
     const query = searchQuery.trim().toLowerCase();
 
     if (activeModal === 'currency') {
-      return CONFIGS.currencies.filter(c => 
-        c.name.toLowerCase().includes(query) || 
-        c.code.toLowerCase().includes(query) || 
-        c.country.toLowerCase().includes(query)
+      const currenciesList = Array.isArray(CURRENCIES) ? CURRENCIES : Object.values(CURRENCIES || {});
+      return currenciesList.filter(c => 
+        (c.name || '').toLowerCase().includes(query) || 
+        (c.code || c.currency || '').toLowerCase().includes(query) || 
+        (c.country || '').toLowerCase().includes(query)
       );
     }
     if (activeModal === 'language_code') {
-      return CONFIGS.languages.filter(l => 
+      return LANGUAGES.filter(l => 
         l.name.toLowerCase().includes(query) || 
         l.code.toLowerCase().includes(query)
       );
     }
     if (activeModal === 'timezone') {
-      return CONFIGS.timezones.filter(t => 
-        t.label.toLowerCase().includes(query) || 
-        t.code?.toLowerCase().includes(query)
+      const countriesList = Array.isArray(COUNTRIES) ? COUNTRIES : Object.values(COUNTRIES || {});
+      return countriesList.filter(t => 
+        (t.name || t.label || t.country || '').toLowerCase().includes(query) || 
+        (t.code || '').toLowerCase().includes(query)
       );
     }
     if (activeModal === 'calendar_type') {
-      return CONFIGS.calendars.filter(c => 
+      return CALENDARS.filter(c => 
         c.name.toLowerCase().includes(query)
       );
     }
@@ -279,10 +266,13 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
   }
 
   // الحصول على المسميات المعروضة بسهولة
-  const activeCurrencyObj = CONFIGS.currencies.find(c => c.code === formData.currency);
-  const activeLangObj = CONFIGS.languages.find(l => l.code === formData.language_code);
-  const activeTimezoneObj = CONFIGS.timezones.find(t => t.code === formData.timezone);
-  const activeCalendarObj = CONFIGS.calendars.find(c => c.code === formData.calendar_type);
+  const currenciesList = Array.isArray(CURRENCIES) ? CURRENCIES : Object.values(CURRENCIES || {});
+  const countriesList = Array.isArray(COUNTRIES) ? COUNTRIES : Object.values(COUNTRIES || {});
+
+  const activeCurrencyObj = currenciesList.find(c => (c.code || c.currency) === formData.currency);
+  const activeLangObj = LANGUAGES.find(l => l.code === formData.language_code);
+  const activeTimezoneObj = countriesList.find(t => (t.code || t.value) === formData.timezone);
+  const activeCalendarObj = CALENDARS.find(c => c.code === formData.calendar_type);
 
   return (
     <div style={{
@@ -451,8 +441,8 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                     onClick={() => { setActiveModal('currency'); setSearchQuery(''); }}
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
-                      <span style={{ color: '#C9A84C', fontWeight: 'bold' }}>{activeCurrencyObj?.symbol}</span>
-                      <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{activeCurrencyObj?.name}</span>
+                      <span style={{ color: '#C9A84C', fontWeight: 'bold' }}>{activeCurrencyObj?.symbol || activeCurrencyObj?.code}</span>
+                      <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{activeCurrencyObj?.name || 'اختر العملة'}</span>
                     </span>
                     <ChevronDown size={16} color="#64748B" />
                   </button>
@@ -468,7 +458,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                     className="custom-select-trigger"
                     onClick={() => { setActiveModal('calendar_type'); setSearchQuery(''); }}
                   >
-                    <span>{activeCalendarObj?.name}</span>
+                    <span>{activeCalendarObj?.name || 'اختر التقويم'}</span>
                     <ChevronDown size={16} color="#64748B" />
                   </button>
                 </div>
@@ -487,7 +477,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                     onClick={() => { setActiveModal('timezone'); setSearchQuery(''); }}
                   >
                     <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                      {activeTimezoneObj?.label}
+                      {activeTimezoneObj?.name || activeTimezoneObj?.label || 'اختر المنطقة الزمنية'}
                     </span>
                     <ChevronDown size={16} color="#64748B" />
                   </button>
@@ -505,7 +495,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span>{activeLangObj?.flag}</span>
-                      <span>{activeLangObj?.name}</span>
+                      <span>{activeLangObj?.name || 'اختر اللغة'}</span>
                     </span>
                     <ChevronDown size={16} color="#64748B" />
                   </button>
@@ -532,7 +522,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
                   <span style={{ color: '#94a3b8' }}>العملة الرسمية:</span>
-                  <span>{activeCurrencyObj?.name} ({activeCurrencyObj?.code})</span>
+                  <span>{activeCurrencyObj?.name} ({activeCurrencyObj?.code || activeCurrencyObj?.currency})</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
                   <span style={{ color: '#94a3b8' }}>التقويم المعتمد:</span>
@@ -540,7 +530,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
                   <span style={{ color: '#94a3b8' }}>المنطقة الزمنية:</span>
-                  <span>{activeTimezoneObj?.label}</span>
+                  <span>{activeTimezoneObj?.name || activeTimezoneObj?.label}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#94a3b8' }}>اللغة الأساسية:</span>
@@ -683,7 +673,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
               </button>
             </div>
 
-            {/* حقل البحث داخل المودال (للتوسع المستقبلي) */}
+            {/* حقل البحث داخل المودال */}
             {(activeModal === 'currency' || activeModal === 'timezone') && (
               <div style={{ padding: '12px 16px', background: '#0d1824', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ position: 'relative' }}>
@@ -716,20 +706,20 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
                   لا توجد نتائج تطابق البحث
                 </div>
               ) : (
-                filteredModalOptions.map((opt) => {
-                  const itemValue = opt.code || opt.value;
+                filteredModalOptions.map((opt, idx) => {
+                  const itemValue = opt.code || opt.currency || opt.value || opt.id;
                   const isSelected = formData[activeModal] === itemValue;
 
                   return (
                     <div 
-                      key={itemValue}
+                      key={itemValue || idx}
                       className={`option-item ${isSelected ? 'selected' : ''}`}
                       onClick={() => handleSelectOption(activeModal, itemValue)}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {opt.flag && <span>{opt.flag}</span>}
                         {opt.symbol && <span style={{ color: '#C9A84C', fontWeight: 'bold', width: '35px' }}>{opt.symbol}</span>}
-                        <span>{opt.name || opt.label}</span>
+                        <span>{opt.name || opt.label || opt.country}</span>
                       </div>
 
                       <div style={{
@@ -825,7 +815,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
         .option-item {
           padding: 14px 18px;
           display: flex;
-          align-items: center;
+          alignItems: center;
           justify-content: space-between;
           color: #E2E8F0;
           font-size: 13px;
