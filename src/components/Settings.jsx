@@ -106,7 +106,9 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
         setFormData(fetched);
         setInitialData(fetched);
 
-        // إعلام الهيدر بالعملة الحالية فور تحميل البيانات
+        // إعلام الهيدر بالعملة الحالية فور تحميل البيانات وتخزينها محلياً
+        localStorage.setItem('app_currency', fetched.currency);
+        window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: fetched.currency }));
         if (onCurrencyChange && fetched.currency) {
           onCurrencyChange(fetched.currency);
         }
@@ -283,7 +285,10 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
       setFormData(updatedState);
       setInitialData(updatedState);
 
-      // 💡 التحديث المباشر واللحظي للعملة في الهيدر وكامل المنظومة
+      // 🔴 التعديل الأساسي والمباشر: حفظ العملة محلياً وإطلاق حدث البث للهيدر
+      localStorage.setItem('app_currency', formData.currency);
+      window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: formData.currency }));
+
       if (onCurrencyChange && formData.currency) {
         onCurrencyChange(formData.currency);
       }
