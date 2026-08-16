@@ -252,6 +252,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }), [isPlatformAdmin, isRtl, academyName, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
+  // دالة تحديث العملة فورياً
+  const handleCurrencyUpdate = (newCurrency) => {
+    setCurrency(newCurrency);
+  };
+
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -304,7 +309,16 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'payments':
         return <Payments students={students} academyId={academyId} currency={currency} />;
       case 'settings':
-        return <Settings academyId={academyId} session={session} currentCurrency={currency} currentTimezone={timezone} currentCountryCode={countryCode} />;
+        return (
+          <Settings 
+            academyId={academyId} 
+            session={session} 
+            currentCurrency={currency} 
+            currentTimezone={timezone} 
+            currentCountryCode={countryCode} 
+            onCurrencyChange={handleCurrencyUpdate}
+          />
+        );
       default:
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
     }
