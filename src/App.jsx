@@ -385,8 +385,30 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
-    return <CreateAcademy session={{ user }} onAcademyCreated={refreshStatus} onLogout={logout} />;
-  }
+  return (
+    <CreateAcademy 
+      onLogout={logout} 
+      onSubmitAcademy={async (formData) => {
+        // هنا يتم إرسال بيانات الأكاديمية لقاعدة البيانات (Supabase)
+        const { error } = await supabase.from('academies').insert([
+          {
+            name: formData.name,
+            slug: formData.slug,
+            currency: formData.currency,
+            calendar: formData.calendar,
+            timezone: formData.timezone,
+            language: formData.language,
+            owner_id: user?.id,
+          }
+        ]);
+
+        if (!error && refreshStatus) {
+          await refreshStatus();
+        }
+      }} 
+    />
+  );
+}
 
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
