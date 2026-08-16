@@ -14,25 +14,36 @@ import {
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext'; // 🟢 جلب الـ Context
 
 export default function Header({ 
   activeTab, 
   sidebarOpen, 
   setSidebarOpen, 
   isRtl, 
-  currentCurrency = 'USD',
+  currentCurrency,
   onCurrencyChange
 }) {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language || 'ar';
   const isAr = currentLanguage.startsWith('ar');
 
+  // 🟢 جلب بيان الأكاديمية الحالية من الـ Context
+  const { academy, currentAcademy } = useAcademy();
+  const activeAcademy = academy || currentAcademy;
+
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  // 🟢 تحديد العملة الأولية بالترتيب: props -> localStorage -> academy context -> EGP
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('app_currency') || currentCurrency || 'USD';
+    return (
+      currentCurrency || 
+      localStorage.getItem('app_currency') || 
+      activeAcademy?.currency || 
+      'EGP'
+    );
   });
 
   const [notifications, setNotifications] = useState([]);
@@ -42,10 +53,19 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+  // 🟢 المزامنة الفورية عند تحميل بيانات الأكاديمية من الـ Context (حل مشكلة الـ Refresh)
+  useEffect(() => {
+    if (activeAcademy?.currency) {
+      setSelectedCurrency(activeAcademy.currency);
+      localStorage.setItem('app_currency', activeAcademy.currency);
+    }
+  }, [activeAcademy?.currency]);
+
   // مزامنة العملة القادمة من الـ Props
   useEffect(() => {
     if (currentCurrency) {
       setSelectedCurrency(currentCurrency);
+      localStorage.setItem('app_currency', currentCurrency);
     }
   }, [currentCurrency]);
 
@@ -54,6 +74,7 @@ export default function Header({
     const handleCurrencyUpdate = (event) => {
       if (event.detail) {
         setSelectedCurrency(event.detail);
+        localStorage.setItem('app_currency', event.detail);
       }
     };
 
