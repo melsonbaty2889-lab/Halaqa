@@ -42,11 +42,27 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+  // مزامنة العملة القادمة من الـ Props
   useEffect(() => {
     if (currentCurrency) {
       setSelectedCurrency(currentCurrency);
     }
   }, [currentCurrency]);
+
+  // الاستماع المباشر لحدث تغيير العملة اللحظي من صفحة الإعدادات
+  useEffect(() => {
+    const handleCurrencyUpdate = (event) => {
+      if (event.detail) {
+        setSelectedCurrency(event.detail);
+      }
+    };
+
+    window.addEventListener('currencyUpdated', handleCurrencyUpdate);
+
+    return () => {
+      window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
+    };
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     setLoadingNotifs(true);
@@ -134,6 +150,7 @@ export default function Header({
   const handleSelectCurrency = (code) => {
     setSelectedCurrency(code);
     localStorage.setItem('app_currency', code);
+    window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: code }));
     if (onCurrencyChange) onCurrencyChange(code);
     setShowCurrencyMenu(false);
   };
