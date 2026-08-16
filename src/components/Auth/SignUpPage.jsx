@@ -49,7 +49,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [status, setStatus] = useState({ type: null, msg: '' });
   const [modalContent, setModalContent] = useState(null);
 
-  // قراءة كود الإحالة من الرابط تلقائياً
+  // قراءة كود الإحالة من رابط الصفحة وتخزينه تلقائياً
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -143,6 +143,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
     setLoading(true);
 
     try {
+      // 1. إنشاء الحساب الرئيسي في Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password: password,
@@ -158,6 +159,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
       if (error) throw error;
 
       if (data?.user) {
+        // 2. محاولة تسجيل الموافقة على الشروط
         try {
           await supabase.from('user_consents').insert([
             {
@@ -174,10 +176,10 @@ export default function SignUpPage({ onSwitchToLogin }) {
             }
           ]);
         } catch (consentErr) {
-          console.warn('Consent logging skipped:', consentErr);
+          console.warn('تنبيه: تعذر إدراج موافقة الشروط:', consentErr);
         }
 
-        // تسجيل الإحالة في saas_referrals إذا وجد كود إحالة
+        // 3. محاولة تسجيل سجل الإحالة إذا وُجد كود إحالة
         if (refCode) {
           try {
             const { data: referrer } = await supabase
@@ -196,7 +198,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
               ]);
             }
           } catch (refErr) {
-            console.warn('Referral logging skipped:', refErr);
+            console.warn('تنبيه: تعذر إدراج سجل الإحالة تلقائياً:', refErr);
           }
         }
       }
@@ -215,9 +217,11 @@ export default function SignUpPage({ onSwitchToLogin }) {
       localStorage.removeItem('pending_ref_code');
 
     } catch (err) {
+      console.error("Signup Error Details:", err);
+
       let rawMsg = typeof err === 'string' 
         ? err 
-        : err?.message || (typeof err === 'object' ? JSON.stringify(err) : '');
+        : err?.message || (typeof err === 'object' ? err.error_description || JSON.stringify(err) : '');
 
       let friendlyMessage = rawMsg;
 
