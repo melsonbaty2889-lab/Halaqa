@@ -21,10 +21,10 @@ import { COUNTRIES } from '../../constants/countries';
 
 export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [modalType, setModalType] = useState(null); // 'currency' | 'timezone' | 'calendar' | 'language' | null
+  const [modalType, setModalType] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // حالة النموذج فارغة بالكامل
+  // حالة النموذج بدون بيانات تجريبية
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -45,7 +45,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
     { value: 'fr', label: 'Français', icon: '🇫🇷' },
   ];
 
-  // خيارات النوافذ المنبثقة
   const currencyOptions = (CURRENCIES || []).map((c) => ({
     value: c.code,
     label: `${c.nameAr || c.labelAr || c.code} (${c.code})`,
@@ -60,14 +59,14 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
     icon: c.flag || '🌐',
   }));
 
-  // دوال توليد الـ Slug تلقائياً
+  // توليد الرابط المختصر تلقائياً عند كتابة الاسم
   const handleNameChange = (e) => {
     const nameVal = e.target.value;
     const generatedSlug = nameVal
       .trim()
       .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[^\w\u0621-\u064A-]+/g, '');
+      .replace(/[^\w-]+/g, '');
 
     setFormData((prev) => ({
       ...prev,
@@ -76,7 +75,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
     }));
   };
 
-  // دوال جلب القيم المعروضة
   const getCurrencyDisplay = () => {
     const item = (CURRENCIES || []).find((c) => c.code === formData.currency);
     return item ? `${item.nameAr || item.labelAr} (${item.code})` : formData.currency;
@@ -97,7 +95,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
     return item ? item.label : formData.language;
   };
 
-  // التحقق من اكتمال الخطوات
   const isStep1Valid = formData.name.trim().length >= 2 && formData.slug.trim().length >= 2;
 
   const handleNext = () => {
@@ -153,11 +150,10 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
         </p>
       </div>
 
-      {/* شريط مؤشر الخطوات */}
+      {/* شريط المؤشر */}
       <div className="w-full max-w-md flex items-center justify-between mb-8 px-4 relative">
         <div className="absolute top-1/2 left-8 right-8 h-0.5 bg-slate-800 -translate-y-1/2 -z-0"></div>
 
-        {/* الخطوة 1 */}
         <div className="flex flex-col items-center gap-2 z-10">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
             currentStep > 1 
@@ -173,7 +169,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
           </span>
         </div>
 
-        {/* الخطوة 2 */}
         <div className="flex flex-col items-center gap-2 z-10">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
             currentStep > 2 
@@ -189,7 +184,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
           </span>
         </div>
 
-        {/* الخطوة 3 */}
         <div className="flex flex-col items-center gap-2 z-10">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
             currentStep === 3 ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-400' : 'bg-slate-800 text-slate-400'
@@ -221,25 +215,34 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
                 type="text"
                 value={formData.name}
                 onChange={handleNameChange}
-                placeholder="مثال: أكاديمية اقرأ للعلوم"
-                className="w-full px-4 py-3 bg-[#172033] text-slate-100 placeholder-slate-500 rounded-xl border border-slate-700/60 focus:outline-none focus:border-amber-500 text-sm transition"
+                placeholder=""
+                className="w-full px-4 py-3 bg-[#172033] text-slate-100 rounded-xl border border-slate-700/60 focus:outline-none focus:border-amber-500 text-sm transition"
                 required
+                autoFocus
               />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <LinkIcon size={14} className="text-amber-400" />
-                <span>الرابط الفريد (Slug)</span>
+                <span>رابط الأكاديمية (بالإنجليزي)</span>
               </label>
               <input
                 type="text"
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                placeholder="iqraa"
-                className="w-full px-4 py-3 bg-[#172033] text-slate-100 placeholder-slate-500 rounded-xl border border-slate-700/60 focus:outline-none focus:border-amber-500 text-sm dir-ltr transition"
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                placeholder=""
+                className="w-full px-4 py-3 bg-[#172033] text-slate-100 rounded-xl border border-slate-700/60 focus:outline-none focus:border-amber-500 text-sm dir-ltr transition"
                 required
               />
+              
+              {/* معاينة حية للرابط */}
+              <div className="text-[11px] text-slate-400 dir-ltr pt-1 flex items-center gap-1">
+                <span className="text-slate-500">رابطك المباشر:</span>
+                <span className="text-amber-400/90 font-mono">
+                  https://.../{formData.slug || 'your-academy'}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -254,7 +257,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
               </h2>
             </div>
 
-            {/* زر اختيار العملة */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Coins size={14} className="text-amber-400" />
@@ -270,7 +272,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
               </button>
             </div>
 
-            {/* زر اختيار التقويم */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Calendar size={14} className="text-amber-400" />
@@ -286,7 +287,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
               </button>
             </div>
 
-            {/* زر اختيار المنطقة الزمنية */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Clock size={14} className="text-amber-400" />
@@ -302,7 +302,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
               </button>
             </div>
 
-            {/* زر اختيار اللغة الأساسية */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Languages size={14} className="text-amber-400" />
@@ -325,7 +324,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
           <div className="space-y-6">
             <div className="flex items-center gap-2 text-amber-400 pb-2 border-b border-slate-800/60">
               <Sparkles size={18} />
-              <h2 className="font-bold text-base">ملخص بيانات الأكاديمية الإقليمية:</h2>
+              <h2 className="font-bold text-base">ملخص بيانات الأكاديمية:</h2>
             </div>
 
             <div className="space-y-4 text-sm">
@@ -335,7 +334,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
               </div>
 
               <div className="flex justify-between items-center py-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">الرابط الفريد (Slug):</span>
+                <span className="text-slate-400 font-medium">عنوان الرابط المختصر:</span>
                 <span className="text-amber-400 font-semibold dir-ltr">{formData.slug || 'غير محدد'}</span>
               </div>
 
@@ -362,7 +361,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
           </div>
         )}
 
-        {/* أزرار التنقل السفلية */}
+        {/* أزرار التنقل */}
         <div className="flex items-center gap-3 mt-8 pt-4">
           {currentStep > 1 && (
             <button
