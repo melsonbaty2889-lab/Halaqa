@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, X, ShieldCheck, Globe, Loader2 } from 'lucide-react';
@@ -42,11 +42,27 @@ export default function SignUpPage({ onSwitchToLogin }) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [refCode, setRefCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
   const [modalContent, setModalContent] = useState(null);
+
+  // قراءة كود الإحالة من الرابط تلقائياً
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref) {
+        setRefCode(ref);
+        localStorage.setItem('pending_ref_code', ref);
+      } else {
+        const savedRef = localStorage.getItem('pending_ref_code');
+        if (savedRef) setRefCode(savedRef);
+      }
+    }
+  }, []);
 
   const toggleLanguage = () => {
     const nextLang = isRtl ? 'en' : 'ar';
@@ -133,7 +149,8 @@ export default function SignUpPage({ onSwitchToLogin }) {
         options: {
           data: {
             full_name: fullName.trim(),
-            role: 'admin'
+            role: 'admin',
+            referred_by_code: refCode || null
           }
         }
       });
@@ -141,20 +158,47 @@ export default function SignUpPage({ onSwitchToLogin }) {
       if (error) throw error;
 
       if (data?.user) {
-        await supabase.from('user_consents').insert([
-          {
-            user_id: data.user.id,
-            consent_type: 'terms_and_privacy',
-            version: 'v1.0',
-            is_accepted: true,
-            language_code: isRtl ? 'ar' : 'en',
-            metadata: {
-              platform: 'Smart Halaqa',
-              role: 'admin',
-              signup_source: 'web'
+        try {
+          await supabase.from('user_consents').insert([
+            {
+              user_id: data.user.id,
+              consent_type: 'terms_and_privacy',
+              version: 'v1.0',
+              is_accepted: true,
+              language_code: isRtl ? 'ar' : 'en',
+              metadata: {
+                platform: 'Smart Halaqa',
+                role: 'admin',
+                signup_source: 'web'
+              }
             }
+          ]);
+        } catch (consentErr) {
+          console.warn('Consent logging skipped:', consentErr);
+        }
+
+        // تسجيل الإحالة في saas_referrals إذا وجد كود إحالة
+        if (refCode) {
+          try {
+            const { data: referrer } = await supabase
+              .from('profiles')
+              .select('id, academy_id')
+              .eq('referral_code', refCode)
+              .maybeSingle();
+
+            if (referrer?.academy_id) {
+              await supabase.from('saas_referrals').insert([
+                {
+                  referrer_academy_id: referrer.academy_id,
+                  referred_user_id: data.user.id,
+                  status: 'pending'
+                }
+              ]);
+            }
+          } catch (refErr) {
+            console.warn('Referral logging skipped:', refErr);
           }
-        ]);
+        }
       }
 
       setStatus({
@@ -168,6 +212,7 @@ export default function SignUpPage({ onSwitchToLogin }) {
       setEmail('');
       setPassword('');
       setAcceptedTerms(false);
+      localStorage.removeItem('pending_ref_code');
 
     } catch (err) {
       let rawMsg = typeof err === 'string' 
