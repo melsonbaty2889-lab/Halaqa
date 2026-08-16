@@ -349,8 +349,16 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
     { label: isRtl ? 'درهم إماراتي (AED)' : 'UAE Dirham (AED)', value: 'AED' },
     { label: isRtl ? 'دينار كويتي (KWD)' : 'Kuwaiti Dinar (KWD)', value: 'KWD' },
     { label: isRtl ? 'ريال قطري (QAR)' : 'Qatari Riyal (QAR)', value: 'QAR' },
+    { label: isRtl ? 'ريال عماني (OMR)' : 'Omani Rial (OMR)', value: 'OMR' },
+    { label: isRtl ? 'دينار بحريني (BHD)' : 'Bahraini Dinar (BHD)', value: 'BHD' },
+    { label: isRtl ? 'دينار أردني (JOD)' : 'Jordanian Dinar (JOD)', value: 'JOD' },
+    { label: isRtl ? 'درهم مغربي (MAD)' : 'Moroccan Dirham (MAD)', value: 'MAD' },
     { label: isRtl ? 'دولار أمريكي (USD)' : 'US Dollar (USD)', value: 'USD' },
-    { label: isRtl ? 'يورو (EUR)' : 'Euro (EUR)', value: 'EUR' }
+    { label: isRtl ? 'يورو (EUR)' : 'Euro (EUR)', value: 'EUR' },
+    { label: isRtl ? 'جنيه إسترليني (GBP)' : 'British Pound (GBP)', value: 'GBP' },
+    { label: isRtl ? 'دولار كندي (CAD)' : 'Canadian Dollar (CAD)', value: 'CAD' },
+    { label: isRtl ? 'ليرة تركية (TRY)' : 'Turkish Lira (TRY)', value: 'TRY' },
+    { label: isRtl ? 'دولار أسترالي (AUD)' : 'Australian Dollar (AUD)', value: 'AUD' }
   ];
 
   const timezoneOptions = [
