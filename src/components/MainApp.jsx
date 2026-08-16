@@ -263,7 +263,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <SubscriptionPage session={session} academyId={academyId} onBack={() => setActiveTab('dashboard')} />;
       case 'referrals':
       case 'affiliate-rewards':
-        return <AffiliateRewards />;
+        return <AffiliateRewards academyId={academyId} currency={currency} />;
       case 'realtime-audit':
         return <RealtimeAudit session={session} userRole={userRole} />;
       case 'communication-hub':
@@ -310,7 +310,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
-  // واجهة تحميل بـ Skeleton Loader المتموج
   const skeletonLoader = (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Skeleton width="220px" height="32px" borderRadius="8px" />
