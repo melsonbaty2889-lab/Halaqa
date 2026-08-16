@@ -9,8 +9,8 @@ import { Select } from '@/components/UI/UI.jsx';
 import { useAcademy } from '@/context/AcademyContext';
 
 export default function Settings({ currentAcademyId: propAcademyId, isRtl = true, onCurrencyChange }) {
-  // 1. جلب الأكاديمية من الـ Context كخيار احتياطي أساسي
-  const { academy, currentAcademy } = useAcademy();
+  // 1. جلب الأكاديمية وتابع التحديث المباشر من الـ Context
+  const { academy, currentAcademy, refreshStatus } = useAcademy();
   
   // 2. اعتماد الـ ID المتاح (سواء الممرر عبر Props أو الموجود في Context)
   const activeAcademy = academy || currentAcademy;
@@ -106,12 +106,8 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
         setFormData(fetched);
         setInitialData(fetched);
 
-        // إعلام الهيدر بالعملة الحالية فور تحميل البيانات وتخزينها محلياً
-        localStorage.setItem('app_currency', fetched.currency);
-        window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: fetched.currency }));
-        if (onCurrencyChange && fetched.currency) {
-          onCurrencyChange(fetched.currency);
-        }
+        // 🟢 ملاحظة: تم إزالة استدعاء الأحداث والـ localStorage من هنا لمنع إجبار الهيدر
+        // على التغير لمجرد فتح الصفحة بدون حفظ.
       }
     } catch (err) {
       showToast(isRtl ? 'حدث خطأ أثناء جلب البيانات: ' + err.message : 'Error fetching data: ' + err.message, 'error');
@@ -285,7 +281,12 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
       setFormData(updatedState);
       setInitialData(updatedState);
 
-      // 🔴 التعديل الأساسي والمباشر: حفظ العملة محلياً وإطلاق حدث البث للهيدر
+      // 🟢 1. تحديث الـ Context العام فوراً
+      if (refreshStatus) {
+        await refreshStatus();
+      }
+
+      // 🟢 2. حفظ العملة محلياً وإطلاق حدث البث للهيدر عند الحفظ الفعلي
       localStorage.setItem('app_currency', formData.currency);
       window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: formData.currency }));
 
