@@ -65,7 +65,19 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
   // ------------------------------------------
   // الربط التلقائي والذكاء عند إدخال البيانات
   // ------------------------------------------
-  
+
+  // 🟢 الخطوة 2: تحديد المنطقة الزمنية تلقائياً من متصفح المستخدم عند فتح الصفحة
+  useEffect(() => {
+    try {
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (userTimezone) {
+        setFormData(prev => ({ ...prev, timezone: userTimezone }));
+      }
+    } catch (e) {
+      console.log('Could not detect timezone automatically');
+    }
+  }, []);
+
   // توليد الرابط الفريد تلقائياً من الاسم
   const handleNameChange = (e) => {
     const nameVal = e.target.value;
@@ -271,7 +283,7 @@ export default function CreateAcademy({ session, onAcademyCreated, onLogout }) {
 
   const activeCurrencyObj = currenciesList.find(c => (c.code || c.currency) === formData.currency);
   const activeLangObj = LANGUAGES.find(l => l.code === formData.language_code);
-  const activeTimezoneObj = countriesList.find(t => (t.code || t.value) === formData.timezone);
+  const activeTimezoneObj = countriesList.find(t => (t.code || t.value) === formData.timezone) || { label: formData.timezone };
   const activeCalendarObj = CALENDARS.find(c => c.code === formData.calendar_type);
 
   return (
