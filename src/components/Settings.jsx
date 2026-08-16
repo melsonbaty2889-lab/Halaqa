@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase.js';
 import { Select } from '@/components/UI/UI.jsx';
 import { useAcademy } from '@/context/AcademyContext';
 
-export default function Settings({ currentAcademyId: propAcademyId, isRtl = true }) {
+export default function Settings({ currentAcademyId: propAcademyId, isRtl = true, onCurrencyChange }) {
   // 1. جلب الأكاديمية من الـ Context كخيار احتياطي أساسي
   const { academy, currentAcademy } = useAcademy();
   
@@ -105,6 +105,11 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
         };
         setFormData(fetched);
         setInitialData(fetched);
+
+        // إعلام الهيدر بالعملة الحالية فور تحميل البيانات
+        if (onCurrencyChange && fetched.currency) {
+          onCurrencyChange(fetched.currency);
+        }
       }
     } catch (err) {
       showToast(isRtl ? 'حدث خطأ أثناء جلب البيانات: ' + err.message : 'Error fetching data: ' + err.message, 'error');
@@ -277,6 +282,12 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
 
       setFormData(updatedState);
       setInitialData(updatedState);
+
+      // 💡 التحديث المباشر واللحظي للعملة في الهيدر وكامل المنظومة
+      if (onCurrencyChange && formData.currency) {
+        onCurrencyChange(formData.currency);
+      }
+
       showToast(isRtl ? 'تم حفظ كافة الإعدادات بنجاح' : 'Settings saved successfully');
     } catch (err) {
       showToast((isRtl ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + err.message, 'error');
