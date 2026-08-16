@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Gift, Copy, Check, Share2, Users, Award, 
-  Clock, DollarSign, Sparkles 
+  Clock, DollarSign, Sparkles, Percent, Tag 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { colors as C } from '@/theme/colors.js';
@@ -22,31 +22,35 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
   const [stats, setStats] = useState({
     totalReferrals: 0,
     activeAcademies: 0,
-    pendingRewards: 0,
-    totalEarned: 0
+    pendingDiscount: 0,
+    totalDiscountEarned: 0
   });
 
-  // نصوص الصفحة بكلتا اللغتين
+  // نصوص الصفحة المحدثة لتعكس الخصم على الاشتراك
   const labels = {
-    badge: isEn ? "Affiliate & Referral Program" : "برنامج الشركاء والإحالة",
-    heroTitle: isEn ? "Share Smart Halaqa & Earn Rewards" : "شارِك المنظومة واكسب مكافآت ورصيد مجاني",
-    heroDesc: isEn ? "Share your referral link with academies and Quranic schools to earn free credits and instant commissions with every new subscription." : "انشر رابط الإحالة الخاص بك للأكاديميات والمقارئ القرآنية، واحصل على رصيد مجاني وعمولات فورية مع كل اشتراك جديد.",
+    badge: isEn ? "Referral & Discount Program" : "برنامج الإحالات وخصومات الاشتراك",
+    heroTitle: isEn ? "Invite Academies & Get Discounts on Your Subscription" : "ادعُ المقارئ واصل على خصم مباشر على اشتراكك",
+    heroDesc: isEn 
+      ? "Share your referral link with other academy managers. When they subscribe to Smart Halaqa, you get a discount applied to your next platform renewal." 
+      : "شارك رابط الإحالة الخاص بك مع مديري المقارئ والأكاديميات الأخرى. عند تجديد أو اشتراك أي أكاديمية عن طريقك، تحصل على خصم مباشر يُطبّق على فاتورة اشتراكك القادمة.",
     directLink: isEn ? "Your Direct Referral Link:" : "رابط الإحالة المباشر الخاص بك:",
     copyLink: isEn ? "Copy Link" : "نسخ الرابط",
     copied: isEn ? "Copied!" : "تم النسخ",
     whatsapp: isEn ? "WhatsApp" : "واتساب",
-    step1Title: isEn ? "1. Share Link" : "1. شارك الرابط",
-    step1Desc: isEn ? "Send the link or referral code to your colleagues and academies." : "أرسل الرابط أو كود الإحالة لزملائك وإدارات المقارئ",
-    step2Title: isEn ? "2. Academy Registration" : "2. تسجيل الأكاديمية",
-    step2Desc: isEn ? "The academy creates its account and subscribes to the platform." : "تقوم الأكاديمية بإنشاء حسابها والاشتراك بالمنظومة",
-    step3Title: isEn ? "3. Earn Rewards" : "3. كسب المكافأة",
-    step3Desc: isEn ? "Instant rewards and credits are credited directly to your account." : "ينزل الرصيد والمكافأة المباشرة في حسابك تلقائياً",
+    step1Title: isEn ? "1. Share Your Link" : "1. شارك رابطك",
+    step1Desc: isEn ? "Send the referral link to fellow Quranic academy directors." : "أرسل رابط الإحالة لمديري المقارئ والأكاديميات",
+    step2Title: isEn ? "2. Academy Subscribes" : "2. اشتراك الأكاديمية",
+    step2Desc: isEn ? "The new academy signs up and pays for their subscription." : "تقوم الأكاديمية الجديدة بالتسجيل وسداد الاشتراك",
+    step3Title: isEn ? "3. Get Your Discount" : "3. احصل على الخصم",
+    step3Desc: isEn ? "Discount is automatically applied to your next billing cycle." : "يتم تطبيق الخصم تلقائياً على فاتورة اشتراكك القادمة",
     totalReferrals: isEn ? "Total Referrals" : "إجمالي الإحالات",
-    activeAcademies: isEn ? "Active Academies" : "أكاديميات مشتركة",
-    pendingRewards: isEn ? "Pending Rewards" : "مكافآت معلقة",
-    totalEarned: isEn ? "Total Earned" : "إجمالي المكتسب",
-    emptyTitle: isEn ? "Referrals & Rewards History" : "سجل الإحالات والأرباح",
-    emptyDesc: isEn ? "You haven't referred any academies yet. Share your link to start earning automatic rewards!" : "لم تقم بأي إحالات بعد. قم بمشاركة رابطك المباشر لبدء احتساب المكافآت تلقائياً."
+    activeAcademies: isEn ? "Subscribed Academies" : "أكاديميات مشتركة",
+    pendingDiscount: isEn ? "Next Renewal Discount" : "خصم التجديد القادم",
+    totalDiscountEarned: isEn ? "Total Saved" : "إجمالي الوفر من الخصومات",
+    emptyTitle: isEn ? "Referrals & Discount History" : "سجل الإحالات والخصومات",
+    emptyDesc: isEn 
+      ? "You haven't referred any academies yet. Share your link now to lower your next subscription payment!" 
+      : "لم تقم بأي إحالات بعد. قم بمشاركة رابطك المباشر الآن لتخفيض قيمة اشتراكك القادم!"
   };
 
   useEffect(() => {
@@ -98,8 +102,8 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
             setStats({
               totalReferrals: total,
               activeAcademies: active,
-              pendingRewards: pending,
-              totalEarned: earned
+              pendingDiscount: pending,
+              totalDiscountEarned: earned
             });
           }
         }
@@ -129,8 +133,8 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
 
   const handleShareWhatsApp = () => {
     const msg = isEn
-      ? `Join Smart Halaqa platform using my referral link:\n${referralLink}`
-      : `انضم إلى منصة إدارة المقارئ والحلقات الذكية عبر الرابط التالي:\n${referralLink}`;
+      ? `Join Smart Halaqa platform to manage Quranic academies using my referral link and get an exclusive discount:\n${referralLink}`
+      : `انضم إلى منصة إدارة المقارئ والحلقات الذكية عبر رابطي واحصل على خصم خاص على اشتراكك:\n${referralLink}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -147,8 +151,8 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         padding: '24px',
         position: 'relative'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: C.brandEmerald?.bgGlow || 'rgba(16,185,129,0.1)', color: C.brandEmerald?.DEFAULT || '#10B981', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', width: 'fit-content', marginBottom: '14px' }}>
-          <Gift size={14} />
+        <div style={{ display: 'flex', itemsCenter: 'center', gap: '8px', padding: '6px 12px', background: C.brandEmerald?.bgGlow || 'rgba(16,185,129,0.1)', color: C.brandEmerald?.DEFAULT || '#10B981', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', width: 'fit-content', marginBottom: '14px' }}>
+          <Tag size={14} />
           <span>{labels.badge}</span>
         </div>
 
@@ -243,7 +247,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
           { step: '3', title: labels.step3Title, desc: labels.step3Desc }
         ].map((item, idx) => (
           <div key={idx} style={{ background: C.dark.card, border: `1px solid ${C.dark.border}`, padding: '14px', borderRadius: '12px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: C.brandEmerald?.bgGlow || 'rgba(16,185,129,0.1)', color: C.brandEmerald?.DEFAULT || '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: C.brandEmerald?.bgGlow || 'rgba(16,185,129,0.1)', color: C.brandEmerald?.DEFAULT || '#10B981', display: 'flex', itemsCenter: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
               {item.step}
             </div>
             <div>
@@ -254,13 +258,13 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         ))}
       </div>
 
-      {/* Metrics Cards */}
+      {/* Metrics Cards - Discount Focused */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
         {[
           { label: labels.totalReferrals, val: stats.totalReferrals, icon: Users, color: '#3B82F6' },
           { label: labels.activeAcademies, val: stats.activeAcademies, icon: Award, color: '#10B981' },
-          { label: labels.pendingRewards, val: `${stats.pendingRewards} ${currency}`, icon: Clock, color: '#F59E0B' },
-          { label: labels.totalEarned, val: `${stats.totalEarned} ${currency}`, icon: DollarSign, color: '#8B5CF6' }
+          { label: labels.pendingDiscount, val: `${stats.pendingDiscount} ${currency}`, icon: Percent, color: '#F59E0B' },
+          { label: labels.totalDiscountEarned, val: `${stats.totalDiscountEarned} ${currency}`, icon: DollarSign, color: '#8B5CF6' }
         ].map((m, i) => (
           <div key={i} style={{ background: C.dark.card, border: `1px solid ${C.dark.border}`, borderRadius: '14px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
