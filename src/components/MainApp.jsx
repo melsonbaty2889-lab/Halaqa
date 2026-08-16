@@ -241,7 +241,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [halaqas, teachers, isRtl]);
 
   const preloadedDashboardData = useMemo(() => ({
-    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || "الأكاديمية"),
+    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || (isRtl ? "الأكاديمية" : "Academy")),
     role: userRole || 'staff', 
     is_activated: isAcademyActive,
     stats: {
@@ -263,7 +263,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <SubscriptionPage session={session} academyId={academyId} onBack={() => setActiveTab('dashboard')} />;
       case 'referrals':
       case 'affiliate-rewards':
-        return <AffiliateRewards academyId={academyId} currency={currency} />;
+        return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
       case 'realtime-audit':
         return <RealtimeAudit session={session} userRole={userRole} />;
       case 'communication-hub':
