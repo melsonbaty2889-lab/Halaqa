@@ -6,6 +6,10 @@ import { Card, PageHeader, TH, TD, Badge, Btn } from '@/components/UI/UI.jsx';
 
 const DEFAULT_SUBSCRIPTION_AMOUNT = 150;
 
+// 💡 دوال مساعدة معيارية لفحص حالات السداد لضمان التوافق مع البيانات القديمة والجديدة
+const checkIsPaid = (status) => status === 'paid' || status === 'مدفوع';
+const checkIsPartial = (status) => status === 'partially_paid' || status === 'مدفوع جزئياً';
+
 export default function Payments({ students, academyId }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
@@ -110,11 +114,12 @@ export default function Payments({ students, academyId }) {
       return;
     }
 
-    let status = 'غير مدفوع';
+    // 💡 حفظ الحالات بقيم معيارية باللغة الإنجليزية لتسهيل التعدد اللغوي والتقارير
+    let status = 'pending';
     if (parsedAmount >= collectStudent.expectedAmount) {
-      status = 'مدفوع';
+      status = 'paid';
     } else if (parsedAmount > 0) {
-      status = 'مدفوع جزئياً';
+      status = 'partially_paid';
     }
 
     const payload = {
@@ -145,8 +150,8 @@ export default function Payments({ students, academyId }) {
     const currency = student.currency || (isRtlLang ? 'ج.م' : 'EGP');
     const studentName = getStudentName(student);
     
-    const isPaid = currentRecord?.status === 'مدفوع';
-    const isPartial = currentRecord?.status === 'مدفوع جزئياً';
+    const isPaid = checkIsPaid(currentRecord?.status);
+    const isPartial = checkIsPartial(currentRecord?.status);
     const paidAmount = currentRecord?.amount || 0;
     const remainingAmount = expectedAmount - paidAmount;
 
@@ -217,9 +222,9 @@ export default function Payments({ students, academyId }) {
   students?.forEach(s => {
     const rec = paymentsData[s.id];
     const expected = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
-    if (rec?.status === 'مدفوع') {
+    if (checkIsPaid(rec?.status)) {
       totalCollected += rec.amount || expected;
-    } else if (rec?.status === 'مدفوع جزئياً') {
+    } else if (checkIsPartial(rec?.status)) {
       totalCollected += rec.amount || 0;
       totalPending += Math.max(0, expected - (rec.amount || 0));
     } else {
@@ -239,8 +244,8 @@ export default function Payments({ students, academyId }) {
     const matchesSearch = studentName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           parentPhone.includes(searchTerm);
     
-    const isPaid = rec?.status === 'مدفوع';
-    const isPartial = rec?.status === 'مدفوع جزئياً';
+    const isPaid = checkIsPaid(rec?.status);
+    const isPartial = checkIsPartial(rec?.status);
 
     if (activeTab === 'paid') return matchesSearch && (isPaid || isPartial);
     if (activeTab === 'pending') return matchesSearch && !isPaid;
@@ -362,7 +367,7 @@ export default function Payments({ students, academyId }) {
         </div>
       </div>
 
-      {/* جدول البيانات واسعراض الطلاب */}
+      {/* جدول البيانات واستعراض الطلاب */}
       <Card style={{ padding: 0, background: 'transparent', boxShadow: 'none' }}>
         {loading ? (
           <>
@@ -406,8 +411,8 @@ export default function Payments({ students, academyId }) {
             <div className="mobile-view">
               {filteredStudents?.map(s => {
                 const rec = paymentsData[s.id];
-                const isPaid = rec?.status === 'مدفوع';
-                const isPartial = rec?.status === 'مدفوع جزئياً';
+                const isPaid = checkIsPaid(rec?.status);
+                const isPartial = checkIsPartial(rec?.status);
                 const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
                 const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
 
@@ -452,8 +457,8 @@ export default function Payments({ students, academyId }) {
                 <tbody>
                   {filteredStudents?.map(s => {
                     const rec = paymentsData[s.id];
-                    const isPaid = rec?.status === 'مدفوع';
-                    const isPartial = rec?.status === 'مدفوع جزئياً';
+                    const isPaid = checkIsPaid(rec?.status);
+                    const isPartial = checkIsPartial(rec?.status);
                     const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
                     const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
 
