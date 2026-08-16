@@ -9,11 +9,11 @@ import {
   Coins, 
   Check, 
   CheckCheck, 
-  Trash2 
+  Trash2,
+  ChevronDown
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
-import { colors as C } from '@/constants/colors';
 
 export default function Header({ 
   activeTab, 
@@ -41,6 +41,12 @@ export default function Header({
   const currencyRef = useRef(null);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+
+  useEffect(() => {
+    if (currentCurrency) {
+      setSelectedCurrency(currentCurrency);
+    }
+  }, [currentCurrency]);
 
   const fetchNotifications = useCallback(async () => {
     setLoadingNotifs(true);
@@ -90,11 +96,13 @@ export default function Header({
   }, []);
 
   const currencies = [
-    { code: 'USD', name: 'USD' },
-    { code: 'EGP', name: 'EGP' },
-    { code: 'SAR', name: 'SAR' },
-    { code: 'EUR', name: 'EUR' },
-    { code: 'AED', name: 'AED' },
+    { code: 'EGP', name: isAr ? 'جنيه مصري (EGP)' : 'EGP' },
+    { code: 'SAR', name: isAr ? 'ريال سعودي (SAR)' : 'SAR' },
+    { code: 'AED', name: isAr ? 'درهم إماراتي (AED)' : 'AED' },
+    { code: 'KWD', name: isAr ? 'دينار كويتي (KWD)' : 'KWD' },
+    { code: 'QAR', name: isAr ? 'ريال قطري (QAR)' : 'QAR' },
+    { code: 'USD', name: isAr ? 'دولار أمريكي (USD)' : 'USD' },
+    { code: 'EUR', name: isAr ? 'يورو (EUR)' : 'EUR' },
   ];
 
   let pathname = '';
@@ -150,341 +158,184 @@ export default function Header({
   };
 
   const activeRtl = isRtl !== undefined ? isRtl : isAr;
-  const dropdownPositionStyle = activeRtl
-    ? { left: 0, right: 'auto' }
-    : { right: 0, left: 'auto' };
 
   return (
-    <header style={{
-      minHeight: '60px',
-      backgroundColor: C.dark.surface,
-      borderBottom: `1px solid ${C.dark.border}`,
-      padding: '8px 12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      color: C.text.title,
-      direction: activeRtl ? 'rtl' : 'ltr',
-      gap: '8px',
-      flexWrap: 'nowrap'
-    }}>
-      {/* القسم الأيسر */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+    <header className="sticky top-0 z-50 min-h-[60px] px-3 py-2 bg-[#0b132b]/80 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between gap-2 shadow-lg text-slate-100" dir={activeRtl ? 'rtl' : 'ltr'}>
+      {/* القسم الأيسر - العنوان وزر القائمة */}
+      <div className="flex items-center gap-2.5 flex-1 min-w-0">
         <button
+          type="button"
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
-          style={{
-            background: C.dark.buttonDark,
-            border: `1px solid ${C.dark.border}`,
-            color: C.primary.DEFAULT,
-            padding: '8px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '0.95rem',
-            flexShrink: 0
-          }}
+          className="p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 text-emerald-400 transition-all duration-200 cursor-pointer flex-shrink-0"
           title={isAr ? "القائمة" : "Menu"}
         >
           <Menu size={18} />
         </button>
 
-        <h1 style={{
-          margin: 0,
-          fontSize: '0.88rem',
-          fontWeight: '700',
-          color: C.text.title,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          lineHeight: '1.2'
-        }}>
+        <h1 className="m-0 text-sm font-bold text-slate-100 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">
           {pageTitle}
         </h1>
       </div>
 
-      {/* القسم الأيمن */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-        {/* العملات */}
-        <div style={{ position: 'relative' }} ref={currencyRef}>
+      {/* القسم الأيمن - الأدوات والقوائم */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* اختيار العملة */}
+        <div className="relative" ref={currencyRef}>
           <button
+            type="button"
             onClick={() => {
               setShowCurrencyMenu(!showCurrencyMenu);
               setShowNotifMenu(false);
               setShowProfileMenu(false);
             }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '6px 8px',
-              background: C.dark.buttonDark,
-              border: `1px solid ${C.dark.border}`,
-              borderRadius: '6px',
-              color: C.primary.DEFAULT,
-              fontSize: '0.72rem',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-xl text-amber-400 text-xs font-medium transition-all duration-200 cursor-pointer"
           >
-            <Coins size={14} />
-            <span>{selectedCurrency}</span>
+            <Coins size={14} className="text-amber-400" />
+            <span className="font-semibold text-slate-200">{selectedCurrency}</span>
+            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${showCurrencyMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {showCurrencyMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '40px',
-              ...dropdownPositionStyle,
-              backgroundColor: C.dark.card,
-              border: `1px solid ${C.dark.border}`,
-              borderRadius: '8px',
-              padding: '6px 0',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
-              zIndex: 150,
-              minWidth: '100px',
-              maxWidth: 'calc(100vw - 24px)'
-            }}>
-              {currencies.map((curr) => (
-                <button
-                  key={curr.code}
-                  onClick={() => handleSelectCurrency(curr.code)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: 'transparent',
-                    border: 'none',
-                    color: selectedCurrency === curr.code ? C.brandEmerald.DEFAULT : C.text.body,
-                    fontSize: '0.75rem',
-                    cursor: 'pointer',
-                    textAlign: isAr ? 'right' : 'left'
-                  }}
-                >
-                  <span>{curr.name}</span>
-                  {selectedCurrency === curr.code && <Check size={12} />}
-                </button>
-              ))}
+            <div className={`absolute top-full mt-2 w-48 bg-[#0f172a] border border-slate-800/90 rounded-xl shadow-2xl z-50 overflow-hidden text-xs max-h-60 overflow-y-auto scrollbar-thin ${activeRtl ? 'left-0' : 'right-0'}`}>
+              <div className="py-1 divide-y divide-slate-800/50">
+                {currencies.map((curr) => (
+                  <button
+                    type="button"
+                    key={curr.code}
+                    onClick={() => handleSelectCurrency(curr.code)}
+                    className={`w-full px-3 py-2.5 flex items-center justify-between transition-colors cursor-pointer ${
+                      activeRtl ? 'text-right' : 'text-left'
+                    } ${
+                      selectedCurrency === curr.code
+                        ? 'bg-emerald-500/10 text-emerald-400 font-semibold'
+                        : 'text-slate-300 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <span>{curr.name}</span>
+                    {selectedCurrency === curr.code && <Check size={14} className="text-emerald-400" />}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        {/* اللغة */}
+        {/* تغيير اللغة */}
         <button
+          type="button"
           onClick={toggleLanguage}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '6px 8px',
-            background: C.dark.buttonDark,
-            border: `1px solid ${C.dark.border}`,
-            borderRadius: '6px',
-            color: C.text.body,
-            fontSize: '0.72rem',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white text-xs font-semibold transition-all duration-200 cursor-pointer"
         >
-          <Globe size={14} style={{ color: C.brandEmerald.light }} />
+          <Globe size={14} className="text-emerald-400" />
           <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
-        {/* الإشعارات */}
-        <div style={{ position: 'relative' }} ref={notifRef}>
+        {/* التنبيهات */}
+        <div className="relative" ref={notifRef}>
           <button 
+            type="button"
             onClick={() => {
               setShowNotifMenu(!showNotifMenu);
               setShowCurrencyMenu(false);
               setShowProfileMenu(false);
             }}
-            style={{ 
-              background: C.dark.buttonDark, 
-              border: `1px solid ${C.dark.border}`, 
-              color: C.text.body, 
-              padding: '7px 9px', 
-              borderRadius: '6px', 
-              cursor: 'pointer', 
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center'
-            }}
+            className="p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all duration-200 cursor-pointer relative flex items-center justify-center"
           >
-            <Bell size={15} style={{ color: C.primary.DEFAULT }} />
+            <Bell size={16} className="text-emerald-400" />
             {unreadCount > 0 && (
-              <span style={{ 
-                position: 'absolute', 
-                top: '4px', 
-                right: '4px', 
-                width: '7px', 
-                height: '7px', 
-                borderRadius: '50%', 
-                backgroundColor: C.brandEmerald.DEFAULT 
-              }}></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
             )}
           </button>
 
           {showNotifMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '40px',
-              ...dropdownPositionStyle,
-              backgroundColor: C.dark.card,
-              border: `1px solid ${C.dark.border}`,
-              borderRadius: '8px',
-              padding: '12px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
-              zIndex: 150,
-              width: '250px',
-              maxWidth: 'calc(100vw - 24px)',
-              color: C.text.body,
-              fontSize: '0.75rem',
-              textAlign: isAr ? 'right' : 'left'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: '10px', 
-                borderBottom: `1px solid ${C.dark.border}`, 
-                paddingBottom: '6px' 
-              }}>
-                <span style={{ fontWeight: 'bold', color: C.text.title }}>
+            <div className={`absolute top-full mt-2 w-72 bg-[#0f172a] border border-slate-800/90 rounded-2xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
+              <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-800">
+                <span className="font-bold text-slate-100">
                   {t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
                 </span>
                 {notifications.length > 0 && (
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="flex gap-2">
                     <button 
+                      type="button"
                       onClick={markAllAsRead} 
                       title={isAr ? 'تحديد الكل كمقروء' : 'Mark all read'} 
-                      style={{ background: 'none', border: 'none', color: C.brandEmerald.light, cursor: 'pointer' }}
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
                     >
-                      <CheckCheck size={14} />
+                      <CheckCheck size={15} />
                     </button>
                     <button 
+                      type="button"
                       onClick={clearAll} 
                       title={isAr ? 'مسح القائمة' : 'Clear list'} 
-                      style={{ background: 'none', border: 'none', color: C.error.DEFAULT, cursor: 'pointer' }}
+                      className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 )}
               </div>
 
               {loadingNotifs ? (
-                <div style={{ padding: '12px 0', color: C.text.muted, textAlign: 'center' }}>
+                <div className="py-4 text-slate-500 text-center">
                   {t('common.loading', isAr ? 'جاري التحميل...' : 'Loading...')}
                 </div>
               ) : notifications.length === 0 ? (
-                <div style={{ padding: '12px 0', color: C.text.muted, textAlign: 'center' }}>
+                <div className="py-4 text-slate-500 text-center">
                   {isAr ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
                 </div>
               ) : (
-                notifications.map((item) => (
-                  <div key={item.id} style={{ padding: '8px 0', borderBottom: `1px solid ${C.dark.border}` }}>
-                    <div 
-                      dir="auto" 
-                      style={{ 
-                        color: item.is_read ? C.text.muted : C.text.title, 
-                        fontWeight: item.is_read ? 'normal' : '600', 
-                        lineHeight: '1.3',
-                        textAlign: 'start'
-                      }}
-                    >
-                      {item.title}
-                    </div>
-
-                    {item.message && (
+                <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60 scrollbar-thin">
+                  {notifications.map((item) => (
+                    <div key={item.id} className="py-2.5 first:pt-0 last:pb-0">
                       <div 
                         dir="auto" 
-                        style={{ color: C.text.body, fontSize: '0.7rem', marginTop: '3px', textAlign: 'start' }}
+                        className={`text-start ${item.is_read ? 'text-slate-400 font-normal' : 'text-slate-100 font-semibold'}`}
                       >
-                        {item.message}
+                        {item.title}
                       </div>
-                    )}
 
-                    <div style={{ color: C.text.placeholder, fontSize: '0.68rem', marginTop: '4px' }}>
-                      {formatTime(item.created_at)}
+                      {item.message && (
+                        <div dir="auto" className="text-slate-400 text-[11px] mt-0.5 text-start">
+                          {item.message}
+                        </div>
+                      )}
+
+                      <div className="text-slate-500 text-[10px] mt-1">
+                        {formatTime(item.created_at)}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
           )}
         </div>
 
         {/* الملف الشخصي */}
-        <div style={{ position: 'relative' }} ref={profileRef}>
+        <div className="relative" ref={profileRef}>
           <button
+            type="button"
             onClick={() => {
               setShowProfileMenu(!showProfileMenu);
               setShowCurrencyMenu(false);
               setShowNotifMenu(false);
             }}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              background: C.dark.buttonDark, 
-              padding: '5px', 
-              borderRadius: '6px', 
-              border: `1px solid ${C.dark.border}`,
-              cursor: 'pointer'
-            }}
+            className="p-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center"
             title={t('nav.profile', isAr ? "الملف الشخصي" : "Profile")}
           >
-            <div style={{ 
-              width: '22px', 
-              height: '22px', 
-              borderRadius: '50%', 
-              background: C.brandEmerald.bgGlow, 
-              color: C.brandEmerald.light, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              fontSize: '0.75rem'
-            }}>
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
               <UserCheck size={14} />
             </div>
           </button>
 
           {showProfileMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '40px',
-              ...dropdownPositionStyle,
-              backgroundColor: C.dark.card,
-              border: `1px solid ${C.dark.border}`,
-              borderRadius: '8px',
-              padding: '12px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
-              zIndex: 150,
-              width: '170px',
-              maxWidth: 'calc(100vw - 24px)',
-              color: C.text.body,
-              fontSize: '0.75rem',
-              textAlign: isAr ? 'right' : 'left'
-            }}>
-              <div style={{ fontWeight: 'bold', color: C.text.title, fontSize: '0.82rem' }}>
+            <div className={`absolute top-full mt-2 w-48 bg-[#0f172a] border border-slate-800/90 rounded-2xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
+              <div className="font-bold text-slate-100 text-xs">
                 {t('header.admin', isAr ? 'صاحب الأكاديمية' : 'Academy Owner')}
               </div>
 
-              <div style={{ 
-                color: C.brandEmerald.DEFAULT, 
-                fontSize: '0.68rem', 
-                marginTop: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: C.brandEmerald.DEFAULT, display: 'inline-block' }}></span>
+              <div className="text-emerald-400 text-[11px] mt-2 flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] inline-block"></span>
                 <span>{isAr ? 'الجلسة نشطة' : 'Active Session'}</span>
               </div>
             </div>
