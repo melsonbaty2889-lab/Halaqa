@@ -10,10 +10,21 @@ const DEFAULT_SUBSCRIPTION_AMOUNT = 150;
 const checkIsPaid = (status) => status === 'paid' || status === 'مدفوع';
 const checkIsPartial = (status) => status === 'partially_paid' || status === 'مدفوع جزئياً';
 
-export default function Payments({ students, academyId }) {
+export default function Payments({ students, academyId, academyCurrency = 'EGP' }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
+  const getCurrencySymbol = () => {
+   if (academyCurrency === 'EGP') return isRtl ? 'ج.م' : 'EGP';
+   if (academyCurrency === 'USD') return isRtl ? '$' : 'USD';
+   if (academyCurrency === 'SAR') return isRtl ? 'ر.س' : 'SAR';
+   if (academyCurrency === 'AED') return isRtl ? 'د.إ' : 'AED';
+   if (academyCurrency === 'AUD') return isRtl ? 'د.أ' : 'AUD';
+  
+  return academyCurrency; // في حال وجود عملة أخرى غير مدرجة
+};
+
+const currencySymbol = getCurrencySymbol();
 
   // دالة حماية ومعالجة آمنة لاسم الطالب لتجنب انهيار الصفحة
   const getStudentName = (student) => {
