@@ -1,244 +1,169 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Gift, Copy, Check, Users, DollarSign, Award, 
-  Share2, Clock, Sparkles, Loader2, AlertCircle, Tag 
+  Gift, Copy, Check, Share2, Users, Award, 
+  Clock, DollarSign, HelpCircle, ArrowUpRight 
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { useAcademy } from '@/context/AcademyContext';
+import { colors as C } from '@/theme/colors.js';
 
-export default function AffiliateRewards() {
-  const { academy } = useAcademy();
-  const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ 
-    totalReferrals: 0, 
-    successfulConversions: 0, 
-    pendingRewards: 0, 
-    totalEarned: 0 
-  });
-  const [referralsList, setReferralsList] = useState([]);
+export default function AffiliateRewards({ referralCode = "E766D3D4", currency = "SAR" }) {
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
-  // كود ورابط الإحالة المعتمد
-  const referralCode = academy?.referral_code || academy?.id?.slice(0, 8)?.toUpperCase() || 'SMART';
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://halaqa.vercel.app';
-  const referralLink = `${baseUrl}/signup?ref=${referralCode}`;
+  const referralLink = `https://halaqa.vercel.app/signup?ref=${referralCode}`;
 
-  useEffect(() => {
-    if (academy?.id) fetchReferralData();
-  }, [academy?.id]);
-
-  const fetchReferralData = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('saas_referrals')
-        .select(`
-          id, referral_code_used, referred_email, referred_academy_id,
-          status, reward_amount, reward_type, reward_details, created_at,
-          academies:referred_academy_id ( name )
-        `)
-        .eq('referrer_academy_id', academy.id)
-        .order('created_at', { ascending: false });
-
-      if (error) console.error('Error fetching referrals:', error);
-
-      if (data) {
-        setReferralsList(data);
-        setStats({
-          totalReferrals: data.length,
-          successfulConversions: data.filter(r => ['subscribed', 'rewarded'].includes(r.status)).length,
-          pendingRewards: data.filter(r => ['pending', 'registered'].includes(r.status)).reduce((s, r) => s + (Number(r.reward_amount) || 0), 0),
-          totalEarned: data.filter(r => r.status === 'rewarded').reduce((s, r) => s + (Number(r.reward_amount) || 0), 0)
-        });
-      }
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text);
+    if (type === 'link') {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } else {
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'rewarded': 
-        return { label: 'تم صرف المكافأة', className: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
-      case 'subscribed': 
-        return { label: 'مشترك (مستحق)', className: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' };
-      case 'registered': 
-        return { label: 'سجل مؤخراً', className: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' };
-      case 'cancelled': 
-        return { label: 'ملغي', className: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' };
-      default: 
-        return { label: status || 'قيد الانتظار', className: 'bg-slate-800 text-slate-400 border border-slate-700' };
-    }
+  const handleShareWhatsApp = () => {
+    const text = encodeURIComponent(`انضم إلى منصة إدارة المقارئ والحلقات الذكية عبر الرابط التالي واحصل على مزايا خاصة:\n${referralLink}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   return (
-    <div className="p-4 sm:p-6 text-slate-100 font-sans dir-rtl max-w-7xl mx-auto space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
       
-      {/* 1. Header & Link Section */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 p-6 sm:p-8 shadow-xl">
-        <div className="absolute -top-10 -left-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <Gift className="w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">برنامج الإحالة والشركاء</h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              شارك كود الإحالة مع المقارئ والأكاديميات واحصل على رصيد ومكافآت مجانية تلقائياً.
+      {/* 1. Hero Card / Promo Banner */}
+      <div style={{
+        background: `linear-gradient(135deg, ${C.dark.card} 0%, ${C.dark.surface} 100%)`,
+        border: `1px solid ${C.dark.border}`,
+        borderRadius: '20px',
+        padding: '24px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '260px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(16, 185, 129, 0.1)', color: C.brandEmerald?.DEFAULT || '#10B981', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '12px' }}>
+              <Gift size={14} /> برنامج الشركاء والإحالة
+            </div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 'bold', color: C.text.title, margin: '0 0 8px 0' }}>
+              شارِك المنظومة واكسب مكافآت ورصيد مجاني
+            </h2>
+            <p style={{ color: C.text.muted, fontSize: '0.9rem', margin: '0 0 20px 0', lineHeight: '1.6' }}>
+              انشر رابط الإحالة الخاص بك للأكاديميات والمقارئ القرآنية، واحصل على رصيد مجاني وعمولات فورية مع كل اشتراك جديد.
             </p>
           </div>
         </div>
 
-        {/* Link Box */}
-        <div className="mt-6 bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Share2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <span className="text-[11px] text-slate-400 block font-medium">رابط الإحالة المباشر:</span>
-              <input 
-                type="text" 
-                readOnly 
-                value={referralLink} 
-                className="bg-transparent border-none text-slate-200 text-xs sm:text-sm w-full outline-none font-mono dir-ltr text-left font-semibold select-all" 
-              />
+        {/* Link & Code Controls */}
+        <div style={{
+          background: C.dark.main,
+          border: `1px solid ${C.dark.border}`,
+          borderRadius: '14px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '0.8rem', color: C.text.muted, fontWeight: 'bold' }}>رابط الإحالة المباشر الخاص بك:</span>
+          
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {/* Display Link input */}
+            <div style={{
+              flex: 1,
+              minWidth: '200px',
+              background: C.dark.surface,
+              border: `1px solid ${C.dark.border}`,
+              borderRadius: '8px',
+              padding: '10px 14px',
+              color: C.text.body,
+              fontSize: '0.85rem',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              direction: 'ltr',
+              textAlign: 'left'
+            }}>
+              {referralLink}
             </div>
-          </div>
 
-          <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto w-full md:w-auto">
-            <span className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5" /> {referralCode}
-            </span>
-
-            <button 
-              onClick={handleCopyLink} 
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
-                copied 
-                  ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20' 
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20'
-              }`}
+            <button
+              onClick={() => handleCopy(referralLink, 'link')}
+              style={{
+                padding: '10px 18px',
+                background: C.primary.gradient,
+                color: C.dark.main,
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'تم النسخ!' : 'نسخ الرابط'}
+              {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+              {copiedLink ? 'تم النسخ' : 'نسخ الرابط'}
+            </button>
+
+            <button
+              onClick={handleShareWhatsApp}
+              style={{
+                padding: '10px 16px',
+                background: '#25D366',
+                color: '#FFF',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <Share2 size={16} /> واتساب
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex items-center gap-4 shadow-sm hover:border-slate-700 transition-all">
-          <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400">
-            <Users className="w-6 h-6" />
+      {/* 2. Steps Guide */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+        {[
+          { step: '1', title: 'شارك الرابط', desc: 'أرسل الرابط أو كود الإحالة لزملائك وإدارات المقارئ' },
+          { step: '2', title: 'تسجيل الأكاديمية', desc: 'تقوم الأكاديمية بإنشاء حسابها والاشتراك بالمنظومة' },
+          { step: '3', title: 'كسب المكافأة', desc: 'ينزل الرصيد والمكافأة المباشرة في حسابك تلقائياً' }
+        ].map((item, idx) => (
+          <div key={idx} style={{ background: C.dark.card, border: `1px solid ${C.dark.border}`, padding: '14px', borderRadius: '12px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: C.brandEmerald?.bgGlow || 'rgba(16,185,129,0.1)', color: C.primary.DEFAULT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+              {item.step}
+            </div>
+            <div>
+              <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: C.text.title }}>{item.title}</div>
+              <div style={{ fontSize: '0.75rem', color: C.text.muted }}>{item.desc}</div>
+            </div>
           </div>
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">إجمالي الإحالات</span>
-            <strong className="text-xl font-bold text-white mt-0.5 block">{stats.totalReferrals}</strong>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex items-center gap-4 shadow-sm hover:border-slate-700 transition-all">
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <Award className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">أكاديميات مشتركة</span>
-            <strong className="text-xl font-bold text-white mt-0.5 block">{stats.successfulConversions}</strong>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex items-center gap-4 shadow-sm hover:border-slate-700 transition-all">
-          <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">مكافآت معلقة</span>
-            <strong className="text-xl font-bold text-white mt-0.5 block">${stats.pendingRewards}</strong>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex items-center gap-4 shadow-sm hover:border-slate-700 transition-all">
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <DollarSign className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">إجمالي المكتسب</span>
-            <strong className="text-xl font-bold text-emerald-400 mt-0.5 block">${stats.totalEarned}</strong>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* 3. Referrals Table Section */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl">
-        <div className="flex items-center gap-2 mb-6 border-b border-slate-800 pb-4">
-          <Sparkles className="w-5 h-5 text-emerald-400" />
-          <h3 className="text-base font-bold text-white">سجل الإحالات والأرباح</h3>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12 text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-emerald-400" />
-            <span className="text-xs">جاري تحميل سجل الإحالات...</span>
+      {/* 3. Metrics Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+        {[
+          { label: 'إجمالي الإحالات', val: '0', icon: Users, color: '#3B82F6' },
+          { label: 'أكاديميات مشتركة', val: '0', icon: Award, color: '#10B981' },
+          { label: 'مكافآت معلقة', val: `0 ${currency}`, icon: Clock, color: '#F59E0B' },
+          { label: 'إجمالي المكتسب', val: `0 ${currency}`, icon: DollarSign, color: '#8B5CF6' }
+        ].map((m, i) => (
+          <div key={i} style={{ background: C.dark.card, border: `1px solid ${C.dark.border}`, borderRadius: '14px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: '0.8rem', color: C.text.muted, marginBottom: '4px' }}>{m.label}</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: C.text.title }}>{m.val}</div>
+            </div>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: `${m.color}15`, color: m.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <m.icon size={22} />
+            </div>
           </div>
-        ) : referralsList.length === 0 ? (
-          <div className="text-center py-12 px-4 bg-slate-950/50 rounded-xl border border-dashed border-slate-800">
-            <AlertCircle className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-            <p className="text-sm font-bold text-slate-200 mb-1">لا توجد إحالات مسجلة بعد</p>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              شارك رابط أو كود الإحالة الخاص بأكاديميتك لبدء كسب الرصيد والمكافآت التلقائية.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-medium">
-                  <th className="pb-3 px-3">الأكاديمية / البريد</th>
-                  <th className="pb-3 px-3">تاريخ الدعوة</th>
-                  <th className="pb-3 px-3">نوع المكافأة</th>
-                  <th className="pb-3 px-3">الحالة</th>
-                  <th className="pb-3 px-3">المبلغ / التفاصيل</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {referralsList.map((ref) => {
-                  const badge = getStatusBadge(ref.status);
-                  return (
-                    <tr key={ref.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-4 px-3 font-semibold text-slate-100">
-                        {ref.academies?.name || ref.referred_email || 'أكاديمية جديدة'}
-                      </td>
-                      <td className="py-4 px-3 text-slate-400">
-                        {new Date(ref.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </td>
-                      <td className="py-4 px-3 text-slate-300">
-                        {ref.reward_type === 'credit' ? 'رصيد حساب' : 
-                         ref.reward_type === 'free_month' ? 'شهر مجاني' : 
-                         ref.reward_type === 'cash' ? 'نقدي' : 'خصم'}
-                      </td>
-                      <td className="py-4 px-3">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold ${badge.className}`}>
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td className="py-4 px-3 font-bold text-emerald-400">
-                        {ref.reward_amount ? `$${ref.reward_amount}` : ref.reward_details || '—'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        ))}
       </div>
 
     </div>
