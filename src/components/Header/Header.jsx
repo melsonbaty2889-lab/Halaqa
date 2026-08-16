@@ -7,41 +7,35 @@ import {
   Globe, 
   UserCheck, 
   Coins, 
-  Check, 
   CheckCheck, 
-  Trash2,
-  ChevronDown
+  Trash2
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
-import { useAcademy } from '@/context/AcademyContext'; // 🟢 جلب الـ Context
+import { useAcademy } from '@/context/AcademyContext';
 
 export default function Header({ 
   activeTab, 
   sidebarOpen, 
   setSidebarOpen, 
-  isRtl, 
-  currentCurrency,
-  onCurrencyChange
+  isRtl
 }) {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language || 'ar';
   const isAr = currentLanguage.startsWith('ar');
 
-  // 🟢 جلب بيان الأكاديمية الحالية من الـ Context
+  // جلب بيانات الأكاديمية الحالية من Context
   const { academy, currentAcademy } = useAcademy();
   const activeAcademy = academy || currentAcademy;
 
-  const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // 🟢 تحديد العملة الأولية بالترتيب: props -> localStorage -> academy context -> EGP
+  // تحديد العملة المعروضة وفق الأولويات: Context -> localStorage -> EGP
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
-      currentCurrency || 
-      localStorage.getItem('app_currency') || 
       activeAcademy?.currency || 
+      localStorage.getItem('app_currency') || 
       'EGP'
     );
   });
@@ -49,11 +43,10 @@ export default function Header({
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(true);
 
-  const currencyRef = useRef(null);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  // 🟢 المزامنة الفورية عند تحميل بيانات الأكاديمية من الـ Context (حل مشكلة الـ Refresh)
+  // المزامنة الفورية عند تحميل بيانات الأكاديمية أو عند الـ Refresh
   useEffect(() => {
     if (activeAcademy?.currency) {
       setSelectedCurrency(activeAcademy.currency);
@@ -61,15 +54,7 @@ export default function Header({
     }
   }, [activeAcademy?.currency]);
 
-  // مزامنة العملة القادمة من الـ Props
-  useEffect(() => {
-    if (currentCurrency) {
-      setSelectedCurrency(currentCurrency);
-      localStorage.setItem('app_currency', currentCurrency);
-    }
-  }, [currentCurrency]);
-
-  // الاستماع المباشر لحدث تغيير العملة اللحظي من صفحة الإعدادات
+  // الاستماع المباشر لحدث حفظ العملة من صفحة الإعدادات (Settings)
   useEffect(() => {
     const handleCurrencyUpdate = (event) => {
       if (event.detail) {
@@ -79,7 +64,6 @@ export default function Header({
     };
 
     window.addEventListener('currencyUpdated', handleCurrencyUpdate);
-
     return () => {
       window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
     };
@@ -124,31 +108,12 @@ export default function Header({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (currencyRef.current && !currencyRef.current.contains(event.target)) setShowCurrencyMenu(false);
       if (notifRef.current && !notifRef.current.contains(event.target)) setShowNotifMenu(false);
       if (profileRef.current && !profileRef.current.contains(event.target)) setShowProfileMenu(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const currencies = [
-    { code: 'EGP', name: isAr ? 'جنيه مصري (EGP)' : 'EGP' },
-    { code: 'SAR', name: isAr ? 'ريال سعودي (SAR)' : 'SAR' },
-    { code: 'AED', name: isAr ? 'درهم إماراتي (AED)' : 'AED' },
-    { code: 'KWD', name: isAr ? 'دينار كويتي (KWD)' : 'KWD' },
-    { code: 'QAR', name: isAr ? 'ريال قطري (QAR)' : 'QAR' },
-    { code: 'OMR', name: isAr ? 'ريال عماني (OMR)' : 'OMR' },
-    { code: 'BHD', name: isAr ? 'دينار بحريني (BHD)' : 'BHD' },
-    { code: 'JOD', name: isAr ? 'دينار أردني (JOD)' : 'JOD' },
-    { code: 'MAD', name: isAr ? 'درهم مغربي (MAD)' : 'MAD' },
-    { code: 'USD', name: isAr ? 'دولار أمريكي (USD)' : 'USD' },
-    { code: 'EUR', name: isAr ? 'يورو (EUR)' : 'EUR' },
-    { code: 'GBP', name: isAr ? 'جنيه إسترليني (GBP)' : 'GBP' },
-    { code: 'CAD', name: isAr ? 'دولار كندي (CAD)' : 'CAD' },
-    { code: 'TRY', name: isAr ? 'ليرة تركية (TRY)' : 'TRY' },
-    { code: 'AUD', name: isAr ? 'دولار أسترالي (AUD)' : 'AUD' },
-  ];
 
   let pathname = '';
   try {
@@ -166,14 +131,6 @@ export default function Header({
     const nextLng = isAr ? 'en' : 'ar';
     i18n.changeLanguage(nextLng);
     localStorage.setItem('i18nextLng', nextLng);
-  };
-
-  const handleSelectCurrency = (code) => {
-    setSelectedCurrency(code);
-    localStorage.setItem('app_currency', code);
-    window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: code }));
-    if (onCurrencyChange) onCurrencyChange(code);
-    setShowCurrencyMenu(false);
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -225,45 +182,15 @@ export default function Header({
 
       {/* القسم الأيمن - الأدوات والقوائم */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {/* اختيار العملة */}
-        <div className="relative" ref={currencyRef}>
-          <button
-            type="button"
-            onClick={() => {
-              setShowCurrencyMenu(!showCurrencyMenu);
-              setShowNotifMenu(false);
-              setShowProfileMenu(false);
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-xl text-amber-400 text-xs font-medium transition-all duration-200 cursor-pointer"
-          >
-            <Coins size={14} className="text-amber-400" />
-            <span className="font-semibold text-slate-200">{selectedCurrency}</span>
-            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${showCurrencyMenu ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showCurrencyMenu && (
-            <div className={`absolute top-full mt-2 w-48 bg-[#0f172a] border border-slate-800/90 rounded-xl shadow-2xl z-50 overflow-hidden text-xs max-h-60 overflow-y-auto scrollbar-thin ${activeRtl ? 'left-0' : 'right-0'}`}>
-              <div className="py-1 divide-y divide-slate-800/50">
-                {currencies.map((curr) => (
-                  <button
-                    type="button"
-                    key={curr.code}
-                    onClick={() => handleSelectCurrency(curr.code)}
-                    className={`w-full px-3 py-2.5 flex items-center justify-between transition-colors cursor-pointer ${
-                      activeRtl ? 'text-right' : 'text-left'
-                    } ${
-                      selectedCurrency === curr.code
-                        ? 'bg-emerald-500/10 text-emerald-400 font-semibold'
-                        : 'text-slate-300 hover:bg-slate-800/50'
-                    }`}
-                  >
-                    <span>{curr.name}</span>
-                    {selectedCurrency === curr.code && <Check size={14} className="text-emerald-400" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        
+        {/* 🟢 شارة عرض العملة المعتمدة للأكاديمية (Read-Only Badge) */}
+        <div 
+          title={isAr ? "العملة المعتمدة للمنظومة" : "Official System Currency"}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-xs font-medium select-none"
+        >
+          <Coins size={14} className="text-amber-400 shrink-0" />
+          <span className="font-semibold text-slate-200">{selectedCurrency}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] shrink-0" />
         </div>
 
         {/* تغيير اللغة */}
@@ -282,7 +209,6 @@ export default function Header({
             type="button"
             onClick={() => {
               setShowNotifMenu(!showNotifMenu);
-              setShowCurrencyMenu(false);
               setShowProfileMenu(false);
             }}
             className="p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all duration-200 cursor-pointer relative flex items-center justify-center"
@@ -363,7 +289,6 @@ export default function Header({
             type="button"
             onClick={() => {
               setShowProfileMenu(!showProfileMenu);
-              setShowCurrencyMenu(false);
               setShowNotifMenu(false);
             }}
             className="p-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center"
