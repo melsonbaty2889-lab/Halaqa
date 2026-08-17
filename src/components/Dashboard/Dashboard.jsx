@@ -18,8 +18,7 @@ import {
   RefreshCw, 
   Landmark,
   Flame,
-  Award,
-  Zap
+  Award
 } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
@@ -121,11 +120,11 @@ export default function Dashboard({
 
   if (loading) {
     return (
-      <div className={styles.dashboardContainer} style={{ padding: '20px' }}>
-        <div style={{ height: '36px', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', width: '35%', marginBottom: '20px' }}></div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '20px' }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} style={{ height: '110px', background: C.dark.card, border: `1px solid ${C.dark.border}`, borderRadius: '16px' }}></div>
+      <div className={styles.dashboardContainer} style={{ padding: '16px' }}>
+        <div style={{ height: '32px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', width: '50%', marginBottom: '16px' }}></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} style={{ height: '100px', background: C.dark.card, border: `1px solid ${C.dark.border}`, borderRadius: '14px' }}></div>
           ))}
         </div>
       </div>
@@ -141,57 +140,69 @@ export default function Dashboard({
   }
 
   return (
-    <div className={styles.dashboardContainer} style={{ paddingBottom: '80px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
+    <div className={styles.dashboardContainer} style={{ padding: '12px 12px 80px 12px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
       
-      {/* 1. الترويسة الرئيسية الهوية الموحدة */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: '800', color: C.text.title, margin: '0 0 6px 0', lineHeight: '1.2' }}>
-            {isArabic ? 'أهلاً بك،' : 'Welcome back,'} {displayName} 👋
-          </h1>
-          <p style={{ color: C.text.muted, fontSize: '0.85rem', margin: 0 }}>
-            {isArabic ? 'منصة إدارة الحلقات الحية والرصد الأكاديمي الموحد' : 'Live Session & Academic Progress Ecosystem'}
-          </p>
-        </div>
+      {/* 1. الترويسة الرئيسية مع دعم الموبايل */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: C.text.title, margin: '0 0 4px 0', lineHeight: '1.3' }}>
+              {isArabic ? 'أهلاً بك،' : 'Welcome back,'} {displayName} 👋
+            </h1>
+            <p style={{ color: C.text.muted, fontSize: '0.8rem', margin: 0, lineHeight: '1.4' }}>
+              {isArabic ? 'منصة إدارة الحلقات الحية والرصد الأكاديمي الموحد' : 'Live Session & Academic Ecosystem'}
+            </p>
+          </div>
 
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px', 
-          padding: '6px 14px', 
-          background: C.brandEmerald.bgGlow, 
-          border: `1px solid ${C.brandEmerald.DEFAULT}`, 
-          borderRadius: '20px', 
-          fontSize: '0.78rem', 
-          color: C.brandEmerald.DEFAULT, 
-          fontWeight: '700' 
-        }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: C.brandEmerald.DEFAULT, boxShadow: `0 0 10px ${C.brandEmerald.DEFAULT}` }}></span>
-          <span>{isArabic ? 'متزامن لحظياً' : 'Realtime Synced'}</span>
-          {lastSyncTime && <span style={{ opacity: 0.8, fontSize: '0.75rem', color: C.text.body }}>({lastSyncTime})</span>}
+          <div style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            padding: '4px 10px', 
+            background: C.brandEmerald.bgGlow, 
+            border: `1px solid ${C.brandEmerald.DEFAULT}`, 
+            borderRadius: '20px', 
+            fontSize: '0.72rem', 
+            color: C.brandEmerald.DEFAULT, 
+            fontWeight: '700',
+            alignSelf: 'flex-start'
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: C.brandEmerald.DEFAULT, boxShadow: `0 0 8px ${C.brandEmerald.DEFAULT}` }}></span>
+            <span>{isArabic ? 'متزامن لحظياً' : 'Realtime Synced'}</span>
+            {lastSyncTime && <span style={{ opacity: 0.8, fontSize: '0.7rem', color: C.text.body }}>({lastSyncTime})</span>}
+          </div>
         </div>
       </div>
 
-      {/* 2. شريط الوصول السريع (محدث بالألوان الذهبية الموحدة) */}
-      <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '24px', scrollbarWidth: 'none' }}>
+      {/* 2. شريط الوصول السريع (سلس وسهل التمرير على الهاتف) */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '10px', 
+        overflowX: 'auto', 
+        paddingBottom: '8px', 
+        marginBottom: '20px', 
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none'
+      }}>
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
           style={{ 
             background: C.primary.gradient, 
             color: '#FFFFFF', 
             border: 'none', 
-            padding: '11px 18px', 
+            padding: '10px 14px', 
             borderRadius: '12px', 
-            fontSize: '0.84rem', 
+            fontSize: '0.8rem', 
             fontWeight: '700', 
             cursor: 'pointer', 
             whiteSpace: 'nowrap', 
+            flexShrink: 0,
             display: 'flex', 
             alignItems: 'center', 
-            gap: '8px', 
-            boxShadow: '0 4px 14px rgba(217, 119, 6, 0.3)' 
+            gap: '6px', 
+            boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)' 
           }}>
-          <Plus size={16} />
+          <Plus size={15} />
           <span>{isArabic ? 'إطلاق حلقة تعليمية' : 'Launch Session'}</span>
         </button>
 
@@ -201,18 +212,19 @@ export default function Dashboard({
             background: C.dark.card, 
             color: C.text.title, 
             border: `1px solid ${C.dark.border}`, 
-            padding: '11px 18px', 
+            padding: '10px 14px', 
             borderRadius: '12px', 
-            fontSize: '0.84rem', 
+            fontSize: '0.8rem', 
             fontWeight: '600', 
             cursor: 'pointer', 
             whiteSpace: 'nowrap', 
+            flexShrink: 0,
             display: 'flex', 
             alignItems: 'center', 
-            gap: '8px' 
+            gap: '6px' 
           }}>
-          <ClipboardCheck size={16} style={{ color: '#38BDF8' }} />
-          <span>{isArabic ? 'تسجيل الحضور النشط' : 'Attendance Record'}</span>
+          <ClipboardCheck size={15} style={{ color: '#38BDF8' }} />
+          <span>{isArabic ? 'تسجيل الحضور' : 'Attendance Record'}</span>
         </button>
 
         <button 
@@ -221,99 +233,100 @@ export default function Dashboard({
             background: C.dark.card, 
             color: C.text.title, 
             border: `1px solid ${C.dark.border}`, 
-            padding: '11px 18px', 
+            padding: '10px 14px', 
             borderRadius: '12px', 
-            fontSize: '0.84rem', 
+            fontSize: '0.8rem', 
             fontWeight: '600', 
             cursor: 'pointer', 
             whiteSpace: 'nowrap', 
+            flexShrink: 0,
             display: 'flex', 
             alignItems: 'center', 
-            gap: '8px' 
+            gap: '6px' 
           }}>
-          <BookOpen size={16} style={{ color: C.primary.DEFAULT }} />
-          <span>{isArabic ? 'توثيق الإنجاز والتسميع' : 'Evaluation & Progress'}</span>
+          <BookOpen size={15} style={{ color: C.primary.DEFAULT }} />
+          <span>{isArabic ? 'توثيق الإنجاز والتسميع' : 'Evaluation'}</span>
         </button>
       </div>
 
-      {/* 3. البطاقات الإحصائية (الموحدة مع نظام الألوان) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      {/* 3. البطاقات الإحصائية (شبكة مرنة تناسب شاشة الموبايل بشكل ممتاز) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '20px' }}>
         
         {/* إجمالي الدارسين */}
         <div 
           onClick={() => setActiveTab && setActiveTab('students')}
-          style={{ background: C.dark.card, padding: '20px', borderRadius: '16px', border: `1px solid ${C.dark.border}`, cursor: 'pointer', transition: 'transform 0.2s' }}
+          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.82rem', fontWeight: '600', marginBottom: '8px' }}>
-            <span>{isArabic ? 'إجمالي الطلاب' : 'Total Learners'}</span>
-            <GraduationCap style={{ color: '#38BDF8' }} size={22} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+            <span style={{ truncate: true }}>{isArabic ? 'إجمالي الطلاب' : 'Total Learners'}</span>
+            <GraduationCap style={{ color: '#38BDF8' }} size={18} />
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: C.text.title }}>{safeText(stats?.studentsCount, '0')}</div>
-          <div style={{ fontSize: '0.75rem', color: C.brandEmerald.DEFAULT, marginTop: '6px', fontWeight: '600' }}>
-            {isArabic ? '↑ طلاب نشطون بالمسارات' : '↑ Active Enrolled'}
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: C.text.title }}>{safeText(stats?.studentsCount, '0')}</div>
+          <div style={{ fontSize: '0.7rem', color: C.brandEmerald.DEFAULT, marginTop: '4px', fontWeight: '600' }}>
+            {isArabic ? '↑ طلاب نشطون' : '↑ Active Enrolled'}
           </div>
         </div>
 
         {/* متوسط الاستمرارية */}
-        <div style={{ background: C.dark.card, padding: '20px', borderRadius: '16px', border: `1px solid ${C.dark.border}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.82rem', fontWeight: '600', marginBottom: '8px' }}>
-            <span>{isArabic ? 'مؤشر الاستمرارية' : 'Consistency Streak'}</span>
-            <Flame style={{ color: '#F97316' }} size={22} />
+        <div style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+            <span>{isArabic ? 'مؤشر الاستمرارية' : 'Consistency'}</span>
+            <Flame style={{ color: '#F97316' }} size={18} />
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#F97316' }}>
-            {safeText(stats?.avgStreak, '0')} <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: C.text.body }}>{isArabic ? 'يوم' : 'Days'}</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#F97316' }}>
+            {safeText(stats?.avgStreak, '0')} <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: C.text.body }}>{isArabic ? 'يوم' : 'Days'}</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#FB923C', marginTop: '6px', fontWeight: '600' }}>
-            {isArabic ? '🔥 التتابع والالتزام المستمر' : 'Active Engagement Streak'}
+          <div style={{ fontSize: '0.7rem', color: '#FB923C', marginTop: '4px', fontWeight: '600' }}>
+            {isArabic ? '🔥 التتابع المستمر' : 'Active Streak'}
           </div>
         </div>
 
         {/* نسبة الحضور */}
         <div 
           onClick={() => setActiveTab && setActiveTab('attendance')}
-          style={{ background: C.dark.card, padding: '20px', borderRadius: '16px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.82rem', fontWeight: '600', marginBottom: '8px' }}>
-            <span>{isArabic ? 'نسبة الحضور اليومية' : 'Daily Attendance'}</span>
-            <TrendingUp style={{ color: '#38BDF8' }} size={22} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+            <span>{isArabic ? 'نسبة الحضور' : 'Daily Attendance'}</span>
+            <TrendingUp style={{ color: '#38BDF8' }} size={18} />
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#38BDF8' }}>{safeText(stats?.attendanceRate, '0%')}</div>
-          <div style={{ fontSize: '0.75rem', color: '#7DD3FC', marginTop: '6px', fontWeight: '600' }}>
-            {isArabic ? 'معدل المشاركة اليومية' : 'Daily Engagement Rate'}
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#38BDF8' }}>{safeText(stats?.attendanceRate, '0%')}</div>
+          <div style={{ fontSize: '0.7rem', color: '#7DD3FC', marginTop: '4px', fontWeight: '600' }}>
+            {isArabic ? 'معدل المشاركة' : 'Engagement Rate'}
           </div>
         </div>
 
         {/* جلسات التسميع */}
         <div 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
-          style={{ background: C.dark.card, padding: '20px', borderRadius: '16px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.82rem', fontWeight: '600', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
             <span>{isArabic ? 'جلسات التسميع' : 'Evaluations'}</span>
-            <BookOpen style={{ color: C.primary.DEFAULT }} size={22} />
+            <BookOpen style={{ color: C.primary.DEFAULT }} size={18} />
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: C.primary.DEFAULT }}>
-            {safeText(stats?.totalSessions, '0')} <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: C.text.body }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: C.primary.DEFAULT }}>
+            {safeText(stats?.totalSessions, '0')} <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: C.text.body }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: C.primary.hover, marginTop: '6px', fontWeight: '600' }}>
-            {isArabic ? 'الجلسات المكتملة اليوم' : 'Completed Today'}
+          <div style={{ fontSize: '0.7rem', color: C.primary.hover, marginTop: '4px', fontWeight: '600' }}>
+            {isArabic ? 'المكتملة اليوم' : 'Completed Today'}
           </div>
         </div>
 
         {/* المتأخرات */}
         <div 
           onClick={() => setActiveTab && setActiveTab('payments')}
-          style={{ background: C.dark.card, padding: '20px', borderRadius: '16px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.82rem', fontWeight: '600', marginBottom: '8px' }}>
-            <span>{isArabic ? 'المتأخرات' : 'Administrative Status'}</span>
-            <AlertTriangle style={{ color: (stats?.overdueCount || 0) > 0 ? C.error.DEFAULT : C.brandEmerald.DEFAULT }} size={22} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+            <span>{isArabic ? 'المتأخرات' : 'Status'}</span>
+            <AlertTriangle style={{ color: (stats?.overdueCount || 0) > 0 ? C.error.DEFAULT : C.brandEmerald.DEFAULT }} size={18} />
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: (stats?.overdueCount || 0) > 0 ? C.error.DEFAULT : C.brandEmerald.DEFAULT }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: (stats?.overdueCount || 0) > 0 ? C.error.DEFAULT : C.brandEmerald.DEFAULT }}>
             {safeText(stats?.overdueCount, '0')}
           </div>
-          <div style={{ fontSize: '0.75rem', color: (stats?.overdueCount || 0) > 0 ? C.error.light : C.brandEmerald.DEFAULT, marginTop: '6px', fontWeight: '600' }}>
-            {isArabic ? 'متطلبات تسوية الإجراءات' : 'Pending Administrative Tasks'}
+          <div style={{ fontSize: '0.7rem', color: (stats?.overdueCount || 0) > 0 ? C.error.light : C.brandEmerald.DEFAULT, marginTop: '4px', fontWeight: '600' }}>
+            {isArabic ? 'طلبات التعديل' : 'Tasks'}
           </div>
         </div>
 
@@ -321,18 +334,18 @@ export default function Dashboard({
 
       {/* 4. الحلقات المباشرة وأنظمة التسميع */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
-        <div style={{ background: C.dark.card, padding: '22px', borderRadius: '20px', border: `1px solid ${C.dark.border}`, marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <h3 style={{ fontSize: '1.05rem', color: C.text.title, margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Landmark style={{ color: C.primary.DEFAULT }} size={20} />
-              <span>{isArabic ? 'الحلقات النشطة وأنظمة التقييم الحية' : 'Active Sessions & Progress Tracking'}</span>
+        <div style={{ background: C.dark.card, padding: '16px', borderRadius: '16px', border: `1px solid ${C.dark.border}`, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '0.95rem', color: C.text.title, margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Landmark style={{ color: C.primary.DEFAULT }} size={18} />
+              <span>{isArabic ? 'الحلقات النشطة' : 'Active Sessions'}</span>
             </h3>
-            <span style={{ fontSize: '0.8rem', color: C.text.muted }}>
-              {stats.activeHalaqasData.length} {isArabic ? 'حلقة جارية' : 'active halaqas'}
+            <span style={{ fontSize: '0.75rem', color: C.text.muted }}>
+              {stats.activeHalaqasData.length} {isArabic ? 'حلقة' : 'active'}
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
             {stats.activeHalaqasData.map((halaqa, idx) => {
               const isLive = halaqa.status === 'live';
               const isFinished = halaqa.status === 'finished';
@@ -340,7 +353,7 @@ export default function Dashboard({
               const statusBg = isLive ? C.error.bgGlow : isFinished ? C.brandEmerald.bgGlow : 'rgba(56, 189, 248, 0.15)';
               const statusColor = isLive ? C.error.DEFAULT : isFinished ? C.brandEmerald.DEFAULT : '#38BDF8';
               const statusLabel = isLive 
-                ? (isArabic ? 'جارية الآن' : 'Live Session') 
+                ? (isArabic ? 'جارية الآن' : 'Live') 
                 : isFinished 
                 ? (isArabic ? 'مكتملة' : 'Completed') 
                 : (isArabic ? 'مجدولة' : 'Upcoming');
@@ -352,42 +365,35 @@ export default function Dashboard({
               const teachingType = safeText(halaqa.teaching_type, 'حضوري');
 
               return (
-                <div key={halaqa.id || idx} style={{ background: C.dark.surface, padding: '16px', borderRadius: '14px', border: `1px solid ${C.dark.border}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <h4 style={{ margin: 0, color: C.text.title, fontSize: '0.95rem', fontWeight: '700' }}>
+                <div key={halaqa.id || idx} style={{ background: C.dark.surface, padding: '12px', borderRadius: '12px', border: `1px solid ${C.dark.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ margin: 0, color: C.text.title, fontSize: '0.88rem', fontWeight: '700' }}>
                       {halaqaName}
                     </h4>
-                    <span style={{ padding: '4px 10px', borderRadius: '12px', background: statusBg, color: statusColor, fontSize: '0.74rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                      <StatusIcon size={13} className={isLive ? styles?.spinning || '' : ''} />
+                    <span style={{ padding: '3px 8px', borderRadius: '10px', background: statusBg, color: statusColor, fontSize: '0.7rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <StatusIcon size={12} className={isLive ? styles?.spinning || '' : ''} />
                       <span>{statusLabel}</span>
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.82rem', color: C.text.body, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <User style={{ color: C.text.muted }} size={15} />
+                  <div style={{ fontSize: '0.78rem', color: C.text.body, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <User style={{ color: C.text.muted }} size={14} />
                     <span>{isArabic ? `المعلم: ${teacherName}` : `Teacher: ${teacherName}`}</span>
                   </div>
 
                   {timeDisplay && (
-                    <div style={{ fontSize: '0.8rem', color: C.text.muted, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Clock style={{ color: C.text.muted }} size={15} />
+                    <div style={{ fontSize: '0.75rem', color: C.text.muted, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Clock style={{ color: C.text.muted }} size={14} />
                       <span>{timeDisplay}</span>
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '0.72rem', padding: '3px 10px', borderRadius: '8px', background: C.primary.bgGlow, color: C.primary.DEFAULT, border: `1px solid ${C.primary.bgGlow}`, fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <Award size={12} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '6px', background: C.primary.bgGlow, color: C.primary.DEFAULT, border: `1px solid ${C.primary.bgGlow}`, fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <Award size={11} />
                       <span>{teachingType}</span>
                     </span>
                   </div>
-
-                  {halaqa.attendance_rate !== undefined && halaqa.attendance_rate !== null && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: `1px solid ${C.dark.border}`, fontSize: '0.78rem', color: '#38BDF8' }}>
-                      <span>{isArabic ? 'نسبة الحضور بالأنشطة:' : 'Attendance:'}</span>
-                      <span style={{ fontWeight: 'bold' }}>{safeText(halaqa.attendance_rate)}%</span>
-                    </div>
-                  )}
                 </div>
               );
             })}
