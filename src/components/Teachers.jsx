@@ -1,8 +1,8 @@
 // src/components/Teachers.jsx
 import React, { useState, useMemo } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import AddStaffModal from './AddStaffModal.jsx';
-import { C } from '../constants/colors';
+import colors from '@/theme/colors';
 import { Btn, Card, Input, Badge, PageHeader } from './UI/UI.jsx';
 import { 
   UserCheck, 
