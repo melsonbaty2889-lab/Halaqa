@@ -1,63 +1,63 @@
 // src/theme/colors.js
 
 export const colors = {
-  // 1. الوصول المباشر (Direct Flattened Mapping للمكونات في UI.jsx)
-  primary: '#D97706',          // البرتقالي الرئيسي
-  primaryHover: '#B45309',     // الهوفر البرتقالي
-  bg: '#070C12',               // خلفية التطبيق العامة
-  card: '#0F172A',             // خلفية البطاقة والكروت
-  surface: '#111C2A',          // أسطح القوائم واللوحات
-  input: '#090F16',            // خلفية حقول الإدخال
-  border: '#223147',           // حدود الحقول والبطاقات
-  borderLight: '#1E293B',
-  
-  // النصوص والحالات
-  text: '#F8FAFC',             // النص الرئيسي الناصع
-  textSub: '#E2E8F0',          // النص الفرعي
-  textMuted: '#94A3B8',        // النص المساعد
-  textPlaceholder: '#64748B',  // الـ Placeholder
-  danger: '#EF4444',           // الأحمر للتنبيهات والأخطاء
-  success: '#10B981',          // الأخضر للعمليات الناجحة
-  shadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
+  // 1. الألوان الرئيسية (من صفحة تسجيل الدخول)
+  primary: '#D97706',          // البرتقالي الذهبي لزر التسجيل والتركيز
+  primaryHover: '#B45309',     // الدرجة الداكنة عند الهوفر
+  gold: '#F59E0B',             // البرتقالي الذهبي للروابط
+  goldLight: '#FEF08A',        // درجة الأصفر الفاتح للشعار
+  goldDark: '#B45309',         // درجة البرتقالي الداكن للشعار
 
-  // 2. الهيكلية المتداخلة (Nested Object لتوافق Tailwind Config والمميزات المتقدمة)
+  // 2. الهوية الزمردية (Logo & Status)
   brandEmerald: {
-    DEFAULT: '#10B981',
-    teal: '#0F766E',
-    light: '#34D399',
+    DEFAULT: '#10B981',        // الزمردي الرئيسي (شريط التحميل والأيقونات)
+    dark: '#047857',           // الزمردي الداكن
+    teal: '#0F766E',           // وهج الشعار
+    tealDark: '#042F2E',       // خلفية مربع الشعار
+    light: '#34D399',          // الزمردي الفاتح للرسائل والنجاح
     border: 'rgba(45, 212, 191, 0.35)',
-    bgGlow: 'rgba(15, 118, 110, 0.18)',
+    shadow: 'rgba(15, 118, 110, 0.35)',
   },
 
-  gold: {
-    DEFAULT: '#C9A84C',
-    hover: '#A58230',
-    glow: 'rgba(201, 168, 76, 0.2)',
-  },
+  // 3. الخلفيات والأسطح الداكنة (تم توحيد خلفية المشروع بخلفية الشاشة الافتتاحية)
+  bg: '#070B14',               // الخلفية الأساسية المعتمدة لكل المشروع (الخاصة بالشاشة الافتتاحية)
+  bgSplash: '#070B14',         // نفس خلفية المشروع
+  card: '#0F172A',             // خلفية بطاقة تسجيل الدخول والنوافذ
+  input: '#090F16',            // خلفية حقول الإدخال
+  buttonGoogle: '#1E293B',     // خلفية زر Google وزر اللغة
 
-  error: {
-    DEFAULT: '#EF4444',
-    light: '#F87171',
-    bg: 'rgba(239, 68, 68, 0.1)',
-    border: 'rgba(239, 68, 68, 0.25)',
-  },
+  // 4. الحدود (Borders)
+  border: '#223147',           // حدود الحقول
+  borderCard: '#1E293B',       // حدود البطاقات
+  borderGoogle: '#334155',     // حدود زر Google
 
-  dark: {
-    bg: '#070C12',
-    card: '#0F172A',
-    surface: '#111C2A',
-    input: '#090F16',
-    buttonDark: '#1E293B',
-    border: '#223147',
-    borderLight: '#1E293B',
-  },
+  // 5. النصوص (Text Colors)
+  text: '#F8FAFC',             // النص الناصع
+  textSub: '#E2E8F0',          // النص الفرعي
+  textLight: '#CBD5E1',        // النص المساعد
+  textMuted: '#94A3B8',        // النصوص الثانوية
+  textPlaceholder: '#64748B',  // نص الـ Placeholder
+  textDark: '#475569',         // الحقوق ونسخة التطبيق
 
-  // التدرجات
+  // 6. الحالات والأخطاء (Status)
+  danger: '#EF4444',
+  dangerLight: '#F87171',
+  dangerBg: 'rgba(239, 68, 68, 0.1)',
+  dangerBorder: 'rgba(239, 68, 68, 0.25)',
+  
+  successBg: 'rgba(16, 185, 129, 0.1)',
+  successBorder: 'rgba(16, 185, 129, 0.25)',
+
+  // 7. التدرجات البصرية (Gradients)
   gradients: {
-    gold: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
-    emerald: 'linear-gradient(135deg, #0F766E 0%, #042F2E 100%)',
-    pageBackground: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)',
-    logoGlow: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
+    // تدرج الخلفية الرسمي الموحد للمشروع بالكامل (من الشاشة الافتتاحية)
+    pageBackground: 'radial-gradient(circle at center, #0F172A 0%, #070B14 100%)',
+    splashBackground: 'radial-gradient(circle at center, #0F172A 0%, #070B14 100%)',
+    
+    logoBg: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
+    goldSvg: 'linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #b45309 100%)',
+    emeraldSvg: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+    progressBar: 'linear-gradient(90deg, #10B981, #F59E0B)',
   }
 };
 
