@@ -156,7 +156,7 @@ export function WhatsAppModal({ isOpen, onClose, message, setMessage, tone, onTo
           })}
         </div>
 
-        {/* نص الرسالة - نص أبيض واضح للتغلب على مشكلة التباين */}
+        {/* نص الرسالة */}
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
