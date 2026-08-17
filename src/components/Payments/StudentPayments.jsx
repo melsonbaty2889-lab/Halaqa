@@ -5,18 +5,16 @@ import { C } from '@/theme/colors';
 import { CreditCard, MessageSquare, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { CollectModal, WhatsAppModal } from './PaymentModals';
 
-const DEFAULT_SUBSCRIPTION_AMOUNT = 150;
-
 const checkIsPaid = (status) => status === 'paid' || status === 'مدفوع';
 const checkIsPartial = (status) => status === 'partially_paid' || status === 'مدفوع جزئياً';
 
-export default function StudentPayments({ students = [], academyId, academyCurrency = 'EGP' }) {
+export default function StudentPayments({ students = [], academyId, academyCurrency }) {
   const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
 
-  // توحيد العملة للجنيه المصري بدلاً من AUD
-  const currencySymbol = isRtl ? 'ج.م' : 'EGP';
+  // استخدام العملة المحددة في إعدادات الأكاديمية والممررة عبر الـ props
+  const currencySymbol = academyCurrency || (isRtl ? 'ج.م' : 'EGP');
 
   const getCurrentMonth = () => {
     const today = new Date();
@@ -60,7 +58,7 @@ export default function StudentPayments({ students = [], academyId, academyCurre
     return new Date(year, month - 1).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' });
   };
 
-  // جلب البيانات الفعليه من داتابيز Supabase فقط
+  // جلب البيانات الفعليه من داتابيز Supabase
   useEffect(() => {
     const fetchPayments = async () => {
       if (!academyId) return;
@@ -81,7 +79,7 @@ export default function StudentPayments({ students = [], academyId, academyCurre
     fetchPayments();
   }, [selectedMonth, academyId]);
 
-  // إعداد التحصيل
+  // إعداد التحصيل (المبلغ المتوقع يأتي مباشرة من اشتراك الطالب المنسق في الأكاديمية)
   const openCollect = (student, record, expected) => {
     setCollectStudent({ id: student.id, name: getStudentName(student), expectedAmount: expected, record });
     setCollectAmount(record ? record.amount.toString() : expected.toString());
@@ -94,7 +92,7 @@ export default function StudentPayments({ students = [], academyId, academyCurre
     if (!collectStudent) return;
     const amountNum = parseFloat(collectAmount) || 0;
     let status = 'pending';
-    if (amountNum >= collectStudent.expectedAmount) status = 'paid';
+    if (amountNum >= collectStudent.expectedAmount && collectStudent.expectedAmount > 0) status = 'paid';
     else if (amountNum > 0) status = 'partially_paid';
 
     const payload = {
@@ -115,11 +113,11 @@ export default function StudentPayments({ students = [], academyId, academyCurre
     }
   };
 
-  // صياغة رسائل الواتساب
+  // صياغة رسائل الواتساب بدون أي مبالغ افتراضية
   const generateWAMsg = (student, toneType) => {
     const name = getStudentName(student);
     const month = formatMonthDisplay(selectedMonth);
-    const fee = student.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+    const fee = student.monthly_fee || 0;
 
     if (toneType === 'official') {
       return `إشعار مالي رسمي\nالسادة أولياء الأمور الكرام،\nيرجى التكرم بالعلم أن اشتراك الطالب/ة (${name}) لشهر (${month}) مستحق السداد بمبلغ (${formatMoney(fee)} ${currencySymbol}).\nنأمل التسوية المالية في أقرب وقت لتنسيق انتظام الطالب.\n— إدارة الحلقة`;
@@ -149,13 +147,13 @@ export default function StudentPayments({ students = [], academyId, academyCurre
     setIsWhatsAppOpen(false);
   };
 
-  // الحسابات المالية الحقيقية
+  // الحسابات المالية اعتماداً على قيمة رسوم الطالب فقط
   let totalCollected = 0;
   let totalPending = 0;
 
   students.forEach(s => {
     const rec = paymentsData[s.id];
-    const expected = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+    const expected = s.monthly_fee || 0;
     if (checkIsPaid(rec?.status)) totalCollected += rec.amount || expected;
     else if (checkIsPartial(rec?.status)) {
       totalCollected += rec.amount || 0;
@@ -194,7 +192,7 @@ export default function StudentPayments({ students = [], academyId, academyCurre
         </div>
       </div>
 
-      {/* شريط البحث والتنقّل بين المجموعات والشهور */}
+      {/* شريط البحث والتنقّل */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
           {['all', 'paid', 'pending'].map(tab => (
@@ -251,7 +249,7 @@ export default function StudentPayments({ students = [], academyId, academyCurre
                   const rec = paymentsData[s.id];
                   const isPaid = checkIsPaid(rec?.status);
                   const isPartial = checkIsPartial(rec?.status);
-                  const expected = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
+                  const expected = s.monthly_fee || 0;
 
                   return (
                     <tr key={s.id} style={{ borderBottom: '1px solid #1e293b', fontSize: '13px' }}>
@@ -291,7 +289,7 @@ export default function StudentPayments({ students = [], academyId, academyCurre
         )}
       </div>
 
-      {/* استدعاء النوافذ من PaymentModals */}
+      {/* استدعاء النوافذ */}
       <CollectModal
         isOpen={isCollectOpen}
         onClose={() => setIsCollectOpen(false)}
