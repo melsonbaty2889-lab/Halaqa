@@ -61,7 +61,25 @@ export const colors = {
     logoBox: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
     // تدرج شريط التحميل (54%)
     progressBar: 'linear-gradient(90deg, #10B981 0%, #F59E0B 100%)',
+  },
+
+  // 7. مفاتيح وصول مباشرة للتوافق المباشر مع مكونات UI القديمة
+  primary: {
+    DEFAULT: '#D97706',
+    hover: '#B45309',
+  },
+  brandEmerald: {
+    DEFAULT: '#10B981',
+    bg: '#09332C',
+    border: '#0D5C4D',
+  },
+  error: {
+    DEFAULT: '#EF4444',
   }
 };
+
+// 🌟 تصدير الاختصارات اللازمة لمنع أخطاء الـ Rollup Build (UI.jsx & Skeleton.jsx)
+export const C = colors;
+export const g = (colorVal) => colorVal;
 
 export default colors;
