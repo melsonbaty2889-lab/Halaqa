@@ -7,31 +7,32 @@
 
 @layer base {
   :root {
-    /* 1. الخلفيات والأسطح (مستخرجة بدقة من شاشات الدخول) */
+    /* 1. الخلفيات والأسطح */
     --bg-dark: #070B11;         /* خلفية التطبيق العامة */
-    --surface-card: #0F172A;    /* خلفية البطاقات والنوافذ الكحلي الداكن */
+    --surface-card: rgba(15, 23, 42, 0.85); /* خلفية البطاقات الشفافة المعتمة */
     --surface-input: #0A101D;   /* خلفية حقول الإدخال */
     --surface-google: #162032;  /* خلفية الأزرار الثانوية وزر Google */
 
     /* 2. الهوية البصرية الرئيسية (Amber/Gold) */
     --primary: #E07A00;         /* لون زر تسجيل الدخول وإرسال الرابط */
-    --primary-hover: #C66B00;   /* لون البرتقالي عند الوقوف بالماوس (Hover) */
-    --primary-glow: rgba(224, 122, 0, 0.35); /* التوهج عند تركيز الحقل (Focus) */
+    --primary-hover: #C66B00;   /* لون البرتقالي عند Hover */
+    --primary-glow: rgba(224, 122, 0, 0.35); /* التوهج عند Focus */
 
-    /* 3. عناصر الشعار والمؤشرات الخضراء */
+    /* 3. عناصر الشعار والمؤشرات الخضراء والتوهج العلوي */
     --emerald-bg: #09332C;      /* خلفية أيقونة المصحف الشريف العليا */
     --emerald-border: #0D5C4D;  /* حدود أيقونة الشعار */
     --emerald-text: #10B981;    /* لون أيقونة الدرع والمؤشرات */
+    --emerald-radial-glow: rgba(16, 185, 129, 0.14); /* الشعاع العلوي */
 
     /* 4. النصوص والحدود الموحدة */
     --text-main: #FFFFFF;       /* النصوص الرئيسية والأزرار */
     --text-sub: #94A3B8;        /* النصوص الفرعية والوصف */
     --text-muted: #475569;      /* نص الـ Placeholder للحقول */
-    --border-card: #1E293B;     /* حدود البطاقات الخارجية */
+    --border-card: rgba(255, 255, 255, 0.08); /* حدود البطاقات الخارجية الناعمة */
     --border-input: #1B2738;    /* حدود الحقول والأزرار */
-    --border-hover: #2E3E56;    /* حدود الحقول عند الوقوف عليها (Hover) */
+    --border-hover: #2E3E56;    /* حدود الحقول عند Hover */
 
-    --shadow-main: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
+    --shadow-main: 0 20px 50px rgba(0, 0, 0, 0.6);
   }
 
   html, body {
@@ -41,6 +42,15 @@
     padding: 0;
     overflow-x: hidden !important;
     background-color: var(--bg-dark);
+    
+    /* 🌟 خلفية النجوم الموزعة بالدقة + الشعاع الزمردي العلوي خلف الشعار */
+    background-image: 
+      radial-gradient(circle at 50% 28%, var(--emerald-radial-glow) 0%, transparent 45%),
+      radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px);
+    background-size: 100% 100%, 24px 24px;
+    background-position: 0 0, 0 0;
+    background-attachment: fixed;
+
     color: var(--text-main);
     font-family: 'Cairo', sans-serif;
     direction: rtl;
@@ -72,7 +82,7 @@
     background: var(--bg-dark);
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--border-card);
+    background: #1E293B;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -81,11 +91,13 @@
 }
 
 @layer components {
-  /* 📦 1. بطاقة المحتوى الموحدة (Card) */
+  /* 📦 1. بطاقة المحتوى الموحدة (Glassmorphism Card) */
   .card-surface {
     background-color: var(--surface-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-card);
-    border-radius: 1.25rem; /* 20px زوايا دائرية */
+    border-radius: 1.5rem; /* 24px */
     padding: 2rem 1.5rem;
     box-shadow: var(--shadow-main);
   }
@@ -96,7 +108,7 @@
     background-color: var(--surface-input);
     border: 1px solid var(--border-input);
     color: var(--text-main);
-    border-radius: 0.875rem; /* 14px */
+    border-radius: 0.875rem;
     padding: 0.875rem 1rem;
     font-size: 0.95rem;
     transition: all 0.2s ease-in-out;
@@ -117,10 +129,9 @@
   }
 
   /* 🔘 3. الأزرار (Primary & Secondary) */
-  /* الزر البرتقالي الرئيسي */
   .btn-primary {
     width: 100%;
-    background-color: var(--primary);
+    background: linear-gradient(180deg, #E67E00 0%, #D97706 100%);
     color: #FFFFFF;
     font-weight: 700;
     font-size: 1rem;
@@ -137,7 +148,6 @@
   }
 
   .btn-primary:hover {
-    background-color: var(--primary-hover);
     box-shadow: 0 6px 20px rgba(224, 122, 0, 0.45);
     transform: translateY(-1px);
   }
@@ -146,7 +156,6 @@
     transform: translateY(0);
   }
 
-  /* الزر الثانوي (Google والأزرار العادية) */
   .btn-secondary {
     width: 100%;
     background-color: var(--surface-google);
@@ -168,7 +177,7 @@
     border-color: var(--border-hover);
   }
 
-  /* 🔗 4. الروابط الملونة (تسجيل جديد / نسيت كلمة المرور) */
+  /* 🔗 4. الروابط الملونة */
   .link-primary {
     color: var(--primary);
     font-weight: 700;
@@ -185,13 +194,13 @@
   .logo-icon-wrapper {
     width: 4.25rem;
     height: 4.25rem;
-    background-color: var(--emerald-bg);
-    border: 1px solid var(--emerald-border);
-    border-radius: 1.125rem;
+    background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    border-radius: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1.25rem auto;
-    box-shadow: 0 0 25px rgba(13, 92, 77, 0.35);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
   }
 }
