@@ -7,7 +7,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
-import { colors as C } from '@/theme/colors.js';
+import rawColors from '@/theme/colors.js';
 
 import SplashScreen from '@/components/UI/SplashScreen'; 
 import DevPlayground from '@/components/DevPlayground';
@@ -19,11 +19,36 @@ import MainApp from '@/components/MainApp';
 import CreateAcademy from '@/components/create-academy/CreateAcademy';
 import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
-const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
+// 🎨 طبقة حماية وتوافق لكائن الألوان (تمنع الكراش والشاشة السوداء)
+const C = {
+  ...rawColors,
+  dark: {
+    main: rawColors?.dark?.main || rawColors?.card || '#0F172A',
+    card: rawColors?.dark?.card || rawColors?.card || '#1E293B',
+    border: rawColors?.dark?.border || rawColors?.borderCard || '#334155',
+    surface: rawColors?.dark?.surface || rawColors?.input || '#090F16',
+  },
+  primary: {
+    DEFAULT: typeof rawColors?.primary === 'string' ? rawColors.primary : rawColors?.primary?.DEFAULT || '#D97706',
+    gradient: rawColors?.primary?.gradient || 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+  },
+  text: {
+    title: rawColors?.text?.title || rawColors?.text || '#F8FAFC',
+    body: rawColors?.text?.body || rawColors?.textSub || '#CBD5E1',
+    muted: rawColors?.text?.muted || rawColors?.textMuted || '#94A3B8',
+  },
+  error: {
+    DEFAULT: rawColors?.error?.DEFAULT || rawColors?.danger || '#EF4444',
+    bgGlow: rawColors?.error?.bgGlow || 'rgba(239, 68, 68, 0.15)',
+    light: rawColors?.error?.light || '#FCA5A5',
+  },
+  brandEmerald: {
+    DEFAULT: rawColors?.brandEmerald?.DEFAULT || '#10B981',
+    bgGlow: rawColors?.brandEmerald?.bgGlow || 'rgba(16, 185, 129, 0.15)',
+  }
+};
 
-const ALLOWED_HOSTS = (import.meta.env.VITE_ALLOWED_HOSTS || 'smart-halaqa.vercel.app,halaqa.vercel.app,localhost,127.0.0.1,192.168.1.9')
-  .split(',')
-  .map((s) => s.trim());
+const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { profile, appState, logout } = useAcademy();
@@ -31,7 +56,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   if (appState === 'LOADING') {
     return (
       <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: C.primary.DEFAULT }}>
-        <Loader2 className="fa-spin" size={28} />
+        <Loader2 className="animate-spin" size={28} />
       </div>
     );
   }
@@ -82,7 +107,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return children;
 };
 
-// التعامل مع أخطاء التحميل والكاش وتفريغ الكاش القديم تلقائياً
+// التعامل مع أخطاء التحميل وتفريغ الكاش القديم تلقائياً
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -236,7 +261,7 @@ class GlobalErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ color: C.text.title, textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+        <div style={{ color: C.text.title, textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif", background: C.dark.main, minHeight: '100vh' }}>
           <AlertTriangle size={48} style={{ color: C.error.DEFAULT, marginBottom: '15px' }} />
           <h2 style={{ color: C.error.DEFAULT, marginBottom: '10px' }}>حدث خطأ تقني في النظام</h2>
           <div style={{ background: C.dark.card, padding: '15px', borderRadius: '8px', border: `1px solid ${C.dark.border}`, maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: C.error.light, overflowX: 'auto' }}>
@@ -308,10 +333,10 @@ function MainContent() {
     );
   }
 
-  if (appState === 'LOADING') {
+  if (appState === 'LOADING' || !appState) {
     return (
       <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT, gap: '12px' }}>
-        <Loader2 className="fa-spin" size={28} />
+        <Loader2 className="animate-spin" size={32} />
         <span style={{ fontSize: '0.85rem', color: C.text.muted, fontFamily: "'Cairo', system-ui, sans-serif" }}>جاري تحميل المنظومة...</span>
       </div>
     );
@@ -353,7 +378,7 @@ function MainContent() {
               disabled={isRefreshing}
               style={{ padding: '10px 20px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <RefreshCw size={16} className={isRefreshing ? 'fa-spin' : ''} />
+              <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
               {isRefreshing ? 'جاري الفحص...' : 'تحديث حالة الطلب'}
             </button>
             
@@ -375,7 +400,7 @@ function MainContent() {
       <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
         <Suspense fallback={
           <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
-            <Loader2 className="fa-spin" size={32} />
+            <Loader2 className="animate-spin" size={32} />
           </div>
         }>
           <AdminDashboard session={{ user }} onLogout={logout} />
@@ -385,30 +410,29 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
-  return (
-    <CreateAcademy 
-      onLogout={logout} 
-      onSubmitAcademy={async (formData) => {
-        // هنا يتم إرسال بيانات الأكاديمية لقاعدة البيانات (Supabase)
-        const { error } = await supabase.from('academies').insert([
-          {
-            name: formData.name,
-            slug: formData.slug,
-            currency: formData.currency,
-            calendar: formData.calendar,
-            timezone: formData.timezone,
-            language: formData.language,
-            owner_id: user?.id,
-          }
-        ]);
+    return (
+      <CreateAcademy 
+        onLogout={logout} 
+        onSubmitAcademy={async (formData) => {
+          const { error } = await supabase.from('academies').insert([
+            {
+              name: formData.name,
+              slug: formData.slug,
+              currency: formData.currency,
+              calendar: formData.calendar,
+              timezone: formData.timezone,
+              language: formData.language,
+              owner_id: user?.id,
+            }
+          ]);
 
-        if (!error && refreshStatus) {
-          await refreshStatus();
-        }
-      }} 
-    />
-  );
-}
+          if (!error && refreshStatus) {
+            await refreshStatus();
+          }
+        }} 
+      />
+    );
+  }
 
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
@@ -446,9 +470,6 @@ function MainContent() {
 }
 
 export default function App() {
-  const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : null;
-  const isAllowed = hostname ? ALLOWED_HOSTS.includes(hostname) : true;
-
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const view = urlParams.get('view');
 
@@ -474,17 +495,19 @@ export default function App() {
     setShowSplash(false);
   };
 
-  if (!isAllowed) {
-    return <div style={{ padding: '30px', color: C.error.DEFAULT, textAlign: 'center', fontFamily: "'Cairo', system-ui, sans-serif" }}>🔒 نطاق غير مصرح به.</div>;
-  }
-
   if (showSplash) {
     return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
   }
 
   return (
     <GlobalErrorBoundary>
-      <MainContent />
+      <Suspense fallback={
+        <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
+          <Loader2 className="animate-spin" size={32} />
+        </div>
+      }>
+        <MainContent />
+      </Suspense>
     </GlobalErrorBoundary>
   );
 }
