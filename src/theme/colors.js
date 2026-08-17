@@ -1,75 +1,67 @@
-// src/theme/colors.js
+/**
+ * نظام الألوان الموحد - Smart Halaqa Design System (v2.5)
+ * مستخرج ومطابق بدقة 100% لشاشة البداية وشاشات تسجيل الدخول واستعادة كلمة المرور
+ */
 
-// 1. ألوان الهوية والتصميم الأساسية
-const baseColors = {
-  primary: '#D97706',
-  primaryHover: '#B45309',
-  
-  card: '#1E293B',
-  borderCard: '#334155',
-  input: '#0F172A',
-  
-  text: '#F8FAFC',
-  textSub: '#CBD5E1',
-  textMuted: '#94A3B8',
-  
-  success: '#10B981',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-};
-
-// 2. الكائن الشامل للألوان
 export const colors = {
-  ...baseColors,
-
-  // دعم الاستدعاء المتداخل C.dark
+  // 1. الخلفيات والأسطح الزجاجية
   dark: {
-    main: '#0F172A',
-    card: '#1E293B',
-    border: '#334155',
-    surface: '#090F16',
+    bg: '#080C16',                      // الكحلي الداكن جداً للخلفية الأساسية
+    card: 'rgba(15, 23, 42, 0.85)',     // خلفية بطاقة Form الزجاجية المعتمة
+    cardBorder: 'rgba(255, 255, 255, 0.08)', // حدود البطاقة الناعمة جداً
+    surface: '#0A0F1C',                 // خلفية حقول الإدخال الداخلية
   },
 
-  // دعم الاستدعاء المتداخل C.primary
-  primary: {
-    DEFAULT: '#D97706',
-    hover: '#B45309',
-    gradient: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
-    bgGlow: 'rgba(217, 119, 6, 0.15)',
+  // 2. البرتقالي / الكهرماني الهوياتي (مطابق تماماً لزر "إرسال رابط الحماية" والعناوين الفرعية)
+  amber: {
+    DEFAULT: '#D97706',                // البرتقالي الكهرماني للروابط والعناوين الفرعية
+    buttonStart: '#E67E00',            // بداية تدرج زر الإرسال
+    buttonEnd: '#D97706',              // نهاية تدرج زر الإرسال
+    borderFocus: '#D97706',            // إطار حقل الإدخال النشط عند الكتابة
+    glowFocus: 'rgba(217, 119, 6, 0.2)', // توهج حقل الإدخال النشط
+    buttonGlow: 'rgba(217, 119, 6, 0.3)',// ظلال زر التسجيل والإرسال
   },
 
-  // دعم الاستدعاء المتداخل C.text
-  text: {
-    title: '#F8FAFC',
-    body: '#CBD5E1',
-    muted: '#94A3B8',
-  },
-
-  // دعم الاستدعاء المتداخل C.error
-  error: {
-    DEFAULT: '#EF4444',
-    bgGlow: 'rgba(239, 68, 68, 0.15)',
-    light: '#FCA5A5',
-  },
-
-  // دعم الاستدعاء المتداخل C.brandEmerald
-  brandEmerald: {
+  // 3. الزمردي المضيء (مطابق تماماً لأيقونة الشعار وشريط التقدم)
+  emerald: {
     DEFAULT: '#10B981',
-    bgGlow: 'rgba(16, 185, 129, 0.15)',
+    dark: '#059669',                   // بداية تدرج مربع الشعار
+    light: '#34D399',                  // حدود الشعار وتوهجه
+    radialGlow: 'rgba(16, 185, 129, 0.14)', // التوهج الشعاعي العلوي خلف الشعار
+    logoGlow: 'rgba(16, 185, 129, 0.35)',   // توهج شعار التطبيق
   },
 
-  // التدرجات الخلفية
+  // 4. النصوص والتباين البصري
+  text: {
+    title: '#FFFFFF',                  // أبيض ناصع للعناوين الرئيسية
+    subtitle: '#D97706',               // برتقالي كهرماني للعناوين الفرعية
+    body: '#E2E8F0',                   // أبيض ناعم للنصوص
+    muted: '#94A3B8',                  // رمادي للنصوص الوصفية
+    placeholder: '#64748B',            // رمادي معتم لنص الإرشاد داخل الحقول
+  },
+
+  // 5. حقول المدخلات (Form Inputs)
+  inputs: {
+    bg: 'rgba(10, 15, 28, 0.8)',       // خلفية الحقل الشفافة الداكنة
+    border: 'rgba(255, 255, 255, 0.12)', // حدود الحقل العادية
+    borderFocus: '#D97706',            // حدود الحقل باللون البرتقالي عند الكتابة
+    icon: '#64748B',                   // لون أيقونة الحقل (مثل البريد والقفالة)
+  },
+
+  // 6. خلفيات التدرج والنجوم (Background Patterns & Gradients)
   gradients: {
-    pageBackground: 'radial-gradient(ellipse at top, #1E293B 0%, #0F172A 70%, #090F16 100%)',
-    goldButton: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+    // خلفية النجوم والتوهج الزمردي العلوي المطابقة للصورة تماماً
+    starsBg: `
+      radial-gradient(circle at 50% 28%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+      radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px)
+    `,
+    // تدرج زر الإرسال الرئيسي
+    primaryBtn: 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+    // تدرج مربع شعار التطبيق الزمردي
+    logoBox: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+    // تدرج شريط التحميل (54%)
+    progressBar: 'linear-gradient(90deg, #10B981 0%, #F59E0B 100%)',
   }
 };
 
-// 3. التدرجات المباشرة (حل استيراد g)
-export const g = colors.gradients;
-
-// 4. تصدير الاختصار C ليتوافق مع Skeleton.jsx والمكونات المشابهة
-export const C = colors;
-
-// 5. التصدير الافتراضي
 export default colors;
