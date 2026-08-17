@@ -1,12 +1,12 @@
-/* src/components/Student/AddStudentModal.jsx */
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 // 🛠️ الخدمات والثوابت والأدوات المساعدة
 import { supabase } from "@/lib/supabase";
 import { COUNTRIES_LIST } from "@/constants/countries";
+import colors from "@/theme/colors";
 
-// 🧩 المكونات العامة
+// 🧩 المكونات العامة والأيقونات
 import { Btn, Input, Select } from "@/components/UI/UI.jsx"; 
 import { X, UserPlus, CheckCircle, AlertCircle, GraduationCap } from 'lucide-react';
 
@@ -17,8 +17,8 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
   const [loading, setLoading] = useState(false);
   const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
 
-  // 📝 حالات النموذج (Form States)
-  const [formData, setFormData] = useState({
+  // 📝 حالات النموذج الأولى (Form Initial States)
+  const initialFormState = {
     name: '',
     parent_name: '',
     parent_phone: '',
@@ -28,11 +28,23 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
     subscription_system: 'monthly',
     halaqa_id: halaqasList.length > 0 ? halaqasList[0].id : '',
     status: 'active'
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   const triggerToast = (text, type = 'success') => {
     setInlineMessage({ text, type });
     setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setInlineMessage({ text: '', type: '' });
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -46,7 +58,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
 
     setLoading(true);
     try {
-      // توليد كود طالب عشوائي أو تسلسلي مختصر
+      // توليد كود طالب تسلسلي مختصر
       const studentCode = 'ST-' + Math.floor(1000 + Math.random() * 9000);
 
       const payload = {
@@ -78,9 +90,8 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
       
       if (onStudentAdded) onStudentAdded(data);
       
-      // إغلاق النافذة بعد النجاح بقليل
       setTimeout(() => {
-        onClose();
+        handleClose();
       }, 1000);
 
     } catch (error) {
@@ -119,50 +130,82 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
   }));
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ position: 'fixed', inset: 0, zIndex: 1300, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', boxSizing: 'border-box' }}>
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'} 
+      className="fixed inset-0 z-[1300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
+    >
       
       {/* 🚀 إشعار تنبيهي داخلي */}
       {inlineMessage.text && (
-        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '10px 20px', borderRadius: '30px', zIndex: 1400, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+        <div 
+          className="fixed top-5 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full z-[1400] flex items-center gap-2 text-xs font-bold text-white shadow-xl animate-fade-in"
+          style={{ 
+            backgroundColor: inlineMessage.type === 'success' ? colors.brandEmerald.DEFAULT : colors.danger 
+          }}
+        >
           {inlineMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{inlineMessage.text}</span>
         </div>
       )}
 
-      <div style={{ width: '100%', maxWidth: '520px', background: '#1E293B', border: '1px solid #334155', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+      {/* 📦 النافذة الرئيسية */}
+      <div 
+        className="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all"
+        style={{ 
+          backgroundColor: colors.card, 
+          borderColor: colors.borderCard 
+        }}
+      >
         
         {/* 🏷️ رأس النافذة */}
-        <div style={{ padding: '16px 20px', background: '#0F172A', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B' }}>
+        <div 
+          className="px-5 py-4 flex items-center justify-between border-b"
+          style={{ 
+            backgroundColor: colors.input, 
+            borderColor: colors.borderCard 
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center border"
+              style={{ 
+                backgroundColor: 'rgba(217, 119, 6, 0.15)', 
+                borderColor: colors.border,
+                color: colors.primary 
+              }}
+            >
               <UserPlus className="w-5 h-5" />
             </div>
             <div>
-              <h3 style={{ margin: 0, color: '#F8FAFC', fontSize: '16px', fontWeight: 'bold' }}>
+              <h3 className="m-0 text-base font-bold" style={{ color: colors.text }}>
                 {t('add_new_student') || (isRtl ? 'إضافة طالب جديد' : 'Add New Student')}
               </h3>
-              <p style={{ margin: 0, color: '#94A3B8', fontSize: '11px' }}>
+              <p className="m-0 text-xs" style={{ color: colors.textMuted }}>
                 {t('add_student_subtitle') || (isRtl ? 'تسجيل بيانات الطالب الجديد في المنظومة' : 'Register new student details')}
               </p>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+          <button 
+            onClick={handleClose} 
+            className="p-1.5 rounded-lg border-0 bg-transparent cursor-pointer transition-colors hover:bg-slate-800/60"
+            style={{ color: colors.textMuted }}
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* 📦 محتوى النموذج */}
-        <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto flex flex-col gap-3.5">
           
           <Input 
             label={t('student_full_name') || (isRtl ? 'اسم الطالب الرباعي' : 'Full Student Name')} 
             value={formData.name} 
-            placeholder={isRtl ? 'مثال: محمد أحمد علي' : 'e.g., John Doe'}
+            placeholder={isRtl ? 'أدخل اسم الطالب' : 'Enter student name'}
             onChange={(e) => setFormData({...formData, name: e.target.value})} 
             required
           />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select 
               label={t('gender') || (isRtl ? 'الجنس' : 'Gender')} 
               value={formData.gender} 
@@ -177,7 +220,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select 
               label={t('halaqa') || (isRtl ? 'الحلقة الدراسية' : 'Halaqa')} 
               value={formData.halaqa_id} 
@@ -192,24 +235,31 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
             />
           </div>
 
-          <div style={{ background: '#0F172A', padding: '12px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* 👨‍👩‍👦 قسم بيانات ولي الأمر */}
+          <div 
+            className="p-3.5 rounded-xl border flex flex-col gap-3"
+            style={{ 
+              backgroundColor: colors.input, 
+              borderColor: colors.border 
+            }}
+          >
             <Input 
               label={t('parent_custody_name') || (isRtl ? 'اسم ولي الأمر' : 'Parent Name')} 
               value={formData.parent_name} 
-              placeholder={isRtl ? 'اسم ولي الأمر (اختياري)' : 'Parent name (optional)'} 
+              placeholder={isRtl ? 'أدخل اسم ولي الأمر' : 'Enter parent name'} 
               onChange={(e) => setFormData({...formData, parent_name: e.target.value})} 
             />
             <Input 
               label={t('contact_hotline') || (isRtl ? 'رقم هاتف ولي الأمر (واتساب)' : 'Parent Phone (WhatsApp)')} 
               type="tel" 
               value={formData.parent_phone} 
-              placeholder="01234567890" 
+              placeholder={isRtl ? 'أدخل رقم الهاتف' : 'Enter phone number'} 
               onChange={(e) => setFormData({...formData, parent_phone: e.target.value})} 
-              style={{ textAlign: 'left', direction: 'ltr' }} 
+              style={{ textAlign: isRtl ? 'right' : 'left', direction: 'ltr' }} 
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select 
               label={t('financial_tariff_plan') || (isRtl ? 'نظام الاشتراك' : 'Subscription Plan')} 
               value={formData.subscription_system} 
@@ -225,12 +275,13 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
           </div>
 
           {/* 🔘 الأزرار */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <div className="flex gap-2.5 mt-2.5">
             <Btn 
               variant="success" 
               type="submit" 
               disabled={loading} 
-              style={{ flex: 1, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}
+              className="flex-1 py-3 flex items-center justify-center gap-1.5 font-bold rounded-xl transition-all active:scale-95"
+              style={{ backgroundColor: colors.primary }}
             >
               <GraduationCap className="w-4 h-4" /> 
               {loading ? (t('saving') || (isRtl ? 'جاري الحفظ...' : 'Saving...')) : (t('save_student') || (isRtl ? 'إضافة وحفظ الطالب' : 'Save Student'))}
@@ -238,8 +289,9 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
             <Btn 
               variant="ghost" 
               type="button" 
-              onClick={onClose} 
-              style={{ padding: '12px 20px', color: '#94A3B8' }}
+              onClick={handleClose} 
+              className="px-5 py-3 rounded-xl transition-all hover:bg-slate-800"
+              style={{ color: colors.textMuted }}
             >
               {t('cancel') || (isRtl ? 'إلغاء' : 'Cancel')}
             </Btn>
