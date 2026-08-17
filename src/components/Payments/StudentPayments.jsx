@@ -14,17 +14,19 @@ export default function Payments({ students, academyId, academyCurrency = 'EGP' 
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = currentLang === 'ar';
-  const getCurrencySymbol = () => {
-   if (academyCurrency === 'EGP') return isRtl ? 'ج.م' : 'EGP';
-   if (academyCurrency === 'USD') return isRtl ? '$' : 'USD';
-   if (academyCurrency === 'SAR') return isRtl ? 'ر.س' : 'SAR';
-   if (academyCurrency === 'AED') return isRtl ? 'د.إ' : 'AED';
-   if (academyCurrency === 'AUD') return isRtl ? 'د.أ' : 'AUD';
-  
-  return academyCurrency; // في حال وجود عملة أخرى غير مدرجة
-};
 
-const currencySymbol = getCurrencySymbol();
+  // 💡 تحديد رمز العملة ديناميكياً بحسب لغة الواجهة وعملة الأكاديمية
+  const getCurrencySymbol = () => {
+    if (academyCurrency === 'EGP') return isRtl ? 'ج.م' : 'EGP';
+    if (academyCurrency === 'USD') return isRtl ? '$' : 'USD';
+    if (academyCurrency === 'SAR') return isRtl ? 'ر.س' : 'SAR';
+    if (academyCurrency === 'AED') return isRtl ? 'د.إ' : 'AED';
+    if (academyCurrency === 'AUD') return isRtl ? 'د.أ' : 'AUD';
+    
+    return academyCurrency; // في حال وجود عملة أخرى غير مدرجة
+  };
+
+  const currencySymbol = getCurrencySymbol();
 
   // دالة حماية ومعالجة آمنة لاسم الطالب لتجنب انهيار الصفحة
   const getStudentName = (student) => {
@@ -158,7 +160,7 @@ const currencySymbol = getCurrencySymbol();
     const [year, month] = selectedMonth.split('-');
     const formattedMonth = `${month}/${year}`;
     const expectedAmount = student.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
-    const currency = student.currency || (isRtlLang ? 'ج.م' : 'EGP');
+    const currency = student.currency || currencySymbol;
     const studentName = getStudentName(student);
     
     const isPaid = checkIsPaid(currentRecord?.status);
@@ -316,14 +318,14 @@ const currencySymbol = getCurrencySymbol();
         <Card className="stat-card" style={{ borderRight: isRtl ? `4px solid #10b981` : 'none', borderLeft: !isRtl ? `4px solid #10b981` : 'none' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalCollected', 'إجمالي التحصيل الفعلي', 'Total Collected')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#10b981' }}>
-            {formatMoney(totalCollected)} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
+            {formatMoney(totalCollected)} <span style={{ fontSize: '14px', color: C.muted }}>{currencySymbol}</span>
           </p>
         </Card>
 
         <Card className="stat-card" style={{ borderRight: isRtl ? `4px solid #f59e0b` : 'none', borderLeft: !isRtl ? `4px solid #f59e0b` : 'none' }}>
           <h4 style={{ margin: 0, color: C.muted, fontSize: '14px' }}>{translateText('totalPending', 'المبالغ المعلقة/المتأخرة', 'Pending Balance')}</h4>
           <p style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '8px 0 0 0', color: '#f59e0b' }}>
-            {formatMoney(totalPending)} <span style={{ fontSize: '14px', color: C.muted }}>{translateText('currency', 'ج.م', 'EGP')}</span>
+            {formatMoney(totalPending)} <span style={{ fontSize: '14px', color: C.muted }}>{currencySymbol}</span>
           </p>
         </Card>
 
@@ -425,7 +427,7 @@ const currencySymbol = getCurrencySymbol();
                 const isPaid = checkIsPaid(rec?.status);
                 const isPartial = checkIsPartial(rec?.status);
                 const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
-                const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
+                const currency = s.currency || currencySymbol;
 
                 return (
                   <div key={s.id} style={{ 
@@ -471,7 +473,7 @@ const currencySymbol = getCurrencySymbol();
                     const isPaid = checkIsPaid(rec?.status);
                     const isPartial = checkIsPartial(rec?.status);
                     const expectedAmount = s.monthly_fee || DEFAULT_SUBSCRIPTION_AMOUNT;
-                    const currency = s.currency || (isRtl ? 'ج.م' : 'EGP');
+                    const currency = s.currency || currencySymbol;
 
                     return (
                       <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'all 0.2s' }}>
