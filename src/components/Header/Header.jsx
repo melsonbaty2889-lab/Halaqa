@@ -24,14 +24,12 @@ export default function Header({
   const currentLanguage = i18n.language || 'ar';
   const isAr = currentLanguage.startsWith('ar');
 
-  // جلب بيانات الأكاديمية الحالية من Context
   const { academy, currentAcademy } = useAcademy();
   const activeAcademy = academy || currentAcademy;
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // تحديد العملة المعروضة وفق الأولويات: Context -> localStorage -> EGP
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
       activeAcademy?.currency || 
@@ -46,7 +44,6 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  // المزامنة الفورية عند تحميل بيانات الأكاديمية أو عند الـ Refresh
   useEffect(() => {
     if (activeAcademy?.currency) {
       setSelectedCurrency(activeAcademy.currency);
@@ -54,7 +51,6 @@ export default function Header({
     }
   }, [activeAcademy?.currency]);
 
-  // الاستماع المباشر لحدث حفظ العملة من صفحة الإعدادات (Settings)
   useEffect(() => {
     const handleCurrencyUpdate = (event) => {
       if (event.detail) {
@@ -106,7 +102,6 @@ export default function Header({
     };
   }, [fetchNotifications]);
 
-  // إغلاق القوائم المنسدلة عند الضغط خارج المكون
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) setShowNotifMenu(false);
@@ -165,34 +160,34 @@ export default function Header({
 
   return (
     <header 
-      className="sticky top-0 z-50 min-h-[60px] px-3 py-2 bg-[#0b132b]/80 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between gap-2 shadow-lg text-slate-100" 
+      className="sticky top-0 z-50 min-h-[60px] px-3 py-2 bg-[#0b132b]/90 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between gap-2 shadow-lg text-slate-100 w-full overflow-hidden" 
       dir={activeRtl ? 'rtl' : 'ltr'}
     >
-      {/* القسم الأيسر/الأيمن - العنوان وزر القائمة */}
-      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+      {/* القسم الرئيسي: زر القائمة وعنوان الصفحة */}
+      <div className="flex items-center gap-2 min-w-0 shrink">
         <button
           type="button"
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 text-emerald-400 transition-all duration-200 cursor-pointer flex-shrink-0 active:scale-95"
+          className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 text-emerald-400 transition-all duration-200 cursor-pointer shrink-0 active:scale-95"
           title={isAr ? "القائمة" : "Menu"}
         >
           <Menu size={18} />
         </button>
 
-        <h1 className="m-0 text-sm font-bold text-slate-100 whitespace-nowrap overflow-hidden text-ellipsis leading-tight select-none">
+        <h1 className="m-0 text-xs sm:text-sm font-bold text-slate-100 truncate leading-tight select-none">
           {pageTitle}
         </h1>
       </div>
 
-      {/* القسم الأيمن/الأيسر - الأدوات والقوائم */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      {/* الأدوات الشريطية الأيمن/الأيسر */}
+      <div className="flex items-center gap-1.5 shrink-0">
         
-        {/* 🟢 شارة عرض العملة المعتمدة للأكاديمية */}
+        {/* شارة العملة */}
         <div 
           title={isAr ? "العملة المعتمدة للمنظومة" : "Official System Currency"}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-xs font-medium select-none"
+          className="flex items-center gap-1 px-2 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-[11px] sm:text-xs font-medium select-none"
         >
-          <Coins size={14} className="text-amber-400 shrink-0" />
+          <Coins size={13} className="text-amber-400 shrink-0" />
           <span className="font-semibold text-slate-200">{selectedCurrency}</span>
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] shrink-0" />
         </div>
@@ -201,9 +196,9 @@ export default function Header({
         <button
           type="button"
           onClick={toggleLanguage}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+          className="flex items-center gap-1 px-2 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-95"
         >
-          <Globe size={14} className="text-emerald-400" />
+          <Globe size={13} className="text-emerald-400" />
           <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
@@ -215,12 +210,12 @@ export default function Header({
               setShowNotifMenu(!showNotifMenu);
               setShowProfileMenu(false);
             }}
-            className="p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all duration-200 cursor-pointer relative flex items-center justify-center active:scale-95"
+            className="p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all duration-200 cursor-pointer relative flex items-center justify-center active:scale-95"
             title={t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
           >
-            <Bell size={16} className="text-emerald-400" />
+            <Bell size={15} className="text-emerald-400" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
             )}
           </button>
 
@@ -296,11 +291,11 @@ export default function Header({
               setShowProfileMenu(!showProfileMenu);
               setShowNotifMenu(false);
             }}
-            className="p-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center active:scale-95"
+            className="p-1 sm:p-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center active:scale-95"
             title={t('nav.profile', isAr ? "الملف الشخصي" : "Profile")}
           >
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
-              <UserCheck size={14} />
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+              <UserCheck size={13} />
             </div>
           </button>
 
