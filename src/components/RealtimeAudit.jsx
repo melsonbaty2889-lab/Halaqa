@@ -26,8 +26,9 @@ import { C } from '@/theme/colors';
 
 export default function RealtimeAudit({ session, userRole }) {
   const { i18n } = useTranslation();
-  const isArabic = !i18n.language || i18n.language.startsWith('ar');
-  const isRtl = i18n.dir() === 'rtl' || isArabic;
+  const currentLang = i18n.language || 'ar';
+  const isArabic = currentLang.startsWith('ar');
+  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : isArabic;
 
   const tableDisplayNames = {
     attendance: isArabic ? 'الحضور والتسميع' : 'Attendance',
@@ -239,7 +240,7 @@ export default function RealtimeAudit({ session, userRole }) {
 
     if (isRaw) {
       return (
-        <pre style={{ background: C.input, padding: 12, borderRadius: 12, color: C.success, overflowX: 'auto', margin: 0, fontSize: '0.72rem', fontFamily: 'monospace', border: `1px solid ${C.border}` }}>
+        <pre className="bg-slate-900/90 p-3 rounded-xl text-emerald-400 overflow-x-auto m-0 text-[11px] font-mono border border-slate-800">
           {JSON.stringify(newData || oldData, null, 2)}
         </pre>
       );
@@ -250,35 +251,35 @@ export default function RealtimeAudit({ session, userRole }) {
     );
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {log.operation === 'UPDATE' && Object.keys(oldData).length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2">
             {Object.keys(newData).map(key => {
               if (JSON.stringify(oldData[key]) === JSON.stringify(newData[key])) return null;
               if (key.endsWith('_id') || key === 'id' || key.endsWith('_at')) return null;
 
               return (
-                <div key={key} style={{ background: C.input, padding: '8px 12px', borderRadius: 10, border: `1px solid ${C.border}` }}>
-                  <div style={{ color: C.textMuted, fontSize: '0.7rem', marginBottom: 4 }}>
+                <div key={key} className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800/80">
+                  <div className="text-slate-400 text-[10px] mb-1">
                     {fieldLabels[key] || key}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: C.danger, textDecoration: 'line-through' }}>{formatValue(key, oldData[key])}</span>
-                    <span style={{ color: C.textMuted }}>➔</span>
-                    <span style={{ color: C.success, fontWeight: 700 }}>{formatValue(key, newData[key])}</span>
+                  <div className="flex items-center gap-1.5 text-[11px] flex-wrap">
+                    <span className="text-rose-400 line-through">{formatValue(key, oldData[key])}</span>
+                    <span className="text-slate-500">➔</span>
+                    <span className="text-emerald-400 font-bold">{formatValue(key, newData[key])}</span>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2">
             {keysToDisplay.map(key => (
-              <div key={key} style={{ background: C.input, padding: '8px 12px', borderRadius: 10, border: `1px solid ${C.border}` }}>
-                <div style={{ color: C.textMuted, fontSize: '0.7rem', marginBottom: 2 }}>
+              <div key={key} className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800/80">
+                <div className="text-slate-400 text-[10px] mb-1">
                   {fieldLabels[key] || key}
                 </div>
-                <div style={{ color: C.text, fontWeight: 600, fontSize: '0.78rem' }}>
+                <div className="text-slate-100 font-semibold text-[11px] truncate">
                   {formatValue(key, newData[key])}
                 </div>
               </div>
@@ -295,22 +296,25 @@ export default function RealtimeAudit({ session, userRole }) {
   ];
 
   return (
-    <div style={{ padding: '24px 16px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div 
+      className="px-2.5 py-4 sm:px-6 sm:py-6 w-full max-w-full overflow-hidden box-border" 
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
+      <div className="max-w-5xl mx-auto space-y-4">
         
         {/* الترويسة الموحدة */}
         <PageHeader 
           title={isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}
           sub={isArabic ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' : 'Real-time tracking of all updates and changes across the system'}
           action={
-            <div style={{ display: 'flex', gap: 10 }}>
-              <Btn variant="secondary" onClick={exportToCSV} style={{ padding: '8px 14px', fontSize: '0.8rem' }}>
-                <Download size={15} />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Btn variant="secondary" onClick={exportToCSV} className="!px-3 !py-1.5 !text-xs">
+                <Download size={14} />
                 <span>{isArabic ? 'تصدير CSV' : 'Export Report'}</span>
               </Btn>
 
-              <Btn variant="secondary" onClick={fetchAuditLogs} style={{ padding: '8px 14px', fontSize: '0.8rem' }}>
-                <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+              <Btn variant="secondary" onClick={fetchAuditLogs} className="!px-3 !py-1.5 !text-xs">
+                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                 <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
               </Btn>
             </div>
@@ -318,9 +322,9 @@ export default function RealtimeAudit({ session, userRole }) {
         />
 
         {/* أدوات البحث والفلترة */}
-        <Card style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+        <Card className="!p-3 sm:!p-4">
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <Input 
                 placeholder={isArabic ? 'ابحث باسم المشرف، أو الجدول، أو العملية...' : 'Search table, user, or operation...'}
                 value={searchQuery}
@@ -336,31 +340,39 @@ export default function RealtimeAudit({ session, userRole }) {
               />
             </div>
 
-            {/* فلتر التاريخ */}
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', background: C.input, padding: '10px 14px', borderRadius: 12, border: `1px solid ${C.border}`, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.primary, fontSize: '0.8rem', fontWeight: 700 }}>
-                <Calendar size={15} />
+            {/* فلتر التاريخ المحدث ليناسب الموبايل */}
+            <div className="flex flex-wrap items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold shrink-0">
+                <Calendar size={14} />
                 <span>{isArabic ? 'النطاق الزمني:' : 'Date Range:'}</span>
               </div>
               
-              <input 
-                type="date" 
-                value={startDate} 
-                onChange={(e) => setStartDate(e.target.value)} 
-                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, padding: '6px 10px', borderRadius: 8, fontSize: '0.78rem', outline: 'none' }} 
-              />
-              
-              <span style={{ color: C.textMuted, fontSize: '0.78rem' }}>{isArabic ? 'إلى' : 'to'}</span>
-              
-              <input 
-                type="date" 
-                value={endDate} 
-                onChange={(e) => setEndDate(e.target.value)} 
-                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, padding: '6px 10px', borderRadius: 8, fontSize: '0.78rem', outline: 'none' }} 
-              />
+              <div className="flex items-center gap-2 flex-1 min-w-[220px]">
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={(e) => setStartDate(e.target.value)} 
+                  className="bg-slate-950 border border-slate-700/80 text-slate-100 px-2.5 py-1.5 rounded-lg text-xs outline-none flex-1 min-w-0"
+                  style={{ colorScheme: 'dark' }}
+                />
+                
+                <span className="text-slate-400 text-xs shrink-0">{isArabic ? 'إلى' : 'to'}</span>
+                
+                <input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={(e) => setEndDate(e.target.value)} 
+                  className="bg-slate-950 border border-slate-700/80 text-slate-100 px-2.5 py-1.5 rounded-lg text-xs outline-none flex-1 min-w-0"
+                  style={{ colorScheme: 'dark' }}
+                />
+              </div>
 
               {(startDate || endDate) && (
-                <Btn variant="ghost" onClick={() => { setStartDate(''); setEndDate(''); }} style={{ color: C.danger, padding: '4px 8px', fontSize: '0.75rem' }}>
+                <Btn 
+                  variant="ghost" 
+                  onClick={() => { setStartDate(''); setEndDate(''); }} 
+                  className="!text-rose-400 !px-2 !py-1 !text-xs shrink-0"
+                >
                   {isArabic ? 'إلغاء الفلترة' : 'Clear'}
                 </Btn>
               )}
@@ -369,22 +381,22 @@ export default function RealtimeAudit({ session, userRole }) {
         </Card>
 
         {/* قائمة السجلات */}
-        <Card>
+        <Card className="!p-2 sm:!p-4">
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: C.textSub, fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Loader2 size={18} className="animate-spin" style={{ color: C.primary }} />
+            <div className="py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin text-emerald-400" />
               <span>{isArabic ? 'جاري تحميل سجل التغييرات...' : 'Loading audit logs...'}</span>
             </div>
           ) : logs.length === 0 ? (
-            <div style={{ padding: 36, textAlign: 'center', color: C.textSub }}>
+            <div className="py-10 text-center text-slate-400 text-xs">
               {isArabic ? 'لا توجد أنشطة مسجلة في قاعدة البيانات بعد' : 'No activities recorded in database yet'}
             </div>
           ) : filteredLogs.length === 0 ? (
-            <div style={{ padding: 36, textAlign: 'center', color: C.textSub }}>
+            <div className="py-10 text-center text-slate-400 text-xs">
               {isArabic ? 'لا توجد نتائج تطابق خيارات البحث' : 'No results matching search filters'}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex flex-col gap-2">
               {filteredLogs.map((log) => {
                 const badge = getOperationBadge(log.operation);
                 const IconComponent = badge.icon;
@@ -394,50 +406,65 @@ export default function RealtimeAudit({ session, userRole }) {
                 const dateFormatted = new Date(log.created_at).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
 
                 return (
-                  <div key={log.id} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+                  <div 
+                    key={log.id} 
+                    className="bg-slate-900/60 rounded-xl border border-slate-800/80 overflow-hidden transition-all hover:border-slate-700"
+                  >
+                    {/* صف السجل الرئيسي المصمم بالتجاوب الكامل */}
                     <div 
                       onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                      style={{ padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }}>
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 10, background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <IconComponent size={18} style={{ color: badge.color }} />
+                      className="p-2.5 sm:p-3.5 flex items-center justify-between gap-2 cursor-pointer select-none"
+                    >
+                      {/* الجهة اليمنى: الأيقونة والنصوص */}
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div 
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0" 
+                          style={{ background: badge.bg }}
+                        >
+                          <IconComponent size={16} style={{ color: badge.color }} />
                         </div>
 
-                        <div>
-                          <div style={{ color: C.text, fontWeight: 700, fontSize: '0.85rem', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span>{badge.label}</span>
-                            <Badge color={C.primary}>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <span className="text-slate-100 font-bold text-xs shrink-0">
+                              {badge.label}
+                            </span>
+                            <Badge color={C.primary} className="!px-1.5 !py-0.5 !text-[10px] truncate max-w-[120px]">
                               {tableDisplayNames[log.table_name] || log.table_name}
                             </Badge>
                           </div>
                           
-                          <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <UserCheck size={13} style={{ color: C.primary }} />
-                            <span>{isArabic ? 'بواسطة:' : 'By:'} <strong style={{ color: C.text }}>{userName}</strong></span>
+                          <div className="text-slate-400 text-[11px] flex items-center gap-1 truncate">
+                            <UserCheck size={12} className="text-emerald-400 shrink-0" />
+                            <span className="shrink-0">{isArabic ? 'بواسطة:' : 'By:'}</span>
+                            <strong className="text-slate-200 truncate">{userName}</strong>
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ textAlign: isRtl ? 'left' : 'right' }}>
-                          <div style={{ color: C.primary, fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Clock size={12} />
-                            <span>{timeFormatted}</span>
+                      {/* الجهة اليسرى: الوقت والسهم */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className={isRtl ? "text-left" : "text-right"}>
+                          <div className="text-emerald-400 text-[11px] font-bold flex items-center gap-1 justify-end">
+                            <Clock size={11} className="shrink-0" />
+                            <span className="whitespace-nowrap">{timeFormatted}</span>
                           </div>
-                          <div style={{ color: C.textMuted, fontSize: '0.7rem', marginTop: 2 }}>
+                          <div className="text-slate-500 text-[10px] mt-0.5 whitespace-nowrap">
                             {dateFormatted}
                           </div>
                         </div>
 
-                        {isExpanded ? <ChevronUp size={16} color={C.textMuted} /> : <ChevronDown size={16} color={C.textMuted} />}
+                        <div className="text-slate-500 p-0.5">
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </div>
                       </div>
                     </div>
 
+                    {/* القائمة المنسدلة للتفاصيل */}
                     {isExpanded && (
-                      <div style={{ padding: '14px 16px', background: C.input, borderTop: `1px solid ${C.border}`, fontSize: '0.78rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                          <span style={{ color: C.textSub, fontWeight: 700 }}>
+                      <div className="p-3 bg-slate-950/80 border-t border-slate-800/80 text-xs">
+                        <div className="flex justify-between items-center mb-2 gap-2">
+                          <span className="text-slate-400 font-bold text-[11px]">
                             {isArabic ? 'تفاصيل العملية:' : 'Payload Details:'}
                           </span>
                           
@@ -447,9 +474,9 @@ export default function RealtimeAudit({ session, userRole }) {
                               e.stopPropagation();
                               setShowRawJson(prev => ({ ...prev, [log.id]: !prev[log.id] }));
                             }}
-                            style={{ padding: '4px 8px', fontSize: '0.7rem' }}
+                            className="!px-2 !py-1 !text-[10px]"
                           >
-                            <Code size={13} />
+                            <Code size={12} />
                             <span>{showRawJson[log.id] ? (isArabic ? 'عرض كارت مبسط' : 'View Friendly') : (isArabic ? 'عرض كود JSON' : 'View Raw JSON')}</span>
                           </Btn>
                         </div>
