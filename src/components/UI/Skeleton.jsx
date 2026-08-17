@@ -1,5 +1,7 @@
 import React from 'react';
-import { C, g } from '@/theme/colors';
+
+import colors from '@/theme/colors';
+const C = colors;
 
 // استخراج التأنيمشن ليعمل بشكل نظيف دون تكرار
 const SkeletonStyles = () => (
