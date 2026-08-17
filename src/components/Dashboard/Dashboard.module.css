@@ -30,7 +30,7 @@
   gap: 12px;
   padding-bottom: 16px;
   margin-bottom: 20px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-card);
 }
 
 .adminTitle {
@@ -50,59 +50,16 @@
 }
 
 .adminSubtitle {
-  color: var(--text-muted);
+  color: var(--text-sub);
   font-size: 0.85rem;
   margin: 4px 0 0 0;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.refreshBtn, .exportBtn, .logoutBtn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  white-space: nowrap;
-  cursor: pointer;
-  border: none;
-  box-sizing: border-box;
-}
-
-.refreshBtn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-light);
-  color: var(--text-main);
-}
-
-.exportBtn {
-  background: var(--success);
-  color: #ffffff;
-}
-
-.logoutBtn {
-  background: var(--danger);
-  color: #ffffff;
-}
-
-.spinning svg {
-  animation: spin 0.8s linear infinite;
-  color: var(--primary) !important;
 }
 
 /* شبكة الإحصائيات */
 .statsGrid, .summaryGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 20px;
   width: 100%;
   box-sizing: border-box;
@@ -110,10 +67,11 @@
 
 .summaryCard, .premiumStatBox {
   background: var(--surface-card);
-  border: 1px solid var(--border-light);
-  padding: 12px 8px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-card);
+  padding: 16px 12px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-main);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -123,8 +81,8 @@
 }
 
 .summaryCardLabel, .statLabel {
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  color: var(--text-sub);
+  font-size: 0.8rem;
   font-weight: 600;
   margin: 0 0 6px 0;
   white-space: nowrap;
@@ -133,170 +91,11 @@
 }
 
 .summaryCardValue, .statNumber {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: var(--primary);
+  color: var(--text-main);
   margin: 0;
   line-height: 1;
-}
-
-/* التبويبات والبحث */
-.tabsContainer, .tabsBar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  white-space: nowrap;
-  padding-bottom: 4px;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.tabsContainer::-webkit-scrollbar, .tabsBar::-webkit-scrollbar {
-  display: none;
-}
-
-.searchWrapper {
-  position: relative !important;
-  width: 100%;
-  margin-bottom: 20px;
-  box-sizing: border-box;
-}
-
-.searchInputBox {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--surface-input);
-  border: 1px solid var(--border-input);
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.searchDropdown {
-  position: absolute !important;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: var(--surface-card);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  max-height: 220px;
-  overflow-y: auto;
-  z-index: 1000 !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-}
-
-/* بطاقات العرض */
-.requestsGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.requestCard, .academyCard {
-  background: var(--surface-dark);
-  border: 1px solid var(--border-light);
-  border-inline-start: 4px solid var(--success);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  box-sizing: border-box;
-}
-
-.requestName, .academyTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 4px 0;
-  text-decoration: none !important;
-}
-
-.requestEmail, .academyOwner {
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  margin: 0;
-}
-
-/* أزرار البطاقة */
-.cardActionsRow {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 8px !important;
-  width: 100%;
-  margin-top: 4px;
-}
-
-.extendBtn {
-  background: transparent;
-  border: 1px solid var(--primary);
-  color: var(--primary);
-  padding: 0 14px;
-  height: 36px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  white-space: nowrap;
-  box-sizing: border-box;
-}
-
-.blockBtn {
-  background: var(--danger);
-  color: #ffffff;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0 !important;
-  box-sizing: border-box;
-}
-
-/* النافذة المنبثقة */
-.modalOverlay {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999 !important;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
-.modalContent {
-  width: 100% !important;
-  max-width: 420px;
-  background: var(--surface-dark);
-  border: 1px solid var(--border-light);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-  box-sizing: border-box;
 }
 
 /* التجاوب للشاشات الصغيرة */
@@ -305,31 +104,20 @@
     padding: 12px 10px;
   }
 
-  .headerActions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .refreshBtn, .exportBtn, .logoutBtn {
-    flex: 1;
-    padding: 7px 6px;
-    font-size: 0.75rem;
-  }
-
   .statsGrid, .summaryGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .summaryCard, .premiumStatBox {
-    padding: 8px 4px;
+    padding: 10px 6px;
   }
 
   .summaryCardValue, .statNumber {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
   }
 
   .summaryCardLabel, .statLabel {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 }
