@@ -10,10 +10,10 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 
-// ✅ استدراج ملف الـ CSS والملفات المجاورة عبر الـ Alias الثابت
 import styles from '@/components/Dashboard/Dashboard.module.css';
 import ActiveHalaqas from '@/components/Dashboard/ActiveHalaqas';
-import AchievementChart from '@/components/Gamification/AchievementChart'; // أو مكان المكون حسب مجلده
+import AchievementChart from '@/components/Gamification/AchievementChart';
+import { colors as C } from '@/theme/colors';
 
 export default function AcademyDashboard({ 
   isRtl, 
@@ -23,7 +23,6 @@ export default function AcademyDashboard({
   setActiveTab, 
   t 
 }) {
-  // 🛡️ دالة مساعدة لمنع React Error #31 وتأمين استخراج النص
   const getText = (val, fallback = '') => {
     if (!val) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -33,7 +32,6 @@ export default function AcademyDashboard({
     return fallback;
   };
 
-  // 🛡️ دالة آمنة للاستدعاء للترجمة t
   const translate = (key, fallback) => {
     if (typeof t === 'function') {
       const res = t(key);
@@ -56,10 +54,10 @@ export default function AcademyDashboard({
       {/* 🟢 الهيدر والترحيب */}
       <header className={styles.academyHeader} style={{ marginBottom: '32px' }}>
         <div>
-          <h1 className={styles.academyGreeting} style={{ fontSize: '1.4rem', fontWeight: '800', color: '#FFF', margin: '0 0 6px 0' }}>
+          <h1 className={styles.academyGreeting} style={{ fontSize: '1.4rem', fontWeight: '800', color: C.text.title, margin: '0 0 6px 0' }}>
             {getText(greeting, isRtl ? 'مرحباً بك' : 'Welcome')}
           </h1>
-          <p className={styles.academyNameText} style={{ color: '#FBBF24', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>
+          <p className={styles.academyNameText} style={{ color: C.primary.DEFAULT, fontSize: '0.95rem', fontWeight: '700', margin: 0 }}>
             {getText(academyName, isRtl ? 'الأكاديمية القرآنيّة الرقمية' : 'Digital Quran Academy')}
           </p>
         </div>
@@ -67,33 +65,45 @@ export default function AcademyDashboard({
 
       {/* ⚡ الإجراءات السريعة */}
       <section className={styles.sectionQuickActions} style={{ marginBottom: '35px' }}>
-        <h2 className={styles.sectionTitle} style={{ fontSize: '1.05rem', fontWeight: '700', color: '#FFF', marginBottom: '16px' }}>
+        <h2 className={styles.sectionTitle} style={{ fontSize: '1.05rem', fontWeight: '700', color: C.text.title, marginBottom: '16px' }}>
           <span>⚡</span> {translate('quick_actions', isRtl ? 'الإجراءات السريعة والمباشرة' : 'Quick Actions')}
         </h2>
         
         <div className={styles.actionsContainer} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px' }}>
-          <button onClick={() => setActiveTab('attendance')} className={`${styles.premiumLaunchpadCard} ${styles.longCard}`}>
+          <button 
+            onClick={() => setActiveTab('attendance')} 
+            className="btn-primary"
+            style={{ padding: '14px 18px', borderRadius: '14px', justifyContent: 'flex-start' }}
+          >
             <div className={styles.actionInner} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div className={styles.launchpadIconWrapper} style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '10px', borderRadius: '10px', color: '#3B82F6' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '8px', borderRadius: '10px', color: '#FFF' }}>
                 <BookOpen size={20} />
               </div>
-              <div className={styles.actionTitleText} style={{ fontWeight: '700', fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '0.92rem' }}>
                 {translate('action_attendance', isRtl ? 'رصد التحضير، وتسميع الحلقات اليومية فورا' : 'Take Attendance & Daily Recitation')}
               </div>
             </div>
           </button>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <button onClick={() => setActiveTab('exams')} className={styles.premiumLaunchpadCard} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px' }}>
-              <Award style={{ color: '#FBBF24' }} size={22} />
-              <span style={{ fontSize: '0.82rem', fontWeight: '700' }}>
+            <button 
+              onClick={() => setActiveTab('exams')} 
+              className="btn-secondary" 
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px' }}
+            >
+              <Award style={{ color: C.primary.DEFAULT }} size={22} />
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: C.text.title }}>
                 {translate('action_exams', isRtl ? 'الاختبارات والترقيات' : 'Exams & Levels')}
               </span>
             </button>
 
-            <button onClick={() => setActiveTab('reports')} className={styles.premiumLaunchpadCard} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px' }}>
-              <MessageCircle style={{ color: '#10B981' }} size={22} />
-              <span style={{ fontSize: '0.82rem', fontWeight: '700' }}>
+            <button 
+              onClick={() => setActiveTab('reports')} 
+              className="btn-secondary" 
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px' }}
+            >
+              <MessageCircle style={{ color: C.brandEmerald.DEFAULT }} size={22} />
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: C.text.title }}>
                 {translate('action_reports', isRtl ? 'تقارير أولياء الأمور' : 'Parent Reports')}
               </span>
             </button>
@@ -103,67 +113,67 @@ export default function AcademyDashboard({
 
       {/* 📊 مؤشرات الأداء */}
       <section className={styles.sectionOverview}>
-        <h2 className={styles.sectionTitle} style={{ fontSize: '1.05rem', fontWeight: '700', color: '#FFF', marginBottom: '16px' }}>
+        <h2 className={styles.sectionTitle} style={{ fontSize: '1.05rem', fontWeight: '700', color: C.text.title, marginBottom: '16px' }}>
           <span>📊</span> {translate('academy_overview', isRtl ? 'مؤشرات الأداء العام للأكاديمية' : 'Academy Overview')}
         </h2>
 
         <div className={styles.statsGrid}>
           {/* الطلاب */}
-          <div className={`${styles.premiumStatBox} ${styles.statBoxStudents}`}>
+          <div className="card-surface" style={{ padding: '16px', borderRadius: '16px' }}>
             <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{translate('total_students', isRtl ? 'إجمالي الطلاب' : 'Total Students')}</p>
-              <h2 className={styles.statNumber}>{studentsCount}</h2>
+              <p className={styles.statLabel} style={{ color: C.text.muted }}>{translate('total_students', isRtl ? 'إجمالي الطلاب' : 'Total Students')}</p>
+              <h2 className={styles.statNumber} style={{ color: C.text.title }}>{studentsCount}</h2>
             </div>
-            <div className={styles.statIcon}><GraduationCap size={24} /></div>
+            <div className={styles.statIcon} style={{ color: C.primary.DEFAULT }}><GraduationCap size={24} /></div>
           </div>
 
           {/* نسبة الحضور */}
           {attendanceRate !== null && (
-            <div className={styles.premiumStatBox} style={{ borderBottom: '3px solid #3B82F6' }}>
+            <div className="card-surface" style={{ padding: '16px', borderRadius: '16px', borderBottom: `3px solid ${C.brandEmerald.DEFAULT}` }}>
               <div className={styles.statBoxInfo}>
-                <p className={styles.statLabel}>{isRtl ? 'نسبة الحضور اليومي' : 'Attendance Rate'}</p>
-                <h2 className={styles.statNumber} style={{ color: '#3B82F6' }}>{attendanceRate}</h2>
+                <p className={styles.statLabel} style={{ color: C.text.muted }}>{isRtl ? 'نسبة الحضور اليومي' : 'Attendance Rate'}</p>
+                <h2 className={styles.statNumber} style={{ color: C.brandEmerald.DEFAULT }}>{attendanceRate}</h2>
               </div>
-              <div className={styles.statIcon}><CheckCircle2 style={{ color: '#3B82F6' }} size={24} /></div>
+              <div className={styles.statIcon} style={{ color: C.brandEmerald.DEFAULT }}><CheckCircle2 size={24} /></div>
             </div>
           )}
 
           {/* الصفحات المسمعة */}
           {totalPagesMuted !== null && (
-            <div className={styles.premiumStatBox} style={{ borderBottom: '3px solid #10B981' }}>
+            <div className="card-surface" style={{ padding: '16px', borderRadius: '16px', borderBottom: `3px solid ${C.brandEmerald.DEFAULT}` }}>
               <div className={styles.statBoxInfo}>
-                <p className={styles.statLabel}>{isRtl ? 'صفحات القرآن المسمّعة اليوم' : 'Pages Recited Today'}</p>
-                <h2 className={styles.statNumber} style={{ color: '#10B981' }}>{totalPagesMuted}</h2>
+                <p className={styles.statLabel} style={{ color: C.text.muted }}>{isRtl ? 'صفحات القرآن المسمّعة اليوم' : 'Pages Recited Today'}</p>
+                <h2 className={styles.statNumber} style={{ color: C.brandEmerald.DEFAULT }}>{totalPagesMuted}</h2>
               </div>
-              <div className={styles.statIcon}><BookOpen style={{ color: '#10B981' }} size={24} /></div>
+              <div className={styles.statIcon} style={{ color: C.brandEmerald.DEFAULT }}><BookOpen size={24} /></div>
             </div>
           )}
 
           {/* الرسوم المعلقة */}
-          <div className={`${styles.premiumStatBox} ${styles.statBoxPayments}`}>
+          <div className="card-surface" style={{ padding: '16px', borderRadius: '16px' }}>
             <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{translate('pending_payments', isRtl ? 'المدفوعات المعلقة' : 'Pending Payments')}</p>
-              <h2 className={styles.statNumber} style={{ color: pendingCount > 0 ? '#F87171' : 'inherit' }}>{pendingCount}</h2>
+              <p className={styles.statLabel} style={{ color: C.text.muted }}>{translate('pending_payments', isRtl ? 'المدفوعات المعلقة' : 'Pending Payments')}</p>
+              <h2 className={styles.statNumber} style={{ color: pendingCount > 0 ? C.error.DEFAULT : C.text.title }}>{pendingCount}</h2>
             </div>
-            <div className={styles.statIcon}><Clock size={24} /></div>
+            <div className={styles.statIcon} style={{ color: pendingCount > 0 ? C.error.DEFAULT : C.text.muted }}><Clock size={24} /></div>
           </div>
 
           {/* الحلقات النشطة */}
-          <div className={`${styles.premiumStatBox} ${styles.statBoxHalagas}`}>
+          <div className="card-surface" style={{ padding: '16px', borderRadius: '16px' }}>
             <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{translate('active_halagas', isRtl ? 'الحلقات النشطة' : 'Active Halaqas')}</p>
-              <h2 className={styles.statNumber}>{activeHalagas}</h2>
+              <p className={styles.statLabel} style={{ color: C.text.muted }}>{translate('active_halagas', isRtl ? 'الحلقات النشطة' : 'Active Halaqas')}</p>
+              <h2 className={styles.statNumber} style={{ color: C.text.title }}>{activeHalagas}</h2>
             </div>
-            <div className={styles.statIcon}><Landmark size={24} /></div>
+            <div className={styles.statIcon} style={{ color: C.primary.DEFAULT }}><Landmark size={24} /></div>
           </div>
 
           {/* الاختبارات المكتملة */}
-          <div className={`${styles.premiumStatBox} ${styles.statBoxExams}`}>
+          <div className="card-surface" style={{ padding: '16px', borderRadius: '16px' }}>
             <div className={styles.statBoxInfo}>
-              <p className={styles.statLabel}>{translate('completed_exams', isRtl ? 'الاختبارات المكتملة' : 'Completed Exams')}</p>
-              <h2 className={styles.statNumber}>{completedExams}</h2>
+              <p className={styles.statLabel} style={{ color: C.text.muted }}>{translate('completed_exams', isRtl ? 'الاختبارات المكتملة' : 'Completed Exams')}</p>
+              <h2 className={styles.statNumber} style={{ color: C.brandEmerald.DEFAULT }}>{completedExams}</h2>
             </div>
-            <div className={styles.statIcon}><CheckCircle2 size={24} /></div>
+            <div className={styles.statIcon} style={{ color: C.brandEmerald.DEFAULT }}><CheckCircle2 size={24} /></div>
           </div>
         </div>
       </section>
