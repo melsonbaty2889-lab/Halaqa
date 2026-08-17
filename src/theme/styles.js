@@ -1,12 +1,12 @@
 // src/theme/styles.js
-import { colors } from './colors';
+import colors from './colors';
 
 export const UI = {
-  // 📦 1. تصميم البطاقات (Glassmorphism Cards)
+  // 📦 1. تصميم البطاقات
   card: "card-surface transition-all duration-200",
   cardActive: "card-surface border-primary ring-2 ring-primary/20 transition-all duration-200",
   
-  // 🔘 2. الأزرار (Primary Gradient & Secondary)
+  // 🔘 2. الأزرار
   btnPrimary: "btn-primary transition-all active:scale-[0.99]",
   btnSecondary: "btn-secondary transition-all active:scale-[0.99]",
   
