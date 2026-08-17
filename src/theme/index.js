@@ -1,3 +1,6 @@
 // src/theme/index.js
-export { default as colors, colors } from './colors';
-export { default as UI, UI } from './styles';
+import colors from './colors';
+import UI from './styles';
+
+export { colors, UI };
+export default { colors, UI };
