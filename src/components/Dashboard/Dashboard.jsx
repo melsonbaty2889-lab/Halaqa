@@ -147,7 +147,7 @@ export default function Dashboard({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', margin: '0 0 4px 0', lineHeight: '1.3' }}>
-            {isArabic ? 'مرحباً بك' : 'Welcome'}, {displayName} 👋
+            {isArabic ? 'مرحباً بك' : 'Welcome'}, {displayName} 
           </h1>
           <p style={{ color: '#94A3B8', fontSize: '0.82rem', margin: 0 }}>
             {isArabic ? 'مركز الإدارة والعمليات اليومية المباشرة وأنظمة الحفظ العالمية' : 'Live Daily Management & Global Memorization Center'}
