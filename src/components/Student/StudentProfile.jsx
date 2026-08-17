@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 // 🛠️ الخدمات والثوابت والأدوات المساعدة
 import { supabase } from "@/lib/supabase";
-import { C } from "@/constants/colors";
+import colors from '@/theme/colors';
 import { COUNTRIES_LIST } from "@/constants/countries";
 import { getQuranProgress } from "@/utils/quranUtils";
 import { formatName } from "@/utils/formatters";
