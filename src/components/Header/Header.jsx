@@ -160,45 +160,45 @@ export default function Header({
 
   return (
     <header 
-      className="sticky top-0 z-50 min-h-[60px] px-3 py-2 bg-[#0b132b]/90 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between gap-2 shadow-lg text-slate-100 w-full overflow-hidden" 
+      className="sticky top-0 z-50 min-h-[56px] px-2.5 py-2 bg-[#0b132b]/95 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between gap-1.5 shadow-lg text-slate-100 w-full max-w-full overflow-hidden" 
       dir={activeRtl ? 'rtl' : 'ltr'}
     >
-      {/* القسم الرئيسي: زر القائمة وعنوان الصفحة */}
-      <div className="flex items-center gap-2 min-w-0 shrink">
+      {/* القسم الأيسر / الأيمن - الزر والعنوان */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
         <button
           type="button"
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 text-emerald-400 transition-all duration-200 cursor-pointer shrink-0 active:scale-95"
+          className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 text-emerald-400 transition-all shrink-0 active:scale-95"
           title={isAr ? "القائمة" : "Menu"}
         >
           <Menu size={18} />
         </button>
 
-        <h1 className="m-0 text-xs sm:text-sm font-bold text-slate-100 truncate leading-tight select-none">
+        <h1 className="m-0 text-xs sm:text-sm font-bold text-slate-100 truncate max-w-[120px] xs:max-w-[160px] sm:max-w-none leading-none select-none">
           {pageTitle}
         </h1>
       </div>
 
-      {/* الأدوات الشريطية الأيمن/الأيسر */}
-      <div className="flex items-center gap-1.5 shrink-0">
+      {/* الأدوات والأيقونات */}
+      <div className="flex items-center gap-1 shrink-0">
         
-        {/* شارة العملة */}
+        {/* العملة */}
         <div 
-          title={isAr ? "العملة المعتمدة للمنظومة" : "Official System Currency"}
-          className="flex items-center gap-1 px-2 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-[11px] sm:text-xs font-medium select-none"
+          title={isAr ? "العملة المعتمدة" : "Currency"}
+          className="flex items-center gap-1 px-1.5 py-1 bg-slate-800/60 border border-slate-700/50 rounded-lg text-[11px] font-medium select-none"
         >
-          <Coins size={13} className="text-amber-400 shrink-0" />
+          <Coins size={12} className="text-amber-400 shrink-0" />
           <span className="font-semibold text-slate-200">{selectedCurrency}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
         </div>
 
-        {/* تغيير اللغة */}
+        {/* زر التبديل بين اللغات */}
         <button
           type="button"
           onClick={toggleLanguage}
-          className="flex items-center gap-1 px-2 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+          className="flex items-center gap-1 px-2 py-1 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-slate-300 hover:text-white text-[11px] font-semibold transition-all active:scale-95"
         >
-          <Globe size={13} className="text-emerald-400" />
+          <Globe size={12} className="text-emerald-400 shrink-0" />
           <span>{isAr ? 'EN' : 'عربي'}</span>
         </button>
 
@@ -210,17 +210,17 @@ export default function Header({
               setShowNotifMenu(!showNotifMenu);
               setShowProfileMenu(false);
             }}
-            className="p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all duration-200 cursor-pointer relative flex items-center justify-center active:scale-95"
+            className="p-1.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-slate-300 hover:text-white transition-all relative flex items-center justify-center active:scale-95"
             title={t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
           >
-            <Bell size={15} className="text-emerald-400" />
+            <Bell size={14} className="text-emerald-400" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
             )}
           </button>
 
           {showNotifMenu && (
-            <div className={`absolute top-full mt-2 w-72 bg-[#0f172a] border border-slate-800/90 rounded-2xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
+            <div className={`absolute top-full mt-2 w-64 xs:w-72 bg-[#0f172a] border border-slate-800/90 rounded-xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
               <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-800">
                 <span className="font-bold text-slate-100">
                   {t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
@@ -230,18 +230,16 @@ export default function Header({
                     <button 
                       type="button"
                       onClick={markAllAsRead} 
-                      title={isAr ? 'تحديد الكل كمقروء' : 'Mark all read'} 
-                      className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors"
                     >
-                      <CheckCheck size={15} />
+                      <CheckCheck size={14} />
                     </button>
                     <button 
                       type="button"
                       onClick={clearAll} 
-                      title={isAr ? 'مسح القائمة' : 'Clear list'} 
-                      className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
+                      className="text-rose-400 hover:text-rose-300 transition-colors"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 )}
@@ -256,23 +254,18 @@ export default function Header({
                   {isAr ? 'لا توجد إشعارات جديدة.' : 'No new notifications.'}
                 </div>
               ) : (
-                <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60 scrollbar-thin">
+                <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60">
                   {notifications.map((item) => (
-                    <div key={item.id} className="py-2.5 first:pt-0 last:pb-0">
-                      <div 
-                        dir="auto" 
-                        className={`text-start ${item.is_read ? 'text-slate-400 font-normal' : 'text-slate-100 font-semibold'}`}
-                      >
+                    <div key={item.id} className="py-2 first:pt-0 last:pb-0">
+                      <div dir="auto" className={`text-start ${item.is_read ? 'text-slate-400' : 'text-slate-100 font-semibold'}`}>
                         {item.title}
                       </div>
-
                       {item.message && (
-                        <div dir="auto" className="text-slate-400 text-[11px] mt-0.5 text-start">
+                        <div dir="auto" className="text-slate-400 text-[10px] mt-0.5 text-start">
                           {item.message}
                         </div>
                       )}
-
-                      <div className="text-slate-500 text-[10px] mt-1">
+                      <div className="text-slate-500 text-[9px] mt-1">
                         {formatTime(item.created_at)}
                       </div>
                     </div>
@@ -283,7 +276,7 @@ export default function Header({
           )}
         </div>
 
-        {/* الملف الشخصي */}
+        {/* البروفايل */}
         <div className="relative" ref={profileRef}>
           <button
             type="button"
@@ -291,22 +284,20 @@ export default function Header({
               setShowProfileMenu(!showProfileMenu);
               setShowNotifMenu(false);
             }}
-            className="p-1 sm:p-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center active:scale-95"
-            title={t('nav.profile', isAr ? "الملف الشخصي" : "Profile")}
+            className="p-1 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-lg transition-all flex items-center justify-center active:scale-95"
           >
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+            <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
               <UserCheck size={13} />
             </div>
           </button>
 
           {showProfileMenu && (
-            <div className={`absolute top-full mt-2 w-48 bg-[#0f172a] border border-slate-800/90 rounded-2xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
-              <div className="font-bold text-slate-100 text-xs">
+            <div className={`absolute top-full mt-2 w-44 bg-[#0f172a] border border-slate-800/90 rounded-xl shadow-2xl z-50 p-2.5 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
+              <div className="font-bold text-slate-100 text-[11px]">
                 {t('header.admin', isAr ? 'صاحب الأكاديمية' : 'Academy Owner')}
               </div>
-
-              <div className="text-emerald-400 text-[11px] mt-2 flex items-center gap-1.5 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] inline-block" />
+              <div className="text-emerald-400 text-[10px] mt-1.5 flex items-center gap-1 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                 <span>{isAr ? 'الجلسة نشطة' : 'Active Session'}</span>
               </div>
             </div>
