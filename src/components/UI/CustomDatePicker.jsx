@@ -2,7 +2,7 @@ import React from 'react';
 import DatePicker from 'react-datepicker';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { ar, enUS } from 'date-fns/locale';
-import { formatHijriDate } from '../utils/dateUtils'; // استدعاء ملفك الخاص
+import { formatHijriDate } from '../../utils/dateUtils';
 import 'react-datepicker/dist/react-datepicker.css';
 
 export default function CustomDatePicker({ startDate, endDate, onChange, isArabic = true }) {
