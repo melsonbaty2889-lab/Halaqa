@@ -22,20 +22,26 @@ import {
   TrendingUp,
   AlertTriangle,
   Users,
-  Eraser
+  Eraser,
+  Sparkles,
+  Code,
+  X
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
 
+// 1. قاموس ترجمة أسماء الجداول التقنية إلى لغة بشرية
 const TABLE_TRANSLATIONS = {
-  students: "الطالب",
-  attendance: "تسجيل الحضور",
-  subscriptions: "الاشتراكات المالية",
+  students: "بيانات الطلاب",
+  attendance: "سجل الحضور والغياب",
+  subscriptions: "الاشتراكات والمدفوعات",
   halaqat: "الحلقات القرآنية",
-  teachers: "المعلمين",
-  profiles: "الملفات الشخصية"
+  teachers: "بيانات المعلمين",
+  profiles: "الملفات الشخصية وحسابات المستخدمين",
+  groups: "المجموعات والدورات"
 };
 
+// 2. قاموس ترجمة مفاتيح الـ JSON
 const JSON_TRANSLATIONS = {
   student_id: "معرف الطالب",
   full_name: "الاسم الكامل",
@@ -49,7 +55,13 @@ const JSON_TRANSLATIONS = {
   updated_at: "تاريخ التحديث"
 };
 
-// 🛡️ دالة آمنة 100% لتحويل أي نوع بيانات إلى نص ومنع خطأ Object Rendering
+// 3. الحقول التقنية المستبعدة من العرض المبسط لمدير الأكاديمية
+const HIDDEN_FIELDS_IN_BASIC_VIEW = [
+  'id', 'created_at', 'updated_at', 'student_id', 'group_id', 
+  'halaqa_id', 'academy_id', 'user_id', 'changed_by', 'parent_id'
+];
+
+// دالة آمنة لتحويل أي قيمة إلى نص
 const safeRenderValue = (val) => {
   if (val === null || val === undefined) return 'لا يوجد';
   if (typeof val === 'object') {
@@ -70,6 +82,16 @@ export default function RealtimeAudit({ isArabic = true }) {
   const [startDate, endDate] = dateRange;
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJsonMap, setShowRawJsonMap] = useState({});
+
+  // 🎛️ وضع العرض: false = وضع المدير (مبسط) | true = وضع المطور (متقدم)
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+
+  // 🔔 نظام التنبيهات المخصص (Toast) بدلاً من alert
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   // 🧹 حالات نافذة التنظيف (Purge Modal)
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
@@ -99,6 +121,7 @@ export default function RealtimeAudit({ isArabic = true }) {
       setLogs(data || []);
     } catch (err) {
       console.error('Error fetching audit logs:', err.message);
+      showToast('حدث خطأ أثناء جلب السجلات', 'error');
     } finally {
       setLoading(false);
     }
@@ -129,6 +152,7 @@ export default function RealtimeAudit({ isArabic = true }) {
           };
 
           setLogs((prevLogs) => [newLogWithProfile, ...prevLogs]);
+          showToast('تم استقبال سجل جديد بشكل مباشر', 'info');
         }
       )
       .subscribe();
@@ -169,6 +193,7 @@ export default function RealtimeAudit({ isArabic = true }) {
     };
   }, [logs]);
 
+  // دالة تنظيف السجلات المعدلة مع استبدال alert بـ Toast مخصص
   const handlePurgeLogs = async () => {
     setPurging(true);
     try {
@@ -178,11 +203,17 @@ export default function RealtimeAudit({ isArabic = true }) {
 
       if (error) throw error;
 
-      alert(`تم حذف ${data || 0} سجل قديم بنجاح.`);
+      const count = data || 0;
+      if (count === 0) {
+        showToast('لم يتم العثور على سجلات قديمة تتطابق مع الفترة المحددة.', 'info');
+      } else {
+        showToast(`تم تنظيف ${count} سجل قديم بنجاح.`, 'success');
+      }
+
       setIsPurgeModalOpen(false);
       fetchAuditLogs();
     } catch (err) {
-      alert('حدث خطأ أثناء تنظيف السجلات: ' + err.message);
+      showToast('حدث خطأ أثناء تنظيف السجلات: ' + err.message, 'error');
     } finally {
       setPurging(false);
     }
@@ -192,7 +223,6 @@ export default function RealtimeAudit({ isArabic = true }) {
     setShowRawJsonMap((prev) => ({ ...prev, [logId]: !prev[logId] }));
   };
 
-  // 🛡️ دالة التظليل المحميّة من كراش الـ RegEx والنصوص غير الصريحة
   const highlightText = (text, highlight) => {
     const safeText = safeRenderValue(text);
     if (!highlight || !highlight.trim() || !safeText) return safeText;
@@ -237,7 +267,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   const handleExportCSV = () => {
     if (filteredLogs.length === 0) return;
 
-    const headers = ["معرف السجل", "التاريخ والوقت", "نوع العملية", "الجدول", "المستخدم", "البيانات"];
+    const headers = ["معرف السجل", "التاريخ والوقت", "نوع العملية", "القسم", "المستخدم", "البيانات"];
     
     const rows = filteredLogs.map((log) => {
       const tableName = safeRenderValue(log.table_name);
@@ -246,11 +276,13 @@ export default function RealtimeAudit({ isArabic = true }) {
       const dateStr = new Date(log.created_at).toLocaleString('ar-EG');
       const dataContent = JSON.stringify(log.new_data || log.old_data || {}).replace(/"/g, '""');
 
+      const actionLabel = log.operation === 'INSERT' ? 'إضافة' : log.operation === 'UPDATE' ? 'تعديل' : 'حذف';
+
       return [
         `"${log.id}"`,
         `"${dateStr}"`,
-        `"${log.operation}"`,
-        `"${translatedTable} (${tableName})"`,
+        `"${actionLabel}"`,
+        `"${translatedTable}"`,
         `"${userName}"`,
         `"${dataContent}"`
       ].join(",");
@@ -265,11 +297,24 @@ export default function RealtimeAudit({ isArabic = true }) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    showToast('تم تصدير التقرير بنجاح', 'success');
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-5 dir-rtl">
+    <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-5 dir-rtl font-sans text-slate-100">
       
+      {/* 🔔 Toast Notification المخصص */}
+      {toast && (
+        <div className={`fixed bottom-5 left-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 ${
+          toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
+          toast.type === 'info' ? 'bg-blue-950/90 border-blue-500/50 text-blue-200' :
+          'bg-rose-950/90 border-rose-500/50 text-rose-200'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertTriangle className="w-5 h-5 text-amber-400" />}
+          <span className="text-xs font-semibold">{toast.message}</span>
+        </div>
+      )}
+
       {/* 🟢 ترويسة الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
@@ -292,7 +337,28 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
-          {/* 🧹 زر الأرشفة والتنظيف */}
+          {/* 🎛️ مفتاح التحويل بين وضع المدير المبسط ووضع المطور المتقدم */}
+          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button
+              onClick={() => setIsAdvancedMode(false)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+                !isAdvancedMode ? 'bg-emerald-500 text-slate-950 font-bold shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              وضع المدير (مبسط)
+            </button>
+            <button
+              onClick={() => setIsAdvancedMode(true)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+                isAdvancedMode ? 'bg-blue-600 text-white font-bold shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Code className="w-3.5 h-3.5" />
+              وضع المطور (متقدم)
+            </button>
+          </div>
+
           <button 
             onClick={() => setIsPurgeModalOpen(true)} 
             className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all"
@@ -363,7 +429,7 @@ export default function RealtimeAudit({ isArabic = true }) {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={isArabic ? "بحث باسم الجدول، المشرف..." : "Search table, user..."}
+              placeholder={isArabic ? "بحث باسم القسم أو المشرف..." : "Search table, user..."}
               className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 pr-9 pl-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-all"
             />
           </div>
@@ -415,7 +481,7 @@ export default function RealtimeAudit({ isArabic = true }) {
             }`}
           >
             <PlusCircle size={13} className="text-emerald-400" />
-            <span>إضافة (INSERT)</span>
+            <span>إضافة</span>
           </button>
 
           <button
@@ -427,7 +493,7 @@ export default function RealtimeAudit({ isArabic = true }) {
             }`}
           >
             <Edit3 size={13} className="text-sky-400" />
-            <span>تعديل (UPDATE)</span>
+            <span>تعديل</span>
           </button>
 
           <button
@@ -439,7 +505,7 @@ export default function RealtimeAudit({ isArabic = true }) {
             }`}
           >
             <Trash2 size={13} className="text-rose-400" />
-            <span>حذف (DELETE)</span>
+            <span>حذف</span>
           </button>
         </div>
       </div>
@@ -463,6 +529,8 @@ export default function RealtimeAudit({ isArabic = true }) {
             const tableName = safeRenderValue(log.table_name);
             const translatedTable = TABLE_TRANSLATIONS[tableName] ? safeRenderValue(TABLE_TRANSLATIONS[tableName]) : tableName;
 
+            const opActionText = log.operation === 'INSERT' ? 'إضافة في' : log.operation === 'UPDATE' ? 'تعديل في' : 'حذف من';
+
             return (
               <div 
                 key={log.id} 
@@ -473,10 +541,10 @@ export default function RealtimeAudit({ isArabic = true }) {
                     <OperationBadge operation={log.operation} />
                     <div>
                       <h3 className="text-sm font-bold text-slate-200">
-                        {TABLE_TRANSLATIONS[tableName] ? (
-                          <>تعديل في جدول <span className="text-emerald-400">{highlightText(translatedTable, searchTerm)}</span></>
+                        {isAdvancedMode ? (
+                          <>عملية <span className="text-emerald-400">{log.operation}</span> على جدول <span className="text-emerald-400">{tableName}</span></>
                         ) : (
-                          <>عملية على <span className="text-emerald-400">{highlightText(tableName, searchTerm)}</span></>
+                          <>{opActionText} <span className="text-emerald-400">{highlightText(translatedTable, searchTerm)}</span></>
                         )}
                       </h3>
                       <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400 flex-wrap">
@@ -484,32 +552,41 @@ export default function RealtimeAudit({ isArabic = true }) {
                           <User size={13} className="text-slate-500" />
                           <span className="text-emerald-400 font-medium">{highlightText(userName, searchTerm)}</span>
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Tag size={13} className="text-slate-500" />
-                          <span className="bg-slate-800/90 px-2 py-0.5 rounded text-slate-300 font-mono text-[10px] border border-slate-700/50">
-                            {highlightText(tableName, searchTerm)}
+                        
+                        {/* يظهر اسم الجدول بالإنجليزية فقط في وضع المطور المتقدم */}
+                        {isAdvancedMode && (
+                          <span className="flex items-center gap-1">
+                            <Tag size={13} className="text-slate-500" />
+                            <span className="bg-slate-800/90 px-2 py-0.5 rounded text-slate-300 font-mono text-[10px] border border-slate-700/50">
+                              {highlightText(tableName, searchTerm)}
+                            </span>
                           </span>
-                        </span>
+                        )}
+
                         <span className="flex items-center gap-1">
                           <Clock size={13} className="text-slate-500" />
-                          <span>{new Date(log.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>{new Date(log.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                          <span className="text-[10px] text-slate-500">({new Date(log.created_at).toLocaleDateString('ar-EG')})</span>
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80 justify-end self-end sm:self-auto w-full sm:w-auto">
-                    <button
-                      onClick={() => toggleRawJson(log.id)}
-                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold flex items-center gap-1 transition-all ${
-                        isRawJson 
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                          : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <Code2 size={13} />
-                      <span>JSON</span>
-                    </button>
+                    {/* زر الـ JSON يظهر فقط عند تفعيل وضع المطور */}
+                    {isAdvancedMode && (
+                      <button
+                        onClick={() => toggleRawJson(log.id)}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold flex items-center gap-1 transition-all ${
+                          isRawJson 
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                            : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <Code2 size={13} />
+                        <span>JSON</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
@@ -523,12 +600,12 @@ export default function RealtimeAudit({ isArabic = true }) {
 
                 {isExpanded && (
                   <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
-                    {isRawJson ? (
+                    {isRawJson && isAdvancedMode ? (
                       <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-mono overflow-x-auto dir-ltr">
                         {JSON.stringify({ old_data: log.old_data, new_data: log.new_data }, null, 2)}
                       </pre>
                     ) : (
-                      <DataDiffViewer log={log} />
+                      <DataDiffViewer log={log} isAdvancedMode={isAdvancedMode} />
                     )}
                   </div>
                 )}
@@ -573,11 +650,16 @@ export default function RealtimeAudit({ isArabic = true }) {
       {isPurgeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-md p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 dir-rtl">
-            <div className="flex items-center gap-2.5 text-rose-400">
-              <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                <Eraser size={20} />
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5 text-rose-400">
+                <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                  <Eraser size={20} />
+                </div>
+                <h3 className="text-base font-bold text-slate-100">تنظيف السجلات القديمة</h3>
               </div>
-              <h3 className="text-base font-bold text-slate-100">تنظيف السجلات القديمة</h3>
+              <button onClick={() => setIsPurgeModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X size={18} />
+              </button>
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -622,26 +704,32 @@ export default function RealtimeAudit({ isArabic = true }) {
   );
 }
 
-function DataDiffViewer({ log }) {
+// 4. مكون عرض الفروقات (Diff Viewer) المعدل والمبسط
+function DataDiffViewer({ log, isAdvancedMode }) {
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
   const displayData = log.new_data || log.old_data || {};
 
   if (!isUpdate) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {Object.entries(displayData).map(([key, value]) => (
-          <div 
-            key={key} 
-            className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/60 flex flex-col justify-between"
-          >
-            <span className="text-[11px] text-slate-400 font-medium">
-              {JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}
-            </span>
-            <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
-              {safeRenderValue(value)}
-            </span>
-          </div>
-        ))}
+        {Object.entries(displayData).map(([key, value]) => {
+          // استبعاد الحقول التقنية في وضع المدير المبسط
+          if (!isAdvancedMode && HIDDEN_FIELDS_IN_BASIC_VIEW.includes(key)) return null;
+
+          return (
+            <div 
+              key={key} 
+              className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/60 flex flex-col justify-between"
+            >
+              <span className="text-[11px] text-slate-400 font-medium">
+                {JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}
+              </span>
+              <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
+                {safeRenderValue(value)}
+              </span>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -651,6 +739,9 @@ function DataDiffViewer({ log }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
       {allKeys.map((key) => {
+        // استبعاد الحقول التقنية في وضع المدير المبسط
+        if (!isAdvancedMode && HIDDEN_FIELDS_IN_BASIC_VIEW.includes(key)) return null;
+
         const oldVal = safeRenderValue(log.old_data?.[key]);
         const newVal = safeRenderValue(log.new_data?.[key]);
         const isChanged = oldVal !== newVal;
