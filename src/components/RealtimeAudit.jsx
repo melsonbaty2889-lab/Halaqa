@@ -45,13 +45,12 @@ const JSON_TRANSLATIONS = {
   updated_at: "تاريخ التحديث"
 };
 
-// دالة مساعدة لضمان تحويل أي قيمة إلى نص وتفادي React Error #31
 const safeRenderValue = (val) => {
   if (val === null || val === undefined) return 'لا يوجد';
   if (typeof val === 'object') {
-    if (val.ar) return val.ar; // إذا كان كائن ترجمة { ar: "..." }
+    if (val.ar) return val.ar;
     if (val.en) return val.en;
-    return JSON.stringify(val); // تحويل أي كائن آخر لنص لتجنب الكراش
+    return JSON.stringify(val);
   }
   return String(val);
 };
@@ -172,6 +171,40 @@ export default function RealtimeAudit({ isArabic = true }) {
     });
   }, [logs, searchTerm, selectedOperation]);
 
+  // 📥 دالة تصدير البيانات المفلترة إلى ملف CSV
+  const handleExportCSV = () => {
+    if (filteredLogs.length === 0) return;
+
+    const headers = ["معرف السجل", "التاريخ والوقت", "نوع العملية", "الجدول", "المستخدم", "البيانات الجديدة/الحالية"];
+    
+    const rows = filteredLogs.map((log) => {
+      const tableName = safeRenderValue(log.table_name);
+      const translatedTable = TABLE_TRANSLATIONS[tableName] ? safeRenderValue(TABLE_TRANSLATIONS[tableName]) : tableName;
+      const userName = log.profiles?.full_name ? safeRenderValue(log.profiles.full_name) : (log.changed_by ? `مستخدم (#${log.changed_by.substring(0, 6)})` : "النظام");
+      const dateStr = new Date(log.created_at).toLocaleString('ar-EG');
+      const dataContent = JSON.stringify(log.new_data || log.old_data || {}).replace(/"/g, '""');
+
+      return [
+        `"${log.id}"`,
+        `"${dateStr}"`,
+        `"${log.operation}"`,
+        `"${translatedTable} (${tableName})"`,
+        `"${userName}"`,
+        `"${dataContent}"`
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `audit_log_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-5 dir-rtl">
       
@@ -205,9 +238,14 @@ export default function RealtimeAudit({ isArabic = true }) {
             <RefreshCw size={14} className={`text-slate-400 ${loading ? 'animate-spin' : ''}`} />
             <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
           </button>
-          <button className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 transition-all">
+          
+          <button 
+            onClick={handleExportCSV}
+            disabled={filteredLogs.length === 0}
+            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 transition-all"
+          >
             <Download size={14} />
-            <span>{isArabic ? 'تصدير التقرير' : 'Export'}</span>
+            <span>{isArabic ? 'تصدير التقرير (CSV)' : 'Export CSV'}</span>
           </button>
         </div>
       </div>
