@@ -45,6 +45,17 @@ const JSON_TRANSLATIONS = {
   updated_at: "تاريخ التحديث"
 };
 
+// دالة مساعدة لضمان تحويل أي قيمة إلى نص وتفادي React Error #31
+const safeRenderValue = (val) => {
+  if (val === null || val === undefined) return 'لا يوجد';
+  if (typeof val === 'object') {
+    if (val.ar) return val.ar; // إذا كان كائن ترجمة { ar: "..." }
+    if (val.en) return val.en;
+    return JSON.stringify(val); // تحويل أي كائن آخر لنص لتجنب الكراش
+  }
+  return String(val);
+};
+
 export default function RealtimeAudit({ isArabic = true }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +124,6 @@ export default function RealtimeAudit({ isArabic = true }) {
     };
   }, []);
 
-  // حساب الإحصائيات الحقيقية لليوم الحالي
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const todayLogs = logs.filter(l => l.created_at && l.created_at.startsWith(today));
@@ -135,8 +145,9 @@ export default function RealtimeAudit({ isArabic = true }) {
   };
 
   const highlightText = (text, highlight) => {
-    if (!highlight.trim() || !text) return text;
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    const safeText = safeRenderValue(text);
+    if (!highlight.trim() || !safeText) return safeText;
+    const parts = safeText.split(new RegExp(`(${highlight})`, 'gi'));
     return parts.map((part, i) => 
       part.toLowerCase() === highlight.toLowerCase() ? (
         <mark key={i} className="bg-amber-400/30 text-amber-200 rounded px-0.5 font-bold">{part}</mark>
@@ -146,9 +157,9 @@ export default function RealtimeAudit({ isArabic = true }) {
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      const tableName = log.table_name || '';
-      const userName = log.profiles?.full_name || '';
-      const recordTitle = TABLE_TRANSLATIONS[tableName] || tableName;
+      const tableName = safeRenderValue(log.table_name);
+      const userName = safeRenderValue(log.profiles?.full_name);
+      const recordTitle = TABLE_TRANSLATIONS[tableName] ? safeRenderValue(TABLE_TRANSLATIONS[tableName]) : tableName;
 
       const matchesSearch =
         recordTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,7 +175,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-5 dir-rtl">
       
-      {/* 🟢 ترويسة الصفحة مع شارة Realtime المباشرة */}
+      {/* 🟢 ترويسة الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2.5">
@@ -175,7 +186,6 @@ export default function RealtimeAudit({ isArabic = true }) {
               {isArabic ? 'سجل العمليات والأنشطة المباشر' : 'Live Audit Log'}
             </h1>
             
-            {/* شارة اتصال Realtime المباشر */}
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               <span>مباشر (Realtime)</span>
@@ -202,7 +212,7 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       </div>
 
-      {/* 📊 كروت الإحصائيات السريعة (Metrics Cards) */}
+      {/* 📊 كروت الإحصائيات السريعة */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
           <div>
@@ -324,9 +334,9 @@ export default function RealtimeAudit({ isArabic = true }) {
             const isExpanded = expandedLogId === log.id;
             const isRawJson = !!showRawJsonMap[log.id];
             const displayData = log.new_data || log.old_data || {};
-            const userName = log.profiles?.full_name || (log.changed_by ? `مستخدم (#${log.changed_by.substring(0, 6)})` : "النظام/آلي");
-            const tableName = log.table_name || '';
-            const translatedTable = TABLE_TRANSLATIONS[tableName] || tableName;
+            const userName = log.profiles?.full_name ? safeRenderValue(log.profiles.full_name) : (log.changed_by ? `مستخدم (#${log.changed_by.substring(0, 6)})` : "النظام/آلي");
+            const tableName = safeRenderValue(log.table_name);
+            const translatedTable = TABLE_TRANSLATIONS[tableName] ? safeRenderValue(TABLE_TRANSLATIONS[tableName]) : tableName;
 
             return (
               <div 
@@ -400,10 +410,10 @@ export default function RealtimeAudit({ isArabic = true }) {
                             className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/60 flex flex-col justify-between"
                           >
                             <span className="text-[11px] text-slate-400 font-medium">
-                              {JSON_TRANSLATIONS[key] || key}
+                              {JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}
                             </span>
                             <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
-                              {value !== null && value !== undefined ? String(value) : 'لا يوجد'}
+                              {safeRenderValue(value)}
                             </span>
                           </div>
                         ))}
@@ -422,7 +432,8 @@ export default function RealtimeAudit({ isArabic = true }) {
 }
 
 function OperationBadge({ operation }) {
-  switch (operation) {
+  const op = safeRenderValue(operation);
+  switch (op) {
     case 'INSERT':
       return (
         <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold flex items-center gap-1 shrink-0">
@@ -448,7 +459,7 @@ function OperationBadge({ operation }) {
       return (
         <span className="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 text-[11px] font-bold flex items-center gap-1 shrink-0">
           <CheckCircle2 size={13} />
-          <span>{operation || 'عملية'}</span>
+          <span>{op || 'عملية'}</span>
         </span>
       );
   }
