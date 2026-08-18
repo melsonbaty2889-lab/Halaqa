@@ -21,7 +21,7 @@ import {
   Activity,
   TrendingUp,
   AlertTriangle,
-  ArrowRightLeft
+  Users
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
@@ -63,6 +63,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOperation, setSelectedOperation] = useState('ALL');
+  const [selectedUser, setSelectedUser] = useState('ALL'); // 🎯 حالة المستخدم المكتشف
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [expandedLogId, setExpandedLogId] = useState(null);
@@ -132,7 +133,19 @@ export default function RealtimeAudit({ isArabic = true }) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedOperation, dateRange]);
+  }, [searchTerm, selectedOperation, selectedUser, dateRange]);
+
+  // 👥 تجميع قائمة فريدة من المشرفين والمستخدمين المتواجدين بالسجلات
+  const uniqueUsers = useMemo(() => {
+    const userMap = new Map();
+    logs.forEach((log) => {
+      if (log.changed_by) {
+        const name = log.profiles?.full_name || `مستخدم (#${log.changed_by.substring(0, 6)})`;
+        userMap.set(log.changed_by, name);
+      }
+    });
+    return Array.from(userMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [logs]);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -177,10 +190,11 @@ export default function RealtimeAudit({ isArabic = true }) {
         userName.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesOp = selectedOperation === 'ALL' || log.operation === selectedOperation;
+      const matchesUser = selectedUser === 'ALL' || log.changed_by === selectedUser;
 
-      return matchesSearch && matchesOp;
+      return matchesSearch && matchesOp && matchesUser;
     });
-  }, [logs, searchTerm, selectedOperation]);
+  }, [logs, searchTerm, selectedOperation, selectedUser]);
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
   const paginatedLogs = useMemo(() => {
@@ -301,7 +315,8 @@ export default function RealtimeAudit({ isArabic = true }) {
 
       {/* 🟢 شريط الفلترة والأزرار السريعة */}
       <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* حقل البحث */}
           <div className="relative flex items-center">
             <Search size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
             <input
@@ -313,6 +328,25 @@ export default function RealtimeAudit({ isArabic = true }) {
             />
           </div>
 
+          {/* 🎯 قائمة اختيار المشرف/المستخدم */}
+          <div className="relative flex items-center">
+            <Users size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 pr-9 pl-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+            >
+              <option value="ALL">جميع المشرفين ({uniqueUsers.length})</option>
+              {uniqueUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* مكوّن اختيار التاريخ */}
           <CustomDatePicker
             startDate={startDate}
             endDate={endDate}
@@ -527,7 +561,6 @@ function DataDiffViewer({ log }) {
     );
   }
 
-  // في حالة التعديل UPDATE: تجميع المفاتيح وعرض الفروقات
   const allKeys = Array.from(new Set([...Object.keys(log.old_data || {}), ...Object.keys(log.new_data || {})]));
 
   return (
