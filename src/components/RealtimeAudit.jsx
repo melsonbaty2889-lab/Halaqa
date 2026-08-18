@@ -49,11 +49,12 @@ const JSON_TRANSLATIONS = {
   updated_at: "تاريخ التحديث"
 };
 
+// 🛡️ دالة آمنة 100% لتحويل أي نوع بيانات إلى نص ومنع خطأ Object Rendering
 const safeRenderValue = (val) => {
   if (val === null || val === undefined) return 'لا يوجد';
   if (typeof val === 'object') {
-    if (val.ar) return val.ar;
-    if (val.en) return val.en;
+    if (val.ar) return String(val.ar);
+    if (val.en) return String(val.en);
     return JSON.stringify(val);
   }
   return String(val);
@@ -145,7 +146,7 @@ export default function RealtimeAudit({ isArabic = true }) {
     const userMap = new Map();
     logs.forEach((log) => {
       if (log.changed_by) {
-        const name = log.profiles?.full_name || `مستخدم (#${log.changed_by.substring(0, 6)})`;
+        const name = log.profiles?.full_name ? safeRenderValue(log.profiles.full_name) : `مستخدم (#${log.changed_by.substring(0, 6)})`;
         userMap.set(log.changed_by, name);
       }
     });
@@ -191,15 +192,22 @@ export default function RealtimeAudit({ isArabic = true }) {
     setShowRawJsonMap((prev) => ({ ...prev, [logId]: !prev[logId] }));
   };
 
+  // 🛡️ دالة التظليل المحميّة من كراش الـ RegEx والنصوص غير الصريحة
   const highlightText = (text, highlight) => {
     const safeText = safeRenderValue(text);
-    if (!highlight.trim() || !safeText) return safeText;
-    const parts = safeText.split(new RegExp(`(${highlight})`, 'gi'));
-    return parts.map((part, i) => 
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <mark key={i} className="bg-amber-400/30 text-amber-200 rounded px-0.5 font-bold">{part}</mark>
-      ) : part
-    );
+    if (!highlight || !highlight.trim() || !safeText) return safeText;
+    
+    try {
+      const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const parts = safeText.split(new RegExp(`(${escapedHighlight})`, 'gi'));
+      return parts.map((part, i) => 
+        part.toLowerCase() === highlight.toLowerCase() ? (
+          <mark key={i} className="bg-amber-400/30 text-amber-200 rounded px-0.5 font-bold">{part}</mark>
+        ) : part
+      );
+    } catch (e) {
+      return safeText;
+    }
   };
 
   const filteredLogs = useMemo(() => {
