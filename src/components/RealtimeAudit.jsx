@@ -20,7 +20,9 @@ import {
   Layers,
   ArrowRight,
   X,
-  Check
+  Check,
+  Globe,
+  SlidersHorizontal
 } from 'lucide-react';
 
 const TABLE_DISPLAY_NAMES = {
@@ -32,10 +34,10 @@ const TABLE_DISPLAY_NAMES = {
     daily_progress: 'الإنجاز اليومي',
   },
   en: {
-    attendance: 'Attendance',
-    payments: 'Payments',
-    halaqas: 'Halaqas',
-    students: 'Students',
+    attendance: 'Attendance & Recitation',
+    payments: 'Subscriptions & Finance',
+    halaqas: 'Halaqas & Circles',
+    students: 'Student Affairs',
     daily_progress: 'Daily Progress',
   }
 };
@@ -72,7 +74,7 @@ const FIELD_LABELS = {
     amount: 'Amount',
     full_name: 'Full Name',
     name: 'Name',
-    phone: 'Phone',
+    phone: 'Phone Number',
     parent_phone: 'Parent Phone',
     quarter_index: 'Quarter',
     quarter_in_hizb: 'Quarter in Hizb',
@@ -117,119 +119,12 @@ const VALUE_TRANSLATIONS = {
     paid: 'Paid',
     monthly: 'Monthly',
     yearly: 'Yearly',
-    false: 'Not Archived',
+    false: 'Active',
     true: 'Archived',
   }
 };
 
-// --- Custom Select المتوافق مع الهوية البصرية ---
-function CustomSelect({ options, value, onChange, placeholder, isRtl }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef(null);
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative w-full" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between input-field border border-emerald-500/20 focus:border-emerald-500/50 rounded-xl px-4 py-2.5 text-xs transition-all duration-200"
-        style={{
-          backgroundColor: 'var(--bg-input, rgba(15, 23, 42, 0.6))',
-          color: 'var(--text-main, #f8fafc)'
-        }}
-      >
-        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
-        <ChevronDown size={14} className={`text-emerald-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <div 
-          className="absolute z-50 w-full mt-2 border border-emerald-500/30 rounded-xl shadow-2xl backdrop-blur-xl max-h-60 overflow-y-auto py-1 animate-in fade-in zoom-in-95 duration-150"
-          style={{
-            backgroundColor: 'var(--bg-card, #0b1320)',
-            borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))'
-          }}
-        >
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => {
-                onChange(opt.value);
-                setIsOpen(false);
-              }}
-              className={`w-full flex items-center justify-between px-4 py-2.5 text-xs ${isRtl ? 'text-right' : 'text-left'} transition-colors ${
-                value === opt.value 
-                  ? 'bg-emerald-500/15 text-emerald-400 font-bold' 
-                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-              }`}
-            >
-              <span>{opt.label}</span>
-              {value === opt.value && <Check size={13} className="text-emerald-400 shrink-0" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --- Custom Date Picker المتوافق مع الهوية البصرية ---
-function CustomDatePicker({ value, onChange, placeholder }) {
-  const inputRef = useRef(null);
-
-  return (
-    <div className="relative flex-1">
-      <input 
-        ref={inputRef}
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="sr-only"
-      />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.showPicker?.() || inputRef.current?.click()}
-        className="w-full flex items-center justify-between input-field border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl px-3 py-2 text-xs transition-all duration-200"
-        style={{
-          backgroundColor: 'var(--bg-input, rgba(15, 23, 42, 0.6))',
-          color: 'var(--text-main, #f8fafc)'
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <CalendarIcon size={13} className="text-emerald-400 shrink-0" />
-          <span className={value ? 'text-emerald-400 font-medium' : 'text-slate-400'}>
-            {value || placeholder}
-          </span>
-        </div>
-        {value && (
-          <X 
-            size={12} 
-            className="text-slate-400 hover:text-rose-400 transition-colors shrink-0" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange('');
-            }}
-          />
-        )}
-      </button>
-    </div>
-  );
-}
-
-export default function RealtimeAudit() {
+export default function GlobalQuranicAudit() {
   const { i18n } = useTranslation();
   const currentLang = i18n.language && i18n.language.startsWith('ar') ? 'ar' : 'en';
   const isRtl = i18n.dir() === 'rtl' || currentLang === 'ar';
@@ -242,13 +137,12 @@ export default function RealtimeAudit() {
   const [endDate, setEndDate] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJson, setShowRawJson] = useState({});
+  const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
   const formatValue = useCallback((key, val) => {
-    if (val === null || val === undefined || val === '') {
-      return <span className="opacity-40">—</span>;
-    }
+    if (val === null || val === undefined || val === '') return <span className="text-slate-400 font-normal">—</span>;
     if (typeof val === 'object') {
-      if (Object.keys(val).length === 0) return <span className="opacity-40">—</span>;
+      if (Object.keys(val).length === 0) return <span className="text-slate-400 font-normal">—</span>;
       if (val[currentLang]) return val[currentLang];
       if (val.ar || val.en) return val.ar || val.en;
       if (val.name) return typeof val.name === 'object' ? formatValue(key, val.name) : val.name;
@@ -256,7 +150,7 @@ export default function RealtimeAudit() {
       return JSON.stringify(val);
     }
     const strVal = String(val);
-    if (VALUE_TRANSLATIONS[currentLang][strVal] !== undefined) {
+    if (VALUE_TRANSLATIONS[currentLang]?.[strVal] !== undefined) {
       return VALUE_TRANSLATIONS[currentLang][strVal];
     }
     return strVal;
@@ -307,8 +201,8 @@ export default function RealtimeAudit() {
     if (log.performer?.full_name) return log.performer.full_name;
     if (log.performer?.name) return log.performer.name;
     if (log.performer?.email) return log.performer.email;
-    if (log.changed_by) return `${currentLang === 'ar' ? 'مستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}...`;
-    return currentLang === 'ar' ? 'النظام التلقائي' : 'System Automated';
+    if (log.changed_by) return `${currentLang === 'ar' ? 'مستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}`;
+    return currentLang === 'ar' ? 'النظام التلقائي' : 'Automated System';
   }, [currentLang]);
 
   const filteredLogs = useMemo(() => {
@@ -359,7 +253,7 @@ export default function RealtimeAudit() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Audit_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Quran_Academy_Audit_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -370,378 +264,267 @@ export default function RealtimeAudit() {
       case 'INSERT':
         return { 
           icon: PlusCircle, 
-          color: 'var(--color-emerald, #10b981)', 
+          color: '#10B981', 
           bg: 'rgba(16, 185, 129, 0.12)', 
-          border: 'rgba(16, 185, 129, 0.4)', 
+          border: 'rgba(16, 185, 129, 0.3)', 
           label: currentLang === 'ar' ? 'إضافة' : 'Insert' 
         };
       case 'UPDATE':
         return { 
           icon: Edit, 
-          color: 'var(--color-blue, #3b82f6)', 
+          color: '#3B82F6', 
           bg: 'rgba(59, 130, 246, 0.12)', 
-          border: 'rgba(59, 130, 246, 0.4)', 
+          border: 'rgba(59, 130, 246, 0.3)', 
           label: currentLang === 'ar' ? 'تعديل' : 'Update' 
         };
       case 'DELETE':
         return { 
           icon: Trash2, 
-          color: 'var(--color-rose, #ef4444)', 
+          color: '#EF4444', 
           bg: 'rgba(239, 68, 68, 0.12)', 
-          border: 'rgba(239, 68, 68, 0.4)', 
+          border: 'rgba(239, 68, 68, 0.3)', 
           label: currentLang === 'ar' ? 'حذف' : 'Delete' 
         };
       default:
         return { 
           icon: Database, 
-          color: 'var(--color-cyan, #0ea5e9)', 
+          color: '#0EA5E9', 
           bg: 'rgba(14, 165, 233, 0.12)', 
-          border: 'rgba(14, 165, 233, 0.4)', 
+          border: 'rgba(14, 165, 233, 0.3)', 
           label: operation || 'Op' 
         };
     }
   };
 
-  const renderFriendlyPayload = (log) => {
-    const isRaw = showRawJson[log.id];
-    const oldData = log.old_data || {};
-    const newData = log.new_data || log.record_data || {};
-
-    if (isRaw) {
-      return (
-        <pre 
-          className="p-3 rounded-xl overflow-x-auto text-xs font-mono border dir-ltr text-left"
-          style={{
-            backgroundColor: 'var(--bg-input, #070d18)',
-            borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))',
-            color: 'var(--color-emerald, #10b981)'
-          }}
-        >
-          {JSON.stringify(newData || oldData, null, 2)}
-        </pre>
-      );
-    }
-
-    const keysToDisplay = Object.keys(newData).filter(k => 
-      !k.endsWith('_id') && k !== 'id' && !k.endsWith('_at') && newData[k] !== null
-    );
-
-    return (
-      <div className="flex flex-col gap-2 pt-1">
-        {log.operation === 'UPDATE' && Object.keys(oldData).length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {Object.keys(newData).map(key => {
-              if (JSON.stringify(oldData[key]) === JSON.stringify(newData[key])) return null;
-              if (key.endsWith('_id') || key === 'id' || key.endsWith('_at')) return null;
-
-              return (
-                <div 
-                  key={key} 
-                  className="p-2.5 rounded-xl border backdrop-blur-sm"
-                  style={{
-                    backgroundColor: 'var(--bg-input, rgba(15, 23, 42, 0.5))',
-                    borderColor: 'var(--border-color, rgba(255, 255, 255, 0.08))'
-                  }}
-                >
-                  <div className="text-slate-400 text-[11px] mb-1 font-medium">
-                    {FIELD_LABELS[currentLang][key] || key}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs flex-wrap">
-                    <span className="text-rose-400 line-through">{formatValue(key, oldData[key])}</span>
-                    <ArrowRight size={12} className={`text-slate-500 ${isRtl ? 'rotate-180' : ''}`} />
-                    <span className="text-emerald-400 font-bold">{formatValue(key, newData[key])}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {keysToDisplay.map(key => (
-              <div 
-                key={key} 
-                className="p-2.5 rounded-xl border backdrop-blur-sm"
-                style={{
-                  backgroundColor: 'var(--bg-input, rgba(15, 23, 42, 0.5))',
-                  borderColor: 'var(--border-color, rgba(255, 255, 255, 0.08))'
-                }}
-              >
-                <div className="text-slate-400 text-[11px] mb-1 font-medium">
-                  {FIELD_LABELS[currentLang][key] || key}
-                </div>
-                <div className="font-bold text-xs" style={{ color: 'var(--text-main, #f8fafc)' }}>
-                  {formatValue(key, newData[key])}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const tableOptions = useMemo(() => [
-    { value: 'all', label: currentLang === 'ar' ? 'جميع الجداول' : 'All Tables' },
-    ...Object.entries(TABLE_DISPLAY_NAMES[currentLang]).map(([key, label]) => ({
-      value: key,
-      label
-    }))
-  ], [currentLang]);
-
   return (
-    <div className={`p-4 max-w-4xl mx-auto font-sans ${isRtl ? 'rtl' : 'ltr'}`}>
+    <div className={`w-full min-h-screen p-3 sm:p-6 lg:p-8 font-sans ${isRtl ? 'rtl' : 'ltr'}`} style={{ backgroundColor: 'var(--bg-main, #0A0F1D)', color: 'var(--text-main, #F8FAFC)' }}>
       
-      {/* الترويسة الرئيسية */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* الترويسة الرئيسية الهادئة والاحترافية */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/10">
         <div>
-          <h1 className="text-2xl font-black tracking-wide mb-1" style={{ color: 'var(--text-main, #ffffff)' }}>
-            {currentLang === 'ar' ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}
-          </h1>
-          <p className="text-xs text-slate-400">
-            {currentLang === 'ar' ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات' : 'Real-time tracking of all updates and changes'}
+          <div className="flex items-center gap-2 mb-1">
+            <Globe className="w-5 h-5 text-emerald-400 shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-black tracking-wide text-white">
+              {currentLang === 'ar' ? 'سجل العمليات والأنشطة المباشر' : 'Global Live Audit Log'}
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400">
+            {currentLang === 'ar' ? 'متابعة شفافة وفورية لكافة التغييرات والإجراءات في الأكاديمية' : 'Real-time transparent activity and change management'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* أزرار التحكم للتصدير والتحديث */}
+        <div className="flex items-center gap-2.5 self-start md:self-auto">
           <button 
             onClick={exportToCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 border rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95"
-            style={{
-              backgroundColor: 'var(--bg-card, rgba(15, 23, 42, 0.8))',
-              borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))',
-              color: 'var(--text-main, #f8fafc)'
-            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all active:scale-95"
           >
-            <Download size={14} className="text-emerald-400" />
-            <span>{currentLang === 'ar' ? 'تصدير CSV' : 'Export CSV'}</span>
+            <Download size={14} />
+            <span>{currentLang === 'ar' ? 'تصدير التقرير' : 'Export CSV'}</span>
           </button>
 
           <button 
             onClick={fetchAuditLogs}
-            className="flex items-center gap-1.5 px-3.5 py-2 border rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95"
-            style={{
-              backgroundColor: 'var(--bg-card, rgba(15, 23, 42, 0.8))',
-              borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))',
-              color: 'var(--text-main, #f8fafc)'
-            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 transition-all active:scale-95"
           >
-            <RefreshCw size={14} className={`text-emerald-400 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw size={14} className={loading ? 'animate-spin text-emerald-400' : ''} />
             <span>{currentLang === 'ar' ? 'تحديث' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
-      {/* لوحة الفلاتر المخصصة */}
-      <div 
-        className="border rounded-2xl p-4 mb-5 shadow-2xl backdrop-blur-xl"
-        style={{
-          backgroundColor: 'var(--bg-card, rgba(11, 19, 32, 0.85))',
-          borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))'
-        }}
-      >
-        <div className="flex flex-col gap-3">
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* مربع البحث */}
-            <div className="relative">
-              <Search size={15} className={`absolute top-3.5 text-emerald-400/80 ${isRtl ? 'right-3.5' : 'left-3.5'}`} />
+      {/* لوحة البحث والفلاتر - متجاوبة 100% مع الشاشات الصغيرة */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 sm:p-5 mb-6 shadow-xl backdrop-blur-md">
+        
+        {/* زر التصفية للهواتف */}
+        <div className="flex sm:hidden items-center justify-between mb-3 pb-2 border-b border-slate-800">
+          <span className="text-xs font-bold text-slate-300 flex items-center gap-2">
+            <SlidersHorizontal size={14} className="text-emerald-400" />
+            {currentLang === 'ar' ? 'خيارات التصفية' : 'Filter Logs'}
+          </span>
+          <button 
+            onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+            className="text-xs text-emerald-400 font-semibold"
+          >
+            {showFiltersMobile ? (currentLang === 'ar' ? 'إخفاء' : 'Hide') : (currentLang === 'ar' ? 'عرض الفلاتر' : 'Show Filters')}
+          </button>
+        </div>
+
+        <div className={`flex-col gap-3 ${showFiltersMobile ? 'flex' : 'hidden sm:flex'}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            
+            {/* البحث النصي */}
+            <div className="relative col-span-1 lg:col-span-1">
+              <Search size={15} className={`absolute top-3.5 text-slate-400 ${isRtl ? 'right-3.5' : 'left-3.5'}`} />
               <input 
                 type="text"
-                placeholder={currentLang === 'ar' ? 'ابحث باسم المشرف، أو الجدول...' : 'Search table or user...'}
+                placeholder={currentLang === 'ar' ? 'بحث باسم المستخدم أو الجدول...' : 'Search by user or table...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full border rounded-xl py-2.5 text-xs transition-all focus:outline-none ${isRtl ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
-                style={{
-                  backgroundColor: 'var(--bg-input, rgba(15, 23, 42, 0.6))',
-                  borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))',
-                  color: 'var(--text-main, #f8fafc)'
-                }}
+                className={`w-full bg-slate-950/70 border border-slate-800 rounded-xl py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-all ${isRtl ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
               />
             </div>
 
-            {/* القائمة المنسدلة المخصصة */}
-            <CustomSelect 
-              options={tableOptions} 
-              value={selectedTable} 
-              onChange={setSelectedTable} 
-              placeholder={currentLang === 'ar' ? 'جميع الجداول' : 'All Tables'}
-              isRtl={isRtl}
-            />
-          </div>
-
-          {/* النطاق الزمني المخصص */}
-          <div 
-            className="p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-            style={{
-              backgroundColor: 'var(--bg-input, rgba(15, 23, 42, 0.4))',
-              borderColor: 'var(--border-color, rgba(255, 255, 255, 0.05))'
-            }}
-          >
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
-              <CalendarIcon size={14} />
-              <span>{currentLang === 'ar' ? 'النطاق الزمني:' : 'Date Range:'}</span>
-            </div>
-
-            <div className="flex items-center gap-2 flex-1 max-w-md">
-              <CustomDatePicker 
-                value={startDate} 
-                onChange={setStartDate} 
-                placeholder={currentLang === 'ar' ? 'من تاريخ' : 'Start Date'} 
-              />
-              <span className="text-slate-500 text-xs font-bold">{currentLang === 'ar' ? 'إلى' : 'to'}</span>
-              <CustomDatePicker 
-                value={endDate} 
-                onChange={setEndDate} 
-                placeholder={currentLang === 'ar' ? 'إلى تاريخ' : 'End Date'} 
-              />
-            </div>
-
-            {(startDate || endDate) && (
-              <button 
-                onClick={() => { setStartDate(''); setEndDate(''); }}
-                className="flex items-center justify-center gap-1 text-rose-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors shrink-0"
+            {/* تصفية الجدول */}
+            <div className="relative">
+              <select
+                value={selectedTable}
+                onChange={(e) => setSelectedTable(e.target.value)}
+                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
               >
-                <FilterX size={13} />
-                <span>{currentLang === 'ar' ? 'إعادة ضبط' : 'Clear'}</span>
-              </button>
-            )}
-          </div>
+                <option value="all">{currentLang === 'ar' ? 'جميع الجداول والقطاعات' : 'All Tables & Modules'}</option>
+                {Object.entries(TABLE_DISPLAY_NAMES[currentLang]).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className={`absolute top-3.5 text-slate-400 pointer-events-none ${isRtl ? 'left-3.5' : 'right-3.5'}`} />
+            </div>
 
+            {/* نطاق التواريخ المدمج */}
+            <div className="flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5 col-span-1 sm:col-span-2 lg:col-span-1">
+              <CalendarIcon size={14} className="text-emerald-400 shrink-0" />
+              <input 
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-transparent text-xs text-slate-200 focus:outline-none w-full"
+              />
+              <span className="text-slate-600 text-xs">-</span>
+              <input 
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-transparent text-xs text-slate-200 focus:outline-none w-full"
+              />
+              {(startDate || endDate) && (
+                <button onClick={() => { setStartDate(''); setEndDate(''); }} className="text-slate-400 hover:text-rose-400 p-1">
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+          </div>
         </div>
       </div>
 
-      {/* قائمة السجلات والكروت */}
-      <div 
-        className="border rounded-2xl p-3 shadow-2xl backdrop-blur-xl"
-        style={{
-          backgroundColor: 'var(--bg-card, rgba(11, 19, 32, 0.85))',
-          borderColor: 'var(--border-color, rgba(16, 185, 129, 0.2))'
-        }}
-      >
+      {/* قائمة السجلات المحدثة بطراز الكروت التكيفية */}
+      <div className="space-y-3">
         {loading ? (
-          <div className="p-10 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-            <Loader2 size={18} className="animate-spin text-emerald-400" />
-            <span>{currentLang === 'ar' ? 'جاري تحميل السجل...' : 'Loading audit logs...'}</span>
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="p-10 text-center text-slate-400 text-xs font-medium">
-            {currentLang === 'ar' ? 'لا توجد أنشطة مسجلة بعد' : 'No activities recorded yet'}
+          <div className="p-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3 bg-slate-900/40 rounded-2xl border border-slate-800">
+            <Loader2 size={24} className="animate-spin text-emerald-400" />
+            <span>{currentLang === 'ar' ? 'جاري جلب البيانات والتحديثات...' : 'Syncing audit logs...'}</span>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="p-10 text-center text-slate-400 text-xs font-medium">
-            {currentLang === 'ar' ? 'لا توجد نتائج تطابق البحث' : 'No matching results'}
+          <div className="p-12 text-center text-slate-400 text-xs font-medium bg-slate-900/40 rounded-2xl border border-slate-800">
+            {currentLang === 'ar' ? 'لا توجد سجلات تطابق خيارات التصفية الحالية' : 'No logs match your current filter selection'}
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {filteredLogs.map((log) => {
-              const badge = getOperationBadge(log.operation);
-              const IconComponent = badge.icon;
-              const isExpanded = expandedLogId === log.id;
-              const userName = getUserDisplayName(log);
-              const timeFormatted = new Date(log.created_at).toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-              const dateFormatted = new Date(log.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
+          filteredLogs.map((log) => {
+            const badge = getOperationBadge(log.operation);
+            const IconComponent = badge.icon;
+            const isExpanded = expandedLogId === log.id;
+            const userName = getUserDisplayName(log);
+            const timeFormatted = new Date(log.created_at).toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateFormatted = new Date(log.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-              return (
+            return (
+              <div 
+                key={log.id} 
+                className="bg-slate-900/90 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl overflow-hidden transition-all duration-200 shadow-md"
+              >
+                {/* رأس كرت النشاط */}
                 <div 
-                  key={log.id} 
-                  className="border rounded-xl overflow-hidden transition-all duration-200 shadow-md"
-                  style={{
-                    backgroundColor: 'var(--bg-card, #0d1626)',
-                    borderColor: 'var(--border-color, rgba(255, 255, 255, 0.08))',
-                    borderRight: isRtl ? `3px solid ${badge.border}` : undefined,
-                    borderLeft: !isRtl ? `3px solid ${badge.border}` : undefined,
-                  }}
+                  onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                  className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/30 transition-colors"
                 >
-                  <div 
-                    onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                    className="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-white/5 transition-colors"
-                  >
-                    
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-inner"
-                        style={{ backgroundColor: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}
-                      >
-                        <IconComponent size={17} />
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-extrabold text-xs tracking-wide" style={{ color: 'var(--text-main, #ffffff)' }}>
-                            {badge.label}
-                          </span>
-                          <span 
-                            className="text-[10px] px-2.5 py-0.5 rounded-full font-semibold border"
-                            style={{
-                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                              borderColor: 'rgba(16, 185, 129, 0.25)',
-                              color: 'var(--color-emerald, #10b981)'
-                            }}
-                          >
-                            {TABLE_DISPLAY_NAMES[currentLang][log.table_name] || log.table_name}
-                          </span>
-                        </div>
-                        
-                        <div className="text-slate-400 text-[11px] flex items-center gap-1">
-                          <UserCheck size={12} className="text-emerald-400" />
-                          <span>{currentLang === 'ar' ? 'بواسطة:' : 'By:'} <strong style={{ color: 'var(--text-main, #f8fafc)' }}>{userName}</strong></span>
-                        </div>
-                      </div>
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div 
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 sm:mt-0"
+                      style={{ backgroundColor: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}
+                    >
+                      <IconComponent size={18} />
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-left rtl:text-right">
-                        <div className="text-emerald-400 text-[11px] font-bold flex items-center gap-1 justify-end rtl:justify-start">
-                          <Clock size={11} />
-                          <span>{timeFormatted}</span>
-                        </div>
-                        <div className="text-slate-500 text-[10px] mt-0.5">
-                          {dateFormatted}
-                        </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-bold text-xs sm:text-sm text-slate-100">
+                          {badge.label}
+                        </span>
+                        <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-md font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {TABLE_DISPLAY_NAMES[currentLang][log.table_name] || log.table_name}
+                        </span>
                       </div>
-
-                      {isExpanded ? <ChevronUp size={16} className="text-emerald-400" /> : <ChevronDown size={16} className="text-slate-500" />}
+                      
+                      <div className="text-slate-400 text-xs flex items-center gap-1.5">
+                        <UserCheck size={13} className="text-slate-500" />
+                        <span>{currentLang === 'ar' ? 'بواسطة:' : 'By:'} <strong className="text-slate-200">{userName}</strong></span>
+                      </div>
                     </div>
                   </div>
 
-                  {isExpanded && (
-                    <div 
-                      className="p-3.5 border-t text-xs animate-in fade-in duration-150"
-                      style={{
-                        backgroundColor: 'var(--bg-input, rgba(7, 13, 24, 0.7))',
-                        borderColor: 'var(--border-color, rgba(255, 255, 255, 0.08))'
-                      }}
-                    >
-                      <div className="flex justify-between items-center mb-2.5">
-                        <span className="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
-                          <Layers size={13} />
-                          {currentLang === 'ar' ? 'تفاصيل التغيير:' : 'Payload:'}
-                        </span>
-                        
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowRawJson(prev => ({ ...prev, [log.id]: !prev[log.id] }));
-                          }}
-                          className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border transition-colors"
-                          style={{
-                            backgroundColor: 'var(--bg-card, rgba(15, 23, 42, 0.8))',
-                            borderColor: 'var(--border-color, rgba(255, 255, 255, 0.1))'
-                          }}
-                        >
-                          <Code size={11} />
-                          <span>{showRawJson[log.id] ? (currentLang === 'ar' ? 'عرض مبسط' : 'Friendly View') : (currentLang === 'ar' ? 'عرض JSON' : 'Raw JSON')}</span>
-                        </button>
-                      </div>
-
-                      {renderFriendlyPayload(log)}
+                  {/* التاريخ وأيقونة التوسع */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
+                    <div className="text-slate-400 text-[11px] sm:text-xs flex sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
+                      <span className="text-emerald-400 font-medium flex items-center gap-1">
+                        <Clock size={11} /> {timeFormatted}
+                      </span>
+                      <span className="text-slate-500">{dateFormatted}</span>
                     </div>
-                  )}
 
+                    <div className="p-1 rounded-lg bg-slate-800/50 text-slate-400">
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* تفاصيل التغييرات عند النقر */}
+                {isExpanded && (
+                  <div className="p-4 bg-slate-950/80 border-t border-slate-800/80 text-xs animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1.5 text-xs">
+                        <Layers size={14} />
+                        {currentLang === 'ar' ? 'تفاصيل البيانات المسجلة:' : 'Payload Details:'}
+                      </span>
+                      
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRawJson(prev => ({ ...prev, [log.id]: !prev[log.id] }));
+                        }}
+                        className="flex items-center gap-1 text-[11px] text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 transition-colors"
+                      >
+                        <Code size={12} />
+                        <span>{showRawJson[log.id] ? (currentLang === 'ar' ? 'عرض مبسط' : 'Friendly View') : (currentLang === 'ar' ? 'عرض JSON' : 'Raw JSON')}</span>
+                      </button>
+                    </div>
+
+                    {/* بيانات الكرت */}
+                    {showRawJson[log.id] ? (
+                      <pre className="p-3 bg-slate-900 rounded-xl overflow-x-auto text-[11px] font-mono text-emerald-400 border border-slate-800 dir-ltr text-left">
+                        {JSON.stringify(log.new_data || log.old_data || {}, null, 2)}
+                      </pre>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        {Object.entries(log.new_data || log.record_data || log.old_data || {}).map(([key, value]) => {
+                          if (key.endsWith('_id') || key === 'id' || key.endsWith('_at') || value === null) return null;
+                          return (
+                            <div key={key} className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/60">
+                              <div className="text-slate-400 text-[10px] font-semibold mb-0.5">
+                                {FIELD_LABELS[currentLang][key] || key}
+                              </div>
+                              <div className="text-slate-100 font-bold text-xs">
+                                {formatValue(key, value)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
