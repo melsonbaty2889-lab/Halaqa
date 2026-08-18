@@ -25,7 +25,9 @@ import {
   Eraser,
   Sparkles,
   Code,
-  X
+  X,
+  Copy,
+  Check
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
@@ -86,7 +88,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   // 🎛️ وضع العرض: false = وضع المدير (مبسط) | true = وضع المطور (متقدم)
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
 
-  // 🔔 نظام التنبيهات المخصص (Toast) بدلاً من alert
+  // 🔔 نظام التنبيهات المخصص (Toast)
   const [toast, setToast] = useState(null);
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -193,7 +195,6 @@ export default function RealtimeAudit({ isArabic = true }) {
     };
   }, [logs]);
 
-  // دالة تنظيف السجلات المعدلة مع استبدال alert بـ Toast مخصص
   const handlePurgeLogs = async () => {
     setPurging(true);
     try {
@@ -303,7 +304,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-5 dir-rtl font-sans text-slate-100">
       
-      {/* 🔔 Toast Notification المخصص */}
+      {/* Toast Notification */}
       {toast && (
         <div className={`fixed bottom-5 left-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 ${
           toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
@@ -315,8 +316,8 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       )}
 
-      {/* 🟢 ترويسة الصفحة */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+      {/* 🟢 ترويسة الصفحة والتعديل 1: تحسين ترتيب وتجاوب الأزرار العلوية */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
@@ -336,9 +337,9 @@ export default function RealtimeAudit({ isArabic = true }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
-          {/* 🎛️ مفتاح التحويل بين وضع المدير المبسط ووضع المطور المتقدم */}
-          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-start md:justify-end">
+          {/* Segmented Control للتبديل بين الوضعين */}
+          <div className="inline-flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
             <button
               onClick={() => setIsAdvancedMode(false)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
@@ -346,7 +347,7 @@ export default function RealtimeAudit({ isArabic = true }) {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              وضع المدير (مبسط)
+              <span>وضع المدير</span>
             </button>
             <button
               onClick={() => setIsAdvancedMode(true)}
@@ -355,35 +356,39 @@ export default function RealtimeAudit({ isArabic = true }) {
               }`}
             >
               <Code className="w-3.5 h-3.5" />
-              وضع المطور (متقدم)
+              <span>وضع المطور</span>
             </button>
           </div>
 
-          <button 
-            onClick={() => setIsPurgeModalOpen(true)} 
-            className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all"
-          >
-            <Eraser size={14} />
-            <span>تنظيف السجلات</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={() => setIsPurgeModalOpen(true)} 
+              title="تنظيف السجلات"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            >
+              <Eraser size={16} />
+              <span className="hidden sm:inline">تنظيف السجلات</span>
+            </button>
 
-          <button 
-            onClick={fetchAuditLogs} 
-            disabled={loading}
-            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 text-xs font-medium flex items-center gap-1.5 transition-all"
-          >
-            <RefreshCw size={14} className={`text-slate-400 ${loading ? 'animate-spin' : ''}`} />
-            <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
-          </button>
-          
-          <button 
-            onClick={handleExportCSV}
-            disabled={filteredLogs.length === 0}
-            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 transition-all"
-          >
-            <Download size={14} />
-            <span>{isArabic ? 'تصدير التقرير (CSV)' : 'Export CSV'}</span>
-          </button>
+            <button 
+              onClick={fetchAuditLogs} 
+              disabled={loading}
+              title="تحديث"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 text-xs font-medium flex items-center gap-1.5 transition-all"
+            >
+              <RefreshCw size={16} className={`text-slate-400 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{isArabic ? 'تحديث' : 'Refresh'}</span>
+            </button>
+            
+            <button 
+              onClick={handleExportCSV}
+              disabled={filteredLogs.length === 0}
+              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 transition-all shrink-0"
+            >
+              <Download size={15} />
+              <span>{isArabic ? 'تصدير (CSV)' : 'Export'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -434,16 +439,17 @@ export default function RealtimeAudit({ isArabic = true }) {
             />
           </div>
 
+          {/* التعديل 2: القائمة المنسدلة بتنسيق داكن مخصص ومتوافق مع الموبايل */}
           <div className="relative flex items-center">
             <Users size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
             <select
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 pr-9 pl-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 pr-9 pl-8 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
             >
-              <option value="ALL">جميع المشرفين ({uniqueUsers.length})</option>
+              <option value="ALL" className="bg-slate-900 text-slate-200">جميع المشرفين ({uniqueUsers.length})</option>
               {uniqueUsers.map((user) => (
-                <option key={user.id} value={user.id}>
+                <option key={user.id} value={user.id} className="bg-slate-900 text-slate-200">
                   {user.name}
                 </option>
               ))}
@@ -553,7 +559,6 @@ export default function RealtimeAudit({ isArabic = true }) {
                           <span className="text-emerald-400 font-medium">{highlightText(userName, searchTerm)}</span>
                         </span>
                         
-                        {/* يظهر اسم الجدول بالإنجليزية فقط في وضع المطور المتقدم */}
                         {isAdvancedMode && (
                           <span className="flex items-center gap-1">
                             <Tag size={13} className="text-slate-500" />
@@ -572,8 +577,8 @@ export default function RealtimeAudit({ isArabic = true }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80 justify-end self-end sm:self-auto w-full sm:w-auto">
-                    {/* زر الـ JSON يظهر فقط عند تفعيل وضع المطور */}
+                  {/* التعديل 5: توحيد موقع ومحاذاة أزرار التحكم جهة اليسار بدقة */}
+                  <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 pt-2.5 sm:pt-0 border-slate-800/80 shrink-0 self-end sm:self-center">
                     {isAdvancedMode && (
                       <button
                         onClick={() => toggleRawJson(log.id)}
@@ -605,7 +610,7 @@ export default function RealtimeAudit({ isArabic = true }) {
                         {JSON.stringify({ old_data: log.old_data, new_data: log.new_data }, null, 2)}
                       </pre>
                     ) : (
-                      <DataDiffViewer log={log} isAdvancedMode={isAdvancedMode} />
+                      <DataDiffViewer log={log} isAdvancedMode={isAdvancedMode} showToast={showToast} />
                     )}
                   </div>
                 )}
@@ -646,7 +651,7 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       )}
 
-      {/* 🧹 نافذة تنظيف/أرشفة السجلات (Purge Modal) */}
+      {/* 🧹 نافذة تنظيف السجلات مع التعديل 2: تنسيق القائمة المنسدلة الداكنة */}
       {isPurgeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-md p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 dir-rtl">
@@ -671,12 +676,12 @@ export default function RealtimeAudit({ isArabic = true }) {
               <select
                 value={purgeDays}
                 onChange={(e) => setPurgeDays(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500/50"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500/50 appearance-none cursor-pointer"
               >
-                <option value={15}>15 يوم</option>
-                <option value={30}>30 يوم (شهر واحد)</option>
-                <option value={60}>60 يوم (شهريين)</option>
-                <option value={90}>90 يوم (3 أشهر)</option>
+                <option value={15} className="bg-slate-900 text-slate-200">15 يوم</option>
+                <option value={30} className="bg-slate-900 text-slate-200">30 يوم (شهر واحد)</option>
+                <option value={60} className="bg-slate-900 text-slate-200">60 يوم (شهريين)</option>
+                <option value={90} className="bg-slate-900 text-slate-200">90 يوم (3 أشهر)</option>
               </select>
             </div>
 
@@ -704,16 +709,52 @@ export default function RealtimeAudit({ isArabic = true }) {
   );
 }
 
-// 4. مكون عرض الفروقات (Diff Viewer) المعدل والمبسط
-function DataDiffViewer({ log, isAdvancedMode }) {
+// 4. مكون عرض التفاصيل والفروقات (DataDiffViewer) مع التعديل 3: اختصار المعرفات مع زر نسخ
+function DataDiffViewer({ log, isAdvancedMode, showToast }) {
+  const [copiedKey, setCopiedKey] = useState(null);
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
   const displayData = log.new_data || log.old_data || {};
+
+  const handleCopy = (text, key) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    if (showToast) showToast('تم نسخ المعرّف بنجاح', 'info');
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  // دالة تحسين عرض النصوص والـ UUIDs
+  const renderFormattedValue = (key, rawVal) => {
+    const val = safeRenderValue(rawVal);
+    const isUUID = typeof rawVal === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawVal);
+
+    if (isUUID) {
+      const shortened = `${rawVal.substring(0, 8)}...`;
+      return (
+        <span className="inline-flex items-center gap-1.5 font-mono text-xs">
+          <span title={rawVal} className="text-sky-300 bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-800/40">
+            {shortened}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopy(rawVal, key);
+            }}
+            title="نسخ المعرّف كامل"
+            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-emerald-400 transition-colors"
+          >
+            {copiedKey === key ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+          </button>
+        </span>
+      );
+    }
+
+    return <span className="text-xs font-semibold text-slate-200 truncate">{val}</span>;
+  };
 
   if (!isUpdate) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
         {Object.entries(displayData).map(([key, value]) => {
-          // استبعاد الحقول التقنية في وضع المدير المبسط
           if (!isAdvancedMode && HIDDEN_FIELDS_IN_BASIC_VIEW.includes(key)) return null;
 
           return (
@@ -724,9 +765,9 @@ function DataDiffViewer({ log, isAdvancedMode }) {
               <span className="text-[11px] text-slate-400 font-medium">
                 {JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}
               </span>
-              <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
-                {safeRenderValue(value)}
-              </span>
+              <div className="mt-1">
+                {renderFormattedValue(key, value)}
+              </div>
             </div>
           );
         })}
@@ -739,11 +780,12 @@ function DataDiffViewer({ log, isAdvancedMode }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
       {allKeys.map((key) => {
-        // استبعاد الحقول التقنية في وضع المدير المبسط
         if (!isAdvancedMode && HIDDEN_FIELDS_IN_BASIC_VIEW.includes(key)) return null;
 
-        const oldVal = safeRenderValue(log.old_data?.[key]);
-        const newVal = safeRenderValue(log.new_data?.[key]);
+        const rawOld = log.old_data?.[key];
+        const rawNew = log.new_data?.[key];
+        const oldVal = safeRenderValue(rawOld);
+        const newVal = safeRenderValue(rawNew);
         const isChanged = oldVal !== newVal;
 
         return (
@@ -770,9 +812,9 @@ function DataDiffViewer({ log, isAdvancedMode }) {
                 </div>
               </div>
             ) : (
-              <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
-                {newVal}
-              </span>
+              <div className="mt-1">
+                {renderFormattedValue(key, rawNew)}
+              </div>
             )}
           </div>
         );
