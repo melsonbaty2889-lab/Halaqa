@@ -10,6 +10,8 @@ import {
   Tag, 
   ChevronDown, 
   ChevronUp,
+  ChevronRight,
+  ChevronLeft,
   PlusCircle,
   Edit3,
   Trash2,
@@ -65,6 +67,10 @@ export default function RealtimeAudit({ isArabic = true }) {
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJsonMap, setShowRawJsonMap] = useState({});
 
+  // 📄 حالات التقسيم لصفحات (Pagination States)
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
@@ -78,7 +84,7 @@ export default function RealtimeAudit({ isArabic = true }) {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(200); // جلب أحدث 200 سجل للتنقل بينها بسهولة
 
       if (error) throw error;
       setLogs(data || []);
@@ -122,6 +128,11 @@ export default function RealtimeAudit({ isArabic = true }) {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // إعادة الصفحة إلى 1 عند تغيير البحث أو نوع العملية
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedOperation, dateRange]);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -171,11 +182,17 @@ export default function RealtimeAudit({ isArabic = true }) {
     });
   }, [logs, searchTerm, selectedOperation]);
 
-  // 📥 دالة تصدير البيانات المفلترة إلى ملف CSV
+  // 📄 اقتطاع السجلات المعروضة بناءً على الصفحة الحالية
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
+  const paginatedLogs = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredLogs.slice(start, start + itemsPerPage);
+  }, [filteredLogs, currentPage]);
+
   const handleExportCSV = () => {
     if (filteredLogs.length === 0) return;
 
-    const headers = ["معرف السجل", "التاريخ والوقت", "نوع العملية", "الجدول", "المستخدم", "البيانات الجديدة/الحالية"];
+    const headers = ["معرف السجل", "التاريخ والوقت", "نوع العملية", "الجدول", "المستخدم", "البيانات"];
     
     const rows = filteredLogs.map((log) => {
       const tableName = safeRenderValue(log.table_name);
@@ -363,12 +380,12 @@ export default function RealtimeAudit({ isArabic = true }) {
             <Loader2 size={24} className="animate-spin text-emerald-400" />
             <span>{isArabic ? 'جاري جلب السجلات المباشرة...' : 'Fetching live audit records...'}</span>
           </div>
-        ) : filteredLogs.length === 0 ? (
+        ) : paginatedLogs.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 text-slate-500 text-xs">
             {isArabic ? 'لا توجد سجلات حقيقية تطابق التحديد' : 'No matching audit logs found'}
           </div>
         ) : (
-          filteredLogs.map((log) => {
+          paginatedLogs.map((log) => {
             const isExpanded = expandedLogId === log.id;
             const isRawJson = !!showRawJsonMap[log.id];
             const displayData = log.new_data || log.old_data || {};
@@ -464,6 +481,37 @@ export default function RealtimeAudit({ isArabic = true }) {
           })
         )}
       </div>
+
+      {/* 🟢 شريط التحكم بالصفحات (Pagination Bar) */}
+      {!loading && filteredLogs.length > 0 && (
+        <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-2 text-xs text-slate-400">
+          <span>
+            عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredLogs.length)} من إجمالي {filteredLogs.length} سجل
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 transition-all"
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            <span className="px-3 py-1 rounded-lg bg-slate-950 text-emerald-400 font-bold border border-slate-800">
+              {currentPage} / {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 transition-all"
+            >
+              <ChevronLeft size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
