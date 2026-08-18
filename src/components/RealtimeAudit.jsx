@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { 
-  History, 
   Search, 
   RefreshCw, 
   Clock, 
@@ -11,76 +10,136 @@ import {
   Edit, 
   Trash2, 
   UserCheck, 
-  X, 
   Download, 
   ChevronDown, 
   ChevronUp,
   Calendar,
   Code,
-  Loader2
+  Loader2,
+  FilterX,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 
-// استيراد مكونات الواجهة الموحدة ونظام الألوان
 import { Card, Btn, Input, Select, PageHeader, Badge } from '@/components/UI/UI';
 import { C } from '@/theme/colors';
 
+// ----------------------------------------------------------------------
+// Mappings & Localizations (توسيع قاموس الترجمة الكامل)
+// ----------------------------------------------------------------------
+const TABLE_DISPLAY_NAMES = {
+  ar: {
+    attendance: 'الحضور والتسميع',
+    payments: 'الاشتراكات والمالية',
+    halaqas: 'الحلقات والمقارئ',
+    students: 'شؤون الطلاب',
+    daily_progress: 'الإنجاز اليومي',
+  },
+  en: {
+    attendance: 'Attendance',
+    payments: 'Payments',
+    halaqas: 'Halaqas',
+    students: 'Students',
+    daily_progress: 'Daily Progress',
+  }
+};
+
+const FIELD_LABELS = {
+  ar: {
+    status: 'الحالة',
+    notes: 'الملاحظات',
+    date: 'التاريخ',
+    juz: 'الجزء',
+    amount: 'المبلغ',
+    full_name: 'الاسم الكامل',
+    name: 'الاسم',
+    phone: 'رقم الهاتف',
+    parent_phone: 'رقم هاتف ولي الأمر',
+    quarter_index: 'الربع',
+    quarter_in_hizb: 'الربع في الحزب',
+    session_grade: 'الدرجة',
+    gender: 'النوع',
+    points: 'النقاط',
+    country: 'الدولة',
+    current_juz: 'الجزء الحالي',
+    is_archived: 'الأرشيف',
+    level_score: 'تقييم المستوى',
+    student_code: 'كود الطالب',
+    payment_status: 'حالة الدفع',
+    last_test_score: 'آخر اختبار',
+    current_quarter: 'الربع الحالي',
+    current_quarter_index: 'مؤشر الربع',
+    subscription_system: 'نظام الاشتراك',
+  },
+  en: {
+    status: 'Status',
+    notes: 'Notes',
+    date: 'Date',
+    juz: 'Juz',
+    amount: 'Amount',
+    full_name: 'Full Name',
+    name: 'Name',
+    phone: 'Phone',
+    parent_phone: 'Parent Phone',
+    quarter_index: 'Quarter',
+    quarter_in_hizb: 'Quarter in Hizb',
+    session_grade: 'Grade',
+    gender: 'Gender',
+    points: 'Points',
+    country: 'Country',
+    current_juz: 'Current Juz',
+    is_archived: 'Archived',
+    level_score: 'Level Score',
+    student_code: 'Student Code',
+    payment_status: 'Payment Status',
+    last_test_score: 'Last Test Score',
+    current_quarter: 'Current Quarter',
+    current_quarter_index: 'Quarter Index',
+    subscription_system: 'Subscription System',
+  }
+};
+
+const VALUE_TRANSLATIONS = {
+  ar: {
+    present: 'حاضر',
+    absent: 'غائب',
+    late: 'متأخر',
+    excused: 'مستأذن',
+    male: 'ذكر',
+    female: 'أنثى',
+    active: 'نشط',
+    unpaid: 'غير مدفوع',
+    paid: 'مدفوع',
+    monthly: 'شهري',
+    yearly: 'سنوي',
+    false: 'غير مؤرشف',
+    true: 'مؤرشف',
+    EG: 'مصر 🇪🇬'
+  },
+  en: {
+    present: 'Present',
+    absent: 'Absent',
+    late: 'Late',
+    excused: 'Excused',
+    male: 'Male',
+    female: 'Female',
+    active: 'Active',
+    unpaid: 'Unpaid',
+    paid: 'Paid',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    false: 'Not Archived',
+    true: 'Archived',
+    EG: 'Egypt 🇪🇬'
+  }
+};
+
 export default function RealtimeAudit({ session, userRole }) {
   const { i18n } = useTranslation();
-  const currentLang = i18n.language || 'ar';
-  const isArabic = currentLang.startsWith('ar');
-  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : isArabic;
+  const currentLang = i18n.language && i18n.language.startsWith('ar') ? 'ar' : 'en';
+  const isRtl = i18n.dir() === 'rtl' || currentLang === 'ar';
 
-  const tableDisplayNames = {
-    attendance: isArabic ? 'الحضور والتسميع' : 'Attendance',
-    payments: isArabic ? 'الاشتراكات والمالية' : 'Payments',
-    halaqas: isArabic ? 'الحلقات والمقارئ' : 'Halaqas',
-    students: isArabic ? 'شؤون الطلاب' : 'Students',
-    daily_progress: isArabic ? 'الإنجاز اليومي' : 'Daily Progress'
-  };
-
-  const fieldLabels = {
-    status: isArabic ? 'الحالة' : 'Status',
-    notes: isArabic ? 'الملاحظات' : 'Notes',
-    date: isArabic ? 'التاريخ' : 'Date',
-    juz: isArabic ? 'الجزء' : 'Juz',
-    amount: isArabic ? 'المبلغ' : 'Amount',
-    full_name: isArabic ? 'الاسم الكامل' : 'Full Name',
-    name: isArabic ? 'الاسم' : 'Name',
-    phone: isArabic ? 'رقم الهاتف' : 'Phone',
-    quarter_index: isArabic ? 'الربع' : 'Quarter',
-    quarter_in_hizb: isArabic ? 'الربع في الحزب' : 'Quarter in Hizb',
-    session_grade: isArabic ? 'الدرجة' : 'Grade',
-    gender: isArabic ? 'النوع' : 'Gender',
-    points: isArabic ? 'النقاط' : 'Points',
-    country: isArabic ? 'الدولة' : 'Country',
-    current_juz: isArabic ? 'الجزء الحالي' : 'Current Juz',
-    is_archived: isArabic ? 'الأرشيف' : 'Archived',
-    level_score: isArabic ? 'تقييم المستوى' : 'Level Score',
-    student_code: isArabic ? 'كود الطالب' : 'Student Code',
-    payment_status: isArabic ? 'حالة الدفع' : 'Payment Status',
-    last_test_score: isArabic ? 'آخر اختبار' : 'Last Test Score',
-    current_quarter: isArabic ? 'الربع الحالي' : 'Current Quarter',
-    current_quarter_index: isArabic ? 'مؤشر الربع' : 'Quarter Index',
-    subscription_system: isArabic ? 'نظام الاشتراك' : 'Subscription System'
-  };
-
-  const valueTranslations = {
-    present: isArabic ? 'حاضر' : 'Present',
-    absent: isArabic ? 'غائب' : 'Absent',
-    late: isArabic ? 'متأخر' : 'Late',
-    excused: isArabic ? 'مستأذن' : 'Excused',
-    male: isArabic ? 'ذكر' : 'Male',
-    female: isArabic ? 'أنثى' : 'Female',
-    active: isArabic ? 'نشط' : 'Active',
-    unpaid: isArabic ? 'غير مدفوع' : 'Unpaid',
-    paid: isArabic ? 'مدفوع' : 'Paid',
-    monthly: isArabic ? 'شهري' : 'Monthly',
-    yearly: isArabic ? 'سنوي' : 'Yearly',
-    false: isArabic ? 'غير مؤرشف' : 'Not Archived',
-    true: isArabic ? 'مؤرشف' : 'Archived',
-    EG: isArabic ? 'مصر 🇪🇬' : 'Egypt 🇪🇬'
-  };
-
+  // State Management
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState('all');
@@ -90,6 +149,29 @@ export default function RealtimeAudit({ session, userRole }) {
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJson, setShowRawJson] = useState({});
 
+  // Helper formatting engine
+  const formatValue = useCallback((key, val) => {
+    if (val === null || val === undefined || val === '') {
+      return <span style={{ color: C.textMuted }}>—</span>;
+    }
+
+    if (typeof val === 'object') {
+      if (Object.keys(val).length === 0) return <span style={{ color: C.textMuted }}>—</span>;
+      if (val[currentLang]) return val[currentLang];
+      if (val.ar || val.en) return val.ar || val.en;
+      if (val.name) return typeof val.name === 'object' ? formatValue(key, val.name) : val.name;
+      if (val.full_name) return val.full_name;
+      return JSON.stringify(val);
+    }
+
+    const strVal = String(val);
+    if (VALUE_TRANSLATIONS[currentLang][strVal] !== undefined) {
+      return VALUE_TRANSLATIONS[currentLang][strVal];
+    }
+    return strVal;
+  }, [currentLang]);
+
+  // Fetch Audit Logs
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -145,30 +227,58 @@ export default function RealtimeAudit({ session, userRole }) {
     };
   }, [fetchAuditLogs]);
 
-  const getUserDisplayName = (log) => {
+  // Extract User Name Safely
+  const getUserDisplayName = useCallback((log) => {
     if (log.performer?.full_name) return log.performer.full_name;
     if (log.performer?.name) return log.performer.name;
     if (log.performer?.email) return log.performer.email;
-    if (log.changed_by) return `${isArabic ? 'مستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}...`;
-    return isArabic ? 'النظام التلقائي' : 'System Automated';
-  };
+    if (log.changed_by) return `${currentLang === 'ar' ? 'مستخدم' : 'User'}: ${log.changed_by.substring(0, 8)}...`;
+    return currentLang === 'ar' ? 'النظام التلقائي' : 'System Automated';
+  }, [currentLang]);
 
+  // Filtered Logs
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const logDate = new Date(log.created_at);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (logDate < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (logDate > end) return false;
+      }
+      if (!searchQuery.trim()) return true;
+
+      const query = searchQuery.toLowerCase().trim();
+      const rawTable = (log.table_name || '').toLowerCase();
+      const localizedTable = (TABLE_DISPLAY_NAMES[currentLang][log.table_name] || '').toLowerCase();
+      const operation = (log.operation || '').toLowerCase();
+      const userName = getUserDisplayName(log).toLowerCase();
+
+      return `${rawTable} ${localizedTable} ${operation} ${userName}`.includes(query);
+    });
+  }, [logs, startDate, endDate, searchQuery, currentLang, getUserDisplayName]);
+
+  // CSV Export Engine
   const exportToCSV = () => {
     if (filteredLogs.length === 0) return;
     const headers = [
-      isArabic ? "المعرف" : "ID", 
-      isArabic ? "الجدول" : "Table", 
-      isArabic ? "العملية" : "Operation", 
-      isArabic ? "بواسطة" : "Changed By", 
-      isArabic ? "التاريخ والتوقيت" : "Date & Time"
+      currentLang === 'ar' ? "المعرف" : "ID", 
+      currentLang === 'ar' ? "الجدول" : "Table", 
+      currentLang === 'ar' ? "العملية" : "Operation", 
+      currentLang === 'ar' ? "بواسطة" : "Changed By", 
+      currentLang === 'ar' ? "التاريخ والتوقيت" : "Date & Time"
     ];
 
     const rows = filteredLogs.map(log => [
       `"${log.id}"`,
-      `"${tableDisplayNames[log.table_name] || log.table_name}"`,
+      `"${TABLE_DISPLAY_NAMES[currentLang][log.table_name] || log.table_name}"`,
       `"${log.operation}"`,
       `"${getUserDisplayName(log)}"`,
-      `"${new Date(log.created_at).toLocaleString(isArabic ? 'ar-EG' : 'en-US')}"`
+      `"${new Date(log.created_at).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US')}"`
     ]);
 
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -185,54 +295,17 @@ export default function RealtimeAudit({ session, userRole }) {
   const getOperationBadge = (operation) => {
     switch (operation?.toUpperCase()) {
       case 'INSERT':
-        return { icon: PlusCircle, color: C.success, bg: `${C.success}18`, label: isArabic ? 'إضافة' : 'Insert' };
+        return { icon: PlusCircle, color: C.success || '#10b981', bg: `${C.success || '#10b981'}18`, label: currentLang === 'ar' ? 'إضافة' : 'Insert' };
       case 'UPDATE':
-        return { icon: Edit, color: C.primary, bg: `${C.primary}18`, label: isArabic ? 'تعديل' : 'Update' };
+        return { icon: Edit, color: C.primary || '#3b82f6', bg: `${C.primary || '#3b82f6'}18`, label: currentLang === 'ar' ? 'تعديل' : 'Update' };
       case 'DELETE':
-        return { icon: Trash2, color: C.danger, bg: `${C.danger}18`, label: isArabic ? 'حذف' : 'Delete' };
+        return { icon: Trash2, color: C.danger || '#ef4444', bg: `${C.danger || '#ef4444'}18`, label: currentLang === 'ar' ? 'حذف' : 'Delete' };
       default:
         return { icon: Database, color: C.primary, bg: `${C.primary}18`, label: operation || 'Op' };
     }
   };
 
-  const filteredLogs = logs.filter((log) => {
-    const logDate = new Date(log.created_at);
-    if (startDate) {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      if (logDate < start) return false;
-    }
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      if (logDate > end) return false;
-    }
-    if (!searchQuery.trim()) return true;
-
-    const query = searchQuery.toLowerCase().trim();
-    const rawTable = (log.table_name || '').toLowerCase();
-    const operation = (log.operation || '').toLowerCase();
-    const userName = getUserDisplayName(log).toLowerCase();
-    return `${rawTable} ${operation} ${userName}`.includes(query);
-  });
-
-  const formatValue = (key, val) => {
-    if (val === null || val === undefined || val === '') return <span style={{ color: C.textMuted }}>—</span>;
-    
-    if (typeof val === 'object') {
-      if (Object.keys(val).length === 0) return <span style={{ color: C.textMuted }}>—</span>;
-      if (val.ar && isArabic) return val.ar;
-      if (val.en && !isArabic) return val.en;
-      if (val.name) return typeof val.name === 'object' ? formatValue(key, val.name) : val.name;
-      if (val.full_name) return val.full_name;
-      return JSON.stringify(val);
-    }
-
-    const strVal = String(val);
-    if (valueTranslations[strVal] !== undefined) return valueTranslations[strVal];
-    return strVal;
-  };
-
+  // Render Compact Grid Payload (تحسين العرض في الموبايل)
   const renderFriendlyPayload = (log) => {
     const isRaw = showRawJson[log.id];
     const oldData = log.old_data || {};
@@ -240,7 +313,17 @@ export default function RealtimeAudit({ session, userRole }) {
 
     if (isRaw) {
       return (
-        <pre className="bg-slate-900/90 p-3 rounded-xl text-emerald-400 overflow-x-auto m-0 text-[11px] font-mono border border-slate-800">
+        <pre style={{ 
+          background: '#090d16', 
+          padding: 12, 
+          borderRadius: 10, 
+          color: '#10b981', 
+          overflowX: 'auto', 
+          margin: 0, 
+          fontSize: '0.72rem', 
+          fontFamily: 'monospace', 
+          border: `1px solid ${C.border}` 
+        }}>
           {JSON.stringify(newData || oldData, null, 2)}
         </pre>
       );
@@ -251,35 +334,35 @@ export default function RealtimeAudit({ session, userRole }) {
     );
 
     return (
-      <div className="flex flex-col gap-2.5">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {log.operation === 'UPDATE' && Object.keys(oldData).length > 0 ? (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
             {Object.keys(newData).map(key => {
               if (JSON.stringify(oldData[key]) === JSON.stringify(newData[key])) return null;
               if (key.endsWith('_id') || key === 'id' || key.endsWith('_at')) return null;
 
               return (
-                <div key={key} className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800/80">
-                  <div className="text-slate-400 text-[10px] mb-1">
-                    {fieldLabels[key] || key}
+                <div key={key} style={{ background: C.input, padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}` }}>
+                  <div style={{ color: C.textMuted, fontSize: '0.7rem', marginBottom: 4, fontWeight: 600 }}>
+                    {FIELD_LABELS[currentLang][key] || key}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] flex-wrap">
-                    <span className="text-rose-400 line-through">{formatValue(key, oldData[key])}</span>
-                    <span className="text-slate-500">➔</span>
-                    <span className="text-emerald-400 font-bold">{formatValue(key, newData[key])}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: C.danger, textDecoration: 'line-through' }}>{formatValue(key, oldData[key])}</span>
+                    <ArrowRight size={10} style={{ color: C.textMuted, transform: isRtl ? 'rotate(180deg)' : 'none' }} />
+                    <span style={{ color: C.success, fontWeight: 700 }}>{formatValue(key, newData[key])}</span>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {keysToDisplay.map(key => (
-              <div key={key} className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800/80">
-                <div className="text-slate-400 text-[10px] mb-1">
-                  {fieldLabels[key] || key}
+              <div key={key} style={{ background: C.input, padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}` }}>
+                <div style={{ color: C.textMuted, fontSize: '0.7rem', marginBottom: 2, fontWeight: 600 }}>
+                  {FIELD_LABELS[currentLang][key] || key}
                 </div>
-                <div className="text-slate-100 font-semibold text-[11px] truncate">
+                <div style={{ color: C.text, fontWeight: 600, fontSize: '0.78rem' }}>
                   {formatValue(key, newData[key])}
                 </div>
               </div>
@@ -290,43 +373,40 @@ export default function RealtimeAudit({ session, userRole }) {
     );
   };
 
-  const tableOptions = [
-    { value: 'all', label: isArabic ? 'جميع الجداول' : 'All Tables' },
-    ...Object.entries(tableDisplayNames).map(([key, label]) => ({ value: key, label }))
-  ];
+  const tableOptions = useMemo(() => [
+    { value: 'all', label: currentLang === 'ar' ? 'جميع الجداول' : 'All Tables' },
+    ...Object.entries(TABLE_DISPLAY_NAMES[currentLang]).map(([key, label]) => ({ value: key, label }))
+  ], [currentLang]);
 
   return (
-    <div 
-      className="px-2.5 py-4 sm:px-6 sm:py-6 w-full max-w-full overflow-hidden box-border" 
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      <div className="max-w-5xl mx-auto space-y-4">
+    <div style={{ padding: '16px 12px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         
-        {/* الترويسة الموحدة */}
+        {/* الترويسة الرئيسية */}
         <PageHeader 
-          title={isArabic ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}
-          sub={isArabic ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات داخل النظام' : 'Real-time tracking of all updates and changes across the system'}
+          title={currentLang === 'ar' ? 'سجل الأنشطة والتغييرات' : 'Live Activity Log'}
+          sub={currentLang === 'ar' ? 'متابعة فورية لكافة الإضافات والتعديلات والعمليات' : 'Real-time tracking of all updates and changes'}
           action={
-            <div className="flex items-center gap-2 flex-wrap">
-              <Btn variant="secondary" onClick={exportToCSV} className="!px-3 !py-1.5 !text-xs">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Btn variant="secondary" onClick={exportToCSV} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
                 <Download size={14} />
-                <span>{isArabic ? 'تصدير CSV' : 'Export Report'}</span>
+                <span>{currentLang === 'ar' ? 'تصدير' : 'Export'}</span>
               </Btn>
 
-              <Btn variant="secondary" onClick={fetchAuditLogs} className="!px-3 !py-1.5 !text-xs">
+              <Btn variant="secondary" onClick={fetchAuditLogs} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
+                <span>{currentLang === 'ar' ? 'تحديث' : 'Refresh'}</span>
               </Btn>
             </div>
           }
         />
 
-        {/* أدوات البحث والفلترة */}
-        <Card className="!p-3 sm:!p-4">
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {/* أدوات التصفية والبحث */}
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
               <Input 
-                placeholder={isArabic ? 'ابحث باسم المشرف، أو الجدول، أو العملية...' : 'Search table, user, or operation...'}
+                placeholder={currentLang === 'ar' ? 'ابحث باسم المشرف، أو الجدول، أو العملية...' : 'Search table, user, or operation...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ margin: 0 }}
@@ -340,40 +420,51 @@ export default function RealtimeAudit({ session, userRole }) {
               />
             </div>
 
-            {/* فلتر التاريخ المحدث ليناسب الموبايل */}
-            <div className="flex flex-wrap items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-              <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold shrink-0">
+            {/* فلتر التاريخ الموحد والمتناسق */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: C.input, padding: '8px 10px', borderRadius: 10, border: `1px solid ${C.border}`, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: C.primary, fontSize: '0.75rem', fontWeight: 700 }}>
                 <Calendar size={14} />
-                <span>{isArabic ? 'النطاق الزمني:' : 'Date Range:'}</span>
+                <span>{currentLang === 'ar' ? 'التاريخ:' : 'Date:'}</span>
               </div>
               
-              <div className="flex items-center gap-2 flex-1 min-w-[220px]">
-                <input 
-                  type="date" 
-                  value={startDate} 
-                  onChange={(e) => setStartDate(e.target.value)} 
-                  className="bg-slate-950 border border-slate-700/80 text-slate-100 px-2.5 py-1.5 rounded-lg text-xs outline-none flex-1 min-w-0"
-                  style={{ colorScheme: 'dark' }}
-                />
-                
-                <span className="text-slate-400 text-xs shrink-0">{isArabic ? 'إلى' : 'to'}</span>
-                
-                <input 
-                  type="date" 
-                  value={endDate} 
-                  onChange={(e) => setEndDate(e.target.value)} 
-                  className="bg-slate-950 border border-slate-700/80 text-slate-100 px-2.5 py-1.5 rounded-lg text-xs outline-none flex-1 min-w-0"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)} 
+                style={{ 
+                  background: C.surface, 
+                  border: `1px solid ${C.border}`, 
+                  color: C.text, 
+                  padding: '4px 8px', 
+                  borderRadius: 6, 
+                  fontSize: '0.75rem', 
+                  outline: 'none',
+                  colorScheme: 'dark'
+                }} 
+              />
+              
+              <span style={{ color: C.textMuted, fontSize: '0.72rem' }}>{currentLang === 'ar' ? 'إلى' : 'to'}</span>
+              
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)} 
+                style={{ 
+                  background: C.surface, 
+                  border: `1px solid ${C.border}`, 
+                  color: C.text, 
+                  padding: '4px 8px', 
+                  borderRadius: 6, 
+                  fontSize: '0.75rem', 
+                  outline: 'none',
+                  colorScheme: 'dark'
+                }} 
+              />
 
               {(startDate || endDate) && (
-                <Btn 
-                  variant="ghost" 
-                  onClick={() => { setStartDate(''); setEndDate(''); }} 
-                  className="!text-rose-400 !px-2 !py-1 !text-xs shrink-0"
-                >
-                  {isArabic ? 'إلغاء الفلترة' : 'Clear'}
+                <Btn variant="ghost" onClick={() => { setStartDate(''); setEndDate(''); }} style={{ color: C.danger, padding: '2px 6px', fontSize: '0.7rem' }}>
+                  <FilterX size={12} />
+                  <span>{currentLang === 'ar' ? 'مسح' : 'Clear'}</span>
                 </Btn>
               )}
             </div>
@@ -381,91 +472,84 @@ export default function RealtimeAudit({ session, userRole }) {
         </Card>
 
         {/* قائمة السجلات */}
-        <Card className="!p-2 sm:!p-4">
+        <Card>
           {loading ? (
-            <div className="py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-              <Loader2 size={16} className="animate-spin text-emerald-400" />
-              <span>{isArabic ? 'جاري تحميل سجل التغييرات...' : 'Loading audit logs...'}</span>
+            <div style={{ padding: 30, textAlign: 'center', color: C.textSub, fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Loader2 size={16} className="animate-spin" style={{ color: C.primary }} />
+              <span>{currentLang === 'ar' ? 'جاري تحميل السجل...' : 'Loading audit logs...'}</span>
             </div>
           ) : logs.length === 0 ? (
-            <div className="py-10 text-center text-slate-400 text-xs">
-              {isArabic ? 'لا توجد أنشطة مسجلة في قاعدة البيانات بعد' : 'No activities recorded in database yet'}
+            <div style={{ padding: 30, textAlign: 'center', color: C.textSub, fontSize: '0.82rem' }}>
+              {currentLang === 'ar' ? 'لا توجد أنشطة مسجلة بعد' : 'No activities recorded yet'}
             </div>
           ) : filteredLogs.length === 0 ? (
-            <div className="py-10 text-center text-slate-400 text-xs">
-              {isArabic ? 'لا توجد نتائج تطابق خيارات البحث' : 'No results matching search filters'}
+            <div style={{ padding: 30, textAlign: 'center', color: C.textSub, fontSize: '0.82rem' }}>
+              {currentLang === 'ar' ? 'لا توجد نتائج تطابق خيارات البحث' : 'No results matching filters'}
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {filteredLogs.map((log) => {
                 const badge = getOperationBadge(log.operation);
                 const IconComponent = badge.icon;
                 const isExpanded = expandedLogId === log.id;
                 const userName = getUserDisplayName(log);
-                const timeFormatted = new Date(log.created_at).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                const dateFormatted = new Date(log.created_at).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
+                const timeFormatted = new Date(log.created_at).toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                const dateFormatted = new Date(log.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
 
                 return (
-                  <div 
-                    key={log.id} 
-                    className="bg-slate-900/60 rounded-xl border border-slate-800/80 overflow-hidden transition-all hover:border-slate-700"
-                  >
-                    {/* صف السجل الرئيسي المصمم بالتجاوب الكامل */}
+                  <div key={log.id} style={{ 
+                    background: C.surface, 
+                    borderRadius: 10, 
+                    border: `1px solid ${C.border}`, 
+                    borderRight: isRtl ? `3px solid ${badge.color}` : undefined,
+                    borderLeft: !isRtl ? `3px solid ${badge.color}` : undefined,
+                    overflow: 'hidden' 
+                  }}>
                     <div 
                       onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                      className="p-2.5 sm:p-3.5 flex items-center justify-between gap-2 cursor-pointer select-none"
-                    >
-                      {/* الجهة اليمنى: الأيقونة والنصوص */}
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div 
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0" 
-                          style={{ background: badge.bg }}
-                        >
-                          <IconComponent size={16} style={{ color: badge.color }} />
+                      style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer' }}>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 8, background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <IconComponent size={18} style={{ color: badge.color }} />
                         </div>
 
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                            <span className="text-slate-100 font-bold text-xs shrink-0">
-                              {badge.label}
-                            </span>
-                            <Badge color={C.primary} className="!px-1.5 !py-0.5 !text-[10px] truncate max-w-[120px]">
-                              {tableDisplayNames[log.table_name] || log.table_name}
+                        <div>
+                          <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span>{badge.label}</span>
+                            <Badge color={C.primary}>
+                              {TABLE_DISPLAY_NAMES[currentLang][log.table_name] || log.table_name}
                             </Badge>
                           </div>
                           
-                          <div className="text-slate-400 text-[11px] flex items-center gap-1 truncate">
-                            <UserCheck size={12} className="text-emerald-400 shrink-0" />
-                            <span className="shrink-0">{isArabic ? 'بواسطة:' : 'By:'}</span>
-                            <strong className="text-slate-200 truncate">{userName}</strong>
+                          <div style={{ color: C.textSub, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <UserCheck size={11} style={{ color: C.primary }} />
+                            <span>{currentLang === 'ar' ? 'بواسطة:' : 'By:'} <strong style={{ color: C.text }}>{userName}</strong></span>
                           </div>
                         </div>
                       </div>
 
-                      {/* الجهة اليسرى: الوقت والسهم */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className={isRtl ? "text-left" : "text-right"}>
-                          <div className="text-emerald-400 text-[11px] font-bold flex items-center gap-1 justify-end">
-                            <Clock size={11} className="shrink-0" />
-                            <span className="whitespace-nowrap">{timeFormatted}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ textAlign: isRtl ? 'left' : 'right' }}>
+                          <div style={{ color: C.primary, fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3, justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
+                            <Clock size={11} />
+                            <span>{timeFormatted}</span>
                           </div>
-                          <div className="text-slate-500 text-[10px] mt-0.5 whitespace-nowrap">
+                          <div style={{ color: C.textMuted, fontSize: '0.68rem', marginTop: 1 }}>
                             {dateFormatted}
                           </div>
                         </div>
 
-                        <div className="text-slate-500 p-0.5">
-                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </div>
+                        {isExpanded ? <ChevronUp size={15} color={C.textMuted} /> : <ChevronDown size={15} color={C.textMuted} />}
                       </div>
                     </div>
 
-                    {/* القائمة المنسدلة للتفاصيل */}
                     {isExpanded && (
-                      <div className="p-3 bg-slate-950/80 border-t border-slate-800/80 text-xs">
-                        <div className="flex justify-between items-center mb-2 gap-2">
-                          <span className="text-slate-400 font-bold text-[11px]">
-                            {isArabic ? 'تفاصيل العملية:' : 'Payload Details:'}
+                      <div style={{ padding: '10px 12px', background: C.input, borderTop: `1px solid ${C.border}`, fontSize: '0.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <span style={{ color: C.textSub, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Layers size={13} style={{ color: C.primary }} />
+                            {currentLang === 'ar' ? 'تفاصيل التغيير:' : 'Payload:'}
                           </span>
                           
                           <Btn 
@@ -474,10 +558,10 @@ export default function RealtimeAudit({ session, userRole }) {
                               e.stopPropagation();
                               setShowRawJson(prev => ({ ...prev, [log.id]: !prev[log.id] }));
                             }}
-                            className="!px-2 !py-1 !text-[10px]"
+                            style={{ padding: '2px 6px', fontSize: '0.68rem' }}
                           >
                             <Code size={12} />
-                            <span>{showRawJson[log.id] ? (isArabic ? 'عرض كارت مبسط' : 'View Friendly') : (isArabic ? 'عرض كود JSON' : 'View Raw JSON')}</span>
+                            <span>{showRawJson[log.id] ? (currentLang === 'ar' ? 'مبسط' : 'Friendly') : (currentLang === 'ar' ? 'كود JSON' : 'Raw JSON')}</span>
                           </Btn>
                         </div>
 
