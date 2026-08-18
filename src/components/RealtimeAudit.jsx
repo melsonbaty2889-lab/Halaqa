@@ -23,7 +23,7 @@ import {
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
 
-// 🌐 قاموس الترجمات الموسع للغات متعددة (جاهز للربط مع i18next)
+// 🌐 قاموس الترجمات
 const I18N_DICTIONARY = {
   ar: {
     title: "سجل العمليات المباشر",
@@ -137,7 +137,6 @@ const I18N_DICTIONARY = {
   }
 };
 
-// 🚫 حقول تقنية تُستبعد تلقائياً في وضع المدير
 const TECHNICAL_KEYS = [
   'id', 'created_at', 'updated_at', 'student_id', 'group_id', 
   'halaqa_id', 'academy_id', 'user_id', 'changed_by', 'parent_id',
@@ -146,37 +145,33 @@ const TECHNICAL_KEYS = [
   'current_quarter_index', 'freeze_cards_remaining', 'badges', 'record_id'
 ];
 
-// 🟢 دالة آمنة تماماً لمنع خطأ Minified React error #31
-const formatDisplayValue = (val) => {
-  if (val === null || val === undefined || val === '' || val === '{}') return '—';
+// 🛡️ الدالة الدرع: تحول أي نوع بيانات (حتى لو كائن بأي تركيبة) إلى نص آمن لـ React
+const toSafeString = (val) => {
+  if (val === null || val === undefined || val === '' || val === '{}') return '';
   if (typeof val === 'boolean') return val ? 'نعم' : 'لا';
+  if (typeof val === 'string' || typeof val === 'number') return String(val);
   
   if (typeof val === 'object') {
     if (Array.isArray(val)) {
-      return val.length === 0 ? '—' : val.map(item => formatDisplayValue(item)).join(', ');
+      return val.map(item => toSafeString(item)).filter(Boolean).join(', ');
     }
-    if (val.ar || val.en) {
-      return String(val.ar || val.en);
-    }
+    // فحص تركيبات الترجمة المختلفة
+    if (val.ar) return toSafeString(val.ar);
+    if (val.en) return toSafeString(val.en);
+    
     try {
       return JSON.stringify(val);
     } catch {
-      return '—';
+      return '';
     }
   }
   return String(val);
 };
 
-// 🟢 استخراج الاسم بشكل آمن من كائنات البيانات
-const getEntityName = (data) => {
-  if (!data) return '';
-  const val = data.full_name || data.name || '';
-  return typeof val === 'object' ? (val.ar || val.en || '') : String(val);
-};
-
 export default function RealtimeAudit({ currentLang = 'ar' }) {
-  const t = I18N_DICTIONARY[currentLang] || I18N_DICTIONARY.ar;
-  const isRtl = currentLang === 'ar';
+  const langKey = (currentLang === 'en') ? 'en' : 'ar';
+  const t = I18N_DICTIONARY[langKey];
+  const isRtl = langKey === 'ar';
 
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -193,7 +188,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
 
   const [toast, setToast] = useState(null);
   const showToast = (message, type = 'success') => {
-    setToast({ message, type });
+    setToast({ message: toSafeString(message), type });
     setTimeout(() => setToast(null), 3500);
   };
 
@@ -242,7 +237,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
         }
 
         setLogs((prev) => [{ ...payload.new, profiles: userProfile }, ...prev]);
-        showToast(t.realtime + ': ' + t.title, 'info');
+        showToast(toSafeString(t.realtime) + ': ' + toSafeString(t.title), 'info');
       })
       .subscribe();
 
@@ -264,8 +259,8 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
     const userMap = new Map();
     logs.forEach((log) => {
       if (log.changed_by) {
-        const name = log.profiles?.full_name || `#${log.changed_by.substring(0, 6)}`;
-        userMap.set(log.changed_by, name);
+        const rawName = log.profiles?.full_name || `#${log.changed_by.substring(0, 6)}`;
+        userMap.set(log.changed_by, toSafeString(rawName));
       }
     });
     return Array.from(userMap.entries()).map(([id, name]) => ({ id, name }));
@@ -274,8 +269,8 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const tableName = log.table_name || '';
-      const translatedTable = t.tables[tableName] || tableName;
-      const userName = log.profiles?.full_name || t.systemUser;
+      const translatedTable = toSafeString(t.tables[tableName]) || tableName;
+      const userName = toSafeString(log.profiles?.full_name) || toSafeString(t.systemUser);
 
       const matchesSearch =
         translatedTable.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -295,7 +290,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
 
       return matchesSearch && matchesOp && matchesUser && matchesDate;
     });
-  }, [logs, searchTerm, selectedOperation, selectedUser, startDate, endDate, currentLang]);
+  }, [logs, searchTerm, selectedOperation, selectedUser, startDate, endDate, langKey]);
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
   const paginatedLogs = useMemo(() => {
@@ -306,11 +301,11 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   return (
     <div className={`w-full max-w-7xl mx-auto p-2 sm:p-5 space-y-4 text-slate-100 ${isRtl ? 'dir-rtl' : 'dir-ltr'}`}>
       
-      {/* Toast Notification */}
+      {/* Notification */}
       {toast && (
         <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-slate-900 border border-slate-700 text-xs font-medium">
           <CheckCircle2 size={15} className="text-emerald-400" />
-          <span>{toast.message}</span>
+          <span>{toSafeString(toast.message)}</span>
         </div>
       )}
 
@@ -322,8 +317,8 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
               <ShieldAlert size={20} />
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-bold tracking-tight">{t.title}</h1>
-              <p className="text-[11px] text-slate-400 hidden sm:block">{t.subtitle}</p>
+              <h1 className="text-base sm:text-xl font-bold tracking-tight">{toSafeString(t.title)}</h1>
+              <p className="text-[11px] text-slate-400 hidden sm:block">{toSafeString(t.subtitle)}</p>
             </div>
           </div>
 
@@ -337,7 +332,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           </div>
         </div>
 
-        {/* View Switcher (Manager vs Developer) */}
+        {/* View Switcher */}
         <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button
             onClick={() => setIsAdvancedMode(false)}
@@ -346,7 +341,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             }`}
           >
             <Sparkles size={14} />
-            <span>{t.managerMode}</span>
+            <span>{toSafeString(t.managerMode)}</span>
           </button>
           <button
             onClick={() => setIsAdvancedMode(true)}
@@ -355,7 +350,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             }`}
           >
             <Code size={14} />
-            <span>{t.developerMode}</span>
+            <span>{toSafeString(t.developerMode)}</span>
           </button>
         </div>
       </div>
@@ -368,7 +363,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             selectedOperation === 'ALL' ? 'bg-slate-800/90 border-emerald-500' : 'bg-slate-900/60 border-slate-800'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{t.todayTotal}</span>
+          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{toSafeString(t.todayTotal)}</span>
           <span className="text-base sm:text-xl font-black text-slate-100">{stats.todayTotal}</span>
         </div>
         <div 
@@ -377,7 +372,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             selectedOperation === 'UPDATE' || selectedOperation === 'INSERT' ? 'bg-slate-800/90 border-sky-500' : 'bg-slate-900/60 border-slate-800'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{t.todayModifications}</span>
+          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{toSafeString(t.todayModifications)}</span>
           <span className="text-base sm:text-xl font-black text-sky-400">{stats.inserts + stats.updates}</span>
         </div>
         <div 
@@ -386,7 +381,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             selectedOperation === 'DELETE' ? 'bg-slate-800/90 border-rose-500' : 'bg-slate-900/60 border-slate-800'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{t.todayDeletes}</span>
+          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{toSafeString(t.todayDeletes)}</span>
           <span className="text-base sm:text-xl font-black text-rose-400">{stats.deletes}</span>
         </div>
       </div>
@@ -400,7 +395,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t.searchPlaceholder}
+              placeholder={toSafeString(t.searchPlaceholder)}
               className={`w-full bg-slate-950 border border-slate-800 rounded-xl py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 ${
                 isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
@@ -416,16 +411,16 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                 isRtl ? 'pr-9 pl-7' : 'pl-9 pr-7'
               }`}
             >
-              <option value="ALL">{t.allUsers} ({uniqueUsers.length})</option>
+              <option value="ALL">{toSafeString(t.allUsers)} ({uniqueUsers.length})</option>
               {uniqueUsers.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
+                <option key={u.id} value={u.id}>{toSafeString(u.name)}</option>
               ))}
             </select>
             <ChevronDown size={13} className={`absolute ${isRtl ? 'left-3' : 'right-3'} text-slate-400 pointer-events-none`} />
           </div>
         </div>
 
-        {/* Date Range Picker */}
+        {/* Custom Date Picker */}
         <CustomDatePicker
           selectsRange={true}
           startDate={startDate}
@@ -436,7 +431,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-xl py-2 px-3 focus:outline-none"
         />
 
-        {/* Operation Filters */}
+        {/* Operations */}
         <div className="flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pt-1">
           <div className="flex items-center gap-1.5">
             {['ALL', 'INSERT', 'UPDATE', 'DELETE'].map((op) => (
@@ -449,7 +444,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                     : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
                 }`}
               >
-                {op === 'ALL' ? t.allOps : op === 'INSERT' ? t.insertOp : op === 'UPDATE' ? t.updateOp : t.deleteOp}
+                {toSafeString(op === 'ALL' ? t.allOps : op === 'INSERT' ? t.insertOp : op === 'UPDATE' ? t.updateOp : t.deleteOp)}
               </button>
             ))}
           </div>
@@ -462,32 +457,32 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
               }`}
             >
               <Filter size={12} />
-              <span>{onlyChanged ? t.hideUnchanged : t.showUnchanged}</span>
+              <span>{toSafeString(onlyChanged ? t.hideUnchanged : t.showUnchanged)}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Logs Feed */}
+      {/* Feed */}
       <div className="space-y-2">
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-400 flex flex-col items-center gap-3">
             <Loader2 size={24} className="animate-spin text-emerald-400" />
-            <span>{t.loading}</span>
+            <span>{toSafeString(t.loading)}</span>
           </div>
         ) : paginatedLogs.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-400 bg-slate-900/40 rounded-xl border border-dashed border-slate-800">
-            {t.noLogs}
+            {toSafeString(t.noLogs)}
           </div>
         ) : (
           paginatedLogs.map((log) => {
             const isExpanded = expandedLogId === log.id;
-            const userName = log.profiles?.full_name || t.systemUser;
+            const userName = toSafeString(log.profiles?.full_name) || toSafeString(t.systemUser);
             const tableName = log.table_name || '';
-            const translatedTable = t.tables[tableName] || tableName;
+            const translatedTable = toSafeString(t.tables[tableName]) || tableName;
             const showRaw = showRawJsonMap[log.id];
 
-            const entityTitle = getEntityName(log.new_data) || getEntityName(log.old_data);
+            const entityTitle = toSafeString(log.new_data?.full_name || log.new_data?.name || log.old_data?.full_name || log.old_data?.name);
 
             return (
               <div key={log.id} className="rounded-xl bg-slate-900/90 border border-slate-800/90 overflow-hidden shadow-sm">
@@ -499,7 +494,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                     <OperationBadge operation={log.operation} t={t} />
                     <div className="truncate">
                       <div className="text-xs sm:text-sm font-bold text-slate-100 truncate">
-                        {log.operation === 'INSERT' ? `${t.insertOp} في ` : log.operation === 'UPDATE' ? `${t.updateOp} في ` : `${t.deleteOp} من `}
+                        {toSafeString(log.operation === 'INSERT' ? `${t.insertOp} في ` : log.operation === 'UPDATE' ? `${t.updateOp} في ` : `${t.deleteOp} من `)}
                         <span className="text-emerald-400 font-semibold">{translatedTable}</span>
                         {entityTitle && <span className="text-slate-400 font-normal ml-1">({entityTitle})</span>}
                       </div>
@@ -516,7 +511,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                   </div>
                 </div>
 
-                {/* Body Content */}
+                {/* Expanded Details */}
                 {isExpanded && (
                   <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/80 space-y-3">
                     <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
@@ -565,7 +560,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
       {/* Pagination */}
       {!loading && filteredLogs.length > 0 && (
         <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs text-slate-400">
-          <span>{t.page} {currentPage} {t.of} {totalPages}</span>
+          <span>{toSafeString(t.page)} {currentPage} {toSafeString(t.of)} {totalPages}</span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
@@ -589,14 +584,9 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   );
 }
 
-// 🎯 مكون العرض المنسق الخالي من أخطاء React Objects
+// 🎯 مكون Diff محصن ضد الكائنات
 function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
-
-  const getFieldLabel = (key) => {
-    const label = t?.fields?.[key] || key;
-    return typeof label === 'object' ? (label.ar || label.en || String(key)) : String(label);
-  };
 
   if (isUpdate) {
     const allKeys = Array.from(new Set([...Object.keys(log.old_data || {}), ...Object.keys(log.new_data || {})]));
@@ -604,8 +594,8 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
     const filteredKeys = allKeys.filter((key) => {
       if (!isAdvancedMode && TECHNICAL_KEYS.includes(key)) return false;
 
-      const oldVal = formatDisplayValue(log.old_data?.[key]);
-      const newVal = formatDisplayValue(log.new_data?.[key]);
+      const oldVal = toSafeString(log.old_data?.[key]);
+      const newVal = toSafeString(log.new_data?.[key]);
       const isChanged = oldVal !== newVal;
 
       if (onlyChanged && !isChanged) return false;
@@ -624,13 +614,14 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
       <div className="space-y-1.5">
         <div className="divide-y divide-slate-800/80 border border-slate-800/80 rounded-xl bg-slate-900/50 overflow-hidden">
           {filteredKeys.map((key) => {
-            const oldVal = formatDisplayValue(log.old_data?.[key]);
-            const newVal = formatDisplayValue(log.new_data?.[key]);
+            const oldVal = toSafeString(log.old_data?.[key]) || '—';
+            const newVal = toSafeString(log.new_data?.[key]) || '—';
+            const label = toSafeString(t?.fields?.[key]) || key;
 
             return (
               <div key={key} className="p-2.5 text-xs flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-slate-400 font-medium text-[11px]">
-                  {getFieldLabel(key)}:
+                  {label}:
                 </span>
                 <div className="flex items-center gap-2 text-[11px] font-mono dir-ltr">
                   <span className="line-through text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40">
@@ -654,37 +645,44 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
   const entries = Object.entries(displayData).filter(([key, val]) => {
     if (!isAdvancedMode) {
       if (TECHNICAL_KEYS.includes(key)) return false;
-      const strVal = formatDisplayValue(val);
-      if (strVal === '—' || strVal === 'false' || strVal === '0') return false;
+      const strVal = toSafeString(val);
+      if (!strVal || strVal === 'false' || strVal === '0') return false;
     }
     return true;
   });
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {entries.map(([key, val]) => (
-        <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 text-xs">
-          <span className="text-slate-400 text-[11px] font-medium">
-            {getFieldLabel(key)}
-          </span>
-          <span className="font-semibold text-slate-200 text-[11px] truncate max-w-[180px]">
-            {formatDisplayValue(val)}
-          </span>
-        </div>
-      ))}
+      {entries.map(([key, val]) => {
+        const label = toSafeString(t?.fields?.[key]) || key;
+        const formattedVal = toSafeString(val) || '—';
+
+        return (
+          <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 text-xs">
+            <span className="text-slate-400 text-[11px] font-medium">
+              {label}
+            </span>
+            <span className="font-semibold text-slate-200 text-[11px] truncate max-w-[180px]">
+              {formattedVal}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 function OperationBadge({ operation, t }) {
+  const opStr = operation === 'INSERT' ? toSafeString(t.insertOp) : operation === 'UPDATE' ? toSafeString(t.updateOp) : operation === 'DELETE' ? toSafeString(t.deleteOp) : 'Operation';
+
   switch (operation) {
     case 'INSERT':
-      return <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">{t.insertOp}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">{opStr}</span>;
     case 'UPDATE':
-      return <span className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 text-[10px] font-bold border border-sky-500/20">{t.updateOp}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 text-[10px] font-bold border border-sky-500/20">{opStr}</span>;
     case 'DELETE':
-      return <span className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-bold border border-rose-500/20">{t.deleteOp}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-bold border border-rose-500/20">{opStr}</span>;
     default:
-      return <span className="px-2 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px]">Operation</span>;
+      return <span className="px-2 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px]">{opStr}</span>;
   }
 }
