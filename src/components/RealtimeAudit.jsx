@@ -15,7 +15,10 @@ import {
   Trash2,
   CheckCircle2,
   Loader2,
-  Layers
+  Layers,
+  Activity,
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
@@ -110,11 +113,27 @@ export default function RealtimeAudit({ isArabic = true }) {
     };
   }, []);
 
+  // حساب الإحصائيات الحقيقية لليوم الحالي
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayLogs = logs.filter(l => l.created_at && l.created_at.startsWith(today));
+
+    const inserts = todayLogs.filter(l => l.operation === 'INSERT').length;
+    const updates = todayLogs.filter(l => l.operation === 'UPDATE').length;
+    const deletes = todayLogs.filter(l => l.operation === 'DELETE').length;
+
+    return {
+      todayTotal: todayLogs.length,
+      inserts,
+      updates,
+      deletes
+    };
+  }, [logs]);
+
   const toggleRawJson = (logId) => {
     setShowRawJsonMap((prev) => ({ ...prev, [logId]: !prev[logId] }));
   };
 
-  // دالة لتظليل النص المبحوث عنه
   const highlightText = (text, highlight) => {
     if (!highlight.trim() || !text) return text;
     const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
@@ -143,21 +162,27 @@ export default function RealtimeAudit({ isArabic = true }) {
   }, [logs, searchTerm, selectedOperation]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-4 dir-rtl">
+    <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-5 dir-rtl">
       
-      {/* 🟢 ترويسة الصفحة */}
+      {/* 🟢 ترويسة الصفحة مع شارة Realtime المباشرة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
               <ShieldAlert size={20} />
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-slate-100">
               {isArabic ? 'سجل العمليات والأنشطة المباشر' : 'Live Audit Log'}
             </h1>
+            
+            {/* شارة اتصال Realtime المباشر */}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              <span>مباشر (Realtime)</span>
+            </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            {isArabic ? 'متابعة كافة التعديلات والتغييرات في النظام لحظة بلحظة' : 'Monitor system changes in real-time'}
+            {isArabic ? 'متابعة كافة التعديلات والتغييرات في الأكاديمية لحظة بلحظة' : 'Monitor system changes in real-time'}
           </p>
         </div>
 
@@ -172,16 +197,47 @@ export default function RealtimeAudit({ isArabic = true }) {
           </button>
           <button className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 transition-all">
             <Download size={14} />
-            <span>{isArabic ? 'تصدير' : 'Export'}</span>
+            <span>{isArabic ? 'تصدير التقرير' : 'Export'}</span>
           </button>
         </div>
       </div>
 
-      {/* 🟢 شريط الفلترة والأزرار السريعة (Filter Chips) */}
+      {/* 📊 كروت الإحصائيات السريعة (Metrics Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+          <div>
+            <span className="text-[11px] text-slate-400 font-medium block">عمليات اليوم</span>
+            <span className="text-xl font-extrabold text-slate-100 mt-0.5 block">{stats.todayTotal}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Activity size={18} />
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+          <div>
+            <span className="text-[11px] text-slate-400 font-medium block">إضافات وتعديلات اليوم</span>
+            <span className="text-xl font-extrabold text-sky-400 mt-0.5 block">{stats.inserts + stats.updates}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <TrendingUp size={18} />
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+          <div>
+            <span className="text-[11px] text-slate-400 font-medium block">حالات الحذف اليوم</span>
+            <span className="text-xl font-extrabold text-rose-400 mt-0.5 block">{stats.deletes}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <AlertTriangle size={18} />
+          </div>
+        </div>
+      </div>
+
+      {/* 🟢 شريط الفلترة والأزرار السريعة */}
       <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md space-y-3">
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* حقل البحث */}
           <div className="relative flex items-center">
             <Search size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
             <input
@@ -193,7 +249,6 @@ export default function RealtimeAudit({ isArabic = true }) {
             />
           </div>
 
-          {/* منتقي التواريخ */}
           <CustomDatePicker
             startDate={startDate}
             endDate={endDate}
@@ -202,7 +257,6 @@ export default function RealtimeAudit({ isArabic = true }) {
           />
         </div>
 
-        {/* أزرار الفلترة السريعة (Filter Chips) المريحة للإبهام */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
           <button
             onClick={() => setSelectedOperation('ALL')}
@@ -263,7 +317,7 @@ export default function RealtimeAudit({ isArabic = true }) {
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 text-slate-500 text-xs">
-            {isArabic ? 'لا توجد سجلات حقيقية طابق التحديد' : 'No matching audit logs found'}
+            {isArabic ? 'لا توجد سجلات حقيقية تطابق التحديد' : 'No matching audit logs found'}
           </div>
         ) : (
           filteredLogs.map((log) => {
@@ -309,7 +363,6 @@ export default function RealtimeAudit({ isArabic = true }) {
                     </div>
                   </div>
 
-                  {/* الأزرار في الجوال والكمبيوتر */}
                   <div className="flex items-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80 justify-end self-end sm:self-auto w-full sm:w-auto">
                     <button
                       onClick={() => toggleRawJson(log.id)}
@@ -333,7 +386,6 @@ export default function RealtimeAudit({ isArabic = true }) {
                   </div>
                 </div>
 
-                {/* تفاصيل البيانات */}
                 {isExpanded && (
                   <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
                     {isRawJson ? (
@@ -399,5 +451,5 @@ function OperationBadge({ operation }) {
           <span>{operation || 'عملية'}</span>
         </span>
       );
-   switch
+  }
 }
