@@ -22,7 +22,7 @@ import {
   TrendingUp,
   AlertTriangle,
   Users,
-  Broom
+  Eraser
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
@@ -289,7 +289,7 @@ export default function RealtimeAudit({ isArabic = true }) {
             onClick={() => setIsPurgeModalOpen(true)} 
             className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all"
           >
-            <Broom size={14} />
+            <Eraser size={14} />
             <span>تنظيف السجلات</span>
           </button>
 
@@ -567,7 +567,7 @@ export default function RealtimeAudit({ isArabic = true }) {
           <div className="w-full max-w-md p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 dir-rtl">
             <div className="flex items-center gap-2.5 text-rose-400">
               <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                <Broom size={20} />
+                <Eraser size={20} />
               </div>
               <h3 className="text-base font-bold text-slate-100">تنظيف السجلات القديمة</h3>
             </div>
