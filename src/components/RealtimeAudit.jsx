@@ -24,7 +24,7 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
-import { supabase } from '../supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 const TABLE_TRANSLATIONS = {
   students: "الطالب",
