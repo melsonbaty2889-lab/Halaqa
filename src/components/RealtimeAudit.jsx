@@ -18,9 +18,8 @@ import {
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 
-// 1. قاموس ترجمة مفاتيح الـ JSON والـ Database Columns إلى اللغة العربية
+// قاموس ترجمة المفاتيح الناتجة من قاعدة البيانات للغة العربية
 const JSON_TRANSLATIONS = {
-  // بيانات الطلاب والأداء
   student_id: "معرف الطالب",
   student_name: "اسم الطالب",
   badges: "الشارات والأوسمة",
@@ -37,15 +36,13 @@ const JSON_TRANSLATIONS = {
   notes: "ملاحظات",
   status: "الحالة",
   role: "الدور / الصلاحية",
-  
-  // مفاتيح عامة
   id: "المعرف",
   title: "العنوان",
   type: "النوع",
   description: "الوصف"
 };
 
-export default function RealtimeAuditLog({ isArabic = true }) {
+export default function RealtimeAudit({ isArabic = true }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAction, setSelectedAction] = useState('ALL');
   const [dateRange, setDateRange] = useState([null, null]);
@@ -53,7 +50,7 @@ export default function RealtimeAuditLog({ isArabic = true }) {
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJsonMap, setShowRawJsonMap] = useState({});
 
-  // نموذج بيانات افتراضي (Audit Logs) للتجربة والمطابقة مع Supabase Realtime
+  // نموذج بيانات للأنشطة
   const [logs] = useState([
     {
       id: "log_101",
@@ -98,22 +95,20 @@ export default function RealtimeAuditLog({ isArabic = true }) {
     }
   ]);
 
-  // دالة لتنسيق وعرض اسم المستخدم بدلاً من الـ UUID المزعج
+  // تنسيق عرض اسم المستخدم مع حجب الـ UUID المزعج
   const formatUserIdentity = (log) => {
     if (log.user_name) return log.user_name;
     if (log.performed_by && log.performed_by.length > 8) {
-      // إظهار بادئة قصيرة جداً في حال عدم توفر الاسم بدلاً من الرقم الكامل
       return `مستخدم (#${log.performed_by.substring(0, 6)})`;
     }
     return "مستخدم النظام";
   };
 
-  // دالة تصفية المفاتيح الفارغة أو الأصفار غير الضرورية لتقليل طول البطاقة
+  // تصفية القيم الفارغة لتقليل حجم البطاقة
   const filterCleanChanges = (changesObj) => {
     if (!changesObj || typeof changesObj !== 'object') return {};
     const clean = {};
     Object.entries(changesObj).forEach(([key, val]) => {
-      // استبعاد القيم الفارغة أو المجموعات الخالية
       if (val !== null && val !== undefined && val !== '' && !(Array.isArray(val) && val.length === 0)) {
         clean[key] = val;
       }
@@ -121,7 +116,6 @@ export default function RealtimeAuditLog({ isArabic = true }) {
     return clean;
   };
 
-  // تبديل عرض الـ Raw JSON لبطاقة محددة
   const toggleRawJson = (logId) => {
     setShowRawJsonMap(prev => ({ ...prev, [logId]: !prev[logId] }));
   };
@@ -143,7 +137,7 @@ export default function RealtimeAuditLog({ isArabic = true }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-4">
       
-      {/* 🟢 Tite Header: ترويسة الصفحة والأزرار الرئيسية */}
+      {/* 🟢 ترويسة الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
@@ -155,7 +149,7 @@ export default function RealtimeAuditLog({ isArabic = true }) {
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            {isArabic ? 'متابعة كافة التعديلات والتغييرات في النظام لحظة بلحظة' : 'Monitor all system modifications and events in real-time'}
+            {isArabic ? 'متابعة كافة التعديلات والتغييرات في النظام لحظة بلحظة' : 'Monitor all system modifications in real-time'}
           </p>
         </div>
 
@@ -171,10 +165,9 @@ export default function RealtimeAuditLog({ isArabic = true }) {
         </div>
       </div>
 
-      {/* 🟢 Filter Section: قسم التصفية والبحث المطور */}
+      {/* 🟢 شريط الفلترة المدمج به CustomDatePicker الصحيح */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md">
         
-        {/* 1. حقل البحث */}
         <div className="relative flex items-center">
           <Search size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
           <input
@@ -186,7 +179,6 @@ export default function RealtimeAuditLog({ isArabic = true }) {
           />
         </div>
 
-        {/* 2. فلتر نوع العملية */}
         <div className="relative flex items-center">
           <Filter size={15} className="absolute right-3 text-slate-400 pointer-events-none" />
           <select
@@ -201,7 +193,7 @@ export default function RealtimeAuditLog({ isArabic = true }) {
           </select>
         </div>
 
-        {/* 3. منتقي التاريخ الداكن المطور (CustomDatePicker) */}
+        {/* منتقي التواريخ المخصص الداكن */}
         <CustomDatePicker
           startDate={startDate}
           endDate={endDate}
@@ -210,7 +202,7 @@ export default function RealtimeAuditLog({ isArabic = true }) {
         />
       </div>
 
-      {/* 🟢 Audit Logs List: قائمة بطاقات التفاصيل */}
+      {/* 🟢 قائمة البطاقات */}
       <div className="space-y-3">
         {filteredLogs.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 text-slate-500 text-xs">
@@ -227,13 +219,9 @@ export default function RealtimeAuditLog({ isArabic = true }) {
                 key={log.id} 
                 className="rounded-2xl bg-slate-900/80 border border-slate-800/90 hover:border-slate-700 transition-all overflow-hidden shadow-lg"
               >
-                {/* ترويسة البطاقة */}
                 <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  
                   <div className="flex items-start gap-3">
-                    {/* شارة نوع العملية بالألوان المميزة */}
                     <ActionBadge action={log.action} />
-
                     <div>
                       <h3 className="text-sm font-bold text-slate-200">
                         {log.record_title}
@@ -255,7 +243,6 @@ export default function RealtimeAuditLog({ isArabic = true }) {
                     </div>
                   </div>
 
-                  {/* أزرار التحكم بالبطاقة */}
                   <div className="flex items-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80 justify-end">
                     <button
                       onClick={() => toggleRawJson(log.id)}
@@ -264,7 +251,6 @@ export default function RealtimeAuditLog({ isArabic = true }) {
                           ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
                           : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                       }`}
-                      title={isArabic ? "عرض كود JSON الخام" : "Toggle Raw JSON"}
                     >
                       <Code2 size={13} />
                       <span>JSON</span>
@@ -279,16 +265,13 @@ export default function RealtimeAuditLog({ isArabic = true }) {
                   </div>
                 </div>
 
-                {/* تفاصيل البطاقة الموسعة */}
                 {isExpanded && (
                   <div className="p-4 border-t border-slate-800/80 bg-slate-950/50">
                     {isRawJson ? (
-                      /* عرض JSON الخام */
                       <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-mono overflow-x-auto dir-ltr">
                         {JSON.stringify(log.changes, null, 2)}
                       </pre>
                     ) : (
-                      /* عرض التفاصيل المترجمة النظيفة */
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                         {Object.entries(cleanChanges).map(([key, value]) => (
                           <div 
@@ -307,7 +290,6 @@ export default function RealtimeAuditLog({ isArabic = true }) {
                     )}
                   </div>
                 )}
-
               </div>
             );
           })
@@ -318,7 +300,6 @@ export default function RealtimeAuditLog({ isArabic = true }) {
   );
 }
 
-// 🟢 مكون شارة نوع العملية بالألوان والرموز المحددة
 function ActionBadge({ action }) {
   switch (action) {
     case 'INSERT':
