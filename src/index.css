@@ -202,3 +202,62 @@
     box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
   }
 }
+
+/* =========================================================
+   📅 6. تخصيص منتقي التاريخ (Custom Dark Datepicker)
+   ========================================================= */
+.custom-dark-calendar {
+  background-color: #0F172A !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 1rem !important;
+  font-family: 'Cairo', sans-serif !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+  overflow: hidden;
+  z-index: 999 !important;
+}
+
+.custom-dark-calendar .react-datepicker__header {
+  background-color: #162032 !important;
+  border-bottom: 1px solid #1B2738 !important;
+  padding-top: 0.75rem !important;
+}
+
+.custom-dark-calendar .react-datepicker__current-month,
+.custom-dark-calendar .react-datepicker-time__header,
+.custom-dark-calendar .react-datepicker__day-name {
+  color: #94A3B8 !important;
+  font-weight: 600 !important;
+}
+
+.custom-dark-calendar .react-datepicker__day {
+  color: #E2E8F0 !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-dark-calendar .react-datepicker__day:hover {
+  background-color: #1B2738 !important;
+  color: #10B981 !important;
+}
+
+.custom-dark-calendar .react-datepicker__day--selected,
+.custom-dark-calendar .react-datepicker__day--in-range {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+  font-weight: bold !important;
+}
+
+.custom-dark-calendar .react-datepicker__day--in-selecting-range {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #10B981 !important;
+}
+
+.custom-dark-calendar .react-datepicker__day--disabled {
+  color: #475569 !important;
+  opacity: 0.4;
+}
+
+.custom-dark-calendar .react-datepicker__navigation-icon::before {
+  border-color: #94A3B8 !important;
+}
