@@ -21,7 +21,8 @@ import {
   Activity,
   TrendingUp,
   AlertTriangle,
-  Users
+  Users,
+  Broom
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
@@ -63,11 +64,16 @@ export default function RealtimeAudit({ isArabic = true }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOperation, setSelectedOperation] = useState('ALL');
-  const [selectedUser, setSelectedUser] = useState('ALL'); // 🎯 حالة المستخدم المكتشف
+  const [selectedUser, setSelectedUser] = useState('ALL');
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJsonMap, setShowRawJsonMap] = useState({});
+
+  // 🧹 حالات نافذة التنظيف (Purge Modal)
+  const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
+  const [purgeDays, setPurgeDays] = useState(30);
+  const [purging, setPurging] = useState(false);
 
   // 📄 حالات التقسيم لصفحات (Pagination)
   const [currentPage, setCurrentPage] = useState(1);
@@ -135,7 +141,6 @@ export default function RealtimeAudit({ isArabic = true }) {
     setCurrentPage(1);
   }, [searchTerm, selectedOperation, selectedUser, dateRange]);
 
-  // 👥 تجميع قائمة فريدة من المشرفين والمستخدمين المتواجدين بالسجلات
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     logs.forEach((log) => {
@@ -162,6 +167,25 @@ export default function RealtimeAudit({ isArabic = true }) {
       deletes
     };
   }, [logs]);
+
+  const handlePurgeLogs = async () => {
+    setPurging(true);
+    try {
+      const { data, error } = await supabase.rpc('delete_old_audit_logs', {
+        days_older: parseInt(purgeDays)
+      });
+
+      if (error) throw error;
+
+      alert(`تم حذف ${data || 0} سجل قديم بنجاح.`);
+      setIsPurgeModalOpen(false);
+      fetchAuditLogs();
+    } catch (err) {
+      alert('حدث خطأ أثناء تنظيف السجلات: ' + err.message);
+    } finally {
+      setPurging(false);
+    }
+  };
 
   const toggleRawJson = (logId) => {
     setShowRawJsonMap((prev) => ({ ...prev, [logId]: !prev[logId] }));
@@ -259,7 +283,16 @@ export default function RealtimeAudit({ isArabic = true }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+          {/* 🧹 زر الأرشفة والتنظيف */}
+          <button 
+            onClick={() => setIsPurgeModalOpen(true)} 
+            className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all"
+          >
+            <Broom size={14} />
+            <span>تنظيف السجلات</span>
+          </button>
+
           <button 
             onClick={fetchAuditLogs} 
             disabled={loading}
@@ -316,7 +349,6 @@ export default function RealtimeAudit({ isArabic = true }) {
       {/* 🟢 شريط الفلترة والأزرار السريعة */}
       <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* حقل البحث */}
           <div className="relative flex items-center">
             <Search size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
             <input
@@ -328,7 +360,6 @@ export default function RealtimeAudit({ isArabic = true }) {
             />
           </div>
 
-          {/* 🎯 قائمة اختيار المشرف/المستخدم */}
           <div className="relative flex items-center">
             <Users size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
             <select
@@ -346,7 +377,6 @@ export default function RealtimeAudit({ isArabic = true }) {
             <ChevronDown size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* مكوّن اختيار التاريخ */}
           <CustomDatePicker
             startDate={startDate}
             endDate={endDate}
@@ -483,7 +513,6 @@ export default function RealtimeAudit({ isArabic = true }) {
                   </div>
                 </div>
 
-                {/* 🔍 تفاصيل السجل والتغيرات (Diff Viewer) */}
                 {isExpanded && (
                   <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
                     {isRawJson ? (
@@ -532,11 +561,59 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       )}
 
+      {/* 🧹 نافذة تنظيف/أرشفة السجلات (Purge Modal) */}
+      {isPurgeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-md p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 dir-rtl">
+            <div className="flex items-center gap-2.5 text-rose-400">
+              <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <Broom size={20} />
+              </div>
+              <h3 className="text-base font-bold text-slate-100">تنظيف السجلات القديمة</h3>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              قم باختيار المدة الزمنية لحذف السجلات القديمة من قاعدة البيانات نهائياً لتخفيف الحجم وترشيد استهلاك المساحة.
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-300 block">حذف السجلات الأقدم من:</label>
+              <select
+                value={purgeDays}
+                onChange={(e) => setPurgeDays(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500/50"
+              >
+                <option value={15}>15 يوم</option>
+                <option value={30}>30 يوم (شهر واحد)</option>
+                <option value={60}>60 يوم (شهريين)</option>
+                <option value={90}>90 يوم (3 أشهر)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                onClick={() => setIsPurgeModalOpen(false)}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-all"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handlePurgeLogs}
+                disabled={purging}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all disabled:opacity-50"
+              >
+                {purging ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                <span>تأكيد الحذف</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
-// 🔀 مكون عرض مقارنة البيانات المفصلة (Diff Viewer Component)
 function DataDiffViewer({ log }) {
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
   const displayData = log.new_data || log.old_data || {};
