@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShieldAlert, 
   Search, 
-  Filter, 
   RefreshCw, 
   Download, 
   Code2, 
@@ -15,12 +14,12 @@ import {
   Edit3,
   Trash2,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Layers
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
 
-// ترجمة الجداول وأسماء الحقول لمدير الأكاديمية
 const TABLE_TRANSLATIONS = {
   students: "الطالب",
   attendance: "تسجيل الحضور",
@@ -53,7 +52,6 @@ export default function RealtimeAudit({ isArabic = true }) {
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJsonMap, setShowRawJsonMap] = useState({});
 
-  // 1️⃣ جلب البيانات الحقيقية مع جلب بيانات المشرف من جدول profiles
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
@@ -81,14 +79,12 @@ export default function RealtimeAudit({ isArabic = true }) {
   useEffect(() => {
     fetchAuditLogs();
 
-    // 2️⃣ البث المباشر Realtime عند إضافة أي سجل جديد
     const channel = supabase
       .channel('realtime_audit_changes')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'audit_logs' },
         async (payload) => {
-          // جلب اسم المستخدم صاحب الإجراء للـ Log الجديد
           let userProfile = null;
           if (payload.new.changed_by) {
             const { data } = await supabase
@@ -118,7 +114,17 @@ export default function RealtimeAudit({ isArabic = true }) {
     setShowRawJsonMap((prev) => ({ ...prev, [logId]: !prev[logId] }));
   };
 
-  // تصفية السجلات حسب التحديد والبحث
+  // دالة لتظليل النص المبحوث عنه
+  const highlightText = (text, highlight) => {
+    if (!highlight.trim() || !text) return text;
+    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    return parts.map((part, i) => 
+      part.toLowerCase() === highlight.toLowerCase() ? (
+        <mark key={i} className="bg-amber-400/30 text-amber-200 rounded px-0.5 font-bold">{part}</mark>
+      ) : part
+    );
+  };
+
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const tableName = log.table_name || '';
@@ -137,7 +143,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   }, [logs, searchTerm, selectedOperation]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-4">
+    <div className="w-full max-w-7xl mx-auto p-3 sm:p-6 space-y-4 dir-rtl">
       
       {/* 🟢 ترويسة الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
@@ -147,7 +153,7 @@ export default function RealtimeAudit({ isArabic = true }) {
               <ShieldAlert size={20} />
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-slate-100">
-              {isArabic ? 'سجل العمليات والأنشطة المباشر' : 'Live Realtime Audit Log'}
+              {isArabic ? 'سجل العمليات والأنشطة المباشر' : 'Live Audit Log'}
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -155,67 +161,109 @@ export default function RealtimeAudit({ isArabic = true }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           <button 
             onClick={fetchAuditLogs} 
             disabled={loading}
-            className="btn-secondary text-xs !py-2 !px-3 flex items-center gap-1.5"
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 text-xs font-medium flex items-center gap-1.5 transition-all"
           >
             <RefreshCw size={14} className={`text-slate-400 ${loading ? 'animate-spin' : ''}`} />
             <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
           </button>
-          <button className="btn-primary text-xs !py-2 !px-3 flex items-center gap-1.5">
+          <button className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 transition-all">
             <Download size={14} />
-            <span>{isArabic ? 'تصدير التقرير' : 'Export Log'}</span>
+            <span>{isArabic ? 'تصدير' : 'Export'}</span>
           </button>
         </div>
       </div>
 
-      {/* 🟢 شريط الفلترة والبحث */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md">
-        <div className="relative flex items-center">
-          <Search size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={isArabic ? "بحث في الجداول أو المشرفين..." : "Search logs or users..."}
-            className="app-input !py-2 !pr-9 text-xs w-full"
+      {/* 🟢 شريط الفلترة والأزرار السريعة (Filter Chips) */}
+      <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md space-y-3">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* حقل البحث */}
+          <div className="relative flex items-center">
+            <Search size={16} className="absolute right-3 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={isArabic ? "بحث باسم الجدول، المشرف..." : "Search table, user..."}
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 pr-9 pl-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-all"
+            />
+          </div>
+
+          {/* منتقي التواريخ */}
+          <CustomDatePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update) => setDateRange(update)}
+            isArabic={isArabic}
           />
         </div>
 
-        <div className="relative flex items-center">
-          <Filter size={15} className="absolute right-3 text-slate-400 pointer-events-none" />
-          <select
-            value={selectedOperation}
-            onChange={(e) => setSelectedOperation(e.target.value)}
-            className="app-input !py-2 !pr-9 text-xs appearance-none cursor-pointer w-full"
+        {/* أزرار الفلترة السريعة (Filter Chips) المريحة للإبهام */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
+          <button
+            onClick={() => setSelectedOperation('ALL')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              selectedOperation === 'ALL'
+                ? 'bg-slate-700 text-white border border-slate-600 shadow-sm'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:bg-slate-800/60'
+            }`}
           >
-            <option value="ALL">{isArabic ? "جميع العمليات (INSERT / UPDATE / DELETE)" : "All Operations"}</option>
-            <option value="INSERT">{isArabic ? "إضافة جديدة (INSERT)" : "INSERT"}</option>
-            <option value="UPDATE">{isArabic ? "تعديل بيانات (UPDATE)" : "UPDATE"}</option>
-            <option value="DELETE">{isArabic ? "حذف (DELETE)" : "DELETE"}</option>
-          </select>
-        </div>
+            <Layers size={13} />
+            <span>الكل ({logs.length})</span>
+          </button>
 
-        <CustomDatePicker
-          startDate={startDate}
-          endDate={endDate}
-          onChange={(update) => setDateRange(update)}
-          isArabic={isArabic}
-        />
+          <button
+            onClick={() => setSelectedOperation('INSERT')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              selectedOperation === 'INSERT'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:bg-emerald-500/10'
+            }`}
+          >
+            <PlusCircle size={13} className="text-emerald-400" />
+            <span>إضافة (INSERT)</span>
+          </button>
+
+          <button
+            onClick={() => setSelectedOperation('UPDATE')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              selectedOperation === 'UPDATE'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:bg-sky-500/10'
+            }`}
+          >
+            <Edit3 size={13} className="text-sky-400" />
+            <span>تعديل (UPDATE)</span>
+          </button>
+
+          <button
+            onClick={() => setSelectedOperation('DELETE')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              selectedOperation === 'DELETE'
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                : 'bg-slate-950/60 text-slate-400 border border-slate-800 hover:bg-rose-500/10'
+            }`}
+          >
+            <Trash2 size={13} className="text-rose-400" />
+            <span>حذف (DELETE)</span>
+          </button>
+        </div>
       </div>
 
-      {/* 🟢 عرض قائمة البطاقات من البيانات الحقيقية */}
+      {/* 🟢 عرض قائمة البطاقات */}
       <div className="space-y-3">
         {loading ? (
           <div className="p-12 text-center rounded-2xl border border-slate-800 bg-slate-900/30 text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
             <Loader2 size={24} className="animate-spin text-emerald-400" />
-            <span>{isArabic ? 'جاري جلب السجلات المباشرة من قواعد البيانات...' : 'Fetching live audit records...'}</span>
+            <span>{isArabic ? 'جاري جلب السجلات المباشرة...' : 'Fetching live audit records...'}</span>
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 text-slate-500 text-xs">
-            {isArabic ? 'لا توجد سجلات حقيقية مسجلة حالياً' : 'No real audit logs found'}
+            {isArabic ? 'لا توجد سجلات حقيقية طابق التحديد' : 'No matching audit logs found'}
           </div>
         ) : (
           filteredLogs.map((log) => {
@@ -223,6 +271,8 @@ export default function RealtimeAudit({ isArabic = true }) {
             const isRawJson = !!showRawJsonMap[log.id];
             const displayData = log.new_data || log.old_data || {};
             const userName = log.profiles?.full_name || (log.changed_by ? `مستخدم (#${log.changed_by.substring(0, 6)})` : "النظام/آلي");
+            const tableName = log.table_name || '';
+            const translatedTable = TABLE_TRANSLATIONS[tableName] || tableName;
 
             return (
               <div 
@@ -234,16 +284,22 @@ export default function RealtimeAudit({ isArabic = true }) {
                     <OperationBadge operation={log.operation} />
                     <div>
                       <h3 className="text-sm font-bold text-slate-200">
-                        {TABLE_TRANSLATIONS[log.table_name] ? `تعديل في ${TABLE_TRANSLATIONS[log.table_name]}` : `عملية على ${log.table_name}`}
+                        {TABLE_TRANSLATIONS[tableName] ? (
+                          <>تعديل في جدول <span className="text-emerald-400">{highlightText(translatedTable, searchTerm)}</span></>
+                        ) : (
+                          <>عملية على <span className="text-emerald-400">{highlightText(tableName, searchTerm)}</span></>
+                        )}
                       </h3>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-400 flex-wrap">
+                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400 flex-wrap">
                         <span className="flex items-center gap-1">
                           <User size={13} className="text-slate-500" />
-                          <span className="text-emerald-400 font-medium">{userName}</span>
+                          <span className="text-emerald-400 font-medium">{highlightText(userName, searchTerm)}</span>
                         </span>
                         <span className="flex items-center gap-1">
                           <Tag size={13} className="text-slate-500" />
-                          <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-mono text-[10px]">{log.table_name}</span>
+                          <span className="bg-slate-800/90 px-2 py-0.5 rounded text-slate-300 font-mono text-[10px] border border-slate-700/50">
+                            {highlightText(tableName, searchTerm)}
+                          </span>
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock size={13} className="text-slate-500" />
@@ -253,13 +309,14 @@ export default function RealtimeAudit({ isArabic = true }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80 justify-end">
+                  {/* الأزرار في الجوال والكمبيوتر */}
+                  <div className="flex items-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80 justify-end self-end sm:self-auto w-full sm:w-auto">
                     <button
                       onClick={() => toggleRawJson(log.id)}
                       className={`px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold flex items-center gap-1 transition-all ${
                         isRawJson 
                           ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                          : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                          : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       <Code2 size={13} />
@@ -268,16 +325,17 @@ export default function RealtimeAudit({ isArabic = true }) {
 
                     <button
                       onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                      className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium flex items-center gap-1 transition-colors"
                     >
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      <span>{isExpanded ? 'إخفاء' : 'عرض التفاصيل'}</span>
+                      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                     </button>
                   </div>
                 </div>
 
-                {/* تفاصيل السجل */}
+                {/* تفاصيل البيانات */}
                 {isExpanded && (
-                  <div className="p-4 border-t border-slate-800/80 bg-slate-950/50">
+                  <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
                     {isRawJson ? (
                       <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-mono overflow-x-auto dir-ltr">
                         {JSON.stringify({ old_data: log.old_data, new_data: log.new_data }, null, 2)}
@@ -315,31 +373,31 @@ function OperationBadge({ operation }) {
   switch (operation) {
     case 'INSERT':
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+        <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold flex items-center gap-1 shrink-0">
           <PlusCircle size={13} />
           <span>إضافة</span>
         </span>
       );
     case 'UPDATE':
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[11px] font-bold flex items-center gap-1">
+        <span className="px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[11px] font-bold flex items-center gap-1 shrink-0">
           <Edit3 size={13} />
           <span>تعديل</span>
         </span>
       );
     case 'DELETE':
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-bold flex items-center gap-1">
+        <span className="px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-bold flex items-center gap-1 shrink-0">
           <Trash2 size={13} />
           <span>حذف</span>
         </span>
       );
     default:
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 text-[11px] font-bold flex items-center gap-1">
+        <span className="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 text-[11px] font-bold flex items-center gap-1 shrink-0">
           <CheckCircle2 size={13} />
           <span>{operation || 'عملية'}</span>
         </span>
       );
-  }
+   switch
 }
