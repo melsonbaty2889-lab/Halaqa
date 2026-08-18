@@ -28,7 +28,8 @@ import {
   X,
   Copy,
   Check,
-  Filter
+  Filter,
+  Calendar
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
@@ -97,7 +98,7 @@ export default function RealtimeAudit({ isArabic = true }) {
 
   // وضع العرض: false = وضع المدير (مبسط) | true = وضع المطور
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
-  const [onlyChanged, setOnlyChanged] = useState(true); // إخفاء غير المعدل تلقائياً
+  const [onlyChanged, setOnlyChanged] = useState(true);
 
   // Toast System
   const [toast, setToast] = useState(null);
@@ -179,6 +180,37 @@ export default function RealtimeAudit({ isArabic = true }) {
     setCurrentPage(1);
   }, [searchTerm, selectedOperation, selectedUser, dateRange]);
 
+  const toggleRawJson = (id) => {
+    setShowRawJsonMap(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleExportCSV = () => {
+    if (!filteredLogs.length) {
+      showToast('لا توجد بيانات للتصدير', 'error');
+      return;
+    }
+
+    const headers = ['المعرف', 'الجدول', 'العملية', 'المشرف', 'التاريخ'];
+    const rows = filteredLogs.map(log => [
+      log.id,
+      TABLE_TRANSLATIONS[log.table_name] || log.table_name,
+      log.operation,
+      log.profiles?.full_name || 'النظام',
+      new Date(log.created_at).toLocaleString('ar-EG')
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('تم تصدير ملف CSV بنجاح', 'success');
+  };
+
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     logs.forEach((log) => {
@@ -234,9 +266,20 @@ export default function RealtimeAudit({ isArabic = true }) {
       const matchesOp = selectedOperation === 'ALL' || log.operation === selectedOperation;
       const matchesUser = selectedUser === 'ALL' || log.changed_by === selectedUser;
 
-      return matchesSearch && matchesOp && matchesUser;
+      // تصفية التاريخ باستخدام CustomDatePicker
+      let matchesDate = true;
+      if (startDate && endDate && log.created_at) {
+        const logDate = new Date(log.created_at);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        matchesDate = logDate >= start && logDate <= end;
+      }
+
+      return matchesSearch && matchesOp && matchesUser && matchesDate;
     });
-  }, [logs, searchTerm, selectedOperation, selectedUser]);
+  }, [logs, searchTerm, selectedOperation, selectedUser, startDate, endDate]);
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
   const paginatedLogs = useMemo(() => {
@@ -247,31 +290,41 @@ export default function RealtimeAudit({ isArabic = true }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-2 sm:p-5 space-y-4 dir-rtl font-sans text-slate-100">
       
-      {/* Notification Toast */}
+      {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-slate-900 border border-slate-700 text-xs">
           <span className="font-semibold">{toast.message}</span>
         </div>
       )}
 
-      {/* 🔴 Toper Header */}
+      {/* Header */}
       <div className="flex flex-col gap-3 pb-3 border-b border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <ShieldAlert size={18} />
             </div>
-            <h1 className="text-base sm:text-lg font-bold">سجل العمليات المباشر</h1>
+            <div>
+              <h1 className="text-base sm:text-lg font-bold">سجل العمليات المباشر</h1>
+              <p className="text-[10px] text-slate-400 hidden sm:block">متابعة التغييرات في الأكاديمية لحظة بلحظة</p>
+            </div>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               Realtime
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button onClick={fetchAuditLogs} className="p-2 rounded-lg bg-slate-800 text-slate-300">
+            <button 
+              onClick={handleExportCSV} 
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold flex items-center gap-1 hover:bg-emerald-500/20 transition-all"
+            >
+              <Download size={13} />
+              <span className="hidden sm:inline">تصدير (CSV)</span>
+            </button>
+            <button onClick={fetchAuditLogs} className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             </button>
-            <button onClick={() => setIsPurgeModalOpen(true)} className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <button onClick={() => setIsPurgeModalOpen(true)} className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all">
               <Eraser size={14} />
             </button>
           </div>
@@ -286,7 +339,7 @@ export default function RealtimeAudit({ isArabic = true }) {
             }`}
           >
             <Sparkles size={13} />
-            <span>عرض مبسط (للمدير)</span>
+            <span>وضع المدير</span>
           </button>
           <button
             onClick={() => setIsAdvancedMode(true)}
@@ -295,30 +348,46 @@ export default function RealtimeAudit({ isArabic = true }) {
             }`}
           >
             <Code size={13} />
-            <span>عرض متقدم (للمطور)</span>
+            <span>وضع المطور</span>
           </button>
         </div>
       </div>
 
-      {/* 📊 Compact Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+        <div 
+          onClick={() => setSelectedOperation('ALL')}
+          className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+            selectedOperation === 'ALL' ? 'bg-slate-800 border-emerald-500/50' : 'bg-slate-900 border-slate-800'
+          }`}
+        >
           <span className="text-[10px] text-slate-400 block">عمليات اليوم</span>
           <span className="text-base font-bold text-slate-100">{stats.todayTotal}</span>
         </div>
-        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
-          <span className="text-[10px] text-slate-400 block">إضافة/تعديل</span>
+        <div 
+          onClick={() => setSelectedOperation('UPDATE')}
+          className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+            selectedOperation === 'UPDATE' || selectedOperation === 'INSERT' ? 'bg-slate-800 border-sky-500/50' : 'bg-slate-900 border-slate-800'
+          }`}
+        >
+          <span className="text-[10px] text-slate-400 block">إضافات وتعديلات اليوم</span>
           <span className="text-base font-bold text-sky-400">{stats.inserts + stats.updates}</span>
         </div>
-        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
-          <span className="text-[10px] text-slate-400 block">حذف</span>
+        <div 
+          onClick={() => setSelectedOperation('DELETE')}
+          className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+            selectedOperation === 'DELETE' ? 'bg-slate-800 border-rose-500/50' : 'bg-slate-900 border-slate-800'
+          }`}
+        >
+          <span className="text-[10px] text-slate-400 block">حالات الحذف اليوم</span>
           <span className="text-base font-bold text-rose-400">{stats.deletes}</span>
         </div>
       </div>
 
-      {/* 🟢 Search & Filters */}
+      {/* Search & Filters Section */}
       <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {/* Search Bar */}
           <div className="relative flex items-center">
             <Search size={14} className="absolute right-3 text-slate-400 pointer-events-none" />
             <input
@@ -326,10 +395,11 @@ export default function RealtimeAudit({ isArabic = true }) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="بحث باسم القسم أو المشرف..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg py-1.5 pr-8 pl-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg py-1.5 pr-8 pl-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-slate-700"
             />
           </div>
 
+          {/* User Select */}
           <div className="relative flex items-center">
             <Users size={14} className="absolute right-3 text-slate-400 pointer-events-none" />
             <select
@@ -346,7 +416,20 @@ export default function RealtimeAudit({ isArabic = true }) {
           </div>
         </div>
 
-        {/* Operation Filters */}
+        {/* 🗓️ التقويم المخصص CustomDatePicker */}
+        <div className="w-full">
+          <CustomDatePicker
+            selectsRange={true}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update) => setDateRange(update)}
+            placeholderText="اختر نطاق التاريخ..."
+            isArabic={isArabic}
+            className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg py-1.5 px-3 focus:outline-none"
+          />
+        </div>
+
+        {/* Operation Quick Buttons */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
           {['ALL', 'INSERT', 'UPDATE', 'DELETE'].map((op) => (
             <button
@@ -376,7 +459,7 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       </div>
 
-      {/* 🟢 Logs List */}
+      {/* Logs List */}
       <div className="space-y-2">
         {loading ? (
           <div className="p-8 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
@@ -393,6 +476,7 @@ export default function RealtimeAudit({ isArabic = true }) {
             const userName = log.profiles?.full_name ? safeRenderValue(log.profiles.full_name) : "النظام/آلي";
             const tableName = safeRenderValue(log.table_name);
             const translatedTable = TABLE_TRANSLATIONS[tableName] || tableName;
+            const showRaw = showRawJsonMap[log.id];
 
             return (
               <div key={log.id} className="rounded-xl bg-slate-900/90 border border-slate-800 overflow-hidden">
@@ -420,15 +504,44 @@ export default function RealtimeAudit({ isArabic = true }) {
                   </button>
                 </div>
 
-                {/* Body Details */}
+                {/* Details Container */}
                 {isExpanded && (
-                  <div className="p-3 border-t border-slate-800 bg-slate-950/80">
-                    <CompactDiffViewer 
-                      log={log} 
-                      isAdvancedMode={isAdvancedMode} 
-                      onlyChanged={onlyChanged}
-                      showToast={showToast} 
-                    />
+                  <div className="p-3 border-t border-slate-800 bg-slate-950/80 space-y-2.5">
+                    
+                    {/* Mode Toggle inside Record for Developer Raw View */}
+                    <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                      <span className="text-[10px] text-slate-400 font-mono">ID: #{log.id}</span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); toggleRawJson(log.id); }}
+                        className="text-[10px] font-bold text-slate-400 hover:text-slate-200 flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded border border-slate-800"
+                      >
+                        <Code2 size={11} />
+                        <span>{showRaw ? "عرض التنسيق المنسق" : "عرض JSON الخام"}</span>
+                      </button>
+                    </div>
+
+                    {showRaw ? (
+                      <div className="relative bg-slate-900 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] overflow-x-auto text-emerald-400 dir-ltr">
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(log, null, 2));
+                            showToast('تم نسخ كود JSON بنجاح', 'success');
+                          }}
+                          className="absolute top-2 right-2 p-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                          title="نسخ"
+                        >
+                          <Copy size={12} />
+                        </button>
+                        <pre>{JSON.stringify(log, null, 2)}</pre>
+                      </div>
+                    ) : (
+                      <CompactDiffViewer 
+                        log={log} 
+                        isAdvancedMode={isAdvancedMode} 
+                        onlyChanged={onlyChanged}
+                        showToast={showToast} 
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -460,7 +573,7 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       )}
 
-      {/* Modal Purge */}
+      {/* Purge Modal */}
       {isPurgeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-sm p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
@@ -469,15 +582,15 @@ export default function RealtimeAudit({ isArabic = true }) {
             <select
               value={purgeDays}
               onChange={(e) => setPurgeDays(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none"
             >
               <option value={15}>أقدم من 15 يوم</option>
               <option value={30}>أقدم من 30 يوم</option>
               <option value={60}>أقدم من 60 يوم</option>
             </select>
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setIsPurgeModalOpen(false)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-xs">إلغاء</button>
-              <button onClick={handlePurgeLogs} disabled={purging} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">تأكيد</button>
+              <button onClick={() => setIsPurgeModalOpen(false)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">إلغاء</button>
+              <button onClick={handlePurgeLogs} disabled={purging} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">تأكيد التنظيف</button>
             </div>
           </div>
         </div>
@@ -487,15 +600,13 @@ export default function RealtimeAudit({ isArabic = true }) {
   );
 }
 
-// 🟢 Mapped Clean Compact Diff Viewer (تنسيق الجداول المضغوط للموبايل)
+// Compact Table Component
 function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, showToast }) {
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
 
-  // في حالة التعديل UPDATE
   if (isUpdate) {
     const allKeys = Array.from(new Set([...Object.keys(log.old_data || {}), ...Object.keys(log.new_data || {})]));
     
-    // فلترة الحقول بناءً على الإعدادات
     const filteredKeys = allKeys.filter((key) => {
       if (!isAdvancedMode && HIDDEN_FIELDS_IN_BASIC_VIEW.includes(key)) return false;
 
@@ -503,7 +614,7 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, showToast }) {
       const newVal = safeRenderValue(log.new_data?.[key]);
       const isChanged = oldVal !== newVal;
 
-      if (onlyChanged && !isChanged) return false; // إخفاء غير المعدل
+      if (onlyChanged && !isChanged) return false;
       return true;
     });
 
@@ -544,13 +655,12 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, showToast }) {
     );
   }
 
-  // في حالة الإضافة أو الحذف (INSERT / DELETE)
   const displayData = log.new_data || log.old_data || {};
   const entries = Object.entries(displayData).filter(([key, val]) => {
     if (!isAdvancedMode) {
       if (HIDDEN_FIELDS_IN_BASIC_VIEW.includes(key)) return false;
       const strVal = safeRenderValue(val);
-      if (strVal === 'لا يوجد' || strVal === 'false' || strVal === '0') return false; // إخفاء الفارغ
+      if (strVal === 'لا يوجد' || strVal === 'false' || strVal === '0') return false;
     }
     return true;
   });
