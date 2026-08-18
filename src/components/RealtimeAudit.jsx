@@ -20,10 +20,11 @@ import {
   Layers,
   Activity,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  ArrowRightLeft
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../supabaseClient';
 
 const TABLE_TRANSLATIONS = {
   students: "الطالب",
@@ -67,7 +68,7 @@ export default function RealtimeAudit({ isArabic = true }) {
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [showRawJsonMap, setShowRawJsonMap] = useState({});
 
-  // 📄 حالات التقسيم لصفحات (Pagination States)
+  // 📄 حالات التقسيم لصفحات (Pagination)
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -84,7 +85,7 @@ export default function RealtimeAudit({ isArabic = true }) {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(200); // جلب أحدث 200 سجل للتنقل بينها بسهولة
+        .limit(200);
 
       if (error) throw error;
       setLogs(data || []);
@@ -129,7 +130,6 @@ export default function RealtimeAudit({ isArabic = true }) {
     };
   }, []);
 
-  // إعادة الصفحة إلى 1 عند تغيير البحث أو نوع العملية
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedOperation, dateRange]);
@@ -182,7 +182,6 @@ export default function RealtimeAudit({ isArabic = true }) {
     });
   }, [logs, searchTerm, selectedOperation]);
 
-  // 📄 اقتطاع السجلات المعروضة بناءً على الصفحة الحالية
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
   const paginatedLogs = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -388,7 +387,6 @@ export default function RealtimeAudit({ isArabic = true }) {
           paginatedLogs.map((log) => {
             const isExpanded = expandedLogId === log.id;
             const isRawJson = !!showRawJsonMap[log.id];
-            const displayData = log.new_data || log.old_data || {};
             const userName = log.profiles?.full_name ? safeRenderValue(log.profiles.full_name) : (log.changed_by ? `مستخدم (#${log.changed_by.substring(0, 6)})` : "النظام/آلي");
             const tableName = safeRenderValue(log.table_name);
             const translatedTable = TABLE_TRANSLATIONS[tableName] ? safeRenderValue(TABLE_TRANSLATIONS[tableName]) : tableName;
@@ -451,6 +449,7 @@ export default function RealtimeAudit({ isArabic = true }) {
                   </div>
                 </div>
 
+                {/* 🔍 تفاصيل السجل والتغيرات (Diff Viewer) */}
                 {isExpanded && (
                   <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
                     {isRawJson ? (
@@ -458,21 +457,7 @@ export default function RealtimeAudit({ isArabic = true }) {
                         {JSON.stringify({ old_data: log.old_data, new_data: log.new_data }, null, 2)}
                       </pre>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                        {Object.entries(displayData).map(([key, value]) => (
-                          <div 
-                            key={key} 
-                            className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/60 flex flex-col justify-between"
-                          >
-                            <span className="text-[11px] text-slate-400 font-medium">
-                              {JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}
-                            </span>
-                            <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
-                              {safeRenderValue(value)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                      <DataDiffViewer log={log} />
                     )}
                   </div>
                 )}
@@ -513,6 +498,76 @@ export default function RealtimeAudit({ isArabic = true }) {
         </div>
       )}
 
+    </div>
+  );
+}
+
+// 🔀 مكون عرض مقارنة البيانات المفصلة (Diff Viewer Component)
+function DataDiffViewer({ log }) {
+  const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
+  const displayData = log.new_data || log.old_data || {};
+
+  if (!isUpdate) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        {Object.entries(displayData).map(([key, value]) => (
+          <div 
+            key={key} 
+            className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/60 flex flex-col justify-between"
+          >
+            <span className="text-[11px] text-slate-400 font-medium">
+              {JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}
+            </span>
+            <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
+              {safeRenderValue(value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // في حالة التعديل UPDATE: تجميع المفاتيح وعرض الفروقات
+  const allKeys = Array.from(new Set([...Object.keys(log.old_data || {}), ...Object.keys(log.new_data || {})]));
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+      {allKeys.map((key) => {
+        const oldVal = safeRenderValue(log.old_data?.[key]);
+        const newVal = safeRenderValue(log.new_data?.[key]);
+        const isChanged = oldVal !== newVal;
+
+        return (
+          <div 
+            key={key} 
+            className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
+              isChanged 
+                ? 'bg-amber-950/20 border-amber-500/40' 
+                : 'bg-slate-900/90 border-slate-800/60'
+            }`}
+          >
+            <span className="text-[11px] text-slate-400 font-medium flex items-center justify-between">
+              <span>{JSON_TRANSLATIONS[key] ? safeRenderValue(JSON_TRANSLATIONS[key]) : key}</span>
+              {isChanged && <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.2 rounded bg-amber-500/10">معدَّل</span>}
+            </span>
+
+            {isChanged ? (
+              <div className="mt-1.5 space-y-1 text-xs font-mono">
+                <div className="text-rose-400/90 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40 line-through truncate">
+                  {oldVal}
+                </div>
+                <div className="text-emerald-400 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/40 truncate">
+                  {newVal}
+                </div>
+              </div>
+            ) : (
+              <span className="text-xs font-semibold text-slate-200 mt-1 truncate">
+                {newVal}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
