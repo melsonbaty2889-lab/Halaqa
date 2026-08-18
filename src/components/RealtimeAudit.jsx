@@ -18,9 +18,6 @@ import {
   Code,
   Copy,
   Filter,
-  Globe,
-  ArrowLeft,
-  ArrowRight,
   CheckCircle2
 } from 'lucide-react';
 import CustomDatePicker from './UI/CustomDatePicker';
@@ -149,15 +146,32 @@ const TECHNICAL_KEYS = [
   'current_quarter_index', 'freeze_cards_remaining', 'badges', 'record_id'
 ];
 
+// 🟢 دالة آمنة تماماً لمنع خطأ Minified React error #31
 const formatDisplayValue = (val) => {
   if (val === null || val === undefined || val === '' || val === '{}') return '—';
-  if (typeof val === 'boolean') return val ? 'نعم / Yes' : 'لا / No';
+  if (typeof val === 'boolean') return val ? 'نعم' : 'لا';
+  
   if (typeof val === 'object') {
-    if (Array.isArray(val) && val.length === 0) return '—';
-    if (val.ar || val.en) return val.ar || val.en;
-    return JSON.stringify(val);
+    if (Array.isArray(val)) {
+      return val.length === 0 ? '—' : val.map(item => formatDisplayValue(item)).join(', ');
+    }
+    if (val.ar || val.en) {
+      return String(val.ar || val.en);
+    }
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return '—';
+    }
   }
   return String(val);
+};
+
+// 🟢 استخراج الاسم بشكل آمن من كائنات البيانات
+const getEntityName = (data) => {
+  if (!data) return '';
+  const val = data.full_name || data.name || '';
+  return typeof val === 'object' ? (val.ar || val.en || '') : String(val);
 };
 
 export default function RealtimeAudit({ currentLang = 'ar' }) {
@@ -184,9 +198,6 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   };
 
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
-  const [purgeDays, setPurgeDays] = useState(30);
-  const [purging, setPurging] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -425,7 +436,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-xl py-2 px-3 focus:outline-none"
         />
 
-        {/* Filters and Controls */}
+        {/* Operation Filters */}
         <div className="flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pt-1">
           <div className="flex items-center gap-1.5">
             {['ALL', 'INSERT', 'UPDATE', 'DELETE'].map((op) => (
@@ -476,8 +487,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             const translatedTable = t.tables[tableName] || tableName;
             const showRaw = showRawJsonMap[log.id];
 
-            // استخراج اسم العينة الأساسية المفهومة بشرية للمدير
-            const entityTitle = log.new_data?.full_name || log.new_data?.name || log.old_data?.full_name || log.old_data?.name || '';
+            const entityTitle = getEntityName(log.new_data) || getEntityName(log.old_data);
 
             return (
               <div key={log.id} className="rounded-xl bg-slate-900/90 border border-slate-800/90 overflow-hidden shadow-sm">
@@ -579,9 +589,14 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   );
 }
 
-// 🎯 مكون العرض النظيف والمترجم (Clean Human Diff)
+// 🎯 مكون العرض المنسق الخالي من أخطاء React Objects
 function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
+
+  const getFieldLabel = (key) => {
+    const label = t?.fields?.[key] || key;
+    return typeof label === 'object' ? (label.ar || label.en || String(key)) : String(label);
+  };
 
   if (isUpdate) {
     const allKeys = Array.from(new Set([...Object.keys(log.old_data || {}), ...Object.keys(log.new_data || {})]));
@@ -611,11 +626,12 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
           {filteredKeys.map((key) => {
             const oldVal = formatDisplayValue(log.old_data?.[key]);
             const newVal = formatDisplayValue(log.new_data?.[key]);
-            const label = t.fields[key] || key;
 
             return (
               <div key={key} className="p-2.5 text-xs flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-slate-400 font-medium text-[11px]">{label}:</span>
+                <span className="text-slate-400 font-medium text-[11px]">
+                  {getFieldLabel(key)}:
+                </span>
                 <div className="flex items-center gap-2 text-[11px] font-mono dir-ltr">
                   <span className="line-through text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40">
                     {oldVal}
@@ -648,7 +664,9 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {entries.map(([key, val]) => (
         <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 text-xs">
-          <span className="text-slate-400 text-[11px] font-medium">{t.fields[key] || key}</span>
+          <span className="text-slate-400 text-[11px] font-medium">
+            {getFieldLabel(key)}
+          </span>
           <span className="font-semibold text-slate-200 text-[11px] truncate max-w-[180px]">
             {formatDisplayValue(val)}
           </span>
