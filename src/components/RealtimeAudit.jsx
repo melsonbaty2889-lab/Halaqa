@@ -20,7 +20,6 @@ import {
 import CustomDatePicker from './UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
 
-// 🌐 قاموس الترجمات
 const I18N_DICTIONARY = {
   ar: {
     title: "سجل العمليات المباشر",
@@ -140,7 +139,6 @@ const TECHNICAL_KEYS = [
   'current_quarter_index', 'freeze_cards_remaining', 'badges', 'record_id'
 ];
 
-// 🛡️ تحويل آمن لكل أنواع البيانات لنص
 const toSafeString = (val) => {
   if (val === null || val === undefined || val === '' || val === '{}') return '';
   if (typeof val === 'boolean') return val ? 'نعم' : 'لا';
@@ -298,8 +296,8 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
     >
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-[var(--surface-card,rgba(15,23,42,0.95))] border border-[var(--emerald-text,#10B981)]/30 text-xs font-medium text-[var(--text-main,#FFFFFF)] backdrop-blur-md">
-          <CheckCircle2 size={15} className="text-[var(--emerald-text,#10B981)]" />
+        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-[var(--surface-card,rgba(15,23,42,0.95))] border border-[var(--primary)]/30 text-xs font-medium text-[var(--text-main,#FFFFFF)] backdrop-blur-md">
+          <CheckCircle2 size={15} className="text-[var(--primary)]" />
           <span>{toSafeString(toast.message)}</span>
         </div>
       )}
@@ -308,7 +306,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
       <div className="flex flex-col gap-3 pb-3 border-b border-[var(--border-card,rgba(255,255,255,0.08))]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] border border-[var(--emerald-text,#10B981)]/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+            <div className="p-2 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 shadow-[0_0_12px_rgba(224,122,0,0.15)]">
               <ShieldAlert size={20} />
             </div>
             <div>
@@ -325,7 +323,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
               <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             </button>
             <button 
-              className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+              className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all"
               title={toSafeString(t.purgeOld)}
             >
               <Eraser size={15} />
@@ -333,13 +331,13 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           </div>
         </div>
 
-        {/* View Switcher */}
+        {/* Unified Mode Switcher */}
         <div className="grid grid-cols-2 gap-1 bg-[var(--surface-card,rgba(15,23,42,0.85))] p-1 rounded-xl border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md">
           <button
             onClick={() => setIsAdvancedMode(false)}
             className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
               !isAdvancedMode 
-                ? 'bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_12px_rgba(224,122,0,0.3)]' 
+                ? 'bg-[var(--primary)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_12px_rgba(224,122,0,0.3)]' 
                 : 'text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)]'
             }`}
           >
@@ -350,7 +348,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             onClick={() => setIsAdvancedMode(true)}
             className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
               isAdvancedMode 
-                ? 'bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_12px_rgba(224,122,0,0.3)]' 
+                ? 'bg-[var(--primary)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_12px_rgba(224,122,0,0.3)]' 
                 : 'text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)]'
             }`}
           >
@@ -360,13 +358,13 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
         </div>
       </div>
 
-      {/* Stats Section */}
+      {/* Stats Section with Adaptive Borders */}
       <div className="grid grid-cols-3 gap-2">
         <div 
           onClick={() => setSelectedOperation('ALL')}
           className={`p-3 rounded-xl border transition-all cursor-pointer ${
             selectedOperation === 'ALL' 
-              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-[var(--primary,#E07A00)] shadow-[0_0_12px_rgba(224,122,0,0.2)]' 
+              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-[var(--primary)] shadow-[0_0_12px_rgba(224,122,0,0.2)]' 
               : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
@@ -377,23 +375,23 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           onClick={() => setSelectedOperation('UPDATE')}
           className={`p-3 rounded-xl border transition-all cursor-pointer ${
             selectedOperation === 'UPDATE' || selectedOperation === 'INSERT' 
-              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.2)]' 
+              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-[var(--primary)] shadow-[0_0_12px_rgba(224,122,0,0.2)]' 
               : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
           <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{toSafeString(t.todayModifications)}</span>
-          <span className="text-base sm:text-xl font-black text-sky-400">{stats.inserts + stats.updates}</span>
+          <span className="text-base sm:text-xl font-black text-[var(--text-main,#FFFFFF)]">{stats.inserts + stats.updates}</span>
         </div>
         <div 
           onClick={() => setSelectedOperation('DELETE')}
           className={`p-3 rounded-xl border transition-all cursor-pointer ${
             selectedOperation === 'DELETE' 
-              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.2)]' 
+              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.2)]' 
               : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
           <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{toSafeString(t.todayDeletes)}</span>
-          <span className="text-base sm:text-xl font-black text-rose-400">{stats.deletes}</span>
+          <span className="text-base sm:text-xl font-black text-red-400">{stats.deletes}</span>
         </div>
       </div>
 
@@ -407,7 +405,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={toSafeString(t.searchPlaceholder)}
-              className={`w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl py-2 text-xs text-[var(--text-main,#FFFFFF)] placeholder:text-[var(--text-sub,#94A3B8)] focus:outline-none focus:border-[var(--primary,#E07A00)] ${
+              className={`w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl py-2 text-xs text-[var(--text-main,#FFFFFF)] placeholder:text-[var(--text-sub,#94A3B8)] focus:outline-none focus:border-[var(--primary)] ${
                 isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
             />
@@ -431,7 +429,6 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           </div>
         </div>
 
-        {/* Custom Date Picker */}
         <CustomDatePicker
           selectsRange={true}
           startDate={startDate}
@@ -442,7 +439,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl py-2 px-3 focus:outline-none"
         />
 
-        {/* Operations */}
+        {/* Operations Buttons */}
         <div className="flex items-center justify-between gap-1.5 overflow-x-auto scrollbar-none pt-1">
           <div className="flex items-center gap-1.5">
             {['ALL', 'INSERT', 'UPDATE', 'DELETE'].map((op) => (
@@ -451,7 +448,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                 onClick={() => setSelectedOperation(op)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   selectedOperation === op 
-                    ? 'bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] font-bold shadow-[0_0_10px_rgba(224,122,0,0.3)]' 
+                    ? 'bg-[var(--primary)] text-[var(--text-main,#FFFFFF)] font-bold shadow-[0_0_10px_rgba(224,122,0,0.3)]' 
                     : 'bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] border border-[var(--border-input,#1B2738)] hover:text-[var(--text-main,#FFFFFF)]'
                 }`}
               >
@@ -465,7 +462,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
               onClick={() => setOnlyChanged(!onlyChanged)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                 onlyChanged 
-                  ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20' 
+                  ? 'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30' 
                   : 'bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] border border-[var(--border-input,#1B2738)]'
               }`}
             >
@@ -476,11 +473,11 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
         </div>
       </div>
 
-      {/* Feed */}
+      {/* Feed Area */}
       <div className="space-y-2">
         {loading ? (
           <div className="p-12 text-center text-xs text-[var(--text-sub,#94A3B8)] flex flex-col items-center gap-3">
-            <Loader2 size={24} className="animate-spin text-[var(--emerald-text,#10B981)]" />
+            <Loader2 size={24} className="animate-spin text-[var(--primary)]" />
             <span>{toSafeString(t.loading)}</span>
           </div>
         ) : paginatedLogs.length === 0 ? (
@@ -508,7 +505,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                     <div className="truncate">
                       <div className="text-xs sm:text-sm font-bold text-[var(--text-main,#FFFFFF)] truncate">
                         {toSafeString(log.operation === 'INSERT' ? `${t.insertOp} في ` : log.operation === 'UPDATE' ? `${t.updateOp} في ` : `${t.deleteOp} من `)}
-                        <span className="text-[var(--emerald-text,#10B981)] font-semibold">{translatedTable}</span>
+                        <span className="text-[var(--primary)] font-semibold">{translatedTable}</span>
                         {entityTitle && <span className="text-[var(--text-sub,#94A3B8)] font-normal ml-1">({entityTitle})</span>}
                       </div>
                       <div className="flex items-center gap-2 text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] mt-1">
@@ -524,7 +521,6 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                   </div>
                 </div>
 
-                {/* Expanded Details */}
                 {isExpanded && (
                   <div className="p-3.5 border-t border-[var(--border-card,rgba(255,255,255,0.08))] bg-[var(--surface-input,#0A101D)] space-y-3">
                     <div className="flex items-center justify-between border-b border-[var(--border-card,rgba(255,255,255,0.08))] pb-2">
@@ -542,7 +538,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                     </div>
 
                     {showRaw ? (
-                      <div className="relative bg-[var(--bg-dark,#070B11)] p-3 rounded-xl border border-[var(--border-input,#1B2738)] font-mono text-[11px] overflow-x-auto text-[var(--emerald-text,#10B981)] dir-ltr">
+                      <div className="relative bg-[var(--bg-dark,#070B11)] p-3 rounded-xl border border-[var(--border-input,#1B2738)] font-mono text-[11px] overflow-x-auto text-[var(--primary)] dir-ltr">
                         <button 
                           onClick={() => {
                             navigator.clipboard.writeText(JSON.stringify(log, null, 2));
@@ -597,7 +593,6 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   );
 }
 
-// 🎯 مكون Diff محصن ضد الكائنات
 function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
   const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
 
@@ -637,11 +632,11 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
                   {label}:
                 </span>
                 <div className="flex items-center gap-2 text-[11px] font-mono dir-ltr">
-                  <span className="line-through text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40">
+                  <span className="line-through text-red-400 bg-red-950/30 px-2 py-0.5 rounded border border-red-900/30">
                     {oldVal}
                   </span>
                   <span className="text-[var(--text-sub,#94A3B8)]">→</span>
-                  <span className="text-[var(--emerald-text,#10B981)] font-bold bg-[var(--emerald-text,#10B981)]/10 px-2 py-0.5 rounded border border-[var(--emerald-text,#10B981)]/20">
+                  <span className="text-[var(--primary)] font-bold bg-[var(--primary)]/10 px-2 py-0.5 rounded border border-[var(--primary)]/20">
                     {newVal}
                   </span>
                 </div>
@@ -653,7 +648,6 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
     );
   }
 
-  // حالات الإضافة أو الحذف
   const displayData = log.new_data || log.old_data || {};
   const entries = Object.entries(displayData).filter(([key, val]) => {
     if (!isAdvancedMode) {
@@ -690,11 +684,11 @@ function OperationBadge({ operation, t }) {
 
   switch (operation) {
     case 'INSERT':
-      return <span className="px-2 py-1 rounded-lg bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] text-[10px] font-bold border border-[var(--emerald-text,#10B981)]/20">{opStr}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold border border-[var(--primary)]/20">{opStr}</span>;
     case 'UPDATE':
-      return <span className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 text-[10px] font-bold border border-sky-500/20">{opStr}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold border border-[var(--primary)]/20">{opStr}</span>;
     case 'DELETE':
-      return <span className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-bold border border-rose-500/20">{opStr}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 text-[10px] font-bold border border-red-500/20">{opStr}</span>;
     default:
       return <span className="px-2 py-1 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] text-[10px]">{opStr}</span>;
   }
