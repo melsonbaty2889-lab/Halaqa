@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useTranslation } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { 
   Send, Radio, FileText, Sparkles, Bell, 
   Plus, Save, Loader2, History, RefreshCw, 
