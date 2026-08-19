@@ -294,7 +294,6 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
       dir={isRtl ? 'rtl' : 'ltr'}
       className="min-h-screen p-3 sm:p-6 bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] select-none relative space-y-4"
     >
-      {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-[var(--surface-card,rgba(15,23,42,0.95))] border border-[var(--primary)]/30 text-xs font-medium text-[var(--text-main,#FFFFFF)] backdrop-blur-md">
           <CheckCircle2 size={15} className="text-[var(--primary)]" />
@@ -331,7 +330,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           </div>
         </div>
 
-        {/* Unified Mode Switcher */}
+        {/* View Switcher */}
         <div className="grid grid-cols-2 gap-1 bg-[var(--surface-card,rgba(15,23,42,0.85))] p-1 rounded-xl border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md">
           <button
             onClick={() => setIsAdvancedMode(false)}
@@ -358,7 +357,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
         </div>
       </div>
 
-      {/* Stats Section with Adaptive Borders */}
+      {/* Stats Section */}
       <div className="grid grid-cols-3 gap-2">
         <div 
           onClick={() => setSelectedOperation('ALL')}
@@ -439,7 +438,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl py-2 px-3 focus:outline-none"
         />
 
-        {/* Operations Buttons */}
+        {/* Operations */}
         <div className="flex items-center justify-between gap-1.5 overflow-x-auto scrollbar-none pt-1">
           <div className="flex items-center gap-1.5">
             {['ALL', 'INSERT', 'UPDATE', 'DELETE'].map((op) => (
