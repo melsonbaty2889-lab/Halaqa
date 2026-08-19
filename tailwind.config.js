@@ -7,16 +7,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        bgDark: '#070B11',
+        dark: 'var(--bg-dark)',
+        bgDark: 'var(--bg-dark)',
         primary: {
-          DEFAULT: '#E07A00',
-          hover: '#C66B00',
-          glow: 'rgba(224, 122, 0, 0.35)',
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+          glow: 'var(--primary-glow)',
         },
         brandEmerald: {
-          DEFAULT: '#10B981',
-          bg: '#09332C',
-          border: '#0D5C4D',
+          DEFAULT: 'var(--emerald-text)',
+          bg: 'var(--emerald-bg)',
+          border: 'var(--emerald-border)',
         },
       },
       boxShadow: {
