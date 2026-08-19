@@ -290,10 +290,10 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   }, [filteredLogs, currentPage]);
 
   return (
-    <div 
-      dir={isRtl ? 'rtl' : 'ltr'}
-      className="min-h-screen p-3 sm:p-6 bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] select-none relative space-y-4"
-    >
+  <div 
+    dir={isRtl ? 'rtl' : 'ltr'}
+    className="min-h-screen p-3 sm:p-6 bg-transparent text-[var(--text-main,#FFFFFF)] select-none relative space-y-4"
+  >
       {toast && (
         <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-[var(--surface-card,rgba(15,23,42,0.95))] border border-[var(--primary)]/30 text-xs font-medium text-[var(--text-main,#FFFFFF)] backdrop-blur-md">
           <CheckCircle2 size={15} className="text-[var(--primary)]" />
@@ -537,7 +537,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                     </div>
 
                     {showRaw ? (
-                      <div className="relative bg-[var(--bg-dark,#070B11)] p-3 rounded-xl border border-[var(--border-input,#1B2738)] font-mono text-[11px] overflow-x-auto text-[var(--primary)] dir-ltr">
+                    <div className="relative bg-[var(--surface-input,#0A101D)]/90 backdrop-blur-md p-3 rounded-xl border border-[var(--border-input,#1B2738)] font-mono text-[11px] overflow-x-auto text-[var(--primary)] dir-ltr">
                         <button 
                           onClick={() => {
                             navigator.clipboard.writeText(JSON.stringify(log, null, 2));
