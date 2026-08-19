@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   Send, Radio, FileText, Sparkles, Smartphone, Mail, Bell, 
   Plus, Save, Loader2, History, CheckCircle2, AlertCircle, 
-  SmartphoneCheck, RefreshCw, Layers, Filter
+  MessageSquare, RefreshCw, Layers, Filter
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Card, Btn, Input } from '@/components/UI/UI';
