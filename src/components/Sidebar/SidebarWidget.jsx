@@ -14,7 +14,7 @@ export default function SidebarWidget({
   const formattedHijri = formatHijriDate(new Date(), isRtl);
 
   return (
-    <div className="bg-slate-900/90 p-2.5 rounded-xl mb-3 border border-slate-800 flex items-center justify-between gap-1.5 shadow-sm">
+       <div className="bg-[var(--surface-card,rgba(15,23,42,0.85))] backdrop-blur-md p-2.5 rounded-xl mb-3 border border-[var(--border-card,rgba(255,255,255,0.08))] flex items-center justify-between gap-1.5 shadow-sm">
       {/* الوقت بتنسيق رقمي زمردي مضيء */}
       <div className="flex items-center gap-1 text-emerald-400 text-xs font-bold font-mono shrink-0">
         <Clock size={14} className="text-emerald-400 shrink-0" />
