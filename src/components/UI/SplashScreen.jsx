@@ -1,6 +1,5 @@
-/* src/components/UI/SplashScreen.jsx */
 import React, { useState, useEffect } from 'react';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo'; // 👈 استدعاء الشعار الموحد
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 
 export default function SplashScreen({ 
   lang = 'ar',
@@ -63,109 +62,66 @@ export default function SplashScreen({
   }, [lang]);
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 99999,
-      background: 'radial-gradient(circle at center, #0F172A 0%, #070B14 100%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: "'Cairo', sans-serif",
-      direction: isRtl ? 'rtl' : 'ltr',
-      overflow: 'hidden',
-      userSelect: 'none',
-      opacity: isFadingOut ? 0 : 1,
-      visibility: isFadingOut ? 'hidden' : 'visible',
-      transition: 'opacity 0.5s ease-in-out, visibility 0.5s ease-in-out'
-    }}>
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'} 
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-hidden select-none bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] transition-opacity duration-500 ease-in-out ${
+        isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+    >
+      {/* خلفية النجوم والتوهج الزمرّدي العلوي من index.css */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 50% 0%, var(--emerald-radial-glow, rgba(16, 185, 129, 0.14)) 0%, transparent 60%),
+            radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 0)
+          `,
+          backgroundSize: '100% 100%, 24px 24px'
+        }}
+      />
 
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundImage: `radial-gradient(rgba(201, 168, 76, 0.06) 1px, transparent 0)`,
-        backgroundSize: '28px 28px',
-        opacity: 0.5,
-        pointerEvents: 'none'
-      }} />
-
-      {/* 🟢 استبدال التصميم القديم بمكون اللوجو الموحد بالحجم المناسب */}
-      <div style={{ marginBottom: '24px', filter: 'drop-shadow(0 0 20px rgba(16, 185, 129, 0.3))' }}>
+      {/* الشعار الموحد */}
+      <div className="mb-6 drop-shadow-[0_0_20px_var(--emerald-radial-glow,rgba(16,185,129,0.2))]">
         <SmartHalaqaProLogo size={100} />
       </div>
 
-      <h1 style={{
-        color: '#FFFFFF',
-        fontSize: '1.8rem',
-        fontWeight: '800',
-        margin: '0 0 6px 0',
-        letterSpacing: '0.5px'
-      }}>
+      {/* العنوان الأساسي */}
+      <h1 className="text-2xl font-extrabold text-[var(--text-main,#FFFFFF)] mb-1.5 tracking-tight">
         {t ? t('app_name') : currentT.title}
       </h1>
       
-      <p style={{
-        color: '#94A3B8',
-        fontSize: '0.88rem',
-        margin: '0 0 24px 0',
-        fontWeight: '500'
-      }}>
+      {/* الوصف الفرعي */}
+      <p className="text-sm text-[var(--text-sub,#94A3B8)] mb-6 font-medium">
         {t ? t('app_subtitle') : currentT.subtitle}
       </p>
 
-      <div style={{
-        background: 'rgba(30, 41, 59, 0.5)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '12px',
-        padding: '10px 20px',
-        marginBottom: '30px',
-        maxWidth: '340px',
-        textAlign: 'center'
-      }}>
-        <span style={{ color: '#C9A84C', fontSize: '0.85rem', fontWeight: '600', display: 'block' }}>
+      {/* بطاقة الآية الكريمة */}
+      <div className="bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md rounded-xl px-5 py-2.5 mb-8 max-w-xs text-center shadow-lg">
+        <span className="text-[var(--primary,#E07A00)] text-sm font-semibold block">
           {isRtl ? `﴿ ${randomAya} ﴾` : `"${randomAya}"`}
         </span>
       </div>
 
-      <div style={{ width: '220px', position: 'relative' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          color: '#64748B',
-          fontSize: '0.75rem',
-          marginBottom: '6px'
-        }}>
+      {/* شريط التحميل */}
+      <div className="w-56 relative">
+        <div className="flex justify-between items-center text-[var(--text-sub,#94A3B8)] text-xs mb-1.5">
           <span>{t ? t('loading') : currentT.loading}</span>
-          <span style={{ color: '#C9A84C', fontWeight: 'bold' }}>{progress}%</span>
+          <span className="text-[var(--primary,#E07A00)] font-bold">{progress}%</span>
         </div>
 
-        <div style={{
-          width: '100%',
-          height: '4px',
-          background: '#1E293B',
-          borderRadius: '10px',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: 'linear-gradient(90deg, #10B981, #C9A84C)',
-            borderRadius: '10px',
-            transition: 'width 0.1s ease-out'
-          }} />
+        <div className="w-full h-1 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-full overflow-hidden">
+          <div 
+            className="h-full rounded-full transition-all duration-100 ease-out"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, var(--emerald-text, #10B981), var(--primary, #E07A00))'
+            }}
+          />
         </div>
       </div>
 
-      <div style={{
-        position: 'absolute',
-        bottom: '20px',
-        color: '#475569',
-        fontSize: '0.7rem',
-        letterSpacing: '1px'
-      }}>
+      {/* رقم الإصدار */}
+      <div className="absolute bottom-5 text-xs text-[var(--text-muted,#475569)] tracking-wider font-mono">
         SMART HALAQA • v2.4
       </div>
     </div>
