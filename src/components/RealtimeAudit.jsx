@@ -3,10 +3,7 @@ import {
   ShieldAlert, 
   Search, 
   RefreshCw, 
-  Download, 
   Code2, 
-  User, 
-  Clock, 
   ChevronDown, 
   ChevronUp,
   ChevronRight,
@@ -29,7 +26,6 @@ const I18N_DICTIONARY = {
     title: "سجل العمليات المباشر",
     subtitle: "متابعة التغييرات في الأكاديمية لحظة بلحظة",
     realtime: "مباشر",
-    exportCsv: "تصدير (CSV)",
     managerMode: "وضع المدير (مبسط)",
     developerMode: "وضع المطور (متقدم)",
     todayTotal: "إجمالي عمليات اليوم",
@@ -84,7 +80,6 @@ const I18N_DICTIONARY = {
     title: "Realtime Audit Logs",
     subtitle: "Track academy system changes live",
     realtime: "Live",
-    exportCsv: "Export CSV",
     managerMode: "Manager Mode",
     developerMode: "Developer Mode",
     todayTotal: "Today's Operations",
@@ -145,7 +140,7 @@ const TECHNICAL_KEYS = [
   'current_quarter_index', 'freeze_cards_remaining', 'badges', 'record_id'
 ];
 
-// 🛡️ الدالة الدرع: تحول أي نوع بيانات (حتى لو كائن بأي تركيبة) إلى نص آمن لـ React
+// 🛡️ تحويل آمن لكل أنواع البيانات لنص
 const toSafeString = (val) => {
   if (val === null || val === undefined || val === '' || val === '{}') return '';
   if (typeof val === 'boolean') return val ? 'نعم' : 'لا';
@@ -155,7 +150,6 @@ const toSafeString = (val) => {
     if (Array.isArray(val)) {
       return val.map(item => toSafeString(item)).filter(Boolean).join(', ');
     }
-    // فحص تركيبات الترجمة المختلفة
     if (val.ar) return toSafeString(val.ar);
     if (val.en) return toSafeString(val.en);
     
@@ -192,7 +186,6 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -299,45 +292,55 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
   }, [filteredLogs, currentPage]);
 
   return (
-    <div className={`w-full max-w-7xl mx-auto p-2 sm:p-5 space-y-4 text-slate-100 ${isRtl ? 'dir-rtl' : 'dir-ltr'}`}>
-      
-      {/* Notification */}
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className="min-h-screen p-3 sm:p-6 bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] select-none relative space-y-4"
+    >
+      {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-slate-900 border border-slate-700 text-xs font-medium">
-          <CheckCircle2 size={15} className="text-emerald-400" />
+        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl bg-[var(--surface-card,rgba(15,23,42,0.95))] border border-[var(--emerald-text,#10B981)]/30 text-xs font-medium text-[var(--text-main,#FFFFFF)] backdrop-blur-md">
+          <CheckCircle2 size={15} className="text-[var(--emerald-text,#10B981)]" />
           <span>{toSafeString(toast.message)}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col gap-3 pb-3 border-b border-slate-800">
+      <div className="flex flex-col gap-3 pb-3 border-b border-[var(--border-card,rgba(255,255,255,0.08))]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="p-2 rounded-xl bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] border border-[var(--emerald-text,#10B981)]/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
               <ShieldAlert size={20} />
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-bold tracking-tight">{toSafeString(t.title)}</h1>
-              <p className="text-[11px] text-slate-400 hidden sm:block">{toSafeString(t.subtitle)}</p>
+              <h1 className="text-base sm:text-xl font-bold tracking-tight text-[var(--text-main,#FFFFFF)]">{toSafeString(t.title)}</h1>
+              <p className="text-[11px] text-[var(--text-sub,#94A3B8)] hidden sm:block">{toSafeString(t.subtitle)}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={fetchAuditLogs} className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition-all">
+            <button 
+              onClick={fetchAuditLogs} 
+              className="p-2 rounded-xl bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)] transition-all"
+            >
               <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             </button>
-            <button onClick={() => setIsPurgeModalOpen(true)} className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all">
+            <button 
+              className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+              title={toSafeString(t.purgeOld)}
+            >
               <Eraser size={15} />
             </button>
           </div>
         </div>
 
         {/* View Switcher */}
-        <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="grid grid-cols-2 gap-1 bg-[var(--surface-card,rgba(15,23,42,0.85))] p-1 rounded-xl border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md">
           <button
             onClick={() => setIsAdvancedMode(false)}
             className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-              !isAdvancedMode ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
+              !isAdvancedMode 
+                ? 'bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_12px_rgba(224,122,0,0.3)]' 
+                : 'text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)]'
             }`}
           >
             <Sparkles size={14} />
@@ -346,7 +349,9 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           <button
             onClick={() => setIsAdvancedMode(true)}
             className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-              isAdvancedMode ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              isAdvancedMode 
+                ? 'bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_12px_rgba(224,122,0,0.3)]' 
+                : 'text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)]'
             }`}
           >
             <Code size={14} />
@@ -360,54 +365,60 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
         <div 
           onClick={() => setSelectedOperation('ALL')}
           className={`p-3 rounded-xl border transition-all cursor-pointer ${
-            selectedOperation === 'ALL' ? 'bg-slate-800/90 border-emerald-500' : 'bg-slate-900/60 border-slate-800'
+            selectedOperation === 'ALL' 
+              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-[var(--primary,#E07A00)] shadow-[0_0_12px_rgba(224,122,0,0.2)]' 
+              : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{toSafeString(t.todayTotal)}</span>
-          <span className="text-base sm:text-xl font-black text-slate-100">{stats.todayTotal}</span>
+          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{toSafeString(t.todayTotal)}</span>
+          <span className="text-base sm:text-xl font-black text-[var(--text-main,#FFFFFF)]">{stats.todayTotal}</span>
         </div>
         <div 
           onClick={() => setSelectedOperation('UPDATE')}
           className={`p-3 rounded-xl border transition-all cursor-pointer ${
-            selectedOperation === 'UPDATE' || selectedOperation === 'INSERT' ? 'bg-slate-800/90 border-sky-500' : 'bg-slate-900/60 border-slate-800'
+            selectedOperation === 'UPDATE' || selectedOperation === 'INSERT' 
+              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.2)]' 
+              : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{toSafeString(t.todayModifications)}</span>
+          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{toSafeString(t.todayModifications)}</span>
           <span className="text-base sm:text-xl font-black text-sky-400">{stats.inserts + stats.updates}</span>
         </div>
         <div 
           onClick={() => setSelectedOperation('DELETE')}
           className={`p-3 rounded-xl border transition-all cursor-pointer ${
-            selectedOperation === 'DELETE' ? 'bg-slate-800/90 border-rose-500' : 'bg-slate-900/60 border-slate-800'
+            selectedOperation === 'DELETE' 
+              ? 'bg-[var(--surface-card,rgba(15,23,42,0.95))] border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.2)]' 
+              : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-slate-400 block truncate">{toSafeString(t.todayDeletes)}</span>
+          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{toSafeString(t.todayDeletes)}</span>
           <span className="text-base sm:text-xl font-black text-rose-400">{stats.deletes}</span>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2.5">
+      <div className="p-3 rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md space-y-2.5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="relative flex items-center">
-            <Search size={14} className={`absolute ${isRtl ? 'right-3' : 'left-3'} text-slate-400 pointer-events-none`} />
+            <Search size={14} className={`absolute ${isRtl ? 'right-3' : 'left-3'} text-[var(--text-sub,#94A3B8)] pointer-events-none`} />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={toSafeString(t.searchPlaceholder)}
-              className={`w-full bg-slate-950 border border-slate-800 rounded-xl py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 ${
+              className={`w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl py-2 text-xs text-[var(--text-main,#FFFFFF)] placeholder:text-[var(--text-sub,#94A3B8)] focus:outline-none focus:border-[var(--primary,#E07A00)] ${
                 isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
             />
           </div>
 
           <div className="relative flex items-center">
-            <Users size={14} className={`absolute ${isRtl ? 'right-3' : 'left-3'} text-slate-400 pointer-events-none`} />
+            <Users size={14} className={`absolute ${isRtl ? 'right-3' : 'left-3'} text-[var(--text-sub,#94A3B8)] pointer-events-none`} />
             <select
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
-              className={`w-full bg-slate-950 border border-slate-800 rounded-xl py-2 text-xs text-slate-200 focus:outline-none appearance-none cursor-pointer ${
+              className={`w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl py-2 text-xs text-[var(--text-main,#FFFFFF)] focus:outline-none appearance-none cursor-pointer ${
                 isRtl ? 'pr-9 pl-7' : 'pl-9 pr-7'
               }`}
             >
@@ -416,7 +427,7 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                 <option key={u.id} value={u.id}>{toSafeString(u.name)}</option>
               ))}
             </select>
-            <ChevronDown size={13} className={`absolute ${isRtl ? 'left-3' : 'right-3'} text-slate-400 pointer-events-none`} />
+            <ChevronDown size={13} className={`absolute ${isRtl ? 'left-3' : 'right-3'} text-[var(--text-sub,#94A3B8)] pointer-events-none`} />
           </div>
         </div>
 
@@ -428,11 +439,11 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
           onChange={(update) => setDateRange(update)}
           placeholderText="اختر نطاق التاريخ..."
           isArabic={isRtl}
-          className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-xl py-2 px-3 focus:outline-none"
+          className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl py-2 px-3 focus:outline-none"
         />
 
         {/* Operations */}
-        <div className="flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pt-1">
+        <div className="flex items-center justify-between gap-1.5 overflow-x-auto scrollbar-none pt-1">
           <div className="flex items-center gap-1.5">
             {['ALL', 'INSERT', 'UPDATE', 'DELETE'].map((op) => (
               <button
@@ -440,8 +451,8 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                 onClick={() => setSelectedOperation(op)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   selectedOperation === op 
-                    ? 'bg-emerald-500 text-slate-950 font-bold' 
-                    : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                    ? 'bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] font-bold shadow-[0_0_10px_rgba(224,122,0,0.3)]' 
+                    : 'bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] border border-[var(--border-input,#1B2738)] hover:text-[var(--text-main,#FFFFFF)]'
                 }`}
               >
                 {toSafeString(op === 'ALL' ? t.allOps : op === 'INSERT' ? t.insertOp : op === 'UPDATE' ? t.updateOp : t.deleteOp)}
@@ -453,7 +464,9 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             <button
               onClick={() => setOnlyChanged(!onlyChanged)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                onlyChanged ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20' : 'bg-slate-950 text-slate-400 border border-slate-800'
+                onlyChanged 
+                  ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20' 
+                  : 'bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] border border-[var(--border-input,#1B2738)]'
               }`}
             >
               <Filter size={12} />
@@ -466,12 +479,12 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
       {/* Feed */}
       <div className="space-y-2">
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-400 flex flex-col items-center gap-3">
-            <Loader2 size={24} className="animate-spin text-emerald-400" />
+          <div className="p-12 text-center text-xs text-[var(--text-sub,#94A3B8)] flex flex-col items-center gap-3">
+            <Loader2 size={24} className="animate-spin text-[var(--emerald-text,#10B981)]" />
             <span>{toSafeString(t.loading)}</span>
           </div>
         ) : paginatedLogs.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-400 bg-slate-900/40 rounded-xl border border-dashed border-slate-800">
+          <div className="p-8 text-center text-xs text-[var(--text-sub,#94A3B8)] bg-[var(--surface-card,rgba(15,23,42,0.85))] rounded-xl border border-dashed border-[var(--border-card,rgba(255,255,255,0.08))]">
             {toSafeString(t.noLogs)}
           </div>
         ) : (
@@ -485,21 +498,21 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
             const entityTitle = toSafeString(log.new_data?.full_name || log.new_data?.name || log.old_data?.full_name || log.old_data?.name);
 
             return (
-              <div key={log.id} className="rounded-xl bg-slate-900/90 border border-slate-800/90 overflow-hidden shadow-sm">
+              <div key={log.id} className="rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] overflow-hidden shadow-sm backdrop-blur-md">
                 <div 
                   onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                  className="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/50 transition-colors"
+                  className="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[var(--surface-input,#0A101D)]/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <OperationBadge operation={log.operation} t={t} />
                     <div className="truncate">
-                      <div className="text-xs sm:text-sm font-bold text-slate-100 truncate">
+                      <div className="text-xs sm:text-sm font-bold text-[var(--text-main,#FFFFFF)] truncate">
                         {toSafeString(log.operation === 'INSERT' ? `${t.insertOp} في ` : log.operation === 'UPDATE' ? `${t.updateOp} في ` : `${t.deleteOp} من `)}
-                        <span className="text-emerald-400 font-semibold">{translatedTable}</span>
-                        {entityTitle && <span className="text-slate-400 font-normal ml-1">({entityTitle})</span>}
+                        <span className="text-[var(--emerald-text,#10B981)] font-semibold">{translatedTable}</span>
+                        {entityTitle && <span className="text-[var(--text-sub,#94A3B8)] font-normal ml-1">({entityTitle})</span>}
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-400 mt-1">
-                        <span className="text-slate-300 font-medium">{userName}</span>
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] mt-1">
+                        <span className="text-[var(--text-main,#FFFFFF)] font-medium">{userName}</span>
                         <span>•</span>
                         <span className="font-mono">{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
@@ -507,21 +520,21 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {isExpanded ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+                    {isExpanded ? <ChevronUp size={18} className="text-[var(--text-sub,#94A3B8)]" /> : <ChevronDown size={18} className="text-[var(--text-sub,#94A3B8)]" />}
                   </div>
                 </div>
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/80 space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
-                      <span className="text-[10px] text-slate-500 font-mono">ID: #{log.id}</span>
+                  <div className="p-3.5 border-t border-[var(--border-card,rgba(255,255,255,0.08))] bg-[var(--surface-input,#0A101D)] space-y-3">
+                    <div className="flex items-center justify-between border-b border-[var(--border-card,rgba(255,255,255,0.08))] pb-2">
+                      <span className="text-[10px] text-[var(--text-sub,#94A3B8)] font-mono">ID: #{log.id}</span>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowRawJsonMap(prev => ({ ...prev, [log.id]: !prev[log.id] }));
                         }}
-                        className="text-[10px] font-bold text-slate-400 hover:text-slate-200 flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800"
+                        className="text-[10px] font-bold text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)] flex items-center gap-1 bg-[var(--surface-card,rgba(15,23,42,0.85))] px-2 py-1 rounded-lg border border-[var(--border-card,rgba(255,255,255,0.08))]"
                       >
                         <Code2 size={12} />
                         <span>{showRaw ? "عرض التنسيق المنسق" : "عرض JSON الخام"}</span>
@@ -529,13 +542,13 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
                     </div>
 
                     {showRaw ? (
-                      <div className="relative bg-slate-900 p-3 rounded-xl border border-slate-800 font-mono text-[11px] overflow-x-auto text-emerald-400 dir-ltr">
+                      <div className="relative bg-[var(--bg-dark,#070B11)] p-3 rounded-xl border border-[var(--border-input,#1B2738)] font-mono text-[11px] overflow-x-auto text-[var(--emerald-text,#10B981)] dir-ltr">
                         <button 
                           onClick={() => {
                             navigator.clipboard.writeText(JSON.stringify(log, null, 2));
                             showToast('تم نسخ كود JSON', 'success');
                           }}
-                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700"
+                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)]"
                         >
                           <Copy size={13} />
                         </button>
@@ -559,20 +572,20 @@ export default function RealtimeAudit({ currentLang = 'ar' }) {
 
       {/* Pagination */}
       {!loading && filteredLogs.length > 0 && (
-        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className="p-3 rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md flex items-center justify-between text-xs text-[var(--text-sub,#94A3B8)]">
           <span>{toSafeString(t.page)} {currentPage} {toSafeString(t.of)} {totalPages}</span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg bg-slate-800 disabled:opacity-30 hover:bg-slate-700"
+              className="p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] disabled:opacity-30 hover:bg-[var(--border-input,#1B2738)]"
             >
               {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg bg-slate-800 disabled:opacity-30 hover:bg-slate-700"
+              className="p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] disabled:opacity-30 hover:bg-[var(--border-input,#1B2738)]"
             >
               {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
@@ -604,7 +617,7 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
 
     if (filteredKeys.length === 0) {
       return (
-        <div className="text-[11px] text-slate-400 text-center py-2">
+        <div className="text-[11px] text-[var(--text-sub,#94A3B8)] text-center py-2">
           جميع الحقول المعدلة ذات طابع تقني داخلي
         </div>
       );
@@ -612,7 +625,7 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
 
     return (
       <div className="space-y-1.5">
-        <div className="divide-y divide-slate-800/80 border border-slate-800/80 rounded-xl bg-slate-900/50 overflow-hidden">
+        <div className="divide-y divide-[var(--border-card,rgba(255,255,255,0.08))] border border-[var(--border-card,rgba(255,255,255,0.08))] rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] overflow-hidden">
           {filteredKeys.map((key) => {
             const oldVal = toSafeString(log.old_data?.[key]) || '—';
             const newVal = toSafeString(log.new_data?.[key]) || '—';
@@ -620,15 +633,15 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
 
             return (
               <div key={key} className="p-2.5 text-xs flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-slate-400 font-medium text-[11px]">
+                <span className="text-[var(--text-sub,#94A3B8)] font-medium text-[11px]">
                   {label}:
                 </span>
                 <div className="flex items-center gap-2 text-[11px] font-mono dir-ltr">
                   <span className="line-through text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40">
                     {oldVal}
                   </span>
-                  <span className="text-slate-500">→</span>
-                  <span className="text-emerald-400 font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/40">
+                  <span className="text-[var(--text-sub,#94A3B8)]">→</span>
+                  <span className="text-[var(--emerald-text,#10B981)] font-bold bg-[var(--emerald-text,#10B981)]/10 px-2 py-0.5 rounded border border-[var(--emerald-text,#10B981)]/20">
                     {newVal}
                   </span>
                 </div>
@@ -658,11 +671,11 @@ function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
         const formattedVal = toSafeString(val) || '—';
 
         return (
-          <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 text-xs">
-            <span className="text-slate-400 text-[11px] font-medium">
+          <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] text-xs">
+            <span className="text-[var(--text-sub,#94A3B8)] text-[11px] font-medium">
               {label}
             </span>
-            <span className="font-semibold text-slate-200 text-[11px] truncate max-w-[180px]">
+            <span className="font-semibold text-[var(--text-main,#FFFFFF)] text-[11px] truncate max-w-[180px]">
               {formattedVal}
             </span>
           </div>
@@ -677,12 +690,12 @@ function OperationBadge({ operation, t }) {
 
   switch (operation) {
     case 'INSERT':
-      return <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">{opStr}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] text-[10px] font-bold border border-[var(--emerald-text,#10B981)]/20">{opStr}</span>;
     case 'UPDATE':
       return <span className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 text-[10px] font-bold border border-sky-500/20">{opStr}</span>;
     case 'DELETE':
       return <span className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-bold border border-rose-500/20">{opStr}</span>;
     default:
-      return <span className="px-2 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px]">{opStr}</span>;
+      return <span className="px-2 py-1 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] text-[10px]">{opStr}</span>;
   }
 }
