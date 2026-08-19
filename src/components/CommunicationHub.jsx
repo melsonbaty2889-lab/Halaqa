@@ -247,7 +247,7 @@ export default function MessagingCenter({ academyId }) {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { id: 'app', label: isRtl ? 'إشعار تطبيق' : 'In-App', icon: Bell },
-                      { id: 'whatsapp', label: isRtl ? 'واتساب' : 'WhatsApp', icon: SmartphoneCheck },
+                      { id: 'whatsapp', label: isRtl ? 'واتساب' : 'WhatsApp', icon: MessageSquare },
                       { id: 'sms', label: 'SMS', icon: Smartphone },
                       { id: 'email', label: isRtl ? 'بريد إلكتروني' : 'Email', icon: Mail },
                     ].map(ch => {
