@@ -381,7 +381,7 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-dark)] flex justify-center items-center text-[var(--primary)]">
+      <div className="min-h-screen bg-transparent)] flex justify-center items-center text-[var(--primary)]">
         <RefreshCw className="spin-animation" size={32} />
       </div>
     );
