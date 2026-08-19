@@ -390,8 +390,8 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
   const activeWeekendDays = Array.isArray(formData.weekend_days) ? formData.weekend_days : [];
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className={`min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] p-3 sm:p-6 pb-40 font-sans ${isRtl ? 'text-right' : 'text-left'}`}>
-      <div className="w-full max-w-4xl mx-auto card-surface !p-4 sm:!p-7 border-0 sm:border rounded-xl sm:rounded-2xl relative">
+  <div dir={isRtl ? 'rtl' : 'ltr'} className={`min-h-screen bg-transparent text-[var(--text-main)] p-3 sm:p-6 pb-40 font-sans ${isRtl ? 'text-right' : 'text-left'}`}>
+    <div className="w-full max-w-4xl mx-auto card-surface !p-4 sm:!p-7 border-0 sm:border rounded-xl sm:rounded-2xl relative">
         
         {toast && (
           <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-2xl text-xs sm:text-sm text-white transition-all ${
