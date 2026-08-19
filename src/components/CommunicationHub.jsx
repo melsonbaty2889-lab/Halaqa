@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-// استيراد أيقونات Lucide الاحترافية
 import { 
   Send, Megaphone, MessageSquare, Mail, 
   Smartphone, Bell, CheckCircle2, Loader2, History,
-  TrendingUp, Users, ShieldCheck, Wand2 
+  TrendingUp, Users, ShieldCheck, Wand2, ArrowLeftRight
 } from 'lucide-react';
-
-// استيراد عناصر التصميم الموحدة
-import { Card, Btn, Input, Select, PageHeader, Badge } from '@/components/UI/UI';
-import { C } from '@/theme/colors';
+import CustomDatePicker from './UI/CustomDatePicker'; // إن وجد أو مكونات المساعدة
 
 export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl }) {
   const { i18n } = useTranslation();
@@ -110,12 +106,11 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
     }
   };
 
-  // الأيقونات الجديدة مع Lucide
   const channels = [
-    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: Bell },
-    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: MessageSquare },
-    { id: 'sms', label: 'SMS', icon: Smartphone },
-    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: Mail }
+    { id: 'in_app', label: isAr ? 'التطبيق' : 'In-App', icon: Bell, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+    { id: 'whatsapp', label: isAr ? 'واتساب' : 'WhatsApp', icon: MessageSquare, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+    { id: 'sms', label: 'SMS', icon: Smartphone, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+    { id: 'email', label: isAr ? 'إيميل' : 'Email', icon: Mail, color: 'text-sky-400 bg-sky-500/10 border-sky-500/20' }
   ];
 
   const recipientOptions = [
@@ -137,180 +132,230 @@ export default function CommunicationHub({ currentAcademyId, isRtl: propIsRtl })
     return found ? found.label : (isAr ? 'جميع الطلاب' : 'All Students');
   };
 
-  const getChannelLabel = (key) => {
-    const found = channels.find(c => c.id === key);
-    return found ? found.label : key;
+  const getChannelBadge = (channelKey) => {
+    const ch = channels.find(c => c.id === channelKey) || channels[0];
+    const IconComp = ch.icon;
+    return (
+      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border flex items-center gap-1 ${ch.color}`}>
+        <IconComp size={11} />
+        {ch.label}
+      </span>
+    );
   };
 
   return (
-    <div style={{ padding: '24px 16px', direction: isRtl ? 'rtl' : 'ltr' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        
-        {/* الترويسة الموحدة */}
-        <PageHeader 
-          title={isAr ? 'مركز التواصل والمراسلات الذكي' : 'Smart Communication Hub'}
-          sub={isAr ? 'إدارة المراسلات والتعاميم الفورية لجميع أطراف الأكاديمية' : 'Broadcast notifications and announcements seamlessly'}
-          action={
-            <div style={{ background: `${C.primary}20`, padding: 12, borderRadius: 12, color: C.primary }}>
-              <Send size={22} />
-            </div>
-          }
-        />
+    <div className={`w-full max-w-7xl mx-auto p-2 sm:p-5 space-y-4 text-slate-100 ${isRtl ? 'dir-rtl' : 'dir-ltr'}`}>
+      
+      {/* الترويسة الرئيسية */}
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Send size={20} />
+          </div>
+          <div>
+            <h1 className="text-base sm:text-xl font-bold tracking-tight">
+              {isAr ? 'مركز التواصل والمراسلات الذكي' : 'Smart Communication Hub'}
+            </h1>
+            <p className="text-[11px] text-slate-400 hidden sm:block">
+              {isAr ? 'إدارة المراسلات والتعاميم الفورية لجميع أطراف الأكاديمية' : 'Broadcast notifications and announcements seamlessly'}
+            </p>
+          </div>
+        </div>
+      </div>
 
-        {/* إحصائيات سريعة */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <Card style={{ padding: 16 }}>
-            <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <TrendingUp size={16} style={{ color: C.primary }} />
-              <span>{isAr ? 'إجمالي المراسلات' : 'Total Sent'}</span>
-            </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: C.text, marginTop: 8 }}>{history.length}</div>
-          </Card>
-
-          <Card style={{ padding: 16 }}>
-            <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Users size={16} style={{ color: C.success }} />
-              <span>{isAr ? 'القنوات الفعالة' : 'Active Channels'}</span>
-            </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: C.text, marginTop: 8 }}>4</div>
-          </Card>
-
-          <Card style={{ padding: 16 }}>
-            <div style={{ color: C.textSub, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <ShieldCheck size={16} style={{ color: C.primary }} />
-              <span>{isAr ? 'حالة النظام' : 'System Status'}</span>
-            </div>
-            <div style={{ marginTop: 8 }}>
-              <Badge color={C.success}>{isAr ? 'نشط ومباشر' : 'Live & Active'}</Badge>
-            </div>
-          </Card>
+      {/* بطاقات الإحصائيات السريعة */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 text-slate-400 text-[10px] sm:text-xs">
+            <TrendingUp size={14} className="text-emerald-400" />
+            <span className="truncate">{isAr ? 'إجمالي المراسلات' : 'Total Sent'}</span>
+          </div>
+          <span className="text-base sm:text-xl font-black text-slate-100 mt-1 block">{history.length}</span>
         </div>
 
-        {/* جسم الصفحة الرئيسي */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-          
-          {/* نموذج الإنشاء */}
-          <Card>
-            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: C.primary, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Megaphone size={18} /> {isAr ? 'إنشاء تعميم جديد' : 'New Broadcast'}
-            </h2>
+        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 text-slate-400 text-[10px] sm:text-xs">
+            <Users size={14} className="text-sky-400" />
+            <span className="truncate">{isAr ? 'القنوات الفعالة' : 'Active Channels'}</span>
+          </div>
+          <span className="text-base sm:text-xl font-black text-sky-400 mt-1 block">4</span>
+        </div>
 
-            {/* القوالب السريعة */}
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: '0.75rem', color: C.textSub, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-                <Wand2 size={14} style={{ color: C.primary }} /> {isAr ? 'قوالب سريعة:' : 'Quick Templates:'}
-              </span>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {templates.map((tpl, idx) => (
-                  <Btn key={idx} variant="secondary" onClick={() => applyTemplate(tpl)} style={{ padding: '4px 10px', fontSize: '0.72rem' }}>
-                    {isAr ? tpl.titleAr : tpl.titleEn}
-                  </Btn>
-                ))}
+        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 text-slate-400 text-[10px] sm:text-xs">
+            <ShieldCheck size={14} className="text-emerald-400" />
+            <span className="truncate">{isAr ? 'حالة النظام' : 'System Status'}</span>
+          </div>
+          <div className="mt-1">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+              {isAr ? 'نشط ومباشر' : 'Live & Active'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* الجسم الرئيسي */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        {/* نموذج إنشاء تعميم جديد */}
+        <div className="lg:col-span-7 bg-slate-900/90 border border-slate-800/90 rounded-xl p-4 space-y-4">
+          <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm border-b border-slate-800 pb-2">
+            <Megaphone size={16} />
+            <span>{isAr ? 'إنشاء تعميم جديد' : 'New Broadcast'}</span>
+          </div>
+
+          {/* القوالب السريعة */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+              <Wand2 size={12} className="text-emerald-400" />
+              <span>{isAr ? 'قوالب سريعة:' : 'Quick Templates:'}</span>
+            </span>
+            <div className="flex gap-1.5 flex-wrap">
+              {templates.map((tpl, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => applyTemplate(tpl)}
+                  className="px-2.5 py-1 text-[11px] font-medium bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-lg transition-all"
+                >
+                  {isAr ? tpl.titleAr : tpl.titleEn}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {successMsg && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+              <CheckCircle2 size={16} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSend} className="space-y-3">
+            {/* القنوات */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-slate-400 font-medium block">
+                {isAr ? 'قناة الإرسال' : 'Channel'}
+              </label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {channels.map((ch) => {
+                  const IconComponent = ch.icon;
+                  const active = formData.channel === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, channel: ch.id })}
+                      className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-[11px] font-bold transition-all ${
+                        active 
+                          ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md' 
+                          : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                      }`}
+                    >
+                      <IconComponent size={16} />
+                      <span>{ch.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {successMsg && (
-              <div style={{ background: `${C.success}15`, border: `1px solid ${C.success}40`, color: C.success, padding: 12, borderRadius: 10, marginBottom: 16, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CheckCircle2 size={16} /> {successMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* قنوات الإرسال */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: C.primary, marginBottom: 8, fontWeight: 600 }}>
-                  {isAr ? 'قناة الإرسال' : 'Channel'}
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {channels.map(ch => {
-                    const IconComponent = ch.icon;
-                    const active = formData.channel === ch.id;
-                    return (
-                      <Btn
-                        key={ch.id}
-                        variant={active ? 'primary' : 'ghost'}
-                        onClick={() => setFormData({ ...formData, channel: ch.id })}
-                        style={{ padding: '10px 4px', flexDirection: 'column', fontSize: '0.75rem', gap: 6 }}
-                      >
-                        <IconComponent size={18} />
-                        <span>{ch.label}</span>
-                      </Btn>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* اختيار المستهدفين */}
-              <Select
-                label={isAr ? 'المستهدفون' : 'Recipients'}
+            {/* المستهدفون */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-slate-400 font-medium block">
+                {isAr ? 'المستهدفون' : 'Recipients'}
+              </label>
+              <select
                 value={formData.recipient}
-                options={recipientOptions}
                 onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
-              />
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50 appearance-none cursor-pointer"
+              >
+                {recipientOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
 
-              {/* عنوان وتفاصيل الرسالة */}
-              <Input
-                label={isAr ? 'عنوان الموضوع' : 'Title'}
+            {/* العنوان */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-slate-400 font-medium block">
+                {isAr ? 'عنوان الموضوع' : 'Title'}
+              </label>
+              <input
+                type="text"
                 placeholder={isAr ? 'أدخل عنوان الرسالة...' : 'Enter title...'}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50"
               />
+            </div>
 
-              <Input
-                as="textarea"
-                label={isAr ? 'محتوى الرسالة' : 'Content'}
+            {/* المحتوى */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-slate-400 font-medium block">
+                {isAr ? 'محتوى الرسالة' : 'Content'}
+              </label>
+              <textarea
+                rows={3}
                 placeholder={isAr ? 'اكتب الرسالة التفصيلية هنا...' : 'Write message details...'}
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 required
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 resize-none"
               />
+            </div>
 
-              <Btn type="submit" variant="primary" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                <span>{isAr ? 'إرسال التعميم الآن' : 'Send Broadcast'}</span>
-              </Btn>
-            </form>
-          </Card>
-
-          {/* سجل المراسلات */}
-          <Card>
-            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: C.primary, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <History size={18} /> {isAr ? 'سجل المراسلات' : 'Recent History'}
-            </h2>
-
-            {fetching ? (
-              <div style={{ textAlign: 'center', color: C.textSub, padding: 20 }}>
-                {isAr ? 'جاري التحميل...' : 'Loading...'}
-              </div>
-            ) : history.length === 0 ? (
-              <div style={{ textAlign: 'center', color: C.textSub, padding: '30px 10px', fontSize: '0.85rem' }}>
-                {isAr ? 'لا توجد مراسلات سابقة' : 'No notification history'}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 480, overflowY: 'auto' }}>
-                {history.map((item) => (
-                  <div key={item.id} style={{ background: C.surface, padding: 14, borderRadius: 12, border: `1px solid ${C.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: C.text }}>
-                        {item.title}
-                      </span>
-                      <Badge color={C.primary}>{getChannelLabel(item.channel)}</Badge>
-                    </div>
-                    <p style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: C.textSub, lineHeight: 1.5 }}>
-                      {item.content || item.message}
-                    </p>
-                    <div style={{ fontSize: '0.72rem', color: C.textMuted, display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{isAr ? 'المستهدفون:' : 'Recipients:'} {getRecipientLabel(item.recipient)}</span>
-                      <span>{new Date(item.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
+            >
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              <span>{isAr ? 'إرسال التعميم الآن' : 'Send Broadcast'}</span>
+            </button>
+          </form>
         </div>
+
+        {/* سجل المراسلات */}
+        <div className="lg:col-span-5 bg-slate-900/90 border border-slate-800/90 rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm border-b border-slate-800 pb-2">
+            <History size={16} />
+            <span>{isAr ? 'سجل المراسلات' : 'Recent History'}</span>
+          </div>
+
+          {fetching ? (
+            <div className="p-8 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
+              <Loader2 size={20} className="animate-spin text-emerald-400" />
+              <span>{isAr ? 'جاري التحميل...' : 'Loading...'}</span>
+            </div>
+          ) : history.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-400 bg-slate-950/40 rounded-xl border border-dashed border-slate-800">
+              {isAr ? 'لا توجد مراسلات سابقة' : 'No notification history'}
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
+              {history.map((item) => (
+                <div key={item.id} className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-bold text-xs text-slate-200 line-clamp-1">
+                      {item.title}
+                    </span>
+                    {getChannelBadge(item.channel)}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
+                    {item.content || item.message}
+                  </p>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-900">
+                    <span>{isAr ? 'المستهدفون:' : 'Recipients:'} {getRecipientLabel(item.recipient)}</span>
+                    <span className="font-mono">{new Date(item.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
