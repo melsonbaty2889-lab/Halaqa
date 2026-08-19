@@ -186,7 +186,6 @@ export default function MessagingCenter({ academyId, academyName }) {
     setTemplateChannels(tmpl.channels || ['whatsapp']);
   };
 
-  // إصلاح زر جديد ليعمل بسلاسة
   const handleNewTemplate = () => {
     setSelectedTemplate(null);
     setIsCreatingNew(true);
@@ -326,29 +325,53 @@ export default function MessagingCenter({ academyId, academyName }) {
                   <span>{isRtl ? 'إعداد تعميم جماعي جديد' : 'Compose Global Broadcast'}</span>
                 </h2>
 
-                {/* شبكة القنوات المنظمة بالمظهر الكحلي */}
+                {/* شبكة القنوات الموحدة مع الشعارات الرسمية المعتمدة */}
                 <div className="mb-4">
-                  <label className="text-[11px] font-medium text-slate-300 block mb-2">{isRtl ? 'قنوات التوصيل المتاحة:' : 'Delivery Channels:'}</label>
+                  <label className="text-[11px] font-medium text-slate-300 block mb-2">
+                    {isRtl ? 'قنوات التوصيل المتاحة:' : 'Delivery Channels:'}
+                  </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'text-emerald-400' },
-                      { id: 'email', label: 'Email', icon: Mail, color: 'text-rose-400' },
-                      { id: 'app', label: isRtl ? 'إشعار التطبيق' : 'App Notice', icon: Bell, color: 'text-amber-400' },
+                      { 
+                        id: 'whatsapp', 
+                        label: 'WhatsApp', 
+                        activeBg: 'bg-[#25D366]/15 border-[#25D366]',
+                        svg: (
+                          <svg className="w-4 h-4 fill-current text-[#25D366]" viewBox="0 0 24 24">
+                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                          </svg>
+                        )
+                      },
+                      { 
+                        id: 'email', 
+                        label: 'Email', 
+                        activeBg: 'bg-rose-500/15 border-rose-500',
+                        svg: (
+                          <svg className="w-4 h-4 viewBox="0 0 24 24">
+                            <path fill="#EA4335" d="M20 18h-2V9.25L12 13 6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20v12z"/>
+                          </svg>
+                        )
+                      },
+                      { 
+                        id: 'app', 
+                        label: isRtl ? 'إشعار التطبيق' : 'App Notice', 
+                        activeBg: 'bg-amber-500/15 border-amber-500',
+                        svg: <Bell size={16} className="text-amber-400" />
+                      },
                     ].map(ch => {
-                      const Icon = ch.icon;
                       const active = selectedChannels.includes(ch.id);
                       return (
                         <button
                           key={ch.id}
                           type="button"
                           onClick={() => toggleChannel(ch.id)}
-                          className={`p-2.5 rounded-xl border text-xs flex items-center justify-center gap-1.5 transition-all ${
+                          className={`p-2.5 rounded-xl border text-xs flex items-center justify-center gap-2 transition-all ${
                             active 
-                              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-bold' 
+                              ? `${ch.activeBg} text-slate-100 font-bold shadow-md` 
                               : 'bg-[#0F172A] border-slate-800 text-slate-400 hover:text-slate-200'
                           }`}
                         >
-                          <Icon size={14} className={active ? ch.color : 'text-slate-500'} />
+                          {ch.svg}
                           <span className="truncate">{ch.label}</span>
                         </button>
                       );
