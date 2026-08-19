@@ -347,7 +347,10 @@ export default function MessagingCenter({ academyId, academyName }) {
                         label: 'Email', 
                         activeBg: 'bg-rose-500/15 border-rose-500',
                         svg: (
-                          <svg className="w-4 h-4 viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24">
+  <path fill="#EA4335" d="M20 18h-2V9.25L12 13 6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20v12z"/>
+</svg>
+
                             <path fill="#EA4335" d="M20 18h-2V9.25L12 13 6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20v12z"/>
                           </svg>
                         )
