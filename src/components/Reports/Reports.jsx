@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Users, UserCheck, UserX, RotateCcw, Loader2, Search } from 'lucide-react';
 
-// إصلاح مسارات الاستيراد واعتماد النمط المعياري الموحد للمشروع
 import { supabase } from '@/lib/supabase';
 import { C } from '@/theme/colors';
 import { Card, Btn, Input } from '@/components/UI/UI';
@@ -49,7 +48,7 @@ export default function Reports({ students = [], academyId }) {
     setTimeout(() => setToastMessage(''), 2500);
   }, []);
 
-  // تنسيق التاريخ ديناميكياً بحسب ثقافة المنطقة ولغتها
+  // تنسيق التاريخ ديناميكياً
   const formattedDateString = useMemo(() => {
     if (!selectedDate) return '';
     try {
@@ -63,7 +62,7 @@ export default function Reports({ students = [], academyId }) {
     }
   }, [selectedDate, currentLang]);
 
-  // جلب البيانات مع حماية الاتصال واستعمال استعلامات آمنة
+  // جلب البيانات من داتابيز Supabase
   const fetchReportsAndTemplate = useCallback(async () => {
     if (!academyId) return;
     setLoading(true);
@@ -131,7 +130,7 @@ export default function Reports({ students = [], academyId }) {
     }
   };
 
-  const handleSendWhatsApp = (student, record) => {
+  const handleSendWhatsApp = useCallback((student, record) => {
     const text = getParsedMessage({ 
       student, 
       record, 
@@ -144,7 +143,7 @@ export default function Reports({ students = [], academyId }) {
     const link = generateWhatsAppLink(phone, text);
     markAsSentInDB(student.id, text);
     window.open(link, '_blank');
-  };
+  }, [messageTemplate, formattedDateString, currentLang, safeString, localPhoneMap]);
 
   const handleCopyToClipboard = (student, record) => {
     const text = getParsedMessage({ 
@@ -191,12 +190,24 @@ export default function Reports({ students = [], academyId }) {
     });
   }, [safeStudents, sentLogs, localPhoneMap, safeString]);
 
-  const handleBulkSendNext = () => {
+  // دالة الإرسال الجماعي التتابعي مع التمرير التلقائي
+  const handleBulkSendNext = useCallback(() => {
     if (unsentStudents.length === 0) return;
     const nextStudent = unsentStudents[0];
     const rec = reportsData[nextStudent.id] || {};
+
     handleSendWhatsApp(nextStudent, rec);
-  };
+
+    if (unsentStudents.length > 1) {
+      const nextStudentId = unsentStudents[1].id;
+      setTimeout(() => {
+        const element = document.getElementById(`student-card-${nextStudentId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 400);
+    }
+  }, [unsentStudents, reportsData, handleSendWhatsApp]);
 
   const totalCount = safeStudents.length;
   const sentCount = Object.keys(sentLogs).length;
@@ -206,45 +217,23 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'} 
-      style={{ background: C.bg, color: C.text, minHeight: '100vh', padding: '16px' }}
+      className="min-h-screen p-4 bg-slate-950 text-slate-100"
     >
       {/* التنبيهات المنبثقة (Toast) */}
       {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: C.success,
-          color: '#ffffff',
-          fontWeight: 'bold',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontSize: '0.8rem',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 9999
-        }}>
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-emerald-500 text-white font-bold px-4 py-2 rounded-full text-xs shadow-xl z-[9999] animate-bounce">
           {toastMessage}
         </div>
       )}
 
       {/* الهيدر وعنصر اختيار التاريخ */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ 
-            width: '36px', 
-            height: '36px', 
-            borderRadius: '10px', 
-            background: `${C.emerald}15`, 
-            border: `1px solid ${C.emerald}30`, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center' 
-          }}>
-            <BookOpen style={{ width: '20px', height: '20px', color: C.emerald }} />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <BookOpen className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.text, margin: 0 }}>
+            <h1 className="text-base font-bold text-slate-100 m-0">
               {t('reports.title', { defaultValue: isRtl ? "تقارير الحلقة الذكية" : "Smart Halaqa Reports" })}
             </h1>
           </div>
@@ -270,32 +259,20 @@ export default function Reports({ students = [], academyId }) {
       />
 
       {/* شريط البحث وتصفية التبويبات */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '16px 0' }}>
-        <div style={{ position: 'relative', width: '100%' }}>
-          <Search style={{ 
-            width: '16px', 
-            height: '16px', 
-            position: 'absolute', 
-            top: '50%', 
-            transform: 'translateY(-50%)', 
-            color: C.textSub,
-            [isRtl ? 'right' : 'left']: '12px'
-          }} />
+      <div className="flex flex-col gap-2.5 my-4">
+        <div className="relative w-full">
+          <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-500 ${isRtl ? 'right-3' : 'left-3'}`} />
           <Input 
             type="text" 
             placeholder={t('reports.search_placeholder', { defaultValue: isRtl ? "بحث باسم الطالب..." : "Search..." })} 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
-            style={{ 
-              paddingLeft: isRtl ? '12px' : '36px', 
-              paddingRight: isRtl ? '36px' : '12px',
-              fontSize: '0.8rem'
-            }}
+            className={`w-full py-2 text-xs bg-slate-900 border-slate-800 ${isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
           />
         </div>
 
         {/* التبويبات التفاعلية */}
-        <div style={{ display: 'flex', itemsCenter: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {[
             { id: 'all', label: t('reports.tabs.all', { defaultValue: isRtl ? "الكل" : "All" }), icon: Users }, 
             { id: 'unsent', label: t('reports.tabs.unsent', { defaultValue: isRtl ? "غير مرسل" : "Unsent" }), icon: RotateCcw }, 
@@ -309,16 +286,13 @@ export default function Reports({ students = [], academyId }) {
                 key={tab.id} 
                 variant={isActive ? 'primary' : 'outline'}
                 onClick={() => setActiveTab(tab.id)} 
-                style={{ 
-                  padding: '6px 12px', 
-                  fontSize: '0.75rem', 
-                  whiteSpace: 'nowrap',
-                  background: isActive ? C.emerald : C.card,
-                  color: isActive ? '#ffffff' : C.textSub,
-                  borderColor: isActive ? C.emerald : C.border
-                }}
+                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap rounded-lg flex items-center gap-1.5 transition-all ${
+                  isActive 
+                    ? 'bg-emerald-600 text-white border-emerald-500' 
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
               >
-                <IconComponent style={{ width: '14px', height: '14px' }} />
+                <IconComponent className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
               </Btn>
             );
@@ -328,51 +302,51 @@ export default function Reports({ students = [], academyId }) {
 
       {/* عرض حالات التحميل والنتائج والبطاقات */}
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', color: C.emerald }}>
-          <Loader2 style={{ width: '28px', height: '28px', animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
-          <span style={{ fontSize: '0.8rem', color: C.textSub }}>
+        <div className="flex flex-col items-center justify-center py-12 text-emerald-400">
+          <Loader2 className="w-7 h-7 animate-spin mb-2" />
+          <span className="text-xs text-slate-400">
             {t('reports.loading', { defaultValue: isRtl ? 'جاري تحميل التقارير...' : 'Loading reports...' })}
           </span>
         </div>
       ) : filteredStudents.length === 0 ? (
-        <Card style={{ textAlign: 'center', padding: '32px', color: C.textSub, fontSize: '0.8rem' }}>
+        <Card className="text-center p-8 text-slate-400 text-xs bg-slate-900/60 border-slate-800 rounded-xl">
           {t('reports.no_data', { defaultValue: isRtl ? 'لا توجد نتائج مطابقة لليوم المحدد.' : 'No matching records found.' })}
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="flex flex-col gap-2.5">
           {filteredStudents.map(student => (
-            <StudentReportCard
-              key={student.id}
-              student={student}
-              record={reportsData[student.id]}
-              isSent={!!sentLogs[student.id]}
-              parentPhone={localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone)}
-              isEditingPhone={editingPhoneStudentId === student.id}
-              tempPhoneValue={tempPhoneValue}
-              savingPhone={savingPhone}
-              copiedId={copiedId}
-              isRtl={isRtl}
-              safeString={safeString}
-              onCopy={handleCopyToClipboard}
-              onSendWhatsApp={handleSendWhatsApp}
-              onResetSent={(id) => setSentLogs(p => { const c = { ...p }; delete c[id]; return c; })}
-              onStartEditPhone={(id, p) => { setEditingPhoneStudentId(id); setTempPhoneValue(p || ''); }}
-              onSavePhone={async (id) => {
-                setSavingPhone(true);
-                try {
-                  await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
-                  setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
-                  setEditingPhoneStudentId(null);
-                  showToast(t('reports.phone_updated', { defaultValue: isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated" }));
-                } catch (err) {
-                  console.error('Failed to update phone number:', err);
-                } finally {
-                  setSavingPhone(false);
-                }
-              }}
-              onCancelEditPhone={() => setEditingPhoneStudentId(null)}
-              setTempPhoneValue={setTempPhoneValue}
-            />
+            <div id={`student-card-${student.id}`} key={student.id}>
+              <StudentReportCard
+                student={student}
+                record={reportsData[student.id]}
+                isSent={!!sentLogs[student.id]}
+                parentPhone={localPhoneMap[student.id] || safeString(student?.parent_phone || student?.phone)}
+                isEditingPhone={editingPhoneStudentId === student.id}
+                tempPhoneValue={tempPhoneValue}
+                savingPhone={savingPhone}
+                copiedId={copiedId}
+                safeString={safeString}
+                onCopy={handleCopyToClipboard}
+                onSendWhatsApp={handleSendWhatsApp}
+                onResetSent={(id) => setSentLogs(p => { const c = { ...p }; delete c[id]; return c; })}
+                onStartEditPhone={(id, p) => { setEditingPhoneStudentId(id); setTempPhoneValue(p || ''); }}
+                onSavePhone={async (id) => {
+                  setSavingPhone(true);
+                  try {
+                    await supabase.from('students').update({ parent_phone: tempPhoneValue.trim() }).eq('id', id);
+                    setLocalPhoneMap(p => ({ ...p, [id]: tempPhoneValue.trim() }));
+                    setEditingPhoneStudentId(null);
+                    showToast(t('reports.phone_updated', { defaultValue: isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated" }));
+                  } catch (err) {
+                    console.error('Failed to update phone number:', err);
+                  } finally {
+                    setSavingPhone(false);
+                  }
+                }}
+                onCancelEditPhone={() => setEditingPhoneStudentId(null)}
+                setTempPhoneValue={setTempPhoneValue}
+              />
+            </div>
           ))}
         </div>
       )}
