@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'i18next';
 import { 
   Send, Radio, FileText, Sparkles, Bell, 
   Plus, Save, Loader2, History, RefreshCw, 
@@ -8,7 +8,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { Card, Btn, Input } from '@/components/UI/UI';
 
-// مكون الاختيار المخصص المتوافق مع الهوية الكحلية والمنقطة
+// القائمة المنسدلة المعتمدة كلياً على فئات الواجهة الموحدة
 function CustomSelect({ options, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -28,14 +28,14 @@ function CustomSelect({ options, value, onChange, placeholder }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full p-2.5 bg-[#0F172A] border border-slate-800 rounded-xl text-xs text-slate-200 flex items-center justify-between hover:border-slate-700 transition-all focus:outline-none"
+        className="w-full p-2.5 bg-card border border-border rounded-xl text-xs text-foreground flex items-center justify-between transition-all focus:outline-none"
       >
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
-        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute z-50 w-full mt-1 bg-[#0F172A] border border-slate-800 rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -46,12 +46,12 @@ function CustomSelect({ options, value, onChange, placeholder }) {
               }}
               className={`w-full p-2.5 text-right text-xs flex items-center justify-between transition-colors ${
                 value === opt.value
-                  ? 'bg-emerald-500/15 text-emerald-300 font-bold'
-                  : 'text-slate-300 hover:bg-slate-800/60'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-foreground hover:bg-accent'
               }`}
             >
               <span>{opt.label}</span>
-              {value === opt.value && <Check size={13} className="text-emerald-400" />}
+              {value === opt.value && <Check size={13} className="text-primary" />}
             </button>
           ))}
         </div>
@@ -90,7 +90,6 @@ export default function CommunicationHub({ academyId, academyName }) {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
-  // صيغ جاهزة ومقترحة للتوعية والتنوع
   const presetTemplates = [
     { title: 'تقرير اليوم', body: 'السلام عليكم ورحمة الله، تقرير الطالب {student_name} بتاريخ {date}: الحفظ ({new_memorization})، المراجعة ({review})، التقييم العام ({session_grade}).' },
     { title: 'تذكير اختبار', body: 'نحيطكم علماً بأنه تقرر عقد اختبار للطالب {student_name} بتاريخ {date}. نرجو المتابعة والمراجعة.' },
@@ -120,12 +119,11 @@ export default function CommunicationHub({ academyId, academyName }) {
     { value: 'fee_notice', label: isRtl ? 'إشعار الرسوم والتسديد' : 'Fee Notice' },
   ];
 
-  // دعم لغوي موسع
   const languageOptions = [
     { value: 'ar', label: 'العربية (Arabic)' },
-    { value: 'en', label: 'English (الإنجليزية)' },
-    { value: 'fr', label: 'Français (الفرنسية)' },
-    { value: 'tr', label: 'Türkçe (التركية)' },
+    { value: 'en', label: 'English (إنجليزية)' },
+    { value: 'fr', label: 'Français (فرنسية)' },
+    { value: 'tr', label: 'Türkçe (تركية)' },
   ];
 
   const fetchTemplates = useCallback(async () => {
@@ -255,37 +253,30 @@ export default function CommunicationHub({ academyId, academyName }) {
   const currentAcademyDisplayName = academyName || (isRtl ? 'الأكاديمية' : 'Academy');
 
   return (
-    <div 
-      dir={isRtl ? 'rtl' : 'ltr'} 
-      className="min-h-screen p-3 sm:p-6 bg-[#0B0F17] text-slate-100 relative overflow-hidden"
-      style={{
-        backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px)`,
-        backgroundSize: '20px 20px'
-      }}
-    >
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen p-3 sm:p-6 bg-background text-foreground">
       
       {/* شريط العنوان العلوي */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950/40 shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
             <Radio size={24} />
           </div>
           <div>
-            <h1 className="text-base sm:text-lg font-extrabold text-slate-100 m-0 tracking-tight">
+            <h1 className="text-base sm:text-lg font-extrabold text-foreground m-0 tracking-tight">
               {isRtl ? 'مركز التواصل والمراسلات الذكي' : 'Smart Messaging Center'}
             </h1>
-            <p className="text-[11px] sm:text-xs text-slate-400 m-0">
+            <p className="text-[11px] sm:text-xs text-muted-foreground m-0">
               {isRtl ? `منظومة الإشعارات الفورية لـ ${currentAcademyDisplayName}` : `Notification Engine for ${currentAcademyDisplayName}`}
             </p>
           </div>
         </div>
 
         {/* التبويبات الرئيسية */}
-        <div className="flex p-1 bg-[#111827] border border-slate-800 rounded-xl self-start sm:self-auto w-full sm:w-auto">
+        <div className="flex p-1 bg-card border border-border rounded-xl self-start sm:self-auto w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('broadcast')}
             className={`flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'broadcast' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              activeTab === 'broadcast' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Send size={13} />
@@ -294,7 +285,7 @@ export default function CommunicationHub({ academyId, academyName }) {
           <button
             onClick={() => setActiveTab('templates')}
             className={`flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'templates' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              activeTab === 'templates' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <FileText size={13} />
@@ -303,7 +294,7 @@ export default function CommunicationHub({ academyId, academyName }) {
           <button
             onClick={() => setActiveTab('logs')}
             className={`flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'logs' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              activeTab === 'logs' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <History size={13} />
@@ -314,50 +305,26 @@ export default function CommunicationHub({ academyId, academyName }) {
 
       {/* المحتوى الرئيسي */}
       {activeTab !== 'logs' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           
           <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
             
             {activeTab === 'broadcast' && (
-              <Card className="p-4 bg-[#111827]/90 border-slate-800 rounded-2xl shadow-xl backdrop-blur-md">
-                <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Card className="p-4 rounded-2xl">
+                <h2 className="text-xs font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Sparkles size={15} />
                   <span>{isRtl ? 'إعداد تعميم جماعي جديد' : 'Compose Global Broadcast'}</span>
                 </h2>
 
-                {/* شبكة القنوات الموحدة مع الشعارات الرسمية المعتمدة */}
                 <div className="mb-4">
-                  <label className="text-[11px] font-medium text-slate-300 block mb-2">
+                  <label className="text-[11px] font-medium text-foreground block mb-2">
                     {isRtl ? 'قنوات التوصيل المتاحة:' : 'Delivery Channels:'}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { 
-                        id: 'whatsapp', 
-                        label: 'WhatsApp', 
-                        activeBg: 'bg-[#25D366]/15 border-[#25D366]',
-                        svg: (
-                          <svg className="w-4 h-4 fill-current text-[#25D366]" viewBox="0 0 24 24">
-                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
-                          </svg>
-                        )
-                      },
-                      { 
-                        id: 'email', 
-                        label: 'Email', 
-                        activeBg: 'bg-rose-500/15 border-rose-500',
-                        svg: (
-                          <svg className="w-4 h-4" viewBox="0 0 24 24">
-                            <path fill="#EA4335" d="M20 18h-2V9.25L12 13 6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20v12z"/>
-                          </svg>
-                        )
-                      },
-                      { 
-                        id: 'app', 
-                        label: isRtl ? 'إشعار التطبيق' : 'App Notice', 
-                        activeBg: 'bg-amber-500/15 border-amber-500',
-                        svg: <Bell size={16} className="text-amber-400" />
-                      },
+                      { id: 'whatsapp', label: 'WhatsApp', icon: <MessageSquare size={16} className="text-primary" /> },
+                      { id: 'email', label: 'Email', icon: <Mail size={16} className="text-destructive" /> },
+                      { id: 'app', label: isRtl ? 'إشعار التطبيق' : 'App Notice', icon: <Bell size={16} className="text-warning" /> },
                     ].map(ch => {
                       const active = selectedChannels.includes(ch.id);
                       return (
@@ -367,11 +334,11 @@ export default function CommunicationHub({ academyId, academyName }) {
                           onClick={() => toggleChannel(ch.id)}
                           className={`p-2.5 rounded-xl border text-xs flex items-center justify-center gap-2 transition-all ${
                             active 
-                              ? `${ch.activeBg} text-slate-100 font-bold shadow-md` 
-                              : 'bg-[#0F172A] border-slate-800 text-slate-400 hover:text-slate-200'
+                              ? 'bg-accent border-primary text-primary font-bold shadow' 
+                              : 'bg-background border-border text-muted-foreground hover:text-foreground'
                           }`}
                         >
-                          {ch.svg}
+                          {ch.icon}
                           <span className="truncate">{ch.label}</span>
                         </button>
                       );
@@ -380,7 +347,7 @@ export default function CommunicationHub({ academyId, academyName }) {
                 </div>
 
                 <div className="mb-4">
-                  <label className="text-[11px] font-medium text-slate-300 block mb-1.5">{isRtl ? 'الفئة المستهدفة:' : 'Target Audience:'}</label>
+                  <label className="text-[11px] font-medium text-foreground block mb-1.5">{isRtl ? 'الفئة المستهدفة:' : 'Target Audience:'}</label>
                   <CustomSelect
                     options={targetAudienceOptions}
                     value={targetAudience}
@@ -395,14 +362,13 @@ export default function CommunicationHub({ academyId, academyName }) {
                     placeholder={isRtl ? 'عنوان الرسالة / الموضوع...' : 'Subject...'}
                     value={broadcastTitle}
                     onChange={(e) => setBroadcastTitle(e.target.value)}
-                    className="w-full bg-[#0F172A] border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:border-emerald-500"
+                    className="w-full text-xs"
                   />
                 </div>
 
-                {/* صيغ مقترحة سريعة لتنويع المراسلة */}
                 <div className="mb-3">
-                  <div className="flex items-center gap-1.5 mb-1.5 text-[10px] text-slate-400">
-                    <Sparkle size={12} className="text-amber-400" />
+                  <div className="flex items-center gap-1.5 mb-1.5 text-[10px] text-muted-foreground">
+                    <Sparkle size={12} className="text-primary" />
                     <span>{isRtl ? 'نماذج وصيغ جاهزة للتعبئة:' : 'Preset templates:'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -414,7 +380,7 @@ export default function CommunicationHub({ academyId, academyName }) {
                           setBroadcastTitle(preset.title);
                           setBroadcastBody(preset.body);
                         }}
-                        className="shrink-0 px-2.5 py-1 bg-[#0F172A] hover:bg-slate-800 border border-slate-800 rounded-lg text-[10px] text-slate-300 transition-colors"
+                        className="shrink-0 px-2.5 py-1 bg-background hover:bg-accent border border-border rounded-lg text-[10px] text-foreground transition-colors"
                       >
                         + {preset.title}
                       </button>
@@ -428,14 +394,14 @@ export default function CommunicationHub({ academyId, academyName }) {
                     placeholder={isRtl ? 'اكتب نص الرسالة المراد إرسالها لولي الأمر...' : 'Type message body...'}
                     value={broadcastBody}
                     onChange={(e) => setBroadcastBody(e.target.value)}
-                    className="w-full p-3 bg-[#0F172A] border border-slate-800 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 resize-none leading-relaxed"
+                    className="w-full p-3 bg-background border border-border rounded-xl text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary resize-none leading-relaxed"
                   />
                 </div>
 
                 <Btn
                   variant="primary"
                   disabled={sendingBroadcast || !broadcastTitle.trim() || !broadcastBody.trim()}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2"
+                  className="w-full py-2.5 font-bold text-xs rounded-xl flex items-center justify-center gap-2"
                 >
                   {sendingBroadcast ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                   <span>{isRtl ? 'إرسال الرسالة الآن' : 'Send Message Now'}</span>
@@ -445,13 +411,13 @@ export default function CommunicationHub({ academyId, academyName }) {
 
             {activeTab === 'templates' && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <Card className="p-3 bg-[#111827] border-slate-800 rounded-xl md:col-span-4">
+                <Card className="p-3 rounded-xl md:col-span-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-slate-300">{isRtl ? 'قوالب الأكاديمية' : 'Templates'}</span>
+                    <span className="text-xs font-bold text-foreground">{isRtl ? 'قوالب الأكاديمية' : 'Templates'}</span>
                     <button
                       type="button"
                       onClick={handleNewTemplate}
-                      className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 text-[11px] font-bold flex items-center gap-1 transition-all"
+                      className="px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 text-[11px] font-bold flex items-center gap-1 transition-all"
                     >
                       <Plus size={13} />
                       <span>{isRtl ? 'جديد' : 'New'}</span>
@@ -459,11 +425,11 @@ export default function CommunicationHub({ academyId, academyName }) {
                   </div>
 
                   {loadingTemplates ? (
-                    <div className="py-8 text-center text-emerald-400">
+                    <div className="py-8 text-center text-primary">
                       <Loader2 size={16} className="animate-spin mx-auto mb-1" />
                     </div>
                   ) : templates.length === 0 && !isCreatingNew ? (
-                    <div className="text-center py-6 text-slate-500 text-[11px]">{isRtl ? 'لا توجد قوالب مخزنة' : 'No templates'}</div>
+                    <div className="text-center py-6 text-muted-foreground text-[11px]">{isRtl ? 'لا توجد قوالب مخزنة' : 'No templates'}</div>
                   ) : (
                     <div className="flex flex-col gap-1.5">
                       {templates.map(tmpl => (
@@ -473,8 +439,8 @@ export default function CommunicationHub({ academyId, academyName }) {
                           onClick={() => loadTemplateIntoForm(tmpl)}
                           className={`w-full p-2.5 text-right rounded-xl border text-xs transition-all ${
                             selectedTemplate?.id === tmpl.id && !isCreatingNew
-                              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-bold'
-                              : 'bg-[#0F172A] border-slate-800 text-slate-400 hover:border-slate-700'
+                              ? 'bg-primary/10 border-primary text-primary font-bold'
+                              : 'bg-background border-border text-muted-foreground hover:border-accent'
                           }`}
                         >
                           <div className="truncate">{tmpl.template_name}</div>
@@ -485,33 +451,33 @@ export default function CommunicationHub({ academyId, academyName }) {
                   )}
                 </Card>
 
-                <Card className="p-4 bg-[#111827] border-slate-800 rounded-xl md:col-span-8">
+                <Card className="p-4 rounded-xl md:col-span-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
-                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'اسم القالب:' : 'Template Name:'}</label>
+                      <label className="text-[11px] text-foreground block mb-1">{isRtl ? 'اسم القالب:' : 'Template Name:'}</label>
                       <Input
                         type="text"
                         placeholder={isRtl ? 'مثال: تقرير الحلقة' : 'Template name...'}
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
-                        className="w-full bg-[#0F172A] border-slate-800 text-xs text-slate-100 placeholder:text-slate-500"
+                        className="w-full text-xs"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'عنوان الرسالة:' : 'Message Title:'}</label>
+                      <label className="text-[11px] text-foreground block mb-1">{isRtl ? 'عنوان الرسالة:' : 'Message Title:'}</label>
                       <Input
                         type="text"
                         placeholder={isRtl ? 'عنوان الإشعار' : 'Title...'}
                         value={templateTitle}
                         onChange={(e) => setTemplateTitle(e.target.value)}
-                        className="w-full bg-[#0F172A] border-slate-800 text-xs text-slate-100 placeholder:text-slate-500"
+                        className="w-full text-xs"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
-                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'حدث الإشعار:' : 'Trigger Event:'}</label>
+                      <label className="text-[11px] text-foreground block mb-1">{isRtl ? 'حدث الإشعار:' : 'Trigger Event:'}</label>
                       <CustomSelect
                         options={triggerEventOptions}
                         value={templateEvent}
@@ -520,8 +486,8 @@ export default function CommunicationHub({ academyId, academyName }) {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] text-slate-300 block mb-1 flex items-center gap-1">
-                        <Globe2 size={12} className="text-emerald-400" />
+                      <label className="text-[11px] text-foreground block mb-1 flex items-center gap-1">
+                        <Globe2 size={12} className="text-primary" />
                         <span>{isRtl ? 'لغة الرسالة:' : 'Language:'}</span>
                       </label>
                       <CustomSelect
@@ -534,14 +500,14 @@ export default function CommunicationHub({ academyId, academyName }) {
                   </div>
 
                   <div className="mb-3">
-                    <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'إدراج متغيرات آلية:' : 'Variables:'}</label>
+                    <label className="text-[11px] text-foreground block mb-1">{isRtl ? 'إدراج متغيرات آلية:' : 'Variables:'}</label>
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                       {availableVariables.map((v, i) => (
                         <button
                           key={i}
                           type="button"
                           onClick={() => setTemplateBody(prev => prev + ' ' + v.code)}
-                          className="shrink-0 px-2.5 py-1 bg-[#0F172A] hover:bg-slate-800 border border-slate-800 rounded-lg text-[10px] text-emerald-400 font-mono transition-colors"
+                          className="shrink-0 px-2.5 py-1 bg-background hover:bg-accent border border-border rounded-lg text-[10px] text-primary font-mono transition-colors"
                         >
                           + {v.label}
                         </button>
@@ -555,7 +521,7 @@ export default function CommunicationHub({ academyId, academyName }) {
                       placeholder={isRtl ? 'نص القالب...' : 'Template text...'}
                       value={templateBody}
                       onChange={(e) => setTemplateBody(e.target.value)}
-                      className="w-full p-3 bg-[#0F172A] border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500 resize-none leading-relaxed placeholder:text-slate-500"
+                      className="w-full p-3 bg-background border border-border rounded-xl text-xs text-foreground focus:outline-none focus:border-primary resize-none leading-relaxed placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -563,7 +529,7 @@ export default function CommunicationHub({ academyId, academyName }) {
                     variant="primary"
                     onClick={handleSaveTemplate}
                     disabled={savingTemplate || !templateName.trim() || !templateBody.trim()}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5"
+                    className="w-full py-2 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5"
                   >
                     {savingTemplate ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
                     <span>{isRtl ? 'حفظ القالب' : 'Save Template'}</span>
@@ -575,35 +541,35 @@ export default function CommunicationHub({ academyId, academyName }) {
 
           {/* المعاينة الحية */}
           <div className="lg:col-span-5 xl:col-span-4 flex justify-center">
-            <Card className="w-full max-w-[320px] p-4 bg-[#111827] border-slate-800 rounded-3xl shadow-2xl flex flex-col items-center border-t-4 border-t-emerald-500">
-              <div className="w-12 h-1 bg-slate-800 rounded-full mb-4"></div>
-              <div className="text-[11px] font-bold text-slate-300 mb-3 flex items-center gap-1.5">
-                <MessageSquare size={13} className="text-emerald-400" />
+            <Card className="w-full max-w-[320px] p-4 rounded-3xl shadow-2xl flex flex-col items-center border-t-4 border-t-primary">
+              <div className="w-12 h-1 bg-border rounded-full mb-4"></div>
+              <div className="text-[11px] font-bold text-foreground mb-3 flex items-center gap-1.5">
+                <MessageSquare size={13} className="text-primary" />
                 <span>{isRtl ? 'معاينة الرسالة لدى ولي الأمر' : 'Parent Screen Preview'}</span>
               </div>
 
-              <div className="w-full bg-[#0F172A] border border-slate-800 rounded-2xl p-3.5 shadow-inner min-h-[280px] flex flex-col justify-between">
+              <div className="w-full bg-background border border-border rounded-2xl p-3.5 min-h-[280px] flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-slate-800/80">
-                    <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[11px] font-bold border border-emerald-500/30">
+                  <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-border">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold border border-primary/20">
                       {currentAcademyDisplayName.charAt(0)}
                     </div>
                     <div className="flex-1 truncate">
-                      <div className="text-[11px] font-bold text-slate-200 truncate">
+                      <div className="text-[11px] font-bold text-foreground truncate">
                         {broadcastTitle || templateTitle || currentAcademyDisplayName}
                       </div>
-                      <div className="text-[9px] text-slate-500">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
+                      <div className="text-[9px] text-muted-foreground">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
                     </div>
                   </div>
 
-                  <div className="text-[11px] text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  <div className="text-[11px] text-foreground whitespace-pre-wrap leading-relaxed">
                     {previewText}
                   </div>
                 </div>
 
-                <div className="mt-4 pt-2 border-t border-slate-800/50 flex items-center justify-between text-[9px] text-slate-500">
+                <div className="mt-4 pt-2 border-t border-border flex items-center justify-between text-[9px] text-muted-foreground">
                   <span>{currentAcademyDisplayName}</span>
-                  <span className="text-emerald-400 font-bold tracking-wider">Encrypted</span>
+                  <span className="text-primary font-bold tracking-wider">Encrypted</span>
                 </div>
               </div>
             </Card>
@@ -614,15 +580,15 @@ export default function CommunicationHub({ academyId, academyName }) {
 
       {/* سجل السيرفر */}
       {activeTab === 'logs' && (
-        <Card className="p-4 bg-[#111827] border-slate-800 rounded-2xl relative z-10">
+        <Card className="p-4 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-bold text-slate-200 flex items-center gap-2">
-              <History size={15} className="text-emerald-400" />
+            <h2 className="text-xs font-bold text-foreground flex items-center gap-2">
+              <History size={15} className="text-primary" />
               <span>{isRtl ? 'سجل العمليات والإرسال' : 'Dispatch Logs'}</span>
             </h2>
             <button
               onClick={fetchLogs}
-              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg text-xs flex items-center gap-1 transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg text-xs flex items-center gap-1 transition-colors"
             >
               <RefreshCw size={12} className={loadingLogs ? 'animate-spin' : ''} />
               <span>{isRtl ? 'تحديث' : 'Refresh'}</span>
@@ -630,38 +596,38 @@ export default function CommunicationHub({ academyId, academyName }) {
           </div>
 
           {loadingLogs ? (
-            <div className="py-12 text-center text-emerald-400">
+            <div className="py-12 text-center text-primary">
               <Loader2 size={20} className="animate-spin mx-auto mb-2" />
-              <span className="text-xs text-slate-500">{isRtl ? 'جاري جلب السجلات...' : 'Fetching logs...'}</span>
+              <span className="text-xs text-muted-foreground">{isRtl ? 'جاري جلب السجلات...' : 'Fetching logs...'}</span>
             </div>
           ) : logs.length === 0 ? (
-            <p className="text-xs text-slate-500 text-center py-8">{isRtl ? 'لا توجد سجلات إرسال حتى الآن' : 'No notification logs found'}</p>
+            <p className="text-xs text-muted-foreground text-center py-8">{isRtl ? 'لا توجد سجلات إرسال حتى الآن' : 'No notification logs found'}</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-right text-xs text-slate-300">
+              <table className="w-full text-right text-xs text-foreground">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                  <tr className="border-b border-border text-muted-foreground text-[11px]">
                     <th className="p-2.5">{isRtl ? 'القناة' : 'Channel'}</th>
                     <th className="p-2.5">{isRtl ? 'الحالة' : 'Status'}</th>
                     <th className="p-2.5">{isRtl ? 'نص الرسالة' : 'Text'}</th>
                     <th className="p-2.5">{isRtl ? 'التاريخ' : 'Sent Date'}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/50">
+                <tbody className="divide-y divide-border">
                   {logs.map(log => (
-                    <tr key={log.id} className="hover:bg-slate-900/50 transition-colors">
-                      <td className="p-2.5 font-mono text-emerald-400 uppercase text-[10px]">{log.channel_used}</td>
+                    <tr key={log.id} className="hover:bg-accent/50 transition-colors">
+                      <td className="p-2.5 font-mono text-primary uppercase text-[10px]">{log.channel_used}</td>
                       <td className="p-2.5">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           log.status === 'delivered' || log.status === 'sent'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            ? 'bg-primary/10 text-primary border border-primary/20'
+                            : 'bg-destructive/10 text-destructive border border-destructive/20'
                         }`}>
                           {log.status}
                         </span>
                       </td>
-                      <td className="p-2.5 max-w-xs truncate text-slate-400">{log.sent_text}</td>
-                      <td className="p-2.5 text-slate-500 text-[10px]">
+                      <td className="p-2.5 max-w-xs truncate text-muted-foreground">{log.sent_text}</td>
+                      <td className="p-2.5 text-muted-foreground text-[10px]">
                         {new Date(log.created_at).toLocaleString(isRtl ? 'ar-EG' : 'en-US')}
                       </td>
                     </tr>
