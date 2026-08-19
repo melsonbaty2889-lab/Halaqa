@@ -255,7 +255,7 @@ export default function CommunicationHub({ academyId, academyName }) {
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'} 
-      className="min-h-screen p-3 sm:p-6 bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] select-none relative overflow-hidden"
+      className="min-h-screen p-3 sm:p-6 bg-transparent text-[var(--text-main,#FFFFFF)] select-none relative overflow-hidden"
     >
       {/* خلفية التوهج الزمردي والتنقيط النجمي */}
       <div 
