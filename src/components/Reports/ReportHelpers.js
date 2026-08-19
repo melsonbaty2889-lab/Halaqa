@@ -1,26 +1,36 @@
 import i18n from '@/i18n'; // ربط مع نظام الترجمة المعتمد في المشروع
 
 /**
- * تنظيف رقم الهاتف وتوليد رابط واتساب عالمي يدعم كافة الدول
+ * تنظيف رقم الهاتف وإرجاع الصياغة الدولية فقط
  * @param {string} phone - رقم الهاتف المدخل
- * @param {string} message - نص الرسالة
- * @param {string} defaultCountryCode - رمز الدولة الافتراضي بدون + (مثال: '966' للسعودية، '20' لمصر)
+ * @param {string} defaultCountryCode - رمز الدولة الافتراضي (مثل '20' لمصر)
+ */
+export const cleanPhoneNumber = (phone = '', defaultCountryCode = '20') => {
+  if (!phone) return '';
+
+  // إزالة أي رموز غير رقمية باستثناء علامة +
+  let cleaned = phone.toString().replace(/[^0-9+]/g, '');
+
+  if (!cleaned) return '';
+
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.substring(1);
+  } else if (cleaned.startsWith('00')) {
+    cleaned = cleaned.substring(2);
+  } else if (cleaned.startsWith('0')) {
+    // إزالة الصفر المحلي وإضافة كود الدولة
+    cleaned = defaultCountryCode + cleaned.substring(1);
+  }
+
+  return cleaned;
+};
+
+/**
+ * توليد رابط واتساب عالمي يدعم كافة الدول
  */
 export const generateWhatsAppLink = (phone = '', message = '', defaultCountryCode = '20') => {
-  // إزالة أي رموز غير رقمية باستثناء علامة +
-  let cleanPhone = phone.toString().replace(/[^0-9+]/g, '');
-
+  const cleanPhone = cleanPhoneNumber(phone, defaultCountryCode);
   if (!cleanPhone) return '#';
-
-  // إذا كان الرقم يبدأ بـ + يتم حذفها للقبول في رابط API
-  if (cleanPhone.startsWith('+')) {
-    cleanPhone = cleanPhone.substring(1);
-  } else if (cleanPhone.startsWith('00')) {
-    cleanPhone = cleanPhone.substring(2);
-  } else if (cleanPhone.startsWith('0')) {
-    // إذا كان الرقم محلياً ويبدأ بـ 0 (مثل 05xxx أو 01xxx)، يتم إضافة مفتاح الدولة الافتراضي
-    cleanPhone = defaultCountryCode + cleanPhone.substring(1);
-  }
 
   return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
 };
@@ -38,7 +48,6 @@ export const getParsedMessage = ({
 }) => {
   const isRtl = locale.startsWith('ar');
 
-  // استخراج البيانات الفعالية بدون افتراضات تجريبية
   const studentName = safeString(student?.name || student?.student_name || record?.student_name);
   const statusVal = record?.attendance_status || record?.status;
 
@@ -67,7 +76,7 @@ export const getParsedMessage = ({
     return statusMap[statusVal] || i18n.t('reports.status.present', { defaultValue: isRtl ? 'حاضر ✅' : 'Present ✅' });
   };
 
-  // 3. تقييم الأداء بنظام ديناميكي يدعم السلم المئوي أو المباشر
+  // 3. تقييم الأداء بنظام ديناميكي
   const getGradeText = () => {
     const rawGrade = record?.session_grade ?? record?.rating ?? record?.score;
     if (rawGrade === null || rawGrade === undefined || rawGrade === '') {
@@ -85,7 +94,7 @@ export const getParsedMessage = ({
 
   let parsed = template || '';
 
-  // خريطة الوسوم العالمية الديناميكية
+  // خريطة الوسوم الديناميكية
   const replaceMap = {
     '{{student_name}}': studentName || i18n.t('reports.placeholders.student_name', { defaultValue: isRtl ? 'اسم الطالب' : 'Student Name' }),
     '{{date}}': getDateDisplay(),
@@ -104,14 +113,16 @@ export const getParsedMessage = ({
     parsed = parsed.replace(regex, replaceMap[tag]);
   });
 
-  // 2. دعم الأقواس القديمة والتوافق الخلفي [Variable]
-  parsed = parsed.replace(/\[اسم_الطالب\]|\[Student_Name\]/gi, replaceMap['{{student_name}}']);
-  parsed = parsed.replace(/\[التاريخ\]|\[Date\]/gi, replaceMap['{{date}}']);
-  parsed = parsed.replace(/\[الحالة\]|\[Status\]/gi, replaceMap['{{status}}']);
-  parsed = parsed.replace(/\[الحفظ\]|\[Memorization\]/gi, replaceMap['{{memorization}}']);
-  parsed = parsed.replace(/\[المراجعة\]|\[Revision\]/gi, replaceMap['{{review}}']);
-  parsed = parsed.replace(/\[التقييم\]|\[Grade\]|\[Rating\]/gi, replaceMap['{{rating}}']);
-  parsed = parsed.replace(/\[الملاحظات\]|\[Notes\]/gi, replaceMap['{{notes}}']);
+  // 2. دعم الأقواس القديمة والأقواس المفردة {اسم_الطالب} و [اسم_الطالب]
+  parsed = parsed.replace(/\{اسم_الطالب\}|\[اسم_الطالب\]|\[Student_Name\]/gi, replaceMap['{{student_name}}']);
+  parsed = parsed.replace(/\{التاريخ\}|\[التاريخ\]|\[Date\]/gi, replaceMap['{{date}}']);
+  parsed = parsed.replace(/\{حالة_الحضور\}|\{الحالة\}|\[الحالة\]|\[Status\]/gi, replaceMap['{{status}}']);
+  parsed = parsed.replace(/\{الحفظ\}|\[الحفظ\]|\[Memorization\]/gi, replaceMap['{{memorization}}']);
+  parsed = parsed.replace(/\{المراجعة\}|\[المراجعة\]|\[Revision\]/gi, replaceMap['{{review}}']);
+  parsed = parsed.replace(/\{التقييم\}|\[التقييم\]|\[Grade\]|\[Rating\]/gi, replaceMap['{{rating}}']);
+  parsed = parsed.replace(/\{اسم_الاختبار\}|\[اسم_الاختبار\]/gi, replaceMap['{{test_name}}']);
+  parsed = parsed.replace(/\{الدرجة\}|\[الدرجة\]/gi, replaceMap['{{score}}']);
+  parsed = parsed.replace(/\{الملاحظات\}|\[الملاحظات\]|\[Notes\]/gi, replaceMap['{{notes}}']);
 
   return parsed;
 };
