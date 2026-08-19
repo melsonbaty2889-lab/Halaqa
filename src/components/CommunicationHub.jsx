@@ -1,27 +1,79 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Send, Radio, FileText, Sparkles, Bell, 
   Plus, Save, Loader2, History, RefreshCw, 
-  MessageSquare, Mail 
+  MessageSquare, Mail, ChevronDown, Check 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Card, Btn, Input } from '@/components/UI/UI';
+
+// مكون المنسدل المخصص للحفاظ على هوية الـ Dark Theme
+function CustomSelect({ options, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 flex items-center justify-between hover:border-slate-700 transition-all focus:outline-none"
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full p-2.5 text-right text-xs flex items-center justify-between transition-colors ${
+                value === opt.value
+                  ? 'bg-emerald-500/15 text-emerald-300 font-bold'
+                  : 'text-slate-300 hover:bg-slate-800/60'
+              }`}
+            >
+              <span>{opt.label}</span>
+              {value === opt.value && <Check size={13} className="text-emerald-400" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MessagingCenter({ academyId, academyName }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language?.startsWith('ar');
 
-  const [activeTab, setActiveTab] = useState('broadcast'); // 'broadcast' | 'templates' | 'logs'
+  const [activeTab, setActiveTab] = useState('broadcast');
 
-  // ----- حالات التعميم الجماعي -----
+  // حالات الإرسال الجماعي
   const [selectedChannels, setSelectedChannels] = useState(['whatsapp']);
   const [targetAudience, setTargetAudience] = useState('all');
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastBody, setBroadcastBody] = useState('');
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
 
-  // ----- حالات إدارة القوالب -----
+  // حالات القوالب
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateName, setTemplateName] = useState('');
@@ -33,7 +85,7 @@ export default function MessagingCenter({ academyId, academyName }) {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
 
-  // ----- حالات السجلات -----
+  // حالات السجلات
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
@@ -46,7 +98,23 @@ export default function MessagingCenter({ academyId, academyName }) {
     { code: '{session_grade}', label: isRtl ? 'التقييم' : 'Grade' },
   ];
 
-  // جلب القوالب الديناميكية الخاصة بالأكاديمية الحالية
+  const targetAudienceOptions = [
+    { value: 'all', label: isRtl ? 'جميع أولياء أمور الأكاديمية' : 'All Academy Parents' },
+    { value: 'present_today', label: isRtl ? 'أولياء أمور الطلاب الحاضرين اليوم' : 'Parents of Students Present Today' },
+    { value: 'absent_today', label: isRtl ? 'أولياء أمور الطلاب الغائبين اليوم' : 'Parents of Students Absent Today' },
+  ];
+
+  const triggerEventOptions = [
+    { value: 'daily_report', label: isRtl ? 'التقرير اليومي للحلقة' : 'Daily Report' },
+    { value: 'exam_reminder', label: isRtl ? 'تذكير بموعد الاختبار' : 'Exam Reminder' },
+    { value: 'absence_alert', label: isRtl ? 'تنبيه غياب الطالب' : 'Absence Alert' },
+  ];
+
+  const languageOptions = [
+    { value: 'ar', label: 'العربية (Arabic)' },
+    { value: 'en', label: 'English' },
+  ];
+
   const fetchTemplates = useCallback(async () => {
     if (!academyId) return;
     setLoadingTemplates(true);
@@ -69,7 +137,6 @@ export default function MessagingCenter({ academyId, academyName }) {
     }
   }, [academyId, selectedTemplate]);
 
-  // جلب سجلات المراسلات الخاصة بالأكاديمية الحالية
   const fetchLogs = useCallback(async () => {
     if (!academyId) return;
     setLoadingLogs(true);
@@ -162,7 +229,6 @@ export default function MessagingCenter({ academyId, academyName }) {
     }
   };
 
-  // المعاينة الحية - محاكاة استبدال المتغيرات بصورة عامة
   const previewText = useMemo(() => {
     let body = activeTab === 'broadcast' ? broadcastBody : templateBody;
     if (!body) return isRtl ? 'معاينة نص الرسالة تظهر هنا...' : 'Message preview appears here...';
@@ -184,24 +250,24 @@ export default function MessagingCenter({ academyId, academyName }) {
       {/* شريط العنوان العلوي */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950/40">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950/40 shrink-0">
             <Radio size={24} />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold text-slate-100 m-0 tracking-tight">
+            <h1 className="text-base sm:text-lg font-extrabold text-slate-100 m-0 tracking-tight">
               {isRtl ? 'مركز التواصل والمراسلات الذكي' : 'Smart Messaging Center'}
             </h1>
-            <p className="text-xs text-slate-400 m-0">
+            <p className="text-[11px] sm:text-xs text-slate-400 m-0">
               {isRtl ? `منظومة الإشعارات الفورية لـ ${currentAcademyDisplayName}` : `Notification Engine for ${currentAcademyDisplayName}`}
             </p>
           </div>
         </div>
 
         {/* التبويبات الرئيسية */}
-        <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-xl">
+        <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-xl self-start sm:self-auto w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('broadcast')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'broadcast' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -210,7 +276,7 @@ export default function MessagingCenter({ academyId, academyName }) {
           </button>
           <button
             onClick={() => setActiveTab('templates')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'templates' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -219,7 +285,7 @@ export default function MessagingCenter({ academyId, academyName }) {
           </button>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'logs' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -229,11 +295,10 @@ export default function MessagingCenter({ academyId, academyName }) {
         </div>
       </div>
 
-      {/* ================= القسم الرئيسي: Grid يدمج الإدخال مع المعاينة الحية ================= */}
+      {/* ================= المحتوى الرئيسي ================= */}
       {activeTab !== 'logs' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           
-          {/* العمود الأول: نماذج الإدخال */}
           <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
             
             {activeTab === 'broadcast' && (
@@ -243,14 +308,14 @@ export default function MessagingCenter({ academyId, academyName }) {
                   <span>{isRtl ? 'إعداد تعميم جماعي جديد' : 'Compose Global Broadcast'}</span>
                 </h2>
 
-                {/* اختيار قنوات التوصيل المفعلة أصبحت جميعها من Lucide React */}
+                {/* شبكة القنوات الموحدة والمنظمة */}
                 <div className="mb-4">
-                  <label className="text-[11px] font-medium text-slate-400 block mb-2">{isRtl ? 'قنوات التوصيل المتاحة:' : 'Delivery Channels:'}</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <label className="text-[11px] font-medium text-slate-300 block mb-2">{isRtl ? 'قنوات التوصيل المتاحة:' : 'Delivery Channels:'}</label>
+                  <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'text-emerald-500' },
-                      { id: 'email', label: 'Email', icon: Mail, color: 'text-rose-500' },
-                      { id: 'app', label: isRtl ? 'إشعار التطبيق' : 'In-App Notice', icon: Bell, color: 'text-amber-400' },
+                      { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: 'text-emerald-400' },
+                      { id: 'email', label: 'Email', icon: Mail, color: 'text-rose-400' },
+                      { id: 'app', label: isRtl ? 'إشعار التطبيق' : 'App Notice', icon: Bell, color: 'text-amber-400' },
                     ].map(ch => {
                       const Icon = ch.icon;
                       const active = selectedChannels.includes(ch.id);
@@ -259,42 +324,39 @@ export default function MessagingCenter({ academyId, academyName }) {
                           key={ch.id}
                           type="button"
                           onClick={() => toggleChannel(ch.id)}
-                          className={`p-2.5 rounded-xl border text-xs flex items-center justify-center gap-2 transition-all ${
+                          className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all ${
                             active 
                               ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-bold' 
-                              : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
                           }`}
                         >
-                          <Icon size={15} className={active ? ch.color : 'text-slate-500'} />
-                          <span>{ch.label}</span>
+                          <Icon size={14} className={active ? ch.color : 'text-slate-500'} />
+                          <span className="truncate">{ch.label}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* تحديد شريحة المستهدفين */}
+                {/* اختيار الفئة عبر المنسدل المخصص */}
                 <div className="mb-4">
-                  <label className="text-[11px] font-medium text-slate-400 block mb-1.5">{isRtl ? 'الفئة المستهدفة:' : 'Target Audience:'}</label>
-                  <select
+                  <label className="text-[11px] font-medium text-slate-300 block mb-1.5">{isRtl ? 'الفئة المستهدفة:' : 'Target Audience:'}</label>
+                  <CustomSelect
+                    options={targetAudienceOptions}
                     value={targetAudience}
-                    onChange={(e) => setTargetAudience(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="all">{isRtl ? 'جميع أولياء أمور الأكاديمية' : 'All Academy Parents'}</option>
-                    <option value="present_today">{isRtl ? 'أولياء أمور الطلاب الحاضرين اليوم' : 'Parents of Students Present Today'}</option>
-                    <option value="absent_today">{isRtl ? 'أولياء أمور الطلاب الغائبين اليوم' : 'Parents of Students Absent Today'}</option>
-                  </select>
+                    onChange={setTargetAudience}
+                    placeholder={isRtl ? 'اختر الفئة' : 'Select Audience'}
+                  />
                 </div>
 
-                {/* الموضوع والنص */}
+                {/* الموضوع والنص مع تباين محسن للنصوص الموحدة */}
                 <div className="mb-3">
                   <Input
                     type="text"
                     placeholder={isRtl ? 'عنوان الرسالة / الموضوع...' : 'Subject...'}
                     value={broadcastTitle}
                     onChange={(e) => setBroadcastTitle(e.target.value)}
-                    className="w-full bg-slate-950 border-slate-800 text-xs"
+                    className="w-full bg-slate-950 border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:border-emerald-500"
                   />
                 </div>
 
@@ -304,7 +366,7 @@ export default function MessagingCenter({ academyId, academyName }) {
                     placeholder={isRtl ? 'اكتب نص الرسالة المراد إرسالها لولي الأمر...' : 'Type message body...'}
                     value={broadcastBody}
                     onChange={(e) => setBroadcastBody(e.target.value)}
-                    className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500 resize-none leading-relaxed"
+                    className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 resize-none leading-relaxed"
                   />
                 </div>
 
@@ -321,13 +383,12 @@ export default function MessagingCenter({ academyId, academyName }) {
 
             {activeTab === 'templates' && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                {/* القائمة الجانبية للقوالب */}
                 <Card className="p-3 bg-slate-900 border-slate-800 rounded-xl md:col-span-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-slate-300">{isRtl ? 'قوالب الأكاديمية' : 'Templates'}</span>
                     <button
                       onClick={handleNewTemplate}
-                      className="p-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 text-[10px] font-bold flex items-center gap-1"
+                      className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 text-[10px] font-bold flex items-center gap-1"
                     >
                       <Plus size={12} />
                       <span>{isRtl ? 'جديد' : 'Add'}</span>
@@ -349,7 +410,7 @@ export default function MessagingCenter({ academyId, academyName }) {
                           className={`w-full p-2.5 text-right rounded-xl border text-xs transition-all ${
                             selectedTemplate?.id === tmpl.id
                               ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-bold'
-                              : 'bg-slate-950 border-slate-800/80 text-slate-400 hover:border-slate-700'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                           }`}
                         >
                           <div className="truncate">{tmpl.template_name}</div>
@@ -360,65 +421,59 @@ export default function MessagingCenter({ academyId, academyName }) {
                   )}
                 </Card>
 
-                {/* محرر القالب */}
                 <Card className="p-4 bg-slate-900 border-slate-800 rounded-xl md:col-span-8">
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">{isRtl ? 'اسم القالب:' : 'Template Name:'}</label>
+                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'اسم القالب:' : 'Template Name:'}</label>
                       <Input
                         type="text"
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
-                        className="w-full bg-slate-950 border-slate-800 text-xs"
+                        className="w-full bg-slate-950 border-slate-800 text-xs text-slate-100 placeholder:text-slate-500"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">{isRtl ? 'عنوان الرسالة:' : 'Message Title:'}</label>
+                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'عنوان الرسالة:' : 'Message Title:'}</label>
                       <Input
                         type="text"
                         value={templateTitle}
                         onChange={(e) => setTemplateTitle(e.target.value)}
-                        className="w-full bg-slate-950 border-slate-800 text-xs"
+                        className="w-full bg-slate-950 border-slate-800 text-xs text-slate-100 placeholder:text-slate-500"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">{isRtl ? 'حدث الإشعار:' : 'Trigger Event:'}</label>
-                      <select
+                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'حدث الإشعار:' : 'Trigger Event:'}</label>
+                      <CustomSelect
+                        options={triggerEventOptions}
                         value={templateEvent}
-                        onChange={(e) => setTemplateEvent(e.target.value)}
-                        className="w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none"
-                      >
-                        <option value="daily_report">{isRtl ? 'التقرير اليومي للحلقة' : 'Daily Report'}</option>
-                        <option value="exam_reminder">{isRtl ? 'تذكير بموعد الاختبار' : 'Exam Reminder'}</option>
-                        <option value="absence_alert">{isRtl ? 'تنبيه غياب الطالب' : 'Absence Alert'}</option>
-                      </select>
+                        onChange={setTemplateEvent}
+                        placeholder={isRtl ? 'اختر الحدث' : 'Select Event'}
+                      />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">{isRtl ? 'اللغة:' : 'Language:'}</label>
-                      <select
+                      <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'اللغة:' : 'Language:'}</label>
+                      <CustomSelect
+                        options={languageOptions}
                         value={templateLang}
-                        onChange={(e) => setTemplateLang(e.target.value)}
-                        className="w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none"
-                      >
-                        <option value="ar">العربية (Arabic)</option>
-                        <option value="en">English</option>
-                      </select>
+                        onChange={setTemplateLang}
+                        placeholder={isRtl ? 'اختر اللغة' : 'Select Language'}
+                      />
                     </div>
                   </div>
 
-                  {/* المتغيرات الديناميكية */}
+                  {/* متغيرات آلية في شريط أفقي قابل للتمرير لتوفير المساحة */}
                   <div className="mb-3">
-                    <label className="text-[10px] text-slate-400 block mb-1">{isRtl ? 'إدراج متغيرات آلية:' : 'Variables:'}</label>
-                    <div className="flex flex-wrap gap-1">
+                    <label className="text-[11px] text-slate-300 block mb-1">{isRtl ? 'إدراج متغيرات آلية:' : 'Variables:'}</label>
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                       {availableVariables.map((v, i) => (
                         <button
                           key={i}
                           type="button"
                           onClick={() => setTemplateBody(prev => prev + ' ' + v.code)}
-                          className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded text-[10px] text-emerald-400 font-mono"
+                          className="shrink-0 px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-[10px] text-emerald-400 font-mono transition-colors"
                         >
                           + {v.label}
                         </button>
@@ -426,13 +481,12 @@ export default function MessagingCenter({ academyId, academyName }) {
                     </div>
                   </div>
 
-                  {/* المحتوى */}
                   <div className="mb-4">
                     <textarea
                       rows={5}
                       value={templateBody}
                       onChange={(e) => setTemplateBody(e.target.value)}
-                      className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500 resize-none leading-relaxed"
+                      className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500 resize-none leading-relaxed placeholder:text-slate-500"
                     />
                   </div>
 
@@ -450,40 +504,37 @@ export default function MessagingCenter({ academyId, academyName }) {
             )}
           </div>
 
-          {/* العمود الثاني: محاكاة جوال ولي الأمر الحية */}
+          {/* المعاينة الحية لولي الأمر */}
           <div className="lg:col-span-5 xl:col-span-4 flex justify-center">
             <Card className="w-full max-w-[320px] p-4 bg-slate-900 border-slate-800 rounded-3xl shadow-2xl flex flex-col items-center border-t-4 border-t-emerald-500">
-              <div className="w-16 h-1 bg-slate-800 rounded-full mb-4"></div>
-              <div className="text-[11px] font-bold text-slate-400 mb-3 flex items-center gap-1.5">
-                <MessageSquare size={13} className="text-emerald-500" />
-                <span>{isRtl ? 'معاينة الرسالة لدى ولي الأمر' : 'Live Parent Screen Preview'}</span>
+              <div className="w-12 h-1 bg-slate-800 rounded-full mb-4"></div>
+              <div className="text-[11px] font-bold text-slate-300 mb-3 flex items-center gap-1.5">
+                <MessageSquare size={13} className="text-emerald-400" />
+                <span>{isRtl ? 'معاينة الرسالة لدى ولي الأمر' : 'Parent Screen Preview'}</span>
               </div>
 
-              {/* مجسم الشاشة */}
-              <div className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 shadow-inner min-h-[280px] flex flex-col justify-between dir-auto">
+              <div className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 shadow-inner min-h-[280px] flex flex-col justify-between">
                 <div>
-                  {/* هيدر الرسالة */}
-                  <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-800/80">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                  <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-slate-800/80">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[11px] font-bold border border-emerald-500/30">
                       {currentAcademyDisplayName.charAt(0)}
                     </div>
                     <div className="flex-1 truncate">
-                      <div className="text-[10px] font-bold text-slate-200 truncate">
+                      <div className="text-[11px] font-bold text-slate-200 truncate">
                         {broadcastTitle || templateTitle || currentAcademyDisplayName}
                       </div>
-                      <div className="text-[8px] text-slate-500">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
+                      <div className="text-[9px] text-slate-500">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
                     </div>
                   </div>
 
-                  {/* محتوى المعاينة المترجم ديناميكياً */}
-                  <div className="text-[11px] text-slate-300 whitespace-pre-wrap leading-relaxed font-sans">
+                  <div className="text-[11px] text-slate-300 whitespace-pre-wrap leading-relaxed">
                     {previewText}
                   </div>
                 </div>
 
                 <div className="mt-4 pt-2 border-t border-slate-800/50 flex items-center justify-between text-[9px] text-slate-500">
                   <span>{currentAcademyDisplayName}</span>
-                  <span className="text-emerald-500 font-bold">Encrypted</span>
+                  <span className="text-emerald-400 font-bold tracking-wider">Encrypted</span>
                 </div>
               </div>
             </Card>
@@ -492,7 +543,7 @@ export default function MessagingCenter({ academyId, academyName }) {
         </div>
       )}
 
-      {/* ================= التبويب الثالث: سجلات الإرسال ================= */}
+      {/* ================= سجل السيرفر ================= */}
       {activeTab === 'logs' && (
         <Card className="p-4 bg-slate-900 border-slate-800 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
@@ -502,7 +553,7 @@ export default function MessagingCenter({ academyId, academyName }) {
             </h2>
             <button
               onClick={fetchLogs}
-              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg text-xs flex items-center gap-1"
+              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg text-xs flex items-center gap-1 transition-colors"
             >
               <RefreshCw size={12} className={loadingLogs ? 'animate-spin' : ''} />
               <span>{isRtl ? 'تحديث' : 'Refresh'}</span>
@@ -529,7 +580,7 @@ export default function MessagingCenter({ academyId, academyName }) {
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
                   {logs.map(log => (
-                    <tr key={log.id} className="hover:bg-slate-950/40">
+                    <tr key={log.id} className="hover:bg-slate-950/40 transition-colors">
                       <td className="p-2.5 font-mono text-emerald-400 uppercase text-[10px]">{log.channel_used}</td>
                       <td className="p-2.5">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
