@@ -43,14 +43,14 @@ export default function Attendance({
     translateText
   } = useAttendance({ students, academyId, halaqas, t, i18n });
 
-  // 🚀 تزامن وتحديد الحلقة تلقائياً فور تحويل المستخدم من شاشة ActiveHalaqas
+  // تزامن وتحديد المجموعة التعليمية تلقائياً
   useEffect(() => {
     if (initialSelectedHalaqaId) {
       setSelectedHalaqaId(initialSelectedHalaqaId);
     }
   }, [initialSelectedHalaqaId, setSelectedHalaqaId]);
 
-  // 🛠️ دالة مساعدة لفك واستخراج اسم الحلقة بأمان (دعم JSONB والنصوص)
+  // دالة مساعدة لاستخراج اسم الحلقة بأمان
   const formatHalaqaName = useCallback((halaqa) => {
     if (!halaqa) return '';
     
@@ -71,15 +71,15 @@ export default function Attendance({
   return (
     <div className="text-primary p-1 font-sans pb-24 relative" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* 1️⃣ الهيدر والتحكم بالتاريخ والحلقة */}
+      {/* 1️⃣ رأس الصفحة وضوابط التصفية */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold text-accent flex items-center gap-2 m-0">
             <GraduationCap className="w-7 h-7 text-accent" /> 
-            {translateText('recitation_attendance', 'رصد الحضور والإنتاجية القرآنية اليومية', 'Recitation & Attendance')}
+            {translateText('recitation_attendance', 'سجل الحضور والإنتاجية التعليمية اليومية', 'Daily Attendance & Performance Track')}
           </h2>
           <p className="text-xs text-muted mt-1 font-medium">
-            {translateText('attendanceSub', 'متابعة الدفتر اليومي للتسميع والمراجعة والتقييم مع التقرير المباشر لأولياء الأمور.', 'Track daily recitation, revision, grading, and instant parent reports.')}
+            {translateText('attendanceSub', 'إدارة وتوثيق سجلات التسميع والمراجعة والتقييم مع التقارير الفورية للمستفيدين.', 'Monitor daily recitation, retention, evaluation, and real-time progress reports.')}
           </p>
         </div>
         
@@ -92,7 +92,7 @@ export default function Attendance({
               className="bg-transparent border-none text-primary text-xs font-bold outline-none cursor-pointer w-full truncate"
             >
               <option value="" className="bg-card text-primary">
-                {isRtl ? 'جميع الحلقات والمجموعات' : 'All Learning Circles'}
+                {isRtl ? 'جميع الحلقات والمجموعات' : 'All Learning Groups'}
               </option>
               {halaqas.map(halaqa => (
                 <option key={halaqa.id} value={halaqa.id} className="bg-card text-primary">
@@ -114,7 +114,7 @@ export default function Attendance({
         </div>
       </div>
 
-      {/* 2️⃣ شريط الإحصائيات */}
+      {/* 2️⃣ لوحة المؤشرات والإحصائيات */}
       <div className="flex flex-col gap-2.5 mb-5">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div className="bg-card border border-border p-3 rounded-xl flex flex-col items-center justify-center">
@@ -138,7 +138,7 @@ export default function Attendance({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div className="sm:col-span-1 bg-info/10 border border-info/30 p-2.5 rounded-xl flex items-center justify-between px-4">
             <span className="text-xs text-info font-bold flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4" /> {isRtl ? 'نسبة الحضور:' : 'Attendance Rate:'}
+              <TrendingUp className="w-4 h-4" /> {isRtl ? 'نسبة الانضباط:' : 'Attendance Rate:'}
             </span>
             <span className="text-base font-extrabold text-info">{stats.rate}%</span>
           </div>
@@ -149,24 +149,24 @@ export default function Attendance({
             disabled={filteredStudents.length === 0}
             className="sm:col-span-2 bg-success text-success-foreground hover:bg-success/90 disabled:opacity-40 p-2.5 rounded-xl border border-success/30 flex items-center justify-center gap-2 text-xs font-extrabold transition-all active:scale-[0.98] shadow-md cursor-pointer"
           >
-            <CheckCheck className="w-4 h-4" /> {isRtl ? 'تحضير جميع طلاب القائمة حضور' : 'Mark All Displayed Present'}
+            <CheckCheck className="w-4 h-4" /> {isRtl ? 'تسجيل حضور كافة طلاب القائمة' : 'Mark All Displayed Attended'}
           </button>
         </div>
       </div>
 
-      {/* 3️⃣ شريط البحث */}
+      {/* 3️⃣ حقل البحث والتصفية */}
       <div className="mb-4 relative">
         <Search className={`absolute top-3.5 w-4 h-4 text-muted ${isRtl ? 'right-3.5' : 'left-3.5'}`} />
         <input 
           type="text"
-          placeholder={isRtl ? "ابحث باسم الطالب لسرعة الوصول..." : "Search student by name..."}
+          placeholder={isRtl ? "البحث عن طالب بالنص أو المعرف..." : "Search student by name or ID..."}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className={`w-full p-2.5 bg-card border border-border rounded-xl text-xs text-primary focus:outline-none focus:border-accent box-border ${isRtl ? 'pr-9' : 'pl-9'}`}
         />
       </div>
 
-      {/* تنبيه الرسائل */}
+      {/* تنبيهات النظام */}
       {message.text && (
         <div className={`p-3.5 rounded-xl mb-4 text-xs font-bold border ${
           message.type === 'success' 
@@ -181,14 +181,14 @@ export default function Attendance({
       {loadingFetch ? (
         <div className="flex flex-col items-center justify-center gap-3 py-12">
           <Loader2 className="w-8 h-8 animate-spin text-accent" />
-          <span className="text-xs text-muted font-bold">{translateText('loadingData', 'جاري جلب سجلات التسميع والحضور...', 'Fetching attendance logs...')}</span>
+          <span className="text-xs text-muted font-bold">{translateText('loadingData', 'جاري استرداد سجلات التسميع والحضور...', 'Fetching attendance logs...')}</span>
         </div>
       ) : (
         <div className="flex flex-col gap-3.5 mb-6">
           {filteredStudents.length === 0 ? (
             <div className="bg-card border border-border rounded-2xl p-8 text-center">
               <p className="text-xs text-muted font-bold m-0">
-                {isRtl ? 'لا يوجد طلاب مسجلون بحسب الفلتر المختار.' : 'No students found matching current filter.'}
+                {isRtl ? 'لا توجد بيانات مطابقة لمعايير البحث الحالية.' : 'No student records match current criteria.'}
               </p>
             </div>
           ) : (
@@ -207,7 +207,7 @@ export default function Attendance({
         </div>
       )}
 
-      {/* 5️⃣ زر الحفظ الثابت بالأسفل (Sticky Floating Action Bar) */}
+      {/* 5️⃣ زر الإقرار والحفظ الثابت */}
       {!loadingFetch && filteredStudents.length > 0 && (
         <div className="sticky bottom-4 z-20 mt-6 backdrop-blur-md bg-background/80 p-2 rounded-2xl border border-border shadow-2xl">
           <button 
@@ -217,8 +217,8 @@ export default function Attendance({
           >
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} 
             {isSaving 
-              ? translateText('saving', 'جاري معالجة وتوثيق الإنتاجية...', 'Saving and adopting records...') 
-              : translateText('saveBtn', 'اعتماد وحفظ الكشف الشامل والتسميع اليومي للحلقة 🚀', 'Adopt & Save Comprehensive Halaqa Sheet 🚀')
+              ? translateText('saving', 'جاري توثيق واعتماد البيانات...', 'Processing & recording entries...') 
+              : translateText('saveBtn', 'اعتماد وحفظ السجل اليومي الشامل للمجموعة', 'Adopt & Save Comprehensive Session Sheet')
             }
           </button>
         </div>
