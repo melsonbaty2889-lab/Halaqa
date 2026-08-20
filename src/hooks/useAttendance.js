@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { sessionService } from '../lib/sessionService';
 
 export function useAttendance({ students = [], academyId, halaqas = [], t, i18n }) {
-  const currentLang = i18n.language || 'ar';
+  const currentLang = i18n?.language || 'ar';
   const isRtl = currentLang === 'ar';
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -81,7 +81,7 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
               notes: record.notes || '',
               new_memorization: record.new_memorization || record.memorization || '',
               retention_assignment: record.retention_assignment || record.revision || '',
-              session_grade: record.session_grade || record.daily_grade || 10,
+              session_grade: record.session_grade ?? record.daily_grade ?? 10,
               quarter_index: record.quarter_index || 1
             };
           });
@@ -98,7 +98,7 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
   }, [selectedDate, academyId]);
 
   // ⚡ تحديث حقل طالب
-  const updateStudentField = (studentId, field, value) => {
+  const updateStudentField = useCallback((studentId, field, value) => {
     setAttendanceData(prev => ({
       ...prev,
       [studentId]: {
@@ -113,24 +113,26 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
         [field]: value
       }
     }));
-  };
+  }, []);
 
   // 🚀 تحضير الكل "حضور"
-  const handleMarkAllPresent = () => {
+  const handleMarkAllPresent = useCallback(() => {
     if (filteredStudents.length === 0) return;
-    const updated = { ...attendanceData };
-    filteredStudents.forEach(st => {
-      updated[st.id] = {
-        ...(updated[st.id] || { notes: '', new_memorization: '', retention_assignment: '', session_grade: 10 }),
-        status: 'present'
-      };
+    setAttendanceData(prev => {
+      const updated = { ...prev };
+      filteredStudents.forEach(st => {
+        updated[st.id] = {
+          ...(updated[st.id] || { notes: '', new_memorization: '', retention_assignment: '', session_grade: 10 }),
+          status: 'present'
+        };
+      });
+      return updated;
     });
-    setAttendanceData(updated);
     setMessage({ 
       text: translateText('allMarkedPresent', 'تم تحضير جميع طلاب القائمة "حضور" بنجاح 🟢', 'All displayed students marked as present 🟢'), 
       type: 'success' 
     });
-  };
+  }, [filteredStudents, translateText]);
 
   // 🔥 الحفظ المجمع
   const handleSaveAttendance = async () => {
@@ -168,7 +170,7 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
           notes: currentRecord?.notes || '',
           new_memorization: isPresent ? (currentRecord?.new_memorization || '') : '',
           retention_assignment: isPresent ? (currentRecord?.retention_assignment || '') : '',
-          session_grade: isPresent ? Number(currentRecord?.session_grade || 10) : null,
+          session_grade: isPresent ? Number(currentRecord?.session_grade ?? 10) : null,
           quarter_index: qIndex,
           juz: juzNum,
           quarter_in_hizb: qInHizb
@@ -201,6 +203,7 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
     loadingFetch,
     isSaving,
     message,
+    setMessage,
     filteredStudents,
     stats,
     updateStudentField,
