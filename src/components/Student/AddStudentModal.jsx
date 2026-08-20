@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* src/components/Student/AddStudentModal.jsx */
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 // 🛠️ الخدمات والثوابت والأدوات المساعدة
@@ -10,15 +11,45 @@ import colors from "@/theme/colors";
 import { Btn, Input, Select } from "@/components/UI/UI.jsx"; 
 import { X, UserPlus, CheckCircle, AlertCircle, GraduationCap } from 'lucide-react';
 
-export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaqasList = [] }) {
+export default function AddStudentModal({ 
+  isOpen, 
+  onClose, 
+  onStudentAdded, 
+  halaqasList = [],
+  academyId = null 
+}) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
   const [loading, setLoading] = useState(false);
   const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
 
-  // 📝 حالات النموذج الأولى (Form Initial States)
-  const initialFormState = {
+  // دالة معالجة واستخراج اسم الحلقة سواء كان نصاً أو كياناً مترجماً JSON
+  const formatName = useCallback((nameData) => {
+    if (!nameData) return '';
+    if (typeof nameData === 'string') {
+      try {
+        const parsed = JSON.parse(nameData);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return isRtl 
+            ? (parsed.ar || parsed.en || parsed.full_name || Object.values(parsed)[0] || '')
+            : (parsed.en || parsed.ar || parsed.full_name || Object.values(parsed)[0] || '');
+        }
+      } catch {
+        return nameData;
+      }
+      return nameData;
+    }
+    if (typeof nameData === 'object') {
+      return isRtl 
+        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
+        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
+    }
+    return String(nameData);
+  }, [isRtl]);
+
+  // 📝 حالات النموذج الأولى
+  const [formData, setFormData] = useState({
     name: '',
     parent_name: '',
     parent_phone: '',
@@ -26,11 +57,16 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
     gender: 'male',
     country: 'EG',
     subscription_system: 'monthly',
-    halaqa_id: halaqasList.length > 0 ? halaqasList[0].id : '',
+    halaqa_id: '',
     status: 'active'
-  };
+  });
 
-  const [formData, setFormData] = useState(initialFormState);
+  // تحديث الحلقة الافتراضية بمجرد تحميل القائمة
+  useEffect(() => {
+    if (halaqasList.length > 0 && !formData.halaqa_id) {
+      setFormData(prev => ({ ...prev, halaqa_id: halaqasList[0].id }));
+    }
+  }, [halaqasList, formData.halaqa_id]);
 
   const triggerToast = (text, type = 'success') => {
     setInlineMessage({ text, type });
@@ -38,7 +74,17 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
   };
 
   const resetForm = () => {
-    setFormData(initialFormState);
+    setFormData({
+      name: '',
+      parent_name: '',
+      parent_phone: '',
+      birth_date: '',
+      gender: 'male',
+      country: 'EG',
+      subscription_system: 'monthly',
+      halaqa_id: halaqasList.length > 0 ? halaqasList[0].id : '',
+      status: 'active'
+    });
     setInlineMessage({ text: '', type: '' });
   };
 
@@ -58,7 +104,6 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
 
     setLoading(true);
     try {
-      // توليد كود طالب تسلسلي مختصر
       const studentCode = 'ST-' + Math.floor(1000 + Math.random() * 9000);
 
       const payload = {
@@ -75,27 +120,54 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
         student_code: studentCode,
         current_quarter_index: 0,
         current_juz: 1,
+        academy_id: academyId || null,
         created_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
+      // 1️⃣ إنشاء سجل الطالب الرئيسي
+      const { data: insertedStudent, error: studentError } = await supabase
         .from('students')
         .insert([payload])
         .select()
         .single();
 
-      if (error) throw error;
+      if (studentError) throw studentError;
+
+      // 2️⃣ ربط الطالب بالحلقة عبر الجدول الوسيط student_halaqas في حال تحديد حلقة
+      let linkedHalaqaData = null;
+      if (formData.halaqa_id && insertedStudent?.id) {
+        const { error: joinError } = await supabase
+          .from('student_halaqas')
+          .insert([{
+            student_id: insertedStudent.id,
+            halaqa_id: formData.halaqa_id,
+            status: 'active',
+            created_at: new Date().toISOString()
+          }]);
+
+        if (joinError) {
+          console.warn('⚠️ Warning linking student to halaqa relation table:', joinError);
+        } else {
+          linkedHalaqaData = halaqasList.find(h => String(h.id) === String(formData.halaqa_id));
+        }
+      }
 
       triggerToast(t('student_added_success') || (isRtl ? 'تم إضافة الطالب بنجاح' : 'Student added successfully'), 'success');
       
-      if (onStudentAdded) onStudentAdded(data);
+      // إرجاع الكيان كاملاً شاملاً بيانات الحلقة المربوطة
+      if (onStudentAdded) {
+        onStudentAdded({
+          ...insertedStudent,
+          halaqas: linkedHalaqaData || null
+        });
+      }
       
       setTimeout(() => {
         handleClose();
       }, 1000);
 
     } catch (error) {
-      console.error("Error adding student:", error);
+      console.error("🚨 Error adding student:", error);
       triggerToast(t('student_added_failed') || (isRtl ? 'فشل إضافة الطالب' : 'Failed to add student'), 'error');
     } finally {
       setLoading(false);
@@ -126,7 +198,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
 
   const halaqaOptions = halaqasList.map(h => ({
     value: h.id,
-    label: h.name
+    label: formatName(h.name)
   }));
 
   return (
@@ -134,7 +206,6 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
       dir={isRtl ? 'rtl' : 'ltr'} 
       className="fixed inset-0 z-[1300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
     >
-      
       {/* 🚀 إشعار تنبيهي داخلي */}
       {inlineMessage.text && (
         <div 
@@ -156,7 +227,6 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
           borderColor: colors.borderCard 
         }}
       >
-        
         {/* 🏷️ رأس النافذة */}
         <div 
           className="px-5 py-4 flex items-center justify-between border-b"
@@ -298,7 +368,6 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded, halaq
           </div>
 
         </form>
-
       </div>
     </div>
   );
