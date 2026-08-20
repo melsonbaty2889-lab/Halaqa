@@ -217,7 +217,7 @@ export default function Reports({ students = [], academyId }) {
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'} 
-      className="min-h-screen p-4 bg-slate-950 text-slate-100"
+      className="min-h-screen p-4 bg-transparent text-slate-100"
     >
       {/* التنبيهات المنبثقة (Toast) */}
       {toastMessage && (
