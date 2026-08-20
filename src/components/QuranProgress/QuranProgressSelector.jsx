@@ -1,4 +1,6 @@
+/* src/components/QuranProgress/QuranProgressSelector.jsx */
 import React, { useState, useEffect, useRef } from 'react';
+import colors from '@/theme/colors';
 
 export default function QuranProgressSelector({ initialIndex, onIndexChange, disabled }) {
   const [juz, setJuz] = useState(1);
@@ -41,32 +43,32 @@ export default function QuranProgressSelector({ initialIndex, onIndexChange, dis
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-      <label style={{ color: '#b392ac', fontSize: '14px', fontWeight: '500', textAlign: 'right', display: 'block' }}>
+    <div className="flex flex-col gap-2 w-full">
+      <label className="text-[#b392ac] text-sm font-medium text-right block">
         المستوى الحالي في الحفظ (الورد):
       </label>
-      <div style={{ display: 'flex', gap: '12px', direction: 'rtl' }}>
-        <div style={{ flex: 1 }}>
+      <div className="flex gap-3 dir-rtl">
+        <div className="flex-1">
           <select 
             value={juz} 
             onChange={(e) => setJuz(parseInt(e.target.value, 10))}
             disabled={disabled}
-            style={{ width: '100%', padding: '12px', backgroundColor: '#111827', color: '#ffffff', borderRadius: '8px', border: '1px solid #374151', cursor: disabled ? 'not-allowed' : 'pointer', textAlign: 'right' }}
+            className={`w-full p-3 bg-[${colors.background || '#111827'}] text-white rounded-lg border border-[${colors.border || '#374151'}] ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} text-right`}
           >
             {Array.from({ length: 30 }, (_, i) => i + 1).map((num) => (
-              <option key={num} value={num}>الجزء {num}</option>
+              <option key={num} value={num} className="bg-[#111827] text-white">الجزء {num}</option>
             ))}
           </select>
         </div>
-        <div style={{ flex: 1 }}>
+        <div className="flex-1">
           <select 
             value={quarterInJuz} 
             onChange={(e) => setQuarterInJuz(parseInt(e.target.value, 10))}
             disabled={disabled}
-            style={{ width: '100%', padding: '12px', backgroundColor: '#111827', color: '#ffffff', borderRadius: '8px', border: '1px solid #374151', cursor: disabled ? 'not-allowed' : 'pointer', textAlign: 'right' }}
+            className={`w-full p-3 bg-[${colors.background || '#111827'}] text-white rounded-lg border border-[${colors.border || '#374151'}] ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} text-right`}
           >
             {Array.from({ length: 8 }, (_, i) => i + 1).map((num) => (
-              <option key={num} value={num}>{getQuarterLabel(num)}</option>
+              <option key={num} value={num} className="bg-[#111827] text-white">{getQuarterLabel(num)}</option>
             ))}
           </select>
         </div>
