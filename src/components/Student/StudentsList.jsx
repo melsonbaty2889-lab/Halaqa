@@ -83,7 +83,6 @@ export default function StudentsList({
       if (halaqasErr) throw halaqasErr;
       if (halaqasData) setInternalHalaqas(halaqasData);
 
-      // 🚀 الاستعلام المحدث للجلب عبر الجدول الوسيط student_halaqas
       const { data: studentsData, error: studentsErr } = await supabase
         .from('students')
         .select(`
@@ -98,7 +97,6 @@ export default function StudentsList({
 
       if (studentsErr) throw studentsErr;
 
-      // تحويل واستخراج الحلقة النشطة للطالب لتسهيل التعامل معها داخل المكون
       const formattedStudents = (studentsData || []).map(student => {
         const activeStudentHalaqa = Array.isArray(student.student_halaqas)
           ? student.student_halaqas.find(sh => sh.status === 'active')
@@ -615,6 +613,7 @@ export default function StudentsList({
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         halaqasList={halaqas}
+        academyId={academyId}
         onStudentAdded={(newStudent) => {
           setStudents(prev => [newStudent, ...prev]);
         }}
