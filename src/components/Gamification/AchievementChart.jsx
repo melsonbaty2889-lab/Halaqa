@@ -1,5 +1,7 @@
+/* src/components/Gamification/AchievementChart.jsx */
 import React from 'react';
-import { FaArrowUp, FaBookOpen } from 'react-icons/fa';
+import { TrendingUp, BookOpen } from 'lucide-react';
+import colors from '@/theme/colors';
 
 // مصفوفة افتراضية كاملة (7 أيام) ومحدثة بدقة
 const DEFAULT_WEEKLY_DATA = [
@@ -49,10 +51,7 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
   const textAlignment = isRtl ? 'text-right' : 'text-left';
 
   return (
-    <div 
-      className="p-5 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4 justify-between h-full transition-all duration-300 hover:border-white/10 select-none"
-      style={{ background: 'var(--surface, #0F172A)' }}
-    >
+    <div className={`p-5 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4 justify-between h-full transition-all duration-300 hover:border-white/10 select-none bg-[${colors.surface || '#0F172A'}]`}>
       {/* حقن أكواد الأنيميشن السينمائية بسلاسة فائقة */}
       <style>{`
         @keyframes customBlurIn {
@@ -83,7 +82,7 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
         </div>
         
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
-          <FaArrowUp size={8} />
+          <TrendingUp className="w-3 h-3" />
           <span>+12%</span>
         </div>
       </div>
@@ -93,7 +92,7 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
         <div className={`p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] ${textAlignment}`}>
           <span className="text-[11px] text-slate-400 block mb-0.5">{isRtl ? 'إجمالي صفحات الأسبوع' : 'Total Weekly Pages'}</span>
           <span className="text-lg font-extrabold text-white flex items-center gap-1 justify-start">
-            <FaBookOpen className="text-[#FBBF24] text-xs shrink-0" />
+            <BookOpen className="text-[#FBBF24] w-4 h-4 shrink-0" />
             <span className="font-sans">{totalPages}</span> 
             <span className="text-xs font-normal text-slate-400">{isRtl ? 'صفحة' : 'Pages'}</span>
           </span>
@@ -107,7 +106,7 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
       </div>
 
       {/* منطقة الـ SVG المتطورة */}
-      <div className="relative w-full mt-2" style={{ height: `${chartHeight}px` }}>
+      <div className="relative w-full mt-2 h-[140px]">
         <svg 
           viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
           className="w-full h-full overflow-visible" 
@@ -153,7 +152,7 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
 
             return (
               <g key={i} className="group/node cursor-pointer">
-                {/* خط المأشير العمودي عند الـ Hover */}
+                {/* خط المؤشر العمودي عند الـ Hover */}
                 <line 
                   x1={p.x} y1={p.y} x2={p.x} y2={chartHeight} 
                   stroke="#FBBF24" strokeWidth="1" strokeDasharray="2 2" 
