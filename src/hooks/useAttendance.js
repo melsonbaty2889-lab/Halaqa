@@ -89,13 +89,17 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
         setAttendanceData(mappedData);
       } catch (error) {
         console.error("🚨 خطأ أثناء استدعاء بيانات الحضور:", error);
+        setMessage({
+          text: translateText('fetchFailed', 'تعذر استرجاع بيانات الحضور لهذا اليوم.', 'Failed to retrieve attendance logs for this date.'),
+          type: 'error'
+        });
       } finally {
         setLoadingFetch(false);
       }
     }
 
     fetchAttendance();
-  }, [selectedDate, academyId]);
+  }, [selectedDate, academyId, translateText]);
 
   // ⚡ تحديث حقل طالب
   const updateStudentField = useCallback((studentId, field, value) => {
@@ -141,6 +145,11 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
       return;
     }
 
+    if (filteredStudents.length === 0) {
+      setMessage({ text: translateText('noStudentsToSave', 'لا يوجد طلاب لتسجيل حضورهم في هذه القائمة', 'No students available to save'), type: 'error' });
+      return;
+    }
+
     setIsSaving(true);
     setMessage({ text: '', type: '' });
 
@@ -167,9 +176,9 @@ export function useAttendance({ students = [], academyId, halaqas = [], t, i18n 
           halaqa_id: targetHalaqaId, 
           date: selectedDate,
           status: currentRecord?.status || 'present',
-          notes: currentRecord?.notes || '',
-          new_memorization: isPresent ? (currentRecord?.new_memorization || '') : '',
-          retention_assignment: isPresent ? (currentRecord?.retention_assignment || '') : '',
+          notes: (currentRecord?.notes || '').trim(),
+          new_memorization: isPresent ? (currentRecord?.new_memorization || '').trim() : '',
+          retention_assignment: isPresent ? (currentRecord?.retention_assignment || '').trim() : '',
           session_grade: isPresent ? Number(currentRecord?.session_grade ?? 10) : null,
           quarter_index: qIndex,
           juz: juzNum,
