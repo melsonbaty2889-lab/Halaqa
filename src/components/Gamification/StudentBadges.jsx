@@ -1,5 +1,7 @@
+/* src/components/Gamification/StudentBadges.jsx */
 import React, { useMemo } from 'react';
 import { Award, Flame, Star, Crown, Lock } from 'lucide-react';
+import colors from '@/theme/colors';
 
 export default function StudentBadges({ student = {}, weeklyData = [], isRtl = true }) {
   const badges = useMemo(() => {
@@ -46,133 +48,54 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'}
-      style={{
-        background: '#0F172A',
-        borderRadius: '16px',
-        border: '1px solid #1E293B',
-        padding: '16px',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
-        boxSizing: 'border-box',
-        marginBottom: '20px'
-      }}
+      className="bg-[#0F172A] rounded-2xl border border-[#1E293B] p-4 shadow-[0_10px_25px_rgba(0,0,0,0.3)] box-border mb-5"
     >
-      <div 
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '14px',
-          paddingBottom: '10px',
-          borderBottom: '1px solid #1E293B'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.12)',
-            padding: '6px',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid rgba(245, 158, 11, 0.2)'
-          }}>
-            <Award size={18} color="#F59E0B" />
+      <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-[#1E293B]">
+        <div className="flex items-center gap-2">
+          <div className="bg-amber-500/15 p-1.5 rounded-lg flex items-center justify-center border border-amber-500/20">
+            <Award size={18} className="text-amber-500" />
           </div>
-          <span style={{ color: '#F8FAFC', fontSize: '14px', fontWeight: 'bold' }}>
+          <span className="text-slate-100 text-sm font-bold">
             {isRtl ? 'شارات التميز والإتقان' : 'Mastery Badges'}
           </span>
         </div>
 
-        <span style={{
-          fontSize: '11px',
-          fontWeight: 'bold',
-          color: '#F59E0B',
-          background: '#090F16',
-          padding: '4px 10px',
-          borderRadius: '20px',
-          border: '1px solid rgba(245, 158, 11, 0.2)'
-        }}>
+        <span className="text-xs font-bold text-amber-500 bg-[#090F16] px-2.5 py-1 rounded-full border border-amber-500/20">
           {unlockedCount} / {badges.length}
         </span>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-        gap: '10px'
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2.5">
         {badges.map((badge) => (
           <div 
             key={badge.id}
-            style={{
-              position: 'relative',
-              background: badge.unlocked ? 'rgba(9, 15, 22, 0.9)' : 'rgba(15, 23, 42, 0.4)',
-              border: badge.unlocked ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid #1E293B',
-              borderRadius: '12px',
-              padding: '12px 8px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              opacity: badge.unlocked ? 1 : 0.45,
-              transition: 'all 0.2s ease',
-              boxShadow: badge.unlocked ? '0 4px 14px rgba(245, 158, 11, 0.08)' : 'none'
-            }}
+            className={`relative rounded-xl p-3 flex flex-col items-center text-center transition-all duration-200 ${
+              badge.unlocked 
+                ? 'bg-[#090F16]/90 border border-amber-500/40 opacity-100 shadow-[0_4px_14px_rgba(245,158,11,0.08)]' 
+                : 'bg-[#0F172A]/40 border border-[#1E293B] opacity-45'
+            }`}
           >
             {badge.unlocked ? (
               badge.count > 1 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-6px',
-                  [isRtl ? 'left' : 'right']: '-6px',
-                  background: '#F59E0B',
-                  color: '#0F172A',
-                  fontSize: '9px',
-                  fontWeight: 'bold',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.4)'
-                }}>
+                <span className={`absolute -top-1.5 ${isRtl ? '-left-1.5' : '-right-1.5'} bg-amber-500 text-[#0F172A] text-[9px] font-bold px-1.5 py-0.5 rounded-[10px] shadow-md`}>
                   x{badge.count}
                 </span>
               )
             ) : (
-              <span style={{
-                position: 'absolute',
-                top: '6px',
-                [isRtl ? 'left' : 'right']: '-6px',
-                color: '#64748B'
-              }}>
+              <span className={`absolute top-1.5 ${isRtl ? '-left-1.5' : '-right-1.5'} text-slate-500`}>
                 <Lock size={12} />
               </span>
             )}
 
-            <div style={{
-              marginBottom: '6px',
-              background: badge.unlocked ? 'rgba(245, 158, 11, 0.12)' : '#090F16',
-              padding: '8px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
+            <div className={`mb-1.5 p-2 rounded-full flex items-center justify-center ${badge.unlocked ? 'bg-amber-500/15' : 'bg-[#090F16]'}`}>
               {badge.icon}
             </div>
 
-            <div style={{
-              fontSize: '12px',
-              fontWeight: 'bold',
-              color: badge.unlocked ? '#F8FAFC' : '#64748B',
-              marginBottom: '3px'
-            }}>
+            <div className={`text-xs font-bold mb-0.5 ${badge.unlocked ? 'text-slate-100' : 'text-slate-500'}`}>
               {isRtl ? badge.titleAr : badge.titleEn}
             </div>
 
-            <div style={{
-              fontSize: '9.5px',
-              color: badge.unlocked ? '#94A3B8' : '#475569',
-              lineHeight: '1.3'
-            }}>
+            <div className={`text-[9.5px] leading-tight ${badge.unlocked ? 'text-slate-400' : 'text-slate-600'}`}>
               {isRtl ? badge.descAr : badge.descEn}
             </div>
           </div>
