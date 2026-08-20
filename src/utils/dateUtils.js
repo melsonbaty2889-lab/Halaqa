@@ -1,5 +1,17 @@
 /* src/utils/dateUtils.js */
 
+export const HIJRI_MONTHS_AR = [
+  "محرم", "صفر", "ربيع الأول", "ربيع الآخر",
+  "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
+  "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+];
+
+export const HIJRI_MONTHS_EN = [
+  "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+];
+
 // جلب التعديل المحفوظ في المتصفح (الافتراضي 0 لأن تقويم أم القرى دقيق)
 export const getSavedHijriOffset = () => {
   if (typeof window === 'undefined') return 0;
