@@ -39,7 +39,8 @@ export const upsertAttendance = async (records) => {
 
   const { data, error } = await supabase
     .from('attendance')
-    .upsert(records, { onConflict: 'student_id,halaqa_id,date' });
+    .upsert(records, { onConflict: 'student_id,date' })
+    .select();
 
   if (error) {
     console.error("🚨 Error upserting attendance:", error.message);
@@ -75,7 +76,7 @@ export const saveDailySession = async ({
           status: attendanceStatus,
           notes: attendanceNotes || null,
         },
-        { onConflict: 'student_id,halaqa_id,date' }
+        { onConflict: 'student_id,date' }
       );
 
     if (attendanceError) throw attendanceError;
