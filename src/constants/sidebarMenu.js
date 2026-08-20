@@ -8,15 +8,19 @@ import {
   Award, 
   CreditCard, 
   SlidersHorizontal, 
+  Zap, 
+  History, 
+  Send, 
   Trophy, 
-  BookMarked, 
-  Send 
+  FolderOpen, 
+  Share2, 
+  BookMarked,
+  Library
 } from "lucide-react";
 
 /**
- * توليد أقسام القائمة الجانبية المخصصة بحسب لغة الواجهة ودور المستخدم (Role-based Menu)
- * @param {boolean} isRtl - اتجاه النص (عربي / إنجليزي)
- * @param {string} userRole - دور المستخدم الحالي ('admin', 'teacher', 'student')
+ * القائمة الجانبية العالمية الموحدة (Global Quranic SaaS Menu)
+ * مصطلحات واضحة يفهمها أي مستخدم عربي أو أجنبي بغض النظر عن دولته أو ثقافته
  */
 export const getMenuSections = (isRtl, userRole = 'admin') => {
   const sections = [
@@ -32,7 +36,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
         },
         { 
           id: 'attendance', 
-          label: isRtl ? 'التسميع والتحضير اليومي' : 'Daily Recitation Log', 
+          label: isRtl ? 'متابعة الحفظ والحضور' : 'Recitation & Attendance Log', 
           icon: CheckCircle2, 
           roles: ['admin', 'teacher', 'student'] 
         },
@@ -47,6 +51,12 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           label: isRtl ? 'المصحف والتسميع الذكي' : 'Interactive Quran & AI', 
           icon: BookMarked, 
           roles: ['admin', 'teacher', 'student'] 
+        },
+        { 
+          id: 'audit_logs', 
+          label: isRtl ? 'سجل النشاطات' : 'Activity Log', 
+          icon: History, 
+          roles: ['admin'] 
         }
       ]
     },
@@ -56,21 +66,33 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
       items: [
         { 
           id: 'halaqas', 
-          label: isRtl ? 'الحلقات والكتاتيب' : 'Halaqas & Katateeb', 
+          label: isRtl ? 'الحلقات والمقارئ' : 'Quran Classes & Circles', 
           icon: BookOpen, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'students', 
-          label: isRtl ? 'دليل الطلاب والأسر' : 'Students & Guardians', 
+          label: isRtl ? 'الطلاب وأولياء الأمور' : 'Students & Guardians', 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'teachers', 
-          label: isRtl ? 'الكادر والمعلمون' : 'Faculty & Staff', 
+          label: isRtl ? 'المعلمون والمقرئون' : 'Teachers & Reciters', 
           icon: Presentation, 
           roles: ['admin'] 
+        },
+        { 
+          id: 'curricula', 
+          label: isRtl ? 'المناهج والقراءات' : 'Curricula & Qiraat', 
+          icon: Library, 
+          roles: ['admin', 'teacher'] 
+        },
+        { 
+          id: 'files', 
+          label: isRtl ? 'المكتبة والمصادر' : 'Library & Resources', 
+          icon: FolderOpen, 
+          roles: ['admin', 'teacher', 'student'] 
         }
       ]
     },
@@ -86,7 +108,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
         },
         { 
           id: 'gamification-streaks', 
-          label: isRtl ? 'سلسلة الإنجاز والأوسمة' : 'Streaks & Badges', 
+          label: isRtl ? 'لوحة التحفيز والأوسمة' : 'Rewards & Badges', 
           icon: Trophy, 
           roles: ['admin', 'teacher', 'student'] 
         }
@@ -94,17 +116,29 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     },
     {
       id: 'admin-finance',
-      title: isRtl ? 'الإدارة والمالية' : 'Finance & Governance',
+      title: isRtl ? 'الإدارة والمالية' : 'Finance & Settings',
       items: [
         { 
           id: 'payments', 
-          label: isRtl ? 'المالية والكفالات' : 'Finance & Sponsorships', 
+          label: isRtl ? 'الاشتراكات والرسوم' : 'Fees & Subscriptions', 
           icon: CreditCard, 
           roles: ['admin'] 
         },
         { 
+          id: 'subscriptions', 
+          label: isRtl ? 'باقة الأكاديمية والترقية' : 'Plan & Upgrades', 
+          icon: Zap, 
+          roles: ['admin'] 
+        },
+        { 
+          id: 'referrals', 
+          label: isRtl ? 'برنامج التوصية والدعوات' : 'Referral Program', 
+          icon: Share2, 
+          roles: ['admin', 'teacher'] 
+        },
+        { 
           id: 'settings', 
-          label: isRtl ? 'إعدادات المنظومة' : 'Academy Settings', 
+          label: isRtl ? 'إعدادات المنظومة' : 'Platform Settings', 
           icon: SlidersHorizontal, 
           roles: ['admin'] 
         }
@@ -112,7 +146,6 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     }
   ];
 
-  // تصفية الأقسام والعناصر بناءً على صلاحيات المستخدم المحددة
   return sections
     .map(section => ({
       ...section,
