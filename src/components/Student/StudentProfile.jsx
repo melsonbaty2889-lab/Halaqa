@@ -3,9 +3,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// 🛠️ الخدمات والثوابت والأدوات المساعدة
+// 🛠️ الخدمات والثوابت وأدوات الهوية
 import { supabase } from "@/lib/supabase";
-import colors from '@/theme/colors';
+import colors from "@/theme/colors";
 import { COUNTRIES_LIST } from "@/constants/countries";
 import { getQuranProgress } from "@/utils/quranUtils";
 import { formatName } from "@/utils/formatters";
@@ -197,18 +197,18 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
 
   if (loading) {
     return (
-      <div style={{ color: C.text || '#fff', textAlign: 'center', padding: '100px 20px' }}>
-        <div style={{ fontSize: '28px', marginBottom: '10px' }}>⏳</div>
-        <div style={{ fontSize: '14px', color: '#94A3B8' }}>{t('loading_premium_profile') || (isRtl ? 'جاري تحميل ملف الطالب...' : 'Loading student profile...')}</div>
+      <div className={`text-[${colors.text || '#fff'}] text-center py-28 px-5`}>
+        <div className="text-3xl mb-2.5">⏳</div>
+        <div className="text-sm text-slate-400">{t('loading_premium_profile') || (isRtl ? 'جاري تحميل ملف الطالب...' : 'Loading student profile...')}</div>
       </div>
     );
   }
 
   if (!student) {
     return (
-      <div style={{ color: '#EF4444', textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{t('student_not_found') || (isRtl ? 'الطالب غير موجود' : 'Student not found')}</div>
-        <Btn variant="ghost" onClick={() => navigate('/students')} style={{ marginTop: '16px' }}>
+      <div className="text-red-500 text-center py-16 px-5">
+        <div className="text-base font-bold">{t('student_not_found') || (isRtl ? 'الطالب غير موجود' : 'Student not found')}</div>
+        <Btn variant="ghost" onClick={() => navigate('/students')} className="mt-4">
           {isRtl ? 'العودة لقائمة الطلاب' : 'Back to Students List'}
         </Btn>
       </div>
@@ -224,9 +224,9 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
 
   const getStatusStyle = (status) => {
     switch(status) {
-      case 'paused': return { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', label: t('status_paused') || (isRtl ? 'موقوف مؤقتاً' : 'Paused') };
-      case 'inactive': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#EF4444', label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') };
-      default: return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10B981', label: t('status_active') || (isRtl ? 'نشط' : 'Active') };
+      case 'paused': return { className: 'bg-amber-500/15 text-amber-400 border-amber-500/20', label: t('status_paused') || (isRtl ? 'موقوف مؤقتاً' : 'Paused') };
+      case 'inactive': return { className: 'bg-red-500/15 text-red-400 border-red-500/20', label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') };
+      default: return { className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', label: t('status_active') || (isRtl ? 'نشط' : 'Active') };
     }
   };
   const statusInfo = getStatusStyle(student.status);
@@ -254,10 +254,10 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   ];
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '12px', boxSizing: 'border-box' }}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="w-full max-w-[600px] mx-auto p-3 box-border">
       
       {inlineMessage.text && (
-        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: inlineMessage.type === 'success' ? '#059669' : '#DC2626', color: '#fff', padding: '12px 20px', borderRadius: '30px', zIndex: 1200, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', fontSize: '14px', fontWeight: 'bold' }}>
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 text-white px-5 py-3 rounded-full z-[1200] flex items-center gap-2 shadow-xl text-sm font-bold ${inlineMessage.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>
           {inlineMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{inlineMessage.text}</span>
         </div>
@@ -267,60 +267,60 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         title={isEditing ? "" : studentDisplayName}
         sub={isEditing ? "" : `${t('student_id') || (isRtl ? 'كود الطالب' : 'Student Code')}: #${student.student_code || (student.id ? student.id.slice(0, 8) : '')}`}
         action={
-          <Btn variant="ghost" onClick={() => navigate(-1)} style={{ borderRadius: '20px' }}>
+          <Btn variant="ghost" onClick={() => navigate(-1)} className="rounded-full">
             {isRtl ? <><ArrowRight className="w-4 h-4" /> {t('back') || 'رجوع'}</> : <><ArrowLeft className="w-4 h-4" /> {t('back') || 'Back'}</>}
           </Btn>
         }
       />
 
-      <Card style={{ borderRadius: '16px 16px 0 0', display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', borderBottom: 'none', background: '#1E293B', border: '1px solid #334155' }}>
+      <Card className={`rounded-t-2xl flex items-center gap-3.5 relative border-b-0 bg-[${colors.card || '#1E293B'}] border border-[${colors.border || '#334155'}] p-4`}>
         
-        <div style={{ position: 'absolute', top: '16px', left: isRtl ? '16px' : 'auto', right: isRtl ? 'auto' : '16px' }}>
+        <div className={`absolute top-4 ${isRtl ? 'left-4' : 'right-4'}`}>
           {isEditing ? (
             <Select 
               value={student.status || "active"} 
               onChange={(e) => setStudent({...student, status: e.target.value})} 
               options={statusOptions}
-              style={{ padding: '4px 8px', fontSize: '11px', height: 'auto', marginBottom: 0 }}
+              className="py-1 px-2 text-xs h-auto mb-0"
             />
           ) : (
-            <span style={{ background: statusInfo.bg, color: statusInfo.text, padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', border: `1px solid ${statusInfo.text}33` }}>
+            <span className={`px-2.5 py-1 rounded-xl text-xs font-bold border ${statusInfo.className}`}>
               ● {statusInfo.label}
             </span>
           )}
         </div>
 
-        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: student.gender === 'female' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: `2px solid ${student.gender === 'female' ? '#EC4899' : '#3B82F6'}` }}>
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl border-2 ${student.gender === 'female' ? 'bg-pink-500/10 border-pink-500 text-pink-500' : 'bg-blue-500/10 border-blue-500 text-blue-500'}`}>
           {genderPolicy === 'separated' && student.gender === 'female' ? (
-            <UserCheck style={{ color: '#EC4899' }} className="w-6 h-6" />
+            <UserCheck className="w-6 h-6 text-pink-500" />
           ) : (
             student.gender === 'female' ? '🧕' : '👨‍🎓'
           )}
         </div>
 
-        <div style={{ flex: 1 }}>
+        <div className="flex-1">
           {isEditing ? (
             <Input 
               value={studentDisplayName} 
               onChange={(e) => setStudent({...student, name: e.target.value})} 
-              style={{ marginBottom: 0, fontSize: '14px', fontWeight: 'bold' }}
+              className="mb-0 text-sm font-bold"
               required
             />
           ) : (
-            <div style={{ textAlign: 'start' }}>
-              <h3 style={{ margin: 0, color: '#F8FAFC', fontSize: '17px', fontWeight: 'bold' }}>{studentDisplayName}</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
+            <div className="text-start">
+              <h3 className="m-0 text-slate-100 text-lg font-bold">{studentDisplayName}</h3>
+              <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
                 <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
                 <span>{matchedCountry ? (isRtl ? (matchedCountry.name_ar || matchedCountry.nameAr) : (matchedCountry.name_en || matchedCountry.nameEn)) : ''}</span>
                 {currentAge !== null && <span>• {currentAge} {t('years_old') || (isRtl ? 'سنة' : 'yrs')}</span>}
-                {halaqaDisplayName && <span style={{ color: '#F59E0B' }}>• {halaqaDisplayName}</span>}
+                {halaqaDisplayName && <span className="text-amber-500">• {halaqaDisplayName}</span>}
               </div>
             </div>
           )}
         </div>
       </Card>
 
-      <div style={{ display: 'flex', background: '#0F172A', borderLeft: `1px solid #334155`, borderRight: `1px solid #334155`, padding: '4px' }}>
+      <div className={`flex bg-[${colors.background || '#0F172A'}] border-x border-[${colors.border || '#334155'}] p-1`}>
         {[
           { id: 'quran', label: t('tab_quran_track') || (isRtl ? 'مسار القرآن' : 'Quran Track'), icon: <BookOpen className="w-3.5 h-3.5" /> },
           { id: 'personal', label: t('tab_identity_contact') || (isRtl ? 'البيانات والتواصل' : 'Identity & Contact'), icon: <Info className="w-3.5 h-3.5" /> },
@@ -330,40 +330,40 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             key={tab.id}
             variant={activeTab === tab.id ? 'primary' : 'ghost'}
             onClick={() => setActiveTab(tab.id)}
-            style={{ flex: 1, padding: '10px 4px', fontSize: '11px', borderRadius: activeTab === tab.id ? '8px' : '0', border: 'none', background: activeTab === tab.id ? '#1E293B' : 'transparent', color: activeTab === tab.id ? '#F59E0B' : '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            className={`flex-1 py-2.5 px-1 text-xs rounded-none border-none flex items-center justify-center gap-1.5 transition-colors ${activeTab === tab.id ? `bg-[${colors.card || '#1E293B'}] text-amber-500 font-bold` : 'bg-transparent text-slate-400 hover:text-slate-200'}`}
           >
             {tab.icon} {tab.label}
           </Btn>
         ))}
       </div>
 
-      <Card style={{ borderRadius: '0 0 16px 16px', borderTop: 'none', background: '#1E293B', border: '1px solid #334155', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Card className={`rounded-b-2xl border-t-0 bg-[${colors.card || '#1E293B'}] border border-[${colors.border || '#334155'}] shadow-2xl flex flex-col gap-4 p-4`}>
         
         {activeTab === 'quran' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="flex flex-col gap-3.5">
             
             <StudentStatsCard student={student} isRtl={isRtl} />
 
             <StudentBadges student={student} weeklyData={weeklyData} isRtl={isRtl} />
 
-            <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155` }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', textAlign: 'start' }}>
-                <span style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className={`bg-[${colors.background || '#0F172A'}] p-3.5 rounded-xl border border-[${colors.border || '#334155'}]`}>
+              <div className="flex items-center mb-2 text-start">
+                <span className="text-xs text-amber-500 font-bold flex items-center gap-1.5">
                   <CheckSquare className="w-4 h-4 text-emerald-500" /> {t('current_memorization_progress') || (isRtl ? 'التقدم الحفظي الحالي' : 'Current Memorization Progress')}
                 </span>
               </div>
-              <div style={{ margin: '8px 0 12px 0' }}>
+              <div className="my-2">
                 <QuranProgressBar currentQuarterIndex={student.current_quarter_index || 0} />
               </div>
-              <div style={{ background: '#1E293B', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', border: `1px solid #334155` }}>
-                <span style={{ color: '#94A3B8' }}>{t('current_juz') || (isRtl ? 'الجزء الحالي' : 'Current Juz')}</span>
-                <span style={{ fontWeight: 'bold', color: '#10B981' }}>{t('juz') || (isRtl ? 'الجزء' : 'Juz')} {student.current_juz || 1}</span>
+              <div className={`bg-[${colors.card || '#1E293B'}] px-3 py-2 rounded-lg text-xs flex justify-between border border-[${colors.border || '#334155'}]`}>
+                <span className="text-slate-400">{t('current_juz') || (isRtl ? 'الجزء الحالي' : 'Current Juz')}</span>
+                <span className="font-bold text-emerald-500">{t('juz') || (isRtl ? 'الجزء' : 'Juz')} {student.current_juz || 1}</span>
               </div>
             </div>
 
             <div className="w-full">
               {chartLoading ? (
-                <div style={{ background: '#0F172A', padding: '24px', borderRadius: '12px', border: `1px solid #334155`, textAlign: 'center', fontSize: '12px', color: '#94A3B8' }}>
+                <div className={`bg-[${colors.background || '#0F172A'}] p-6 rounded-xl border border-[${colors.border || '#334155'}] text-center text-xs text-slate-400`}>
                   ⏳ {isRtl ? 'جاري تحليل منحنى الإنجاز الأسبوعي...' : 'Analyzing weekly achievement logs...'}
                 </div>
               ) : (
@@ -372,11 +372,11 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             </div>
 
             {isEditing && (
-              <div style={{ background: '#0F172A', padding: '14px', borderRadius: '12px', border: `1px solid #334155`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ color: '#94A3B8', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'start' }}>
+              <div className={`bg-[${colors.background || '#0F172A'}] p-3.5 rounded-xl border border-[${colors.border || '#334155'}] flex flex-col gap-1.5`}>
+                <label className="text-slate-400 text-xs font-bold flex items-center gap-1 text-start">
                   <GraduationCap className="w-4 h-4" /> {t('update_progress_selector') || (isRtl ? 'تعديل موضع الحفظ' : 'Update Memorization Selector')}
                 </label>
-                <div style={{ background: '#1E293B', padding: '6px', borderRadius: '8px', border: `1px solid #334155` }}>
+                <div className={`bg-[${colors.card || '#1E293B'}] p-1.5 rounded-lg border border-[${colors.border || '#334155'}]`}>
                   <QuranProgressSelector 
                     initialIndex={parseInt(student.current_quarter_index, 10) || 0} 
                     onIndexChange={(idx) => setStudent(prev => ({ ...prev, current_quarter_index: idx }))}
@@ -388,8 +388,8 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         )}
 
         {activeTab === 'personal' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="flex flex-col gap-3.5">
+            <div className="grid grid-cols-2 gap-3">
               <Select 
                 label={t("gender") || (isRtl ? 'الجنس' : 'Gender')} 
                 value={student.gender || "male"} 
@@ -414,7 +414,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
               options={countryOptions}
             />
 
-            <div style={{ background: '#0F172A', padding: '12px', borderRadius: '12px', border: `1px solid #334155`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div className={`bg-[${colors.background || '#0F172A'}] p-3 rounded-xl border border-[${colors.border || '#334155'}] flex flex-col gap-2`}>
               <Input 
                 label={t('parent_custody_name') || (isRtl ? 'اسم ولي الأمر' : 'Parent Name')} 
                 value={student.parent_name || ""} 
@@ -423,8 +423,8 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
                 disabled={!isEditing}
               />
 
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1 }}>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
                   <Input 
                     label={t('contact_hotline') || (isRtl ? 'رقم هاتف التواصل' : 'Contact Phone')} 
                     type="tel" 
@@ -432,7 +432,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
                     placeholder={t('not_specified') || (isRtl ? 'غير محدد' : 'Not specified')} 
                     onChange={(e) => setStudent({...student, parent_phone: e.target.value})} 
                     disabled={!isEditing}
-                    style={{ textAlign: 'left', direction: 'ltr' }} 
+                    className="text-left direction-ltr" 
                   />
                 </div>
                 {!isEditing && cleanPhone && (
@@ -440,7 +440,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
                     href={`https://wa.me/${cleanPhone}`} 
                     target="_blank" 
                     rel="noreferrer" 
-                    style={{ background: '#10B981', color: '#fff', width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', marginBottom: '16px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white w-11 h-11 rounded-xl flex items-center justify-center no-underline mb-4 shadow-md transition-colors"
                     title="WhatsApp"
                   >
                     <MessageCircle className="w-5 h-5" />
@@ -452,7 +452,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         )}
 
         {activeTab === 'financial' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="flex flex-col gap-3.5">
             <Select 
               label={t('financial_tariff_plan') || (isRtl ? 'نظام الاشتراك' : 'Subscription Plan')} 
               value={student.subscription_system || "monthly"} 
@@ -468,23 +468,23 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
               placeholder={t('academic_notes_placeholder') || (isRtl ? 'اكتب أي ملاحظات خاصة بالطالب...' : 'Type student notes...')} 
               onChange={(e) => setStudent({...student, notes: e.target.value})} 
               disabled={!isEditing}
-              style={{ minHeight: '100px', lineHeight: '1.5' }}
+              className="min-h-[100px] leading-relaxed"
             />
           </div>
         )}
 
-        <div style={{ marginTop: '4px' }}>
+        <div className="mt-1">
           {isEditing ? (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <Btn variant="success" onClick={handleUpdate} disabled={saving} style={{ flex: 1, padding: '12px', display: 'flex', items: 'center', justifyContent: 'center', gap: '6px' }}>
+            <div className="flex gap-2.5">
+              <Btn variant="success" onClick={handleUpdate} disabled={saving} className="flex-1 py-3 flex items-center justify-center gap-1.5">
                 <Save className="w-4 h-4" /> {saving ? (t("saving") || (isRtl ? "جاري الحفظ..." : "Saving...")) : (t('save_changes') || (isRtl ? "حفظ التغييرات" : "Save Changes"))}
               </Btn>
-              <Btn variant="ghost" onClick={() => setIsEditing(false)} style={{ flex: 1, padding: '12px', display: 'flex', items: 'center', justifyContent: 'center', gap: '6px' }}>
+              <Btn variant="ghost" onClick={() => setIsEditing(false)} className="flex-1 py-3 flex items-center justify-center gap-1.5">
                 <X className="w-4 h-4" /> {t("cancel") || (isRtl ? "إلغاء" : "Cancel")}
               </Btn>
             </div>
           ) : (
-            <Btn variant="primary" onClick={() => setIsEditing(true)} style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold', display: 'flex', items: 'center', justifyContent: 'center', gap: '6px' }}>
+            <Btn variant="primary" onClick={() => setIsEditing(true)} className="w-full py-3 text-sm font-bold flex items-center justify-center gap-1.5">
               <Edit3 className="w-4 h-4" /> {t('edit_full_profile') || (isRtl ? "تعديل بيانات الملف الشخصي" : "Edit Full Profile")}
             </Btn>
           )}
