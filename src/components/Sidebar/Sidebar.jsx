@@ -1,3 +1,4 @@
+// src/components/Sidebar/Sidebar.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
@@ -32,7 +33,7 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  const menuSections = getMenuSections(isRtl);
+  const menuSections = getMenuSections(isRtl, userRole);
   const [openSectionId, setOpenSectionId] = useState(null);
 
   const getText = (val) => {
@@ -44,7 +45,6 @@ export default function Sidebar({
     return '';
   };
 
-  // إغلاق القائمة تلقائياً عند تغيير التبويب في الشاشات الصغيرة
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
     if (isMobile && typeof setSidebarOpen === 'function') {
@@ -62,14 +62,15 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // فتح القسم التابع للتبويب النشط أو فتح أول قسم افتراضياً
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items.some(item => item.id === activeTab));
     if (activeSection) {
       setOpenSectionId(activeSection.id);
-    } else {
-      setOpenSectionId('ops');
+    } else if (menuSections.length > 0) {
+      setOpenSectionId(menuSections[0].id);
     }
-  }, [activeTab]);
+  }, [activeTab, isRtl, userRole]);
 
   const toggleSection = (sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
@@ -249,7 +250,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* غطاء خلفي عند فتح القائمة على الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -327,6 +327,7 @@ export default function Sidebar({
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
             isRtl={isRtl}
+            effectiveDaysLeft={effectiveDaysLeft}
           />
 
           <SidebarSearch
