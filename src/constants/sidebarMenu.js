@@ -2,49 +2,40 @@
 import { 
   BarChart3, 
   GraduationCap, 
-  Presentation, 
   CheckCircle2, 
   BookOpen, 
   Award, 
   CreditCard, 
   SlidersHorizontal, 
-  Zap, 
-  History, 
   Send, 
-  Trophy, 
-  FolderOpen, 
-  Share2, 
   BookMarked,
   Library
 } from "lucide-react";
 
 /**
- * القائمة الجانبية العالمية الموحدة (Global Quranic SaaS Menu)
- * مصطلحات واضحة يفهمها أي مستخدم عربي أو أجنبي بغض النظر عن دولته أو ثقافته
+ * القائمة الجانبية العالمية الموحدة والنهائية (Global Quranic SaaS Sidebar)
+ * هيكل مقتضب ومحترف (10 عناصر رئيسية) يغطي كافة جداول قاعدة البيانات (48 جدولاً ومشهداً)
+ * 
+ * @param {boolean} isRtl - اتجاه الواجهة (عربي / إنجليزي)
+ * @param {string} userRole - دور المستخدم الحالي ('admin', 'teacher', 'student')
  */
 export const getMenuSections = (isRtl, userRole = 'admin') => {
   const sections = [
     {
       id: 'main-ops',
-      title: isRtl ? 'الرئيسية والعمليات' : 'Main Operations',
+      title: isRtl ? 'الرئيسية والعمليات' : 'Operations Hub',
       items: [
         { 
           id: 'dashboard', 
-          label: isRtl ? 'لوحة التحكم' : 'Dashboard', 
+          label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Analytics', 
           icon: BarChart3, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'attendance', 
-          label: isRtl ? 'متابعة الحفظ والحضور' : 'Recitation & Attendance Log', 
+          label: isRtl ? 'متابعة الحفظ والحضور' : 'Recitation & Attendance', 
           icon: CheckCircle2, 
           roles: ['admin', 'teacher', 'student'] 
-        },
-        { 
-          id: 'reports', 
-          label: isRtl ? 'التواصل والتقارير' : 'Communication & Reports', 
-          icon: Send, 
-          roles: ['admin', 'teacher'] 
         },
         { 
           id: 'interactive_quran', 
@@ -53,16 +44,16 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
-          id: 'audit_logs', 
-          label: isRtl ? 'سجل النشاطات' : 'Activity Log', 
-          icon: History, 
-          roles: ['admin'] 
+          id: 'reports', 
+          label: isRtl ? 'التواصل والتقارير' : 'Communication & Reports', 
+          icon: Send, 
+          roles: ['admin', 'teacher'] 
         }
       ]
     },
     {
       id: 'academic-hub',
-      title: isRtl ? 'الشؤون الأكاديمية' : 'Academic Hub',
+      title: isRtl ? 'الشؤون الأكاديمية والقراءات' : 'Academic & Curricula Hub',
       items: [
         { 
           id: 'halaqas', 
@@ -71,70 +62,34 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           roles: ['admin', 'teacher'] 
         },
         { 
-          id: 'students', 
-          label: isRtl ? 'الطلاب وأولياء الأمور' : 'Students & Guardians', 
+          id: 'directory', 
+          label: isRtl ? 'دليل المقرأة والمستخدمين' : 'Academy Directory', 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
-          id: 'teachers', 
-          label: isRtl ? 'المعلمون والمقرئون' : 'Teachers & Reciters', 
-          icon: Presentation, 
-          roles: ['admin'] 
-        },
-        { 
           id: 'curricula', 
-          label: isRtl ? 'المناهج والقراءات' : 'Curricula & Qiraat', 
+          label: isRtl ? 'المناهج والمكتبة القرآنية' : 'Curricula, Sanad & Library', 
           icon: Library, 
-          roles: ['admin', 'teacher'] 
-        },
-        { 
-          id: 'files', 
-          label: isRtl ? 'المكتبة والمصادر' : 'Library & Resources', 
-          icon: FolderOpen, 
           roles: ['admin', 'teacher', 'student'] 
         }
       ]
     },
     {
-      id: 'eval-gamification',
-      title: isRtl ? 'التقييم والتحفيز' : 'Evaluation & Rewards',
+      id: 'eval-finance',
+      title: isRtl ? 'التحفيز والمالية والإدارة' : 'Rewards, Finance & Governance',
       items: [
         { 
-          id: 'exams', 
-          label: isRtl ? 'الاختبارات والشهادات' : 'Exams & Certificates', 
+          id: 'evaluations', 
+          label: isRtl ? 'الاختبارات والتحفيز' : 'Exams & Badges', 
           icon: Award, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
-          id: 'gamification-streaks', 
-          label: isRtl ? 'لوحة التحفيز والأوسمة' : 'Rewards & Badges', 
-          icon: Trophy, 
-          roles: ['admin', 'teacher', 'student'] 
-        }
-      ]
-    },
-    {
-      id: 'admin-finance',
-      title: isRtl ? 'الإدارة والمالية' : 'Finance & Settings',
-      items: [
-        { 
-          id: 'payments', 
-          label: isRtl ? 'الاشتراكات والرسوم' : 'Fees & Subscriptions', 
+          id: 'finance', 
+          label: isRtl ? 'المركز المالي والاشتراكات' : 'Finance & Subscriptions', 
           icon: CreditCard, 
           roles: ['admin'] 
-        },
-        { 
-          id: 'subscriptions', 
-          label: isRtl ? 'باقة الأكاديمية والترقية' : 'Plan & Upgrades', 
-          icon: Zap, 
-          roles: ['admin'] 
-        },
-        { 
-          id: 'referrals', 
-          label: isRtl ? 'برنامج التوصية والدعوات' : 'Referral Program', 
-          icon: Share2, 
-          roles: ['admin', 'teacher'] 
         },
         { 
           id: 'settings', 
@@ -146,6 +101,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     }
   ];
 
+  // تصفية العناصر بحسب دور المستخدم وإخفاء الأقسام الفارغة
   return sections
     .map(section => ({
       ...section,
