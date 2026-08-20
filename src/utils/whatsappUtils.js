@@ -15,6 +15,20 @@ const formatName = (nameData, isRtl) => {
 };
 
 /**
+ * دالة لتنسيق رقم الهاتف وتنظيفه مع إضافة الرمز الدولي الافتراضي إذا لزم الأمر
+ */
+const formatPhoneNumber = (phone) => {
+  if (!phone) return '';
+  let clean = String(phone).replace(/\D/g, '');
+  
+  // إذا كان الرقم مصرياً يبدأ بـ 01
+  if (clean.startsWith('01') && clean.length === 11) {
+    clean = '2' + clean;
+  }
+  return clean;
+};
+
+/**
  * إنشاء وإرسال تقرير الحضور والإنتاجية اليومية للواتساب
  */
 export const sendWhatsAppAttendanceReport = (student, record = {}, selectedDate, isRtl = true) => {
@@ -25,8 +39,8 @@ export const sendWhatsAppAttendanceReport = (student, record = {}, selectedDate,
     return;
   }
 
-  const cleanPhone = String(parentPhone).replace(/\D/g, '');
-  if (!cleanPhone) {
+  const cleanPhone = formatPhoneNumber(parentPhone);
+  if (!cleanPhone || cleanPhone.length < 8) {
     alert(isRtl ? "رقم الهاتف المسجل غير صالح!" : "Registered phone number is invalid!");
     return;
   }
@@ -46,24 +60,24 @@ export const sendWhatsAppAttendanceReport = (student, record = {}, selectedDate,
     excused: 'Excused 🔵'
   };
 
-  const gradeMap = isRtl ? {
-    10: 'ممتاز 🌟',
-    8: 'جيد جداً 👍',
-    6: 'يحتاج تحسين ⚠️'
-  } : {
-    10: 'Excellent 🌟',
-    8: 'Very Good 👍',
-    6: 'Needs Improvement ⚠️'
+  const getGradeText = (grade) => {
+    const numGrade = Number(grade);
+    if (numGrade >= 10) return isRtl ? 'ممتاز (10/10) 🌟' : 'Excellent (10/10) 🌟';
+    if (numGrade >= 8) return isRtl ? 'جيد جداً 👍' : 'Very Good 👍';
+    if (numGrade >= 6) return isRtl ? 'قيد التحسين ⚠️' : 'Needs Improvement ⚠️';
+    return isRtl ? `${numGrade} درجات` : `${numGrade} Points`;
   };
+
+  const isPresent = currentStatus === 'present' || currentStatus === 'late';
 
   const text = isRtl ? `السلام عليكم ورحمة الله وبركاته 🌸
 تقرير أداء الطالب/ة: *${studentName}*
 📅 التاريخ: ${selectedDate}
 
 📌 الحضور: ${statusMap[currentStatus] || 'حاضر 🟢'}
-📖 الحفظ الجديد: ${record.new_memorization || 'لم يحدد'}
+${isPresent ? `📖 الحفظ الجديد: ${record.new_memorization || 'لم يحدد'}
 🔁 المراجعة والربط: ${record.retention_assignment || 'لم يحدد'}
-⭐ التقييم: ${gradeMap[record.session_grade] || 'ممتاز 🌟'}
+⭐ التقييم: ${getGradeText(record.session_grade ?? 10)}` : ''}
 📝 الملاحظات: ${record.notes || 'لا يوجد ملاحظات'}
 
 شاكرين ومقدرين حسن متابعتكم معنا 🌿`
@@ -72,9 +86,9 @@ Performance Report for: *${studentName}*
 📅 Date: ${selectedDate}
 
 📌 Attendance: ${statusMap[currentStatus] || 'Present 🟢'}
-📖 New Memorization: ${record.new_memorization || 'Not specified'}
+${isPresent ? `📖 New Memorization: ${record.new_memorization || 'Not specified'}
 🔁 Revision: ${record.retention_assignment || 'Not specified'}
-⭐ Daily Grade: ${gradeMap[record.session_grade] || 'Excellent 🌟'}
+⭐ Daily Grade: ${getGradeText(record.session_grade ?? 10)}` : ''}
 📝 Notes: ${record.notes || 'None'}
 
 Thank you for your cooperation and support 🌿`;
