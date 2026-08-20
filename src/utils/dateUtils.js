@@ -1,17 +1,5 @@
 /* src/utils/dateUtils.js */
 
-export const HIJRI_MONTHS_AR = [
-  "محرم", "صفر", "ربيع الأول", "ربيع الآخر",
-  "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
-  "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
-];
-
-export const HIJRI_MONTHS_EN = [
-  "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
-  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
-  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
-];
-
 // جلب التعديل المحفوظ في المتصفح (الافتراضي 0 لأن تقويم أم القرى دقيق)
 export const getSavedHijriOffset = () => {
   if (typeof window === 'undefined') return 0;
@@ -27,7 +15,7 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * حساب التاريخ الهجري الدقيق بناءً على تقويم أم القرى الرسمي (Umm al-Qura)
+ * حساب أجزاء التاريخ الهجري بناءً على تقويم أم القرى (Umm al-Qura)
  */
 export const getHijriParts = (dateObj, offsetDays = getSavedHijriOffset()) => {
   try {
@@ -46,14 +34,38 @@ export const getHijriParts = (dateObj, offsetDays = getSavedHijriOffset()) => {
     const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
     const year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
 
-    return { day, month, year };
+    return { day, month, year, adjustedDate };
   } catch (e) {
-    return { day: 1, month: 1, year: 1448 };
+    return { day: 1, month: 1, year: 1448, adjustedDate: new Date(dateObj) };
   }
 };
 
-export const formatHijriDate = (dateObj, isArabic = true, offsetDays = getSavedHijriOffset()) => {
-  const { day, month, year } = getHijriParts(dateObj, offsetDays);
-  const monthName = isArabic ? HIJRI_MONTHS_AR[month - 1] : HIJRI_MONTHS_EN[month - 1];
-  return isArabic ? `${day} ${monthName} ${year} هـ` : `${monthName} ${day}, ${year} AH`;
+/**
+ * تنسيق التاريخ الهجري عالمياً لدعم أي لغة (مثل 'ar', 'en', 'tr', 'id', 'ur')
+ */
+export const formatHijriDate = (dateObj, langOrIsArabic = 'ar', offsetDays = getSavedHijriOffset()) => {
+  try {
+    const { adjustedDate } = getHijriParts(dateObj, offsetDays);
+
+    // تحديد كود اللغة المناسب
+    let locale = 'ar';
+    if (typeof langOrIsArabic === 'boolean') {
+      locale = langOrIsArabic ? 'ar' : 'en';
+    } else if (typeof langOrIsArabic === 'string') {
+      locale = langOrIsArabic.toLowerCase().trim();
+    }
+
+    // استخراج التاريخ المنسق مباشرة بلغته الأصلية المحددة من المحرك
+    const formatter = new Intl.DateTimeFormat(`${locale}-u-ca-islamic-umalqura`, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    return formatter.format(adjustedDate);
+  } catch (error) {
+    console.error("Error formatting Hijri date globally:", error);
+    const isAr = String(langOrIsArabic).startsWith('ar');
+    return isAr ? '٧ ربيع الأول ١٤٤٨ هـ' : '7 Rabi\' al-Awwal 1448 AH';
+  }
 };
