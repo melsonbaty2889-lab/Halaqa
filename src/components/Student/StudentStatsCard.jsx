@@ -1,5 +1,7 @@
+/* src/components/Student/StudentStatsCard.jsx */
 import React from 'react';
 import { Flame, Crown, TrendingUp, Sparkles } from 'lucide-react';
+import colors from '@/theme/colors';
 
 export default function StudentStatsCard({ student = {}, isRtl = true }) {
   const streak = student?.current_streak || 0;
@@ -10,7 +12,7 @@ export default function StudentStatsCard({ student = {}, isRtl = true }) {
   const streakProgress = Math.min(100, Math.round((streak / nextStreakGoal) * 100));
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#0F172A] p-3.5 rounded-xl border border-slate-700/80 shadow-md">
+    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[${colors.background || '#0F172A'}] p-3.5 rounded-xl border border-slate-700/80 shadow-md`}>
       
       {/* 1. بطاقة السلسلة مع شريط التقدم والتأثير الحي */}
       <div className="relative overflow-hidden bg-gradient-to-br from-red-500/10 via-slate-900 to-slate-900 p-3 rounded-lg border border-red-500/20 flex flex-col justify-between">
@@ -45,8 +47,7 @@ export default function StudentStatsCard({ student = {}, isRtl = true }) {
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div 
-              className="bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full transition-all duration-500" 
-              style={{ width: `${streakProgress}%` }}
+              className={`bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full transition-all duration-500 w-[${streakProgress}%]`} 
             />
           </div>
         </div>
