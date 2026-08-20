@@ -1,61 +1,41 @@
+/* src/components/QuranProgress/QuranProgressBar.jsx */
 import React from 'react';
 import { getQuranProgress } from '@/utils/quranUtils';
+import colors from '@/theme/colors';
 
 const QuranProgressBar = ({ currentQuarterIndex }) => {
   // تحويل الرقم القادم من قاعدة البيانات إلى تفاصيل ونسبة مئوية
   const progress = getQuranProgress(currentQuarterIndex);
 
   return (
-    <div style={{
-      background: '#1E293B',
-      padding: '20px',
-      borderRadius: '16px',
-      direction: 'rtl', 
-      fontFamily: 'sans-serif',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-      border: '1px solid #334155',
-      maxWidth: '500px',
-      margin: '15px auto'
-    }}>
+    <div className="bg-[#1E293B] p-5 rounded-2xl rtl font-sans shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3)] border border-[#334155] max-w-[500px] my-4 mx-auto">
      
       {/* قسم النصوص العلوية */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div className="flex justify-between items-center mb-3.5">
         <div>
-          <span style={{ color: '#94A3B8', fontSize: '11px', display: 'block', marginBottom: '4px' }}>المحطة الحالية</span>
-          <span style={{ color: '#FBBF24', fontWeight: 'bold', fontSize: '15px' }}>
+          <span className="text-[#94A3B8] text-[11px] block mb-1">المحطة الحالية</span>
+          <span className="text-[#FBBF24] font-bold text-[15px]">
             📍 {progress.text}
           </span>
         </div>
  
-        <div style={{ textAlign: 'left' }}>
-          <span style={{ color: '#94A3B8', fontSize: '11px', display: 'block', marginBottom: '4px' }}>نسبة التقدم</span>
-          <span style={{ color: '#10B981', fontWeight: 'bold', fontSize: '18px' }}>
+        <div className="text-left">
+          <span className="text-[#94A3B8] text-[11px] block mb-1">نسبة التقدم</span>
+          <span className="text-[#10B981] font-bold text-lg">
             {progress.percentage}%
           </span>
         </div>
       </div>
 
       {/* شريط خط السير (Progress Bar) */}
-      <div style={{
-        width: '100%',
-        height: '12px',
-        background: '#334155',
-        borderRadius: '6px',
-        overflow: 'hidden',
-        position: 'relative',
-        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)'
-      }}>
-        <div style={{
-          width: `${progress.percentage}%`,
-          height: '100%',
-          background: 'linear-gradient(90deg, #10B981, #34D399)',
-          borderRadius: '6px',
-          transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' 
-        }} />
+      <div className="w-full h-3 bg-[#334155] rounded-md overflow-hidden relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+        <div 
+          className={`h-full bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-md transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] w-[${progress.percentage}%]`} 
+        />
       </div>
 
       {/* نص تشجيعي ذكي أسفل الشريط */}
-      <div style={{ marginTop: '12px', fontSize: '12px', color: '#94A3B8', textAlign: 'center' }}>
+      <div className="mt-3 text-xs text-[#94A3B8] text-center">
         {progress.percentage === 100 
           ? '🎉 هنيئاً لك ختم القرآن الكريم بالكامل!' 
           : `متبقي ${100 - progress.percentage}% على ختمة كاملة، واصل الهمة!`}
