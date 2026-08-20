@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-[#0F172A]'; // أو i18next حسب إعدادات مشروعك
+import { useTranslation } from 'react-i18next';
 import { FileUp, Download, Trash2, FileCheck, Eye, FileText, Image as ImageIcon } from 'lucide-react';
 import colors from '@/theme/colors';
 
