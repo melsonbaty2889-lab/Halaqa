@@ -12,38 +12,33 @@ import {
   Library
 } from "lucide-react";
 
-/**
- * القائمة الجانبية العالمية الموحدة (SaaS Enterprise Model)
- * @param {Function} t - دالة الترجمة من i18next
- * @param {string} userRole - دور المستخدم الحالي ('admin', 'teacher', 'student')
- */
-export const getMenuSections = (t, userRole = 'admin') => {
+export const getMenuSections = (isRtl, userRole = 'admin') => {
   const sections = [
     {
       id: 'main-ops',
-      title: t('sidebar.sections.operations', 'الرئيسية والعمليات'),
+      title: isRtl ? 'الرئيسية والعمليات' : 'Operations Hub',
       items: [
         { 
           id: 'dashboard', 
-          label: t('sidebar.items.dashboard', 'لوحة التحكم والأداء'), 
+          label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Analytics', 
           icon: BarChart3, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'attendance', 
-          label: t('sidebar.items.attendance', 'متابعة الحفظ والحضور'), 
+          label: isRtl ? 'متابعة الحفظ والحضور' : 'Recitation & Attendance', 
           icon: CheckCircle2, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'interactive_quran', 
-          label: t('sidebar.items.interactiveQuran', 'المصحف والتسميع الذكي'), 
+          label: isRtl ? 'المصحف والتسميع الذكي' : 'Interactive Quran & AI', 
           icon: BookMarked, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'reports', 
-          label: t('sidebar.items.reports', 'التواصل والتقارير'), 
+          label: isRtl ? 'التواصل والتقارير' : 'Communication & Reports', 
           icon: Send, 
           roles: ['admin', 'teacher'] 
         }
@@ -51,23 +46,23 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'academic-hub',
-      title: t('sidebar.sections.academic', 'الشؤون الأكاديمية والقراءات'),
+      title: isRtl ? 'الشؤون الأكاديمية والقراءات' : 'Academic & Curricula Hub',
       items: [
         { 
           id: 'halaqas', 
-          label: t('sidebar.items.halaqas', 'الحلقات والمقارئ'), 
+          label: isRtl ? 'الحلقات والمقارئ' : 'Quran Classes & Circles', 
           icon: BookOpen, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'directory', 
-          label: t('sidebar.items.directory', 'دليل المقرأة والمستخدمين'), 
+          label: isRtl ? 'دليل المقرأة والمستخدمين' : 'Academy Directory', 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'curricula', 
-          label: t('sidebar.items.curricula', 'المناهج والمكتبة القرآنية'), 
+          label: isRtl ? 'المناهج والمكتبة القرآنية' : 'Curricula, Sanad & Library', 
           icon: Library, 
           roles: ['admin', 'teacher', 'student'] 
         }
@@ -75,23 +70,23 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'eval-finance',
-      title: t('sidebar.sections.governance', 'التحفيز والمالية والإدارة'),
+      title: isRtl ? 'التحفيز والمالية والإدارة' : 'Rewards, Finance & Governance',
       items: [
         { 
           id: 'evaluations', 
-          label: t('sidebar.items.evaluations', 'الاختبارات والتحفيز'), 
+          label: isRtl ? 'الاختبارات والتحفيز' : 'Exams & Badges', 
           icon: Award, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'finance', 
-          label: t('sidebar.items.finance', 'المركز المالي والاشتراكات'), 
+          label: isRtl ? 'المركز المالي والاشتراكات' : 'Finance & Subscriptions', 
           icon: CreditCard, 
           roles: ['admin'] 
         },
         { 
           id: 'settings', 
-          label: t('sidebar.items.settings', 'إعدادات المنظومة'), 
+          label: isRtl ? 'إعدادات المنظومة' : 'Platform Settings', 
           icon: SlidersHorizontal, 
           roles: ['admin'] 
         }
