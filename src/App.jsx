@@ -10,13 +10,13 @@ import { ROLES } from '@/constants/roles';
 import rawColors from '@/theme/colors.js';
 
 import SplashScreen from '@/components/UI/SplashScreen'; 
-import DevPlayground from '@/components/DevPlayground';
+import DevPlayground from '@/components/Dev/DevPlayground';
 import LoginPage from '@/components/Auth/LoginPage';
 import SignUpPage from '@/components/Auth/SignUpPage';
 import ForgotPassword from '@/components/Auth/ForgotPassword';
 import UpdatePassword from '@/components/Auth/UpdatePassword';
 import MainApp from '@/components/MainApp';
-import CreateAcademy from '@/components/create-academy/CreateAcademy';
+import CreateAcademy from '@/components/CreateAcademy/CreateAcademy';
 import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
 // 🎨 طبقة حماية وتوافق لكائن الألوان (تمنع الكراش والشاشة السوداء)
