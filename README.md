@@ -1,83 +1,31 @@
-# 🕌 الحلقة الذكية — نظام إدارة حلقات تحفيظ القرآن
+# 🕌 Smart Halaqa | الحلقة الذكية
 
-## 🚀 الرفع على Vercel (خطوات بسيطة)
-
-### الطريقة الأولى: بدون GitHub (الأسرع)
-
-1. ثبّت Vercel CLI:
-```
-npm install -g vercel
-```
-
-2. افتح الفولدر ورفع مباشرة:
-```
-cd halqa-app
-npm install
-vercel
-```
-
-3. اتبع التعليمات → رابطك يظهر فورًا ✅
+منصة عالمية متطورة لإدارة حلقات وأكاديميات تحفيظ القرآن الكريم، مصممة باستخدام **React**, **Vite**, **Tailwind CSS**, و **Supabase**.
 
 ---
 
-### الطريقة الثانية: عبر GitHub (الأفضل)
+## 🚀 الميزات الرئيسية
 
-1. **ارفع الفولدر على GitHub:**
-   - اذهب إلى github.com → New Repository
-   - اسمه: `halqa-smart`
-   - ارفع كل الملفات
-
-2. **اربط بـ Vercel:**
-   - اذهب إلى vercel.com
-   - سجّل دخول بحساب GitHub
-   - اضغط "Add New Project"
-   - اختر الـ repo `halqa-smart`
-   - اضغط Deploy ✅
-
-3. **رابطك سيكون:**
-   ```
-   https://halqa-smart.vercel.app
-   ```
+* **إدارة الحلقات والطلاب:** متابعة الحضور والغياب، حفظ واختبارات القرآن الكريم.
+* **إدارة الكادر التعليمي:** متابعة المعلمين وأولياء الأمور والصلاحيات.
+* **لوحة تحكم وتحليلات:** تقارير وإحصائيات تفصيلية مع تدقيق الأنشطة (Audit Logs).
+* **دعم متعدد اللغات:** دعم كامل للغة العربية والإنجليزي مع توافق RTL.
+* **تطبيق ويب تقدمي (PWA):** دعم العمل ودعم التحديثات التلقائية وشاشات التثبيت.
 
 ---
 
-## 💻 تشغيل محلي للتجربة
+## 🛠️ التقنيات المستخدمة (Tech Stack)
 
-```bash
-npm install
-npm run dev
-```
-
-افتح: http://localhost:5173
+* **Frontend:** React, Vite, Tailwind CSS, Lucide Icons
+* **Localization:** i18next
+* **Backend & Database:** Supabase (PostgreSQL, Auth, RLS)
+* **Deployment:** Vercel
 
 ---
 
-## 🔑 بيانات الدخول
+## 💻 التشغيل المحلي (Local Setup)
 
-- المستخدم: `admin`
-- الباسورد: `1234`
-
----
-
-## 📁 هيكل الملفات
-
-```
-halqa-app/
-├── index.html          ← الصفحة الرئيسية
-├── vite.config.js      ← إعدادات Vite
-├── package.json        ← المكتبات
-├── vercel.json         ← إعدادات Vercel
-└── src/
-    ├── main.jsx        ← نقطة البداية
-    └── App.jsx         ← النظام الكامل
-```
-
----
-
-## 🔗 ربط Systeme
-
-بعد الرفع، اذهب لصفحة **Systeme** داخل النظام وأضف رابط فانلك.
-
----
-
-صُنع بـ ❤️ — نظام الحلقة الذكية
+1. **استคลون المستودع:**
+   ```bash
+   git clone [https://github.com/melsonbaty2889-lab/Halaqa.git](https://github.com/melsonbaty2889-lab/Halaqa.git)
+   cd Halaqa
