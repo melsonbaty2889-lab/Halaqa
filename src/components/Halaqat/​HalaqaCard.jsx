@@ -12,68 +12,37 @@ export default function HalaqaCard({
   const { t } = useTranslation();
 
   return (
-    <div style={{
-      padding: '16px',
-      borderRadius: '16px',
-      border: '1px solid rgba(255,255,255,0.08)',
-      background: '#0c1520',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      gap: '16px'
-    }}>
+    <div className="p-4 rounded-2xl border border-white/10 bg-slate-900/80 flex flex-col justify-between gap-4">
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
-          <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#fff', margin: 0 }}>
+        <div className="flex justify-between items-start gap-2 mb-2">
+          <h4 className="text-sm font-extrabold text-white m-0">
             {getLocalizedText(halaqa.name)}
           </h4>
-          <span style={{
-            padding: '2px 8px',
-            borderRadius: '12px',
-            fontSize: '0.68rem',
-            background: 'rgba(34, 197, 94, 0.15)',
-            color: '#22c55e',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            fontWeight: '700'
-          }}>
+          <span className="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-bold">
             {t('activeSession', 'جلسة نشطة')}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '8px' }}>
-          <User size={14} style={{ color: '#C9A84C' }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
+          <User size={14} className="text-amber-500" />
+          <span className="truncate">
             {getLocalizedText(halaqa.teacher_name || halaqa.teacher, t('unassigned', 'بانتظار تعيين معتمد'))}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#94a3b8' }}>
-          <Clock size={13} style={{ color: '#64748B' }} />
+        <div className="flex items-center gap-2 text-[12px] text-slate-400">
+          <Clock size={13} className="text-slate-500" />
           <span>{halaqa.start_time || '16:00'} - {halaqa.end_time || '17:15'}</span>
-          <span style={{ fontSize: '0.68rem', background: 'rgba(21, 35, 50, 0.92)', padding: '2px 6px', borderRadius: '6px', color: '#94a3b8' }}>
+          <span className="text-[11px] bg-slate-800/90 px-1.5 py-0.5 rounded text-slate-400">
             {halaqa.timezone || 'UTC'}
           </span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
+      <div className="flex items-center gap-2 border-t border-white/10 pt-3">
         <button 
           onClick={() => onNavigateToAttendance?.(halaqa.id)} 
-          style={{
-            flex: 1,
-            padding: '10px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #C9A84C 0%, #A58230 100%)',
-            color: '#0c1520',
-            border: 'none',
-            fontSize: '0.78rem',
-            fontWeight: '800',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px'
-          }}
+          className="flex-1 p-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 color-slate-950 text-xs font-extrabold cursor-pointer flex items-center justify-center gap-1.5 border-none"
         >
           <Video size={14} />
           {t('goToAttendance', 'الانضمام للجلسة المباشرة')}
@@ -81,16 +50,7 @@ export default function HalaqaCard({
 
         <button 
           onClick={() => onToggleArchiveHalaqa?.(halaqa.id, halaqa.is_archived)} 
-          style={{
-            padding: '10px 14px',
-            borderRadius: '10px',
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: 'transparent',
-            color: '#94a3b8',
-            fontSize: '0.78rem',
-            fontWeight: '700',
-            cursor: 'pointer'
-          }}
+          className="px-3.5 py-2.5 rounded-xl border border-white/10 bg-transparent text-slate-400 text-xs font-bold cursor-pointer hover:bg-white/5 transition-colors"
         >
           {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
         </button>
