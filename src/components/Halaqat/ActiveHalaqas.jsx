@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FolderOpen, Plus, Archive, Search, X, Radio } from 'lucide-react';
-import HalaqaCard from './HalaqaCard.jsx';
+import ​HalaqaCardItem from './​HalaqaCardItem.jsx';
 import HalaqaFormModal from './HalaqaFormModal.jsx';
 
 export default function ActiveHalaqas({ 
@@ -171,7 +171,7 @@ export default function ActiveHalaqas({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredHalaqas.map((halaqa) => (
-              <HalaqaCard
+              <​HalaqaCardItem
                 key={halaqa.id}
                 halaqa={halaqa}
                 viewMode={viewMode}
