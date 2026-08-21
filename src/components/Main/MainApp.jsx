@@ -28,15 +28,15 @@ const safeLazy = (importFn) => {
 };
 
 const Students = safeLazy(() => import('@/components/Student/StudentProfile.jsx'));
-const Teachers = safeLazy(() => import('@/components/Teachers.jsx')); 
-const Attendance = safeLazy(() => import('@/components/Attendance.jsx'));
-const Exams = safeLazy(() => import('@/components/Exams.jsx')); 
+const Teachers = safeLazy(() => import('@/components/Teachers/Teacher.jsx')); 
+const Attendance = safeLazy(() => import('@/components/Attendance/Attendance.jsx'));
+const Exams = safeLazy(() => import('@/components/Exams/Exams.jsx')); 
 const Payments = safeLazy(() => import('@/components/Payments/StudentPayments.jsx'));
-const Settings = safeLazy(() => import('@/components/Settings.jsx')); 
+const Settings = safeLazy(() => import('@/components/Settings/Settings.jsx')); 
 const Reports = safeLazy(() => import('@/components/Reports/Reports.jsx'));
-const ActiveHalaqas = safeLazy(() => import('@/components/ActiveHalaqas.jsx'));
-const RealtimeAudit = safeLazy(() => import('@/components/RealtimeAudit.jsx'));
-const CommunicationHub = safeLazy(() => import('@/components/CommunicationHub.jsx'));
+const ActiveHalaqas = safeLazy(() => import('@/components/Halaqat/ActiveHalaqas.jsx'));
+const RealtimeAudit = safeLazy(() => import('@/components/Logs/RealtimeAudit.jsx'));
+const CommunicationHub = safeLazy(() => import('@/components/Notifications/CommunicationHub.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 
