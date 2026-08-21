@@ -4,24 +4,21 @@ import { supabase } from '@/lib/supabase';
 import { X, User, Phone, Mail, Save, AlertCircle } from 'lucide-react';
 
 export default function ParentModal({ isOpen, onClose, parentToEdit = null, academyId, onSaved }) {
-  const [fullName, setFullName] = useState('');
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [relation, setRelation] = useState('أب');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (parentToEdit) {
-      setFullName(parentToEdit.full_name || '');
+      setName(parentToEdit.name || '');
       setPhone(parentToEdit.phone || '');
       setEmail(parentToEdit.email || '');
-      setRelation(parentToEdit.relation || 'أب');
     } else {
-      setFullName('');
+      setName('');
       setPhone('');
       setEmail('');
-      setRelation('أب');
     }
     setErrorMsg('');
   }, [parentToEdit, isOpen]);
@@ -30,7 +27,7 @@ export default function ParentModal({ isOpen, onClose, parentToEdit = null, acad
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName || !phone) {
+    if (!name || !phone) {
       setErrorMsg('يرجى كتابة الاسم ورقم الهاتف على الأقل');
       return;
     }
@@ -40,16 +37,16 @@ export default function ParentModal({ isOpen, onClose, parentToEdit = null, acad
       setErrorMsg('');
 
       const payload = {
-        full_name: fullName,
+        name: name,
         phone: phone,
         email: email || null,
-        relation: relation,
       };
 
       if (academyId) payload.academy_id = academyId;
 
       let result;
       if (parentToEdit?.id) {
+        payload.updated_at = new Date().toISOString();
         result = await supabase
           .from('parents')
           .update(payload)
@@ -57,7 +54,6 @@ export default function ParentModal({ isOpen, onClose, parentToEdit = null, acad
           .select()
           .single();
       } else {
-        payload.created_at = new Date().toISOString();
         result = await supabase
           .from('parents')
           .insert([payload])
@@ -81,7 +77,6 @@ export default function ParentModal({ isOpen, onClose, parentToEdit = null, acad
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '16px' }} dir="rtl">
       <div style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '16px', width: '100%', maxWidth: '450px', padding: '20px', position: 'relative' }}>
         
-        {/* رأس النافذة */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid #334155' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#F59E0B', margin: 0 }}>
             {parentToEdit ? 'تعديل بيانات ولي الأمر' : 'إضافة ولي أمر جديد'}
@@ -102,7 +97,7 @@ export default function ParentModal({ isOpen, onClose, parentToEdit = null, acad
             <label style={{ display: 'block', fontSize: '12px', color: '#CBD5E1', marginBottom: '4px' }}>الاسم الكامل</label>
             <div style={{ position: 'relative' }}>
               <User size={16} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="اسم ولي الأمر" style={inputStyle} required />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم ولي الأمر" style={inputStyle} required />
             </div>
           </div>
 
@@ -120,15 +115,6 @@ export default function ParentModal({ isOpen, onClose, parentToEdit = null, acad
               <Mail size={16} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@mail.com" style={inputStyle} />
             </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#CBD5E1', marginBottom: '4px' }}>صلة القرابة</label>
-            <select value={relation} onChange={(e) => setRelation(e.target.value)} style={inputStyle}>
-              <option value="أب">أب</option>
-              <option value="أم">أم</option>
-              <option value="ولي أمر (آخر)">ولي أمر (آخر)</option>
-            </select>
           </div>
 
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
