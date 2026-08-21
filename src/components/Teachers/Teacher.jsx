@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import AddStaffModal from './AddStaffModal.jsx';
 import { C, g } from '@/theme/colors';
-import { Btn, Card, Input, Badge, PageHeader } from './UI/UI.jsx';
+import { Btn, Card, Input, Badge, PageHeader } from '@/components/UI/UI.jsx';
 import { 
   UserCheck, 
   Plus, 
