@@ -13,39 +13,37 @@ import {
 } from "lucide-react";
 
 /**
- * القائمة الجانبية العالمية الموحدة والنهائية (Global Quranic SaaS Sidebar)
- * هيكل مقتضب ومحترف (10 عناصر رئيسية) يغطي كافة جداول قاعدة البيانات (48 جدولاً ومشهداً)
- * 
- * @param {boolean} isRtl - اتجاه الواجهة (عربي / إنجليزي)
+ * القائمة الجانبية العالمية الموحدة (SaaS Enterprise Model)
+ * @param {Function} t - دالة الترجمة من i18next
  * @param {string} userRole - دور المستخدم الحالي ('admin', 'teacher', 'student')
  */
-export const getMenuSections = (isRtl, userRole = 'admin') => {
+export const getMenuSections = (t, userRole = 'admin') => {
   const sections = [
     {
       id: 'main-ops',
-      title: isRtl ? 'الرئيسية والعمليات' : 'Operations Hub',
+      title: t('sidebar.sections.operations', 'الرئيسية والعمليات'),
       items: [
         { 
           id: 'dashboard', 
-          label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Analytics', 
+          label: t('sidebar.items.dashboard', 'لوحة التحكم والأداء'), 
           icon: BarChart3, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'attendance', 
-          label: isRtl ? 'متابعة الحفظ والحضور' : 'Recitation & Attendance', 
+          label: t('sidebar.items.attendance', 'متابعة الحفظ والحضور'), 
           icon: CheckCircle2, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'interactive_quran', 
-          label: isRtl ? 'المصحف والتسميع الذكي' : 'Interactive Quran & AI', 
+          label: t('sidebar.items.interactiveQuran', 'المصحف والتسميع الذكي'), 
           icon: BookMarked, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'reports', 
-          label: isRtl ? 'التواصل والتقارير' : 'Communication & Reports', 
+          label: t('sidebar.items.reports', 'التواصل والتقارير'), 
           icon: Send, 
           roles: ['admin', 'teacher'] 
         }
@@ -53,23 +51,23 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     },
     {
       id: 'academic-hub',
-      title: isRtl ? 'الشؤون الأكاديمية والقراءات' : 'Academic & Curricula Hub',
+      title: t('sidebar.sections.academic', 'الشؤون الأكاديمية والقراءات'),
       items: [
         { 
           id: 'halaqas', 
-          label: isRtl ? 'الحلقات والمقارئ' : 'Quran Classes & Circles', 
+          label: t('sidebar.items.halaqas', 'الحلقات والمقارئ'), 
           icon: BookOpen, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'directory', 
-          label: isRtl ? 'دليل المقرأة والمستخدمين' : 'Academy Directory', 
+          label: t('sidebar.items.directory', 'دليل المقرأة والمستخدمين'), 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'curricula', 
-          label: isRtl ? 'المناهج والمكتبة القرآنية' : 'Curricula, Sanad & Library', 
+          label: t('sidebar.items.curricula', 'المناهج والمكتبة القرآنية'), 
           icon: Library, 
           roles: ['admin', 'teacher', 'student'] 
         }
@@ -77,23 +75,23 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     },
     {
       id: 'eval-finance',
-      title: isRtl ? 'التحفيز والمالية والإدارة' : 'Rewards, Finance & Governance',
+      title: t('sidebar.sections.governance', 'التحفيز والمالية والإدارة'),
       items: [
         { 
           id: 'evaluations', 
-          label: isRtl ? 'الاختبارات والتحفيز' : 'Exams & Badges', 
+          label: t('sidebar.items.evaluations', 'الاختبارات والتحفيز'), 
           icon: Award, 
           roles: ['admin', 'teacher', 'student'] 
         },
         { 
           id: 'finance', 
-          label: isRtl ? 'المركز المالي والاشتراكات' : 'Finance & Subscriptions', 
+          label: t('sidebar.items.finance', 'المركز المالي والاشتراكات'), 
           icon: CreditCard, 
           roles: ['admin'] 
         },
         { 
           id: 'settings', 
-          label: isRtl ? 'إعدادات المنظومة' : 'Platform Settings', 
+          label: t('sidebar.items.settings', 'إعدادات المنظومة'), 
           icon: SlidersHorizontal, 
           roles: ['admin'] 
         }
@@ -101,7 +99,6 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     }
   ];
 
-  // تصفية العناصر بحسب دور المستخدم وإخفاء الأقسام الفارغة
   return sections
     .map(section => ({
       ...section,
