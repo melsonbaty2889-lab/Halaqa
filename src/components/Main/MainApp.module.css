@@ -1,0 +1,68 @@
+/* src/components/MainApp.module.css */
+
+.appContainer {
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--bg-dark);
+}
+
+@media (max-width: 768px) {
+  .appContainer {
+    flex-direction: column; 
+  }
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--surface-dark);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  box-sizing: border-box;
+  z-index: 2000;
+  border-inline-end: 1px solid var(--border-light);
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebarTitle {
+  color: var(--primary);
+  margin-bottom: 4px;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarNavBtn {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: start;
+  transition: all 0.2s ease; 
+}
+
+.sidebarNavBtn:hover:not(.sidebarNavBtnSelected) {
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+}
+
+.sidebarNavBtnSelected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
