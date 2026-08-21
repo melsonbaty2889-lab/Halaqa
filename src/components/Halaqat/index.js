@@ -1,3 +1,3 @@
-export { default as ActiveHalaqas } from './ActiveHalaqas';
-export { default as HalaqaFormModal } from './HalaqaFormModal';
-export { default as HalaqaCard } from './HalaqaCard';
+export { default as ActiveHalaqas } from './ActiveHalaqas.jsx';
+export { default as HalaqaFormModal } from './HalaqaFormModal.jsx';
+export { default as HalaqaCard } from './HalaqaCard.jsx';
