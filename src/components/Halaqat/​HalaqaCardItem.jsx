@@ -2,7 +2,7 @@ import React from 'react';
 import { User, Clock, Video } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function HalaqaCard({ 
+export default function HalaqaCardItem({ 
   halaqa, 
   viewMode, 
   getLocalizedText, 
