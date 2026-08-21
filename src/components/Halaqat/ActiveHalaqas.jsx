@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FolderOpen, Plus, Archive, Search, X, Radio } from 'lucide-react';
-import HalaqaCard from './HalaqaCard.jsx';
-import HalaqaFormModal from './HalaqaFormModal.jsx';
+import HalaqaCard from '@/components/Halaqat/HalaqaCard.jsx';
+import HalaqaFormModal from '@/components/Halaqat//HalaqaFormModal.jsx';
 
 export default function ActiveHalaqas({ 
   halaqas = [], 
