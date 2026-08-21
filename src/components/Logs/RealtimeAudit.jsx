@@ -17,7 +17,7 @@ import {
   Filter,
   CheckCircle2
 } from 'lucide-react';
-import CustomDatePicker from './UI/CustomDatePicker';
+import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import { supabase } from '@/lib/supabase';
 
 const I18N_DICTIONARY = {
