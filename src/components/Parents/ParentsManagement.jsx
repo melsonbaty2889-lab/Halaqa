@@ -1,13 +1,13 @@
 /* src/components/Parents/ParentsManagement.jsx */
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Users, UserPlus, Link2, Edit3, Phone, Mail } from 'lucide-react';
+import { Users, UserPlus, Link2, Edit3 } from 'lucide-react';
 
 import ParentModal from './ParentModal';
 import ParentStudentLink from './ParentStudentLink';
 
 export default function ParentsManagement({ academyId }) {
-  const [activeTab, setActiveTab] = useState('list'); // 'list' | 'link'
+  const [activeTab, setActiveTab] = useState('list');
   const [parents, setParents] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -47,7 +47,6 @@ export default function ParentsManagement({ academyId }) {
   return (
     <div dir="rtl" style={{ maxWidth: '800px', margin: '0 auto', padding: '16px', color: '#F8FAFC', fontFamily: "'Cairo', sans-serif" }}>
       
-      {/* 🏷️ الرأس والأزرار */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#F59E0B', margin: 0 }}>شؤون أولياء الأمور</h2>
@@ -63,7 +62,6 @@ export default function ParentsManagement({ academyId }) {
         </button>
       </div>
 
-      {/* 🔘 تبويب التنقل بين القائمة والربط */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: '#1E293B', padding: '4px', borderRadius: '10px', border: '1px solid #334155' }}>
         <button
           onClick={() => setActiveTab('list')}
@@ -79,7 +77,6 @@ export default function ParentsManagement({ academyId }) {
         </button>
       </div>
 
-      {/* 📋 محتوى التبويب */}
       {activeTab === 'list' ? (
         <div style={{ background: '#1E293B', borderRadius: '14px', border: '1px solid #334155', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
@@ -88,7 +85,7 @@ export default function ParentsManagement({ academyId }) {
                 <tr style={{ background: '#0F172A', color: '#94A3B8', borderBottom: '1px solid #334155' }}>
                   <th style={{ padding: '12px' }}>الاسم</th>
                   <th style={{ padding: '12px' }}>رقم الهاتف</th>
-                  <th style={{ padding: '12px' }}>الصلة</th>
+                  <th style={{ padding: '12px' }}>البريد الإلكتروني</th>
                   <th style={{ padding: '12px', textAlign: 'center' }}>إجراء</th>
                 </tr>
               </thead>
@@ -98,13 +95,9 @@ export default function ParentsManagement({ academyId }) {
                 ) : parents.length > 0 ? (
                   parents.map((p) => (
                     <tr key={p.id} style={{ borderBottom: '1px solid #334155' }}>
-                      <td style={{ padding: '12px', fontWeight: '600', color: '#F8FAFC' }}>{p.full_name}</td>
+                      <td style={{ padding: '12px', fontWeight: '600', color: '#F8FAFC' }}>{p.name}</td>
                       <td style={{ padding: '12px', color: '#CBD5E1' }}>{p.phone}</td>
-                      <td style={{ padding: '12px' }}>
-                        <span style={{ padding: '2px 8px', background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', borderRadius: '6px', fontSize: '11px', fontWeight: '700' }}>
-                          {p.relation}
-                        </span>
-                      </td>
+                      <td style={{ padding: '12px', color: '#CBD5E1' }}>{p.email || 'غير مدخل'}</td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
                         <button onClick={() => handleOpenEdit(p)} style={{ background: '#0F172A', border: '1px solid #334155', color: '#3B82F6', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}>
                           <Edit3 size={14} />
@@ -123,7 +116,6 @@ export default function ParentsManagement({ academyId }) {
         <ParentStudentLink academyId={academyId} />
       )}
 
-      {/* 🪟 نافذة الإضافة/التعديل */}
       <ParentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
