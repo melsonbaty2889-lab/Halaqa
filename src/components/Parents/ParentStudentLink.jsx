@@ -9,6 +9,7 @@ export default function ParentStudentLink({ academyId }) {
   const [students, setStudents] = useState([]);
   const [selectedParentId, setSelectedParentId] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [relationshipType, setRelationshipType] = useState('father');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [loading, setLoading] = useState(false);
@@ -18,8 +19,8 @@ export default function ParentStudentLink({ academyId }) {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      let parentQuery = supabase.from('parents').select('id, full_name, phone');
-      let studentQuery = supabase.from('students').select('id, name, parent_id, parent_phone');
+      let parentQuery = supabase.from('parents').select('id, name, phone');
+      let studentQuery = supabase.from('students').select('id, name, parent_id');
 
       if (academyId) {
         parentQuery = parentQuery.eq('academy_id', academyId);
@@ -41,17 +42,29 @@ export default function ParentStudentLink({ academyId }) {
     fetchData();
   }, [fetchData]);
 
+  // جلب الأبناء المربوطين من جدول student_guardians
   useEffect(() => {
     if (!selectedParentId) {
       setSelectedStudentIds([]);
       return;
     }
-    const linkedIds = students
-      .filter(s => String(s.parent_id) === String(selectedParentId))
-      .map(s => s.id);
-    
-    setSelectedStudentIds(linkedIds);
-  }, [selectedParentId, students]);
+
+    async function loadGuardians() {
+      const { data } = await supabase
+        .from('student_guardians')
+        .select('student_id, relationship_type')
+        .eq('parent_id', selectedParentId);
+
+      if (data) {
+        setSelectedStudentIds(data.map(d => d.student_id));
+        if (data.length > 0 && data[0].relationship_type) {
+          setRelationshipType(data[0].relationship_type);
+        }
+      }
+    }
+
+    loadGuardians();
+  }, [selectedParentId]);
 
   const toggleStudentSelection = (studentId) => {
     setSelectedStudentIds(prev => 
@@ -71,32 +84,46 @@ export default function ParentStudentLink({ academyId }) {
       setSaving(true);
       setStatusMsg(null);
 
-      // 1. فك ربط الطلاب الذين تم إلغاء تحديدهم
+      // 1. حذف العلاقات القديمة لولي الأمر في جدول student_guardians
       await supabase
-        .from('students')
-        .update({ parent_id: null })
+        .from('student_guardians')
+        .delete()
         .eq('parent_id', selectedParentId);
 
-      // 2. ربط الطلاب الجدد المحددون
+      // 2. إضافة العلاقات الجديدة
       if (selectedStudentIds.length > 0) {
+        const guardiansData = selectedStudentIds.map(studentId => ({
+          student_id: studentId,
+          parent_id: selectedParentId,
+          relationship_type: relationshipType,
+        }));
+
+        const { error: linkErr } = await supabase
+          .from('student_guardians')
+          .insert(guardiansData);
+
+        if (linkErr) throw linkErr;
+
+        // 3. تحديث parent_id المباشر في جدول students
         await supabase
           .from('students')
           .update({ parent_id: selectedParentId })
           .in('id', selectedStudentIds);
       }
 
-      setStatusMsg({ type: 'success', text: 'تم تحديث الربط بنجاح!' });
+      setStatusMsg({ type: 'success', text: 'تم تحديث روابط الأبناء بنجاح!' });
       fetchData();
     } catch (err) {
       console.error('خطأ في حفظ العمليات:', err);
-      setStatusMsg({ type: 'error', text: 'حدث خطأ أثناء حفظ التغييرات' });
+      setStatusMsg({ type: 'error', text: 'حدث خطأ أثناء حفظ التغييرات: ' + err.message });
     } finally {
       setSaving(false);
     }
   };
 
   const filteredStudents = students.filter(s => {
-    const formatted = formatName ? formatName(s.name, 'ar') : s.name;
+    const studentName = typeof s.name === 'object' ? (s.name?.ar || s.name?.en || '') : s.name;
+    const formatted = formatName ? formatName(studentName, 'ar') : studentName;
     return formatted.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -109,22 +136,37 @@ export default function ParentStudentLink({ academyId }) {
         </div>
       )}
 
-      {/* 👨‍👦 اختيار ولي الأمر */}
-      <div style={{ background: '#1E293B', padding: '16px', borderRadius: '14px', border: '1px solid #334155', marginBottom: '20px' }}>
-        <label style={{ display: 'block', fontSize: '13px', color: '#CBD5E1', marginBottom: '8px', fontWeight: '700' }}>اختر ولي الأمر:</label>
-        <select 
-          value={selectedParentId} 
-          onChange={(e) => setSelectedParentId(e.target.value)} 
-          style={{ width: '100%', padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#FFF', fontSize: '13px', outline: 'none' }}
-        >
-          <option value="">-- اضغط لاختيار ولي أمر --</option>
-          {parents.map(p => (
-            <option key={p.id} value={p.id}>{p.full_name} ({p.phone})</option>
-          ))}
-        </select>
+      <div style={{ background: '#1E293B', padding: '16px', borderRadius: '14px', border: '1px solid #334155', marginBottom: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', color: '#CBD5E1', marginBottom: '8px', fontWeight: '700' }}>اختر ولي الأمر:</label>
+          <select 
+            value={selectedParentId} 
+            onChange={(e) => setSelectedParentId(e.target.value)} 
+            style={{ width: '100%', padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#FFF', fontSize: '13px', outline: 'none' }}
+          >
+            <option value="">-- اضغط لاختيار ولي أمر --</option>
+            {parents.map(p => (
+              <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', color: '#CBD5E1', marginBottom: '8px', fontWeight: '700' }}>صلة القرابة:</label>
+          <select 
+            value={relationshipType} 
+            onChange={(e) => setRelationshipType(e.target.value)} 
+            style={{ width: '100%', padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#FFF', fontSize: '13px', outline: 'none' }}
+          >
+            <option value="father">أب (Father)</option>
+            <option value="mother">أم (Mother)</option>
+            <option value="guardian">ولي أمر (Guardian)</option>
+            <option value="uncle">عم/خال (Uncle)</option>
+            <option value="other">آخر (Other)</option>
+          </select>
+        </div>
       </div>
 
-      {/* 👨‍🎓 تحديد الطلاب */}
       {selectedParentId && (
         <div style={{ background: '#1E293B', padding: '16px', borderRadius: '14px', border: '1px solid #334155' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -147,6 +189,7 @@ export default function ParentStudentLink({ academyId }) {
             {filteredStudents.length > 0 ? (
               filteredStudents.map(student => {
                 const isSelected = selectedStudentIds.includes(student.id);
+                const rawName = typeof student.name === 'object' ? (student.name?.ar || student.name?.en || '') : student.name;
                 return (
                   <div 
                     key={student.id} 
@@ -154,7 +197,7 @@ export default function ParentStudentLink({ academyId }) {
                     style={{ padding: '10px 12px', background: isSelected ? 'rgba(245, 158, 11, 0.1)' : '#0F172A', border: `1px solid ${isSelected ? '#F59E0B' : '#334155'}`, borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                   >
                     <span style={{ fontSize: '13px', color: isSelected ? '#F59E0B' : '#F8FAFC', fontWeight: isSelected ? '700' : 'normal' }}>
-                      {formatName ? formatName(student.name, 'ar') : student.name}
+                      {formatName ? formatName(rawName, 'ar') : rawName}
                     </span>
                     <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: isSelected ? '#F59E0B' : 'transparent', border: `1px solid ${isSelected ? '#F59E0B' : '#64748B'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {isSelected && <Check size={14} style={{ color: '#0F172A' }} />}
