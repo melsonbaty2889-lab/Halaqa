@@ -1,37 +1,35 @@
 /* src/components/Student/StudentsList.jsx */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { 
   UserPlus, FileSpreadsheet, Archive, 
-  GraduationCap, Layers, Eye, BookOpen, RotateCcw,
-  Flame, Star, Search, X, MessageSquare, MoreVertical,
-  Edit3, ArrowRightLeft
+  Search, X, Eye, BookOpen, Flame, Star, 
+  MessageSquare, MoreVertical, Edit3, ArrowRightLeft, RotateCcw 
 } from 'lucide-react';
-import QuranProgressBar from '@/components/QuranProgress/QuranProgressBar';
+
 import AddStudentModal from '@/components/Student/AddStudentModal';
+import QuranProgressBar from '@/components/QuranProgress/QuranProgressBar';
+import { formatName } from '@/utils/formatters';
 
 export default function StudentsList({ 
   academyId, 
   students: propStudents, 
   halaqas: propHalaqas,
   setStudents: propSetStudents,
-  onEditStudent // خيار تمرير دالة تعديل خارجية إن وجدت
+  onEditStudent
 }) {
-  const navigate = useNavigate();
   const { i18n } = useTranslation();
+  const navigate = useNavigate();
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
   const [internalStudents, setInternalStudents] = useState([]);
   const [internalHalaqas, setInternalHalaqas] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
 
-  // حالة التحكم في المودالات والقوائم
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [activeMenuId, setActiveMenuId] = useState(null); // القائمة المنسدلة المفتوحة
-  const [transferStudent, setTransferStudent] = useState(null); // الطالب المراد نقله
+  const [transferStudent, setTransferStudent] = useState(null);
   const [selectedNewHalaqa, setSelectedNewHalaqa] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
 
@@ -44,139 +42,65 @@ export default function StudentsList({
   const [selectedGender, setSelectedGender] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active');
 
-  const formatName = useCallback((nameData) => {
-    if (!nameData) return '';
-    if (typeof nameData === 'string') {
-      try {
-        const parsed = JSON.parse(nameData);
-        if (typeof parsed === 'object' && parsed !== null) {
-          return isRtl 
-            ? (parsed.ar || parsed.en || parsed.full_name || Object.values(parsed)[0] || '')
-            : (parsed.en || parsed.ar || parsed.full_name || Object.values(parsed)[0] || '');
-        }
-      } catch {
-        return nameData;
-      }
-      return nameData;
-    }
-    if (typeof nameData === 'object') {
-      return isRtl 
-        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
-        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
-    }
-    return String(nameData);
-  }, [isRtl]);
-
   const getQuranProgress = useCallback((quarterIndex) => {
     const qIndex = Math.max(0, Math.min(240, Number(quarterIndex) || 0));
     const juz = Math.min(30, Math.floor(qIndex / 8) + 1);
-    const percentage = Math.round((qIndex / 240) * 100);
-    return { juz, percentage, qIndex };
+    return { juz, qIndex };
   }, []);
 
   const fetchData = useCallback(async () => {
     if (!academyId || propStudents) return;
-    
     try {
       setLoading(true);
-      setFetchError(null);
-
-      const { data: halaqasData, error: halaqasErr } = await supabase
-        .from('halaqas')
-        .select('id, name')
-        .eq('academy_id', academyId);
-        
-      if (halaqasErr) throw halaqasErr;
+      const { data: halaqasData } = await supabase.from('halaqas').select('id, name').eq('academy_id', academyId);
       if (halaqasData) setInternalHalaqas(halaqasData);
 
-      const { data: studentsData, error: studentsErr } = await supabase
+      const { data: studentsData } = await supabase
         .from('students')
-        .select(`
-          *,
-          student_halaqas (
-            status,
-            halaqas ( id, name )
-          )
-        `)
+        .select(`*, student_halaqas ( status, halaqas ( id, name ) )`)
         .eq('academy_id', academyId)
         .order('created_at', { ascending: false });
 
-      if (studentsErr) throw studentsErr;
-
-      const formattedStudents = (studentsData || []).map(student => {
-        const activeStudentHalaqa = Array.isArray(student.student_halaqas)
-          ? student.student_halaqas.find(sh => sh.status === 'active')
-          : null;
-          
-        const linkedHalaqa = activeStudentHalaqa?.halaqas || null;
-
-        return {
-          ...student,
-          halaqa_id: linkedHalaqa?.id || student.halaqa_id || null,
-          halaqas: linkedHalaqa
-        };
+      const formatted = (studentsData || []).map(student => {
+        const activeSH = Array.isArray(student.student_halaqas) ? student.student_halaqas.find(sh => sh.status === 'active') : null;
+        const linkedHalaqa = activeSH?.halaqas || null;
+        return { ...student, halaqa_id: linkedHalaqa?.id || student.halaqa_id || null, halaqas: linkedHalaqa };
       });
 
-      setInternalStudents(formattedStudents);
-
+      setInternalStudents(formatted);
     } catch (err) {
-      console.error('🚨 Error fetching data:', err);
-      setFetchError(isRtl ? 'حدث خطأ أثناء تحميل البيانات' : 'Failed to load data');
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [academyId, isRtl, propStudents]);
+  }, [academyId, propStudents]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const checkIsMale = (student) => {
-    const g = String(student.gender || '').trim().toLowerCase();
-    return g === 'male' || g === 'ذكر' || g === 'm';
-  };
-
-  const checkIsFemale = (student) => {
-    const g = String(student.gender || '').trim().toLowerCase();
-    return g === 'female' || g === 'أنثى' || g === 'f';
-  };
+  const checkIsMale = (s) => ['male', 'ذكر', 'm'].includes(String(s.gender || '').trim().toLowerCase());
+  const checkIsFemale = (s) => ['female', 'أنثى', 'f'].includes(String(s.gender || '').trim().toLowerCase());
 
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
-    
     return students.filter(student => {
       const isArchived = student.is_archived || student.status === 'archived';
-      
       if (selectedStatus === 'active' && isArchived) return false;
       if (selectedStatus === 'archived' && !isArchived) return false;
-
       if (selectedHalaqa === 'no_halaqa' && student.halaqa_id) return false;
       if (selectedHalaqa !== 'all' && selectedHalaqa !== 'no_halaqa' && String(student.halaqa_id) !== String(selectedHalaqa)) return false;
-
       if (selectedGender === 'male' && !checkIsMale(student)) return false;
       if (selectedGender === 'female' && !checkIsFemale(student)) return false;
 
       if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase().trim();
-        const studentDisplayName = formatName(student.name).toLowerCase();
-        const codeMatch = student.student_code ? String(student.student_code).toLowerCase().includes(query) : false;
-        const matchName = studentDisplayName.includes(query);
-        const matchPhone = student.parent_phone ? String(student.parent_phone).includes(query) : false;
-        return matchName || matchPhone || codeMatch;
+        const q = searchTerm.toLowerCase().trim();
+        const matchName = formatName(student.name, isRtl ? 'ar' : 'en').toLowerCase().includes(q);
+        const matchCode = student.student_code ? String(student.student_code).toLowerCase().includes(q) : false;
+        const matchPhone = student.parent_phone ? String(student.parent_phone).includes(q) : false;
+        return matchName || matchPhone || matchCode;
       }
-
       return true;
     });
-  }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm, formatName]);
-
-  const stats = useMemo(() => {
-    return {
-      displayed: filteredStudents.length,
-      noHalaqa: filteredStudents.filter(s => !s.halaqa_id).length,
-      males: filteredStudents.filter(checkIsMale).length,
-      females: filteredStudents.filter(checkIsFemale).length,
-    };
-  }, [filteredStudents]);
+  }, [students, selectedStatus, selectedHalaqa, selectedGender, searchTerm, isRtl]);
 
   const handleToggleArchive = async (e, studentId, currentStatus, currentIsArchived) => {
     if (e) e.stopPropagation();
@@ -184,76 +108,29 @@ export default function StudentsList({
     const newStatus = willBeArchived ? 'archived' : 'active';
 
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus, is_archived: willBeArchived } : s));
-
-    try {
-      const { error } = await supabase
-        .from('students')
-        .update({ status: newStatus, is_archived: willBeArchived, updated_at: new Date().toISOString() })
-        .eq('id', studentId);
-
-      if (error) {
-        console.error('🚨 Supabase Update Error:', error);
-        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus, is_archived: currentIsArchived } : s));
-        alert(isRtl ? 'حدث خطأ أثناء تحديث حالة الطالب' : 'Failed to update student status');
-      }
-    } catch (err) {
-      console.error(err);
-      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus, is_archived: currentIsArchived } : s));
-    }
+    await supabase.from('students').update({ status: newStatus, is_archived: willBeArchived, updated_at: new Date().toISOString() }).eq('id', studentId);
   };
 
-  // تنفيذ حركة النقل السريع للطالب
   const handleConfirmTransfer = async () => {
-    if (!transferStudent || !selectedNewHalaqa) return;
-
+    if (!transferStudent) return;
     try {
       setTransferLoading(true);
       const newHalaqaObj = halaqas.find(h => String(h.id) === String(selectedNewHalaqa));
+      await supabase.from('students').update({ halaqa_id: selectedNewHalaqa || null, updated_at: new Date().toISOString() }).eq('id', transferStudent.id);
 
-      // تحديث جدول الطلاب الرئيسي
-      const { error: studentErr } = await supabase
-        .from('students')
-        .update({ 
-          halaqa_id: selectedNewHalaqa,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', transferStudent.id);
-
-      if (studentErr) throw studentErr;
-
-      // تحديث الواجهة المحلية مباشرة
-      setStudents(prev => prev.map(s => {
-        if (s.id === transferStudent.id) {
-          return {
-            ...s,
-            halaqa_id: selectedNewHalaqa,
-            halaqas: newHalaqaObj || s.halaqas
-          };
-        }
-        return s;
-      }));
-
+      setStudents(prev => prev.map(s => s.id === transferStudent.id ? { ...s, halaqa_id: selectedNewHalaqa || null, halaqas: newHalaqaObj || null } : s));
       setTransferStudent(null);
-      setSelectedNewHalaqa('');
     } catch (err) {
-      console.error('🚨 Error transferring student:', err);
-      alert(isRtl ? 'حدث خطأ أثناء نقل الطالب' : 'Failed to transfer student');
+      console.error(err);
     } finally {
       setTransferLoading(false);
     }
   };
 
   return (
-    <div 
-      dir={isRtl ? 'rtl' : 'ltr'} 
-      style={{ 
-        maxWidth: '720px', 
-        margin: '0 auto', 
-        padding: '16px', 
-        color: '#F8FAFC', 
-        fontFamily: "'Cairo', system-ui, -apple-system, sans-serif" 
-      }}
-    >
+    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ maxWidth: '720px', margin: '0 auto', padding: '16px', color: '#F8FAFC', fontFamily: "'Cairo', sans-serif" }}>
+      
+      {/* 🏷️ الرأس */}
       <div style={{ marginBottom: '20px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#F59E0B', margin: '0 0 4px 0' }}>
           {isRtl ? 'إدارة شؤون الطلاب والدارسين' : 'Students Directory'}
@@ -263,691 +140,187 @@ export default function StudentsList({
         </p>
       </div>
 
+      {/* 🔘 الأزرار العلوية */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr', gap: '8px', marginBottom: '20px' }}>
-        <button
-          type="button"
-          onClick={() => setSelectedStatus(prev => prev === 'active' ? 'archived' : 'active')}
-          style={{
-            padding: '10px 6px',
-            fontSize: '12px',
-            fontWeight: '600',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: '1px solid',
-            borderColor: selectedStatus === 'archived' ? '#F59E0B' : '#334155',
-            background: selectedStatus === 'archived' ? 'rgba(245, 158, 11, 0.15)' : '#1E293B',
-            color: selectedStatus === 'archived' ? '#F59E0B' : '#CBD5E1',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Archive size={14} />
-          {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
+        <button type="button" onClick={() => setSelectedStatus(prev => prev === 'active' ? 'archived' : 'active')} style={{ padding: '10px 6px', fontSize: '12px', fontWeight: '600', borderRadius: '12px', cursor: 'pointer', border: '1px solid', borderColor: selectedStatus === 'archived' ? '#F59E0B' : '#334155', background: selectedStatus === 'archived' ? 'rgba(245, 158, 11, 0.15)' : '#1E293B', color: selectedStatus === 'archived' ? '#F59E0B' : '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <Archive size={14} /> {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
         </button>
 
-        <button
-          type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          style={{
-            padding: '10px 8px',
-            fontSize: '13px',
-            fontWeight: '700',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: 'none',
-            background: '#F59E0B',
-            color: '#0F172A',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <UserPlus size={16} />
-          {isRtl ? 'إضافة طالب جديد' : 'Add Student'}
+        <button type="button" onClick={() => setIsAddModalOpen(true)} style={{ padding: '10px 8px', fontSize: '13px', fontWeight: '700', borderRadius: '12px', cursor: 'pointer', border: 'none', background: '#F59E0B', color: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)' }}>
+          <UserPlus size={16} /> {isRtl ? 'إضافة طالب جديد' : 'Add Student'}
         </button>
 
-        <button
-          type="button"
-          onClick={() => alert(isRtl ? 'ميزة تصدير الملفات ستتوفر قريباً...' : 'Export coming soon...')}
-          style={{
-            padding: '10px 6px',
-            fontSize: '12px',
-            fontWeight: '600',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: '1px solid #334155',
-            background: '#1E293B',
-            color: '#10B981',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px'
-          }}
-        >
-          <FileSpreadsheet size={15} />
-          {isRtl ? 'تصدير' : 'Export'}
+        <button type="button" onClick={() => alert(isRtl ? 'ميزة التصدير ستتوفر قريباً...' : 'Export coming soon...')} style={{ padding: '10px 6px', fontSize: '12px', fontWeight: '600', borderRadius: '12px', cursor: 'pointer', border: '1px solid #334155', background: '#1E293B', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <FileSpreadsheet size={15} /> {isRtl ? 'تصدير' : 'Export'}
         </button>
       </div>
 
-      {/* لوحة الإحصائيات */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
-        <div style={{ background: '#1E293B', borderRadius: '14px', padding: '12px 14px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>{isRtl ? 'العدد المعروض' : 'Displayed'}</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#F8FAFC', marginTop: '2px' }}>{stats.displayed}</div>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', padding: '10px', borderRadius: '10px' }}>
-            <GraduationCap size={18} />
-          </div>
-        </div>
-
-        <div style={{ background: '#1E293B', borderRadius: '14px', padding: '12px 14px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>{isRtl ? 'بدون حلقة' : 'No Halaqa'}</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#EF4444', marginTop: '2px' }}>{stats.noHalaqa}</div>
-          </div>
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '10px', borderRadius: '10px' }}>
-            <Layers size={18} />
-          </div>
-        </div>
-
-        <div style={{ background: '#1E293B', borderRadius: '14px', padding: '12px 14px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>{isRtl ? 'ذكور' : 'Males'}</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#3B82F6', marginTop: '2px' }}>{stats.males}</div>
-          </div>
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>
-            ♂ {isRtl ? 'ذكور' : 'M'}
-          </div>
-        </div>
-
-        <div style={{ background: '#1E293B', borderRadius: '14px', padding: '12px 14px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>{isRtl ? 'إناث' : 'Females'}</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#EC4899', marginTop: '2px' }}>{stats.females}</div>
-          </div>
-          <div style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#EC4899', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>
-            ♀ {isRtl ? 'إناث' : 'F'}
-          </div>
-        </div>
-      </div>
-
-      {/* البحث والتصفية */}
+      {/* 🔍 البحث والفلترة */}
       <div style={{ background: '#1E293B', borderRadius: '14px', padding: '14px', border: '1px solid #334155', marginBottom: '20px' }}>
         <div style={{ position: 'relative', marginBottom: '10px' }}>
-          <input 
-            type="text"
-            placeholder={isRtl ? 'ابحث باسم الطالب، رقم الهاتف، أو كود الطالب...' : 'Search student name, phone or code...'}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: isRtl ? '12px 38px 12px 12px' : '12px 12px 12px 38px',
-              background: '#0F172A',
-              border: '1px solid #334155',
-              borderRadius: '10px',
-              color: '#FFF',
-              fontSize: '13px',
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
-          />
-          <Search 
-            size={16}
-            style={{ 
-              position: 'absolute', 
-              top: '50%', 
-              transform: 'translateY(-50%)', 
-              [isRtl ? 'right' : 'left']: '12px', 
-              color: '#64748B' 
-            }} 
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                [isRtl ? 'left' : 'right']: '12px',
-                background: 'none',
-                border: 'none',
-                color: '#64748B',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={15} />
-            </button>
-          )}
+          <input type="text" placeholder={isRtl ? 'ابحث باسم الطالب، رقم الهاتف، أو كود الطالب...' : 'Search student name, phone or code...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: isRtl ? '12px 38px 12px 12px' : '12px 12px 12px 38px', background: '#0F172A', border: '1px solid #334155', borderRadius: '10px', color: '#FFF', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+          <Search size={16} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '12px', color: '#64748B' }} />
+          {searchTerm && <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '12px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}><X size={15} /></button>}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94A3B8', marginBottom: '4px' }}>
-              {isRtl ? 'تصفية بالحلقة' : 'Halaqa'}
-            </label>
-            <select
-              value={selectedHalaqa}
-              onChange={(e) => setSelectedHalaqa(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: '#0F172A',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                color: '#CBD5E1',
-                fontSize: '12px',
-                outline: 'none'
-              }}
-            >
-              <option value="all">{isRtl ? 'جميع الحلقات' : 'All Halaqas'}</option>
-              <option value="no_halaqa">{isRtl ? 'بدون حلقة' : 'Without Halaqa'}</option>
-              {halaqas.map(h => (
-                <option key={h.id} value={h.id}>
-                  {formatName(h.name)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select value={selectedHalaqa} onChange={(e) => setSelectedHalaqa(e.target.value)} style={{ padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#CBD5E1', fontSize: '12px' }}>
+            <option value="all">{isRtl ? 'جميع الحلقات' : 'All Halaqas'}</option>
+            <option value="no_halaqa">{isRtl ? 'بدون حلقة' : 'Without Halaqa'}</option>
+            {halaqas.map(h => <option key={h.id} value={h.id}>{formatName(h.name, isRtl ? 'ar' : 'en')}</option>)}
+          </select>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94A3B8', marginBottom: '4px' }}>
-              {isRtl ? 'تصفية بالجنس' : 'Gender'}
-            </label>
-            <select
-              value={selectedGender}
-              onChange={(e) => setSelectedGender(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: '#0F172A',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                color: '#CBD5E1',
-                fontSize: '12px',
-                outline: 'none'
-              }}
-            >
-              <option value="all">{isRtl ? 'الكل (ذكر / أنثى)' : 'All Genders'}</option>
-              <option value="male">{isRtl ? 'ذكور فقط' : 'Males Only'}</option>
-              <option value="female">{isRtl ? 'إناث فقط' : 'Females Only'}</option>
-            </select>
-          </div>
+          <select value={selectedGender} onChange={(e) => setSelectedGender(e.target.value)} style={{ padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#CBD5E1', fontSize: '12px' }}>
+            <option value="all">{isRtl ? 'الكل (ذكر / أنثى)' : 'All Genders'}</option>
+            <option value="male">{isRtl ? 'ذكور فقط' : 'Males Only'}</option>
+            <option value="female">{isRtl ? 'إناث فقط' : 'Females Only'}</option>
+          </select>
         </div>
       </div>
 
-      {/* بطاقات الطلاب */}
+      {/* 📋 قائمة البطاقات */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#94A3B8', fontSize: '14px' }}>
-          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
-          {isRtl ? 'جاري تحميل قائمة الطلاب...' : 'Loading students...'}
-        </div>
-      ) : fetchError ? (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #EF4444', padding: '16px', borderRadius: '12px', color: '#F87171', textAlign: 'center' }}>
-          {fetchError}
-        </div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>⏳ {isRtl ? 'جاري التحميل...' : 'Loading...'}</div>
       ) : filteredStudents.length === 0 ? (
-        <div style={{ background: '#1E293B', padding: '40px 20px', textAlign: 'center', borderRadius: '14px', border: '1px dashed #334155' }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>📬</div>
-          <div style={{ color: '#CBD5E1', fontSize: '14px', fontWeight: 'bold' }}>
-            {isRtl ? 'لم يتم العثور على نتائج مطابقة' : 'No matching results'}
-          </div>
+        <div style={{ background: '#1E293B', padding: '40px', textAlign: 'center', borderRadius: '14px', border: '1px dashed #334155', color: '#CBD5E1' }}>
+          {isRtl ? 'لم يتم العثور على نتائج' : 'No results found'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {filteredStudents.map(student => {
-            const isStudentArchived = student.is_archived || student.status === 'archived';
-            const studentDisplayName = formatName(student.name);
-            const linkedHalaqa = student.halaqas || (Array.isArray(halaqas) ? halaqas.find(h => String(h.id) === String(student.halaqa_id)) : null);
-            const halaqaDisplayName = linkedHalaqa ? formatName(linkedHalaqa.name) : '';
-            const { juz, qIndex } = getQuranProgress(student.current_quarter_index);
-            const streakDays = student.current_streak || 0;
-            const points = student.points || 0;
-            const cleanPhone = student.parent_phone ? String(student.parent_phone).replace(/\D/g, '') : null;
-
-            return (
-              <div 
-                key={student.id} 
-                style={{ 
-                  background: '#1E293B', 
-                  borderRadius: '14px', 
-                  padding: '14px', 
-                  border: '1px solid #334155',
-                  opacity: isStudentArchived ? 0.75 : 1,
-                  position: 'relative'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <div style={{ 
-                    width: '46px', 
-                    height: '46px', 
-                    borderRadius: '12px', 
-                    background: '#0F172A', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    fontSize: '22px',
-                    border: '1px solid #334155',
-                    flexShrink: 0
-                  }}>
-                    {checkIsFemale(student) ? '🧕' : '👨‍🎓'}
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {studentDisplayName}
-                      </div>
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        {streakDays > 0 && (
-                          <span style={{ fontSize: '11px', background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', padding: '2px 6px', borderRadius: '6px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Flame size={12} /> {streakDays}d
-                          </span>
-                        )}
-                        {points > 0 && (
-                          <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '2px 6px', borderRadius: '6px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Star size={11} /> {points}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px', fontSize: '11px' }}>
-                      <span style={{ 
-                        color: linkedHalaqa ? '#F59E0B' : '#EF4444', 
-                        background: linkedHalaqa ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                        padding: '2px 8px', 
-                        borderRadius: '6px',
-                        fontWeight: '600'
-                      }}>
-                        {linkedHalaqa ? halaqaDisplayName : (isRtl ? 'بدون حلقة' : 'No Halaqa')}
-                      </span>
-
-                      <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <BookOpen size={13} style={{ color: '#10B981' }} /> 
-                        {isRtl ? `الجزء ${juz}` : `Juz ${juz}`}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                    {cleanPhone && (
-                      <a 
-                        href={`https://wa.me/${cleanPhone}`} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        title={isRtl ? 'تواصل عبر واتساب' : 'WhatsApp Contact'}
-                        style={{ 
-                          background: 'rgba(16, 185, 129, 0.15)', 
-                          color: '#10B981', 
-                          width: '36px', 
-                          height: '36px', 
-                          borderRadius: '10px', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          textDecoration: 'none'
-                        }}
-                      >
-                        <MessageSquare size={17} />
-                      </a>
-                    )}
-
-                    {/* قائمة الإجراءات السريعة (Quick Actions Menu) */}
-                    <div style={{ position: 'relative' }}>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMenuId(activeMenuId === student.id ? null : student.id);
-                        }}
-                        style={{
-                          background: '#0F172A',
-                          border: '1px solid #334155',
-                          color: '#CBD5E1',
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer'
-                        }}
-                        title={isRtl ? 'الإجراءات السريعة' : 'Quick Actions'}
-                      >
-                        <MoreVertical size={18} />
-                      </button>
-
-                      {/* القائمة المنبثقة */}
-                      {activeMenuId === student.id && (
-                        <>
-                          <div 
-                            style={{ position: 'fixed', inset: 0, zIndex: 40 }} 
-                            onClick={() => setActiveMenuId(null)} 
-                          />
-                          <div style={{
-                            position: 'absolute',
-                            [isRtl ? 'left' : 'right']: 0,
-                            top: '42px',
-                            width: '180px',
-                            background: '#0F172A',
-                            border: '1px solid #334155',
-                            borderRadius: '12px',
-                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
-                            zIndex: 50,
-                            padding: '4px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '2px'
-                          }}>
-                            {/* عرض التفاصيل */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null);
-                                navigate(`/students/${student.id}`);
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '8px 10px',
-                                background: 'transparent',
-                                border: 'none',
-                                borderRadius: '8px',
-                                color: '#CBD5E1',
-                                fontSize: '12px',
-                                textAlign: isRtl ? 'right' : 'left',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                              }}
-                            >
-                              <Eye size={14} style={{ color: '#F59E0B' }} />
-                              {isRtl ? 'عرض التفاصيل' : 'View Details'}
-                            </button>
-
-                            {/* تعديل البيانات */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null);
-                                if (onEditStudent) {
-                                  onEditStudent(student);
-                                } else {
-                                  navigate(`/students/${student.id}?edit=true`);
-                                }
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '8px 10px',
-                                background: 'transparent',
-                                border: 'none',
-                                borderRadius: '8px',
-                                color: '#CBD5E1',
-                                fontSize: '12px',
-                                textAlign: isRtl ? 'right' : 'left',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                              }}
-                            >
-                              <Edit3 size={14} style={{ color: '#3B82F6' }} />
-                              {isRtl ? 'تعديل البيانات' : 'Edit Student'}
-                            </button>
-
-                            {/* نقل سريع */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null);
-                                setTransferStudent(student);
-                                setSelectedNewHalaqa(student.halaqa_id || '');
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '8px 10px',
-                                background: 'transparent',
-                                border: 'none',
-                                borderRadius: '8px',
-                                color: '#CBD5E1',
-                                fontSize: '12px',
-                                textAlign: isRtl ? 'right' : 'left',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                              }}
-                            >
-                              <ArrowRightLeft size={14} style={{ color: '#10B981' }} />
-                              {isRtl ? 'نقل سريع لحلقة أخرى' : 'Quick Transfer'}
-                            </button>
-
-                            {/* أرشفة / استعادة */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                setActiveMenuId(null);
-                                handleToggleArchive(e, student.id, student.status, student.is_archived);
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '8px 10px',
-                                background: 'transparent',
-                                border: 'none',
-                                borderTop: '1px solid #1E293B',
-                                borderRadius: '8px',
-                                color: isStudentArchived ? '#10B981' : '#EF4444',
-                                fontSize: '12px',
-                                textAlign: isRtl ? 'right' : 'left',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                marginTop: '2px'
-                              }}
-                            >
-                              {isStudentArchived ? <RotateCcw size={14} /> : <Archive size={14} />}
-                              {isStudentArchived ? (isRtl ? 'استعادة الحساب' : 'Restore Account') : (isRtl ? 'أرشفة الطالب' : 'Archive Student')}
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '12px' }}>
-                  <QuranProgressBar currentQuarterIndex={qIndex} showDetails={true} />
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(51, 65, 85, 0.5)' }}>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/students/${student.id}`)}
-                    style={{
-                      flex: 1,
-                      padding: '8px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      border: '1px solid rgba(245, 158, 11, 0.3)',
-                      background: 'rgba(245, 158, 11, 0.05)',
-                      color: '#F59E0B',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <Eye size={14} />
-                    {isRtl ? 'عرض التفاصيل' : 'View Details'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTransferStudent(student);
-                      setSelectedNewHalaqa(student.halaqa_id || '');
-                    }}
-                    style={{
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      border: '1px solid #334155',
-                      background: '#0F172A',
-                      color: '#CBD5E1',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <ArrowRightLeft size={13} style={{ color: '#10B981' }} />
-                    {isRtl ? 'نقل' : 'Transfer'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => handleToggleArchive(e, student.id, student.status, student.is_archived)}
-                    style={{
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      border: '1px solid #334155',
-                      background: 'transparent',
-                      color: isStudentArchived ? '#10B981' : '#64748B',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    {isStudentArchived ? <RotateCcw size={13} /> : <Archive size={13} />}
-                    {isStudentArchived ? (isRtl ? 'استعادة' : 'Restore') : (isRtl ? 'أرشفة' : 'Archive')}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {filteredStudents.map(student => (
+            <StudentItemCard 
+              key={student.id}
+              student={student}
+              halaqas={halaqas}
+              getQuranProgress={getQuranProgress}
+              onToggleArchive={handleToggleArchive}
+              onOpenTransferModal={(s) => { setTransferStudent(s); setSelectedNewHalaqa(s.halaqa_id || ''); }}
+              onEditStudent={onEditStudent}
+              isRtl={isRtl}
+              navigate={navigate}
+            />
+          ))}
         </div>
       )}
 
-      {/* نافذة النقل السريع المنبثقة */}
+      {/* 🚚 نافذة النقل السريع بين الحلقات */}
       {transferStudent && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15, 23, 42, 0.75)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-          padding: '16px'
-        }}>
-          <div style={{
-            background: '#1E293B',
-            border: '1px solid #334155',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '400px',
-            padding: '20px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
-          }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', itemsCenter: 'center', justifyContent: 'center', zIndex: 100, padding: '16px' }}>
+          <div style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '20px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC', margin: '0 0 12px 0' }}>
-              {isRtl ? `نقل الطالب: ${formatName(transferStudent.name)}` : `Transfer: ${formatName(transferStudent.name)}`}
+              {isRtl ? `نقل الطالب: ${formatName(transferStudent.name, 'ar')}` : `Transfer Student`}
             </h3>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>
-                {isRtl ? 'اختر الحلقة الجديدة' : 'Select New Halaqa'}
-              </label>
-              <select
-                value={selectedNewHalaqa}
-                onChange={(e) => setSelectedNewHalaqa(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  background: '#0F172A',
-                  border: '1px solid #334155',
-                  borderRadius: '10px',
-                  color: '#FFF',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
-              >
-                <option value="">{isRtl ? 'بدون حلقة (إزالة من الحلقة)' : 'No Halaqa'}</option>
-                {halaqas.map(h => (
-                  <option key={h.id} value={h.id}>
-                    {formatName(h.name)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            <select value={selectedNewHalaqa} onChange={(e) => setSelectedNewHalaqa(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '10px', color: '#FFF', fontSize: '13px', marginBottom: '16px' }}>
+              <option value="">{isRtl ? 'بدون حلقة (إزالة)' : 'No Halaqa'}</option>
+              {halaqas.map(h => <option key={h.id} value={h.id}>{formatName(h.name, isRtl ? 'ar' : 'en')}</option>)}
+            </select>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={() => setTransferStudent(null)}
-                disabled={transferLoading}
-                style={{
-                  padding: '8px 16px',
-                  background: 'transparent',
-                  border: '1px solid #334155',
-                  borderRadius: '10px',
-                  color: '#94A3B8',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                {isRtl ? 'إلغاء' : 'Cancel'}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmTransfer}
-                disabled={transferLoading}
-                style={{
-                  padding: '8px 16px',
-                  background: '#F59E0B',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: '#0F172A',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  opacity: transferLoading ? 0.7 : 1
-                }}
-              >
-                {transferLoading ? (isRtl ? 'جاري النقل...' : 'Transferring...') : (isRtl ? 'تأكيد النقل' : 'Confirm Transfer')}
+              <button type="button" onClick={() => setTransferStudent(null)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #334155', borderRadius: '10px', color: '#94A3B8' }}>{isRtl ? 'إلغاء' : 'Cancel'}</button>
+              <button type="button" onClick={handleConfirmTransfer} disabled={transferLoading} style={{ padding: '8px 16px', background: '#F59E0B', border: 'none', borderRadius: '10px', color: '#0F172A', fontWeight: '700' }}>
+                {transferLoading ? (isRtl ? 'جاري النقل...' : 'Transferring...') : (isRtl ? 'تأكيد' : 'Confirm')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* نافذة إضافة طالب المنبثقة */}
+      {/* ➕ استخدام نافذة إضافة طالب الموجودة لديك أصلاً */}
       <AddStudentModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         halaqasList={halaqas}
         academyId={academyId}
-        onStudentAdded={(newStudent) => {
-          setStudents(prev => [newStudent, ...prev]);
-        }}
+        onStudentAdded={(newStudent) => setStudents(prev => [newStudent, ...prev])}
       />
     </div>
   );
 }
+
+// 📇 بطاقة عرض الطالب داخل القائمة
+function StudentItemCard({ student, halaqas, getQuranProgress, onToggleArchive, onOpenTransferModal, onEditStudent, isRtl, navigate }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isStudentArchived = student.is_archived || student.status === 'archived';
+  const studentName = formatName(student.name, isRtl ? 'ar' : 'en');
+  const linkedHalaqa = student.halaqas || (Array.isArray(halaqas) ? halaqas.find(h => String(h.id) === String(student.halaqa_id)) : null);
+  const halaqaName = linkedHalaqa ? formatName(linkedHalaqa.name, isRtl ? 'ar' : 'en') : '';
+  const { juz, qIndex } = getQuranProgress(student.current_quarter_index);
+  const cleanPhone = student.parent_phone ? String(student.parent_phone).replace(/\D/g, '') : null;
+
+  return (
+    <div style={{ background: '#1E293B', borderRadius: '14px', padding: '14px', border: '1px solid #334155', opacity: isStudentArchived ? 0.75 : 1 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '1px solid #334155', flexShrink: 0 }}>
+          {['female', 'أنثى', 'f'].includes(String(student.gender).toLowerCase()) ? '🧕' : '👨‍🎓'}
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {studentName}
+            </div>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {student.current_streak > 0 && <span style={{ fontSize: '11px', background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', padding: '2px 6px', borderRadius: '6px', fontWeight: '700' }}><Flame size={12} inline /> {student.current_streak}d</span>}
+              {student.points > 0 && <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '2px 6px', borderRadius: '6px', fontWeight: '700' }}><Star size={11} inline /> {student.points}</span>}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '11px' }}>
+            <span style={{ color: linkedHalaqa ? '#F59E0B' : '#EF4444', background: linkedHalaqa ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '6px', fontWeight: '600' }}>
+              {linkedHalaqa ? halaqaName : (isRtl ? 'بدون حلقة' : 'No Halaqa')}
+            </span>
+            <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <BookOpen size={13} style={{ color: '#10B981' }} /> {isRtl ? `الجزء ${juz}` : `Juz ${juz}`}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {cleanPhone && (
+            <a href={`https://wa.me/${cleanPhone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+              <MessageSquare size={17} />
+            </a>
+          )}
+
+          <div style={{ position: 'relative' }}>
+            <button type="button" onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ background: '#0F172A', border: '1px solid #334155', color: '#CBD5E1', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <MoreVertical size={18} />
+            </button>
+
+            {isMenuOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setIsMenuOpen(false)} />
+                <div style={{ position: 'absolute', [isRtl ? 'left' : 'right']: 0, top: '42px', width: '160px', background: '#0F172A', border: '1px solid #334155', borderRadius: '12px', zIndex: 50, padding: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <button type="button" onClick={() => { setIsMenuOpen(false); navigate(`/students/${student.id}`); }} style={menuStyle(isRtl)}><Eye size={14} style={{ color: '#F59E0B' }} /> {isRtl ? 'التفاصيل' : 'Details'}</button>
+                  <button type="button" onClick={() => { setIsMenuOpen(false); if (onEditStudent) onEditStudent(student); else navigate(`/students/${student.id}?edit=true`); }} style={menuStyle(isRtl)}><Edit3 size={14} style={{ color: '#3B82F6' }} /> {isRtl ? 'تعديل' : 'Edit'}</button>
+                  <button type="button" onClick={() => { setIsMenuOpen(false); onOpenTransferModal(student); }} style={menuStyle(isRtl)}><ArrowRightLeft size={14} style={{ color: '#10B981' }} /> {isRtl ? 'نقل' : 'Transfer'}</button>
+                  <button type="button" onClick={(e) => { setIsMenuOpen(false); onToggleArchive(e, student.id, student.status, student.is_archived); }} style={{ ...menuStyle(isRtl), color: isStudentArchived ? '#10B981' : '#EF4444' }}>
+                    {isStudentArchived ? <RotateCcw size={14} /> : <Archive size={14} />} {isStudentArchived ? (isRtl ? 'استعادة' : 'Restore') : (isRtl ? 'أرشفة' : 'Archive')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '12px' }}>
+        <QuranProgressBar currentQuarterIndex={qIndex} showDetails={true} />
+      </div>
+    </div>
+  );
+}
+
+const menuStyle = (isRtl) => ({
+  width: '100%',
+  padding: '8px 10px',
+  background: 'transparent',
+  border: 'none',
+  borderRadius: '8px',
+  color: '#CBD5E1',
+  fontSize: '12px',
+  textAlign: isRtl ? 'right' : 'left',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px'
+});
