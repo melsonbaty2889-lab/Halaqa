@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { 
   UserPlus, FileSpreadsheet, Archive, 
   GraduationCap, Layers, Eye, BookOpen, RotateCcw,
-  Flame, Star, Search, X, MessageSquare
+  Flame, Star, Search, X, MessageSquare, MoreVertical,
+  Edit3, ArrowRightLeft
 } from 'lucide-react';
 import QuranProgressBar from '@/components/QuranProgress/QuranProgressBar';
 import AddStudentModal from '@/components/Student/AddStudentModal';
@@ -15,7 +16,8 @@ export default function StudentsList({
   academyId, 
   students: propStudents, 
   halaqas: propHalaqas,
-  setStudents: propSetStudents 
+  setStudents: propSetStudents,
+  onEditStudent // خيار تمرير دالة تعديل خارجية إن وجدت
 }) {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
@@ -26,8 +28,12 @@ export default function StudentsList({
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
 
-  // حالة التحكم في إظهار أو إخفاء مودال إضافة طالب جديد
+  // حالة التحكم في المودالات والقوائم
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null); // القائمة المنسدلة المفتوحة
+  const [transferStudent, setTransferStudent] = useState(null); // الطالب المراد نقله
+  const [selectedNewHalaqa, setSelectedNewHalaqa] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
 
   const students = propStudents || internalStudents;
   const halaqas = propHalaqas || internalHalaqas;
@@ -173,7 +179,7 @@ export default function StudentsList({
   }, [filteredStudents]);
 
   const handleToggleArchive = async (e, studentId, currentStatus, currentIsArchived) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     const willBeArchived = !(currentIsArchived || currentStatus === 'archived');
     const newStatus = willBeArchived ? 'archived' : 'active';
 
@@ -193,6 +199,47 @@ export default function StudentsList({
     } catch (err) {
       console.error(err);
       setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: currentStatus, is_archived: currentIsArchived } : s));
+    }
+  };
+
+  // تنفيذ حركة النقل السريع للطالب
+  const handleConfirmTransfer = async () => {
+    if (!transferStudent || !selectedNewHalaqa) return;
+
+    try {
+      setTransferLoading(true);
+      const newHalaqaObj = halaqas.find(h => String(h.id) === String(selectedNewHalaqa));
+
+      // تحديث جدول الطلاب الرئيسي
+      const { error: studentErr } = await supabase
+        .from('students')
+        .update({ 
+          halaqa_id: selectedNewHalaqa,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', transferStudent.id);
+
+      if (studentErr) throw studentErr;
+
+      // تحديث الواجهة المحلية مباشرة
+      setStudents(prev => prev.map(s => {
+        if (s.id === transferStudent.id) {
+          return {
+            ...s,
+            halaqa_id: selectedNewHalaqa,
+            halaqas: newHalaqaObj || s.halaqas
+          };
+        }
+        return s;
+      }));
+
+      setTransferStudent(null);
+      setSelectedNewHalaqa('');
+    } catch (err) {
+      console.error('🚨 Error transferring student:', err);
+      alert(isRtl ? 'حدث خطأ أثناء نقل الطالب' : 'Failed to transfer student');
+    } finally {
+      setTransferLoading(false);
     }
   };
 
@@ -472,7 +519,8 @@ export default function StudentsList({
                   borderRadius: '14px', 
                   padding: '14px', 
                   border: '1px solid #334155',
-                  opacity: isStudentArchived ? 0.75 : 1
+                  opacity: isStudentArchived ? 0.75 : 1,
+                  position: 'relative'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -529,28 +577,191 @@ export default function StudentsList({
                     </div>
                   </div>
 
-                  {cleanPhone && (
-                    <a 
-                      href={`https://wa.me/${cleanPhone}`} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      title={isRtl ? 'تواصل عبر واتساب' : 'WhatsApp Contact'}
-                      style={{ 
-                        background: 'rgba(16, 185, 129, 0.15)', 
-                        color: '#10B981', 
-                        width: '36px', 
-                        height: '36px', 
-                        borderRadius: '10px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        textDecoration: 'none',
-                        flexShrink: 0
-                      }}
-                    >
-                      <MessageSquare size={17} />
-                    </a>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    {cleanPhone && (
+                      <a 
+                        href={`https://wa.me/${cleanPhone}`} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        title={isRtl ? 'تواصل عبر واتساب' : 'WhatsApp Contact'}
+                        style={{ 
+                          background: 'rgba(16, 185, 129, 0.15)', 
+                          color: '#10B981', 
+                          width: '36px', 
+                          height: '36px', 
+                          borderRadius: '10px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        <MessageSquare size={17} />
+                      </a>
+                    )}
+
+                    {/* قائمة الإجراءات السريعة (Quick Actions Menu) */}
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(activeMenuId === student.id ? null : student.id);
+                        }}
+                        style={{
+                          background: '#0F172A',
+                          border: '1px solid #334155',
+                          color: '#CBD5E1',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                        title={isRtl ? 'الإجراءات السريعة' : 'Quick Actions'}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+
+                      {/* القائمة المنبثقة */}
+                      {activeMenuId === student.id && (
+                        <>
+                          <div 
+                            style={{ position: 'fixed', inset: 0, zIndex: 40 }} 
+                            onClick={() => setActiveMenuId(null)} 
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            [isRtl ? 'left' : 'right']: 0,
+                            top: '42px',
+                            width: '180px',
+                            background: '#0F172A',
+                            border: '1px solid #334155',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                            zIndex: 50,
+                            padding: '4px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '2px'
+                          }}>
+                            {/* عرض التفاصيل */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                navigate(`/students/${student.id}`);
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '8px 10px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '8px',
+                                color: '#CBD5E1',
+                                fontSize: '12px',
+                                textAlign: isRtl ? 'right' : 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}
+                            >
+                              <Eye size={14} style={{ color: '#F59E0B' }} />
+                              {isRtl ? 'عرض التفاصيل' : 'View Details'}
+                            </button>
+
+                            {/* تعديل البيانات */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                if (onEditStudent) {
+                                  onEditStudent(student);
+                                } else {
+                                  navigate(`/students/${student.id}?edit=true`);
+                                }
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '8px 10px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '8px',
+                                color: '#CBD5E1',
+                                fontSize: '12px',
+                                textAlign: isRtl ? 'right' : 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}
+                            >
+                              <Edit3 size={14} style={{ color: '#3B82F6' }} />
+                              {isRtl ? 'تعديل البيانات' : 'Edit Student'}
+                            </button>
+
+                            {/* نقل سريع */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                setTransferStudent(student);
+                                setSelectedNewHalaqa(student.halaqa_id || '');
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '8px 10px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '8px',
+                                color: '#CBD5E1',
+                                fontSize: '12px',
+                                textAlign: isRtl ? 'right' : 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}
+                            >
+                              <ArrowRightLeft size={14} style={{ color: '#10B981' }} />
+                              {isRtl ? 'نقل سريع لحلقة أخرى' : 'Quick Transfer'}
+                            </button>
+
+                            {/* أرشفة / استعادة */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                setActiveMenuId(null);
+                                handleToggleArchive(e, student.id, student.status, student.is_archived);
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '8px 10px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderTop: '1px solid #1E293B',
+                                borderRadius: '8px',
+                                color: isStudentArchived ? '#10B981' : '#EF4444',
+                                fontSize: '12px',
+                                textAlign: isRtl ? 'right' : 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginTop: '2px'
+                              }}
+                            >
+                              {isStudentArchived ? <RotateCcw size={14} /> : <Archive size={14} />}
+                              {isStudentArchived ? (isRtl ? 'استعادة الحساب' : 'Restore Account') : (isRtl ? 'أرشفة الطالب' : 'Archive Student')}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ marginTop: '12px' }}>
@@ -583,6 +794,30 @@ export default function StudentsList({
 
                   <button
                     type="button"
+                    onClick={() => {
+                      setTransferStudent(student);
+                      setSelectedNewHalaqa(student.halaqa_id || '');
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      border: '1px solid #334155',
+                      background: '#0F172A',
+                      color: '#CBD5E1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <ArrowRightLeft size={13} style={{ color: '#10B981' }} />
+                    {isRtl ? 'نقل' : 'Transfer'}
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={(e) => handleToggleArchive(e, student.id, student.status, student.is_archived)}
                     style={{
                       padding: '8px 12px',
@@ -605,6 +840,101 @@ export default function StudentsList({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* نافذة النقل السريع المنبثقة */}
+      {transferStudent && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#1E293B',
+            border: '1px solid #334155',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '400px',
+            padding: '20px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC', margin: '0 0 12px 0' }}>
+              {isRtl ? `نقل الطالب: ${formatName(transferStudent.name)}` : `Transfer: ${formatName(transferStudent.name)}`}
+            </h3>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>
+                {isRtl ? 'اختر الحلقة الجديدة' : 'Select New Halaqa'}
+              </label>
+              <select
+                value={selectedNewHalaqa}
+                onChange={(e) => setSelectedNewHalaqa(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  background: '#0F172A',
+                  border: '1px solid #334155',
+                  borderRadius: '10px',
+                  color: '#FFF',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              >
+                <option value="">{isRtl ? 'بدون حلقة (إزالة من الحلقة)' : 'No Halaqa'}</option>
+                {halaqas.map(h => (
+                  <option key={h.id} value={h.id}>
+                    {formatName(h.name)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setTransferStudent(null)}
+                disabled={transferLoading}
+                style={{
+                  padding: '8px 16px',
+                  background: 'transparent',
+                  border: '1px solid #334155',
+                  borderRadius: '10px',
+                  color: '#94A3B8',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                {isRtl ? 'إلغاء' : 'Cancel'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmTransfer}
+                disabled={transferLoading}
+                style={{
+                  padding: '8px 16px',
+                  background: '#F59E0B',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#0F172A',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  opacity: transferLoading ? 0.7 : 1
+                }}
+              >
+                {transferLoading ? (isRtl ? 'جاري النقل...' : 'Transferring...') : (isRtl ? 'تأكيد النقل' : 'Confirm Transfer')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
