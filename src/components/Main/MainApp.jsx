@@ -7,7 +7,7 @@ import { ROLES } from '@/constants/roles';
 import { colors as C } from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
-import Sidebar from './Sidebar/Sidebar';
+import Sidebar from '@/components/Sidebar/Sidebar';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
