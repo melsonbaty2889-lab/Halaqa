@@ -9,80 +9,115 @@ import {
   SlidersHorizontal, 
   Send, 
   BookMarked,
-  Library
+  Library,
+  HeartHandshake,
+  Users,
+  Flame,
+  ShieldCheck,
+  FolderOpen
 } from "lucide-react";
 
 export const getMenuSections = (isRtl, userRole = 'admin') => {
   const sections = [
     {
       id: 'main-ops',
-      title: isRtl ? 'الرئيسية والعمليات' : 'Operations Hub',
+      title: isRtl ? 'الرئيسية والعمليات' : 'Main & Operations',
       items: [
         { 
           id: 'dashboard', 
-          label: isRtl ? 'لوحة التحكم والأداء' : 'Dashboard & Analytics', 
+          label: isRtl ? 'لوحة التحكم' : 'Dashboard', 
           icon: BarChart3, 
-          roles: ['admin', 'teacher', 'student'] 
+          roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'attendance', 
-          label: isRtl ? 'متابعة الحفظ والحضور' : 'Recitation & Attendance', 
+          label: isRtl ? 'التسميع والحضور' : 'Attendance & Recitation', 
           icon: CheckCircle2, 
-          roles: ['admin', 'teacher', 'student'] 
+          roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'interactive_quran', 
           label: isRtl ? 'المصحف والتسميع الذكي' : 'Interactive Quran & AI', 
           icon: BookMarked, 
-          roles: ['admin', 'teacher', 'student'] 
+          roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'reports', 
-          label: isRtl ? 'التواصل والتقارير' : 'Communication & Reports', 
+          label: isRtl ? 'الرسائل والتقارير' : 'Messaging & Reports', 
           icon: Send, 
-          roles: ['admin', 'teacher'] 
+          roles: ['admin', 'teacher', 'parent'] 
         }
       ]
     },
     {
       id: 'academic-hub',
-      title: isRtl ? 'الشؤون الأكاديمية والقراءات' : 'Academic & Curricula Hub',
+      title: isRtl ? 'الشؤون التعليمية والتقييم' : 'Academic & Evaluation',
       items: [
         { 
           id: 'halaqas', 
-          label: isRtl ? 'الحلقات والمقارئ' : 'Quran Classes & Circles', 
+          label: isRtl ? 'الحلقات والفصول' : 'Classes & Circles', 
           icon: BookOpen, 
           roles: ['admin', 'teacher'] 
         },
         { 
-          id: 'directory', 
-          label: isRtl ? 'دليل المقرأة والمستخدمين' : 'Academy Directory', 
+          id: 'students', 
+          label: isRtl ? 'إدارة الطلاب' : 'Students Directory', 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
+          id: 'parents', 
+          label: isRtl ? 'أولياء الأمور' : 'Parents & Guardians', 
+          icon: HeartHandshake, 
+          roles: ['admin', 'teacher'] 
+        },
+        { 
+          id: 'teachers', 
+          label: isRtl ? 'الكادر التعليمي والإداري' : 'Teachers & Staff', 
+          icon: Users, 
+          roles: ['admin'] 
+        },
+        { 
           id: 'curricula', 
-          label: isRtl ? 'المناهج والمكتبة القرآنية' : 'Curricula, Sanad & Library', 
+          label: isRtl ? 'المناهج والعلوم الشرعية' : 'Curricula & Islamic Studies', 
           icon: Library, 
-          roles: ['admin', 'teacher', 'student'] 
+          roles: ['admin', 'teacher', 'student', 'parent'] 
+        },
+        { 
+          id: 'evaluations', 
+          label: isRtl ? 'الاختبارات والشهادات' : 'Exams & Certificates', 
+          icon: Award, 
+          roles: ['admin', 'teacher', 'student', 'parent'] 
+        },
+        { 
+          id: 'gamification', 
+          label: isRtl ? 'التحفيز والأوسمة' : 'Badges & Streaks', 
+          icon: Flame, 
+          roles: ['admin', 'teacher', 'student', 'parent'] 
+        },
+        { 
+          id: 'documents', 
+          label: isRtl ? 'المستندات والملفات' : 'Documents & Files', 
+          icon: FolderOpen, 
+          roles: ['admin', 'teacher'] 
         }
       ]
     },
     {
       id: 'eval-finance',
-      title: isRtl ? 'التحفيز والمالية والإدارة' : 'Rewards, Finance & Governance',
+      title: isRtl ? 'الإدارة والمالية' : 'Management & Finance',
       items: [
         { 
-          id: 'evaluations', 
-          label: isRtl ? 'الاختبارات والتحفيز' : 'Exams & Badges', 
-          icon: Award, 
-          roles: ['admin', 'teacher', 'student'] 
+          id: 'finance', 
+          label: isRtl ? 'الاشتراكات والمالية' : 'Finance & Subscriptions', 
+          icon: CreditCard, 
+          roles: ['admin', 'parent'] 
         },
         { 
-          id: 'finance', 
-          label: isRtl ? 'المركز المالي والاشتراكات' : 'Finance & Subscriptions', 
-          icon: CreditCard, 
-          roles: ['admin'] 
+          id: 'audit_logs', 
+          label: isRtl ? 'سجل العمليات الأمني' : 'Security Audit Logs', 
+          icon: ShieldCheck, 
+          roles: ['admin', 'super_admin'] 
         },
         { 
           id: 'settings', 
