@@ -28,7 +28,7 @@ const safeLazy = (importFn) => {
 };
 
 const Students = safeLazy(() => import('@/components/Student/StudentProfile.jsx'));
-const Teachers = safeLazy(() => import('@/components/Teachers/Teacher.jsx')); 
+const Teachers = safeLazy(() => import('@/components/Teachers/Teachers.jsx')); 
 const Attendance = safeLazy(() => import('@/components/Attendance/Attendance.jsx'));
 const Exams = safeLazy(() => import('@/components/Exams/Exams.jsx')); 
 const Payments = safeLazy(() => import('@/components/Payments/StudentPayments.jsx'));
