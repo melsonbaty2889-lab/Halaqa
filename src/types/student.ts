@@ -7,9 +7,9 @@ export interface Student {
   id: string;
   student_code?: string | null;
   academy_id: string;
-  name: Json; // مطابقة نوع Json للغات المتعددة في Supabase
-  birth_date?: string | null; // مطابقة الحقل مع قاعدة البيانات
-  gender?: StudentGender | string | null;
+  name: Json; // دعم اللغات المتعددة (JSONB)
+  birth_date?: string | null;
+  gender?: StudentGender | null;
   nationality?: string | null;
   country?: string | null;
 
@@ -29,7 +29,7 @@ export interface Student {
 
   // بيانات الحلقة والحالة
   halaqa_id?: string | null;
-  status?: StudentStatus | string | null;
+  status?: StudentStatus | null;
   is_archived?: boolean | null;
   avatar_url?: string | null;
   notes?: Json | null;
@@ -48,8 +48,8 @@ export interface Student {
 
 export interface StudentFilters {
   searchTerm?: string;
-  gender?: 'all' | 'male' | 'female';
+  gender?: 'all' | StudentGender;
   halaqaId?: string;
-  status?: StudentStatus | 'all';
-  isArchived: boolean;
+  status?: 'all' | StudentStatus;
+  isArchived?: boolean;
 }
