@@ -99,7 +99,7 @@ export function useSignUpForm(onSignUpSuccess) {
         type: 'error',
         msg: userFriendlyMsg
       });
-    } fontFinally {
+    } finally {
       setLoading(false);
     }
   };
