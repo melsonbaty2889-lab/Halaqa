@@ -1,4 +1,4 @@
-import i18n from '@/i18n'; // ربط مع نظام الترجمة المعتمد في المشروع
+import i18n from '@/i18n';
 
 /**
  * تنظيف رقم الهاتف وإرجاع الصياغة الدولية فقط
@@ -8,9 +8,7 @@ import i18n from '@/i18n'; // ربط مع نظام الترجمة المعتمد
 export const cleanPhoneNumber = (phone = '', defaultCountryCode = '20') => {
   if (!phone) return '';
 
-  // إزالة أي رموز غير رقمية باستثناء علامة +
   let cleaned = phone.toString().replace(/[^0-9+]/g, '');
-
   if (!cleaned) return '';
 
   if (cleaned.startsWith('+')) {
@@ -18,7 +16,6 @@ export const cleanPhoneNumber = (phone = '', defaultCountryCode = '20') => {
   } else if (cleaned.startsWith('00')) {
     cleaned = cleaned.substring(2);
   } else if (cleaned.startsWith('0')) {
-    // إزالة الصفر المحلي وإضافة كود الدولة
     cleaned = defaultCountryCode + cleaned.substring(1);
   }
 
@@ -46,7 +43,7 @@ export const getParsedMessage = ({
   locale = i18n.language || 'ar',
   safeString = (val) => (val !== undefined && val !== null ? String(val) : '')
 }) => {
-  const isRtl = locale.startsWith('ar');
+  const isRtl = String(locale).startsWith('ar');
 
   const studentName = safeString(student?.name || student?.student_name || record?.student_name);
   const statusVal = record?.attendance_status || record?.status;
@@ -107,13 +104,13 @@ export const getParsedMessage = ({
     '{{notes}}': safeString(record?.session_notes || record?.notes) || i18n.t('reports.no_notes', { defaultValue: isRtl ? 'لا يوجد ملاحظات إضافية.' : 'No additional notes.' })
   };
 
-  // 1. معالجة الوسوم الرئيسية {{variable}}
+  // 1. معالجة الوسوم القياسية {{tag}}
   Object.keys(replaceMap).forEach((tag) => {
     const regex = new RegExp(tag.replace(/[{()}]/g, '\\$&'), 'g');
     parsed = parsed.replace(regex, replaceMap[tag]);
   });
 
-  // 2. دعم الأقواس القديمة والأقواس المفردة {اسم_الطالب} و [اسم_الطالب]
+  // 2. دعم الأقواس والأجناس التبادلية القديمة
   parsed = parsed.replace(/\{اسم_الطالب\}|\[اسم_الطالب\]|\[Student_Name\]/gi, replaceMap['{{student_name}}']);
   parsed = parsed.replace(/\{التاريخ\}|\[التاريخ\]|\[Date\]/gi, replaceMap['{{date}}']);
   parsed = parsed.replace(/\{حالة_الحضور\}|\{الحالة\}|\[الحالة\]|\[Status\]/gi, replaceMap['{{status}}']);
