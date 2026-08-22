@@ -42,29 +42,26 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
     handleGoogleLogin,
   } = useLoginForm(onLoginSuccess);
 
-  const inputClasses = `
-    w-full py-3.5 px-10.5 rounded-lg border border-[#223147] bg-[#090F16] text-white text-sm outline-none
-    transition-all duration-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20
-    [&&:-webkit-autofill]:[text-fill-color:white] [&&:-webkit-autofill]:[box-shadow:0_0_0_1000px_#090F16_inset]
-  `;
+  // ضبط الـ Padding حسب الاتجاه لمنع تداخل الأيقونات
+  const inputPadding = isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11';
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_50%_25%,rgba(15,118,110,0.18)_0%,#070C12_70%)] pt-15 pb-10 px-5 font-['Cairo',sans-serif] relative box-border"
+      className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_50%_25%,rgba(15,118,110,0.18)_0%,#070C12_70%)] pt-12 pb-10 px-5 font-['Cairo',sans-serif] relative box-border"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* زر تغيير اللغة */}
+      {/* زر تغيير اللغة - أعلى الصفحة */}
       <button
         type="button"
         onClick={toggleLanguage}
-        className={`fixed top-5 ${isRtl ? 'left-5' : 'right-5'} bg-slate-900 border border-slate-800 text-slate-300 py-2 px-3.5 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg z-50 hover:bg-slate-800 transition-colors`}
+        className={`absolute top-5 ${isRtl ? 'left-5' : 'right-5'} bg-slate-900 border border-slate-800 text-slate-300 py-2 px-3.5 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg z-50 hover:bg-slate-800 transition-colors`}
       >
-        <Globe size={14} className="text-amber-600" />
+        <Globe size={14} className="text-amber-500" />
         <span>{isRtl ? 'English' : 'العربية'}</span>
       </button>
 
       {/* بطاقة تسجيل الدخول */}
-      <div className="w-full max-w-[420px] bg-slate-900 p-8 sm:px-[25px] sm:pt-[35px] sm:pb-[30px] rounded-2xl border border-slate-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] my-auto relative">
+      <div className="w-full max-w-[420px] bg-slate-900/90 backdrop-blur-md p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] my-auto relative">
         
         {/* الشعار والعنوان */}
         <div className="flex flex-col items-center mb-5">
@@ -72,15 +69,15 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           <h1 className="text-slate-50 text-2xl font-bold mt-3 mb-1">
             {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
           </h1>
-          <p className="text-amber-600 text-[11px] font-bold tracking-[0.8px] uppercase m-0">
+          <p className="text-amber-500 text-[11px] font-bold tracking-wider uppercase m-0">
             {isRtl ? 'منصة إدارة المقارئ والأكاديميات' : 'ACADEMY MANAGEMENT PLATFORM'}
           </p>
         </div>
 
-        <h2 className="text-slate-200 text-lg text-center mb-1.5 font-semibold">
+        <h2 className="text-slate-200 text-lg text-center mb-1 font-semibold">
           {isRtl ? 'تسجيل الدخول' : 'Sign In'}
         </h2>
-        <p className="text-slate-400 text-xs sm:text-sm text-center mb-5.5">
+        <p className="text-slate-400 text-xs text-center mb-5">
           {isRtl ? 'أهلاً بعودتك! ادخل لمتابعة إدارة حلقاتك التعليمية' : 'Welcome back! Log in to access your academy'}
         </p>
 
@@ -89,7 +86,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading || redirecting}
-          className="w-full p-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-50 text-sm font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4.5 transition-all hover:bg-slate-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full p-3 rounded-lg border border-slate-700 bg-slate-800/80 text-slate-50 text-sm font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4 transition-all hover:bg-slate-700/80 disabled:opacity-50"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -101,21 +98,21 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         </button>
 
         {/* فاصل */}
-        <div className="flex items-center gap-2.5 mb-4.5">
-          <div className="flex-1 h-px bg-slate-700"></div>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="flex-1 h-px bg-slate-800"></div>
           <span className="text-slate-500 text-xs">{isRtl ? 'أو عبر البريد' : 'or via email'}</span>
-          <div className="flex-1 h-px bg-slate-700"></div>
+          <div className="flex-1 h-px bg-slate-800"></div>
         </div>
 
         {/* التنبيهات */}
         {status.msg && (
-          <div className={`p-3.5 rounded-xl mb-4.5 text-xs sm:text-sm leading-relaxed flex flex-col gap-2 ${
+          <div className={`p-3 rounded-xl mb-4 text-xs leading-relaxed flex flex-col gap-2 ${
             status.type === 'success' 
               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
               : 'bg-red-500/10 text-red-400 border border-red-500/25'
           }`}>
             <div className="flex items-center gap-2">
-              <AlertCircle size={18} className="shrink-0" />
+              <AlertCircle size={16} className="shrink-0" />
               <div>{status.msg}</div>
             </div>
 
@@ -124,7 +121,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
                 type="button"
                 onClick={handleResendEmail}
                 disabled={resendLoading || cooldown > 0}
-                className="self-start mt-1 bg-amber-600 hover:bg-amber-700 text-white border-none rounded-md px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+                className="self-start bg-amber-600 hover:bg-amber-700 text-white rounded px-2.5 py-1 text-[11px] font-bold cursor-pointer disabled:opacity-60"
               >
                 {resendLoading 
                   ? (isRtl ? 'جاري الإرسال...' : 'Sending...') 
@@ -137,10 +134,14 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         )}
 
         {/* نموذج تسجيل الدخول */}
-        <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
+        <form onSubmit={handleEmailLogin} className="flex flex-col gap-3.5">
           
           {/* حقل البريد الإلكتروني */}
-          <div className="relative">
+          <div className="relative flex items-center">
+            <Mail 
+              size={18} 
+              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${email ? 'text-amber-500' : 'text-slate-500'}`} 
+            />
             <input 
               type="email"
               value={email}
@@ -150,19 +151,19 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               }}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
-              className={`${inputClasses} ${fieldErrors.email ? '!border-red-500' : ''}`}
-            />
-            <Mail 
-              size={18} 
-              className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'right-3.5' : 'left-3.5'} transition-colors ${email ? 'text-amber-600' : 'text-slate-500'}`} 
+              className={`w-full py-3 ${inputPadding} rounded-lg border border-slate-700/80 bg-slate-950/60 text-white text-sm outline-none transition-all focus:border-amber-500 focus:ring-1 focus:ring-amber-500 ${fieldErrors.email ? '!border-red-500' : ''}`}
             />
             {fieldErrors.email && (
-              <span className="text-red-500 text-[11px] mt-1 block px-1">{fieldErrors.email}</span>
+              <span className="text-red-500 text-[11px] mt-1 block">{fieldErrors.email}</span>
             )}
           </div>
 
           {/* حقل كلمة المرور */}
-          <div className="relative">
+          <div className="relative flex items-center">
+            <Lock 
+              size={18} 
+              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${password ? 'text-amber-500' : 'text-slate-500'}`} 
+            />
             <input 
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -173,27 +174,23 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               }}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               required
-              className={`${inputClasses} ${fieldErrors.password ? '!border-red-500' : ''}`}
-            />
-            <Lock 
-              size={18} 
-              className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'right-3.5' : 'left-3.5'} transition-colors ${password ? 'text-amber-600' : 'text-slate-500'}`} 
+              className={`w-full py-3 ${inputPadding} rounded-lg border border-slate-700/80 bg-slate-950/60 text-white text-sm outline-none transition-all focus:border-amber-500 focus:ring-1 focus:ring-amber-500 ${fieldErrors.password ? '!border-red-500' : ''}`}
             />
             
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center transition-colors ${password ? 'text-amber-600' : 'text-slate-500'}`}
+              className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center text-slate-500 hover:text-slate-300`}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
 
             {fieldErrors.password && (
-              <span className="text-red-500 text-[11px] mt-1 block px-1">{fieldErrors.password}</span>
+              <span className="text-red-500 text-[11px] mt-1 block">{fieldErrors.password}</span>
             )}
 
             {capsLockOn && (
-              <div className="flex items-center gap-1 text-amber-500 text-[11px] mt-1.5 px-1">
+              <div className="flex items-center gap-1 text-amber-500 text-[11px] mt-1">
                 <AlertTriangle size={13} />
                 <span>{isRtl ? 'مفتاح الحروف الكبيرة (Caps Lock) مفعل' : 'Caps Lock is ON'}</span>
               </div>
@@ -201,13 +198,13 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           </div>
 
           {/* تذكرني واستعادة كلمة السر */}
-          <div className="flex justify-between items-center text-xs sm:text-sm text-slate-400">
+          <div className="flex justify-between items-center text-xs text-slate-400 mt-1">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input 
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="accent-amber-600 w-4 h-4 cursor-pointer"
+                className="accent-amber-500 w-4 h-4 cursor-pointer"
               />
               <span>{isRtl ? 'تذكرني' : 'Remember me'}</span>
             </label>
@@ -215,7 +212,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             <button 
               type="button"
               onClick={onForgotPassword}
-              className="bg-transparent border-none text-amber-500 hover:underline cursor-pointer font-inherit text-xs sm:text-sm"
+              className="bg-transparent border-none text-amber-500 hover:underline cursor-pointer font-inherit text-xs"
             >
               {isRtl ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
             </button>
@@ -225,7 +222,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           <button 
             type="submit" 
             disabled={loading || redirecting}
-            className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-base rounded-xl transition-colors shadow-[0_4px_12px_rgba(217,119,6,0.25)] flex items-center justify-center gap-2 mt-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-lg transition-colors shadow-md flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-60"
           >
             {redirecting ? (
               <>
@@ -256,7 +253,7 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
         </div>
 
         {/* التحويل لإنشاء حساب */}
-        <div className="mt-5 text-center text-xs sm:text-sm text-slate-400">
+        <div className="mt-4 text-center text-xs text-slate-400">
           {isRtl ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
           <button 
             type="button"
