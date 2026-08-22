@@ -1,22 +1,19 @@
-/* src/components/Student/StudentStatsCard.jsx */
 import React from 'react';
 import { Flame, Crown, TrendingUp, Sparkles } from 'lucide-react';
-import colors from '@/theme/colors';
 
 export default function StudentStatsCard({ student = {}, isRtl = true }) {
   const streak = student?.current_streak || 0;
   const points = student?.points || 0;
 
-  // حساب الهدف القادم للسلسلة (كل 3 أيام أو 7 أيام)
+  // حساب الهدف القادم للسلسلة
   const nextStreakGoal = streak < 3 ? 3 : Math.ceil((streak + 1) / 3) * 3;
   const streakProgress = Math.min(100, Math.round((streak / nextStreakGoal) * 100));
 
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[${colors.background || '#0F172A'}] p-3.5 rounded-xl border border-slate-700/80 shadow-md`}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 p-3.5 rounded-xl border border-slate-700/80 shadow-md">
       
-      {/* 1. بطاقة السلسلة مع شريط التقدم والتأثير الحي */}
+      {/* 1. بطاقة السلسلة */}
       <div className="relative overflow-hidden bg-gradient-to-br from-red-500/10 via-slate-900 to-slate-900 p-3 rounded-lg border border-red-500/20 flex flex-col justify-between">
-        
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-red-500/20 rounded-lg text-red-400 shadow-sm">
@@ -39,7 +36,7 @@ export default function StudentStatsCard({ student = {}, isRtl = true }) {
           </div>
         </div>
 
-        {/* شريط التقدم نحو الوسام القادم */}
+        {/* شريط التقدم */}
         <div className="mt-1">
           <div className="flex justify-between items-center text-[9px] text-slate-400 mb-1">
             <span>{isRtl ? `الهدف: ${nextStreakGoal} أيام` : `Goal: ${nextStreakGoal} Days`}</span>
@@ -47,16 +44,15 @@ export default function StudentStatsCard({ student = {}, isRtl = true }) {
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div 
-              className={`bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full transition-all duration-500 w-[${streakProgress}%]`} 
+              className="bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full transition-all duration-500" 
+              style={{ width: `${streakProgress}%` }}
             />
           </div>
         </div>
-
       </div>
 
-      {/* 2. بطاقة إجمالي النقاط والمستوى */}
+      {/* 2. بطاقة إجمالي النقاط */}
       <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900 p-3 rounded-lg border border-amber-500/20 flex flex-col justify-between">
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shadow-sm">
@@ -77,7 +73,7 @@ export default function StudentStatsCard({ student = {}, isRtl = true }) {
           </div>
         </div>
 
-        {/* مؤشر رتبة الطالب */}
+        {/* رتبة الطالب */}
         <div className="mt-2 text-start pt-2 border-t border-slate-800/80 flex items-center justify-between">
           <span className="text-[10px] text-slate-400">
             {isRtl ? 'المستوى الحالي:' : 'Current Rank:'}
@@ -86,7 +82,6 @@ export default function StudentStatsCard({ student = {}, isRtl = true }) {
             {points >= 500 ? (isRtl ? 'متميز 🌟' : 'Elite 🌟') : (isRtl ? 'مكافح ⚡' : 'Striker ⚡')}
           </span>
         </div>
-
       </div>
 
     </div>
