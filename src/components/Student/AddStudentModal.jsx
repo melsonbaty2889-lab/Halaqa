@@ -1,374 +1,203 @@
-/* src/components/Student/AddStudentModal.jsx */
-import React, { useState, useEffect, useCallback } from "react";
-import { useTranslation } from "react-i18next";
+import React, { useState } from 'react';
+import { X, UserPlus, User, Phone, BookOpen, Calendar, AlertCircle } from 'lucide-react';
+import { formatName } from '@/utils/formatters';
 
-// 🛠️ الخدمات والثوابت والأدوات المساعدة
-import { supabase } from "@/lib/supabase";
-import { COUNTRIES_LIST } from "@/constants/countries";
-import colors from "@/theme/colors";
-
-// 🧩 المكونات العامة والأيقونات
-import { Btn, Input, Select } from "@/components/UI/UI.jsx"; 
-import { X, UserPlus, CheckCircle, AlertCircle, GraduationCap } from 'lucide-react';
-
-export default function AddStudentModal({ 
-  isOpen, 
-  onClose, 
-  onStudentAdded, 
-  halaqasList = [],
-  academyId = null 
-}) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
-
-  const [loading, setLoading] = useState(false);
-  const [inlineMessage, setInlineMessage] = useState({ text: '', type: '' });
-
-  // دالة معالجة واستخراج اسم الحلقة سواء كان نصاً أو كياناً مترجماً JSON
-  const formatName = useCallback((nameData) => {
-    if (!nameData) return '';
-    if (typeof nameData === 'string') {
-      try {
-        const parsed = JSON.parse(nameData);
-        if (typeof parsed === 'object' && parsed !== null) {
-          return isRtl 
-            ? (parsed.ar || parsed.en || parsed.full_name || Object.values(parsed)[0] || '')
-            : (parsed.en || parsed.ar || parsed.full_name || Object.values(parsed)[0] || '');
-        }
-      } catch {
-        return nameData;
-      }
-      return nameData;
-    }
-    if (typeof nameData === 'object') {
-      return isRtl 
-        ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
-        : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
-    }
-    return String(nameData);
-  }, [isRtl]);
-
-  // 📝 حالات النموذج الأولى
+const AddStudentModal = ({ isOpen, onClose, onAddStudent, halaqat = [] }) => {
   const [formData, setFormData] = useState({
     name: '',
-    parent_name: '',
-    parent_phone: '',
-    birth_date: '',
-    gender: 'male',
-    country: 'EG',
-    subscription_system: 'monthly',
+    phone: '',
     halaqa_id: '',
-    status: 'active'
+    join_date: new Date().toISOString().split('T')[0],
+    notes: '',
   });
 
-  // تحديث الحلقة الافتراضية بمجرد تحميل القائمة
-  useEffect(() => {
-    if (halaqasList.length > 0 && !formData.halaqa_id) {
-      setFormData(prev => ({ ...prev, halaqa_id: halaqasList[0].id }));
-    }
-  }, [halaqasList, formData.halaqa_id]);
-
-  const triggerToast = (text, type = 'success') => {
-    setInlineMessage({ text, type });
-    setTimeout(() => setInlineMessage({ text: '', type: '' }), 4000);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      parent_name: '',
-      parent_phone: '',
-      birth_date: '',
-      gender: 'male',
-      country: 'EG',
-      subscription_system: 'monthly',
-      halaqa_id: halaqasList.length > 0 ? halaqasList[0].id : '',
-      status: 'active'
-    });
-    setInlineMessage({ text: '', type: '' });
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = 'اسم الطالب مطلوب';
+    }
+    if (formData.phone && !/^01[0125][0-9]{8}$/.test(formData.phone)) {
+      newErrors.phone = 'رقم الهاتف غير صحيح (يجب أن يكون رقم مصري مكون من 11 رقم)';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) {
-      triggerToast(t('student_name_required') || (isRtl ? 'اسم الطالب مطلوب' : 'Student name is required'), 'error');
-      return;
-    }
+    if (!validate()) return;
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
-      const studentCode = 'ST-' + Math.floor(1000 + Math.random() * 9000);
-
-      const payload = {
-        name: formData.name.trim(),
-        parent_name: formData.parent_name.trim() || null,
-        parent_phone: formData.parent_phone.trim() || null,
-        birth_date: formData.birth_date || null,
-        gender: formData.gender,
-        country: formData.country,
-        country_code: formData.country,
-        subscription_system: formData.subscription_system,
-        halaqa_id: formData.halaqa_id || null,
-        status: formData.status,
-        student_code: studentCode,
-        current_quarter_index: 0,
-        current_juz: 1,
-        academy_id: academyId || null,
-        created_at: new Date().toISOString()
+      const formattedData = {
+        ...formData,
+        name: formatName(formData.name),
+        status: 'active',
       };
-
-      // 1️⃣ إنشاء سجل الطالب الرئيسي
-      const { data: insertedStudent, error: studentError } = await supabase
-        .from('students')
-        .insert([payload])
-        .select()
-        .single();
-
-      if (studentError) throw studentError;
-
-      // 2️⃣ ربط الطالب بالحلقة عبر الجدول الوسيط student_halaqas في حال تحديد حلقة
-      let linkedHalaqaData = null;
-      if (formData.halaqa_id && insertedStudent?.id) {
-        const { error: joinError } = await supabase
-          .from('student_halaqas')
-          .insert([{
-            student_id: insertedStudent.id,
-            halaqa_id: formData.halaqa_id,
-            status: 'active',
-            created_at: new Date().toISOString()
-          }]);
-
-        if (joinError) {
-          console.warn('⚠️ Warning linking student to halaqa relation table:', joinError);
-        } else {
-          linkedHalaqaData = halaqasList.find(h => String(h.id) === String(formData.halaqa_id));
-        }
-      }
-
-      triggerToast(t('student_added_success') || (isRtl ? 'تم إضافة الطالب بنجاح' : 'Student added successfully'), 'success');
-      
-      // إرجاع الكيان كاملاً شاملاً بيانات الحلقة المربوطة
-      if (onStudentAdded) {
-        onStudentAdded({
-          ...insertedStudent,
-          halaqas: linkedHalaqaData || null
-        });
-      }
-      
-      setTimeout(() => {
-        handleClose();
-      }, 1000);
-
+      await onAddStudent(formattedData);
+      onClose();
+      setFormData({
+        name: '',
+        phone: '',
+        halaqa_id: '',
+        join_date: new Date().toISOString().split('T')[0],
+        notes: '',
+      });
     } catch (error) {
-      console.error("🚨 Error adding student:", error);
-      triggerToast(t('student_added_failed') || (isRtl ? 'فشل إضافة الطالب' : 'Failed to add student'), 'error');
+      console.error('Error adding student:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const genderOptions = [
-    { value: "male", label: t('gender_male') || (isRtl ? 'ذكر' : 'Male') },
-    { value: "female", label: t('gender_female') || (isRtl ? 'أنثى' : 'Female') }
-  ];
-
-  const statusOptions = [
-    { value: "active", label: t('status_active') || (isRtl ? 'نشط' : 'Active') },
-    { value: "paused", label: t('status_paused') || (isRtl ? 'موقوف' : 'Paused') },
-    { value: "inactive", label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') }
-  ];
-
-  const paymentOptions = [
-    { value: "monthly", label: t('plan_monthly') || (isRtl ? 'اشتراك شهري' : 'Monthly Subscription') },
-    { value: "per_hour", label: t('plan_per_hour') || (isRtl ? 'بالساعة' : 'Per Hour') },
-    { value: "free", label: t('plan_free') || (isRtl ? 'مجاني / منحة' : 'Free / Scholarship') }
-  ];
-
-  const countryOptions = (COUNTRIES_LIST || []).map(c => ({
-    value: c.code,
-    label: `${c.flag} ${isRtl ? (c.name_ar || c.nameAr) : (c.name_en || c.nameEn)} (${c.code})`
-  }));
-
-  const halaqaOptions = halaqasList.map(h => ({
-    value: h.id,
-    label: formatName(h.name)
-  }));
-
   return (
-    <div 
-      dir={isRtl ? 'rtl' : 'ltr'} 
-      className="fixed inset-0 z-[1300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
-    >
-      {/* 🚀 إشعار تنبيهي داخلي */}
-      {inlineMessage.text && (
-        <div 
-          className="fixed top-5 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full z-[1400] flex items-center gap-2 text-xs font-bold text-white shadow-xl animate-fade-in"
-          style={{ 
-            backgroundColor: inlineMessage.type === 'success' ? colors.brandEmerald.DEFAULT : colors.danger 
-          }}
-        >
-          {inlineMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          <span>{inlineMessage.text}</span>
-        </div>
-      )}
-
-      {/* 📦 النافذة الرئيسية */}
-      <div 
-        className="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all"
-        style={{ 
-          backgroundColor: colors.card, 
-          borderColor: colors.borderCard 
-        }}
-      >
-        {/* 🏷️ رأس النافذة */}
-        <div 
-          className="px-5 py-4 flex items-center justify-between border-b"
-          style={{ 
-            backgroundColor: colors.input, 
-            borderColor: colors.borderCard 
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center border"
-              style={{ 
-                backgroundColor: 'rgba(217, 119, 6, 0.15)', 
-                borderColor: colors.border,
-                color: colors.primary 
-              }}
-            >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-primary-500/10 text-primary-400 rounded-xl">
               <UserPlus className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="m-0 text-base font-bold" style={{ color: colors.text }}>
-                {t('add_new_student') || (isRtl ? 'إضافة طالب جديد' : 'Add New Student')}
-              </h3>
-              <p className="m-0 text-xs" style={{ color: colors.textMuted }}>
-                {t('add_student_subtitle') || (isRtl ? 'تسجيل بيانات الطالب الجديد في المنظومة' : 'Register new student details')}
-              </p>
-            </div>
+            <h2 className="text-lg font-bold text-slate-100">إضافة طالب جديد</h2>
           </div>
-          <button 
-            onClick={handleClose} 
-            className="p-1.5 rounded-lg border-0 bg-transparent cursor-pointer transition-colors hover:bg-slate-800/60"
-            style={{ color: colors.textMuted }}
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* 📦 محتوى النموذج */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto flex flex-col gap-3.5">
-          
-          <Input 
-            label={t('student_full_name') || (isRtl ? 'اسم الطالب الرباعي' : 'Full Student Name')} 
-            value={formData.name} 
-            placeholder={isRtl ? 'أدخل اسم الطالب' : 'Enter student name'}
-            onChange={(e) => setFormData({...formData, name: e.target.value})} 
-            required
-          />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* اسم الطالب */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              اسم الطالب الثلاثي / الرباعي *
+            </label>
+            <div className="relative">
+              <User className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="أدخل اسم الطالب كاملًا..."
+                className={`w-full pr-9 pl-3 py-2.5 bg-slate-800 border ${
+                  errors.name ? 'border-rose-500' : 'border-slate-700'
+                } rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors`}
+              />
+            </div>
+            {errors.name && (
+              <p className="text-rose-400 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.0 h-3.0" />
+                {errors.name}
+              </p>
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Select 
-              label={t('gender') || (isRtl ? 'الجنس' : 'Gender')} 
-              value={formData.gender} 
-              onChange={(e) => setFormData({...formData, gender: e.target.value})} 
-              options={genderOptions}
-            />
-            <Input 
-              label={t('birth_date') || (isRtl ? 'تاريخ الميلاد' : 'Birth Date')} 
-              type="date" 
-              value={formData.birth_date} 
-              onChange={(e) => setFormData({...formData, birth_date: e.target.value})} 
+          {/* رقم الهاتف */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              رقم الهاتف / الواتساب
+            </label>
+            <div className="relative">
+              <Phone className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="01xxxxxxxx"
+                className={`w-full pr-9 pl-3 py-2.5 bg-slate-800 border ${
+                  errors.phone ? 'border-rose-500' : 'border-slate-700'
+                } rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors`}
+              />
+            </div>
+            {errors.phone && (
+              <p className="text-rose-400 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {errors.phone}
+              </p>
+            )}
+          </div>
+
+          {/* الحلقة وتاريخ الانضمام */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                تحديد الحلقة
+              </label>
+              <div className="relative">
+                <BookOpen className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <select
+                  value={formData.halaqa_id}
+                  onChange={(e) => setFormData({ ...formData, halaqa_id: e.target.value })}
+                  className="w-full pr-9 pl-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors appearance-none"
+                >
+                  <option value="">بدون تحديد حلقة</option>
+                  {halaqat.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                تاريخ الانضمام
+              </label>
+              <div className="relative">
+                <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="date"
+                  value={formData.join_date}
+                  onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
+                  className="w-full pr-9 pl-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ملاحظات */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1.5">ملاحظات إضافية</label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={3}
+              placeholder="أي ملاحظات خاصة بالطالب..."
+              className="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors resize-none"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Select 
-              label={t('halaqa') || (isRtl ? 'الحلقة الدراسية' : 'Halaqa')} 
-              value={formData.halaqa_id} 
-              onChange={(e) => setFormData({...formData, halaqa_id: e.target.value})} 
-              options={halaqaOptions.length > 0 ? halaqaOptions : [{ value: '', label: isRtl ? 'لا توجد حلقات متاحة' : 'No halaqas available' }]}
-            />
-            <Select 
-              label={t('country_geographic_region') || (isRtl ? 'الدولة / المنطقة' : 'Country')} 
-              value={formData.country} 
-              onChange={(e) => setFormData({...formData, country: e.target.value})} 
-              options={countryOptions}
-            />
-          </div>
-
-          {/* 👨‍👩‍👦 قسم بيانات ولي الأمر */}
-          <div 
-            className="p-3.5 rounded-xl border flex flex-col gap-3"
-            style={{ 
-              backgroundColor: colors.input, 
-              borderColor: colors.border 
-            }}
-          >
-            <Input 
-              label={t('parent_custody_name') || (isRtl ? 'اسم ولي الأمر' : 'Parent Name')} 
-              value={formData.parent_name} 
-              placeholder={isRtl ? 'أدخل اسم ولي الأمر' : 'Enter parent name'} 
-              onChange={(e) => setFormData({...formData, parent_name: e.target.value})} 
-            />
-            <Input 
-              label={t('contact_hotline') || (isRtl ? 'رقم هاتف ولي الأمر (واتساب)' : 'Parent Phone (WhatsApp)')} 
-              type="tel" 
-              value={formData.parent_phone} 
-              placeholder={isRtl ? 'أدخل رقم الهاتف' : 'Enter phone number'} 
-              onChange={(e) => setFormData({...formData, parent_phone: e.target.value})} 
-              style={{ textAlign: isRtl ? 'right' : 'left', direction: 'ltr' }} 
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Select 
-              label={t('financial_tariff_plan') || (isRtl ? 'نظام الاشتراك' : 'Subscription Plan')} 
-              value={formData.subscription_system} 
-              onChange={(e) => setFormData({...formData, subscription_system: e.target.value})} 
-              options={paymentOptions}
-            />
-            <Select 
-              label={t('status') || (isRtl ? 'حالة الطالب' : 'Status')} 
-              value={formData.status} 
-              onChange={(e) => setFormData({...formData, status: e.target.value})} 
-              options={statusOptions}
-            />
-          </div>
-
-          {/* 🔘 الأزرار */}
-          <div className="flex gap-2.5 mt-2.5">
-            <Btn 
-              variant="success" 
-              type="submit" 
-              disabled={loading} 
-              className="flex-1 py-3 flex items-center justify-center gap-1.5 font-bold rounded-xl transition-all active:scale-95"
-              style={{ backgroundColor: colors.primary }}
+          {/* الأزرار */}
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
             >
-              <GraduationCap className="w-4 h-4" /> 
-              {loading ? (t('saving') || (isRtl ? 'جاري الحفظ...' : 'Saving...')) : (t('save_student') || (isRtl ? 'إضافة وحفظ الطالب' : 'Save Student'))}
-            </Btn>
-            <Btn 
-              variant="ghost" 
-              type="button" 
-              onClick={handleClose} 
-              className="px-5 py-3 rounded-xl transition-all hover:bg-slate-800"
-              style={{ color: colors.textMuted }}
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-600/20 disabled:opacity-50"
             >
-              {t('cancel') || (isRtl ? 'إلغاء' : 'Cancel')}
-            </Btn>
+              {isSubmitting ? 'جاري الحفظ...' : 'إضافة الطالب'}
+            </button>
           </div>
-
         </form>
       </div>
     </div>
   );
-}
+};
+
+export default AddStudentModal;
