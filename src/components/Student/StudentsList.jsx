@@ -1,4 +1,3 @@
-/* src/components/Student/StudentsList.jsx */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
@@ -69,7 +68,7 @@ export default function StudentsList({
 
       setInternalStudents(formatted);
     } catch (err) {
-      console.error(err);
+      console.error('🚨 Error fetching students:', err);
     } finally {
       setLoading(false);
     }
@@ -121,56 +120,96 @@ export default function StudentsList({
       setStudents(prev => prev.map(s => s.id === transferStudent.id ? { ...s, halaqa_id: selectedNewHalaqa || null, halaqas: newHalaqaObj || null } : s));
       setTransferStudent(null);
     } catch (err) {
-      console.error(err);
+      console.error('🚨 Error transferring student:', err);
     } finally {
       setTransferLoading(false);
     }
   };
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} style={{ maxWidth: '720px', margin: '0 auto', padding: '16px', color: '#F8FAFC', fontFamily: "'Cairo', sans-serif" }}>
+    <div className={`max-w-2xl mx-auto p-4 text-[#F8FAFC] font-['Cairo',sans-serif] ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'}`}>
       
-      {/* 🏷️ الرأس */}
-      <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#F59E0B', margin: '0 0 4px 0' }}>
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-xl md:text-2xl font-extrabold text-[#E07A00]">
           {isRtl ? 'إدارة شؤون الطلاب والدارسين' : 'Students Directory'}
         </h1>
-        <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0 }}>
+        <p className="text-xs text-[#94A3B8] mt-1">
           {isRtl ? 'متابعة الطلاب، الحلقات المنتسبين إليها، والحالة الحفظية' : 'Manage enrolled students, halaqas and memorization status'}
         </p>
       </div>
 
-      {/* 🔘 الأزرار العلوية */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr', gap: '8px', marginBottom: '20px' }}>
-        <button type="button" onClick={() => setSelectedStatus(prev => prev === 'active' ? 'archived' : 'active')} style={{ padding: '10px 6px', fontSize: '12px', fontWeight: '600', borderRadius: '12px', cursor: 'pointer', border: '1px solid', borderColor: selectedStatus === 'archived' ? '#F59E0B' : '#334155', background: selectedStatus === 'archived' ? 'rgba(245, 158, 11, 0.15)' : '#1E293B', color: selectedStatus === 'archived' ? '#F59E0B' : '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          <Archive size={14} /> {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
+      {/* Action Buttons */}
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        <button 
+          type="button" 
+          onClick={() => setSelectedStatus(prev => prev === 'active' ? 'archived' : 'active')} 
+          className={`py-2 px-2 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-all ${
+            selectedStatus === 'archived' 
+              ? 'border-[#E07A00] bg-[#E07A00]/15 text-[#E07A00]' 
+              : 'border-[#1B2738] bg-[#0F172A] text-[#CBD5E1] hover:bg-[#1B2738]'
+          }`}
+        >
+          <Archive className="w-3.5 h-3.5" /> 
+          {selectedStatus === 'active' ? (isRtl ? 'الأرشيف' : 'Archive') : (isRtl ? 'النشطين' : 'Active')}
         </button>
 
-        <button type="button" onClick={() => setIsAddModalOpen(true)} style={{ padding: '10px 8px', fontSize: '13px', fontWeight: '700', borderRadius: '12px', cursor: 'pointer', border: 'none', background: '#F59E0B', color: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)' }}>
-          <UserPlus size={16} /> {isRtl ? 'إضافة طالب جديد' : 'Add Student'}
+        <button 
+          type="button" 
+          onClick={() => setIsAddModalOpen(true)} 
+          className="py-2 px-2 text-xs md:text-sm font-bold rounded-xl bg-[#E07A00] text-white hover:bg-[#C66B00] flex items-center justify-center gap-1.5 shadow-lg shadow-[#E07A00]/10 active:scale-95 transition-all"
+        >
+          <UserPlus className="w-4 h-4" /> 
+          {isRtl ? 'إضافة طالب' : 'Add Student'}
         </button>
 
-        <button type="button" onClick={() => alert(isRtl ? 'ميزة التصدير ستتوفر قريباً...' : 'Export coming soon...')} style={{ padding: '10px 6px', fontSize: '12px', fontWeight: '600', borderRadius: '12px', cursor: 'pointer', border: '1px solid #334155', background: '#1E293B', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          <FileSpreadsheet size={15} /> {isRtl ? 'تصدير' : 'Export'}
+        <button 
+          type="button" 
+          onClick={() => alert(isRtl ? 'ميزة التصدير ستتوفر قريباً...' : 'Export coming soon...')} 
+          className="py-2 px-2 text-xs font-semibold rounded-xl border border-[#1B2738] bg-[#0F172A] text-[#10B981] hover:bg-[#09332C] transition-all flex items-center justify-center gap-1.5"
+        >
+          <FileSpreadsheet className="w-3.5 h-3.5" /> 
+          {isRtl ? 'تصدير' : 'Export'}
         </button>
       </div>
 
-      {/* 🔍 البحث والفلترة */}
-      <div style={{ background: '#1E293B', borderRadius: '14px', padding: '14px', border: '1px solid #334155', marginBottom: '20px' }}>
-        <div style={{ position: 'relative', marginBottom: '10px' }}>
-          <input type="text" placeholder={isRtl ? 'ابحث باسم الطالب، رقم الهاتف، أو كود الطالب...' : 'Search student name, phone or code...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: isRtl ? '12px 38px 12px 12px' : '12px 12px 12px 38px', background: '#0F172A', border: '1px solid #334155', borderRadius: '10px', color: '#FFF', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
-          <Search size={16} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '12px', color: '#64748B' }} />
-          {searchTerm && <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '12px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}><X size={15} /></button>}
+      {/* Search & Filters */}
+      <div className="bg-[#0F172A]/85 rounded-2xl p-3.5 border border-[#1B2738] mb-5 space-y-3">
+        <div className="relative">
+          <input 
+            type="text" 
+            placeholder={isRtl ? 'ابحث باسم الطالب، رقم الهاتف، أو كود الطالب...' : 'Search student name, phone or code...'} 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            className="w-full py-2.5 px-9 bg-[#0A101D] border border-[#1B2738] rounded-xl text-white text-xs outline-none focus:border-[#E07A00] transition-colors"
+          />
+          <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-[#475569] ${isRtl ? 'right-3' : 'left-3'}`} />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')} 
+              className={`absolute top-1/2 -translate-y-1/2 text-[#475569] hover:text-white ${isRtl ? 'left-3' : 'right-3'}`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <select value={selectedHalaqa} onChange={(e) => setSelectedHalaqa(e.target.value)} style={{ padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#CBD5E1', fontSize: '12px' }}>
+        <div className="grid grid-cols-2 gap-2">
+          <select 
+            value={selectedHalaqa} 
+            onChange={(e) => setSelectedHalaqa(e.target.value)} 
+            className="p-2 bg-[#0A101D] border border-[#1B2738] rounded-xl text-[#CBD5E1] text-xs outline-none focus:border-[#E07A00]"
+          >
             <option value="all">{isRtl ? 'جميع الحلقات' : 'All Halaqas'}</option>
             <option value="no_halaqa">{isRtl ? 'بدون حلقة' : 'Without Halaqa'}</option>
             {halaqas.map(h => <option key={h.id} value={h.id}>{formatName(h.name, isRtl ? 'ar' : 'en')}</option>)}
           </select>
 
-          <select value={selectedGender} onChange={(e) => setSelectedGender(e.target.value)} style={{ padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#CBD5E1', fontSize: '12px' }}>
+          <select 
+            value={selectedGender} 
+            onChange={(e) => setSelectedGender(e.target.value)} 
+            className="p-2 bg-[#0A101D] border border-[#1B2738] rounded-xl text-[#CBD5E1] text-xs outline-none focus:border-[#E07A00]"
+          >
             <option value="all">{isRtl ? 'الكل (ذكر / أنثى)' : 'All Genders'}</option>
             <option value="male">{isRtl ? 'ذكور فقط' : 'Males Only'}</option>
             <option value="female">{isRtl ? 'إناث فقط' : 'Females Only'}</option>
@@ -178,15 +217,15 @@ export default function StudentsList({
         </div>
       </div>
 
-      {/* 📋 قائمة البطاقات */}
+      {/* Cards List */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>⏳ {isRtl ? 'جاري التحميل...' : 'Loading...'}</div>
+        <div className="text-center py-12 text-[#94A3B8] text-xs">⏳ {isRtl ? 'جاري التحميل...' : 'Loading...'}</div>
       ) : filteredStudents.length === 0 ? (
-        <div style={{ background: '#1E293B', padding: '40px', textAlign: 'center', borderRadius: '14px', border: '1px dashed #334155', color: '#CBD5E1' }}>
+        <div className="bg-[#0F172A]/40 p-10 text-center rounded-2xl border border-dashed border-[#1B2738] text-[#94A3B8] text-xs">
           {isRtl ? 'لم يتم العثور على نتائج' : 'No results found'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="space-y-3">
           {filteredStudents.map(student => (
             <StudentItemCard 
               key={student.id}
@@ -203,20 +242,35 @@ export default function StudentsList({
         </div>
       )}
 
-      {/* 🚚 نافذة النقل السريع بين الحلقات */}
+      {/* Transfer Modal */}
       {transferStudent && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', itemsCenter: 'center', justifyContent: 'center', zIndex: 100, padding: '16px' }}>
-          <div style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '20px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC', margin: '0 0 12px 0' }}>
+        <div className="fixed inset-0 bg-[#0F172A]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0F172A] border border-[#1B2738] rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+            <h3 className="text-sm font-bold text-white">
               {isRtl ? `نقل الطالب: ${formatName(transferStudent.name, 'ar')}` : `Transfer Student`}
             </h3>
-            <select value={selectedNewHalaqa} onChange={(e) => setSelectedNewHalaqa(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0F172A', border: '1px solid #334155', borderRadius: '10px', color: '#FFF', fontSize: '13px', marginBottom: '16px' }}>
+            <select 
+              value={selectedNewHalaqa} 
+              onChange={(e) => setSelectedNewHalaqa(e.target.value)} 
+              className="w-full p-2.5 bg-[#0A101D] border border-[#1B2738] rounded-xl text-white text-xs outline-none focus:border-[#E07A00]"
+            >
               <option value="">{isRtl ? 'بدون حلقة (إزالة)' : 'No Halaqa'}</option>
               {halaqas.map(h => <option key={h.id} value={h.id}>{formatName(h.name, isRtl ? 'ar' : 'en')}</option>)}
             </select>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setTransferStudent(null)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #334155', borderRadius: '10px', color: '#94A3B8' }}>{isRtl ? 'إلغاء' : 'Cancel'}</button>
-              <button type="button" onClick={handleConfirmTransfer} disabled={transferLoading} style={{ padding: '8px 16px', background: '#F59E0B', border: 'none', borderRadius: '10px', color: '#0F172A', fontWeight: '700' }}>
+            <div className="flex justify-end gap-2 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setTransferStudent(null)} 
+                className="px-4 py-2 bg-transparent border border-[#1B2738] rounded-xl text-xs text-[#94A3B8] hover:text-white"
+              >
+                {isRtl ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button 
+                type="button" 
+                onClick={handleConfirmTransfer} 
+                disabled={transferLoading} 
+                className="px-4 py-2 bg-[#E07A00] hover:bg-[#C66B00] rounded-xl text-xs text-white font-bold transition-colors"
+              >
                 {transferLoading ? (isRtl ? 'جاري النقل...' : 'Transferring...') : (isRtl ? 'تأكيد' : 'Confirm')}
               </button>
             </div>
@@ -224,7 +278,7 @@ export default function StudentsList({
         </div>
       )}
 
-      {/* ➕ استخدام نافذة إضافة طالب الموجودة لديك أصلاً */}
+      {/* Add Student Modal */}
       <AddStudentModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -236,7 +290,7 @@ export default function StudentsList({
   );
 }
 
-// 📇 بطاقة عرض الطالب داخل القائمة
+// Student Card Item
 function StudentItemCard({ student, halaqas, getQuranProgress, onToggleArchive, onOpenTransferModal, onEditStudent, isRtl, navigate }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isStudentArchived = student.is_archived || student.status === 'archived';
@@ -247,54 +301,102 @@ function StudentItemCard({ student, halaqas, getQuranProgress, onToggleArchive, 
   const cleanPhone = student.parent_phone ? String(student.parent_phone).replace(/\D/g, '') : null;
 
   return (
-    <div style={{ background: '#1E293B', borderRadius: '14px', padding: '14px', border: '1px solid #334155', opacity: isStudentArchived ? 0.75 : 1 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '1px solid #334155', flexShrink: 0 }}>
+    <div className={`p-4 rounded-2xl border transition-all ${
+      isStudentArchived ? 'bg-[#0F172A]/40 border-rose-500/20 opacity-70' : 'bg-[#0F172A]/85 border-[#1B2738] hover:border-[#2E3E56]'
+    }`}>
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-xl bg-[#0A101D] border border-[#1B2738] flex items-center justify-center text-xl shrink-0">
           {['female', 'أنثى', 'f'].includes(String(student.gender).toLowerCase()) ? '🧕' : '👨‍🎓'}
         </div>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-bold text-white truncate">
               {studentName}
-            </div>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {student.current_streak > 0 && <span style={{ fontSize: '11px', background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', padding: '2px 6px', borderRadius: '6px', fontWeight: '700' }}><Flame size={12} inline /> {student.current_streak}d</span>}
-              {student.points > 0 && <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '2px 6px', borderRadius: '6px', fontWeight: '700' }}><Star size={11} inline /> {student.points}</span>}
+            </span>
+            <div className="flex gap-1 shrink-0">
+              {student.current_streak > 0 && (
+                <span className="text-[10px] bg-[#E07A00]/15 text-[#E07A00] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                  <Flame className="w-3 h-3" /> {student.current_streak}d
+                </span>
+              )}
+              {student.points > 0 && (
+                <span className="text-[10px] bg-[#10B981]/15 text-[#10B981] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                  <Star className="w-3 h-3" /> {student.points}
+                </span>
+              )}
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '11px' }}>
-            <span style={{ color: linkedHalaqa ? '#F59E0B' : '#EF4444', background: linkedHalaqa ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '6px', fontWeight: '600' }}>
+          <div className="flex items-center gap-2 mt-1.5 text-xs">
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+              linkedHalaqa ? 'bg-[#E07A00]/10 text-[#E07A00]' : 'bg-rose-500/10 text-rose-400'
+            }`}>
               {linkedHalaqa ? halaqaName : (isRtl ? 'بدون حلقة' : 'No Halaqa')}
             </span>
-            <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <BookOpen size={13} style={{ color: '#10B981' }} /> {isRtl ? `الجزء ${juz}` : `Juz ${juz}`}
+            <span className="text-[#94A3B8] flex items-center gap-1 text-[11px]">
+              <BookOpen className="w-3.5 h-3.5 text-[#10B981]" /> {isRtl ? `الجزء ${juz}` : `Juz ${juz}`}
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="flex items-center gap-1.5 shrink-0">
           {cleanPhone && (
-            <a href={`https://wa.me/${cleanPhone}`} target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-              <MessageSquare size={17} />
+            <a 
+              href={`https://wa.me/${cleanPhone}`} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="w-9 h-9 rounded-xl bg-[#09332C] border border-[#0D5C4D] text-[#10B981] flex items-center justify-center hover:bg-[#10B981] hover:text-white transition-colors"
+            >
+              <MessageSquare className="w-4 h-4" />
             </a>
           )}
 
-          <div style={{ position: 'relative' }}>
-            <button type="button" onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ background: '#0F172A', border: '1px solid #334155', color: '#CBD5E1', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <MoreVertical size={18} />
+          <div className="relative">
+            <button 
+              type="button" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="w-9 h-9 rounded-xl bg-[#0A101D] border border-[#1B2738] text-[#CBD5E1] flex items-center justify-center hover:border-[#E07A00] transition-colors"
+            >
+              <MoreVertical className="w-4 h-4" />
             </button>
 
             {isMenuOpen && (
               <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setIsMenuOpen(false)} />
-                <div style={{ position: 'absolute', [isRtl ? 'left' : 'right']: 0, top: '42px', width: '160px', background: '#0F172A', border: '1px solid #334155', borderRadius: '12px', zIndex: 50, padding: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <button type="button" onClick={() => { setIsMenuOpen(false); navigate(`/students/${student.id}`); }} style={menuStyle(isRtl)}><Eye size={14} style={{ color: '#F59E0B' }} /> {isRtl ? 'التفاصيل' : 'Details'}</button>
-                  <button type="button" onClick={() => { setIsMenuOpen(false); if (onEditStudent) onEditStudent(student); else navigate(`/students/${student.id}?edit=true`); }} style={menuStyle(isRtl)}><Edit3 size={14} style={{ color: '#3B82F6' }} /> {isRtl ? 'تعديل' : 'Edit'}</button>
-                  <button type="button" onClick={() => { setIsMenuOpen(false); onOpenTransferModal(student); }} style={menuStyle(isRtl)}><ArrowRightLeft size={14} style={{ color: '#10B981' }} /> {isRtl ? 'نقل' : 'Transfer'}</button>
-                  <button type="button" onClick={(e) => { setIsMenuOpen(false); onToggleArchive(e, student.id, student.status, student.is_archived); }} style={{ ...menuStyle(isRtl), color: isStudentArchived ? '#10B981' : '#EF4444' }}>
-                    {isStudentArchived ? <RotateCcw size={14} /> : <Archive size={14} />} {isStudentArchived ? (isRtl ? 'استعادة' : 'Restore') : (isRtl ? 'أرشفة' : 'Archive')}
+                <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                <div className={`absolute top-10 w-36 bg-[#0A101D] border border-[#1B2738] rounded-xl z-50 p-1 shadow-xl flex flex-col gap-1 ${
+                  isRtl ? 'left-0' : 'right-0'
+                }`}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsMenuOpen(false); navigate(`/students/${student.id}`); }} 
+                    className="w-full px-2.5 py-1.5 rounded-lg text-xs text-[#CBD5E1] hover:bg-[#1B2738] flex items-center gap-2"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-[#E07A00]" /> {isRtl ? 'التفاصيل' : 'Details'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsMenuOpen(false); if (onEditStudent) onEditStudent(student); else navigate(`/students/${student.id}?edit=true`); }} 
+                    className="w-full px-2.5 py-1.5 rounded-lg text-xs text-[#CBD5E1] hover:bg-[#1B2738] flex items-center gap-2"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-sky-400" /> {isRtl ? 'تعديل' : 'Edit'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsMenuOpen(false); onOpenTransferModal(student); }} 
+                    className="w-full px-2.5 py-1.5 rounded-lg text-xs text-[#CBD5E1] hover:bg-[#1B2738] flex items-center gap-2"
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-[#10B981]" /> {isRtl ? 'نقل' : 'Transfer'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={(e) => { setIsMenuOpen(false); onToggleArchive(e, student.id, student.status, student.is_archived); }} 
+                    className={`w-full px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 hover:bg-[#1B2738] ${
+                      isStudentArchived ? 'text-[#10B981]' : 'text-rose-400'
+                    }`}
+                  >
+                    {isStudentArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />} 
+                    {isStudentArchived ? (isRtl ? 'استعادة' : 'Restore') : (isRtl ? 'أرشفة' : 'Archive')}
                   </button>
                 </div>
               </>
@@ -303,24 +405,9 @@ function StudentItemCard({ student, halaqas, getQuranProgress, onToggleArchive, 
         </div>
       </div>
 
-      <div style={{ marginTop: '12px' }}>
+      <div className="mt-3 pt-2 border-t border-[#1B2738]">
         <QuranProgressBar currentQuarterIndex={qIndex} showDetails={true} />
       </div>
     </div>
   );
 }
-
-const menuStyle = (isRtl) => ({
-  width: '100%',
-  padding: '8px 10px',
-  background: 'transparent',
-  border: 'none',
-  borderRadius: '8px',
-  color: '#CBD5E1',
-  fontSize: '12px',
-  textAlign: isRtl ? 'right' : 'left',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px'
-});
