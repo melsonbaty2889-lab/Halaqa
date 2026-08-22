@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Globe, ShieldCheck } from 'lucide-react';
-import SmartHalaqaProLogo from '../ui/SmartHalaqaProLogo';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 
 export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
