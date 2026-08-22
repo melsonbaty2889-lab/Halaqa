@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { handleAuthError } from '@/utils/errorHandler';
-import { signupSchema, validateFormData } from '@/schemas/auth';
+import { signUpSchema, validateFormData } from '@/schemas/auth';
 
 export function useSignUpForm(onSignUpSuccess) {
   const { i18n } = useTranslation();
@@ -53,7 +53,7 @@ export function useSignUpForm(onSignUpSuccess) {
       agreeTerms
     };
 
-    const validationResult = validateFormData(formData, signupSchema);
+    const validationResult = validateFormData(formData, signUpSchema);
 
     if (!validationResult.valid) {
       setFieldErrors(validationResult.errors);
