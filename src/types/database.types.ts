@@ -28,6 +28,11 @@ export interface Database {
           created_at: string
           updated_at: string | null
         }
+        Insert: Omit<Database['public']['Tables']['academies']['Row'], 'created_at' | 'updated_at'> & {
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['academies']['Row']>
       }
       students: {
         Row: {
@@ -63,6 +68,11 @@ export interface Database {
           halaqa_id: string | null
           points: number | null
         }
+        Insert: Omit<Database['public']['Tables']['students']['Row'], 'created_at' | 'updated_at'> & {
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['students']['Row']>
       }
       teachers: {
         Row: {
@@ -92,6 +102,11 @@ export interface Database {
           metadata: Json | null
           salary_system: string | null
         }
+        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'created_at' | 'updated_at'> & {
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['teachers']['Row']>
       }
       halaqas: {
         Row: {
@@ -118,6 +133,11 @@ export interface Database {
           min_students: number | null
           meeting_platform: string | null
         }
+        Insert: Omit<Database['public']['Tables']['halaqas']['Row'], 'created_at' | 'updated_at'> & {
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['halaqas']['Row']>
       }
       profiles: {
         Row: {
@@ -140,7 +160,16 @@ export interface Database {
           metadata: Json | null
           academy_id: string | null
         }
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'> & {
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['profiles']['Row']>
       }
     }
   }
 }
+
+// Helper Types للاستيراد المباشر للأنواع
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Enums<T extends keyof Database['public']> = Database['public'];
