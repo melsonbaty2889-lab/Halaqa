@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
+import { supabase } from '@/lib/supabase';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { TermsModal } from '@/components/UI/TermsModal';
 import { 
@@ -15,7 +16,7 @@ import {
   UserCheck
 } from 'lucide-react';
 
-export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess, onGoogleSignUp }) {
+export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const {
     isRtl,
     fullName,
@@ -38,6 +39,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess, onGoogleS
     fieldErrors,
     setFieldErrors,
     status,
+    setStatus,
     toggleLanguage,
     handleKeyUp,
     handleSignUp,
@@ -46,10 +48,51 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess, onGoogleS
   // حالات إدارة نافذة الشروط والأحكام
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('terms');
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const openModal = (type) => {
     setModalType(type);
     setShowModal(true);
+  };
+
+  // دالة التسجيل بواسطة جوجل مع حفظ الدور المحدد من القائمة
+  const handleGoogleSignUp = async () => {
+    if (!agreeTerms) {
+      setStatus({
+        type: 'error',
+        msg: isRtl 
+          ? 'يجب الموافقة على الشروط والأحكام وسياية الخصوصية أولاً' 
+          : 'You must agree to the Terms & Conditions and Privacy Policy first.'
+      });
+      return;
+    }
+
+    try {
+      setGoogleLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          data: {
+            role: role // حفظ الدور المختار حالياً عند إنشاء الحساب بـ Google
+          }
+        },
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Google Sign-up Error:', err);
+      setStatus({
+        type: 'error',
+        msg: isRtl ? 'فشل التسجيل بواسطة Google' : 'Google sign-up failed'
+      });
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const inputPadding = isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11';
@@ -98,27 +141,32 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess, onGoogleS
         {/* زر التسجيل بـ Google */}
         <button
           type="button"
-          onClick={onGoogleSignUp}
-          className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 cursor-pointer shadow-sm mb-3"
+          onClick={handleGoogleSignUp}
+          disabled={googleLoading}
+          className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 cursor-pointer shadow-sm mb-3 disabled:opacity-50"
         >
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-            <path
-              fill="#EA4335"
-              d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-            />
-            <path
-              fill="#4285F4"
-              d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12s.7 2.3 1.9 4.7l3.7-2.9z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
-            />
-          </svg>
+          {googleLoading ? (
+            <Loader2 size={16} className="animate-spin text-amber-500" />
+          ) : (
+            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <path
+                fill="#EA4335"
+                d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12s.7 2.3 1.9 4.7l3.7-2.9z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
+              />
+            </svg>
+          )}
           <span>{isRtl ? 'التسجيل باستخدام Google' : 'Sign up with Google'}</span>
         </button>
 
