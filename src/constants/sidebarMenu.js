@@ -20,7 +20,7 @@ import {
 export const getMenuSections = (isRtl, userRole = 'admin') => {
   const sections = [
     {
-      id: 'main-ops',
+      id: 'main-operations',
       title: isRtl ? 'الرئيسية والعمليات' : 'Main & Operations',
       items: [
         { 
@@ -42,15 +42,15 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
-          id: 'reports', 
-          label: isRtl ? 'الرسائل والتقارير' : 'Messaging & Reports', 
+          id: 'communications-reports', 
+          label: isRtl ? 'الإشعارات والتقارير' : 'Notifications & Reports', 
           icon: Send, 
           roles: ['admin', 'teacher', 'parent'] 
         }
       ]
     },
     {
-      id: 'people-halaqas',
+      id: 'halaqas-people',
       title: isRtl ? 'الحلقات والأفراد' : 'Halaqas & Directory',
       items: [
         { 
@@ -80,7 +80,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
       ]
     },
     {
-      id: 'academic-evaluation',
+      id: 'curriculum-progress',
       title: isRtl ? 'المناهج والتقييم' : 'Curricula & Progress',
       items: [
         { 
@@ -110,7 +110,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
       ]
     },
     {
-      id: 'eval-finance',
+      id: 'management-finance',
       title: isRtl ? 'الإدارة والمالية' : 'Management & Finance',
       items: [
         { 
