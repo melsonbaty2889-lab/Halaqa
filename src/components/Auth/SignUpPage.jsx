@@ -102,7 +102,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <User 
               size={18} 
-              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${fullName ? 'text-amber-500' : 'text-slate-500'}`} 
+              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none z-10 transition-colors ${fullName ? 'text-amber-500' : 'text-slate-500'}`} 
             />
             <input 
               type="text"
@@ -121,7 +121,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <Mail 
               size={18} 
-              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${email ? 'text-amber-500' : 'text-slate-500'}`} 
+              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none z-10 transition-colors ${email ? 'text-amber-500' : 'text-slate-500'}`} 
             />
             <input 
               type="email"
@@ -138,7 +138,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
           {/* نوع الحساب */}
           <div className="relative flex items-center">
-            <UserCheck size={18} className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} text-amber-500 pointer-events-none`} />
+            <UserCheck size={18} className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} text-amber-500 pointer-events-none z-10`} />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
@@ -155,7 +155,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <Lock 
               size={18} 
-              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${password ? 'text-amber-500' : 'text-slate-500'}`} 
+              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none z-10 transition-colors ${password ? 'text-amber-500' : 'text-slate-500'}`} 
             />
             <input 
               type={showPassword ? 'text' : 'password'}
@@ -172,7 +172,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center text-slate-500 hover:text-slate-300`}
+              className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center text-slate-500 hover:text-slate-300 z-10 p-1`}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -182,7 +182,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <Lock 
               size={18} 
-              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${confirmPassword ? 'text-amber-500' : 'text-slate-500'}`} 
+              className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none z-10 transition-colors ${confirmPassword ? 'text-amber-500' : 'text-slate-500'}`} 
             />
             <input 
               type={showConfirmPassword ? 'text' : 'password'}
@@ -198,7 +198,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center text-slate-500 hover:text-slate-300`}
+              className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center text-slate-500 hover:text-slate-300 z-10 p-1`}
             >
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
