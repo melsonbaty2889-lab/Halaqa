@@ -1,6 +1,8 @@
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
+import { TermsModal } from '@/components/UI/TermsModal';
 import { 
   User, 
   Mail, 
@@ -9,9 +11,7 @@ import {
   EyeOff, 
   AlertCircle, 
   Globe, 
-  ShieldCheck, 
   Loader2, 
-  AlertTriangle,
   UserCheck
 } from 'lucide-react';
 
@@ -35,7 +35,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     showConfirmPassword,
     setShowConfirmPassword,
     loading,
-    capsLockOn,
     fieldErrors,
     setFieldErrors,
     status,
@@ -43,6 +42,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     handleKeyUp,
     handleSignUp,
   } = useSignUpForm(onSignUpSuccess);
+
+  // حالات إدارة نافذة الشروط والأحكام
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState('terms');
+
+  const openModal = (type) => {
+    setModalType(type);
+    setShowModal(true);
+  };
 
   const inputPadding = isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11';
 
@@ -196,17 +204,55 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             </button>
           </div>
 
-          {/* الشروط والأحكام */}
-          <div className="flex items-start gap-2 text-xs text-slate-400 mt-1">
+          {/* الشروط والأحكام التفاعلية */}
+          <div className="flex items-start gap-2 text-xs text-slate-300 my-1">
             <input 
               type="checkbox"
-              id="terms"
+              id="agreeTerms"
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
               className="accent-amber-500 w-4 h-4 cursor-pointer mt-0.5 shrink-0"
             />
-            <label htmlFor="terms" className="cursor-pointer leading-tight">
-              {isRtl ? 'أوافق على الشروط والأحكام وسياسة الخصوصية' : 'I agree to Terms & Conditions and Privacy Policy'}
+            <label htmlFor="agreeTerms" className="cursor-pointer leading-tight select-none">
+              {isRtl ? (
+                <>
+                  أوافق على{' '}
+                  <button
+                    type="button"
+                    onClick={() => openModal('terms')}
+                    className="text-amber-500 underline font-medium hover:text-amber-400 focus:outline-none p-0 bg-transparent border-none cursor-pointer"
+                  >
+                    الشروط والأحكام
+                  </button>
+                  {' '}و{' '}
+                  <button
+                    type="button"
+                    onClick={() => openModal('privacy')}
+                    className="text-amber-500 underline font-medium hover:text-amber-400 focus:outline-none p-0 bg-transparent border-none cursor-pointer"
+                  >
+                    سياسة الخصوصية
+                  </button>
+                </>
+              ) : (
+                <>
+                  I agree to the{' '}
+                  <button
+                    type="button"
+                    onClick={() => openModal('terms')}
+                    className="text-amber-500 underline font-medium hover:text-amber-400 focus:outline-none p-0 bg-transparent border-none cursor-pointer"
+                  >
+                    Terms & Conditions
+                  </button>
+                  {' '}and{' '}
+                  <button
+                    type="button"
+                    onClick={() => openModal('privacy')}
+                    className="text-amber-500 underline font-medium hover:text-amber-400 focus:outline-none p-0 bg-transparent border-none cursor-pointer"
+                  >
+                    Privacy Policy
+                  </button>
+                </>
+              )}
             </label>
           </div>
 
@@ -240,6 +286,14 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </div>
 
       </div>
+
+      {/* المودال المنبثق للشروط وسياسة الخصوصية */}
+      <TermsModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        contentType={modalType}
+        isRtl={isRtl}
+      />
     </div>
   );
 }
