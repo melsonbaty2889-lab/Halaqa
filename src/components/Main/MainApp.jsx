@@ -252,7 +252,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }), [isPlatformAdmin, isRtl, academyName, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
-  // دالة تحديث العملة فورياً
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
   };
@@ -278,7 +277,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'students':
         return <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />;
       case 'teachers':
-        return <Teachers teachers={teachers} setTeachers={setTeachers} academyId={academyId} halaqas={enrichedHalaqas} />;
+        return (
+          <Teachers 
+            teachers={teachers} 
+            setTeachers={setTeachers} 
+            academyId={academyId} 
+            halaqas={enrichedHalaqas}
+            onRefresh={() => fetchAcademyData(academyId)}
+            t={t}
+            isRtl={isRtl}
+          />
+        );
       case 'halaqas':
         return (
           <ActiveHalaqas 
