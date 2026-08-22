@@ -1,21 +1,62 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { FaTimes, FaUserTie, FaSpinner } from 'react-icons/fa';
+import { supabase } from '@/lib/supabase';
+import { X, UserPlus, Loader2, Award, Globe, DollarSign } from 'lucide-react';
+import { C } from '@/theme/colors';
+import { Btn, Input } from '@/components/UI/UI';
 
 export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [role, setRole] = useState('teacher');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'teacher',
+    title: 'شيخ / معلم',
+    country: 'EG',
+    timezone: 'UTC+02:00',
+    ijazat: [],
+    compensationType: 'volunteer', // volunteer, hourly, monthly
+    hourlyRate: '',
+    currency: 'USD'
+  });
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
+  const titlesList = [
+    'شيخ / مقرئ',
+    'محفظ / معلّم',
+    'شيخة / معلّمة',
+    'شيخ المقارئ',
+    'Ustaz / Ustazah',
+    'Quran Instructor',
+    'مشرف تربوي'
+  ];
+
+  const ijazatOptions = [
+    'حفص عن عاصم',
+    'ورش عن نافع',
+    'قالون عن نافع',
+    'الدوري عن أبي عمرو',
+    'القراءات العشر الصغرى',
+    'القراءات العشر الكبرى',
+    'إجازة في المتون الجزرية/الأطفال'
+  ];
+
+  const handleIjazatChange = (ijaza) => {
+    setFormData(prev => ({
+      ...prev,
+      ijazat: prev.ijazat.includes(ijaza)
+        ? prev.ijazat.filter(i => i !== ijaza)
+        : [...prev.ijazat, ijaza]
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setErrorMsg('يرجى إدخال اسم المعلم / المدير');
+    if (!formData.name.trim()) {
+      setErrorMsg('يرجى إدخال اسم المعلم');
       return;
     }
 
@@ -27,197 +68,198 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
         .from('teachers')
         .insert([
           {
-            name: name.trim(),
-            email: email.trim() || null,
-            phone: phone.trim() || null,
-            role: role,
+            name: formData.name.trim(),
+            email: formData.email.trim() || null,
+            phone: formData.phone.trim() || null,
+            role: formData.role,
+            title: formData.title,
+            country: formData.country,
+            timezone: formData.timezone,
+            ijazat: formData.ijazat,
+            compensation_type: formData.compensationType,
+            hourly_rate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : 0,
+            currency: formData.currency,
             academy_id: academyId || null
           }
         ]);
 
       if (error) throw error;
 
-      setName('');
-      setEmail('');
-      setPhone('');
-      setRole('teacher');
       if (onSuccess) onSuccess();
     } catch (err) {
-      console.error("🚨 خطأ أثناء إضافة المعلم:", err);
-      setErrorMsg(err.message || "حدث خطأ أثناء إضافة الكادر التعليمي");
+      console.error("🚨 خطأ أثناء إضافة الكادر:", err);
+      setErrorMsg(err.message || "حدث خطأ أثناء حفظ البيانات");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(15, 23, 42, 0.75)',
-      backdropFilter: 'blur(4px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '16px'
-    }}>
-      <div style={{
-        background: '#111C2A',
-        border: '1px solid #334155',
-        borderRadius: '16px',
-        width: '100%',
-        maxWidth: '480px',
-        padding: '24px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-        fontFamily: "'Cairo', system-ui, sans-serif",
-        color: '#FFF'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ margin: 0, fontSize: '18px', color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaUserTie /> إضافة معلم / مدير جديد
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div 
+        className="w-full max-w-2xl rounded-2xl p-6 shadow-2xl border text-white max-h-[90vh] overflow-y-auto"
+        style={{ backgroundColor: C.surface, borderColor: C.border }}
+      >
+        <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
+          <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: C.primary }}>
+            <UserPlus className="w-5 h-5" /> إضافة كادر تعليمي / مقرئ جديد
           </h3>
-          <button 
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: '18px', cursor: 'pointer' }}
-          >
-            <FaTimes />
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {errorMsg && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#EF4444', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>
+          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-xs font-bold mb-4">
             {errorMsg}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '6px' }}>الاسم الكامل *</label>
-            <input 
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="مثال: د. أحمد المحمود"
-              required
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                background: '#1E293B',
-                border: '1px solid #334155',
-                color: '#FFF',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-slate-300 mb-1">الاسم الكامل *</label>
+              <Input 
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="الاسم الكامل"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-300 mb-1">المسمى/المرتبة العلمية</label>
+              <select 
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+              >
+                {titlesList.map((t, idx) => (
+                  <option key={idx} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-300 mb-1">البريد الإلكتروني</label>
+              <Input 
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com"
+                dir="ltr"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-300 mb-1">رقم الهاتف / الواتساب</label>
+              <Input 
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+20 / +966 / +1 ..."
+                dir="ltr"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-300 mb-1">الدور النظامي</label>
+              <select 
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+              >
+                <option value="teacher">مقرئ / معلم حلقات</option>
+                <option value="supervisor">مشرف تعليمي</option>
+                <option value="admin">مدير أكاديمية</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-300 mb-1">المنطقة الزمنية (Timezone)</label>
+              <select 
+                value={formData.timezone}
+                onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+              >
+                <option value="UTC+00:00">جرينتش (UTC+0)</option>
+                <option value="UTC+01:00">المغرب / أوروبا الوسطى (UTC+1)</option>
+                <option value="UTC+02:00">مصر / فلسطين / أوروبا الشرقية (UTC+2)</option>
+                <option value="UTC+03:00">السعودية / الخليج / تركيا (UTC+3)</option>
+                <option value="UTC+07:00">إندونيسيا / جنوب شرق آسيا (UTC+7)</option>
+                <option value="UTC-05:00">شرق أمريكا / كندا (UTC-5)</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '6px' }}>البريد الإلكتروني</label>
-            <input 
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="teacher@example.com"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                background: '#1E293B',
-                border: '1px solid #334155',
-                color: '#FFF',
-                outline: 'none',
-                boxSizing: 'border-box',
-                direction: 'ltr'
-              }}
-            />
+          {/* الإجازات القرآنية */}
+          <div className="pt-2">
+            <label className="block text-xs font-bold text-amber-400 mb-2 flex items-center gap-1.5">
+              <Award className="w-4 h-4" /> الإجازات والروايات المعتمدة
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+              {ijazatOptions.map((ijaza, idx) => (
+                <label key={idx} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white">
+                  <input 
+                    type="checkbox"
+                    checked={formData.ijazat.includes(ijaza)}
+                    onChange={() => handleIjazatChange(ijaza)}
+                    className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0"
+                  />
+                  <span>{ijaza}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '6px' }}>رقم الهاتف</label>
-            <input 
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+201000000000"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                background: '#1E293B',
-                border: '1px solid #334155',
-                color: '#FFF',
-                outline: 'none',
-                boxSizing: 'border-box',
-                direction: 'ltr'
-              }}
-            />
+          {/* النظام المالي */}
+          <div className="pt-2">
+            <label className="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+              <DollarSign className="w-4 h-4 text-emerald-400" /> نظام التعويض / التعاقد
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <select 
+                value={formData.compensationType}
+                onChange={(e) => setFormData({ ...formData, compensationType: e.target.value })}
+                className="p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+              >
+                <option value="volunteer">احتساب / تطوع</option>
+                <option value="hourly">بالساعة</option>
+                <option value="monthly">راتب شهري ثابت</option>
+              </select>
+
+              {formData.compensationType !== 'volunteer' && (
+                <>
+                  <Input 
+                    type="number"
+                    value={formData.hourlyRate}
+                    onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
+                    placeholder="القيمة"
+                  />
+                  <select 
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    className="p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR (ر.س)</option>
+                    <option value="EGP">EGP (ج.م)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="MAD">MAD (د.م)</option>
+                  </select>
+                </>
+              )}
+            </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '6px' }}>الدور / الصلاحية</label>
-            <select 
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                background: '#1E293B',
-                border: '1px solid #334155',
-                color: '#FFF',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            >
-              <option value="teacher">مقرئ / معلم</option>
-              <option value="admin">مدير أكاديمية</option>
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #C9A84C, #A88934)',
-                color: '#0F172A',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              {loading ? <FaSpinner className="fa-spin" /> : 'إضافة الكادر'}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #334155',
-                background: '#1E293B',
-                color: '#94A3B8',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer'
-              }}
-            >
+          <div className="flex gap-3 pt-4 border-t border-white/10">
+            <Btn type="submit" disabled={loading} variant="primary" className="flex-1 flex items-center justify-center gap-2">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ الكادر التعليمي'}
+            </Btn>
+            <Btn type="button" onClick={onClose} variant="secondary" className="flex-1">
               إلغاء
-            </button>
+            </Btn>
           </div>
         </form>
       </div>
