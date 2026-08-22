@@ -7,13 +7,14 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Card, Btn, Input } from '@/components/UI/UI';
+import { AVAILABLE_VARIABLES, PRESET_TEMPLATES } from '@/data/reportTemplates';
 
-// القائمة المنسدلة المعتمدة كلياً على متغيرات التصميم الموحدة
+// 1. مكون القائمة المنسدلة المستقل
 function CustomSelect({ options, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  const selectedOption = options.find(o => o.value === value);
+  const selectedOption = useMemo(() => options.find(o => o.value === value), [options, value]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -60,6 +61,45 @@ function CustomSelect({ options, value, onChange, placeholder }) {
   );
 }
 
+// 2. مكون المعاينة الحية المباشرة
+function LivePreview({ isRtl, title, templateTitle, currentAcademyDisplayName, previewText }) {
+  return (
+    <div className="w-full max-w-[320px] p-4 rounded-3xl shadow-2xl flex flex-col items-center bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] border-t-4 border-t-[var(--primary,#E07A00)] backdrop-blur-md">
+      <div className="w-12 h-1 bg-[var(--border-input,#1B2738)] rounded-full mb-4" />
+      <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] mb-3 flex items-center gap-1.5">
+        <MessageSquare size={13} className="text-[var(--emerald-text,#10B981)]" />
+        <span>{isRtl ? 'معاينة الرسالة لدى ولي الأمر' : 'Parent Screen Preview'}</span>
+      </div>
+
+      <div className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-2xl p-3.5 min-h-[280px] flex flex-col justify-between shadow-inner">
+        <div>
+          <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-[var(--border-input,#1B2738)]">
+            <div className="w-7 h-7 rounded-full bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] flex items-center justify-center text-[11px] font-bold border border-[var(--emerald-text,#10B981)]/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+              {currentAcademyDisplayName.charAt(0)}
+            </div>
+            <div className="flex-1 truncate">
+              <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] truncate">
+                {title || templateTitle || currentAcademyDisplayName}
+              </div>
+              <div className="text-[9px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-[var(--text-main,#FFFFFF)] whitespace-pre-wrap leading-relaxed">
+            {previewText}
+          </div>
+        </div>
+
+        <div className="mt-4 pt-2 border-t border-[var(--border-input,#1B2738)] flex items-center justify-between text-[9px] text-[var(--text-sub,#94A3B8)]">
+          <span>{currentAcademyDisplayName}</span>
+          <span className="text-[var(--emerald-text,#10B981)] font-bold tracking-wider">Encrypted</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 3. المكون الرئيسي
 export default function CommunicationHub({ academyId, academyName }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language?.startsWith('ar');
@@ -90,41 +130,37 @@ export default function CommunicationHub({ academyId, academyName }) {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
-  const presetTemplates = [
-    { title: 'تقرير اليوم', body: 'السلام عليكم ورحمة الله، تقرير الطالب {student_name} بتاريخ {date}: الحفظ ({new_memorization})، المراجعة ({review})، التقييم العام ({session_grade}).' },
-    { title: 'تذكير اختبار', body: 'نحيطكم علماً بأنه تقرر عقد اختبار للطالب {student_name} بتاريخ {date}. نرجو المتابعة والمراجعة.' },
-    { title: 'تنبيه غياب', body: 'تنبيه: نود إحاطتكم بغياب الطالب {student_name} عن حلقة اليوم بتاريخ {date}. نرجو التواصل معنا.' },
-    { title: 'تهنئة وتشجيع', body: 'مبارك! أظهر الطالب {student_name} أداءً ممتازاً وتفوقاً ملحوظاً في حفظ اليوم ({new_memorization}).' }
-  ];
-
-  const availableVariables = [
-    { code: '{student_name}', label: isRtl ? 'اسم الطالب' : 'Student Name' },
-    { code: '{date}', label: isRtl ? 'التاريخ' : 'Date' },
-    { code: '{attendance_status}', label: isRtl ? 'حالة الحضور' : 'Attendance' },
-    { code: '{new_memorization}', label: isRtl ? 'الحفظ الجديد' : 'New Memorization' },
-    { code: '{review}', label: isRtl ? 'المراجعة' : 'Review' },
-    { code: '{session_grade}', label: isRtl ? 'التقييم' : 'Grade' },
-  ];
-
-  const targetAudienceOptions = [
+  // خيارات القوائم المنسدلة
+  const targetAudienceOptions = useMemo(() => [
     { value: 'all', label: isRtl ? 'جميع أولياء أمور الأكاديمية' : 'All Academy Parents' },
     { value: 'present_today', label: isRtl ? 'أولياء أمور الطلاب الحاضرين اليوم' : 'Parents of Present Students' },
     { value: 'absent_today', label: isRtl ? 'أولياء أمور الطلاب الغائبين اليوم' : 'Parents of Absent Students' },
-  ];
+  ], [isRtl]);
 
-  const triggerEventOptions = [
+  const triggerEventOptions = useMemo(() => [
     { value: 'daily_report', label: isRtl ? 'التقرير اليومي للحلقة' : 'Daily Report' },
     { value: 'exam_reminder', label: isRtl ? 'تذكير بموعد الاختبار' : 'Exam Reminder' },
     { value: 'absence_alert', label: isRtl ? 'تنبيه غياب الطالب' : 'Absence Alert' },
     { value: 'fee_notice', label: isRtl ? 'إشعار الرسوم والتسديد' : 'Fee Notice' },
-  ];
+  ], [isRtl]);
 
-  const languageOptions = [
+  const languageOptions = useMemo(() => [
     { value: 'ar', label: 'العربية (Arabic)' },
     { value: 'en', label: 'English (إنجليزية)' },
     { value: 'fr', label: 'Français (فرنسية)' },
     { value: 'tr', label: 'Türkçe (تركية)' },
-  ];
+  ], []);
+
+  const loadTemplateIntoForm = useCallback((tmpl) => {
+    setSelectedTemplate(tmpl);
+    setIsCreatingNew(false);
+    setTemplateName(tmpl.template_name || '');
+    setTemplateTitle(tmpl.title || '');
+    setTemplateEvent(tmpl.trigger_event || 'daily_report');
+    setTemplateLang(tmpl.language_code || 'ar');
+    setTemplateBody(tmpl.template_body || '');
+    setTemplateChannels(tmpl.channels || ['whatsapp']);
+  }, []);
 
   const fetchTemplates = useCallback(async () => {
     if (!academyId) return;
@@ -146,7 +182,7 @@ export default function CommunicationHub({ academyId, academyName }) {
     } finally {
       setLoadingTemplates(false);
     }
-  }, [academyId, selectedTemplate, isCreatingNew]);
+  }, [academyId, selectedTemplate, isCreatingNew, loadTemplateIntoForm]);
 
   const fetchLogs = useCallback(async () => {
     if (!academyId) return;
@@ -172,17 +208,6 @@ export default function CommunicationHub({ academyId, academyName }) {
     if (activeTab === 'templates') fetchTemplates();
     if (activeTab === 'logs') fetchLogs();
   }, [activeTab, fetchTemplates, fetchLogs]);
-
-  const loadTemplateIntoForm = (tmpl) => {
-    setSelectedTemplate(tmpl);
-    setIsCreatingNew(false);
-    setTemplateName(tmpl.template_name || '');
-    setTemplateTitle(tmpl.title || '');
-    setTemplateEvent(tmpl.trigger_event || 'daily_report');
-    setTemplateLang(tmpl.language_code || 'ar');
-    setTemplateBody(tmpl.template_body || '');
-    setTemplateChannels(tmpl.channels || ['whatsapp']);
-  };
 
   const handleNewTemplate = () => {
     setSelectedTemplate(null);
@@ -242,12 +267,12 @@ export default function CommunicationHub({ academyId, academyName }) {
     if (!body) return isRtl ? 'معاينة نص الرسالة تظهر هنا...' : 'Message preview appears here...';
     
     return body
-      .replace(/{student_name}/g, isRtl ? '[اسم الطالب]' : '[Student Name]')
-      .replace(/{date}/g, new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US'))
-      .replace(/{attendance_status}/g, isRtl ? '[حالة الحضور]' : '[Attendance]')
-      .replace(/{new_memorization}/g, isRtl ? '[الحفظ الجديد]' : '[New Memorization]')
-      .replace(/{review}/g, isRtl ? '[المراجعة]' : '[Review]')
-      .replace(/{session_grade}/g, isRtl ? '[التقييم]' : '[Grade]');
+      .replace(/\{student_name\}|\{\{student_name\}\}/g, isRtl ? '[اسم الطالب]' : '[Student Name]')
+      .replace(/\{date\}|\{\{date\}\}/g, new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US'))
+      .replace(/\{attendance_status\}|\{\{attendance_status\}\}/g, isRtl ? '[حالة الحضور]' : '[Attendance]')
+      .replace(/\{new_memorization\}|\{\{new_memorization\}\}/g, isRtl ? '[الحفظ الجديد]' : '[New Memorization]')
+      .replace(/\{review\}|\{\{review\}\}/g, isRtl ? '[المراجعة]' : '[Review]')
+      .replace(/\{session_grade\}|\{\{session_grade\}\}/g, isRtl ? '[التقييم]' : '[Grade]');
   }, [broadcastBody, templateBody, activeTab, isRtl]);
 
   const currentAcademyDisplayName = academyName || (isRtl ? 'الأكاديمية' : 'Academy');
@@ -257,7 +282,6 @@ export default function CommunicationHub({ academyId, academyName }) {
       dir={isRtl ? 'rtl' : 'ltr'} 
       className="min-h-screen p-3 sm:p-6 bg-transparent text-[var(--text-main,#FFFFFF)] select-none relative overflow-hidden"
     >
-      {/* خلفية التوهج الزمردي والتنقيط النجمي */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -270,7 +294,6 @@ export default function CommunicationHub({ academyId, academyName }) {
       />
 
       <div className="relative z-10">
-        {/* شريط العنوان العلوي */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-[var(--emerald-text,#10B981)]/10 border border-[var(--emerald-text,#10B981)]/20 flex items-center justify-center text-[var(--emerald-text,#10B981)] shrink-0 shadow-[0_0_15px_var(--emerald-radial-glow,rgba(16,185,129,0.2))]">
@@ -286,7 +309,6 @@ export default function CommunicationHub({ academyId, academyName }) {
             </div>
           </div>
 
-          {/* التبويبات الرئيسية */}
           <div className="flex p-1 bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md rounded-xl self-start sm:self-auto w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('broadcast')}
@@ -324,12 +346,9 @@ export default function CommunicationHub({ academyId, academyName }) {
           </div>
         </div>
 
-        {/* المحتوى الرئيسي */}
         {activeTab !== 'logs' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            
             <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
-              
               {activeTab === 'broadcast' && (
                 <div className="p-4 rounded-2xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md shadow-lg">
                   <h2 className="text-xs font-bold text-[var(--primary,#E07A00)] uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -393,7 +412,7 @@ export default function CommunicationHub({ academyId, academyName }) {
                       <span>{isRtl ? 'نماذج وصيغ جاهزة للتعبئة:' : 'Preset templates:'}</span>
                     </div>
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                      {presetTemplates.map((preset, idx) => (
+                      {(PRESET_TEMPLATES || []).map((preset, idx) => (
                         <button
                           key={idx}
                           type="button"
@@ -523,14 +542,14 @@ export default function CommunicationHub({ academyId, academyName }) {
                     <div className="mb-3">
                       <label className="text-[11px] text-[var(--text-main,#FFFFFF)] block mb-1">{isRtl ? 'إدراج متغيرات آلية:' : 'Variables:'}</label>
                       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                        {availableVariables.map((v, i) => (
+                        {(AVAILABLE_VARIABLES || []).map((v, i) => (
                           <button
                             key={i}
                             type="button"
                             onClick={() => setTemplateBody(prev => prev + ' ' + v.code)}
                             className="shrink-0 px-2.5 py-1 bg-[var(--surface-input,#0A101D)] hover:bg-[var(--primary,#E07A00)]/10 border border-[var(--border-input,#1B2738)] rounded-lg text-[10px] text-[var(--primary,#E07A00)] font-mono transition-colors"
                           >
-                            + {v.label}
+                            + {isRtl ? v.labelAr : v.labelEn}
                           </button>
                         ))}
                       </div>
@@ -560,46 +579,18 @@ export default function CommunicationHub({ academyId, academyName }) {
               )}
             </div>
 
-            {/* المعاينة الحية */}
             <div className="lg:col-span-5 xl:col-span-4 flex justify-center">
-              <div className="w-full max-w-[320px] p-4 rounded-3xl shadow-2xl flex flex-col items-center bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] border-t-4 border-t-[var(--primary,#E07A00)] backdrop-blur-md">
-                <div className="w-12 h-1 bg-[var(--border-input,#1B2738)] rounded-full mb-4"></div>
-                <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] mb-3 flex items-center gap-1.5">
-                  <MessageSquare size={13} className="text-[var(--emerald-text,#10B981)]" />
-                  <span>{isRtl ? 'معاينة الرسالة لدى ولي الأمر' : 'Parent Screen Preview'}</span>
-                </div>
-
-                <div className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-2xl p-3.5 min-h-[280px] flex flex-col justify-between shadow-inner">
-                  <div>
-                    <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-[var(--border-input,#1B2738)]">
-                      <div className="w-7 h-7 rounded-full bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] flex items-center justify-center text-[11px] font-bold border border-[var(--emerald-text,#10B981)]/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                        {currentAcademyDisplayName.charAt(0)}
-                      </div>
-                      <div className="flex-1 truncate">
-                        <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] truncate">
-                          {broadcastTitle || templateTitle || currentAcademyDisplayName}
-                        </div>
-                        <div className="text-[9px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] text-[var(--text-main,#FFFFFF)] whitespace-pre-wrap leading-relaxed">
-                      {previewText}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-2 border-t border-[var(--border-input,#1B2738)] flex items-center justify-between text-[9px] text-[var(--text-sub,#94A3B8)]">
-                    <span>{currentAcademyDisplayName}</span>
-                    <span className="text-[var(--emerald-text,#10B981)] font-bold tracking-wider">Encrypted</span>
-                  </div>
-                </div>
-              </div>
+              <LivePreview 
+                isRtl={isRtl}
+                title={broadcastTitle}
+                templateTitle={templateTitle}
+                currentAcademyDisplayName={currentAcademyDisplayName}
+                previewText={previewText}
+              />
             </div>
-
           </div>
         )}
 
-        {/* سجل السيرفر */}
         {activeTab === 'logs' && (
           <div className="p-4 rounded-2xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md shadow-lg">
             <div className="flex items-center justify-between mb-4">
