@@ -1,116 +1,171 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { FileUp, Download, Trash2, FileCheck, Eye, FileText, Image as ImageIcon } from 'lucide-react';
-import colors from '@/theme/colors';
+import React, { useState } from 'react';
+import { 
+  FileText, Upload, Trash2, Download, ExternalLink, 
+  Plus, CheckCircle2, AlertCircle, File 
+} from 'lucide-react';
 
-export default function StudentDocuments({ 
-  documents = [], 
-  onUpload, 
-  onDelete, 
-  onView,
-  dir = 'rtl' // إمكانية التبديل بين rtl و ltr
-}) {
-  // يمكنك استخدام useTranslation() للترجمة التلقائية
-  const { t } = useTranslation?.() || { t: (key) => key };
+const StudentDocuments = ({ studentId, documents = [], onUploadDocument, onDeleteDocument }) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [docName, setDocName] = useState('');
+  const [file, setFile] = useState(null);
+  const [error, setError] = useState('');
 
-  // دالة لاختيار الأيقونة بحسب نوع الملف
-  const getFileIcon = (mimeType) => {
-    if (mimeType?.includes('image')) return <ImageIcon className="w-4 h-4 text-emerald-400" />;
-    return <FileText className="w-4 h-4 text-emerald-400" />;
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError('حجم الملف يجب ألا يتجاوز 5 ميجابايت');
+        setFile(null);
+        return;
+      }
+      setError('');
+      setFile(selectedFile);
+      if (!docName) {
+        setDocName(selectedFile.name.split('.')[0]);
+      }
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file || !docName.trim()) {
+      setError('يرجى تحديد الملف وإدخال اسم المستند');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', docName);
+      formData.append('student_id', studentId);
+
+      await onUploadDocument(formData);
+      setDocName('');
+      setFile(null);
+      setError('');
+    } catch (err) {
+      setError('حدث خطأ أثناء رفع المستند، حاول مرة أخرى');
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
-    <div 
-      dir={dir}
-      style={{ backgroundColor: colors.surface || '#0F172A' }}
-      className="w-full border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col gap-4"
-    >
-      {/* Header Section */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-3">
-        <div className="flex items-center gap-2">
-          <FileCheck className="w-5 h-5 text-[#FBBF24]" />
-          <h3 className="text-white font-bold text-base">
-            {t('studentDocuments') || 'مستندات ومرفقات الطالب'}
-          </h3>
-        </div>
-        
-        {onUpload && (
-          <button 
-            type="button"
-            onClick={onUpload}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FBBF24] text-[#0F172A] text-xs font-bold hover:bg-[#FBBF24]/95 transition-colors"
-          >
-            <FileUp className="w-4 h-4" />
-            <span>{t('uploadDocument') || 'رفع مستند جديد'}</span>
-          </button>
-        )}
+    <div className="space-y-6">
+      {/* نموذج رفع مستند جديد */}
+      <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 backdrop-blur-sm">
+        <h3 className="text-base font-semibold text-slate-100 flex items-center gap-2 mb-4">
+          <Upload className="w-5 h-5 text-primary-400" />
+          رفع مستند جديد للطالب
+        </h3>
+
+        <form onSubmit={handleUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">اسم المستند *</label>
+              <input
+                type="text"
+                value={docName}
+                onChange={(e) => setDocName(e.target.value)}
+                placeholder="مثال: شهادة الميلاد / الهوية الوطنية"
+                className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">الملف *</label>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                className="w-full text-xs text-slate-400 file:mr-0 file:ml-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-medium file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-rose-400 text-xs flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {error}
+            </p>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={isUploading || !file}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-medium transition-all shadow-md shadow-primary-600/20 disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              {isUploading ? 'جاري الرفع...' : 'رفع المستند'}
+            </button>
+          </div>
+        </form>
       </div>
 
-      {/* Documents List */}
-      <div className="flex flex-col gap-2.5">
+      {/* قائمة المستندات المرفوعة */}
+      <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 backdrop-blur-sm space-y-4">
+        <h3 className="text-base font-semibold text-slate-100 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-primary-400" />
+          المستندات المحفوظة ({documents.length})
+        </h3>
+
         {documents.length === 0 ? (
-          <div className="text-center py-8 text-slate-400 text-sm">
-            {t('noDocuments') || 'لا توجد مستندات مرفقة لهذا الطالب'}
+          <div className="text-center py-8 text-slate-400 border border-dashed border-slate-700/60 rounded-xl">
+            <File className="w-10 h-10 text-slate-500 mx-auto mb-2 opacity-50" />
+            <p className="text-xs">لا توجد مستندات مرفوعة لهذا الطالب حتى الآن</p>
           </div>
         ) : (
-          documents.map((doc) => (
-            <div 
-              key={doc.id} 
-              className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-3"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/5">
-                  {getFileIcon(doc.file_type)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {documents.map((doc) => (
+              <div 
+                key={doc.id}
+                className="flex items-center justify-between p-3.5 bg-slate-900/60 border border-slate-700/50 rounded-xl hover:border-slate-600 transition-colors"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="p-2 bg-slate-800 rounded-lg text-primary-400 shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="truncate">
+                    <h4 className="text-xs font-semibold text-slate-200 truncate">{doc.title}</h4>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      {new Date(doc.created_at || Date.now()).toLocaleDateString('ar-EG')}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold text-white">{doc.title || doc.file_name}</span>
-                  <span className="text-[11px] text-slate-400">
-                    {doc.file_size ? `${doc.file_size}` : ''} 
-                    {doc.created_at && ` • ${new Date(doc.created_at).toLocaleDateString()}`}
-                  </span>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  {doc.url && (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 text-slate-400 hover:text-primary-400 hover:bg-slate-800 rounded-lg transition-colors"
+                      title="عرض/تحميل"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                  {onDeleteDocument && (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteDocument(doc.id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                      title="حذف"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1.5">
-                {onView && (
-                  <button 
-                    type="button"
-                    onClick={() => onView(doc)}
-                    className="p-1.5 rounded-lg bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
-                    title={t('preview') || 'معاينة'}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                )}
-                
-                {doc.file_url && (
-                  <a 
-                    href={doc.file_url} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="p-1.5 rounded-lg bg-white/5 text-emerald-400 hover:bg-white/10 transition-colors"
-                    title={t('download') || 'تحميل'}
-                  >
-                    <Download className="w-4 h-4" />
-                  </a>
-                )}
-
-                {onDelete && (
-                  <button 
-                    type="button"
-                    onClick={() => onDelete(doc.id)}
-                    className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
-                    title={t('delete') || 'حذف'}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>
   );
-}
+};
+
+export default StudentDocuments;
