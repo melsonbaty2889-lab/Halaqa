@@ -50,8 +50,8 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
       ]
     },
     {
-      id: 'academic-hub',
-      title: isRtl ? 'الشؤون التعليمية والتقييم' : 'Academic & Evaluation',
+      id: 'people-halaqas',
+      title: isRtl ? 'الحلقات والأفراد' : 'Halaqas & Directory',
       items: [
         { 
           id: 'halaqas', 
@@ -76,7 +76,13 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           label: isRtl ? 'الكادر التعليمي والإداري' : 'Teachers & Staff', 
           icon: Users, 
           roles: ['admin'] 
-        },
+        }
+      ]
+    },
+    {
+      id: 'academic-evaluation',
+      title: isRtl ? 'المناهج والتقييم' : 'Curricula & Progress',
+      items: [
         { 
           id: 'curricula', 
           label: isRtl ? 'المناهج والعلوم الشرعية' : 'Curricula & Islamic Studies', 
