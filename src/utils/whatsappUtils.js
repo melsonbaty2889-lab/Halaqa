@@ -1,51 +1,39 @@
-// src/utils/whatsappUtils.js
+/**
+ * مكتبة التواصل وإرسال التقارير عبر واتساب
+ * تطبيق سمارت حلقة (Smart Halaqa)
+ */
+
+import { formatName, formatPhoneNumber } from './formatters';
 
 /**
- * دالة مساعدة لاستخراج الاسم بنص صريح مجرد من أطر JSON
+ * فتح رابط الواتساب بأمان
  */
-const formatName = (nameData, isRtl) => {
-  if (!nameData) return '';
-  if (typeof nameData === 'string') return nameData;
-  if (typeof nameData === 'object') {
-    return isRtl 
-      ? (nameData.ar || nameData.en || nameData.full_name || Object.values(nameData)[0] || '')
-      : (nameData.en || nameData.ar || nameData.full_name || Object.values(nameData)[0] || '');
-  }
-  return String(nameData);
-};
-
-/**
- * دالة لتنسيق رقم الهاتف وتنظيفه مع إضافة الرمز الدولي الافتراضي إذا لزم الأمر
- */
-const formatPhoneNumber = (phone) => {
-  if (!phone) return '';
-  let clean = String(phone).replace(/\D/g, '');
+const openWhatsAppLink = (phone, text) => {
+  const cleanPhone = formatPhoneNumber(phone);
+  const encodedText = encodeURIComponent(text);
+  const url = `https://wa.me/${cleanPhone}?text=${encodedText}`;
   
-  // إذا كان الرقم مصرياً يبدأ بـ 01
-  if (clean.startsWith('01') && clean.length === 11) {
-    clean = '2' + clean;
-  }
-  return clean;
+  const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+  if (newWindow) newWindow.opener = null;
 };
 
 /**
- * إنشاء وإرسال تقرير الحضور والإنتاجية اليومية للواتساب
+ * 1. إرسال تقرير الحضور والإنتاجية اليومية
  */
 export const sendWhatsAppAttendanceReport = (student, record = {}, selectedDate, isRtl = true) => {
-  const parentPhone = student.parent_phone || student.phone;
+  const parentPhone = student?.parent_phone || student?.phone;
   
   if (!parentPhone) {
-    alert(isRtl ? "لا يوجد رقم هاتف مسجل لولي الأمر!" : "No phone number registered for parent!");
-    return;
+    return { success: false, reason: 'NO_PHONE' };
   }
 
   const cleanPhone = formatPhoneNumber(parentPhone);
   if (!cleanPhone || cleanPhone.length < 8) {
-    alert(isRtl ? "رقم الهاتف المسجل غير صالح!" : "Registered phone number is invalid!");
-    return;
+    return { success: false, reason: 'INVALID_PHONE' };
   }
 
-  const studentName = formatName(student.name, isRtl) || (isRtl ? 'الطالب' : 'Student');
+  const lang = isRtl ? 'ar' : 'en';
+  const studentName = formatName(student?.name, lang) || (isRtl ? 'الطالب' : 'Student');
   const currentStatus = record.status || 'present';
 
   const statusMap = isRtl ? {
@@ -93,5 +81,6 @@ ${isPresent ? `📖 New Memorization: ${record.new_memorization || 'Not specifie
 
 Thank you for your cooperation and support 🌿`;
 
-  window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+  openWhatsAppLink(parentPhone, text);
+  return { success: true };
 };
