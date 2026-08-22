@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { X, UserPlus, Loader2, Award, Globe, DollarSign } from 'lucide-react';
+import { X, UserPlus, Loader2, Award, DollarSign } from 'lucide-react';
 import { C } from '@/theme/colors';
 import { Btn, Input } from '@/components/UI/UI';
 
@@ -10,13 +10,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     email: '',
     phone: '',
     role: 'teacher',
-    title: 'شيخ / معلم',
+    title: 'معلّم / مقرئ',
+    isTeaching: true,
     country: 'EG',
-    timezone: 'UTC+02:00',
+    timezone: 'Africa/Cairo',
     ijazat: [],
-    compensationType: 'volunteer', // volunteer, hourly, monthly
+    compensationType: 'volunteer',
     hourlyRate: '',
-    currency: 'USD'
+    currency: 'EGP'
   });
 
   const [loading, setLoading] = useState(false);
@@ -24,14 +25,11 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
   if (!isOpen) return null;
 
+  // المسميات المبسطة
   const titlesList = [
-    'شيخ / مقرئ',
-    'محفظ / معلّم',
-    'شيخة / معلّمة',
-    'شيخ المقارئ',
-    'Ustaz / Ustazah',
-    'Quran Instructor',
-    'مشرف تربوي'
+    'معلّم / مقرئ',
+    'مشرف تعليمي',
+    'مدير أكاديمية'
   ];
 
   const ijazatOptions = [
@@ -41,7 +39,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     'الدوري عن أبي عمرو',
     'القراءات العشر الصغرى',
     'القراءات العشر الكبرى',
-    'إجازة في المتون الجزرية/الأطفال'
+    'إجازة المتون'
   ];
 
   const handleIjazatChange = (ijaza) => {
@@ -56,7 +54,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setErrorMsg('يرجى إدخال اسم المعلم');
+      setErrorMsg('يرجى إدخال اسم الكادر');
       return;
     }
 
@@ -64,28 +62,47 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     setErrorMsg('');
 
     try {
-      const { error } = await supabase
+      // 1. إضافة الكادر في جدول المعلمين
+      const { data: teacherData, error: teacherError } = await supabase
         .from('teachers')
         .insert([
           {
             name: formData.name.trim(),
             email: formData.email.trim() || null,
             phone: formData.phone.trim() || null,
-            role: formData.role,
             title: formData.title,
+            is_teaching: formData.isTeaching,
             country: formData.country,
             timezone: formData.timezone,
-            ijazat: formData.ijazat,
-            compensation_type: formData.compensationType,
-            hourly_rate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : 0,
-            currency: formData.currency,
-            academy_id: academyId || null
+            ijazas: formData.ijazat,
+            employment_type: formData.compensationType,
+            hourly_rate: formData.compensationType === 'hourly' ? parseFloat(formData.hourlyRate) || 0 : 0,
+            monthly_salary: formData.compensationType === 'monthly' ? parseFloat(formData.hourlyRate) || 0 : 0,
+            salary_system: formData.compensationType
           }
-        ]);
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (teacherError) throw teacherError;
+
+      // 2. ربط المعلم بالأكاديمية الحالية في جدول academy_teachers
+      if (teacherData && academyId) {
+        const { error: relError } = await supabase
+          .from('academy_teachers')
+          .insert([
+            {
+              academy_id: academyId,
+              teacher_id: teacherData.id,
+              is_active: true
+            }
+          ]);
+
+        if (relError) throw relError;
+      }
 
       if (onSuccess) onSuccess();
+      onClose();
     } catch (err) {
       console.error("🚨 خطأ أثناء إضافة الكادر:", err);
       setErrorMsg(err.message || "حدث خطأ أثناء حفظ البيانات");
@@ -102,7 +119,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
       >
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: C.primary }}>
-            <UserPlus className="w-5 h-5" /> إضافة كادر تعليمي / مقرئ جديد
+            <UserPlus className="w-5 h-5" /> إضافة كادر تعليمي / إداري
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />
@@ -123,13 +140,13 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="الاسم الكامل"
+                placeholder="اسم المعلم أو الإداري"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">المسمى/المرتبة العلمية</label>
+              <label className="block text-xs text-slate-300 mb-1">المسمى الوظيفي</label>
               <select 
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -164,15 +181,15 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">الدور النظامي</label>
+              <label className="block text-xs text-slate-300 mb-1">الصلاحية للنظام</label>
               <select 
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
               >
-                <option value="teacher">مقرئ / معلم حلقات</option>
+                <option value="teacher">معلّم (حلقة)</option>
+                <option value="admin">مدير أكاديمية (إدارة + تدريس)</option>
                 <option value="supervisor">مشرف تعليمي</option>
-                <option value="admin">مدير أكاديمية</option>
               </select>
             </div>
 
@@ -183,40 +200,55 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
                 onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                 className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
               >
-                <option value="UTC+00:00">جرينتش (UTC+0)</option>
-                <option value="UTC+01:00">المغرب / أوروبا الوسطى (UTC+1)</option>
-                <option value="UTC+02:00">مصر / فلسطين / أوروبا الشرقية (UTC+2)</option>
-                <option value="UTC+03:00">السعودية / الخليج / تركيا (UTC+3)</option>
-                <option value="UTC+07:00">إندونيسيا / جنوب شرق آسيا (UTC+7)</option>
-                <option value="UTC-05:00">شرق أمريكا / كندا (UTC-5)</option>
+                <option value="Africa/Cairo">مصر (UTC+2)</option>
+                <option value="Asia/Riyadh">السعودية / الخليج (UTC+3)</option>
+                <option value="UTC">جرينتش (UTC+0)</option>
+                <option value="Africa/Casablanca">المغرب العربي (UTC+1)</option>
+                <option value="America/New_York">نيويورك (UTC-5)</option>
               </select>
             </div>
           </div>
 
-          {/* الإجازات القرآنية */}
-          <div className="pt-2">
-            <label className="block text-xs font-bold text-amber-400 mb-2 flex items-center gap-1.5">
-              <Award className="w-4 h-4" /> الإجازات والروايات المعتمدة
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white/[0.02] p-3 rounded-xl border border-white/5">
-              {ijazatOptions.map((ijaza, idx) => (
-                <label key={idx} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white">
-                  <input 
-                    type="checkbox"
-                    checked={formData.ijazat.includes(ijaza)}
-                    onChange={() => handleIjazatChange(ijaza)}
-                    className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0"
-                  />
-                  <span>{ijaza}</span>
-                </label>
-              ))}
+          {/* خيار التدريس الفعلي */}
+          <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-200">إتاحة التدريس المباشر للحلقات</p>
+              <p className="text-[10px] text-slate-400">تفعيل هذا الخيار يسمح ببيان الاسم في قائمة معلمي الحلقات</p>
             </div>
+            <input 
+              type="checkbox"
+              checked={formData.isTeaching}
+              onChange={(e) => setFormData({ ...formData, isTeaching: e.target.checked })}
+              className="w-4 h-4 rounded border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+            />
           </div>
+
+          {/* الإجازات القرآنية */}
+          {formData.isTeaching && (
+            <div className="pt-2">
+              <label className="block text-xs font-bold text-amber-400 mb-2 flex items-center gap-1.5">
+                <Award className="w-4 h-4" /> الإجازات القرآنية
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                {ijazatOptions.map((ijaza, idx) => (
+                  <label key={idx} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white">
+                    <input 
+                      type="checkbox"
+                      checked={formData.ijazat.includes(ijaza)}
+                      onChange={() => handleIjazatChange(ijaza)}
+                      className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0"
+                    />
+                    <span>{ijaza}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* النظام المالي */}
           <div className="pt-2">
             <label className="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
-              <DollarSign className="w-4 h-4 text-emerald-400" /> نظام التعويض / التعاقد
+              <DollarSign className="w-4 h-4 text-emerald-400" /> التعاقد والماليات
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <select 
@@ -226,7 +258,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
               >
                 <option value="volunteer">احتساب / تطوع</option>
                 <option value="hourly">بالساعة</option>
-                <option value="monthly">راتب شهري ثابت</option>
+                <option value="monthly">راتب شهري</option>
               </select>
 
               {formData.compensationType !== 'volunteer' && (
@@ -235,18 +267,17 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
                     type="number"
                     value={formData.hourlyRate}
                     onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                    placeholder="القيمة"
+                    placeholder="المبلغ"
                   />
                   <select 
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                     className="p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
                   >
-                    <option value="USD">USD ($)</option>
-                    <option value="SAR">SAR (ر.س)</option>
                     <option value="EGP">EGP (ج.م)</option>
+                    <option value="SAR">SAR (ر.س)</option>
+                    <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
-                    <option value="MAD">MAD (د.م)</option>
                   </select>
                 </>
               )}
@@ -255,7 +286,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
           <div className="flex gap-3 pt-4 border-t border-white/10">
             <Btn type="submit" disabled={loading} variant="primary" className="flex-1 flex items-center justify-center gap-2">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ الكادر التعليمي'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ البيانات'}
             </Btn>
             <Btn type="button" onClick={onClose} variant="secondary" className="flex-1">
               إلغاء
