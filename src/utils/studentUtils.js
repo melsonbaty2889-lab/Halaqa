@@ -1,90 +1,85 @@
-import React from 'react';
-import { FaUserGraduate } from 'react-icons/fa';
+/**
+ * أدوات مساعدة خاصة ببيانات الطلاب
+ * تطبيق سمارت حلقة (Smart Halaqa)
+ */
 
 /**
- * حساب عمر الطالب استناداً إلى تاريخ الميلاد
+ * دالة مساعدة لتبسيط استخراج النصوص المترجمة
  */
-export const calculateAge = (dateOfBirth) => {
-  if (!dateOfBirth) return null;
-  const today = new Date();
-  const birth = new Date(dateOfBirth);
-  if (isNaN(birth.getTime())) return null;
-  
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
+const getText = (t, key, defaultAr, defaultEn, lang = 'ar') => {
+  if (t && key) {
+    const translated = t(key);
+    if (translated && translated !== key) return translated;
   }
-  return age;
+  return lang.startsWith('ar') ? defaultAr : defaultEn;
 };
 
 /**
- * تحديد ألوان ونصوص شارة حالة الطالب
+ * 1. حساب عمر الطالب استناداً إلى تاريخ الميلاد
  */
-export const getStatusStyle = (status, t = null, isRtl = true) => {
+export const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return null;
+  const birth = new Date(dateOfBirth);
+  if (isNaN(birth.getTime())) return null;
+  
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age > 0 ? age : null;
+};
+
+/**
+ * 2. تحديد ألوان ونصوص شارة حالة الطالب
+ */
+export const getStatusStyle = (status, t = null, lang = 'ar') => {
   switch (status) {
     case 'paused':
       return { 
         bg: 'rgba(245, 158, 11, 0.15)', 
         text: '#F59E0B', 
-        label: t ? (t('status_paused') || (isRtl ? 'موقوف مؤقتاً' : 'Paused')) : (isRtl ? 'موقوف مؤقتاً' : 'Paused') 
+        label: getText(t, 'status_paused', 'موقوف مؤقتاً', 'Paused', lang)
       };
     case 'inactive':
       return { 
         bg: 'rgba(239, 68, 68, 0.15)', 
         text: '#EF4444', 
-        label: t ? (t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive')) : (isRtl ? 'غير نشط' : 'Inactive') 
+        label: getText(t, 'status_inactive', 'غير نشط', 'Inactive', lang)
       };
     default:
       return { 
         bg: 'rgba(16, 185, 129, 0.15)', 
         text: '#10B981', 
-        label: t ? (t('status_active') || (isRtl ? 'نشط' : 'Active')) : (isRtl ? 'نشط' : 'Active') 
+        label: getText(t, 'status_active', 'نشط', 'Active', lang)
       };
   }
 };
 
 /**
- * تنقية رقم الهاتف وتجهيز رابط الواتساب مباشر
+ * 3. خيارات الحالات الموحدة للقوائم المنسدلة
  */
-export const getWhatsAppLink = (phone) => {
-  if (!phone) return null;
-  const cleanPhone = String(phone).replace(/\D/g, '');
-  return cleanPhone ? `https://wa.me/${cleanPhone}` : null;
-};
-
-/**
- * اختيار أيقونة / إيموجي الطالب بحسب الجنس وسياسة الخصوصية
- */
-export const renderStudentAvatar = (gender, genderPolicy = 'mixed') => {
-  if (genderPolicy === 'separated' && gender === 'female') {
-    return <FaUserGraduate style={{ color: '#EC4899', fontSize: '20px' }} />;
-  }
-  return gender === 'female' ? '🧕' : '👨‍🎓';
-};
-
-/**
- * خيارات الحالات الموحدة للقوائم المنسدلة
- */
-export const getStatusOptions = (t = null, isRtl = true) => [
-  { value: "active", label: t ? (t('status_active') || (isRtl ? 'نشط' : 'Active')) : (isRtl ? 'نشط' : 'Active') },
-  { value: "paused", label: t ? (t('status_paused') || (isRtl ? 'موقوف' : 'Paused')) : (isRtl ? 'موقوف' : 'Paused') },
-  { value: "inactive", label: t ? (t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive')) : (isRtl ? 'غير نشط' : 'Inactive') }
+export const getStatusOptions = (t = null, lang = 'ar') => [
+  { value: "active", label: getText(t, 'status_active', 'نشط', 'Active', lang) },
+  { value: "paused", label: getText(t, 'status_paused', 'موقوف', 'Paused', lang) },
+  { value: "inactive", label: getText(t, 'status_inactive', 'غير نشط', 'Inactive', lang) }
 ];
 
 /**
- * خيارات الجنس الموحدة
+ * 4. خيارات الجنس الموحدة
  */
-export const getGenderOptions = (t = null, isRtl = true) => [
-  { value: "male", label: t ? (t('gender_male') || (isRtl ? 'ذكر' : 'Male')) : (isRtl ? 'ذكر' : 'Male') },
-  { value: "female", label: t ? (t('gender_female') || (isRtl ? 'أنثى' : 'Female')) : (isRtl ? 'أنثى' : 'Female') }
+export const getGenderOptions = (t = null, lang = 'ar') => [
+  { value: "male", label: getText(t, 'gender_male', 'ذكر', 'Male', lang) },
+  { value: "female", label: getText(t, 'gender_female', 'أنثى', 'Female', lang) }
 ];
 
 /**
- * خيارات أنظمة الاشتراك الموحدة
+ * 5. خيارات أنظمة الاشتراك الموحدة
  */
-export const getPaymentOptions = (t = null, isRtl = true) => [
-  { value: "monthly", label: t ? (t('plan_monthly') || (isRtl ? 'اشتراك شهري' : 'Monthly Subscription')) : (isRtl ? 'اشتراك شهري' : 'Monthly Subscription') },
-  { value: "per_hour", label: t ? (t('plan_per_hour') || (isRtl ? 'بالساعة' : 'Per Hour')) : (isRtl ? 'بالساعة' : 'Per Hour') },
-  { value: "free", label: t ? (t('plan_free') || (isRtl ? 'مجاني / منحة' : 'Free / Scholarship')) : (isRtl ? 'مجاني / منحة' : 'Free / Scholarship') }
+export const getPaymentOptions = (t = null, lang = 'ar') => [
+  { value: "monthly", label: getText(t, 'plan_monthly', 'اشتراك شهري', 'Monthly Subscription', lang) },
+  { value: "per_hour", label: getText(t, 'plan_per_hour', 'بالساعة', 'Per Hour', lang) },
+  { value: "free", label: getText(t, 'plan_free', 'مجاني / منحة', 'Free / Scholarship', lang) }
 ];
