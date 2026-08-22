@@ -1,13 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
-// ✅ استدعاء مباشر من مجلد lib
-import { supabase } from '@/lib/supabase';
-
-// ✅ استدعاء مباشر من مجلدي utils و schemas (حسب موقع المجلدات الحالي داخل src)
-import { handleAuthError } from '@/utils/errorHandler';
-import { loginSchema, validateFormData } from '@/schemas/auth';
+import { useLoginForm } from '@/hooks/useLoginForm';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { 
   Mail, 
   Lock, 
@@ -20,370 +13,83 @@ import {
   AlertTriangle 
 } from 'lucide-react';
 
-// 🌟 شعار منصة الحلقة الذكية الرسمي (طابق تماماً لصفحة التسجيل)
-const SmartHalaqaProLogo = ({ size = 52 }) => (
-  <div style={{
-    width: `${size}px`,
-    height: `${size}px`,
-    borderRadius: '14px',
-    background: 'radial-gradient(circle at 30% 20%, #0f766e 0%, #042f2e 100%)',
-    border: '1px solid rgba(45, 212, 191, 0.35)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 8px 20px rgba(15, 118, 110, 0.35)',
-    flexShrink: 0
-  }}>
-    <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="goldGradLogin" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="50%" stopColor="#f59e0b" />
-          <stop offset="100%" stopColor="#b45309" />
-        </linearGradient>
-        <linearGradient id="emeraldGradLogin" x1="8" y1="12" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#10b981" />
-          <stop offset="100%" stopColor="#047857" />
-        </linearGradient>
-      </defs>
-      <circle cx="16" cy="16" r="12" stroke="url(#goldGradLogin)" strokeWidth="1.8" />
-      <path d="M16 12C13.5 10.5 10 10.5 7.5 11.5V21C10 20 13.5 20 16 21.5V12Z" fill="url(#emeraldGradLogin)" stroke="#fef08a" strokeWidth="0.8" />
-      <path d="M16 12C18.5 10.5 22 10.5 24.5 11.5V21C22 20 18.5 20 16 21.5V12Z" fill="url(#emeraldGradLogin)" stroke="#fef08a" strokeWidth="0.8" />
-    </svg>
-  </div>
-);
-
 export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginSuccess }) {
-  const { i18n } = useTranslation();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { t } = useTranslation();
   
-  const isRtl = i18n?.language === 'ar';
+  const {
+    isRtl,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    rememberMe,
+    setRememberMe,
+    loading,
+    redirecting,
+    capsLockOn,
+    cooldown,
+    fieldErrors,
+    setFieldErrors,
+    status,
+    showResend,
+    resendLoading,
+    toggleLanguage,
+    handleKeyUp,
+    handleEmailLogin,
+    handleResendEmail,
+    handleGoogleLogin,
+  } = useLoginForm(onLoginSuccess);
 
-  // الحالات الأساسية (States)
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  
-  // حالات مؤشرات UX المتقدمة
-  const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
-  const [capsLockOn, setCapsLockOn] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-
-  // Zod & Status Management
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [status, setStatus] = useState({ type: null, msg: '' });
-  const [showResend, setShowResend] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-
-  // 1. التعبئة التلقائية للبريد عند التحويل من صفحة التسجيل
-  useEffect(() => {
-    if (location.state?.email) {
-      setEmail(location.state.email);
-    }
-  }, [location.state]);
-
-  // 2. إدارة العداد التنازلي لمنع تكرار طلب التفعيل (Cooldown Timer)
-  useEffect(() => {
-    let timer;
-    if (cooldown > 0) {
-      timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [cooldown]);
-
-  // التبديل بين اللغات
-  const toggleLanguage = () => {
-    const nextLang = isRtl ? 'en' : 'ar';
-    if (i18n?.changeLanguage) {
-      i18n.changeLanguage(nextLang);
-    }
-  };
-
-  // فحص مفتاح Caps Lock
-  const handleKeyUp = (e) => {
-    if (e.getModifierState) {
-      setCapsLockOn(e.getModifierState('CapsLock'));
-    }
-  };
-
-  // 3. عملية تسجيل الدخول الرئيسية
-  const handleEmailLogin = async (e) => {
-    e.preventDefault();
-    setStatus({ type: null, msg: '' });
-    setFieldErrors({});
-    setShowResend(false);
-
-    // التحقق المسبق عبر Zod[span_4](start_span)[span_4](end_span)
-    const validationResult = validateFormData(
-      { email: email.trim(), password: password.trim() },
-      loginSchema
-    );
-
-    if (!validationResult.valid) {
-      setFieldErrors(validationResult.errors);
-      setStatus({
-        type: 'error',
-        msg: isRtl ? 'يرجى تصحيح الأخطاء الموضحة أدناه.' : 'Please correct the highlighted errors.'
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // تسجيل الدخول في Supabase[span_5](start_span)[span_5](end_span)
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: validationResult.data.email,
-        password: validationResult.data.password,
-      });
-
-      if (authError) {
-        if (authError.message === 'Email not confirmed') {
-          setShowResend(true);
-        }
-        throw authError;
-      }
-
-      const user = authData.user;
-      setRedirecting(true); // تفعيل شاشة التوجيه السلسة
-
-      // تحديث حالة الاتصال وآخر تسجيل دخول[span_6](start_span)[span_6](end_span)
-      await supabase
-        .from('profiles')
-        .update({ 
-          last_login_at: new Date().toISOString(),
-          is_online: true 
-        })
-        .eq('id', user.id);
-
-      // جلب بيانات البروفايل والأكاديمية لتحديد الصلاحيات[span_7](start_span)[span_7](end_span)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role, academy_id, is_activated, is_deleted')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      if (profile?.is_deleted) {
-        await supabase.auth.signOut();
-        setRedirecting(false);
-        throw new Error(isRtl ? 'هذا الحساب معطل أو تم حذفه.' : 'This account is deactivated or deleted.');
-      }
-
-      setStatus({
-        type: 'success',
-        msg: isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...' : '✅ Logged in successfully! Redirecting...'
-      });
-
-      // التوجيه الذكي حسب الدور (Role-based Navigation)[span_8](start_span)[span_8](end_span)
-      setTimeout(() => {
-        if (onLoginSuccess) {
-          onLoginSuccess({ user, profile });
-        } else {
-          const role = profile?.role?.toLowerCase().trim() || 'student';
-          const routeMap = {
-            super_admin: '/admin-dashboard',
-            admin: '/dashboard',
-            academy_admin: '/dashboard',
-            teacher: '/teacher-dashboard',
-            student: '/student-dashboard',
-            parent: '/parent-dashboard',
-          };
-          navigate(routeMap[role] || '/dashboard');
-        }
-      }, 500);
-
-    } catch (err) {
-      console.error('Login Error:', err);
-      const userFriendlyMsg = handleAuthError(err, isRtl);
-      setStatus({
-        type: 'error',
-        msg: userFriendlyMsg
-      });
-      setRedirecting(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 4. إعادة إرسال رابط التفعيل مع دعم Cooldown[span_9](start_span)[span_9](end_span)
-  const handleResendEmail = async () => {
-    if (!email.trim() || cooldown > 0) return;
-
-    setResendLoading(true);
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}?lang=${i18n?.language || 'ar'}`
-        }
-      });
-
-      if (error) throw error;
-
-      setStatus({
-        type: 'success',
-        msg: isRtl 
-          ? '✅ تم إعادة إرسال رابط التفعيل! تفقد البريد الوارد أو المجلد غير المرغوب به (Spam).' 
-          : '✅ Activation link sent! Check your inbox or spam folder.'
-      });
-      setShowResend(false);
-      setCooldown(60); // قفل الإرسال لمدة 60 ثانية
-
-    } catch (error) {
-      const userFriendlyMsg = handleAuthError(error, isRtl);
-      setStatus({ type: 'error', msg: userFriendlyMsg });
-    } finally {
-      setResendLoading(false);
-    }
-  };
-
-  // 5. التسجيل عبر Google OAuth[span_10](start_span)[span_10](end_span)[span_11](start_span)[span_11](end_span)
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
-    } catch (err) {
-      const userFriendlyMsg = handleAuthError(err, isRtl);
-      setStatus({ type: 'error', msg: userFriendlyMsg });
-      setLoading(false);
-    }
-  };
+  const inputClasses = `
+    w-full py-3.5 px-10.5 rounded-lg border border-[#223147] bg-[#090F16] text-white text-sm outline-none
+    transition-all duration-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20
+    [&&:-webkit-autofill]:[text-fill-color:white] [&&:-webkit-autofill]:[box-shadow:0_0_0_1000px_#090F16_inset]
+  `;
 
   return (
     <div 
-      style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)', 
-        padding: '60px 20px 40px 20px', 
-        fontFamily: "'Cairo', sans-serif", 
-        position: 'relative',
-        boxSizing: 'border-box'
-      }} 
+      className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_50%_25%,rgba(15,118,110,0.18)_0%,#070C12_70%)] pt-15 pb-10 px-5 font-['Cairo',sans-serif] relative box-border"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      
-      {/* تنسيقات الإدخال والتعبئة التلقائية المطابقة لـ SignUpPage */}
-      <style>{`
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px #090F16 inset !important;
-          transition: background-color 5000s ease-in-out 0s;
-        }
-        .form-input-field {
-          width: 100%;
-          padding: 14px 42px;
-          border-radius: 10px;
-          border: 1px solid #223147;
-          background: #090F16;
-          color: #ffffff;
-          font-size: 14px;
-          outline: none;
-          box-sizing: border-box;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .form-input-field:focus {
-          border-color: #D97706 !important;
-          box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important;
-        }
-        .form-input-error {
-          border-color: #EF4444 !important;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .spin-icon {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
-
-      {/* زر اللغة العائم الثابت */}
+      {/* زر تغيير اللغة */}
       <button
         type="button"
         onClick={toggleLanguage}
-        style={{
-          position: 'fixed',
-          top: '20px',
-          [isRtl ? 'left' : 'right']: '20px',
-          background: '#0F172A',
-          border: '1px solid #1E293B',
-          color: '#CBD5E1',
-          padding: '8px 14px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          zIndex: 50
-        }}
+        className={`fixed top-5 ${isRtl ? 'left-5' : 'right-5'} bg-slate-900 border border-slate-800 text-slate-300 py-2 px-3.5 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg z-50 hover:bg-slate-800 transition-colors`}
       >
-        <Globe size={14} color="#D97706" />
+        <Globe size={14} className="text-amber-600" />
         <span>{isRtl ? 'English' : 'العربية'}</span>
       </button>
 
-      {/* الكارت الرئيسي */}
-      <div style={{ width: '100%', maxWidth: '420px', background: '#0F172A', padding: '35px 25px 30px 25px', borderRadius: '20px', border: '1px solid #1E293B', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', margin: 'auto 0', relative: 'relative' }}>
+      {/* بطاقة تسجيل الدخول */}
+      <div className="w-full max-w-[420px] bg-slate-900 p-8 sm:px-[25px] sm:pt-[35px] sm:pb-[30px] rounded-2xl border border-slate-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] my-auto relative">
         
-        {/* الشعار والهوية البصرية[span_12](start_span)[span_12](end_span) */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+        {/* الشعار والعنوان */}
+        <div className="flex flex-col items-center mb-5">
           <SmartHalaqaProLogo size={52} />
-          <h1 style={{ color: '#F8FAFC', fontSize: '22px', fontWeight: 'bold', margin: '12px 0 4px 0' }}>
+          <h1 className="text-slate-50 text-2xl font-bold mt-3 mb-1">
             {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
           </h1>
-          <p style={{ color: '#D97706', fontSize: '11px', fontWeight: '700', letterSpacing: '0.8px', margin: 0, textTransform: 'uppercase' }}>
+          <p className="text-amber-600 text-[11px] font-bold tracking-[0.8px] uppercase m-0">
             {isRtl ? 'منصة إدارة المقارئ والأكاديميات' : 'ACADEMY MANAGEMENT PLATFORM'}
           </p>
         </div>
 
-        <h2 style={{ color: '#E2E8F0', fontSize: '18px', textAlign: 'center', marginBottom: '6px', fontWeight: '600' }}>
+        <h2 className="text-slate-200 text-lg text-center mb-1.5 font-semibold">
           {isRtl ? 'تسجيل الدخول' : 'Sign In'}
         </h2>
-        <p style={{ color: '#94A3B8', fontSize: '13px', textAlign: 'center', marginBottom: '22px' }}>
+        <p className="text-slate-400 text-xs sm:text-sm text-center mb-5.5">
           {isRtl ? 'أهلاً بعودتك! ادخل لمتابعة إدارة حلقاتك التعليمية' : 'Welcome back! Log in to access your academy'}
         </p>
 
-        {/* التسجيل عبر Google السريع[span_13](start_span)[span_13](end_span)[span_14](start_span)[span_14](end_span) */}
+        {/* التسجيل عبر Google */}
         <button
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading || redirecting}
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '10px',
-            border: '1px solid #334155',
-            background: '#1E293B',
-            color: '#F8FAFC',
-            fontSize: '14px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            marginBottom: '18px',
-            transition: 'all 0.2s'
-          }}
+          className="w-full p-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-50 text-sm font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4.5 transition-all hover:bg-slate-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -394,52 +100,31 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           {isRtl ? 'المتابعة بواسطة Google' : 'Continue with Google'}
         </button>
 
-        {/* فاصل البريد الإلكتروني[span_15](start_span)[span_15](end_span) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-          <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
-          <span style={{ color: '#64748B', fontSize: '12px' }}>{isRtl ? 'أو عبر البريد' : 'or via email'}</span>
-          <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
+        {/* فاصل */}
+        <div className="flex items-center gap-2.5 mb-4.5">
+          <div className="flex-1 h-px bg-slate-700"></div>
+          <span className="text-slate-500 text-xs">{isRtl ? 'أو عبر البريد' : 'or via email'}</span>
+          <div className="flex-1 h-px bg-slate-700"></div>
         </div>
 
-        {/* تنبيه الأخطاء أو النجاح التفاعلي[span_16](start_span)[span_16](end_span) */}
+        {/* التنبيهات */}
         {status.msg && (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: '12px',
-            marginBottom: '18px',
-            fontSize: '13px',
-            lineHeight: '1.6',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            color: status.type === 'success' ? '#34D399' : '#F87171',
-            border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <div className={`p-3.5 rounded-xl mb-4.5 text-xs sm:text-sm leading-relaxed flex flex-col gap-2 ${
+            status.type === 'success' 
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
+              : 'bg-red-500/10 text-red-400 border border-red-500/25'
+          }`}>
+            <div className="flex items-center gap-2">
+              <AlertCircle size={18} className="shrink-0" />
               <div>{status.msg}</div>
             </div>
 
-            {/* زر إعادة الإرسال الذكي مع التهدئة[span_17](start_span)[span_17](end_span) */}
             {showResend && (
               <button
                 type="button"
                 onClick={handleResendEmail}
                 disabled={resendLoading || cooldown > 0}
-                style={{
-                  alignSelf: 'flex-start',
-                  marginTop: '4px',
-                  background: '#D97706',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: (resendLoading || cooldown > 0) ? 'not-allowed' : 'pointer',
-                  opacity: (resendLoading || cooldown > 0) ? 0.6 : 1
-                }}
+                className="self-start mt-1 bg-amber-600 hover:bg-amber-700 text-white border-none rounded-md px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {resendLoading 
                   ? (isRtl ? 'جاري الإرسال...' : 'Sending...') 
@@ -451,11 +136,11 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           </div>
         )}
 
-        {/* نموذج الدخول الرئيسي[span_18](start_span)[span_18](end_span) */}
-        <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* نموذج تسجيل الدخول */}
+        <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
           
-          {/* حقل البريد الإلكتروني[span_19](start_span)[span_19](end_span) */}
-          <div style={{ position: 'relative' }}>
+          {/* حقل البريد الإلكتروني */}
+          <div className="relative">
             <input 
               type="email"
               value={email}
@@ -465,18 +150,19 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               }}
               placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
               required
-              className={`form-input-field ${fieldErrors.email ? 'form-input-error' : ''}`}
+              className={`${inputClasses} ${fieldErrors.email ? '!border-red-500' : ''}`}
             />
-            <Mail size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: email ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
+            <Mail 
+              size={18} 
+              className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'right-3.5' : 'left-3.5'} transition-colors ${email ? 'text-amber-600' : 'text-slate-500'}`} 
+            />
             {fieldErrors.email && (
-              <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block', padding: '0 4px' }}>
-                {fieldErrors.email}
-              </span>
+              <span className="text-red-500 text-[11px] mt-1 block px-1">{fieldErrors.email}</span>
             )}
           </div>
 
-          {/* حقل كلمة المرور مع مؤشر Caps Lock[span_20](start_span)[span_20](end_span) */}
-          <div style={{ position: 'relative' }}>
+          {/* حقل كلمة المرور */}
+          <div className="relative">
             <input 
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -487,40 +173,41 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
               }}
               placeholder={isRtl ? 'كلمة المرور' : 'Password'}
               required
-              className={`form-input-field ${fieldErrors.password ? 'form-input-error' : ''}`}
+              className={`${inputClasses} ${fieldErrors.password ? '!border-red-500' : ''}`}
             />
-            <Lock size={18} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'right' : 'left']: '14px', color: password ? '#D97706' : '#64748B', transition: 'color 0.2s' }} />
+            <Lock 
+              size={18} 
+              className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'right-3.5' : 'left-3.5'} transition-colors ${password ? 'text-amber-600' : 'text-slate-500'}`} 
+            />
             
-            <span 
+            <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', [isRtl ? 'left' : 'right']: '14px', color: password ? '#D97706' : '#64748B', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+              className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3.5' : 'right-3.5'} bg-transparent border-none cursor-pointer flex items-center transition-colors ${password ? 'text-amber-600' : 'text-slate-500'}`}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
+            </button>
 
             {fieldErrors.password && (
-              <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block', padding: '0 4px' }}>
-                {fieldErrors.password}
-              </span>
+              <span className="text-red-500 text-[11px] mt-1 block px-1">{fieldErrors.password}</span>
             )}
 
-            {/* تنبيه Caps Lock التفاعلي */}
             {capsLockOn && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#F59E0B', fontSize: '11px', marginTop: '6px', padding: '0 4px' }}>
+              <div className="flex items-center gap-1 text-amber-500 text-[11px] mt-1.5 px-1">
                 <AlertTriangle size={13} />
                 <span>{isRtl ? 'مفتاح الحروف الكبيرة (Caps Lock) مفعل' : 'Caps Lock is ON'}</span>
               </div>
             )}
           </div>
 
-          {/* تذكرني + استعادة كلمة المرور المنسقة[span_21](start_span)[span_21](end_span) */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#94A3B8' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+          {/* تذكرني واستعادة كلمة السر */}
+          <div className="flex justify-between items-center text-xs sm:text-sm text-slate-400">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
               <input 
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                style={{ accentColor: '#D97706', width: '16px', height: '16px', cursor: 'pointer' }}
+                className="accent-amber-600 w-4 h-4 cursor-pointer"
               />
               <span>{isRtl ? 'تذكرني' : 'Remember me'}</span>
             </label>
@@ -528,43 +215,26 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
             <button 
               type="button"
               onClick={onForgotPassword}
-              style={{ background: 'none', border: 'none', color: '#F59E0B', cursor: 'pointer', font: 'inherit', fontSize: '13px' }}
-              className="hover:underline"
+              className="bg-transparent border-none text-amber-500 hover:underline cursor-pointer font-inherit text-xs sm:text-sm"
             >
               {isRtl ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
             </button>
           </div>
 
-          {/* زر تسجيل الدخول الرئيسي[span_22](start_span)[span_22](end_span) */}
+          {/* زر الإرسال */}
           <button 
             type="submit" 
             disabled={loading || redirecting}
-            style={{ 
-              padding: '14px', 
-              background: '#D97706', 
-              color: '#FFFFFF', 
-              border: 'none', 
-              borderRadius: '12px', 
-              fontWeight: 'bold', 
-              fontSize: '15px',
-              cursor: (loading || redirecting) ? 'not-allowed' : 'pointer', 
-              marginTop: '6px',
-              transition: 'background 0.2s ease',
-              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
+            className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-base rounded-xl transition-colors shadow-[0_4px_12px_rgba(217,119,6,0.25)] flex items-center justify-center gap-2 mt-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {redirecting ? (
               <>
-                <Loader2 size={18} className="spin-icon" />
+                <Loader2 size={18} className="animate-spin" />
                 <span>{isRtl ? 'جاري تجهيز لوحة التحكم...' : 'Preparing dashboard...'}</span>
               </>
             ) : loading ? (
               <>
-                <Loader2 size={18} className="spin-icon" />
+                <Loader2 size={18} className="animate-spin" />
                 <span>{isRtl ? 'جاري التحقق...' : 'Signing in...'}</span>
               </>
             ) : (
@@ -573,9 +243,9 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           </button>
         </form>
 
-        {/* شارة التشفير والأمان SSL 256-bit[span_23](start_span)[span_23](end_span) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#64748B', marginTop: '20px' }}>
-          <ShieldCheck size={14} color="#10B981" />
+        {/* شارة التشفير والأمان */}
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 mt-5">
+          <ShieldCheck size={14} className="text-emerald-500" />
           <span>
             {isRtl ? (
               <>بياناتك مشفرة ومحمية وفق معايير <span dir="ltr">256-bit</span></>
@@ -585,12 +255,16 @@ export default function LoginPage({ onSwitchToSignUp, onForgotPassword, onLoginS
           </span>
         </div>
 
-        {/* رابط التحويل لإنشاء حساب[span_24](start_span)[span_24](end_span)[span_25](start_span)[span_25](end_span) */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
+        {/* التحويل لإنشاء حساب */}
+        <div className="mt-5 text-center text-xs sm:text-sm text-slate-400">
           {isRtl ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
-          <span onClick={onSwitchToSignUp} style={{ color: '#F59E0B', cursor: 'pointer', fontWeight: 'bold' }}>
+          <button 
+            type="button"
+            onClick={onSwitchToSignUp} 
+            className="bg-transparent border-none text-amber-500 font-bold cursor-pointer hover:underline p-0"
+          >
             {isRtl ? 'إنشاء حساب جديد' : 'Create Account'}
-          </span>
+          </button>
         </div>
 
       </div>
