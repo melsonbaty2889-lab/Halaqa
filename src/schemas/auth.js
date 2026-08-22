@@ -17,13 +17,20 @@ export const loginSchema = z.object({
 
 /**
  * Sign up form validation schema
- * Includes password confirmation and stronger rules
+ * Includes full name, role, terms agreement, and password confirmation
  */
 export const signUpSchema = z.object({
+  fullName: z
+    .string()
+    .min(1, { message: 'الاسم الكامل مطلوب' })
+    .min(3, { message: 'الاسم يجب أن يكون 3 أحرف على الأقل' }),
   email: z
     .string()
     .min(1, { message: 'البريد الإلكتروني مطلوب' })
     .email({ message: 'البريد الإلكتروني غير صحيح' }),
+  role: z
+    .string()
+    .min(1, { message: 'يرجى تحديد نوع الحساب' }),
   password: z
     .string()
     .min(1, { message: 'كلمة المرور مطلوبة' })
@@ -33,6 +40,10 @@ export const signUpSchema = z.object({
   confirmPassword: z
     .string()
     .min(1, { message: 'تأكيد كلمة المرور مطلوب' }),
+  agreeTerms: z
+    .literal(true, {
+      errorMap: () => ({ message: 'يجب الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة' }),
+    }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'كلمات المرور غير متطابقة',
   path: ['confirmPassword'],
