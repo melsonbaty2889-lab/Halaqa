@@ -1,22 +1,20 @@
-/* src/components/Student/StudentProfile.jsx */
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// 🛠️ الخدمات والثوابت وأدوات الهوية
+// Services & Utilities
 import { supabase } from "@/lib/supabase";
-import colors from "@/theme/colors";
 import { COUNTRIES_LIST } from "@/constants/countries";
 import { getQuranProgress } from "@/utils/quranUtils";
 import { formatName } from "@/utils/formatters";
 
-// 🧩 المكونات العامة والمجاورة
+// UI Components
 import { Btn, Card, Input, Select, PageHeader } from "@/components/UI/UI.jsx"; 
 import QuranProgressSelector from "@/components/QuranProgress/QuranProgressSelector";
 import QuranProgressBar from "@/components/QuranProgress/QuranProgressBar";
 import AchievementChart from "@/components/Gamification/AchievementChart"; 
 
-// 🎓 المكونات الفرعية التابعة للطالب
+// Subcomponents
 import StudentStatsCard from "@/components/Student/StudentStatsCard";
 import StudentBadges from "@/components/Gamification/StudentBadges";
 import { 
@@ -69,7 +67,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         if (error) throw error;
         if (data) setStudent(data);
       } catch (err) {
-        console.error("Error fetching student details:", err);
+        console.error("🚨 Error fetching student details:", err);
         triggerToast(t('error_fetching_student') || (isRtl ? "تعذر جلب بيانات الطالب" : "Failed to fetch student profile"), "error");
       } finally {
         setLoading(false);
@@ -126,7 +124,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
 
         setWeeklyData(processedChartData);
       } catch (err) {
-        console.error("Error processing weekly achievement chart:", err);
+        console.error("🚨 Error processing weekly achievement chart:", err);
       } finally {
         setChartLoading(false);
       }
@@ -188,7 +186,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
       setIsEditing(false);
       triggerToast(t('profile_updated_success') || (isRtl ? "تم تحديث الملف الشخصي بنجاح" : "Profile updated successfully"), "success");
     } catch (error) {
-      console.error("Error saving student profile:", error);
+      console.error("🚨 Error saving student profile:", error);
       triggerToast(t('profile_updated_failed') || (isRtl ? "فشل تحديث البيانات" : "Failed to update profile"), "error");
     } finally {
       setSaving(false);
@@ -197,17 +195,17 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
 
   if (loading) {
     return (
-      <div className={`text-[${colors.text || '#fff'}] text-center py-28 px-5`}>
+      <div className="text-white text-center py-28 px-5 font-['Cairo',sans-serif]">
         <div className="text-3xl mb-2.5">⏳</div>
-        <div className="text-sm text-slate-400">{t('loading_premium_profile') || (isRtl ? 'جاري تحميل ملف الطالب...' : 'Loading student profile...')}</div>
+        <div className="text-xs text-[#94A3B8]">{t('loading_premium_profile') || (isRtl ? 'جاري تحميل ملف الطالب...' : 'Loading student profile...')}</div>
       </div>
     );
   }
 
   if (!student) {
     return (
-      <div className="text-red-500 text-center py-16 px-5">
-        <div className="text-base font-bold">{t('student_not_found') || (isRtl ? 'الطالب غير موجود' : 'Student not found')}</div>
+      <div className="text-rose-400 text-center py-16 px-5 font-['Cairo',sans-serif]">
+        <div className="text-sm font-bold">{t('student_not_found') || (isRtl ? 'الطالب غير موجود' : 'Student not found')}</div>
         <Btn variant="ghost" onClick={() => navigate('/students')} className="mt-4">
           {isRtl ? 'العودة لقائمة الطلاب' : 'Back to Students List'}
         </Btn>
@@ -225,8 +223,8 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   const getStatusStyle = (status) => {
     switch(status) {
       case 'paused': return { className: 'bg-amber-500/15 text-amber-400 border-amber-500/20', label: t('status_paused') || (isRtl ? 'موقوف مؤقتاً' : 'Paused') };
-      case 'inactive': return { className: 'bg-red-500/15 text-red-400 border-red-500/20', label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') };
-      default: return { className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', label: t('status_active') || (isRtl ? 'نشط' : 'Active') };
+      case 'inactive': return { className: 'bg-rose-500/15 text-rose-400 border-rose-500/20', label: t('status_inactive') || (isRtl ? 'غير نشط' : 'Inactive') };
+      default: return { className: 'bg-[#09332C] text-[#10B981] border-[#0D5C4D]', label: t('status_active') || (isRtl ? 'نشط' : 'Active') };
     }
   };
   const statusInfo = getStatusStyle(student.status);
@@ -254,10 +252,13 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
   ];
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="w-full max-w-[600px] mx-auto p-3 box-border">
+    <div className={`w-full max-w-[600px] mx-auto p-3 font-['Cairo',sans-serif] ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'}`}>
       
+      {/* Toast Notification */}
       {inlineMessage.text && (
-        <div className={`fixed top-5 left-1/2 -translate-x-1/2 text-white px-5 py-3 rounded-full z-[1200] flex items-center gap-2 shadow-xl text-sm font-bold ${inlineMessage.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 rounded-full z-50 flex items-center gap-2 shadow-2xl text-xs font-bold ${
+          inlineMessage.type === 'success' ? 'bg-[#10B981]' : 'bg-rose-500'
+        }`}>
           {inlineMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{inlineMessage.text}</span>
         </div>
@@ -267,32 +268,34 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
         title={isEditing ? "" : studentDisplayName}
         sub={isEditing ? "" : `${t('student_id') || (isRtl ? 'كود الطالب' : 'Student Code')}: #${student.student_code || (student.id ? student.id.slice(0, 8) : '')}`}
         action={
-          <Btn variant="ghost" onClick={() => navigate(-1)} className="rounded-full">
+          <Btn variant="ghost" onClick={() => navigate(-1)} className="rounded-xl border border-[#1B2738] bg-[#0F172A] text-[#94A3B8]">
             {isRtl ? <><ArrowRight className="w-4 h-4" /> {t('back') || 'رجوع'}</> : <><ArrowLeft className="w-4 h-4" /> {t('back') || 'Back'}</>}
           </Btn>
         }
       />
 
-      <Card className={`rounded-t-2xl flex items-center gap-3.5 relative border-b-0 bg-[${colors.card || '#1E293B'}] border border-[${colors.border || '#334155'}] p-4`}>
-        
+      {/* Top Banner */}
+      <Card className="rounded-t-2xl flex items-center gap-3.5 relative border-b-0 bg-[#0F172A]/85 border-[#1B2738] p-4">
         <div className={`absolute top-4 ${isRtl ? 'left-4' : 'right-4'}`}>
           {isEditing ? (
             <Select 
               value={student.status || "active"} 
               onChange={(e) => setStudent({...student, status: e.target.value})} 
               options={statusOptions}
-              className="py-1 px-2 text-xs h-auto mb-0"
+              className="py-1 px-2 text-xs h-auto mb-0 bg-[#0A101D] border-[#1B2738]"
             />
           ) : (
-            <span className={`px-2.5 py-1 rounded-xl text-xs font-bold border ${statusInfo.className}`}>
+            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border ${statusInfo.className}`}>
               ● {statusInfo.label}
             </span>
           )}
         </div>
 
-        <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl border-2 ${student.gender === 'female' ? 'bg-pink-500/10 border-pink-500 text-pink-500' : 'bg-blue-500/10 border-blue-500 text-blue-500'}`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl border ${
+          student.gender === 'female' ? 'bg-pink-500/10 border-pink-500/30 text-pink-400' : 'bg-sky-500/10 border-sky-500/30 text-sky-400'
+        }`}>
           {genderPolicy === 'separated' && student.gender === 'female' ? (
-            <UserCheck className="w-6 h-6 text-pink-500" />
+            <UserCheck className="w-6 h-6 text-pink-400" />
           ) : (
             student.gender === 'female' ? '🧕' : '👨‍🎓'
           )}
@@ -303,24 +306,25 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             <Input 
               value={studentDisplayName} 
               onChange={(e) => setStudent({...student, name: e.target.value})} 
-              className="mb-0 text-sm font-bold"
+              className="mb-0 text-sm font-bold bg-[#0A101D] border-[#1B2738]"
               required
             />
           ) : (
-            <div className="text-start">
-              <h3 className="m-0 text-slate-100 text-lg font-bold">{studentDisplayName}</h3>
-              <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+            <div>
+              <h3 className="m-0 text-white text-base font-bold">{studentDisplayName}</h3>
+              <div className="flex items-center gap-2 text-xs text-[#94A3B8] mt-1">
                 <span>{matchedCountry ? matchedCountry.flag : '🌐'}</span>
                 <span>{matchedCountry ? (isRtl ? (matchedCountry.name_ar || matchedCountry.nameAr) : (matchedCountry.name_en || matchedCountry.nameEn)) : ''}</span>
                 {currentAge !== null && <span>• {currentAge} {t('years_old') || (isRtl ? 'سنة' : 'yrs')}</span>}
-                {halaqaDisplayName && <span className="text-amber-500">• {halaqaDisplayName}</span>}
+                {halaqaDisplayName && <span className="text-[#E07A00] font-semibold">• {halaqaDisplayName}</span>}
               </div>
             </div>
           )}
         </div>
       </Card>
 
-      <div className={`flex bg-[${colors.background || '#0F172A'}] border-x border-[${colors.border || '#334155'}] p-1`}>
+      {/* Tabs */}
+      <div className="flex bg-[#0A101D] border-x border-[#1B2738] p-1">
         {[
           { id: 'quran', label: t('tab_quran_track') || (isRtl ? 'مسار القرآن' : 'Quran Track'), icon: <BookOpen className="w-3.5 h-3.5" /> },
           { id: 'personal', label: t('tab_identity_contact') || (isRtl ? 'البيانات والتواصل' : 'Identity & Contact'), icon: <Info className="w-3.5 h-3.5" /> },
@@ -330,40 +334,43 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             key={tab.id}
             variant={activeTab === tab.id ? 'primary' : 'ghost'}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 px-1 text-xs rounded-none border-none flex items-center justify-center gap-1.5 transition-colors ${activeTab === tab.id ? `bg-[${colors.card || '#1E293B'}] text-amber-500 font-bold` : 'bg-transparent text-slate-400 hover:text-slate-200'}`}
+            className={`flex-1 py-2 px-1 text-xs rounded-xl border-none flex items-center justify-center gap-1.5 transition-colors ${
+              activeTab === tab.id ? 'bg-[#0F172A] text-[#E07A00] font-bold border border-[#1B2738]' : 'bg-transparent text-[#94A3B8] hover:text-white'
+            }`}
           >
             {tab.icon} {tab.label}
           </Btn>
         ))}
       </div>
 
-      <Card className={`rounded-b-2xl border-t-0 bg-[${colors.card || '#1E293B'}] border border-[${colors.border || '#334155'}] shadow-2xl flex flex-col gap-4 p-4`}>
+      {/* Main Tab Content Card */}
+      <Card className="rounded-b-2xl border-t-0 bg-[#0F172A]/85 border border-[#1B2738] shadow-2xl flex flex-col gap-4 p-4">
         
+        {/* Quran Track */}
         {activeTab === 'quran' && (
           <div className="flex flex-col gap-3.5">
-            
             <StudentStatsCard student={student} isRtl={isRtl} />
-
             <StudentBadges student={student} weeklyData={weeklyData} isRtl={isRtl} />
 
-            <div className={`bg-[${colors.background || '#0F172A'}] p-3.5 rounded-xl border border-[${colors.border || '#334155'}]`}>
-              <div className="flex items-center mb-2 text-start">
-                <span className="text-xs text-amber-500 font-bold flex items-center gap-1.5">
-                  <CheckSquare className="w-4 h-4 text-emerald-500" /> {t('current_memorization_progress') || (isRtl ? 'التقدم الحفظي الحالي' : 'Current Memorization Progress')}
+            <div className="bg-[#0A101D] p-3.5 rounded-2xl border border-[#1B2738]">
+              <div className="flex items-center mb-2">
+                <span className="text-xs text-[#E07A00] font-bold flex items-center gap-1.5">
+                  <CheckSquare className="w-4 h-4 text-[#10B981]" /> 
+                  {t('current_memorization_progress') || (isRtl ? 'التقدم الحفظي الحالي' : 'Current Memorization Progress')}
                 </span>
               </div>
               <div className="my-2">
                 <QuranProgressBar currentQuarterIndex={student.current_quarter_index || 0} />
               </div>
-              <div className={`bg-[${colors.card || '#1E293B'}] px-3 py-2 rounded-lg text-xs flex justify-between border border-[${colors.border || '#334155'}]`}>
-                <span className="text-slate-400">{t('current_juz') || (isRtl ? 'الجزء الحالي' : 'Current Juz')}</span>
-                <span className="font-bold text-emerald-500">{t('juz') || (isRtl ? 'الجزء' : 'Juz')} {student.current_juz || 1}</span>
+              <div className="bg-[#0F172A] px-3 py-2 rounded-xl text-xs flex justify-between border border-[#1B2738]">
+                <span className="text-[#94A3B8]">{t('current_juz') || (isRtl ? 'الجزء الحالي' : 'Current Juz')}</span>
+                <span className="font-bold text-[#10B981]">{t('juz') || (isRtl ? 'الجزء' : 'Juz')} {student.current_juz || 1}</span>
               </div>
             </div>
 
             <div className="w-full">
               {chartLoading ? (
-                <div className={`bg-[${colors.background || '#0F172A'}] p-6 rounded-xl border border-[${colors.border || '#334155'}] text-center text-xs text-slate-400`}>
+                <div className="bg-[#0A101D] p-6 rounded-2xl border border-[#1B2738] text-center text-xs text-[#94A3B8]">
                   ⏳ {isRtl ? 'جاري تحليل منحنى الإنجاز الأسبوعي...' : 'Analyzing weekly achievement logs...'}
                 </div>
               ) : (
@@ -372,11 +379,12 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
             </div>
 
             {isEditing && (
-              <div className={`bg-[${colors.background || '#0F172A'}] p-3.5 rounded-xl border border-[${colors.border || '#334155'}] flex flex-col gap-1.5`}>
-                <label className="text-slate-400 text-xs font-bold flex items-center gap-1 text-start">
-                  <GraduationCap className="w-4 h-4" /> {t('update_progress_selector') || (isRtl ? 'تعديل موضع الحفظ' : 'Update Memorization Selector')}
+              <div className="bg-[#0A101D] p-3.5 rounded-2xl border border-[#1B2738] flex flex-col gap-2">
+                <label className="text-[#94A3B8] text-xs font-bold flex items-center gap-1">
+                  <GraduationCap className="w-4 h-4 text-[#E07A00]" /> 
+                  {t('update_progress_selector') || (isRtl ? 'تعديل موضع الحفظ' : 'Update Memorization Selector')}
                 </label>
-                <div className={`bg-[${colors.card || '#1E293B'}] p-1.5 rounded-lg border border-[${colors.border || '#334155'}]`}>
+                <div className="bg-[#0F172A] p-2 rounded-xl border border-[#1B2738]">
                   <QuranProgressSelector 
                     initialIndex={parseInt(student.current_quarter_index, 10) || 0} 
                     onIndexChange={(idx) => setStudent(prev => ({ ...prev, current_quarter_index: idx }))}
@@ -387,6 +395,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           </div>
         )}
 
+        {/* Identity & Contact */}
         {activeTab === 'personal' && (
           <div className="flex flex-col gap-3.5">
             <div className="grid grid-cols-2 gap-3">
@@ -414,7 +423,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
               options={countryOptions}
             />
 
-            <div className={`bg-[${colors.background || '#0F172A'}] p-3 rounded-xl border border-[${colors.border || '#334155'}] flex flex-col gap-2`}>
+            <div className="bg-[#0A101D] p-3.5 rounded-2xl border border-[#1B2738] flex flex-col gap-3">
               <Input 
                 label={t('parent_custody_name') || (isRtl ? 'اسم ولي الأمر' : 'Parent Name')} 
                 value={student.parent_name || ""} 
@@ -432,7 +441,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
                     placeholder={t('not_specified') || (isRtl ? 'غير محدد' : 'Not specified')} 
                     onChange={(e) => setStudent({...student, parent_phone: e.target.value})} 
                     disabled={!isEditing}
-                    className="text-left direction-ltr" 
+                    className="dir-ltr text-right" 
                   />
                 </div>
                 {!isEditing && cleanPhone && (
@@ -440,7 +449,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
                     href={`https://wa.me/${cleanPhone}`} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white w-11 h-11 rounded-xl flex items-center justify-center no-underline mb-4 shadow-md transition-colors"
+                    className="bg-[#09332C] border border-[#0D5C4D] text-[#10B981] hover:bg-[#10B981] hover:text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors mb-0.5"
                     title="WhatsApp"
                   >
                     <MessageCircle className="w-5 h-5" />
@@ -451,6 +460,7 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           </div>
         )}
 
+        {/* Financials & Notes */}
         {activeTab === 'financial' && (
           <div className="flex flex-col gap-3.5">
             <Select 
@@ -473,18 +483,19 @@ export default function StudentProfile({ genderPolicy = 'mixed' }) {
           </div>
         )}
 
+        {/* Footer Actions */}
         <div className="mt-1">
           {isEditing ? (
             <div className="flex gap-2.5">
-              <Btn variant="success" onClick={handleUpdate} disabled={saving} className="flex-1 py-3 flex items-center justify-center gap-1.5">
+              <Btn onClick={handleUpdate} disabled={saving} className="flex-1 py-3 bg-[#E07A00] hover:bg-[#C66B00] text-white font-bold flex items-center justify-center gap-1.5 rounded-xl">
                 <Save className="w-4 h-4" /> {saving ? (t("saving") || (isRtl ? "جاري الحفظ..." : "Saving...")) : (t('save_changes') || (isRtl ? "حفظ التغييرات" : "Save Changes"))}
               </Btn>
-              <Btn variant="ghost" onClick={() => setIsEditing(false)} className="flex-1 py-3 flex items-center justify-center gap-1.5">
+              <Btn variant="ghost" onClick={() => setIsEditing(false)} className="flex-1 py-3 border border-[#1B2738] bg-[#0A101D] text-[#94A3B8] hover:text-white flex items-center justify-center gap-1.5 rounded-xl">
                 <X className="w-4 h-4" /> {t("cancel") || (isRtl ? "إلغاء" : "Cancel")}
               </Btn>
             </div>
           ) : (
-            <Btn variant="primary" onClick={() => setIsEditing(true)} className="w-full py-3 text-sm font-bold flex items-center justify-center gap-1.5">
+            <Btn onClick={() => setIsEditing(true)} className="w-full py-3 bg-[#E07A00] hover:bg-[#C66B00] text-white font-bold text-xs md:text-sm flex items-center justify-center gap-1.5 rounded-xl shadow-lg shadow-[#E07A00]/10">
               <Edit3 className="w-4 h-4" /> {t('edit_full_profile') || (isRtl ? "تعديل بيانات الملف الشخصي" : "Edit Full Profile")}
             </Btn>
           )}
