@@ -8,18 +8,18 @@ export default function ReportMetrics({
   completionPercentage = 0,
   remainingCount = 0,
   unsentCount = 0,
-  onBulkSend
+  onBulkSend = null
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isArabic = currentLang.startsWith('ar');
 
-  // تقريب نسبة الإنجاز لتجنب ظهور الكسور الطويلة
-  const roundedPercentage = Math.round(completionPercentage || 0);
+  // تقريب نسبة الإنجاز وتأمينها بين 0 و 100
+  const roundedPercentage = Math.min(100, Math.max(0, Math.round(completionPercentage || 0)));
 
   return (
     <div className="flex flex-col gap-3 mb-4">
-      {/* البطاقات الرئيسية للإحصائيات (متجاوبة: 2 في الشاشات الصغيرة، 4 في الشاشات الكبيرة) */}
+      {/* البطاقات الرئيسية للإحصائيات */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         
         {/* إجمالي الطلاب */}
@@ -35,7 +35,7 @@ export default function ReportMetrics({
           </span>
         </Card>
 
-        {/* نسبة الإرسال مع شريط تقدم مصغر */}
+        {/* نسبة الإنجاز مع شريط تقدم مصغر */}
         <Card className="p-3 text-center bg-slate-900/90 border-slate-800 rounded-xl relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-center gap-1.5 mb-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -50,7 +50,7 @@ export default function ReportMetrics({
           <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden">
             <div 
               className="bg-emerald-500 h-full transition-all duration-500" 
-              style={{ width: `${Math.min(100, Math.max(0, roundedPercentage))}%` }}
+              style={{ width: `${roundedPercentage}%` }}
             />
           </div>
         </Card>
@@ -83,7 +83,7 @@ export default function ReportMetrics({
       </div>
 
       {/* زر الإرسال الجماعي التتابعي */}
-      {unsentCount > 0 && (
+      {unsentCount > 0 && onBulkSend && (
         <Btn
           variant="primary"
           onClick={onBulkSend}
