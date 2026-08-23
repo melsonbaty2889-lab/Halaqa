@@ -40,6 +40,7 @@ const RealtimeAudit = safeLazy(() => import('@/components/Logs/RealtimeAudit.jsx
 const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
+const Curriculum = safeLazy(() => import('@/components/Curriculum/CurriculumStructure.jsx'));
 
 // ----------------------------------------------------
 // مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
@@ -365,6 +366,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         setSelectedHalaqaId(halaqaId);
         setActiveTab('attendance');
       }}
+    />
+  );
+        case 'curriculum':
+        case 'curricula':
+        case 'curricula-islamic-studies':
+        case 'curricula_islamic_studies':
+          return (
+             <Curriculum 
+      academyId={academyId} 
+      students={students} 
+      halaqas={halaqas} 
+      isRtl={isRtl} 
     />
   );
       case 'attendance':
