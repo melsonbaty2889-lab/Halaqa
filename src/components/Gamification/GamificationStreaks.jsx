@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Flame, Award } from 'lucide-react';
 import StudentBadges from './StudentBadges';
-import WeeklyQuestCard from './WeeklyQuestCard';
 import AchievementChart from './AchievementChart';
 
 export default function GamificationStreaks({ badges = [], quest = null, weeklyData = [] }) {
