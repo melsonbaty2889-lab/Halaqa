@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { sessionService } from '@/lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
-import CertificateModal from './Certificates/CertificateModal'; // 👈 استدعاء نافذة الشهادة
+import CertificateModal from '@/components/Certificates/CertificateModal'; // 👈 استدعاء نافذة الشهادة
 import { 
   Award, 
   Minus, 
