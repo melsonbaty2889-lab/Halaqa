@@ -90,7 +90,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
-          id: 'evaluations', 
+          id: 'exams', 
           label: isRtl ? 'الاختبارات والشهادات' : 'Exams & Certificates', 
           icon: Award, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
