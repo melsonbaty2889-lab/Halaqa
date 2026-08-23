@@ -1,9 +1,9 @@
 /* src/components/Gamification/AchievementChart.jsx */
 import React from 'react';
 import { TrendingUp, BookOpen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import colors from '@/theme/colors';
 
-// مصفوفة افتراضية كاملة (7 أيام) ومحدثة بدقة
 const DEFAULT_WEEKLY_DATA = [
   { dayAr: 'السبت', dayEn: 'Sat', pages: 45 },
   { dayAr: 'الأحد', dayEn: 'Sun', pages: 65 },
@@ -14,24 +14,23 @@ const DEFAULT_WEEKLY_DATA = [
   { dayAr: 'الجمعة', dayEn: 'Fri', pages: 60 },
 ];
 
-export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = true }) {
+export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl: propIsRtl }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language?.split('-')[0]?.toLowerCase() || 'ar';
+  const isRtl = propIsRtl !== undefined ? propIsRtl : (i18n?.dir() === 'rtl');
+
   const safeData = data && data.length > 0 ? data : DEFAULT_WEEKLY_DATA;
   
-  // 1. حساب الإحصائيات الحيوية ديناميكياً
   const totalPages = safeData.reduce((sum, item) => sum + item.pages, 0);
   const peakDayItem = [...safeData].sort((a, b) => b.pages - a.pages)[0] || { dayAr: '-', dayEn: '-', pages: 0 };
-  const peakDayText = isRtl 
-    ? `${peakDayItem.dayAr} (${peakDayItem.pages})` 
-    : `${peakDayItem.dayEn} (${peakDayItem.pages})`;
+  const peakDayName = isRtl ? peakDayItem.dayAr : peakDayItem.dayEn;
 
-  // 2. هندسة الأبعاد والسقف المرن
   const highestPageValue = Math.max(...safeData.map(d => d.pages), 10);
-  const maxPages = highestPageValue * 1.15; // 15% مساحة أمان علوية
+  const maxPages = highestPageValue * 1.15;
 
   const chartWidth = 500;   
   const chartHeight = 140;  
 
-  // 3. بناء إحداثيات النقاط مع دعم كامل وديناميكي لـ RTL / LTR وأي عدد من الأيام
   const points = safeData.map((d, index) => {
     const divider = safeData.length > 1 ? safeData.length - 1 : 1;
     const x = isRtl 
@@ -51,8 +50,7 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
   const textAlignment = isRtl ? 'text-right' : 'text-left';
 
   return (
-    <div className={`p-5 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4 justify-between h-full transition-all duration-300 hover:border-white/10 select-none bg-[${colors.surface || '#0F172A'}]`}>
-      {/* حقن أكواد الأنيميشن السينمائية بسلاسة فائقة */}
+    <div className="p-5 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4 justify-between h-full transition-all duration-300 hover:border-white/10 select-none bg-slate-900">
       <style>{`
         @keyframes customBlurIn {
           from { opacity: 0; transform: scaleY(0.95); transform-origin: bottom; }
@@ -71,41 +69,54 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
       `}</style>
 
       {/* الرأس الإحصائي */}
-      <div className={`flex items-start justify-between ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
+      <div className={`flex items-start justify-between gap-2 ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
         <div className={`flex flex-col gap-0.5 ${textAlignment}`}>
           <h3 className="text-sm font-bold text-white tracking-wide">
-            {isRtl ? 'منحنى الإنجاز الأسبوعي' : 'Weekly Achievement Chart'}
+            {t('gamification.chartTitle', isRtl ? 'منحنى الإنجاز الأسبوعي' : 'Weekly Achievement Chart')}
           </h3>
           <p className="text-[11px] text-slate-400">
-            {isRtl ? 'مجموع الصفحات المنجزة (حفظ ومراجعة)' : 'Total completed pages (Hifz & Muraja\'ah)'}
+            {t('gamification.chartSubtitle', isRtl ? 'مجموع الصفحات المنجزة (حفظ ومراجعة)' : 'Total completed pages (Hifz & Muraja\'ah)')}
           </p>
         </div>
         
-        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
+        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 dir-ltr">
           <TrendingUp className="w-3 h-3" />
           <span>+12%</span>
         </div>
       </div>
 
-      {/* بطاقات البيانات الإحصائية الحية */}
-      <div className={`grid grid-cols-2 gap-3 ${isRtl ? 'direction-rtl' : 'direction-ltr'}`}>
-        <div className={`p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] ${textAlignment}`}>
-          <span className="text-[11px] text-slate-400 block mb-0.5">{isRtl ? 'إجمالي صفحات الأسبوع' : 'Total Weekly Pages'}</span>
-          <span className="text-lg font-extrabold text-white flex items-center gap-1 justify-start">
-            <BookOpen className="text-[#FBBF24] w-4 h-4 shrink-0" />
-            <span className="font-sans">{totalPages}</span> 
-            <span className="text-xs font-normal text-slate-400">{isRtl ? 'صفحة' : 'Pages'}</span>
+      {/* بطاقات البيانات الإحصائية */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className={`p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] ${textAlignment} min-w-0`}>
+          <span className="text-[11px] text-slate-400 block mb-0.5 truncate">
+            {t('gamification.totalWeeklyPages', isRtl ? 'إجمالي صفحات الأسبوع' : 'Total Weekly Pages')}
+          </span>
+          <span className="text-base sm:text-lg font-extrabold text-white flex items-center gap-1 justify-start min-w-0">
+            <BookOpen className="text-amber-400 w-4 h-4 shrink-0" />
+            <span className="font-sans truncate">{totalPages}</span> 
+            <span className="text-xs font-normal text-slate-400 shrink-0">
+              {t('gamification.pagesUnit', isRtl ? 'صفحة' : 'Pages')}
+            </span>
           </span>
         </div>
-        <div className={`p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] ${textAlignment}`}>
-          <span className="text-[11px] text-slate-400 block mb-0.5">{isRtl ? 'أعلى يوم إنجاز' : 'Peak Day'}</span>
-          <span className="text-lg font-extrabold text-[#FBBF24] truncate block">
-            {peakDayText}
+
+        {/* حماية بطاقة أعلى يوم من القص */}
+        <div className={`p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] ${textAlignment} min-w-0`}>
+          <span className="text-[11px] text-slate-400 block mb-0.5 truncate">
+            {t('gamification.peakDay', isRtl ? 'أعلى يوم إنجاز' : 'Peak Day')}
           </span>
+          <div className="flex items-baseline gap-1 min-w-0">
+            <span className="text-base font-bold text-amber-400 truncate">
+              {peakDayName}
+            </span>
+            <span className="text-xs font-semibold text-slate-400 shrink-0">
+              ({peakDayItem.pages})
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* منطقة الـ SVG المتطورة */}
+      {/* رسم الـ SVG */}
       <div className="relative w-full mt-2 h-[140px]">
         <svg 
           viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
@@ -122,16 +133,13 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
             </filter>
           </defs>
 
-          {/* خطوط الخلفية الشبكية */}
           <line x1="0" y1="0" x2={chartWidth} y2="0" stroke="rgba(255,255,255,0.02)" strokeWidth="1" strokeDasharray="4 4" />
           <line x1="0" y1={chartHeight / 2} x2={chartWidth} y2={chartHeight / 2} stroke="rgba(255,255,255,0.02)" strokeWidth="1" strokeDasharray="4 4" />
           <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
 
           {sortedPointsForPath.length > 0 && (
             <>
-              {/* تعبئة المساحة السفلية مع أنيميشن التدرج البصري */}
               <path d={areaPath} fill="url(#chartGradientUltimate)" className="animate-chart-area" />
-              {/* رسم الخط العلوي مع تأثير الرسم الذاتي المتدفق */}
               <path 
                 d={linePath} 
                 fill="none" 
@@ -145,25 +153,20 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
             </>
           )}
 
-          {/* نقاط الارتكاز والـ Tooltips الذكية */}
           {points.map((p, i) => {
             const tooltipWidth = 46;
             const safeTooltipX = Math.max(4, Math.min(chartWidth - tooltipWidth - 4, p.x - tooltipWidth / 2));
 
             return (
               <g key={i} className="group/node cursor-pointer">
-                {/* خط المؤشر العمودي عند الـ Hover */}
                 <line 
                   x1={p.x} y1={p.y} x2={p.x} y2={chartHeight} 
                   stroke="#FBBF24" strokeWidth="1" strokeDasharray="2 2" 
                   className="opacity-0 group-hover/node:opacity-40 transition-opacity duration-200"
                 />
-                {/* حلقة التوهج العائمة */}
-                <circle cx={p.x} cy={p.y} r="8" className="fill-[#FBBF24]/20 opacity-0 group-hover/node:opacity-100 transition-all duration-200" />
-                {/* النقطة المركزية */}
-                <circle cx={p.x} cy={p.y} r="3.5" className="fill-[#0F172A] stroke-[#FBBF24] stroke-[2.5] transition-all duration-200 group-hover/node:r-4.5" />
+                <circle cx={p.x} cy={p.y} r="8" className="fill-amber-400/20 opacity-0 group-hover/node:opacity-100 transition-all duration-200" />
+                <circle cx={p.x} cy={p.y} r="3.5" className="fill-slate-900 stroke-amber-400 stroke-[2.5] transition-all duration-200 group-hover/node:r-4.5" />
 
-                {/* الـ Tooltip المعزز هندسياً وضد الانقسام */}
                 <g className="opacity-0 pointer-events-none group-hover/node:opacity-100 transition-all duration-150 origin-center">
                   <rect 
                     x={safeTooltipX} 
@@ -191,12 +194,12 @@ export default function AchievementChart({ data = DEFAULT_WEEKLY_DATA, isRtl = t
         </svg>
       </div>
 
-      {/* محور الأيام السفلي المرن والمتوافق مع الاتجاهات */}
-      <div className={`flex justify-between text-[11px] text-slate-500 font-semibold px-1 ${
-        isRtl ? 'flex-row' : 'flex-row-reverse'
+      {/* محور الأيام السفلي مع التوزيع المحاذي */}
+      <div className={`grid grid-cols-7 text-[11px] text-slate-400 font-semibold text-center ${
+        isRtl ? 'direction-rtl' : 'direction-ltr'
       }`}>
         {safeData.map((d, i) => (
-          <span key={i} className="w-10 text-center block tracking-tight">
+          <span key={i} className="truncate px-0.5">
             {isRtl ? d.dayAr : d.dayEn}
           </span>
         ))}
