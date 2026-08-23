@@ -226,14 +226,16 @@ export default function Sidebar({
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
-  const sidebarStyles = {
+    const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
     height: '100vh',
     [isRtl ? 'right' : 'left']: 0,
     width: isMobile ? 'min(280px, 80vw)' : '280px',
-    backgroundColor: C.dark.surface,
+    backgroundColor: C.dark.surfaceCard || 'rgba(15, 23, 42, 0.85)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     borderLeft: isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
     borderRight: !isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
     display: 'flex',
