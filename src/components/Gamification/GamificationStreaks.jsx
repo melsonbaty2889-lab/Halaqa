@@ -20,6 +20,13 @@ export default function GamificationStreaks({
   const [activeTab, setActiveTab] = useState(initialTab); 
   const [debugInfo, setDebugInfo] = useState({ currentAcademyId: null, error: null });
 
+  // 🔄 مزامنة التبويب النشط عند التغيير من القائمة الجانبية
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
   useEffect(() => {
     async function fetchGamificationData() {
       setLoading(true);
