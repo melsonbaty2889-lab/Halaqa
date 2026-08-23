@@ -40,3 +40,6 @@ export const REPORT_TEMPLATES = [
     textEn: `🌟 *Excellence & Appreciation* 🌟\n\nPeace be upon you,\nWe are extremely proud of *{{student_name}}*'s performance today 👏\n\nShowed outstanding commitment and dedication during today's session ({{date}}).\n{{notes}}\n\nKeep encouraging them on this noble journey 💖`
   }
 ];
+
+// تصدير مرادف لضمان عدم حدوث خطأ Import في مكون CommunicationHub
+export const PRESET_TEMPLATES = REPORT_TEMPLATES;
