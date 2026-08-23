@@ -1,105 +1,16 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Send, Radio, FileText, Sparkles, Bell, 
   Plus, Save, Loader2, History, RefreshCw, 
-  MessageSquare, Mail, ChevronDown, Check, Globe2, Sparkle
+  MessageSquare, Mail, Globe2, Sparkle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Card, Btn, Input } from '@/components/UI/UI';
 import { AVAILABLE_VARIABLES, PRESET_TEMPLATES } from '@/data/reportTemplates';
+import CustomSelect from './CustomSelect';
+import LivePreview from './LivePreview';
 
-// 1. مكون القائمة المنسدلة المستقل
-function CustomSelect({ options, value, onChange, placeholder }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  const selectedOption = useMemo(() => options.find(o => o.value === value), [options, value]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative w-full" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full p-2.5 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)] flex items-center justify-between transition-all focus:outline-none"
-      >
-        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
-        <ChevronDown size={14} className={`text-[var(--text-sub,#94A3B8)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      {open && (
-        <div className="absolute z-50 w-full mt-1 bg-[var(--surface-card,rgba(15,23,42,0.95))] border border-[var(--border-card,rgba(255,255,255,0.08))] rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto backdrop-blur-md">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => {
-                onChange(opt.value);
-                setOpen(false);
-              }}
-              className={`w-full p-2.5 text-right text-xs flex items-center justify-between transition-colors ${
-                value === opt.value
-                  ? 'bg-[var(--primary,#E07A00)]/10 text-[var(--primary,#E07A00)] font-bold'
-                  : 'text-[var(--text-main,#FFFFFF)] hover:bg-[var(--surface-input,#0A101D)]'
-              }`}
-            >
-              <span>{opt.label}</span>
-              {value === opt.value && <Check size={13} className="text-[var(--primary,#E07A00)]" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// 2. مكون المعاينة الحية المباشرة
-function LivePreview({ isRtl, title, templateTitle, currentAcademyDisplayName, previewText }) {
-  return (
-    <div className="w-full max-w-[320px] p-4 rounded-3xl shadow-2xl flex flex-col items-center bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] border-t-4 border-t-[var(--primary,#E07A00)] backdrop-blur-md">
-      <div className="w-12 h-1 bg-[var(--border-input,#1B2738)] rounded-full mb-4" />
-      <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] mb-3 flex items-center gap-1.5">
-        <MessageSquare size={13} className="text-[var(--emerald-text,#10B981)]" />
-        <span>{isRtl ? 'معاينة الرسالة لدى ولي الأمر' : 'Parent Screen Preview'}</span>
-      </div>
-
-      <div className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-2xl p-3.5 min-h-[280px] flex flex-col justify-between shadow-inner">
-        <div>
-          <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-[var(--border-input,#1B2738)]">
-            <div className="w-7 h-7 rounded-full bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] flex items-center justify-center text-[11px] font-bold border border-[var(--emerald-text,#10B981)]/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-              {currentAcademyDisplayName.charAt(0)}
-            </div>
-            <div className="flex-1 truncate">
-              <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] truncate">
-                {title || templateTitle || currentAcademyDisplayName}
-              </div>
-              <div className="text-[9px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'الآن • رسالة مباشرة' : 'Now • Direct Message'}</div>
-            </div>
-          </div>
-
-          <div className="text-[11px] text-[var(--text-main,#FFFFFF)] whitespace-pre-wrap leading-relaxed">
-            {previewText}
-          </div>
-        </div>
-
-        <div className="mt-4 pt-2 border-t border-[var(--border-input,#1B2738)] flex items-center justify-between text-[9px] text-[var(--text-sub,#94A3B8)]">
-          <span>{currentAcademyDisplayName}</span>
-          <span className="text-[var(--emerald-text,#10B981)] font-bold tracking-wider">Encrypted</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 3. المكون الرئيسي
 export default function CommunicationHub({ academyId, academyName }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language?.startsWith('ar');
@@ -130,7 +41,6 @@ export default function CommunicationHub({ academyId, academyName }) {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
-  // خيارات القوائم المنسدلة
   const targetAudienceOptions = useMemo(() => [
     { value: 'all', label: isRtl ? 'جميع أولياء أمور الأكاديمية' : 'All Academy Parents' },
     { value: 'present_today', label: isRtl ? 'أولياء أمور الطلاب الحاضرين اليوم' : 'Parents of Present Students' },
