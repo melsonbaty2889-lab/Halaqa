@@ -1,9 +1,12 @@
 /* src/components/Gamification/StudentBadges.jsx */
 import React, { useMemo } from 'react';
 import { Award, Flame, Star, Crown, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export default function StudentBadges({ student = {}, weeklyData = [], isRtl = true }) {
-  // حساب الشارات بناءً على بيانات الطالب الفعلية
+export default function StudentBadges({ student = {}, weeklyData = [], isRtl: propIsRtl }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = propIsRtl !== undefined ? propIsRtl : (i18n?.dir() === 'rtl');
+
   const badges = useMemo(() => {
     const streak = student?.current_streak || 0;
     const quarterIndex = student?.current_quarter_index || 0;
@@ -16,7 +19,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         titleEn: 'Hifz Spark',
         descAr: 'استمرار لـ 3 أيام متتالية',
         descEn: '3 Days Streak',
-        icon: <Flame size={18} className="text-amber-400" />,
+        icon: <Flame size={18} className="text-orange-400" />,
         unlocked: streak >= 3,
         count: Math.floor(streak / 3)
       },
@@ -36,7 +39,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
         titleEn: 'Weekly Achiever',
         descAr: 'التزام وحضور منتظم',
         descEn: 'Consistent Active Week',
-        icon: <Crown size={18} className="text-amber-400" />,
+        icon: <Crown size={18} className="text-sky-400" />,
         unlocked: activeWeeks >= 4,
         count: 1
       }
@@ -47,40 +50,38 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
 
   return (
     <div 
-      dir={isRtl ? 'rtl' : 'ltr'}
-      className="bg-[#0F172A] rounded-2xl border border-slate-800 p-4 shadow-lg mb-5"
+      className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg mb-5"
     >
       {/* رأس الكارت الشخصي */}
       <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <div className="bg-amber-500/15 p-1.5 rounded-lg flex items-center justify-center border border-amber-500/20">
-            <Award size={18} className="text-amber-500" />
+            <Award size={18} className="text-amber-400" />
           </div>
           <span className="text-slate-100 text-sm font-bold">
-            {isRtl ? 'شارات التميز والإتقان' : 'Mastery Badges'}
+            {t('gamification.masteryBadges', isRtl ? 'شارات التميز والإتقان' : 'Mastery Badges')}
           </span>
         </div>
 
-        <span className="text-xs font-bold text-amber-400 bg-[#090F16] px-2.5 py-1 rounded-full border border-amber-500/20">
+        <span className="text-xs font-bold text-amber-400 bg-slate-950 px-2.5 py-1 rounded-full border border-amber-500/20 dir-ltr">
           {unlockedCount} / {badges.length}
         </span>
       </div>
 
-      {/* شبكة الأوسمة المكتسبة والمغلقة */}
+      {/* شبكة الأوسمة */}
       <div className="grid grid-cols-3 gap-2.5">
         {badges.map((badge) => (
           <div 
             key={badge.id}
             className={`relative rounded-xl p-3 flex flex-col items-center text-center transition-all ${
               badge.unlocked 
-                ? 'bg-[#090F16] border border-amber-500/40 shadow-sm' 
-                : 'bg-[#0F172A]/50 border border-slate-800/60 opacity-50'
+                ? 'bg-slate-950 border border-amber-500/40 shadow-sm' 
+                : 'bg-slate-950/40 border border-slate-800/60 opacity-50'
             }`}
           >
-            {/* شارة التكرار أو القفل */}
             {badge.unlocked ? (
               badge.count > 1 && (
-                <span className="absolute -top-1.5 start-1.5 bg-amber-500 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shadow">
+                <span className="absolute -top-1.5 start-1.5 bg-amber-400 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shadow">
                   x{badge.count}
                 </span>
               )
@@ -90,15 +91,15 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl = t
               </span>
             )}
 
-            <div className={`mb-1.5 p-2 rounded-full flex items-center justify-center ${badge.unlocked ? 'bg-amber-500/15' : 'bg-slate-800/50'}`}>
+            <div className={`mb-1.5 p-2 rounded-full flex items-center justify-center ${badge.unlocked ? 'bg-amber-500/10' : 'bg-slate-800/50'}`}>
               {badge.icon}
             </div>
 
-            <div className={`text-xs font-bold mb-0.5 ${badge.unlocked ? 'text-slate-100' : 'text-slate-500'}`}>
+            <div className={`text-xs font-bold mb-0.5 truncate w-full ${badge.unlocked ? 'text-slate-100' : 'text-slate-500'}`}>
               {isRtl ? badge.titleAr : badge.titleEn}
             </div>
 
-            <div className={`text-[9.5px] leading-tight ${badge.unlocked ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className={`text-[9.5px] leading-tight line-clamp-2 ${badge.unlocked ? 'text-slate-400' : 'text-slate-600'}`}>
               {isRtl ? badge.descAr : badge.descEn}
             </div>
           </div>
