@@ -233,18 +233,18 @@ export default function Header({
           </button>
 
           {showNotifMenu && (
-            <div className={`absolute top-full mt-2 w-72 sm:w-80 bg-[var(--surface-card)] backdrop-blur-xl border border-[var(--border-card)] rounded-2xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
-              <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-slate-100">
-                    {t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
-                  </span>
-                  {unreadCount > 0 && (
-                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                      {unreadCount} {isAr ? 'جديد' : 'new'}
-                    </span>
-                  )}
-                </div>
+  <div className={`absolute top-full mt-2 w-72 sm:w-80 bg-[#0b132b]/98 backdrop-blur-2xl border border-slate-700/80 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50 p-3.5 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
+    <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/10">
+      <div className="flex items-center gap-2">
+        <span className="font-extrabold text-slate-100">
+          {t('notifications.title', isAr ? 'التنبيهات' : 'Notifications')}
+        </span>
+        {unreadCount > 0 && (
+          <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+            {unreadCount} {isAr ? 'جديد' : 'new'}
+          </span>
+        )}
+      </div>
 
                 {notifications.length > 0 && (
                   <div className="flex gap-2">
