@@ -272,14 +272,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
       case 'realtime-audit':
         return <RealtimeAudit session={session} userRole={userRole} />;
+      case 'communications-reports':
       case 'notifications_reports':
-case 'reports':
-  return (
-    <div className="space-y-6">
-      <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />
-      <Reports students={students} academyId={academyId} countryCode={countryCode} />
-    </div>
-  );
+      case 'reports':
+        return <CommunicationsAndReportsHub academyId={academyId} isRtl={isRtl} students={students} countryCode={countryCode} />;
       case 'students':
         return <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />;
       case 'teachers':
