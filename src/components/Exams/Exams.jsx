@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { sessionService } from '@/lib/sessionService'; 
 import { useTranslation } from 'react-i18next';
+import CertificateModal from './Certificates/CertificateModal'; // 👈 استدعاء نافذة الشهادة
 import { 
   Award, 
   Minus, 
@@ -18,7 +19,6 @@ export default function Exams({ students = [], academyId }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl' || i18n.language?.startsWith('ar');
 
-  // 🛠️ دالة مساعدة لفك واستخراج اسم الطالب بأمان (دعم JSONB والنصوص)
   const formatStudentName = useCallback((nameData) => {
     if (!nameData) return '';
     if (typeof nameData === 'string') return nameData;
@@ -30,11 +30,9 @@ export default function Exams({ students = [], academyId }) {
     return String(nameData);
   }, [isRtl]);
 
-  // 🌍 أوزان الخصم الديناميكية (Dynamic SaaS Settings)
   const [mistakeWeight, setMistakeWeight] = useState(5);
   const [promptWeight, setPromptWeight] = useState(2);
 
-  // 📝 حالات إدارة واجهة نموذج الاختبار الحالي
   const [selectedStudent, setSelectedStudent] = useState('');
   const [examType, setExamType] = useState('surah');
   const [examContent, setExamContent] = useState('');
@@ -43,17 +41,18 @@ export default function Exams({ students = [], academyId }) {
   const [tajweedRating, setTajweedRating] = useState('excellent');
   const [notes, setNotes] = useState('');
 
-  // 📊 حالات جلب السجل والتخزين والبحث السفلي
   const [examLogs, setExamLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState({ type: '', text: '' });
 
-  // 🧮 حساب الدرجة المستحقة تلقائياً حياً بناءً على الأوزان الديناميكية
+  // 🎓 حالات التحكم في نافذة الشهادة (Modal)
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [selectedCertData, setSelectedCertData] = useState(null);
+
   const calculatedScore = Math.max(0, 100 - (fullErrors * mistakeWeight) - (warnings * promptWeight));
 
-  // 1️⃣ 🌟 تأثير جلب إعدادات الأكاديمية الخاصة بالأوزان والخصومات ديناميكياً
   useEffect(() => {
     async function fetchAcademySettings() {
       if (!academyId) return;
@@ -75,7 +74,6 @@ export default function Exams({ students = [], academyId }) {
     fetchAcademySettings();
   }, [academyId]);
 
-  // 2️⃣ 📜 تأثير جلب سجل الاختبارات السابقة المعتمدة للأكاديمية
   const fetchExamLogs = useCallback(async () => {
     if (!academyId) return;
     setLoadingLogs(true);
@@ -102,7 +100,6 @@ export default function Exams({ students = [], academyId }) {
     fetchExamLogs();
   }, [fetchExamLogs]);
 
-  // 3️⃣ 💾 دالة اعتماد وحفظ نتيجة الاختبار الحي عبر الخدمة الموحدة
   const handleSaveExam = async () => {
     if (!selectedStudent || !examContent.trim()) {
       setFeedbackMsg({ 
@@ -138,7 +135,6 @@ export default function Exams({ students = [], academyId }) {
         text: isRtl ? 'تم اعتماد الاختبار بنجاح وإدراج النتيجة في لوحة الشرف! 🎉' : 'Exam certified successfully and added to honor roll! 🎉' 
       });
       
-      // تصفير النموذج للحصص القادمة
       setSelectedStudent('');
       setExamContent('');
       setFullErrors(0);
@@ -157,57 +153,53 @@ export default function Exams({ students = [], academyId }) {
     }
   };
 
-  // 🎓 دالة إصدار وتوثيق الشهادة الفعلية في Supabase
+  // 🎓 دالة إنشاء/جلب الشهادة وفتح Modal الشهادة مباشرةً
   const handlePrintCertificate = async (log) => {
     try {
       const studentName = formatStudentName(log.students?.name) || (isRtl ? 'الطالب' : 'Student');
       const studentId = log.student_id;
-      const curriculumId = log.curriculum_id;
+      const curriculumId = log.curriculum_id || log.id; 
 
-      if (!studentId || !curriculumId) {
-        alert(isRtl 
-          ? 'تعذر إصدار الشهادة: معرف الطالب أو المنهج غير مكتمِل في سجل هذا الاختبار.' 
-          : 'Cannot issue certificate: Missing student or curriculum ID.'
-        );
-        return;
-      }
+      let certCode = `CERT-${log.id.substring(0, 6).toUpperCase()}`;
 
-      // 1. التحقق مما إذا كانت الشهادة مسجلة مسبقاً لهذا الطالب في هذا المنهج
-      const { data: existingCert, error: fetchError } = await supabase
-        .from('certificates')
-        .select('verification_code')
-        .eq('student_id', studentId)
-        .eq('curriculum_id', curriculumId)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      let certCode = existingCert?.verification_code;
-
-      // 2. إن لم تكن موجودة، يتم توليد رمز فريد وحفظ الشهادة جديدة في Supabase
-      if (!certCode) {
-        certCode = `CERT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-        const { error: insertError } = await supabase
+      // 1. فحص وجود كود موثق بجدول الشهادات إن وجد
+      if (studentId && log.curriculum_id) {
+        const { data: existingCert } = await supabase
           .from('certificates')
-          .insert([{
-            student_id: studentId,
-            curriculum_id: curriculumId,
-            verification_code: certCode
-          }]);
+          .select('verification_code')
+          .eq('student_id', studentId)
+          .eq('curriculum_id', log.curriculum_id)
+          .maybeSingle();
 
-        if (insertError) throw insertError;
+        if (existingCert?.verification_code) {
+          certCode = existingCert.verification_code;
+        } else {
+          const { error: insertError } = await supabase
+            .from('certificates')
+            .insert([{
+              student_id: studentId,
+              curriculum_id: log.curriculum_id,
+              verification_code: certCode
+            }]);
+          if (insertError) console.warn('لم يتم إضافة الشهادة لقاعدة البيانات، سيتم عرضها فقط:', insertError);
+        }
       }
 
-      // 3. إشعار المستخدم برمز التحقق المعتمد
-      alert(isRtl 
-        ? `تم توثيق الشهادة بنجاح للطالب: ${studentName}\nرمز التحقق المعتمد: ${certCode}` 
-        : `Certificate issued for ${studentName}!\nVerification code: ${certCode}`
-      );
+      // 2. تزويد النافذة ببيانات الشهادة وفتحها
+      setSelectedCertData({
+        studentName,
+        examTarget: log.exam_target || log.notes || 'اختبار القرآن الكريم',
+        score: log.final_score,
+        date: log.date ? new Date(log.date.replace(/-/g, '/')).toLocaleDateString('ar-EG') : new Date().toLocaleDateString('ar-EG'),
+        verificationCode: certCode,
+        academyName: 'أكاديمية تحفيظ القرآن الكريم',
+        tajweedGrade: log.tajweed_grade
+      });
+
+      setIsCertModalOpen(true);
 
     } catch (err) {
-      console.error('🚨 خطأ أثناء إصدار الشهادة:', err);
-      alert(isRtl ? `حدث خطأ أثناء حفظ الشهادة: ${err.message}` : `Error: ${err.message}`);
+      console.error('🚨 خطأ أثناء فتح الشهادة:', err);
     }
   };
 
@@ -221,7 +213,7 @@ export default function Exams({ students = [], academyId }) {
   return (
     <div className="text-slate-100 p-1 font-sans" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       
-      {/* هيدر اللوحة التوضيحي */}
+      {/* هيدر اللوحة */}
       <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md mb-6">
         <h2 className="text-xl md:text-2xl font-extrabold text-amber-400 flex items-center gap-3 m-0">
           <Award className="text-amber-500 w-6 h-6" /> {isRtl ? 'لوحة رصد الاختبارات والترقيات القرآنية الرسمية' : 'Quranic Exams & Milestones Panel'}
@@ -234,13 +226,12 @@ export default function Exams({ students = [], academyId }) {
         </p>
       </div>
 
-      {/* نموذج إجراء الاختبار الحي */}
+      {/* نموذج إجراء الاختبار */}
       <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/20 backdrop-blur-md">
         <h3 className="text-base font-bold text-white mb-5 flex items-center gap-2">
           <GraduationCap className="text-amber-400 w-5 h-5" /> {isRtl ? 'عقد لجنة اختبار وإصدار تقييم موثق' : 'Conduct Official Live Exam'}
         </h3>
 
-        {/* رسائل التغذية الراجعة */}
         {feedbackMsg.text && (
           <div className={`p-4 rounded-xl mb-5 text-xs font-bold border ${
             feedbackMsg.type === 'success' 
@@ -251,7 +242,6 @@ export default function Exams({ students = [], academyId }) {
           </div>
         )}
 
-        {/* حقول الاختيار التفاعلية */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
             <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'اختر الطالب الخاضع للاختبار' : 'Select Student'}</label>
@@ -285,7 +275,6 @@ export default function Exams({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* محتوى الاختبار */}
         <div className="mb-5">
           <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'المحتوى الدقيق للجنة الاختبار' : 'Exam Content / Target'}</label>
           <input 
@@ -297,7 +286,6 @@ export default function Exams({ students = [], academyId }) {
           />
         </div>
 
-        {/* لوحة العدادات المتقدمة للأخطاء والتنبيهات */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
           <div className="p-4 rounded-xl border border-red-500/10 bg-slate-950/40 text-center">
             <span className="block text-xs font-bold text-red-400 mb-3">{isRtl ? 'الخطأ الكامل (نسيان/تبديل كلمة)' : 'Full Errors (Deductions)'}</span>
@@ -320,7 +308,6 @@ export default function Exams({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* تقييم التجويد */}
         <div className="mb-5">
           <label className="block text-xs font-bold text-slate-400 mb-3">{isRtl ? 'جودة الأداء النغمي والتجويد الفطري' : 'Tajweed & Articulation Standard'}</label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -345,7 +332,6 @@ export default function Exams({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* عبارة الثناء والتقدير */}
         <div className="mb-5">
           <label className="block text-xs font-bold text-slate-400 mb-2">{isRtl ? 'عبارة ثناء ورسالة تقديرية تظهر بالشهادة' : 'Praise & Certification Note'}</label>
           <textarea 
@@ -357,7 +343,6 @@ export default function Exams({ students = [], academyId }) {
           />
         </div>
 
-        {/* شاشة احتساب النتيجة المباشرة الذكية */}
         <div className={`p-4 rounded-xl text-center mb-6 border border-dashed ${
           calculatedScore >= 90 ? 'border-emerald-500/30 bg-emerald-500/5' : calculatedScore >= 75 ? 'border-amber-500/30 bg-amber-500/5' : 'border-red-500/30 bg-red-500/5'
         }`}>
@@ -369,7 +354,6 @@ export default function Exams({ students = [], academyId }) {
           </div>
         </div>
 
-        {/* زر الاعتماد النهائي */}
         <button
           onClick={handleSaveExam}
           disabled={isSubmitting}
@@ -379,10 +363,8 @@ export default function Exams({ students = [], academyId }) {
         </button>
       </div>
 
-      {/* 📊 جدول سجل التقييمات والاختبارات الكبرى السابق */}
+      {/* سجل التقييمات والشهادات */}
       <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md mt-6">
-        
-        {/* محرك البحث السريع */}
         <div className="relative mb-4 flex items-center">
           <Search className={`absolute ${isRtl ? 'right-4' : 'left-4'} text-slate-500 w-4 h-4`} />
           <input 
@@ -447,10 +429,10 @@ export default function Exams({ students = [], academyId }) {
                               ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-slate-950' 
                               : 'bg-slate-950 text-slate-600 border-slate-900 disabled:opacity-20'
                           }`}
-                          title={isRtl ? "طباعة شهادة التقدير الرسمية" : "Print Official Milestone Certificate"}
+                          title={isRtl ? "عرض وطباعة شهادة التقدير" : "View & Print Certificate"}
                         >
                           <Printer className="w-3 h-3" />
-                          <span>{isRtl ? 'الشهادة' : 'Cert'}</span>
+                          <span>{isRtl ? 'عرض الشهادة' : 'View Cert'}</span>
                         </button>
                       </td>
                     </tr>
@@ -461,6 +443,14 @@ export default function Exams({ students = [], academyId }) {
           </div>
         )}
       </div>
+
+      {/* 🎓 استدعية نافذة الشهادة الموثقة مع Modal */}
+      <CertificateModal 
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        certData={selectedCertData}
+        isRtl={isRtl}
+      />
 
     </div>
   );
