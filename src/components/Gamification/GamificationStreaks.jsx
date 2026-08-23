@@ -8,12 +8,16 @@ import {
 } from 'lucide-react';
 import AchievementChart from './AchievementChart';
 
-export default function GamificationStreaks({ academyId: propAcademyId, isRtl = true }) {
+export default function GamificationStreaks({ 
+  academyId: propAcademyId, 
+  isRtl = true, 
+  initialTab = 'leaderboard' 
+}) {
   const [loading, setLoading] = useState(true);
   const [topAchievers, setTopAchievers] = useState([]);
   const [badges, setBadges] = useState([]);
   const [streaks, setStreaks] = useState([]);
-  const [activeTab, setActiveTab] = useState('leaderboard'); 
+  const [activeTab, setActiveTab] = useState(initialTab); 
   const [debugInfo, setDebugInfo] = useState({ currentAcademyId: null, error: null });
 
   useEffect(() => {
