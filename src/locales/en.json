@@ -166,5 +166,30 @@
     "successMsg": "Transaction logged successfully! The smart verification system will unlock your enterprise access within minutes.",
     "switchLang": "العربية",
     "backToDashboard": "⬅️ Back to Analytics Dashboard"
+  },
+  "gamification": {
+    "title": "Achievements & Leaderboards",
+    "subtitle": "Student motivation, badges, and daily streak tracking",
+    "tabs": {
+      "leaderboard": "Leaderboard",
+      "streaks": "Streaks",
+      "badges": "Badges"
+    },
+    "leaderboardUpdating": "Weekly leaderboard is currently updating...",
+    "badgesTitle": "Mastery & Excellence Badges",
+    "chartTitle": "Weekly Performance Chart",
+    "chartSubtitle": "Total completed pages (Memorization & Revision)",
+    "totalWeekly": "Total Weekly Pages",
+    "peakDay": "Peak Performance Day",
+    "pages": "Pages",
+    "days": {
+      "sat": "Sat",
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri"
+    }
   }
 }
