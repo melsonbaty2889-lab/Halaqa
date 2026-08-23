@@ -1,28 +1,24 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
-        dark: 'var(--bg-dark)',
-        bgDark: 'var(--bg-dark)',
+        dark: {
+          bg: 'var(--bg-dark)',           // #070B11
+          card: 'var(--surface-card)',     // rgba(15, 23, 42, 0.85)
+          input: 'var(--surface-input)',   // #0A101D
+        },
         primary: {
-          DEFAULT: 'var(--primary)',
-          hover: 'var(--primary-hover)',
+          DEFAULT: 'var(--primary)',       // #E07A00 / #D97706
+          hover: 'var(--primary-hover)',   // #C66B00
           glow: 'var(--primary-glow)',
         },
         brandEmerald: {
-          DEFAULT: 'var(--emerald-text)',
-          bg: 'var(--emerald-bg)',
-          border: 'var(--emerald-border)',
+          DEFAULT: 'var(--emerald-text)',  // #10B981
+          bg: 'var(--emerald-bg)',        // #09332C
+          border: 'var(--emerald-border)',// #0D5C4D
         },
-      },
-      boxShadow: {
-        'main': '0 20px 50px rgba(0, 0, 0, 0.6)',
-        'btn': '0 4px 14px rgba(224, 122, 0, 0.3)',
       },
     },
   },
