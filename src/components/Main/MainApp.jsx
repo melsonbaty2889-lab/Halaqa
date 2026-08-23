@@ -330,7 +330,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
        );
       case 'parents':
       case 'parents-guardians':
-      case 'parents_guardians':
+      case 'parents-management':
         return (
         <Parents 
         academyId={academyId} 
