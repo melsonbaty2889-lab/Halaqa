@@ -1,11 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, Filter, Users, UserCheck, UserX, AlertCircle } from 'lucide-react';
+import { Search, Plus, Filter, Users, UserCheck, UserX, AlertCircle, ArrowRight } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
+import StudentProfile from './StudentProfile';
+import AddStudentModal from './AddStudentModal';
 import { formatName } from '@/utils/formatters';
 
-const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading }) => {
+const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isLoading }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -51,13 +55,39 @@ const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading 
     }
   };
 
+  // إذا تم اختيار طالب، نعرض بروفايل الطالب الشامل
+  if (selectedStudent) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setSelectedStudent(null)}
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-all"
+        >
+          <ArrowRight className="w-4 h-4" />
+          العودة لقائمة الطلاب
+        </button>
+        <StudentProfile 
+          student={selectedStudent} 
+          academyId={academyId} 
+          halaqas={halaqas}
+          onUpdateStudent={(updated) => {
+            if (setStudents) {
+              setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
+            }
+            setSelectedStudent(updated);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* الهيدر والإحصائيات السريعة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-            <Users className="w-7 h-7 text-primary-400" />
+            <Users className="w-7 h-7 text-emerald-400" />
             قائمة الطلاب
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -66,8 +96,8 @@ const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading 
         </div>
 
         <button
-          onClick={onAddStudent}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-medium transition-all shadow-lg shadow-primary-600/20 active:scale-95"
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
         >
           <Plus className="w-5 h-5" />
           إضافة طالب جديد
@@ -90,7 +120,7 @@ const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading 
         </div>
       </div>
 
-      {/* أدوية البحث والتصفية */}
+      {/* أدوات البحث والتصفية */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -99,7 +129,7 @@ const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="البحث باسم الطالب أو رقم الهاتف..."
-            className="w-full pl-4 pr-10 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-400 focus:outline-none focus:border-primary-500 transition-colors"
+            className="w-full pl-4 pr-10 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 transition-colors"
           />
         </div>
 
@@ -108,7 +138,7 @@ const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-primary-500 transition-colors text-sm"
+            className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors text-sm"
           >
             <option value="all">جميع الحالات</option>
             <option value="active">نشط فقط</option>
@@ -132,11 +162,27 @@ const StudentsList = ({ students = [], onSelectStudent, onAddStudent, isLoading 
             <StudentItemCard
               key={student.id}
               student={student}
-              onClick={onSelectStudent}
+              onClick={() => setSelectedStudent(student)}
               getStatusBadge={getStatusBadge}
             />
           ))}
         </div>
+      )}
+
+      {/* مودال إضافة طالب جديد */}
+      {isAddModalOpen && (
+        <AddStudentModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          academyId={academyId}
+          halaqas={halaqas}
+          onStudentAdded={(newStudent) => {
+            if (setStudents) {
+              setStudents(prev => [newStudent, ...prev]);
+            }
+            setIsAddModalOpen(false);
+          }}
+        />
       )}
     </div>
   );
