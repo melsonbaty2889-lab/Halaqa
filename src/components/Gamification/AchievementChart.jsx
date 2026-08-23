@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrendingUp, BookOpen, Calendar } from 'lucide-react';
+import { BookOpen, Calendar } from 'lucide-react';
 
 export default function AchievementChart({ weeklyData = [] }) {
   const { t } = useTranslation();
@@ -14,10 +14,10 @@ export default function AchievementChart({ weeklyData = [] }) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-white">
-            {t('gamification.chart.title', 'منحنى الإنجاز الأسبوعي')}
+            {t('gamification.chartTitle')}
           </h3>
           <p className="text-[11px] text-slate-400">
-            {t('gamification.chart.subtitle', 'مجموع الصفحات المنجزة (حفظ ومراجعة)')}
+            {t('gamification.chartSubtitle')}
           </p>
         </div>
       </div>
@@ -27,10 +27,10 @@ export default function AchievementChart({ weeklyData = [] }) {
           <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
           <div>
             <span className="text-[10px] text-slate-400 block leading-none mb-1">
-              {t('gamification.chart.totalWeekly', 'إجمالي صفحات الأسبوع')}
+              {t('gamification.totalWeekly')}
             </span>
             <span className="text-xs font-bold text-white">
-              {totalPages} {t('gamification.chart.pages', 'صفحة')}
+              {totalPages} {t('gamification.pages')}
             </span>
           </div>
         </div>
@@ -39,10 +39,10 @@ export default function AchievementChart({ weeklyData = [] }) {
           <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
           <div>
             <span className="text-[10px] text-slate-400 block leading-none mb-1">
-              {t('gamification.chart.peakDay', 'أعلى يوم إنجاز')}
+              {t('gamification.peakDay')}
             </span>
             <span className="text-xs font-bold text-amber-400">
-              {peakItem.dayKey ? t(`gamification.chart.days.${peakItem.dayKey}`) : '-'} ({peakItem.pages || 0})
+              {peakItem.dayKey ? t(`gamification.days.${peakItem.dayKey}`) : '-'} ({peakItem.pages || 0})
             </span>
           </div>
         </div>
@@ -51,7 +51,7 @@ export default function AchievementChart({ weeklyData = [] }) {
       <div className="pt-2">
         {weeklyData.length === 0 ? (
           <p className="text-xs text-slate-500 text-center py-4">
-            {t('common.noResults', 'لا توجد بيانات')}
+            {t('common.noResults')}
           </p>
         ) : (
           <div className="h-24 w-full flex items-end justify-between gap-1 px-1">
@@ -62,7 +62,7 @@ export default function AchievementChart({ weeklyData = [] }) {
                   style={{ height: `${((item.pages || 0) / maxPages) * 100}%` }}
                 />
                 <span className="text-[10px] font-medium text-slate-400">
-                  {t(`gamification.chart.days.${item.dayKey}`)}
+                  {t(`gamification.days.${item.dayKey}`)}
                 </span>
               </div>
             ))}
