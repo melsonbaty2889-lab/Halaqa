@@ -33,12 +33,14 @@ const Attendance = safeLazy(() => import('@/components/Attendance/Attendance.jsx
 const Exams = safeLazy(() => import('@/components/Exams/Exams.jsx')); 
 const Payments = safeLazy(() => import('@/components/Payments/StudentPayments.jsx'));
 const Settings = safeLazy(() => import('@/components/Settings/Settings.jsx')); 
+const CommunicationHub = safeLazy(() => import('@/components/Notifications/CommunicationHub.jsx'));
 const Reports = safeLazy(() => import('@/components/Reports/Reports.jsx'));
 const ActiveHalaqas = safeLazy(() => import('@/components/Halaqat/ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('@/components/Logs/RealtimeAudit.jsx'));
-const CommunicationHub = safeLazy(() => import('@/components/Notifications/CommunicationHub.jsx'));
+
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
+const Parents = safeLazy(() => import('@/components/Parents/Parents.jsx'));
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -270,10 +272,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
       case 'realtime-audit':
         return <RealtimeAudit session={session} userRole={userRole} />;
-      case 'communication-hub':
-        return <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />;
-      case 'reports':
-        return <Reports students={students} academyId={academyId} countryCode={countryCode} />;
+      case 'notifications':
+case 'communication-hub':
+  return <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />;
+
+case 'reports':
+  return <Reports students={students} academyId={academyId} countryCode={countryCode} />;
       case 'students':
         return <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />;
       case 'teachers':
