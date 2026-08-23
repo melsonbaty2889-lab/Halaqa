@@ -332,21 +332,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         );
       case 'halaqas':
+      case 'active-halaqas':
+      case 'classes':
         return (
-          <ActiveHalaqas 
-            halaqas={enrichedHalaqas} 
-            teachers={teachers} 
-            students={students} 
-            isLoading={loadingData} 
-            error={null} 
-            isRtl={isRtl} 
-            isMobile={isMobile} 
-            onNavigateToAttendance={(halaqaId) => {
-              setSelectedHalaqaId(halaqaId);
-              setActiveTab('attendance');
-            }}
-          />
-        );
+    <ActiveHalaqas 
+      halaqas={enrichedHalaqas} 
+      teachers={teachers} 
+      students={students} 
+      isLoading={loadingData} 
+      error={null} 
+      isRtl={isRtl} 
+      isMobile={isMobile} 
+      onNavigateToAttendance={(halaqaId) => {
+        setSelectedHalaqaId(halaqaId);
+        setActiveTab('attendance');
+      }}
+    />
+  );
       case 'attendance':
         return <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} />;
       case 'exams':
