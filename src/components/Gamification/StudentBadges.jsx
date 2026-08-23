@@ -21,7 +21,7 @@ export default function StudentBadges({ badges = [] }) {
             <Award className="w-5 h-5" />
           </div>
           <h3 className="text-sm font-bold text-white">
-            {t('gamification.badges.title', 'شارات التميز والإتقان')}
+            {t('gamification.badgesTitle')}
           </h3>
         </div>
         <span className="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full dir-ltr">
@@ -31,7 +31,7 @@ export default function StudentBadges({ badges = [] }) {
 
       {badges.length === 0 ? (
         <p className="text-xs text-slate-500 text-center py-4">
-          {t('common.noResults', 'لا توجد بيانات')}
+          {t('common.noResults')}
         </p>
       ) : (
         <div className="grid grid-cols-3 gap-2.5">
@@ -48,7 +48,7 @@ export default function StudentBadges({ badges = [] }) {
               >
                 {badge.unlocked && badge.tier && (
                   <span className="absolute -top-2.5 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    {t(`gamification.badges.${badge.tier.toLowerCase()}`, badge.tier)}
+                    {badge.tier}
                   </span>
                 )}
 
@@ -62,10 +62,10 @@ export default function StudentBadges({ badges = [] }) {
 
                 <div className="w-full my-1">
                   <h4 className="text-xs font-bold text-white leading-tight break-words">
-                    {t(`gamification.badges.${badge.key}`, badge.title)}
+                    {badge.title}
                   </h4>
                   <p className="text-[10px] text-slate-400 mt-1 leading-tight break-words">
-                    {t(`gamification.badges.${badge.key}Desc`, badge.desc)}
+                    {badge.desc}
                   </p>
                 </div>
               </div>
