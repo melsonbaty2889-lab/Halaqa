@@ -1,136 +1,105 @@
+/* src/components/Gamification/GamificationStreaks.jsx */
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trophy, Award, Flame, Star, BookOpen, TrendingUp } from 'lucide-react';
+import { Trophy, Flame, Award } from 'lucide-react';
 
-export default function GamificationStreaks({ badges = [], streaks = [], leaderboard = [], chartData = [] }) {
+// استدعاء المكونات الفرعية الجاهزة
+import StudentBadges from './StudentBadges';
+import AchievementChart from './AchievementChart';
+import WeeklyQuestCard from './WeeklyQuestCard';
+
+export default function GamificationStreaks({ 
+  student = { current_streak: 5, current_quarter_index: 12 }, 
+  weeklyData = [], 
+  leaderboard = [],
+  badges = []
+}) {
   const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState('leaderboard');
-
-  // كود اللغة الحالي (ar, en, fr, ur...)
+  // جعل التبويب الافتراضي هو الأوسمة لعرض الشارات فوراً
+  const [activeTab, setActiveTab] = useState('badges');
+  
   const currentLang = i18n?.language?.split('-')[0]?.toLowerCase() || 'ar';
   const isRtl = i18n?.dir() === 'rtl';
 
-  // دالة جلب محتوى الوسام من JSONB مع الحماية
-  const getBadgeContent = (badge, isTitle = true) => {
-    const field = isTitle ? badge.titles : badge.descriptions;
-    
-    if (field && typeof field === 'object') {
-      if (field[currentLang]) return field[currentLang];
-      if (field['ar']) return field['ar'];
-      if (field['en']) return field['en'];
-    }
-
-    // Fallback للحقول القديمة
-    if (isTitle) return badge.title || t('gamification.defaultBadgeTitle', 'وسام إنجاز');
-    return badge.description || t('gamification.defaultBadgeDesc', 'وسام تشجيعي للتفوق والمواظبة');
-  };
-
-  // اختصار أيام الأسبوع للرسم البياني لتفادي التداخل
-  const formatDayName = (day) => {
-    const daysMap = {
-      Sat: { ar: 'سبت', en: 'Sat' },
-      Sun: { ar: 'أحد', en: 'Sun' },
-      Mon: { ar: 'إثنين', en: 'Mon' },
-      Tue: { ar: 'ثلاثاء', en: 'Tue' },
-      Wed: { ar: 'أربعاء', en: 'Wed' },
-      Thu: { ar: 'خميس', en: 'Thu' },
-      Fri: { ar: 'جمعة', en: 'Fri' },
-    };
-    return daysMap[day]?.[currentLang] || day;
-  };
-
   return (
-    <div className="space-y-6 text-slate-100 dir-auto">
-      {/* الهيدر الرئيسي والتبويب */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 backdrop-blur-md">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
-            <Trophy className="w-7 h-7" />
+    <div className="space-y-4 text-slate-100 select-none">
+      {/* 1. الكارت الرئيسي للتنقل */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 rounded-xl text-amber-400">
+            <Trophy className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-wide">
+            <h2 className="text-base font-bold text-white">
               {t('gamification.title', 'لوحة الإنجازات والتحديات')}
             </h2>
-            <p className="text-sm text-slate-400">
+            <p className="text-xs text-slate-400">
               {t('gamification.subtitle', 'تحفيز الطلاب وتتبع الأوسمة والسلسلة اليومية')}
             </p>
           </div>
         </div>
 
         {/* أزرار التبويب */}
-        <div className="grid grid-cols-3 gap-2 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800/80">
+        <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
           <button
             onClick={() => setActiveTab('leaderboard')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
               activeTab === 'leaderboard'
-                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Trophy className="w-4 h-4" />
+            <Trophy className="w-3.5 h-3.5" />
             <span>{t('gamification.tabs.leaderboard', 'المتصدرين')}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('streaks')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
               activeTab === 'streaks'
-                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Flame className="w-4 h-4" />
+            <Flame className="w-3.5 h-3.5" />
             <span>{t('gamification.tabs.streaks', 'السلسلة')}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('badges')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
               activeTab === 'badges'
-                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Award className="w-4 h-4" />
-            <span>
-              {t('gamification.tabs.badges', 'الأوسمة')} ({badges.length})
-            </span>
+            <Award className="w-3.5 h-3.5" />
+            <span>{t('gamification.tabs.badges', 'الأوسمة')}</span>
           </button>
         </div>
       </div>
 
-      {/* قسم عرض الأوسمة عند اختيار تبويب Badges */}
-      {activeTab === 'badges' && (
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4 text-sky-400">
-            <Award className="w-5 h-5" />
-            <h3 className="font-bold">{t('gamification.badgesHeader', 'الأوسمة والإنجازات المتاحة')}</h3>
-          </div>
+      {/* 2. عرض المكون الفرعي حسب التبويب المختار */}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {badges.map((badge) => (
-              <div
-                key={badge.id}
-                className="flex items-center justify-between p-4 bg-slate-950/40 border border-slate-800 rounded-xl hover:border-amber-500/30 transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
-                    <Award className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-100">{getBadgeContent(badge, true)}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">
-                      {getBadgeContent(badge, false)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg text-amber-400 text-xs font-bold whitespace-nowrap">
-                  <Star className="w-3.5 h-3.5 fill-amber-400" />
-                  <span>+{badge.points_rewarded || 10}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* تبويب الأوسمة */}
+      {activeTab === 'badges' && (
+        <StudentBadges student={student} weeklyData={weeklyData} isRtl={isRtl} />
+      )}
+
+      {/* تبويب السلسلة والمنحنى البياني والتحدي الأسبوعي */}
+      {activeTab === 'streaks' && (
+        <div className="space-y-4">
+          <WeeklyQuestCard isRtl={isRtl} />
+          <AchievementChart data={weeklyData} isRtl={isRtl} />
+        </div>
+      )}
+
+      {/* تبويب المتصدرين */}
+      {activeTab === 'leaderboard' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
+          <p className="text-xs text-slate-400">
+            {t('gamification.noLeaderboard', 'لوحة المتصدرين قيد التحديث الأسبوعي...')}
+          </p>
         </div>
       )}
     </div>
