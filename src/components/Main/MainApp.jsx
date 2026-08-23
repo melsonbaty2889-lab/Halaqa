@@ -37,7 +37,7 @@ const CommunicationHub = safeLazy(() => import('@/components/Notifications/Commu
 const Reports = safeLazy(() => import('@/components/Reports/Reports.jsx'));
 const ActiveHalaqas = safeLazy(() => import('@/components/Halaqat/ActiveHalaqas.jsx'));
 const RealtimeAudit = safeLazy(() => import('@/components/Logs/RealtimeAudit.jsx'));
-
+const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
@@ -327,6 +327,16 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
          academyId={academyId} 
          halaqas={enrichedHalaqas} 
          />
+       );
+      case 'parents':
+      case 'parents-guardians':
+      case 'parents_guardians':
+        return (
+        <Parents 
+        academyId={academyId} 
+        students={students} 
+        isRtl={isRtl} 
+        />
        );
       case 'teachers':
         return (
