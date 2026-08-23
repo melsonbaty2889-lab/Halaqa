@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { formatName } from '@/utils/formatters';
 import { 
   Trophy, Flame, Medal, Star, Crown, 
-  GraduationCap, Loader2, AlertTriangle, Lock
+  GraduationCap, Loader2, AlertTriangle
 } from 'lucide-react';
 import AchievementChart from './AchievementChart';
 
@@ -20,7 +20,7 @@ export default function GamificationStreaks({
   const [activeTab, setActiveTab] = useState(initialTab); 
   const [debugInfo, setDebugInfo] = useState({ currentAcademyId: null, error: null });
 
-  // 🔄 مزامنة التبويب النشط عند التغيير من القائمة الجانبية
+  // مزامنة التبويب عند الضغط عليه من القائمة الجانبية
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
@@ -47,7 +47,7 @@ export default function GamificationStreaks({
 
         setDebugInfo({ currentAcademyId: targetAcademyId || 'غير محدد', error: null });
 
-        // 1️⃣ جلب الأوسمة ومنع التكرار باستخدام Map
+        // 1️⃣ جلب الأوسمة ومنع التكرار
         let badgesQuery = supabase.from('badges').select('*');
         if (targetAcademyId) badgesQuery = badgesQuery.eq('academy_id', targetAcademyId);
 
@@ -105,7 +105,7 @@ export default function GamificationStreaks({
   const lang = isRtl ? 'ar' : 'en';
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="flex flex-col gap-5 p-3 pb-10 box-border text-start">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="flex flex-col gap-4 p-3 pb-10 box-border text-start">
       
       {debugInfo.error && (
         <div className="bg-red-950/40 border border-red-500/30 text-red-300 p-3 rounded-xl text-xs flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function GamificationStreaks({
         </div>
       )}
 
-      {/* الهيدر الرئيسي والتبويبات */}
+      {/* الهيدر الرئيسي وتنقل التبويبات */}
       <div className="bg-[#0F172A] p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col gap-3.5">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
@@ -169,60 +169,61 @@ export default function GamificationStreaks({
         </div>
       </div>
 
-      {/* منحنى الإنجاز الأسبوعي */}
-      <AchievementChart isRtl={isRtl} />
-
-      {/* عرض التبويب المحدد */}
+      {/* 1️⃣ تبويب المتصدرين (عرض الرسم البياني + النظراء) */}
       {activeTab === 'leaderboard' && (
-        <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
-          <h2 className="text-sm text-amber-400 mb-3.5 flex items-center gap-2 font-bold">
-            <Crown size={16} />
-            <span>{isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}</span>
-          </h2>
+        <>
+          <AchievementChart isRtl={isRtl} />
 
-          <div className="flex flex-col gap-2.5">
-            {topAchievers.map((item, index) => {
-              const pts = item.points || 0;
-              const level = Math.floor(pts / 50) + 1;
-              const progressInLevel = ((pts % 50) / 50) * 100;
+          <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
+            <h2 className="text-sm text-amber-400 mb-3.5 flex items-center gap-2 font-bold">
+              <Crown size={16} />
+              <span>{isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}</span>
+            </h2>
 
-              return (
-                <div key={item.id || index} className="flex flex-col gap-2 p-3 bg-[#090F16] rounded-xl border border-slate-800/80">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className={`font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center ${
-                        index === 0 ? 'bg-amber-500 text-slate-950 font-extrabold' : 'bg-slate-800 text-slate-300'
-                      }`}>
-                        {index + 1}
-                      </span>
-                      <GraduationCap size={20} className={index === 0 ? 'text-amber-400' : 'text-slate-400'} />
-                      <div>
-                        <span className="text-slate-100 font-bold text-xs block">
-                          {formatName(item.name, lang, isRtl ? 'طالب' : 'Student')}
+            <div className="flex flex-col gap-2.5">
+              {topAchievers.map((item, index) => {
+                const pts = item.points || 0;
+                const level = Math.floor(pts / 50) + 1;
+                const progressInLevel = ((pts % 50) / 50) * 100;
+
+                return (
+                  <div key={item.id || index} className="flex flex-col gap-2 p-3 bg-[#090F16] rounded-xl border border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center ${
+                          index === 0 ? 'bg-amber-500 text-slate-950 font-extrabold' : 'bg-slate-800 text-slate-300'
+                        }`}>
+                          {index + 1}
                         </span>
-                        <span className="text-slate-400 text-[11px]">
-                          {isRtl ? `المستوى ${level}` : `Level ${level}`}
-                        </span>
+                        <GraduationCap size={20} className={index === 0 ? 'text-amber-400' : 'text-slate-400'} />
+                        <div>
+                          <span className="text-slate-100 font-bold text-xs block">
+                            {formatName(item.name, lang, isRtl ? 'طالب' : 'Student')}
+                          </span>
+                          <span className="text-slate-400 text-[11px]">
+                            {isRtl ? `المستوى ${level}` : `Level ${level}`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg text-amber-400 font-bold text-xs border border-amber-500/20">
+                        <Star size={12} className="fill-amber-400" />
+                        <span>{pts}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg text-amber-400 font-bold text-xs border border-amber-500/20">
-                      <Star size={12} className="fill-amber-400" />
-                      <span>{pts}</span>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden mt-1">
+                      <div className="bg-amber-400 h-full transition-all duration-500" style={{ width: `${progressInLevel}%` }} />
                     </div>
                   </div>
-
-                  {/* شريط التقدم المعزز */}
-                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden mt-1">
-                    <div className="bg-amber-400 h-full transition-all duration-500" style={{ width: `${progressInLevel}%` }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
+      {/* 2️⃣ تبويب السلسلة */}
       {activeTab === 'streaks' && (
         <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
           <h2 className="text-sm text-emerald-400 mb-3.5 flex items-center gap-2 font-bold">
@@ -261,6 +262,7 @@ export default function GamificationStreaks({
         </div>
       )}
 
+      {/* 3️⃣ تبويب الأوسمة */}
       {activeTab === 'badges' && (
         <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
           <h2 className="text-sm text-sky-400 mb-3.5 flex items-center gap-2 font-bold">
