@@ -40,7 +40,6 @@ const RealtimeAudit = safeLazy(() => import('@/components/Logs/RealtimeAudit.jsx
 const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
-const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
 
 // ----------------------------------------------------
 // مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
