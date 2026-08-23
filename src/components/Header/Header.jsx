@@ -234,7 +234,6 @@ export default function Header({
 
           {showNotifMenu && (
             <div className={`absolute top-full mt-2 w-72 sm:w-80 bg-[var(--surface-card)] backdrop-blur-xl border border-[var(--border-card)] rounded-2xl shadow-2xl z-50 p-3 text-xs text-slate-300 ${activeRtl ? 'left-0' : 'right-0'}`}>
-              
               <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-slate-100">
