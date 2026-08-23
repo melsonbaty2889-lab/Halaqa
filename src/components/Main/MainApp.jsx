@@ -27,7 +27,7 @@ const safeLazy = (importFn) => {
   );
 };
 
-const Students = safeLazy(() => import('@/components/Student/StudentProfile.jsx'));
+const Students = safeLazy(() => import('@/components/Student/StudentsList.jsx'));
 const Teachers = safeLazy(() => import('@/components/Teachers/Teachers.jsx')); 
 const Attendance = safeLazy(() => import('@/components/Attendance/Attendance.jsx'));
 const Exams = safeLazy(() => import('@/components/Exams/Exams.jsx')); 
@@ -318,7 +318,16 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'reports':
         return <CommunicationsAndReportsHub academyId={academyId} isRtl={isRtl} students={students} countryCode={countryCode} />;
       case 'students':
-        return <Students students={students} setStudents={setStudents} academyId={academyId} halaqas={enrichedHalaqas} />;
+      case 'student-profile':
+      case 'students-management':
+        return (
+        <Students 
+         students={students} 
+         setStudents={setStudents} 
+         academyId={academyId} 
+         halaqas={enrichedHalaqas} 
+         />
+       );
       case 'teachers':
         return (
           <Teachers 
