@@ -1,10 +1,11 @@
 /* src/components/Gamification/GamificationStreaks.jsx */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { formatName } from '@/utils/formatters';
 import { 
   Trophy, Flame, Medal, Star, Crown, 
-  GraduationCap, Loader2, AlertTriangle
+  GraduationCap, Loader2, AlertTriangle 
 } from 'lucide-react';
 import AchievementChart from './AchievementChart';
 
@@ -13,6 +14,9 @@ export default function GamificationStreaks({
   isRtl = true, 
   initialTab = 'leaderboard' 
 }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
+
   const [loading, setLoading] = useState(true);
   const [topAchievers, setTopAchievers] = useState([]);
   const [badges, setBadges] = useState([]);
@@ -20,7 +24,7 @@ export default function GamificationStreaks({
   const [activeTab, setActiveTab] = useState(initialTab); 
   const [debugInfo, setDebugInfo] = useState({ currentAcademyId: null, error: null });
 
-  // مزامنة التبويب عند الضغط عليه من القائمة الجانبية
+  // مزامنة التبويب النشط فور التبديل من القائمة الجانبية
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
@@ -41,24 +45,31 @@ export default function GamificationStreaks({
             .limit(1)
             .maybeSingle();
 
-          if (acadErr) errMsg += `خطأ الأكاديمية: ${acadErr.message} | `;
+          if (acadErr) errMsg += `Academy Error: ${acadErr.message} | `;
           if (academyData?.id) targetAcademyId = academyData.id;
         }
 
-        setDebugInfo({ currentAcademyId: targetAcademyId || 'غير محدد', error: null });
+        setDebugInfo({ currentAcademyId: targetAcademyId || 'N/A', error: null });
 
-        // 1️⃣ جلب الأوسمة ومنع التكرار
+        // 1️⃣ جلب الأوسمة ومنع التكرار نهائياً بناءً على الاسم الموحد
         let badgesQuery = supabase.from('badges').select('*');
         if (targetAcademyId) badgesQuery = badgesQuery.eq('academy_id', targetAcademyId);
 
         const { data: badgesData, error: badgesErr } = await badgesQuery;
-        if (badgesErr) errMsg += `خطأ الأوسمة: ${badgesErr.message} | `;
+        if (badgesErr) errMsg += `Badges Error: ${badgesErr.message} | `;
         
+        // إزالة التكرار بالاعتماد على العنوان لضمان عدم ظهور الشارة مرتين
         const uniqueBadgesMap = new Map();
-        (badgesData || []).forEach(item => uniqueBadgesMap.set(item.id || item.title, item));
+        (badgesData || []).forEach(item => {
+          const uniqueKey = (item.title || item.title_ar || item.id || '').trim().toLowerCase();
+          if (uniqueKey && !uniqueBadgesMap.has(uniqueKey)) {
+            uniqueBadgesMap.set(uniqueKey, item);
+          }
+        });
+        
         setBadges(Array.from(uniqueBadgesMap.values()));
 
-        // 2️⃣ جلب بيانات السلاسل والمتصدرين
+        // 2️⃣ جلب الطلاب والسلاسل
         let studentsQuery = supabase
           .from('students')
           .select('id, name, current_streak, longest_streak, points')
@@ -68,7 +79,7 @@ export default function GamificationStreaks({
         if (targetAcademyId) studentsQuery = studentsQuery.eq('academy_id', targetAcademyId);
 
         const { data: studentsData, error: studErr } = await studentsQuery;
-        if (studErr) errMsg += `خطأ الطلاب: ${studErr.message} | `;
+        if (studErr) errMsg += `Students Error: ${studErr.message} | `;
         
         const processedStudents = (studentsData || []).map(student => ({
           ...student,
@@ -82,7 +93,7 @@ export default function GamificationStreaks({
         if (errMsg) setDebugInfo(prev => ({ ...prev, error: errMsg }));
 
       } catch (err) {
-        setDebugInfo(prev => ({ ...prev, error: err.message || 'حدث خطأ غير متوقع' }));
+        setDebugInfo(prev => ({ ...prev, error: err.message || 'Unexpected Error' }));
       } finally {
         setLoading(false);
       }
@@ -96,13 +107,19 @@ export default function GamificationStreaks({
       <div className="flex justify-center items-center min-h-[220px] text-amber-500 gap-2">
         <Loader2 className="animate-spin" size={28} />
         <span className="text-slate-400 text-sm">
-          {isRtl ? 'جاري جلب البيانات...' : 'Loading data...'}
+          {t('common.loading', isRtl ? 'جاري جلب البيانات...' : 'Loading data...')}
         </span>
       </div>
     );
   }
 
-  const lang = isRtl ? 'ar' : 'en';
+  // دالة مساعدة لاختيار النص بحسب اللغة الحالية تلقائياً
+  const getLocalizedText = (item, fieldAr, fieldEn, fallbackKey) => {
+    if (currentLang.startsWith('en')) {
+      return item[fieldEn] || item[fieldAr] || t(fallbackKey);
+    }
+    return item[fieldAr] || item[fieldEn] || item.title || item.description || t(fallbackKey);
+  };
 
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} className="flex flex-col gap-4 p-3 pb-10 box-border text-start">
@@ -110,11 +127,11 @@ export default function GamificationStreaks({
       {debugInfo.error && (
         <div className="bg-red-950/40 border border-red-500/30 text-red-300 p-3 rounded-xl text-xs flex items-center gap-2">
           <AlertTriangle size={18} className="text-red-400 shrink-0" />
-          <span><strong>تنبيه التشخيص:</strong> {debugInfo.error}</span>
+          <span><strong>{t('common.diagnostic', 'تنبيه التشخيص')}:</strong> {debugInfo.error}</span>
         </div>
       )}
 
-      {/* الهيدر الرئيسي وتنقل التبويبات */}
+      {/* الهيدر الرئيسي والتنقل */}
       <div className="bg-[#0F172A] p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col gap-3.5">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
@@ -122,10 +139,10 @@ export default function GamificationStreaks({
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-100 m-0">
-              {isRtl ? 'لوحة الإنجازات والتحديات' : 'Gamification & Streaks'}
+              {t('gamification.title', isRtl ? 'لوحة الإنجازات والتحديات' : 'Gamification & Streaks')}
             </h1>
             <p className="text-slate-400 text-xs mt-0.5 mb-0">
-              {isRtl ? 'تحفيز الطلاب وتتبع الأوسمة والسلسلة اليومية' : 'Track student streaks & achievements'}
+              {t('gamification.subtitle', isRtl ? 'تحفيز الطلاب وتتبع الأوسمة والسلسلة اليومية' : 'Track student streaks & achievements')}
             </p>
           </div>
         </div>
@@ -140,7 +157,7 @@ export default function GamificationStreaks({
             }`}
           >
             <Crown size={14} />
-            <span>{isRtl ? 'المتصدرين' : 'Leaderboard'}</span>
+            <span>{t('gamification.leaderboard', isRtl ? 'المتصدرين' : 'Leaderboard')}</span>
           </button>
           
           <button 
@@ -152,7 +169,7 @@ export default function GamificationStreaks({
             }`}
           >
             <Flame size={14} />
-            <span>{isRtl ? 'السلسلة' : 'Streaks'}</span>
+            <span>{t('gamification.streaks', isRtl ? 'السلسلة' : 'Streaks')}</span>
           </button>
 
           <button 
@@ -164,12 +181,12 @@ export default function GamificationStreaks({
             }`}
           >
             <Medal size={14} />
-            <span>{isRtl ? 'الأوسمة' : 'Badges'} ({badges.length})</span>
+            <span>{t('gamification.badges', isRtl ? 'الأوسمة' : 'Badges')} ({badges.length})</span>
           </button>
         </div>
       </div>
 
-      {/* 1️⃣ تبويب المتصدرين (عرض الرسم البياني + النظراء) */}
+      {/* 1️⃣ تبويب المتصدرين */}
       {activeTab === 'leaderboard' && (
         <>
           <AchievementChart isRtl={isRtl} />
@@ -177,7 +194,7 @@ export default function GamificationStreaks({
           <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
             <h2 className="text-sm text-amber-400 mb-3.5 flex items-center gap-2 font-bold">
               <Crown size={16} />
-              <span>{isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers'}</span>
+              <span>{t('gamification.topAchievers', isRtl ? 'قائمة أعلى الطلاب إنجازاً' : 'Top Achievers')}</span>
             </h2>
 
             <div className="flex flex-col gap-2.5">
@@ -198,10 +215,10 @@ export default function GamificationStreaks({
                         <GraduationCap size={20} className={index === 0 ? 'text-amber-400' : 'text-slate-400'} />
                         <div>
                           <span className="text-slate-100 font-bold text-xs block">
-                            {formatName(item.name, lang, isRtl ? 'طالب' : 'Student')}
+                            {formatName(item.name, currentLang, isRtl ? 'طالب' : 'Student')}
                           </span>
                           <span className="text-slate-400 text-[11px]">
-                            {isRtl ? `المستوى ${level}` : `Level ${level}`}
+                            {t('gamification.level', isRtl ? `المستوى ${level}` : `Level ${level}`)}
                           </span>
                         </div>
                       </div>
@@ -228,7 +245,7 @@ export default function GamificationStreaks({
         <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
           <h2 className="text-sm text-emerald-400 mb-3.5 flex items-center gap-2 font-bold">
             <Flame size={16} />
-            <span>{isRtl ? 'سلاسل المواظبة والالتزام' : 'Daily Streaks'}</span>
+            <span>{t('gamification.dailyStreaks', isRtl ? 'سلاسل المواظبة والالتزام' : 'Daily Streaks')}</span>
           </h2>
 
           <div className="grid grid-cols-1 gap-2.5">
@@ -240,20 +257,20 @@ export default function GamificationStreaks({
                   </div>
                   <div>
                     <h3 className="text-slate-100 text-xs font-bold m-0">
-                      {formatName(st.name, lang, isRtl ? 'طالب' : 'Student')}
+                      {formatName(st.name, currentLang, isRtl ? 'طالب' : 'Student')}
                     </h3>
                     <div className="text-slate-400 text-[11px]">
-                      {isRtl ? `أفضل رقم: ${st.longest_streak || st.current_streak} يوم` : `Best: ${st.longest_streak || st.current_streak} days`}
+                      {t('gamification.bestStreak', isRtl ? `أفضل رقم: ${st.longest_streak || st.current_streak} يوم` : `Best: ${st.longest_streak || st.current_streak} days`)}
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-[#0F172A] px-3 py-1.5 rounded-lg border border-slate-800 text-center">
                   <div className="text-amber-400 font-bold text-xs">
-                    {st.current_streak} {isRtl ? 'يوم' : 'Days'}
+                    {st.current_streak} {t('common.days', isRtl ? 'يوم' : 'Days')}
                   </div>
                   <div className="text-emerald-400 text-[10px] font-bold">
-                    ⚡ {st.current_streak > 0 ? (isRtl ? 'مستمر' : 'Active') : (isRtl ? 'غير نشط' : 'Inactive')}
+                    ⚡ {st.current_streak > 0 ? t('common.active', isRtl ? 'مستمر' : 'Active') : t('common.inactive', isRtl ? 'غير نشط' : 'Inactive')}
                   </div>
                 </div>
               </div>
@@ -267,7 +284,7 @@ export default function GamificationStreaks({
         <div className="bg-[#0F172A] rounded-2xl border border-slate-800/80 p-4">
           <h2 className="text-sm text-sky-400 mb-3.5 flex items-center gap-2 font-bold">
             <Medal size={16} />
-            <span>{isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges'}</span>
+            <span>{t('gamification.availableBadges', isRtl ? 'الأوسمة والإنجازات المتاحة' : 'Academy Badges')}</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -279,15 +296,15 @@ export default function GamificationStreaks({
                   </div>
                   <div>
                     <h3 className="text-slate-100 text-xs font-bold m-0">
-                      {badge.title || (isRtl ? 'وسام تفوق' : 'Achievement Badge')}
+                      {getLocalizedText(badge, 'title_ar', 'title_en', 'gamification.badgeTitle')}
                     </h3>
                     <p className="text-slate-400 text-[11px] m-0 leading-tight">
-                      {badge.description || (isRtl ? 'وسام تقديري للمواظبة والتفوق' : 'Reward for diligence')}
+                      {getLocalizedText(badge, 'description_ar', 'description_en', 'gamification.badgeDesc')}
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-[#0F172A] px-2.5 py-1.5 rounded-lg border border-slate-800 text-center">
+                <div className="bg-[#0F172A] px-2.5 py-1.5 rounded-lg border border-slate-800 text-center shrink-0">
                   <div className="text-amber-400 font-bold text-xs flex items-center gap-1">
                     <Star size={12} className="fill-amber-400" />
                     <span>+{badge.points_rewarded || 50}</span>
