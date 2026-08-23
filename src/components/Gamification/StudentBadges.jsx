@@ -46,15 +46,31 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl: pr
   const { t, i18n } = useTranslation();
   const isRtl = propIsRtl !== undefined ? propIsRtl : (i18n?.dir() === 'rtl');
 
-  // تشغيل مؤثرات الاحتفال عند الضغط على وسام مفتوح
-  const handleBadgeClick = (badge) => {
-    if (badge.unlocked) {
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#FBBF24', '#38BDF8', '#34D399']
-      });
+  // 2. دالة التقاط موقع اللمس على الجوال وإطلاق الاحتفال
+  const handleBadgeClick = (badge, event) => {
+    if (!badge.unlocked) return;
+
+    let x = 0.5;
+    let y = 0.6;
+
+    if (event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      x = (rect.left + rect.width / 2) / window.innerWidth;
+      y = (rect.top + rect.height / 2) / window.innerHeight;
+    }
+
+    // إطلاق جزيئات Confetti من موقع الإصبع
+    confetti({
+      particleCount: window.innerWidth < 640 ? 35 : 65,
+      spread: 50,
+      origin: { x, y },
+      colors: ['#FBBF24', '#38BDF8', '#34D399', '#F43F5E'],
+      disableForReducedMotion: true
+    });
+
+    // اهتزاز طفيف في الهاتف عند اللمس
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(40);
     }
   };
 
@@ -96,7 +112,6 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl: pr
       }
     ];
 
-    // دمج محرك المستويات مع كل وسام ديناميكياً
     return rawBadges.map(b => ({
       ...b,
       tier: getBadgeTier(b.count)
@@ -106,8 +121,7 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl: pr
   const unlockedCount = useMemo(() => badges.filter(b => b.unlocked).length, [badges]);
 
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg mb-5">
-      {/* رأس الهيدر */}
+    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg mb-5 select-none">
       <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <div className="bg-amber-500/15 p-1.5 rounded-lg flex items-center justify-center border border-amber-500/20">
@@ -123,7 +137,6 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl: pr
         </span>
       </div>
 
-      {/* عرض الأوسمة بالمستويات الثلاثة */}
       <div className="grid grid-cols-3 gap-2.5">
         {badges.map((badge) => {
           const IconComponent = badge.icon;
@@ -132,14 +145,14 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl: pr
           return (
             <div 
               key={badge.id}
-              onClick={() => handleBadgeClick(badge)}
-              className={`relative rounded-xl p-3 flex flex-col items-center text-center transition-all cursor-pointer select-none ${
+              onClick={(e) => handleBadgeClick(badge, e)}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className={`relative rounded-xl p-3 flex flex-col items-center text-center transition-all cursor-pointer touch-manipulation active:scale-95 ${
                 badge.unlocked 
-                  ? `bg-slate-950 border ${tier.borderColor} ${tier.shadow} hover:scale-[1.02]` 
+                  ? `bg-slate-950 border ${tier.borderColor} ${tier.shadow}` 
                   : 'bg-slate-950/40 border border-slate-800/60 opacity-40 cursor-not-allowed'
               }`}
             >
-              {/* شارة المستوى والمضاعف (برونزي / فضي / ذهبي) */}
               {badge.unlocked ? (
                 <span className={`absolute -top-1.5 start-1.5 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded-full shadow ${tier.badgeBg}`}>
                   {isRtl ? tier.tierNameAr : tier.tierNameEn} {badge.count > 1 ? `x${badge.count}` : ''}
@@ -150,12 +163,10 @@ export default function StudentBadges({ student = {}, weeklyData = [], isRtl: pr
                 </span>
               )}
 
-              {/* الأيقونة الملونة بحسب المستوى */}
               <div className={`mb-1.5 p-2 rounded-full flex items-center justify-center ${badge.unlocked ? tier.bgColor : 'bg-slate-800/50'}`}>
                 <IconComponent size={18} className={badge.unlocked ? tier.iconColor : 'text-slate-500'} />
               </div>
 
-              {/* العنوان والوصف */}
               <div className={`text-xs font-bold mb-0.5 truncate w-full ${badge.unlocked ? 'text-slate-100' : 'text-slate-500'}`}>
                 {isRtl ? badge.titleAr : badge.titleEn}
               </div>
