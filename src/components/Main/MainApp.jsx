@@ -42,6 +42,47 @@ const GamificationStreaks = safeLazy(() => import('@/components/Gamification/Gam
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
 
+// ----------------------------------------------------
+// مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
+// ----------------------------------------------------
+const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }) => {
+  const [activeSubTab, setActiveSubTab] = useState('communications');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit">
+        <button
+          onClick={() => setActiveSubTab('communications')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            activeSubTab === 'communications' 
+              ? 'bg-emerald-600 text-white shadow-lg' 
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          {isRtl ? 'مركز التواصل والإشعارات' : 'Communication Center'}
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('reports')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            activeSubTab === 'reports' 
+              ? 'bg-emerald-600 text-white shadow-lg' 
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          {isRtl ? 'التقارير الذكية' : 'Reports'}
+        </button>
+      </div>
+
+      {activeSubTab === 'communications' ? (
+        <CommunicationHub currentAcademyId={academyId} isRtl={isRtl} />
+      ) : (
+        <Reports students={students} academyId={academyId} countryCode={countryCode} />
+      )}
+    </div>
+  );
+};
+
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
