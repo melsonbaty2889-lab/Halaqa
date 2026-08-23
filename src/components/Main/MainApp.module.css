@@ -1,4 +1,4 @@
-/* src/components/MainApp.module.css */
+/* src/components/Main/MainApp.module.css */
 
 .appContainer {
   min-height: 100vh;
@@ -14,7 +14,9 @@
 
 .sidebar {
   width: 260px;
-  background: var(--surface-dark);
+  background: var(--surface-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -23,7 +25,8 @@
   top: 0;
   box-sizing: border-box;
   z-index: 2000;
-  border-inline-end: 1px solid var(--border-light);
+  border-inline-end: 1px solid var(--border-card);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
   transition: transform 0.3s ease-in-out;
 }
 
@@ -40,10 +43,10 @@
 
 .sidebarNavBtn {
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-sub);
   padding: 12px 16px;
-  border-radius: 10px;
-  border: none;
+  border-radius: 12px;
+  border: 1px solid transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -52,17 +55,19 @@
   font-size: 14px;
   font-weight: 600;
   text-align: start;
-  transition: all 0.2s ease; 
+  transition: all 0.2s ease-in-out; 
 }
 
 .sidebarNavBtn:hover:not(.sidebarNavBtnSelected) {
   background: rgba(255, 255, 255, 0.04);
-  color: #ffffff;
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .sidebarNavBtnSelected {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
-  color: #ffffff !important;
+  background: linear-gradient(180deg, #E67E00 0%, #D97706 100%) !important;
+  color: #FFFFFF !important;
   font-weight: 800;
-  box-shadow: 0 4px 15px var(--primary-glow);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 15px var(--primary-glow) !important;
 }
