@@ -1,5 +1,7 @@
+// src/components/Sidebar/SidebarMenu.jsx
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { colors as C } from '@/theme/colors';
 
 export default function SidebarMenu({
   filteredMenuSections,
@@ -27,8 +29,8 @@ export default function SidebarMenu({
                 onClick={() => toggleSection(section.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border-0 text-[12.5px] font-bold cursor-pointer transition-all duration-200 ${
                   isExpanded
-                    ? 'bg-emerald-950/40 text-emerald-400 border-b border-emerald-500/20 shadow-sm'
-                    : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-b border-emerald-500/20'
+                    : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 }`}
               >
                 <span className="tracking-wide">{getText(section.title)}</span>
@@ -53,17 +55,27 @@ export default function SidebarMenu({
                           setActiveTab(item.id);
                           if (isMobile) setSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-0 cursor-pointer transition-all duration-200 text-xs text-start ${
+                        style={
                           isActive
-                            ? 'bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent text-amber-300 font-bold rtl:border-r-[3.5px] ltr:border-l-[3.5px] border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
-                            : 'bg-transparent text-slate-300 hover:bg-slate-800/50 hover:text-emerald-300 font-medium'
+                            ? {
+                                background: 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+                                color: '#FFFFFF',
+                                boxShadow: '0 4px 15px rgba(224, 122, 0, 0.35)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)'
+                              }
+                            : {}
+                        }
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-xs text-start ${
+                          isActive
+                            ? 'font-bold'
+                            : 'bg-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200 font-medium'
                         }`}
                       >
                         {Icon && (
                           <Icon
                             size={17}
                             className={`shrink-0 transition-colors duration-200 ${
-                              isActive ? 'text-amber-400' : 'text-slate-400'
+                              isActive ? 'text-white' : 'text-slate-400'
                             }`}
                           />
                         )}
@@ -77,7 +89,7 @@ export default function SidebarMenu({
           );
         })
       ) : (
-        <div className="text-center py-4 px-3 text-slate-400 text-xs bg-slate-900/80 rounded-lg border border-slate-800">
+        <div className="text-center py-4 px-3 text-slate-400 text-xs bg-slate-900/60 rounded-xl border border-white/5">
           {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
         </div>
       )}
