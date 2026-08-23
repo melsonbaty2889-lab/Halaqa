@@ -4,7 +4,7 @@ import {
   ArrowRight, Edit, Trash2, Flame, Crown, TrendingUp, Sparkles, Zap 
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/lib/supabase';
 import { formatName } from '@/utils/formatters';
 import StudentDocuments from './StudentDocuments';
 import StudentBadges from '@/components/Gamification/StudentBadges';
