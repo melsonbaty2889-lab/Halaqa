@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
 import AddStaffModal from './AddStaffModal';
@@ -22,15 +22,15 @@ export default function Teachers({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTeacherForAvailability, setSelectedTeacherForAvailability] = useState(null);
 
-  const translate = (key, fallback) => {
+  const translate = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       const res = t(key);
-      if (res && typeof res === 'string') return res;
+      if (res && typeof res === 'string' && res !== key) return res;
     }
     return fallback;
-  };
+  }, [t]);
 
-  const fetchStaff = async () => {
+  const fetchStaff = useCallback(async () => {
     if (onRefresh) {
       onRefresh();
       return;
@@ -53,13 +53,14 @@ export default function Teachers({
     } finally {
       setLoading(false);
     }
-  };
+  }, [academyId, onRefresh, setTeachers]);
 
+  // إيقاف الوميض بإيقاف استدعاء fetchStaff إذا كان setTeachers ممرراً بالفعل أو البيانات متوفرة
   useEffect(() => {
-    if (academyId && teachers.length === 0) {
+    if (academyId && teachers.length === 0 && !setTeachers) {
       fetchStaff();
     }
-  }, [academyId]);
+  }, [academyId, teachers.length, setTeachers, fetchStaff]);
 
   const toggleStatus = async (teacherId, currentStatus) => {
     try {
@@ -93,10 +94,10 @@ export default function Teachers({
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-white">
             <Users className="w-6 h-6 text-[#E07A00]" /> 
-            {translate('teachers_title', isRtl ? 'الكادر التعليمي والإداري' : 'Teaching & Administrative Staff')}
+            {translate('teachers_title', 'الكادر التعليمي والإداري')}
           </h2>
           <p className="text-xs text-[#94A3B8] mt-1">
-            {translate('teachers_desc', isRtl ? 'إدارة المعلمين والمشرفين ومدراء الأكاديمية' : 'Manage teachers, supervisors, and academy managers')}
+            {translate('teachers_desc', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية')}
           </p>
         </div>
 
@@ -105,7 +106,7 @@ export default function Teachers({
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white bg-[#E07A00] hover:bg-[#C66B00] transition-colors shadow-lg shadow-[#E07A00]/10 active:scale-95"
         >
           <Plus className="w-4 h-4" /> 
-          {translate('add_staff', isRtl ? 'إضافة كادر جديد' : 'Add New Staff')}
+          {translate('add_staff', 'إضافة كادر جديد')}
         </button>
       </div>
 
@@ -113,7 +114,7 @@ export default function Teachers({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-2xl bg-[#0F172A]/85 border border-[#1B2738] flex items-center justify-between">
           <div>
-            <p className="text-xs text-[#94A3B8]">{translate('total_staff', isRtl ? 'إجمالي الكادر' : 'Total Staff')}</p>
+            <p className="text-xs text-[#94A3B8]">{translate('total_staff', 'إجمالي الكادر')}</p>
             <p className="text-2xl font-bold text-white mt-1">{teachers.length}</p>
           </div>
           <div className="p-3 rounded-xl bg-[#E07A00]/10 text-[#E07A00]">
@@ -123,7 +124,7 @@ export default function Teachers({
 
         <div className="p-4 rounded-2xl bg-[#0F172A]/85 border border-[#1B2738] flex items-center justify-between">
           <div>
-            <p className="text-xs text-[#94A3B8]">{translate('active_teaching', isRtl ? 'المعلمون المباشرون للحلقات' : 'Active Teaching Staff')}</p>
+            <p className="text-xs text-[#94A3B8]">{translate('active_teaching', 'المعلمون المباشرون للحلقات')}</p>
             <p className="text-2xl font-bold text-[#10B981] mt-1">{teachers.filter(s => s.is_teaching).length}</p>
           </div>
           <div className="p-3 rounded-xl bg-[#09332C] text-[#10B981] border border-[#0D5C4D]">
@@ -133,7 +134,7 @@ export default function Teachers({
 
         <div className="p-4 rounded-2xl bg-[#0F172A]/85 border border-[#1B2738] flex items-center justify-between">
           <div>
-            <p className="text-xs text-[#94A3B8]">{translate('active_accounts', isRtl ? 'الحسابات النشطة' : 'Active Accounts')}</p>
+            <p className="text-xs text-[#94A3B8]">{translate('active_accounts', 'الحسابات النشطة')}</p>
             <p className="text-2xl font-bold text-sky-400 mt-1">{teachers.filter(s => s.is_active).length}</p>
           </div>
           <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
@@ -161,7 +162,7 @@ export default function Teachers({
             onClick={() => setSelectedTeacherForAvailability(null)}
             className="absolute top-4 left-4 text-xs text-[#94A3B8] hover:text-white"
           >
-            ✕ {translate('close', isRtl ? 'إغلاق' : 'Close')}
+            ✕ {translate('close', 'إغلاق')}
           </button>
           <TeacherAvailabilityManager teacherId={selectedTeacherForAvailability} />
         </div>
@@ -169,10 +170,10 @@ export default function Teachers({
 
       {/* Teachers Cards Grid */}
       {loading ? (
-        <div className="text-center py-12 text-[#94A3B8] text-xs">{translate('loading', isRtl ? 'جاري تحميل البيانات...' : 'Loading...')}</div>
+        <div className="text-center py-12 text-[#94A3B8] text-xs">{translate('loading', 'جاري تحميل البيانات...')}</div>
       ) : filteredStaff.length === 0 ? (
         <div className="text-center py-12 bg-[#0F172A]/40 rounded-2xl border border-dashed border-[#1B2738] text-[#94A3B8] text-xs">
-          {translate('no_teachers_found', isRtl ? 'لا توجد نتائج تطابق خيارات البحث' : 'No records match search parameters')}
+          {translate('no_teachers_found', 'لا توجد نتائج تطابق خيارات البحث')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
