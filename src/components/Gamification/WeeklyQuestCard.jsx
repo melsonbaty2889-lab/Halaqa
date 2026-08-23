@@ -8,7 +8,7 @@ export default function WeeklyQuestCard({ quest = null }) {
   if (!quest) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg text-center text-xs text-slate-500">
-        {t('common.noResults', 'لا توجد بيانات')}
+        {t('common.noResults')}
       </div>
     );
   }
@@ -25,10 +25,10 @@ export default function WeeklyQuestCard({ quest = null }) {
           </div>
           <div>
             <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
-              {t('gamification.quest.badge', 'تحدي الأسبوع')}
+              {t('gamification.tabs.streaks')}
             </span>
             <p className="text-xs font-semibold text-slate-300">
-              {quest.description || t('gamification.quest.desc', 'متابعة ورد الحفظ الأسبوعي')}
+              {quest.description}
             </p>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function WeeklyQuestCard({ quest = null }) {
 
       <div className="space-y-1.5">
         <div className="flex justify-between items-center text-xs font-bold">
-          <span className="text-slate-400">{t('gamification.quest.progress', 'التقدم')}</span>
+          <span className="text-slate-400">Progress</span>
           <span className="text-amber-400 dir-ltr font-mono">
             {current} / {target} ({percentage}%)
           </span>
