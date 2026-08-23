@@ -111,4 +111,11 @@ export const silentError = (error, context = 'Background', fallback = null) => {
   }
 };
 
+/**
+ * 4. معالجة أخطاء تسجيل الدخول والمصادقة
+ */
+export const handleAuthError = (error, lang = 'ar') => {
+  return handleError(error, 'Auth', lang);
+};
+
 export default handleError;
