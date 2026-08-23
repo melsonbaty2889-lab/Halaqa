@@ -42,7 +42,7 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
-          id: 'communications-reports', 
+          id: 'notifications_reports', 
           label: isRtl ? 'الإشعارات والتقارير' : 'Notifications & Reports', 
           icon: Send, 
           roles: ['admin', 'teacher', 'parent'] 
