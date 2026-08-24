@@ -41,6 +41,7 @@ const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.js
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 const Curriculum = safeLazy(() => import('@/components/Curriculum/CurriculumManagement.jsx'));
+const Documents = safeLazy(() => import('@/components/Student/StudentDocuments.jsx'));
 
 // ----------------------------------------------------
 // مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
@@ -397,6 +398,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="badges" />;
       case 'payments':
         return <Payments students={students} academyId={academyId} currency={currency} />;
+      case 'documents':
+      case 'student-documents':
+      case 'documents-files':
+        return (
+       <Documents 
+      academyId={academyId} 
+      students={students} 
+      teachers={teachers} 
+      isRtl={isRtl} 
+    />
+  ); 
       case 'settings':
         return (
           <Settings 
