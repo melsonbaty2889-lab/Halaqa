@@ -11,6 +11,7 @@ const AddStudentModal = ({
   academyId,
   halaqas = [],
   onSuccess,
+  onStudentAdded,
 }) => {
   const [formData, setFormData] = useState({
     name_ar: '',
@@ -132,27 +133,40 @@ const AddStudentModal = ({
         updated_at: new Date().toISOString(),
       };
 
+      let resultData = null;
+
       if (studentToEdit) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('students')
           .update(payload)
-          .eq('id', studentToEdit.id);
+          .eq('id', studentToEdit.id)
+          .select()
+          .single();
 
         if (error) throw error;
+        resultData = data;
       } else {
-        const { error } = await supabase.from('students').insert([
-          {
-            ...payload,
-            status: 'active',
-            is_archived: false,
-            created_at: new Date().toISOString(),
-          },
-        ]);
+        const { data, error } = await supabase
+          .from('students')
+          .insert([
+            {
+              ...payload,
+              status: 'active',
+              is_archived: false,
+              created_at: new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single();
 
         if (error) throw error;
+        resultData = data;
       }
 
-      if (onSuccess) await onSuccess();
+      // إشعار المكون الأب بالبيانات الجديدة لتحديث القائمة فورياً
+      if (onSuccess) await onSuccess(resultData);
+      if (onStudentAdded) await onStudentAdded(resultData);
+
       onClose();
     } catch (err) {
       console.error('خطأ أثناء حفظ البيانات:', err);
