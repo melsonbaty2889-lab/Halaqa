@@ -1,16 +1,10 @@
-/* src/components/Dashboard/AdminDashboard.jsx */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import styles from '@/components/Dashboard/Dashboard.module.css';
 import { supabase } from '@/lib/supabase';
-
-// 🛠️ تصحيح المسار المسبب لخطأ Vercel Build (استبدال @/UI بـ @/components/UI)
 import EmptyState from '@/components/UI/EmptyState'; 
 
-// ✨ استيراد الأيقونات
 import { 
   Building2, 
   Clock, 
-  CheckCircle2, 
   ShieldCheck,
   Ban,
   RefreshCw,
@@ -23,8 +17,6 @@ import {
   Eye,
   Unlock,
   Search,
-  Filter,
-  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   MessageCircle,
@@ -37,7 +29,6 @@ import {
 
 const PAGE_SIZE = 10;
 
-// 🛡️ دالة أمان لمساعدات النصوص
 const getSafeText = (val, defaultVal = '') => {
   if (val === null || val === undefined) return defaultVal;
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -62,25 +53,20 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   
   const [activeTab, setActiveTab] = useState('all'); 
   const [extendModalAcademy, setExtendModalAcademy] = useState(null);
-  const [receiptModalUrl, setReceiptModalUrl] = useState(null); 
   const [toast, setToast] = useState(null);
 
-  // 📱 حالة نافذة إدخال رقم الهاتف
   const [phoneModalData, setPhoneModalData] = useState(null);
   const [inputPhone, setInputPhone] = useState('');
 
-  // 🔍 حالات البحث والفلترة والفرز والصفحات
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('all'); 
   const [sortBy, setSortBy] = useState('created_at_desc'); 
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 📥 حالة Drawer التفاصيل العميقة
   const [selectedAcademyDetails, setSelectedAcademyDetails] = useState(null);
   const [academyStatsLoading, setAcademyStatsLoading] = useState(false);
   const [deepStats, setDeepStats] = useState({ studentsCount: 0, halaqatCount: 0, payments: [] });
 
-  // 🔲 حالة التحديد الجماعي
   const [selectedAcademyIds, setSelectedAcademyIds] = useState([]);
 
   const showToast = (message, type = 'success') => {
@@ -88,15 +74,13 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // 📲 دالة فتح الواتساب مباشرة مع رسالة مجهزة
   const handleWhatsAppClick = (phone, academyName) => {
     if (!phone) return;
     const cleanPhone = phone.replace(/\D/g, '');
-    const message = encodeURIComponent(`السلام عليكم، تواصل معك من إدارة منصة حلقات بشأن أكاديمية (${academyName})`);
+    const message = encodeURIComponent(`السلام عليكم، نأتيك من إدارة المنصة بشأن أكاديمية (${academyName})`);
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
-  // 💾 دالة حفظ رقم الهاتف من الـ Modal
   const handleSavePhone = async () => {
     if (!inputPhone.trim() || !phoneModalData) return;
     
@@ -104,17 +88,14 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     
     setProcessingId('save-phone');
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ phone: cleanPhone })
-        .eq('id', phoneModalData.ownerId)
-        .select();
+        .eq('id', phoneModalData.ownerId);
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
-      showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح! 🎉" : "Phone saved successfully!");
+      showToast(isRtl ? "تم حفظ رقم الهاتف بنجاح" : "Phone saved successfully!");
       
       if (selectedAcademyDetails && selectedAcademyDetails.owner_id === phoneModalData.ownerId) {
         setSelectedAcademyDetails(prev => ({
@@ -133,7 +114,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // 📥 جلب البيانات المرقّمة من Supabase
   const fetchDashboardData = useCallback(async (isSilentRefresh = false) => {
     if (!isSilentRefresh) setLoading(true);
     else setRefreshing(true);
@@ -221,7 +201,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       setAcademies(enrichedAcademies);
 
     } catch (err) {
-      console.error("❌ Admin Dashboard Fetch Error:", err.message);
+      console.error("Admin Dashboard Fetch Error:", err.message);
       showToast(isRtl ? "حدث خطأ أثناء تحميل البيانات." : "Error loading data.", "error");
     } finally {
       setLoading(false);
@@ -238,7 +218,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     setSelectedAcademyIds([]); 
   }, [activeTab, searchQuery, planFilter, sortBy]);
 
-  // 🔍 فلترة الصفحة الحالية
   const filteredAcademies = useMemo(() => {
     return academies.filter(item => {
       const acadName = getSafeText(item.name).toLowerCase();
@@ -293,7 +272,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     });
   }, [academies, searchQuery, planFilter, activeTab]);
 
-  // 📥 فتح Drawer وجلب الإحصائيات العميقة
   const openAcademyDrawer = async (academy) => {
     setSelectedAcademyDetails(academy);
     setAcademyStatsLoading(true);
@@ -321,7 +299,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // 🔲 إدارات التحديد الجماعي
   const toggleSelectAll = () => {
     if (selectedAcademyIds.length === filteredAcademies.length) {
       setSelectedAcademyIds([]);
@@ -336,12 +313,11 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     );
   };
 
-  // 🔲 الإجراءات الجماعية
   const handleBulkStatusChange = async (newStatus) => {
     if (selectedAcademyIds.length === 0) return;
     const actionText = newStatus ? (isRtl ? 'تفعيل' : 'Activate') : (isRtl ? 'حظر' : 'Block');
     
-    if (!window.confirm(isRtl ? `هل تأكد من ${actionText} عدد (${selectedAcademyIds.length}) أكاديمية؟` : `Confirm ${actionText} ${selectedAcademyIds.length} academies?`)) return;
+    if (!window.confirm(isRtl ? `تأكيد ${actionText} عدد (${selectedAcademyIds.length}) أكاديمية؟` : `Confirm ${actionText} ${selectedAcademyIds.length} academies?`)) return;
 
     setProcessingId('bulk');
     try {
@@ -352,7 +328,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (error) throw error;
 
-      showToast(isRtl ? `تم ${actionText} الأكاديميات بنجاح!` : `Bulk action completed!`);
+      showToast(isRtl ? `تم ${actionText} الأكاديميات بنجاح` : `Bulk action completed!`);
       setSelectedAcademyIds([]);
       fetchDashboardData(true);
     } catch (err) {
@@ -364,7 +340,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
   const handleBulkExtend = async (days) => {
     if (selectedAcademyIds.length === 0) return;
-    if (!window.confirm(isRtl ? `هل تأكد من تمديد +${days} يوم لعدد (${selectedAcademyIds.length}) أكاديمية؟` : `Extend +${days} days for ${selectedAcademyIds.length} academies?`)) return;
+    if (!window.confirm(isRtl ? `تأكيد تمديد +${days} يوم لعدد (${selectedAcademyIds.length}) أكاديمية؟` : `Extend +${days} days for ${selectedAcademyIds.length} academies?`)) return;
 
     setProcessingId('bulk');
     try {
@@ -379,7 +355,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
       if (error) throw error;
 
-      showToast(isRtl ? `تم التمديد الجماعي بنجاح (+${days} يوم)!` : `Bulk extension applied!`);
+      showToast(isRtl ? `تم التمديد الجماعي بنجاح (+${days} يوم)` : `Bulk extension applied!`);
       setSelectedAcademyIds([]);
       fetchDashboardData(true);
     } catch (err) {
@@ -389,13 +365,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // ⛔ الحظر الفردي
-  const onDeactivateClick = async (id, ownerId) => {
+  const onDeactivateClick = async (id) => {
     if (processingId) return;
     const targetAcademy = academies.find(a => a.id === id);
     const targetName = getSafeText(targetAcademy?.name, 'الأكاديمية');
     
-    if (!window.confirm(isRtl ? `هل ترغب بتعليق/حظر (${targetName})؟` : 'Deactivate this academy?')) return;
+    if (!window.confirm(isRtl ? `تعليق/حظر (${targetName})؟` : 'Deactivate this academy?')) return;
 
     setProcessingId(`deactivate-${id}`);
 
@@ -412,8 +387,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // 🔓 إلغاء الحظر الفردي
-  const onActivateClick = async (id, ownerId) => {
+  const onActivateClick = async (id) => {
     if (processingId) return;
     const targetAcademy = academies.find(a => a.id === id);
     const targetName = getSafeText(targetAcademy?.name, 'الأكاديمية');
@@ -426,7 +400,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       const { error: acadErr } = await supabase.from('academies').update({ is_active: true }).eq('id', id);
       if (acadErr) throw acadErr;
 
-      showToast(isRtl ? `تم إلغاء حظر "${targetName}" بنجاح! 🎉` : "Activated", "success");
+      showToast(isRtl ? `تم تفعيل "${targetName}" بنجاح` : "Activated", "success");
       fetchDashboardData(true);
     } catch (error) {
       showToast(isRtl ? "فشل تفعيل الأكاديمية." : "Failed to activate.", "error");
@@ -435,7 +409,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // ⏱️ التمديد الفردي
   const onExtendTrialClick = async (id, daysToAdd, isLifetime = false) => {
     if (processingId) return;
     setProcessingId(`extend-${id}`);
@@ -461,7 +434,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         .eq('id', id);
       if (acadErr) throw acadErr;
 
-      showToast(isLifetime ? (isRtl ? "تم منح اشتراك دائم ♾️" : "Lifetime granted ♾️") : (isRtl ? `تم التمديد +${daysToAdd} يوم` : `+${daysToAdd} Days extended`));
+      showToast(isLifetime ? (isRtl ? "تم منح اشتراك دائم" : "Lifetime granted") : (isRtl ? `تم التمديد +${daysToAdd} يوم` : `+${daysToAdd} Days extended`));
       setExtendModalAcademy(null);
       fetchDashboardData(true);
     } catch (error) {
@@ -471,7 +444,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     }
   };
 
-  // 📊 CSV Export
   const exportToCSV = () => {
     if (academies.length === 0) return;
 
@@ -494,198 +466,179 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   };
 
   const getTrialStatusBadge = (trialEndsAt) => {
-    if (!trialEndsAt) return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
+    if (!trialEndsAt) return { text: isRtl ? 'حساب دائم' : 'Lifetime', color: '#38BDF8' };
     
     const endDate = new Date(trialEndsAt);
     if (endDate.getFullYear() > 2090) {
-      return { text: isRtl ? 'حساب دائم ♾️' : 'Lifetime ♾️', color: '#38BDF8' };
+      return { text: isRtl ? 'حساب دائم' : 'Lifetime', color: '#38BDF8' };
     }
 
     const diffDays = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) return { text: isRtl ? 'منتهية ⚠️' : 'Expired ⚠️', color: '#EF4444' };
+    if (diffDays <= 0) return { text: isRtl ? 'منتهية' : 'Expired', color: '#EF4444' };
     return { text: isRtl ? `متبقي ${diffDays} يوم` : `${diffDays}d left`, color: '#10B981' };
   };
 
   const totalPages = Math.ceil(totalAcademiesCount / PAGE_SIZE) || 1;
 
   return (
-    <div className={styles.dashboardContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div className={`space-y-6 ${isRtl ? 'rtl' : 'ltr'}`}>
       
-      {/* 🔔 Toast */}
+      {/* Toast Notification */}
       {toast && (
-        <div style={{
-          position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999,
-          background: toast.type === 'error' ? '#EF4444' : toast.type === 'info' ? '#3B82F6' : '#10B981',
-          color: '#FFF', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', fontSize: '0.85rem',
-          boxShadow: '0 8px 20px rgba(0,0,0,0.3)', maxWidth: '90%', textAlign: 'center'
-        }}>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl max-w-[90%] text-center ${
+          toast.type === 'error' ? 'bg-rose-600' : toast.type === 'info' ? 'bg-blue-600' : 'bg-emerald-600'
+        }`}>
           {toast.message}
         </div>
       )}
 
-      {/* 🔝 الهيدر الرئيسي */}
-      <header className={styles.adminHeader}>
-        <h1 className={styles.adminTitle}>
-          <ShieldCheck size={24} color="#FBBF24" style={{ flexShrink: 0 }} />
+      {/* الهيدر الرئيسي */}
+      <header className="flex flex-wrap items-center justify-between gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <h1 className="text-lg font-bold text-white flex items-center gap-2 m-0">
+          <ShieldCheck size={24} className="text-amber-400 shrink-0" />
           <span>{isRtl ? 'المنصة العالمية لحلقات القرآن' : 'Global Quran Terminal'}</span>
-          <span className={styles.adminBadge}>Super Admin</span>
+          <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">Super Admin</span>
         </h1>
         
-        <div className={styles.headerActions}>
-          <button onClick={exportToCSV} style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10B981', color: '#34D399', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+        <div className="flex items-center gap-2">
+          <button onClick={exportToCSV} className="bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 text-xs font-bold hover:bg-emerald-900/50 transition-colors">
             <FileSpreadsheet size={16} /> CSV
           </button>
-          <button onClick={() => fetchDashboardData(true)} disabled={refreshing} style={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
-            <RefreshCw size={16} className={refreshing ? styles.spinAnimation : ''} /> {isRtl ? 'مزامنة' : 'Sync'}
+          <button onClick={() => fetchDashboardData(true)} disabled={refreshing} className="bg-slate-800 border border-slate-700 text-slate-100 px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 text-xs font-semibold hover:bg-slate-700 transition-colors">
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> {isRtl ? 'مزامنة' : 'Sync'}
           </button>
-          {onLogout && <button onClick={onLogout} style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem' }}>{isRtl ? 'خروج' : 'Logout'}</button>}
+          {onLogout && <button onClick={onLogout} className="bg-rose-600 hover:bg-rose-700 text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors">{isRtl ? 'خروج' : 'Logout'}</button>}
         </div>
       </header>
 
-      {/* 📊 بطاقات الإحصائيات */}
-      <div className={styles.statsGrid}>
-        <div className={styles.premiumStatBox}>
+      {/* بطاقات الإحصائيات */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
           <div>
-            <p className={styles.statLabel}>{isRtl ? 'الأكاديميات المشتركة' : 'Total Academies'}</p>
-            <h2 className={styles.statNumber}>{loading ? '...' : totalAcademiesCount}</h2>
+            <p className="text-xs text-slate-400 mb-1">{isRtl ? 'الأكاديميات المشتركة' : 'Total Academies'}</p>
+            <h2 className="text-2xl font-extrabold text-white m-0">{loading ? '...' : totalAcademiesCount}</h2>
           </div>
-          <div className={styles.statIcon}><Building2 size={24} /></div>
+          <div className="text-slate-400 bg-slate-800 p-2.5 rounded-xl"><Building2 size={24} /></div>
         </div>
 
-        <div className={styles.premiumStatBox}>
+        <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
           <div>
-            <p className={styles.statLabel}>{isRtl ? 'انتظار المراجعة' : 'Pending Verification'}</p>
-            <h2 className={styles.statNumber} style={{ color: pendingCount > 0 ? '#FBBF24' : 'inherit' }}>{loading ? '...' : pendingCount}</h2>
+            <p className="text-xs text-slate-400 mb-1">{isRtl ? 'انتظار المراجعة' : 'Pending Verification'}</p>
+            <h2 className={`text-2xl font-extrabold m-0 ${pendingCount > 0 ? 'text-amber-400' : 'text-white'}`}>{loading ? '...' : pendingCount}</h2>
           </div>
-          <div className={styles.statIcon}><Clock size={24} /></div>
+          <div className="text-slate-400 bg-slate-800 p-2.5 rounded-xl"><Clock size={24} /></div>
         </div>
 
-        <div className={styles.premiumStatBox} style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+        <div className="bg-rose-950/20 border border-rose-900/30 p-4 rounded-xl flex justify-between items-center">
           <div>
-            <p className={styles.statLabel}>{isRtl ? 'أكاديميات محظورة / معطلة' : 'Blocked Academies'}</p>
-            <h2 className={styles.statNumber} style={{ color: '#EF4444' }}>{loading ? '...' : blockedCount}</h2>
+            <p className="text-xs text-slate-400 mb-1">{isRtl ? 'أكاديميات محظورة / معطلة' : 'Blocked Academies'}</p>
+            <h2 className="text-2xl font-extrabold text-rose-500 m-0">{loading ? '...' : blockedCount}</h2>
           </div>
-          <div className={styles.statIcon}><AlertTriangle size={24} color="#EF4444" /></div>
+          <div className="bg-rose-950/50 p-2.5 rounded-xl"><AlertTriangle size={24} className="text-rose-500" /></div>
         </div>
 
-        <div className={styles.premiumStatBox} style={{ background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>
+        <div className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-xl flex justify-between items-center">
           <div>
-            <p className={styles.statLabel}>{isRtl ? 'إجمالي الإيرادات' : 'Total Revenue'}</p>
-            <h2 className={styles.statNumber} style={{ color: '#34D399' }}>{loading ? '...' : `${totalRevenue} EGP`}</h2>
+            <p className="text-xs text-slate-400 mb-1">{isRtl ? 'إجمالي الإيرادات' : 'Total Revenue'}</p>
+            <h2 className="text-2xl font-extrabold text-emerald-400 m-0">{loading ? '...' : `${totalRevenue} EGP`}</h2>
           </div>
-          <div className={styles.statIcon}><FileSpreadsheet size={24} color="#34D399" /></div>
+          <div className="bg-emerald-950/50 p-2.5 rounded-xl"><FileSpreadsheet size={24} className="text-emerald-400" /></div>
         </div>
       </div>
 
-      {/* 🔍 شريط البحث والفلترة والفرز */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '20px', background: '#1E293B', padding: '14px', borderRadius: '12px', border: '1px solid #334155' }}>
-        <div style={{ position: 'relative', width: '100%' }}>
-          <Search size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '12px' }} />
+      {/* شريط البحث والفلترة والفرز */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-900 p-3.5 rounded-xl border border-slate-800">
+        <div className="relative w-full">
+          <Search size={18} className="absolute top-1/2 -translate-y-1/2 right-3 text-slate-400" />
           <input
             type="text"
             placeholder={isRtl ? "ابحث باسم الأكاديمية، المالك..." : "Search academy, owner..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 40px 10px 12px', color: '#FFF', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pr-10 pl-3 text-white text-xs outline-none focus:border-slate-700"
           />
-          {searchQuery && <X size={16} color="#94A3B8" onClick={() => setSearchQuery('')} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', cursor: 'pointer' }} />}
+          {searchQuery && <X size={16} className="absolute top-1/2 -translate-y-1/2 left-3 text-slate-400 cursor-pointer" onClick={() => setSearchQuery('')} />}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 8px', color: '#FFF', fontSize: '0.8rem', outline: 'none', cursor: 'pointer', textAlign: 'center' }}>
-            <option value="all">🔍 {isRtl ? 'جميع الخطط' : 'All Plans'}</option>
-            <option value="expiring_soon">⏳ {isRtl ? 'تنتهي خلال 7 أيام' : 'Expiring in 7 Days'}</option>
-            <option value="trial">⏱️ {isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
-            <option value="monthly">📅 {isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
-            <option value="yearly">🗓️ {isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
-            <option value="lifetime">♾️ {isRtl ? 'حسابات دائمة' : 'Lifetime'}</option>
+        <div className="grid grid-cols-2 gap-2.5">
+          <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-2 text-white text-xs outline-none cursor-pointer">
+            <option value="all">{isRtl ? 'جميع الخطط' : 'All Plans'}</option>
+            <option value="expiring_soon">{isRtl ? 'تنتهي خلال 7 أيام' : 'Expiring in 7 Days'}</option>
+            <option value="trial">{isRtl ? 'مؤقتة / تجريبية' : 'Trial'}</option>
+            <option value="monthly">{isRtl ? 'اشتراك شهري' : 'Monthly'}</option>
+            <option value="yearly">{isRtl ? 'اشتراك سنوي' : 'Yearly'}</option>
+            <option value="lifetime">{isRtl ? 'حسابات دائمة' : 'Lifetime'}</option>
           </select>
 
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', padding: '10px 8px', color: '#FFF', fontSize: '0.8rem', outline: 'none', cursor: 'pointer', textAlign: 'center' }}>
-            <option value="created_at_desc">⬇️ {isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
-            <option value="created_at_asc">⬆️ {isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
-            <option value="trial_ends_asc">⚠️ {isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-2 text-white text-xs outline-none cursor-pointer">
+            <option value="created_at_desc">{isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
+            <option value="created_at_asc">{isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
+            <option value="trial_ends_asc">{isRtl ? 'الأقرب انتهاءً' : 'Expiring Soon'}</option>
           </select>
         </div>
       </div>
 
-      {/* ⚡ شريط الإجراءات الجماعية (Bulk Actions Bar) */}
+      {/* شريط الإجراءات الجماعية */}
       {selectedAcademyIds.length > 0 && (
-        <div style={{
-          background: 'linear-gradient(90deg, #1E293B 0%, #0F172A 100%)',
-          border: '1px solid #3B82F6',
-          borderRadius: '12px',
-          padding: '12px 18px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-          boxShadow: '0 4px 14px rgba(59, 130, 246, 0.2)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ background: '#3B82F6', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.8rem' }}>
+        <div className="bg-slate-900 border border-sky-500/50 rounded-xl p-3 flex items-center justify-between flex-wrap gap-3 shadow-lg shadow-sky-500/5">
+          <div className="flex items-center gap-2.5">
+            <span className="bg-sky-500 text-white px-2.5 py-1 rounded-full font-bold text-xs">
               {selectedAcademyIds.length} {isRtl ? 'محدد' : 'Selected'}
             </span>
-            <span style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>{isRtl ? 'اختر إجراءً لتطبيقه دفعة واحدة:' : 'Choose a bulk action:'}</span>
+            <span className="text-slate-300 text-xs">{isRtl ? 'اختر إجراءً لتطبيقه:' : 'Choose action:'}</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button onClick={() => handleBulkExtend(30)} disabled={processingId === 'bulk'} style={{ background: 'rgba(251, 191, 36, 0.15)', border: '1px solid #FBBF24', color: '#FBBF24', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => handleBulkExtend(30)} disabled={processingId === 'bulk'} className="bg-amber-950/40 border border-amber-500/40 text-amber-400 px-3 py-1.5 rounded-lg cursor-pointer text-xs font-bold">
               +30 {isRtl ? 'يوم' : 'Days'}
             </button>
-            <button onClick={() => handleBulkStatusChange(true)} disabled={processingId === 'bulk'} style={{ background: '#10B981', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            <button onClick={() => handleBulkStatusChange(true)} disabled={processingId === 'bulk'} className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 px-3 py-1.5 rounded-lg cursor-pointer text-xs font-bold">
               {isRtl ? 'تفعيل الجماعي' : 'Bulk Activate'}
             </button>
-            <button onClick={() => handleBulkStatusChange(false)} disabled={processingId === 'bulk'} style={{ background: '#EF4444', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            <button onClick={() => handleBulkStatusChange(false)} disabled={processingId === 'bulk'} className="bg-rose-600 hover:bg-rose-500 text-white border-0 px-3 py-1.5 rounded-lg cursor-pointer text-xs font-bold">
               {isRtl ? 'حظر الجماعي' : 'Bulk Block'}
             </button>
-            <button onClick={() => setSelectedAcademyIds([])} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '0.8rem' }}>
+            <button onClick={() => setSelectedAcademyIds([])} className="bg-transparent border-0 text-slate-400 cursor-pointer text-xs">
               {isRtl ? 'إلغاء التحديد' : 'Deselect'}
             </button>
           </div>
         </div>
       )}
 
-      {/* 🗂️ شريط التبويبات Tabs */}
-      <div className={styles.tabsBar}>
+      {/* شريط التبويبات Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {[
           { id: 'all', label: isRtl ? 'عرض الكل' : 'All', count: totalAcademiesCount },
-          { id: 'pending', label: isRtl ? 'طلبات الاشتراكات المعلقة' : 'Pending Subscriptions', count: pendingCount },
+          { id: 'pending', label: isRtl ? 'طلبات المعلقة' : 'Pending Subscriptions', count: pendingCount },
           { id: 'active', label: isRtl ? 'النشطة' : 'Active', count: activeCount },
-          { id: 'blocked', label: isRtl ? 'المحظورة / المعطلة 🚫' : 'Blocked', count: blockedCount },
+          { id: 'blocked', label: isRtl ? 'المحظورة' : 'Blocked', count: blockedCount },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              background: activeTab === tab.id ? '#3B82F6' : 'rgba(30, 41, 59, 0.6)',
-              color: '#FFF', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
-              fontSize: '0.82rem', fontWeight: activeTab === tab.id ? 'bold' : 'normal',
-              display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap'
-            }}
+            className={`border-0 px-3.5 py-2 rounded-lg cursor-pointer text-xs flex items-center gap-1.5 whitespace-nowrap transition-colors ${
+              activeTab === tab.id ? 'bg-sky-600 font-bold text-white' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+            }`}
           >
-            {tab.label}
-            <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.72rem' }}>{tab.count}</span>
+            <span>{tab.label}</span>
+            <span className="bg-slate-950/40 px-1.5 py-0.5 rounded text-[10px]">{tab.count}</span>
           </button>
         ))}
       </div>
 
-      {/* 🏢 قائمة الأكاديميات الرئيسية */}
-      <section style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <h2 style={{ fontSize: '1.05rem', color: '#FFF', margin: 0 }}>
-            {activeTab === 'active' ? (isRtl ? 'الأكاديميات النشطة ✅' : 'Active Academies') :
-             activeTab === 'blocked' ? (isRtl ? 'الأكاديميات المحظورة 🚫' : 'Blocked Academies') :
-             (isRtl ? 'جميع الأكاديميات 🏢' : 'All Academies')}
+      {/* قائمة الأكاديميات الرئيسية */}
+      <section className="space-y-3">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-base font-bold text-white m-0">
+            {activeTab === 'active' ? (isRtl ? 'الأكاديميات النشطة' : 'Active Academies') :
+             activeTab === 'blocked' ? (isRtl ? 'الأكاديميات المحظورة' : 'Blocked Academies') :
+             (isRtl ? 'جميع الأكاديميات' : 'All Academies')}
           </h2>
 
-          {/* زر تحديد الكل */}
           {filteredAcademies.length > 0 && (
             <button
               onClick={toggleSelectAll}
-              style={{ background: 'transparent', border: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              className="bg-transparent border-0 text-sky-400 cursor-pointer text-xs flex items-center gap-1.5"
             >
               {selectedAcademyIds.length === filteredAcademies.length ? <CheckSquare size={16} /> : <Square size={16} />}
               {selectedAcademyIds.length === filteredAcademies.length ? (isRtl ? 'إلغاء تحديد الكل' : 'Deselect All') : (isRtl ? 'تحديد كل الصفحة' : 'Select All')}
@@ -696,7 +649,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         {filteredAcademies.length === 0 ? (
           <EmptyState icon={<Building2 size={36} />} title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} description={isRtl ? "جرب تعديل عبارة البحث أو خيار التصفية." : "Try adjusting your filters or query."} />
         ) : (
-          <div className={styles.requestsGrid}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {filteredAcademies.map(academy => {
               const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
               const isBlocked = !academy.is_active;
@@ -705,53 +658,45 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               return (
                 <div 
                   key={academy.id} 
-                  className={styles.requestCard} 
-                  style={{ 
-                    borderRight: isBlocked ? '4px solid #EF4444' : isExpired ? '4px solid #F59E0B' : '4px solid #10B981',
-                    background: isSelected ? '#1E293B' : isBlocked ? '#1E1B2E' : '#1E293B',
-                    borderColor: isSelected ? '#3B82F6' : undefined,
-                    position: 'relative'
-                  }}
+                  className={`relative p-4 rounded-xl border transition-colors ${
+                    isSelected ? 'bg-slate-800/90 border-sky-500' : isBlocked ? 'bg-slate-900 border-rose-500/40' : 'bg-slate-900/90 border-slate-800'
+                  }`}
                 >
-                  {/* Checkbox التحديد الجماعي */}
                   <div 
                     onClick={() => toggleSelectAcademy(academy.id)}
-                    style={{ position: 'absolute', top: '14px', left: isRtl ? 'unset' : '14px', right: isRtl ? '14px' : 'unset', cursor: 'pointer', zIndex: 5, color: isSelected ? '#3B82F6' : '#64748B' }}
+                    className={`absolute top-4 cursor-pointer z-10 ${isRtl ? 'left-4' : 'right-4'} ${isSelected ? 'text-sky-400' : 'text-slate-500'}`}
                   >
                     {isSelected ? <CheckSquare size={20} /> : <Square size={20} />}
                   </div>
 
-                  <div className={styles.requestInfo} style={{ paddingRight: isRtl ? '28px' : '0', paddingLeft: !isRtl ? '28px' : '0' }}>
+                  <div className="space-y-1 mb-4">
                     <h3 
-                      className={styles.requestName} 
                       onClick={() => openAcademyDrawer(academy)}
-                      style={{ color: isBlocked ? '#FCA5A5' : '#FFF', cursor: 'pointer', textDecoration: 'underline' }}
+                      className="text-sm font-bold text-white hover:underline cursor-pointer m-0"
                     >
                       {getSafeText(academy.name, 'أكاديمية بدون اسم')}
                     </h3>
                     {academy.ownerProfile && (
-                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: '4px 0' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <User size={12} /> {getSafeText(academy.ownerProfile.full_name)}
-                        </span>
+                      <div className="text-xs text-slate-300 flex items-center gap-1">
+                        <User size={12} className="text-slate-400" />
+                        <span>{getSafeText(academy.ownerProfile.full_name)}</span>
                       </div>
                     )}
-                    <span style={{ fontSize: '0.72rem', color: isBlocked ? '#EF4444' : isExpired ? '#F87171' : '#94A3B8' }}>
-                      {isBlocked ? '🚫 محظورة / معطلة' : `⏱️ ${getTrialStatusBadge(academy.trial_ends_at).text}`}
-                    </span>
+                    <div className="text-[11px] font-semibold">
+                      {isBlocked ? (
+                        <span className="text-rose-400">محظورة / معطلة</span>
+                      ) : (
+                        <span className="text-slate-400">{getTrialStatusBadge(academy.trial_ends_at).text}</span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* 🕹️ أزرار التحكم بالكارت الرئيسي */}
-                  <div className={styles.cardActions}>
+                  {/* أزرار التحكم */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-800/60">
                     {academy.ownerProfile?.phone ? (
                       <button 
                         onClick={() => handleWhatsAppClick(academy.ownerProfile.phone, getSafeText(academy.name))}
-                        title="تواصل عبر واتساب"
-                        style={{ 
-                          background: '#25D366', border: 'none', color: '#FFF', padding: '6px 10px', 
-                          borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', 
-                          alignItems: 'center', gap: '4px', fontWeight: 'bold'
-                        }}
+                        className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1"
                       >
                         <MessageCircle size={14} /> WhatsApp
                       </button>
@@ -765,12 +710,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                           });
                           setInputPhone(academy.ownerProfile?.phone || '');
                         }}
-                        title="إضافة رقم هاتف"
-                        style={{ 
-                          background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#F87171', 
-                          padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', 
-                          display: 'flex', alignItems: 'center', gap: '4px' 
-                        }}
+                        className="bg-rose-950/30 border border-rose-500/40 text-rose-400 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold flex items-center gap-1"
                       >
                         <MessageCircle size={14} /> + هاتف
                       </button>
@@ -778,7 +718,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
                     <button 
                       onClick={() => openAcademyDrawer(academy)} 
-                      style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3B82F6', color: '#60A5FA', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      className="bg-sky-950/30 border border-sky-500/30 text-sky-400 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold flex items-center gap-1"
                     >
                       <Eye size={14} /> {isRtl ? 'تفاصيل' : 'Details'}
                     </button>
@@ -786,15 +726,15 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                     <button 
                       onClick={() => setExtendModalAcademy(academy)} 
                       disabled={processingId !== null} 
-                      style={{ background: '#0F172A', border: '1px solid #FBBF24', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      className="bg-slate-800 border border-amber-500/40 text-amber-400 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold flex items-center gap-1"
                     >
                       <Plus size={14} /> {isRtl ? 'تمديد' : 'Extend'}
                     </button>
 
                     {isBlocked ? (
-                      <button onClick={() => onActivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#10B981', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><Unlock size={14} /></button>
+                      <button onClick={() => onActivateClick(academy.id)} disabled={processingId !== null} className="bg-emerald-600 text-white border-0 p-1.5 rounded-lg cursor-pointer"><Unlock size={14} /></button>
                     ) : (
-                      <button onClick={() => onDeactivateClick(academy.id, academy.owner_id)} disabled={processingId !== null} style={{ background: '#EF4444', border: 'none', color: '#FFF', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}><Ban size={14} /></button>
+                      <button onClick={() => onDeactivateClick(academy.id)} disabled={processingId !== null} className="bg-rose-600 text-white border-0 p-1.5 rounded-lg cursor-pointer"><Ban size={14} /></button>
                     )}
                   </div>
                 </div>
@@ -803,53 +743,50 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
           </div>
         )}
 
-        {/* 📄 الترقيم */}
+        {/* الترقيم */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '24px', background: '#1E293B', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
-            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ background: currentPage === 1 ? '#0F172A' : '#3B82F6', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', opacity: currentPage === 1 ? 0.5 : 1 }}>
+          <div className="flex items-center justify-center gap-3 mt-4 bg-slate-900 p-3 rounded-xl border border-slate-800">
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="bg-sky-600 text-white disabled:bg-slate-950 border-0 px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 text-xs disabled:opacity-50">
               {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />} {isRtl ? 'السابقة' : 'Previous'}
             </button>
 
-            <span style={{ color: '#CBD5E1', fontSize: '0.85rem', fontWeight: 'bold' }}>{isRtl ? `الصفحة ${currentPage} من ${totalPages}` : `Page ${currentPage} of ${totalPages}`}</span>
+            <span className="text-slate-300 text-xs font-bold">{isRtl ? `الصفحة ${currentPage} من ${totalPages}` : `Page ${currentPage} of ${totalPages}`}</span>
 
-            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage >= totalPages} style={{ background: currentPage >= totalPages ? '#0F172A' : '#3B82F6', color: '#FFF', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', opacity: currentPage >= totalPages ? 0.5 : 1 }}>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage >= totalPages} className="bg-sky-600 text-white disabled:bg-slate-950 border-0 px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 text-xs disabled:opacity-50">
               {isRtl ? 'التالية' : 'Next'} {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
           </div>
         )}
       </section>
 
-      {/* 📥 Drawer التفاصيل العميقة للأكاديمية */}
+      {/* Drawer التفاصيل العميقة */}
       {selectedAcademyDetails && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 3000, display: 'flex', justifyContent: isRtl ? 'flex-start' : 'flex-end' }}>
-          <div style={{ width: '100%', maxWidth: '440px', background: '#0F172A', height: '100%', borderLeft: isRtl ? 'none' : '1px solid #334155', borderRight: isRtl ? '1px solid #334155' : 'none', padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div className={`fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[3000] flex ${isRtl ? 'justify-start' : 'justify-end'}`}>
+          <div className="w-full max-w-md bg-slate-900 h-full border-x border-slate-800 p-6 overflow-y-auto flex flex-col">
             
-            {/* هيدر النافذة */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, color: '#FFF', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Building2 color="#3B82F6" size={20} />
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="m-0 text-white text-base font-bold flex items-center gap-2">
+                <Building2 className="text-sky-400" size={20} />
                 {getSafeText(selectedAcademyDetails.name)}
               </h3>
-              <button onClick={() => setSelectedAcademyDetails(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}><X size={20} /></button>
+              <button onClick={() => setSelectedAcademyDetails(null)} className="bg-transparent border-0 text-slate-400 cursor-pointer"><X size={20} /></button>
             </div>
 
-            {/* بيانات المالك والتواصل السريع */}
-            <div style={{ background: '#1E293B', borderRadius: '12px', padding: '14px', marginBottom: '16px', border: '1px solid #334155' }}>
-              <p style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: '#94A3B8' }}>{isRtl ? 'مالك الأكاديمية:' : 'Academy Owner:'}</p>
-              <h4 style={{ margin: '0 0 4px 0', color: '#FFF', fontSize: '1rem' }}>{getSafeText(selectedAcademyDetails.ownerProfile?.full_name, 'غير معروف')}</h4>
-              <p style={{ margin: '0 0 12px 0', fontSize: '0.8rem', color: '#CBD5E1' }}>{getSafeText(selectedAcademyDetails.ownerProfile?.email)}</p>
+            <div className="bg-slate-950 rounded-xl p-4 mb-4 border border-slate-800">
+              <p className="m-0 text-xs text-slate-400 mb-1">{isRtl ? 'مالك الأكاديمية:' : 'Academy Owner:'}</p>
+              <h4 className="m-0 text-white text-sm font-bold mb-1">{getSafeText(selectedAcademyDetails.ownerProfile?.full_name, 'غير معروف')}</h4>
+              <p className="m-0 text-xs text-slate-300 mb-3">{getSafeText(selectedAcademyDetails.ownerProfile?.email)}</p>
 
-              {/* 📲 زر التواصل عبر WhatsApp داخل Drawer */}
               {selectedAcademyDetails.ownerProfile?.phone ? (
                 <button
                   onClick={() => handleWhatsAppClick(selectedAcademyDetails.ownerProfile.phone, getSafeText(selectedAcademyDetails.name))}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#25D366', color: '#FFF', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer' }}
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white border-0 py-2 rounded-lg font-bold text-xs cursor-pointer"
                 >
-                  <MessageCircle size={18} /> {isRtl ? 'تواصل عبر واتساب مباشر' : 'Direct WhatsApp Chat'}
+                  <MessageCircle size={18} /> {isRtl ? 'تواصل عبر الواتساب' : 'WhatsApp Chat'}
                 </button>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#EF4444' }}>⚠️ لا يوجد رقم هاتف مسجل للمالك</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="m-0 text-xs text-rose-400">لا يوجد رقم هاتف مسجل للمالك</p>
                   <button
                     onClick={() => {
                       setPhoneModalData({
@@ -859,7 +796,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                       });
                       setInputPhone(selectedAcademyDetails.ownerProfile?.phone || '');
                     }}
-                    style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #EF4444', color: '#F87171', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}
+                    className="bg-rose-950/40 border border-rose-500/40 text-rose-400 px-2 py-1 rounded text-xs cursor-pointer"
                   >
                     + إضافة رقم
                   </button>
@@ -867,36 +804,34 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               )}
             </div>
 
-            {/* 📊 بطاقات الإحصائيات الحية */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #334155' }}>
-                <Users size={20} color="#34D399" style={{ marginBottom: '4px' }} />
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</p>
-                <h3 style={{ margin: '4px 0 0 0', color: '#FFF' }}>{academyStatsLoading ? '...' : deepStats.studentsCount}</h3>
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-slate-950 p-3 rounded-xl text-center border border-slate-800">
+                <Users size={20} className="text-emerald-400 mx-auto mb-1" />
+                <p className="m-0 text-xs text-slate-400">{isRtl ? 'إجمالي الطلاب' : 'Total Students'}</p>
+                <h3 className="m-0 mt-1 text-white text-lg font-bold">{academyStatsLoading ? '...' : deepStats.studentsCount}</h3>
               </div>
-              <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #334155' }}>
-                <BookOpen size={20} color="#60A5FA" style={{ marginBottom: '4px' }} />
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>{isRtl ? 'الحلقات الدراسية' : 'Halaqat Classes'}</p>
-                <h3 style={{ margin: '4px 0 0 0', color: '#FFF' }}>{academyStatsLoading ? '...' : deepStats.halaqatCount}</h3>
+              <div className="bg-slate-950 p-3 rounded-xl text-center border border-slate-800">
+                <BookOpen size={20} className="text-sky-400 mx-auto mb-1" />
+                <p className="m-0 text-xs text-slate-400">{isRtl ? 'الحلقات الدراسية' : 'Halaqat Classes'}</p>
+                <h3 className="m-0 mt-1 text-white text-lg font-bold">{academyStatsLoading ? '...' : deepStats.halaqatCount}</h3>
               </div>
             </div>
 
-            {/* 📜 سجل المدفوعات والاشتراكات */}
-            <h4 style={{ color: '#FFF', fontSize: '0.95rem', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <History size={16} color="#FBBF24" /> {isRtl ? 'سجل المدفوعات والاشتراكات' : 'Payment History'}
+            <h4 className="text-white text-sm font-bold mb-3 flex items-center gap-2">
+              <History size={16} className="text-amber-400" /> {isRtl ? 'سجل المدفوعات والاشتراكات' : 'Payment History'}
             </h4>
 
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div className="flex-1 overflow-y-auto space-y-2">
               {deepStats.payments.length === 0 ? (
-                <p style={{ fontSize: '0.8rem', color: '#64748B', textAlign: 'center', marginTop: '20px' }}>{isRtl ? 'لا يوجد سجل مدفوعات سابق' : 'No prior payment history'}</p>
+                <p className="text-xs text-slate-500 text-center mt-5">{isRtl ? 'لا يوجد سجل مدفوعات سابق' : 'No prior payment history'}</p>
               ) : (
                 deepStats.payments.map(p => (
-                  <div key={p.id} style={{ background: '#1E293B', border: '1px solid #334155', padding: '10px', borderRadius: '8px', marginBottom: '8px', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FFF', marginBottom: '4px' }}>
+                  <div key={p.id} className="bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs">
+                    <div className="flex justify-between text-white mb-1">
                       <strong>{p.plan_tier} ({p.plan_duration})</strong>
-                      <span style={{ color: p.status === 'active' ? '#34D399' : '#FBBF24' }}>{p.status}</span>
+                      <span className={p.status === 'active' ? 'text-emerald-400' : 'text-amber-400'}>{p.status}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', fontSize: '0.75rem' }}>
+                    <div className="flex justify-between text-slate-400 text-[11px]">
                       <span>{p.price} {p.currency || 'EGP'}</span>
                       <span>{new Date(p.created_at).toLocaleDateString()}</span>
                     </div>
@@ -909,89 +844,67 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         </div>
       )}
 
-      {/* ⏱️ نافذة التمديد الفردي */}
+      {/* Modal تمديد الاشتراك */}
       {extendModalAcademy && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '16px' }}>
-          <div style={{ background: '#0F172A', border: '1px solid #FBBF24', borderRadius: '16px', padding: '20px', maxWidth: '400px', width: '100%', color: '#FFF', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '8px', fontSize: '1.05rem' }}>⏱️ {isRtl ? 'تمديد اشتراك الأكاديمية' : 'Extend Subscription'}</h3>
-            <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>{getSafeText(extendModalAcademy.name)}</p>
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl p-5 max-w-sm w-full text-white text-center">
+            <h3 className="mb-2 text-base font-bold">{isRtl ? 'تمديد اشتراك الأكاديمية' : 'Extend Subscription'}</h3>
+            <p className="text-slate-400 text-xs mb-4">{getSafeText(extendModalAcademy.name)}</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 7)} style={{ background: '#1E293B', border: '1px solid #334155', color: '#FFF', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+7 {isRtl ? 'أيام' : 'Days'}</button>
-              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 30)} style={{ background: '#1E293B', border: '1px solid #FBBF24', color: '#FBBF24', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+30 {isRtl ? 'يوم' : 'Days'}</button>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 7)} className="bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl cursor-pointer font-bold text-xs">+7 {isRtl ? 'أيام' : 'Days'}</button>
+              <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 30)} className="bg-slate-800 border border-amber-500/40 text-amber-400 p-2.5 rounded-xl cursor-pointer font-bold text-xs">+30 {isRtl ? 'يوم' : 'Days'}</button>
             </div>
 
-            <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 0, true)} style={{ width: '100%', background: '#3B82F6', color: '#FFF', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <button onClick={() => onExtendTrialClick(extendModalAcademy.id, 0, true)} className="w-full bg-sky-600 text-white border-0 p-2.5 rounded-xl cursor-pointer font-bold text-xs mb-3 flex items-center justify-center gap-2">
               <InfinityIcon size={18} /> {isRtl ? 'اشتراك دائم (Lifetime)' : 'Grant Lifetime'}
             </button>
 
-            <button onClick={() => setExtendModalAcademy(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '0.8rem' }}>
+            <button onClick={() => setExtendModalAcademy(null)} className="bg-transparent border-0 text-slate-400 cursor-pointer text-xs">
               {isRtl ? 'إلغاء' : 'Cancel'}
             </button>
           </div>
         </div>
       )}
 
-      {/* 📱 Modal إضافة / تعديل رقم الهاتف */}
+      {/* Modal إضافة رقم الهاتف */}
       {phoneModalData && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
-          backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 4000, padding: '16px'
-        }}>
-          <div style={{
-            background: '#0F172A', border: '1px solid #3B82F6', borderRadius: '16px',
-            padding: '24px', maxWidth: '400px', width: '100%', color: '#FFF'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MessageCircle color="#25D366" size={20} />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
+          <div className="bg-slate-900 border border-sky-500/40 rounded-2xl p-6 max-w-sm w-full text-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="m-0 text-base font-bold flex items-center gap-2">
+                <MessageCircle size={20} className="text-emerald-400" />
                 {isRtl ? 'إدخال رقم هاتف المالك' : 'Enter Owner Phone'}
               </h3>
-              <button onClick={() => setPhoneModalData(null)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
-                <X size={18} />
-              </button>
+              <button onClick={() => setPhoneModalData(null)} className="bg-transparent border-0 text-slate-400 cursor-pointer"><X size={18} /></button>
             </div>
 
-            <p style={{ color: '#94A3B8', fontSize: '0.82rem', marginBottom: '16px' }}>
+            <p className="text-slate-400 text-xs mb-4">
               {isRtl ? `أدخل رقم هاتف مالك أكاديمية (${phoneModalData.academyName}) لتفعيل التواصل عبر الواتساب:` : `Enter phone for (${phoneModalData.academyName}):`}
             </p>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', color: '#CBD5E1', marginBottom: '6px' }}>
-                {isRtl ? 'رقم الهاتف (مع رمز الدولة مثل 2010...):' : 'Phone number (with country code):'}
-              </label>
+            <div className="mb-5">
+              <label className="block text-xs text-slate-300 mb-1.5">{isRtl ? 'رقم الهاتف:' : 'Phone number:'}</label>
               <input
                 type="tel"
                 placeholder="201000000000"
                 value={inputPhone}
                 onChange={(e) => setInputPhone(e.target.value)}
-                style={{
-                  width: '100%', background: '#1E293B', border: '1px solid #334155',
-                  borderRadius: '8px', padding: '10px 12px', color: '#FFF', fontSize: '0.9rem',
-                  outline: 'none', direction: 'ltr', textAlign: 'left', boxSizing: 'border-box'
-                }}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white text-sm outline-none ltr text-left"
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="flex gap-2">
               <button
                 onClick={handleSavePhone}
                 disabled={processingId === 'save-phone'}
-                style={{
-                  flex: 1, background: '#25D366', color: '#FFF', border: 'none',
-                  padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
-                  fontSize: '0.85rem'
-                }}
+                className="flex-1 bg-emerald-600 text-white border-0 py-2.5 rounded-lg font-bold cursor-pointer text-xs"
               >
                 {processingId === 'save-phone' ? '...' : (isRtl ? 'حفظ وتفعيل الواتساب' : 'Save & Enable WhatsApp')}
               </button>
               <button
                 onClick={() => setPhoneModalData(null)}
-                style={{
-                  background: 'transparent', border: '1px solid #334155', color: '#94A3B8',
-                  padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem'
-                }}
+                className="bg-transparent border border-slate-800 text-slate-400 px-3.5 py-2.5 rounded-lg cursor-pointer text-xs"
               >
                 {isRtl ? 'إلغاء' : 'Cancel'}
               </button>
