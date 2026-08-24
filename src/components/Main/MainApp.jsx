@@ -1,32 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
-import { 
-  RefreshCw, 
-  AlertTriangle, 
-  MessageSquare, 
-  BarChart2, 
-  FolderOpen 
-} from 'lucide-react';
+import { RefreshCw, AlertTriangle, MessageSquare, BarChart2 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
+import { colors as C } from '@/theme/colors.js';
+import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from '@/components/Sidebar/Sidebar';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
-import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
-// ----------------------------------------------------
-// التحميل المتأخر الآمن للمكونات (Safe Lazy Loading)
-// ----------------------------------------------------
 const safeLazy = (importFn) => {
   return lazy(() =>
     importFn().catch((error) => {
       const errorMsg = error?.message || error?.toString() || '';
       if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-        console.warn("Module update detected, reloading application...");
+        console.warn("🚨 تم رصد تحديث في الملفات، جاري إعادة التحميل تلقائياً...");
         window.location.reload();
         return new Promise(() => {}); 
       }
@@ -51,22 +43,19 @@ const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQu
 const Curriculum = safeLazy(() => import('@/components/Curriculum/CurriculumManagement.jsx'));
 const StudentDocuments = safeLazy(() => import('@/components/Student/StudentDocuments.jsx'));
 
-// ----------------------------------------------------
-// مكوّن مركز التواصل والتقارير الموحد
-// ----------------------------------------------------
 const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }) => {
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState('communications');
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit">
+      <div className="flex gap-2 p-1 rounded-xl border border-slate-700/50 w-fit" style={{ background: C.dark.card }}>
         <button
           onClick={() => setActiveSubTab('communications')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
               ? 'bg-emerald-600 text-white shadow-lg' 
-              : 'text-slate-400 hover:text-slate-200'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
           <MessageSquare className="w-4 h-4" />
@@ -78,7 +67,7 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
               ? 'bg-emerald-600 text-white shadow-lg' 
-              : 'text-slate-400 hover:text-slate-200'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
           <BarChart2 className="w-4 h-4" />
@@ -95,34 +84,26 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
   );
 };
 
-// ----------------------------------------------------
-// حدود معالجة الأخطاء الموحدة
-// ----------------------------------------------------
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
-
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
-
   componentDidCatch(error, errorInfo) {
-    console.error("System Error Boundary Captured:", error, errorInfo);
+    console.error("🚨 Error Logged in Boundary:", error, errorInfo);
   }
-
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-6 bg-slate-800/90 rounded-2xl border border-rose-500/30 text-rose-300 m-5">
-          <div className="flex items-center gap-3 mb-3">
-            <AlertTriangle className="w-6 h-6 text-rose-400" />
-            <h3 className="m-0 text-lg font-semibold text-rose-200">
-              حدث خطأ أثناء تحميل هذا القسم
-            </h3>
+        <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
+          <div style={{ display: 'flex', items: 'center', gap: '10px', marginBottom: '12px' }}>
+            <AlertTriangle size={22} />
+            <h3 style={{ margin: 0, color: C.error.light, fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre className="bg-slate-950 p-3 rounded-lg text-slate-400 text-xs overflow-x-auto dir-ltr">
+          <pre style={{ background: C.dark.main, padding: '12px', borderRadius: '8px', color: C.text.body, fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -130,10 +111,9 @@ class ErrorBoundaryInner extends React.Component {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
+            style={{ padding: '10px 18px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <RefreshCw className="w-4 h-4" />
-            إعادة تحميل الصفحة
+            <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
         </div>
       );
@@ -142,9 +122,6 @@ class ErrorBoundaryInner extends React.Component {
   }
 }
 
-// ----------------------------------------------------
-// المكون الرئيسي للتطبيق MainApp
-// ----------------------------------------------------
 export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated, setShowEarlyUpgrade }) {
   const { t, i18n } = useTranslation(); 
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
@@ -289,7 +266,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           setLoadingData(false);
         }
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        console.error("🚨 Error loading initial data:", error);
         setLoadingData(false);
       }
     }
@@ -302,15 +279,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       const teacher = Array.isArray(teachers) ? teachers.find(t => t.id === h.teacher_id) : null;
       return {
         ...h,
-        teacher_name: teacher ? teacher.name : (h.teacher_name || t('common.unassigned', 'غير معين'))
+        teacher_name: teacher ? teacher.name : (h.teacher_name || (isRtl ? 'غير معين' : 'Unassigned'))
       };
     });
-  }, [halaqas, teachers, t]);
+  }, [halaqas, teachers, isRtl]);
 
   const preloadedDashboardData = useMemo(() => ({
-    academyName: isPlatformAdmin 
-      ? t('common.platform_admin', 'إدارة المنصة العامة') 
-      : (academyName || t('common.academy', 'الأكاديمية')),
+    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || (isRtl ? "الأكاديمية" : "Academy")),
     role: userRole || 'staff', 
     is_activated: isAcademyActive,
     stats: {
@@ -319,7 +294,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h?.is_archived).length : 0, 
       completedExams: completedExamsCount || 0
     }
-  }), [isPlatformAdmin, academyName, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
+  }), [isPlatformAdmin, isRtl, academyName, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
@@ -451,9 +426,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   };
 
   const skeletonLoader = (
-    <div className="p-6 flex flex-col gap-5">
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Skeleton width="220px" height="32px" borderRadius="8px" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
         <CardSkeleton />
         <CardSkeleton />
         <CardSkeleton />
@@ -463,10 +438,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   );
 
   return (
-    <div 
-      className="flex min-h-screen w-full bg-slate-950 text-slate-100 font-sans" 
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: C.dark.main, color: C.text.title, fontFamily: "'Cairo', system-ui, sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
       <Sidebar 
         currentAcademyId={academyId}
         onSwitchAcademy={handleSwitchAcademy}
@@ -487,7 +459,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      <div className="flex flex-col flex-1 min-w-0 min-h-screen bg-slate-900">
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh' }}>
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
@@ -507,13 +479,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           }}
         />
 
-        <main className="p-4 md:p-6 flex-1 overflow-y-auto">
+        <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto' }}>
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={skeletonLoader}>
               {loadingData ? skeletonLoader : renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
-        </main>
+        </div>
       </div>
     </div>
   );
