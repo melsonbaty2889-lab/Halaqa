@@ -27,7 +27,7 @@ export default function CustomDatePicker({
 
   return (
     <div className="flex flex-col w-full space-y-1.5">
-      {/* شريط التبديل بين التقويمين */}
+      {/* شريط التبديل بين التقويمين وحساب العمر */}
       <div className="flex items-center justify-between text-xs">
         <button
           type="button"
@@ -59,7 +59,7 @@ export default function CustomDatePicker({
             dateFormat="yyyy/MM/dd"
             showMonthDropdown
             showYearDropdown
-            dropdownMode="select"
+            dropdownMode="scroll"
             placeholderText={placeholder || (isArabic ? "اختر نطاق التاريخ..." : "Select date range...")}
             className="w-full bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-xl px-10 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
             calendarClassName="custom-dark-calendar"
@@ -72,8 +72,9 @@ export default function CustomDatePicker({
             dateFormat="yyyy/MM/dd"
             showMonthDropdown
             showYearDropdown
-            dropdownMode="select"
-            yearDropdownItemNumber={70}
+            dropdownMode="scroll"
+            maxDate={new Date()}
+            yearDropdownItemNumber={80}
             scrollableYearDropdown
             placeholderText={placeholder || (isArabic ? "اختر التاريخ..." : "Select date...")}
             className="w-full bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-xl px-10 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
