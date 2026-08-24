@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { getDashboardStats } from '@/lib/dashboardService';
-import styles from '@/components/Dashboard/Dashboard.module.css';
-import { colors as C } from '@/theme/colors';
 import { 
   GraduationCap, 
   TrendingUp, 
@@ -120,11 +118,11 @@ export default function Dashboard({
 
   if (loading) {
     return (
-      <div className={styles.dashboardContainer} style={{ padding: '16px' }}>
-        <div style={{ height: '32px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', width: '50%', marginBottom: '16px' }}></div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+      <div className="p-4 space-y-4">
+        <div className="h-8 bg-slate-800 animate-pulse rounded-lg w-1/2"></div>
+        <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} style={{ height: '100px', background: C.dark.card, border: `1px solid ${C.dark.border}`, borderRadius: '14px' }}></div>
+            <div key={i} className="h-24 bg-slate-800 border border-slate-700/50 rounded-xl animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -133,165 +131,105 @@ export default function Dashboard({
 
   if (isSuperAdmin) {
     return (
-      <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center', color: C.text.muted }}>⏳ جاري تحميل لوحة التحكم...</div>}>
+      <Suspense fallback={<div className="p-5 text-center text-slate-400">جاري تحميل لوحة التحكم...</div>}>
         <AdminDashboard isRtl={isRtl} academyName={displayName} onLogout={() => supabase.auth.signOut()} />
       </Suspense>
     );
   }
 
   return (
-    <div className={styles.dashboardContainer} style={{ padding: '12px 12px 80px 12px', direction: isRtl ? 'rtl' : 'ltr', textAlign: isRtl ? 'right' : 'left' }}>
+    <div className={`p-3 pb-20 text-right ${isRtl ? 'rtl' : 'ltr'}`}>
       
-      {/* 1. الترويسة الرئيسية مع دعم الموبايل */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+      {/* الترويسة الرئيسية */}
+      <div className="flex flex-col gap-2 mb-5">
+        <div className="flex justify-between items-start flex-wrap gap-2">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: C.text.title, margin: '0 0 4px 0', lineHeight: '1.3' }}>
-              {isArabic ? 'أهلاً بك،' : 'Welcome back,'} {displayName} 👋
+            <h1 className="text-xl font-extrabold text-slate-100 m-0 leading-tight">
+              {isArabic ? 'أهلاً بك،' : 'Welcome back,'} {displayName}
             </h1>
-            <p style={{ color: C.text.muted, fontSize: '0.8rem', margin: 0, lineHeight: '1.4' }}>
+            <p className="text-slate-400 text-xs m-0 mt-1">
               {isArabic ? 'منصة إدارة الحلقات الحية والرصد الأكاديمي الموحد' : 'Live Session & Academic Ecosystem'}
             </p>
           </div>
 
-          <div style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: '6px', 
-            padding: '4px 10px', 
-            background: C.brandEmerald.bgGlow, 
-            border: `1px solid ${C.brandEmerald.DEFAULT}`, 
-            borderRadius: '20px', 
-            fontSize: '0.72rem', 
-            color: C.brandEmerald.DEFAULT, 
-            fontWeight: '700',
-            alignSelf: 'flex-start'
-          }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: C.brandEmerald.DEFAULT, boxShadow: `0 0 8px ${C.brandEmerald.DEFAULT}` }}></span>
-            <span>{isArabic ? 'متزامن لحظياً' : 'Realtime Synced'}</span>
-            {lastSyncTime && <span style={{ opacity: 0.8, fontSize: '0.7rem', color: C.text.body }}>({lastSyncTime})</span>}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/60 border border-emerald-500/30 rounded-full text-xs color-emerald-400 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+            <span className="text-emerald-400">{isArabic ? 'متزامن لحظياً' : 'Realtime Synced'}</span>
+            {lastSyncTime && <span className="text-slate-400 text-[10px]">({lastSyncTime})</span>}
           </div>
         </div>
       </div>
 
-      {/* 2. شريط الوصول السريع (سلس وسهل التمرير على الهاتف) */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '10px', 
-        overflowX: 'auto', 
-        paddingBottom: '8px', 
-        marginBottom: '20px', 
-        WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none'
-      }}>
+      {/* شريط الوصول السريع */}
+      <div className="flex gap-2.5 overflow-x-auto pb-2 mb-5 scrollbar-none">
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
-          style={{ 
-            background: C.primary.gradient, 
-            color: '#FFFFFF', 
-            border: 'none', 
-            padding: '10px 14px', 
-            borderRadius: '12px', 
-            fontSize: '0.8rem', 
-            fontWeight: '700', 
-            cursor: 'pointer', 
-            whiteSpace: 'nowrap', 
-            flexShrink: 0,
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px', 
-            boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)' 
-          }}>
+          className="bg-amber-600 hover:bg-amber-500 text-white border-0 px-3.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-md shadow-amber-600/20"
+        >
           <Plus size={15} />
           <span>{isArabic ? 'إطلاق حلقة تعليمية' : 'Launch Session'}</span>
         </button>
 
         <button 
           onClick={() => setActiveTab && setActiveTab('attendance')} 
-          style={{ 
-            background: C.dark.card, 
-            color: C.text.title, 
-            border: `1px solid ${C.dark.border}`, 
-            padding: '10px 14px', 
-            borderRadius: '12px', 
-            fontSize: '0.8rem', 
-            fontWeight: '600', 
-            cursor: 'pointer', 
-            whiteSpace: 'nowrap', 
-            flexShrink: 0,
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px' 
-          }}>
-          <ClipboardCheck size={15} style={{ color: '#38BDF8' }} />
+          className="bg-slate-800 text-slate-100 border border-slate-700/60 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5"
+        >
+          <ClipboardCheck size={15} className="text-sky-400" />
           <span>{isArabic ? 'تسجيل الحضور' : 'Attendance Record'}</span>
         </button>
 
         <button 
           onClick={() => setActiveTab && setActiveTab('students')} 
-          style={{ 
-            background: C.dark.card, 
-            color: C.text.title, 
-            border: `1px solid ${C.dark.border}`, 
-            padding: '10px 14px', 
-            borderRadius: '12px', 
-            fontSize: '0.8rem', 
-            fontWeight: '600', 
-            cursor: 'pointer', 
-            whiteSpace: 'nowrap', 
-            flexShrink: 0,
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px' 
-          }}>
-          <BookOpen size={15} style={{ color: C.primary.DEFAULT }} />
+          className="bg-slate-800 text-slate-100 border border-slate-700/60 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5"
+        >
+          <BookOpen size={15} className="text-amber-500" />
           <span>{isArabic ? 'توثيق الإنجاز والتسميع' : 'Evaluation'}</span>
         </button>
       </div>
 
-      {/* 3. البطاقات الإحصائية (شبكة مرنة تناسب شاشة الموبايل بشكل ممتاز) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+      {/* البطاقات الإحصائية */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
         
         {/* إجمالي الدارسين */}
         <div 
           onClick={() => setActiveTab && setActiveTab('students')}
-          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
-            <span style={{ truncate: true }}>{isArabic ? 'إجمالي الطلاب' : 'Total Learners'}</span>
-            <GraduationCap style={{ color: '#38BDF8' }} size={18} />
+          <div className="flex justify-between items-center text-slate-400 text-xs font-semibold mb-1.5">
+            <span className="truncate">{isArabic ? 'إجمالي الطلاب' : 'Total Learners'}</span>
+            <GraduationCap className="text-sky-400" size={18} />
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: C.text.title }}>{safeText(stats?.studentsCount, '0')}</div>
-          <div style={{ fontSize: '0.7rem', color: C.brandEmerald.DEFAULT, marginTop: '4px', fontWeight: '600' }}>
-            {isArabic ? '↑ طلاب نشطون' : '↑ Active Enrolled'}
+          <div className="text-2xl font-extrabold text-slate-100">{safeText(stats?.studentsCount, '0')}</div>
+          <div className="text-[10px] text-emerald-400 mt-1 font-semibold">
+            {isArabic ? 'طلاب نشطون' : 'Active Enrolled'}
           </div>
         </div>
 
         {/* متوسط الاستمرارية */}
-        <div style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+        <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50">
+          <div className="flex justify-between items-center text-slate-400 text-xs font-semibold mb-1.5">
             <span>{isArabic ? 'مؤشر الاستمرارية' : 'Consistency'}</span>
-            <Flame style={{ color: '#F97316' }} size={18} />
+            <Flame className="text-orange-500" size={18} />
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#F97316' }}>
-            {safeText(stats?.avgStreak, '0')} <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: C.text.body }}>{isArabic ? 'يوم' : 'Days'}</span>
+          <div className="text-2xl font-extrabold text-orange-500">
+            {safeText(stats?.avgStreak, '0')} <span className="text-xs font-normal text-slate-400">{isArabic ? 'يوم' : 'Days'}</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#FB923C', marginTop: '4px', fontWeight: '600' }}>
-            {isArabic ? '🔥 التتابع المستمر' : 'Active Streak'}
+          <div className="text-[10px] text-orange-400 mt-1 font-semibold">
+            {isArabic ? 'التتابع المستمر' : 'Active Streak'}
           </div>
         </div>
 
         {/* نسبة الحضور */}
         <div 
           onClick={() => setActiveTab && setActiveTab('attendance')}
-          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+          <div className="flex justify-between items-center text-slate-400 text-xs font-semibold mb-1.5">
             <span>{isArabic ? 'نسبة الحضور' : 'Daily Attendance'}</span>
-            <TrendingUp style={{ color: '#38BDF8' }} size={18} />
+            <TrendingUp className="text-sky-400" size={18} />
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#38BDF8' }}>{safeText(stats?.attendanceRate, '0%')}</div>
-          <div style={{ fontSize: '0.7rem', color: '#7DD3FC', marginTop: '4px', fontWeight: '600' }}>
+          <div className="text-2xl font-extrabold text-sky-400">{safeText(stats?.attendanceRate, '0%')}</div>
+          <div className="text-[10px] text-sky-300 mt-1 font-semibold">
             {isArabic ? 'معدل المشاركة' : 'Engagement Rate'}
           </div>
         </div>
@@ -299,16 +237,16 @@ export default function Dashboard({
         {/* جلسات التسميع */}
         <div 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
-          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+          <div className="flex justify-between items-center text-slate-400 text-xs font-semibold mb-1.5">
             <span>{isArabic ? 'جلسات التسميع' : 'Evaluations'}</span>
-            <BookOpen style={{ color: C.primary.DEFAULT }} size={18} />
+            <BookOpen className="text-amber-500" size={18} />
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: C.primary.DEFAULT }}>
-            {safeText(stats?.totalSessions, '0')} <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: C.text.body }}>{isArabic ? 'جلسة' : 'Sessions'}</span>
+          <div className="text-2xl font-extrabold text-amber-500">
+            {safeText(stats?.totalSessions, '0')} <span className="text-xs font-normal text-slate-400">{isArabic ? 'جلسة' : 'Sessions'}</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: C.primary.hover, marginTop: '4px', fontWeight: '600' }}>
+          <div className="text-[10px] text-amber-400 mt-1 font-semibold">
             {isArabic ? 'المكتملة اليوم' : 'Completed Today'}
           </div>
         </div>
@@ -316,42 +254,42 @@ export default function Dashboard({
         {/* المتأخرات */}
         <div 
           onClick={() => setActiveTab && setActiveTab('payments')}
-          style={{ background: C.dark.card, padding: '14px', borderRadius: '14px', border: `1px solid ${C.dark.border}`, cursor: 'pointer' }}
+          className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.text.muted, fontSize: '0.78rem', fontWeight: '600', marginBottom: '6px' }}>
+          <div className="flex justify-between items-center text-slate-400 text-xs font-semibold mb-1.5">
             <span>{isArabic ? 'المتأخرات' : 'Status'}</span>
-            <AlertTriangle style={{ color: (stats?.overdueCount || 0) > 0 ? C.error.DEFAULT : C.brandEmerald.DEFAULT }} size={18} />
+            <AlertTriangle className={(stats?.overdueCount || 0) > 0 ? "text-rose-500" : "text-emerald-400"} size={18} />
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: (stats?.overdueCount || 0) > 0 ? C.error.DEFAULT : C.brandEmerald.DEFAULT }}>
+          <div className={`text-2xl font-extrabold ${(stats?.overdueCount || 0) > 0 ? "text-rose-500" : "text-emerald-400"}`}>
             {safeText(stats?.overdueCount, '0')}
           </div>
-          <div style={{ fontSize: '0.7rem', color: (stats?.overdueCount || 0) > 0 ? C.error.light : C.brandEmerald.DEFAULT, marginTop: '4px', fontWeight: '600' }}>
+          <div className={`text-[10px] mt-1 font-semibold ${(stats?.overdueCount || 0) > 0 ? "text-rose-400" : "text-emerald-400"}`}>
             {isArabic ? 'طلبات التعديل' : 'Tasks'}
           </div>
         </div>
 
       </div>
 
-      {/* 4. الحلقات المباشرة وأنظمة التسميع */}
-      {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
-        <div style={{ background: C.dark.card, padding: '16px', borderRadius: '16px', border: `1px solid ${C.dark.border}`, marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <h3 style={{ fontSize: '0.95rem', color: C.text.title, margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Landmark style={{ color: C.primary.DEFAULT }} size={18} />
+      {/* الحلقات المباشرة */}
+      {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 && (
+        <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/50 mb-5">
+          <div className="flex justify-between items-center mb-3.5">
+            <h3 className="text-sm text-slate-100 font-bold flex items-center gap-1.5 m-0">
+              <Landmark className="text-amber-500" size={18} />
               <span>{isArabic ? 'الحلقات النشطة' : 'Active Sessions'}</span>
             </h3>
-            <span style={{ fontSize: '0.75rem', color: C.text.muted }}>
+            <span className="text-xs text-slate-400">
               {stats.activeHalaqasData.length} {isArabic ? 'حلقة' : 'active'}
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+          <div className="grid grid-cols-1 gap-3">
             {stats.activeHalaqasData.map((halaqa, idx) => {
               const isLive = halaqa.status === 'live';
               const isFinished = halaqa.status === 'finished';
               
-              const statusBg = isLive ? C.error.bgGlow : isFinished ? C.brandEmerald.bgGlow : 'rgba(56, 189, 248, 0.15)';
-              const statusColor = isLive ? C.error.DEFAULT : isFinished ? C.brandEmerald.DEFAULT : '#38BDF8';
+              const statusBg = isLive ? 'bg-rose-950/40 border-rose-500/30' : isFinished ? 'bg-emerald-950/40 border-emerald-500/30' : 'bg-sky-950/40 border-sky-500/30';
+              const statusColor = isLive ? 'text-rose-400' : isFinished ? 'text-emerald-400' : 'text-sky-400';
               const statusLabel = isLive 
                 ? (isArabic ? 'جارية الآن' : 'Live') 
                 : isFinished 
@@ -365,31 +303,31 @@ export default function Dashboard({
               const teachingType = safeText(halaqa.teaching_type, 'حضوري');
 
               return (
-                <div key={halaqa.id || idx} style={{ background: C.dark.surface, padding: '12px', borderRadius: '12px', border: `1px solid ${C.dark.border}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h4 style={{ margin: 0, color: C.text.title, fontSize: '0.88rem', fontWeight: '700' }}>
+                <div key={halaqa.id || idx} className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/40">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="m-0 color-slate-100 text-sm font-bold">
                       {halaqaName}
                     </h4>
-                    <span style={{ padding: '3px 8px', borderRadius: '10px', background: statusBg, color: statusColor, fontSize: '0.7rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <StatusIcon size={12} className={isLive ? styles?.spinning || '' : ''} />
+                    <span className={`px-2 py-0.5 rounded-lg border text-[10px] font-bold inline-flex items-center gap-1 ${statusBg} ${statusColor}`}>
+                      <StatusIcon size={12} className={isLive ? 'animate-spin' : ''} />
                       <span>{statusLabel}</span>
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.78rem', color: C.text.body, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <User style={{ color: C.text.muted }} size={14} />
+                  <div className="text-xs text-slate-300 mb-1 flex items-center gap-1.5">
+                    <User className="text-slate-400" size={14} />
                     <span>{isArabic ? `المعلم: ${teacherName}` : `Teacher: ${teacherName}`}</span>
                   </div>
 
                   {timeDisplay && (
-                    <div style={{ fontSize: '0.75rem', color: C.text.muted, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Clock style={{ color: C.text.muted }} size={14} />
+                    <div className="text-[11px] text-slate-400 mb-1.5 flex items-center gap-1.5">
+                      <Clock className="text-slate-400" size={14} />
                       <span>{timeDisplay}</span>
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '6px', background: C.primary.bgGlow, color: C.primary.DEFAULT, border: `1px solid ${C.primary.bgGlow}`, fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950/40 text-amber-400 border border-amber-500/20 font-semibold inline-flex items-center gap-1">
                       <Award size={11} />
                       <span>{teachingType}</span>
                     </span>
@@ -399,7 +337,7 @@ export default function Dashboard({
             })}
           </div>
         </div>
-      ) : null}
+      )}
 
     </div>
   );
