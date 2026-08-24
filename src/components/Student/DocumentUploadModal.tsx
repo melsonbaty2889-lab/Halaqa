@@ -195,3 +195,4 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     </div>
   );
 };
+export default DocumentUploadModal;
