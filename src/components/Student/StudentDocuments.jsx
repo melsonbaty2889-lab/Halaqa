@@ -14,6 +14,7 @@ import {
   Building2 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import DocumentUploadModal from './DocumentUploadModal';
 
 const DOCUMENT_TYPES = [
   { value: 'id_card', labelAr: 'بطاقة الهوية', labelEn: 'ID Card' },
