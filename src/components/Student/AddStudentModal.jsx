@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Calendar } from 'lucide-react';
+import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
-import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
+import { calculateAge } from '@/utils/dateUtils';
+import CustomDatePicker from '../ui/CustomDatePicker';
 
 const AddStudentModal = ({
   isOpen,
@@ -84,12 +85,15 @@ const AddStudentModal = ({
     setErrors({});
   }, [studentToEdit, isOpen]);
 
-  const handleDateChange = (e) => {
-    const bDate = e.target.value;
+  // تحديث تاريخ الميلاد وحساب السن تلقائياً
+  const handleDateChange = (date) => {
+    const bDate = date ? date.toISOString().split('T')[0] : '';
     setFormData((prev) => ({ ...prev, birth_date: bDate }));
     if (bDate) {
       const age = calculateAge(bDate);
       setShowParentFields(age !== null && age < 18);
+    } else {
+      setShowParentFields(true);
     }
   };
 
@@ -176,10 +180,6 @@ const AddStudentModal = ({
     }
   };
 
-  // حساب السن والتاريخ الهجري للعارض السريع
-  const currentAge = calculateAge(formData.birth_date);
-  const hijriBirthDate = formData.birth_date ? formatHijriDate(formData.birth_date, 'ar') : '';
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
@@ -262,33 +262,22 @@ const AddStudentModal = ({
                 </select>
               </div>
 
-              {/* حقل تاريخ الميلاد المطور لدعم الهجري والسن تلقائياً */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-medium text-slate-300">
-                    تاريخ الميلاد
-                  </label>
-                  {currentAge !== null && (
-                    <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                      العمر: {currentAge} سنة
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="date"
-                  value={formData.birth_date}
+              {/* حقل تاريخ الميلاد مع المكون المخصص */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  تاريخ الميلاد
+                </label>
+                <CustomDatePicker
+                  selectedDate={formData.birth_date ? new Date(formData.birth_date) : null}
                   onChange={handleDateChange}
-                  style={{ colorScheme: 'dark' }}
-                  className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
+                  isArabic={true}
+                  showAge={true}
+                  placeholder="اختر تاريخ الميلاد..."
                 />
-                {hijriBirthDate && (
-                  <p className="text-[11px] text-amber-300/90 mt-1.5 flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
-                    <Calendar className="w-3 h-3 shrink-0" />
-                    الموافق هجرياً: {hijriBirthDate}
-                  </p>
-                )}
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   دولة الإقامة
