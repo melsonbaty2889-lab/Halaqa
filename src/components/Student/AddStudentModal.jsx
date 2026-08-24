@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
+import { formatHijriDate, calculateAge } from '@/utils/hijriDate';
 
 const AddStudentModal = ({
   isOpen,
@@ -60,8 +61,8 @@ const AddStudentModal = ({
       });
 
       if (studentToEdit.birth_date) {
-        const age = new Date().getFullYear() - new Date(studentToEdit.birth_date).getFullYear();
-        setShowParentFields(age < 18);
+        const age = calculateAge(studentToEdit.birth_date);
+        setShowParentFields(age !== null && age < 18);
       }
     } else {
       setFormData({
@@ -87,8 +88,8 @@ const AddStudentModal = ({
     const bDate = e.target.value;
     setFormData((prev) => ({ ...prev, birth_date: bDate }));
     if (bDate) {
-      const age = new Date().getFullYear() - new Date(bDate).getFullYear();
-      setShowParentFields(age < 18);
+      const age = calculateAge(bDate);
+      setShowParentFields(age !== null && age < 18);
     }
   };
 
@@ -163,7 +164,6 @@ const AddStudentModal = ({
         resultData = data;
       }
 
-      // إشعار المكون الأب بالبيانات الجديدة لتحديث القائمة فورياً
       if (onSuccess) await onSuccess(resultData);
       if (onStudentAdded) await onStudentAdded(resultData);
 
@@ -176,17 +176,22 @@ const AddStudentModal = ({
     }
   };
 
+  // حساب السن والتاريخ الهجري للعارض السريع
+  const currentAge = calculateAge(formData.birth_date);
+  const hijriBirthDate = formData.birth_date ? formatHijriDate(formData.birth_date, 'ar') : '';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl my-8 overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary-500/10 text-primary-400 rounded-xl">
               {studentToEdit ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-100">
+              <h2 className="text-base sm:text-lg font-bold text-slate-100">
                 {studentToEdit ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد'}
               </h2>
               <p className="text-xs text-slate-400">إدخال البيانات الأساسية والدولية والعائلية</p>
@@ -202,8 +207,7 @@ const AddStudentModal = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-          {/* البيانات الأساسية */}
+        <form id="add-student-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-4 h-4" /> البيانات الأساسية
@@ -218,7 +222,7 @@ const AddStudentModal = ({
                   type="text"
                   value={formData.name_ar}
                   onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
-                  placeholder=""
+                  placeholder="مثال: عمار محمد"
                   className={`w-full px-3 py-2.5 bg-slate-800 border ${
                     errors.name_ar ? 'border-rose-500' : 'border-slate-700'
                   } rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors`}
@@ -239,7 +243,7 @@ const AddStudentModal = ({
                   type="text"
                   value={formData.name_en}
                   onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                  placeholder=""
+                  placeholder="Ammar Mohamed"
                   className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                 />
               </div>
@@ -258,16 +262,31 @@ const AddStudentModal = ({
                 </select>
               </div>
 
+              {/* حقل تاريخ الميلاد المطور لدعم الهجري والسن تلقائياً */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  تاريخ الميلاد
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-medium text-slate-300">
+                    تاريخ الميلاد
+                  </label>
+                  {currentAge !== null && (
+                    <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                      العمر: {currentAge} سنة
+                    </span>
+                  )}
+                </div>
                 <input
                   type="date"
                   value={formData.birth_date}
                   onChange={handleDateChange}
+                  style={{ colorScheme: 'dark' }}
                   className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
                 />
+                {hijriBirthDate && (
+                  <p className="text-[11px] text-amber-300/90 mt-1.5 flex items-center gap-1 font-medium bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    الموافق هجرياً: {hijriBirthDate}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -366,7 +385,7 @@ const AddStudentModal = ({
                     type="text"
                     value={formData.parent_name}
                     onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
-                    placeholder=""
+                    placeholder="اسم ولي الأمر"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                   />
                 </div>
@@ -379,7 +398,7 @@ const AddStudentModal = ({
                     type="tel"
                     value={formData.parent_phone}
                     onChange={(e) => setFormData({ ...formData, parent_phone: e.target.value })}
-                    placeholder=""
+                    placeholder="+20 123456789"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                   />
                 </div>
@@ -394,7 +413,7 @@ const AddStudentModal = ({
                     onChange={(e) =>
                       setFormData({ ...formData, parent_whatsapp: e.target.value })
                     }
-                    placeholder=""
+                    placeholder="+20 123456789"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                   />
                 </div>
@@ -411,29 +430,31 @@ const AddStudentModal = ({
               rows={2}
               value={formData.notes_text}
               onChange={(e) => setFormData({ ...formData, notes_text: e.target.value })}
-              placeholder=""
+              placeholder="أي ملاحظات تخص الطالب..."
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors resize-none"
             />
           </div>
-
-          {/* أزرار التحكم */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-600/20 disabled:opacity-50"
-            >
-              {isSubmitting ? 'جاري الحفظ...' : studentToEdit ? 'حفظ التعديلات' : 'إضافة الطالب'}
-            </button>
-          </div>
         </form>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 bg-slate-900 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            إلغاء
+          </button>
+          <button
+            type="submit"
+            form="add-student-form"
+            disabled={isSubmitting}
+            className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-600/20 disabled:opacity-50"
+          >
+            {isSubmitting ? 'جاري الحفظ...' : studentToEdit ? 'حفظ التعديلات' : 'إضافة الطالب'}
+          </button>
+        </div>
+
       </div>
     </div>
   );
