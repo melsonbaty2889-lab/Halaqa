@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
 import { calculateAge } from '@/utils/dateUtils';
-import CustomDatePicker from '../ui/CustomDatePicker';
+import CustomDatePicker from '@/components/UI/CustomDatePicker';
 
 const AddStudentModal = ({
   isOpen,
