@@ -103,6 +103,28 @@
     "student_added_success": "Student registered successfully and professionally! 🎉",
     "student_added_failed": "Registration failed:",
     "error_updating_surah": "Unable to update the current Surah"
+    // ar.json
+"documents":
+    {
+  "upload_title": "رفع ملف جديد",
+  "type_label": "نوع المستند",
+  "file_label": "الملف",
+  "drag_drop_text": "انقر هنا لاختيار ملف من جهازك",
+  "notes_label": "ملاحظات",
+  "notes_placeholder": "تفاصيل أو ملاحظات إضافية...",
+  "error_size_limit": "حجم الملف يتجاوز الحد المسموح (10 ميجابايت)",
+  "error_select_file": "يرجى اختيار ملف أولاً",
+  "types": {
+    "id_card": "بطاقة الهوية",
+    "passport": "جواز السفر",
+    "birth_certificate": "شهادة الميلاد",
+    "parent_consent": "موافقة ولي الأمر",
+    "medical_report": "تقرير طبي",
+    "payment_receipt": "إيصال دفع",
+    "certificate": "شهادة",
+    "other": "أخرى"
+  }
+}
   },
   "finance": {
     "total_collection": "Total Revenue Collected",
