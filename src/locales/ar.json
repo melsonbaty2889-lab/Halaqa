@@ -17,7 +17,6 @@
   "save": "حفظ التغييرات",
   "actions": "الإجراءات",
   "cancel": "إلغاء",
-  
   "total_students": "إجمالي الطلاب المسجلين",
   "attendance_rate": "معدل الحضور العام",
   "pending_payments": "المستحقات المعلقة",
@@ -25,14 +24,12 @@
   "pending_payments_alert": "تنبيه: توجد اشتراكات مستحقة لم يتم سدادها بعد",
   "review_now": "مراجعة السجل الآن",
   "no_alerts": "لا توجد تنبيهات حالية، النظام مستقر تماماً!",
-
   "present": "حاضر",
   "absent": "غائب",
   "late": "متأخر",
   "excused": "غائب بعذر",
   "notes": "إضافة ملاحظات أو توجيهات...",
   "save_attendance": "اعتماد وحفظ الكشف",
-
   "total_collection": "إجمالي الإيرادات المحصلة",
   "mark_paid": "تأكيد الدفع",
   "mark_unpaid": "إلغاء السداد",
@@ -40,36 +37,32 @@
   "paid": "مدفوع",
   "unpaid": "غير مدفوع",
   "due_date": "تاريخ الاستحقاق",
-
   "memorization": "الحفظ الجديد",
   "revision": "المراجعة (الماضي)",
   "daily_grade": "تقييم اليوم",
   "excellent": "ممتاز",
   "good": "جيد",
   "needs_improvement": "يحتاج إلى تركيز",
-
-
-"documents": {
-  "upload_title": "رفع ملف جديد",
-  "type_label": "نوع المستند",
-  "file_label": "الملف",
-  "drag_drop_text": "انقر هنا لاختيار ملف من جهازك",
-  "notes_label": "ملاحظات",
-  "notes_placeholder": "تفاصيل أو ملاحظات إضافية...",
-  "error_size_limit": "حجم الملف يتجاوز الحد المسموح (10 ميجابايت)",
-  "error_select_file": "يرجى اختيار ملف أولاً",
-  "types": {
-    "id_card": "بطاقة الهوية",
-    "passport": "جواز السفر",
-    "birth_certificate": "شهادة الميلاد",
-    "parent_consent": "موافقة ولي الأمر",
-    "medical_report": "تقرير طبي",
-    "payment_receipt": "إيصال دفع",
-    "certificate": "شهادة",
-    "other": "أخرى"
-  }
-}
-  
+  "documents": {
+    "upload_title": "رفع ملف جديد",
+    "type_label": "نوع المستند",
+    "file_label": "الملف",
+    "drag_drop_text": "انقر هنا لاختيار ملف من جهازك",
+    "notes_label": "ملاحظات",
+    "notes_placeholder": "تفاصيل أو ملاحظات إضافية...",
+    "error_size_limit": "حجم الملف يتجاوز الحد المسموح (10 ميجابايت)",
+    "error_select_file": "يرجى اختيار ملف أولاً",
+    "types": {
+      "id_card": "بطاقة الهوية",
+      "passport": "جواز السفر",
+      "birth_certificate": "شهادة الميلاد",
+      "parent_consent": "موافقة ولي الأمر",
+      "medical_report": "تقرير طبي",
+      "payment_receipt": "إيصال دفع",
+      "certificate": "شهادة",
+      "other": "أخرى"
+    }
+  },
   "createAccount": "إنشاء حساب معلم/مشرف",
   "fullName": "الاسم الكامل",
   "email": "البريد الإلكتروني",
@@ -83,13 +76,11 @@
   "backToLogin": "العودة لتسجيل الدخول",
   "enterEmailParagraph": "أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة تعيين كلمة السر.",
   "sendingStatus": "جاري الإرسال...",
-
   "errorLoading": "عذراً، فشل تحميل البيانات من الخادم",
   "noStaffRecord": "هذا الحساب غير مسجل في نظام المعلمين",
   "fieldRequired": "هذا الحقل مطلوب ولا يمكن تركه فارغاً",
   "invalidEmail": "يرجى إدخال بريد إلكتروني صحيح",
   "passwordTooShort": "كلمة المرور يجب ألا تقل عن 6 رموز",
-
   "students_management_title": "شؤون الطلاب والمسار التعليمي",
   "add_new_student": "إضافة طالب جديد",
   "registration_data_title": "بيانات التسجيل الأساسية والقرآنية",
@@ -122,7 +113,6 @@
   "student_added_success": "تم تسجيل الطالب بنجاح واحترافية! 🎉",
   "student_added_failed": "فشل التسجيل:",
   "error_updating_surah": "تعذر تحديث السورة الحالية",
-
   "quick_actions": "الإجراءات السريعة للحلقة",
   "academy_overview": "التقرير العام للأكاديمية",
   "action_attendance": "الحضور والمتابعة",
@@ -131,7 +121,6 @@
   "action_payments": "المالية والاشتراكات",
   "active_halagas": "الحلقات النشطة اليوم",
   "completed_exams": "اختبارات الأجزاء الناجحة",
-
   "brand": {
     "title": "الحلقة الذكية",
     "subtitle": "إدارة المقارئ والأكاديميات"
@@ -185,7 +174,6 @@
     "title": "التنبيهات",
     "new": "جديد"
   },
-
   "subscription": {
     "title": "امتلاك ترخيص المنظومة - منصة الحلقة الذكية",
     "subtitle": "اختر خطة الاستثمار الأكاديمي الأنسب لك، وانضم إلى كبرى الأكاديميات والمراكز التعليمية حول العالم.",
