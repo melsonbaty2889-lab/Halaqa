@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, Filter, Users, UserCheck, UserX, AlertCircle, ArrowRight } from 'lucide-react';
+import { Search, Plus, Filter, Users, UserCheck, UserX, AlertCircle } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
@@ -55,30 +55,24 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
     }
   };
 
-  // عرض ملف الطالب الشخصي عند الاختيار
+  // عرض ملف الطالب الشخصي عند الاختيار (تمت إزالة زر العودة الخارجي لمنع التكرار)
   if (selectedStudent) {
     return (
-      <div className="space-y-4">
-        <button
-          onClick={() => setSelectedStudent(null)}
-          className="btn-secondary w-auto py-2"
-        >
-          <ArrowRight className="w-4 h-4" />
-          <span>العودة لقائمة الطلاب</span>
-        </button>
-        <StudentProfile 
-          student={selectedStudent} 
-          academyId={academyId} 
-          halaqas={halaqas}
-          onBack={() => setSelectedStudent(null)}
-          onUpdateStudent={(updated) => {
-            if (setStudents) {
-              setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
-            }
-            setSelectedStudent(updated);
-          }}
-        />
-      </div>
+      <StudentProfile 
+        student={selectedStudent} 
+        academyId={academyId} 
+        halaqas={halaqas}
+        onBack={() => setSelectedStudent(null)}
+        onEdit={(studentToEdit) => {
+          // التعامل مع التعديل عند الحاجة
+        }}
+        onDelete={(studentId) => {
+          if (setStudents) {
+            setStudents(prev => prev.filter(s => s.id !== studentId));
+          }
+          setSelectedStudent(null);
+        }}
+      />
     );
   }
 
