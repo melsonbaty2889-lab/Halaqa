@@ -3,7 +3,7 @@ import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Calendar } fro
 import { supabase } from '@/lib/supabase';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
-import { formatHijriDate, calculateAge } from '@/utils/hijriDate';
+import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 
 const AddStudentModal = ({
   isOpen,
