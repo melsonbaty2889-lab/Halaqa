@@ -3,6 +3,10 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        cairo: ['Cairo', 'sans-serif'],
+        sans: ['Cairo', 'sans-serif'], // تعيين Cairo كخط افتراضي عند استخدام font-sans
+      },
       colors: {
         dark: {
           bg: 'var(--bg-dark)',           // #070B11
