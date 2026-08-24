@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DatePicker from 'react-datepicker';
 import { Calendar as CalendarIcon, Repeat } from 'lucide-react';
 import { ar, enUS } from 'date-fns/locale';
-import { formatHijriDate, calculateAge } from '../../utils/dateUtils';
+import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 import 'react-datepicker/dist/react-datepicker.css';
 
 export default function CustomDatePicker({ 
