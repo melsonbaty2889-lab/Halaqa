@@ -14,8 +14,9 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const formattedName = formatName(student.name || '');
-      const matchesSearch = formattedName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (student.phone && student.phone.includes(searchQuery));
+      const matchesSearch =
+        formattedName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (student.phone && student.phone.includes(searchQuery));
       const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -55,12 +56,20 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
     }
   };
 
-  // عرض ملف الطالب الشخصي عند الاختيار (تمت إزالة زر العودة الخارجي لمنع التكرار)
+  // دالة موحدة للتعامل مع إضافة الطالب الجديد وتحديث الواجهة فوراً
+  const handleStudentAdded = (newStudent) => {
+    if (setStudents && newStudent) {
+      setStudents((prev) => [newStudent, ...prev]);
+    }
+    setIsAddModalOpen(false);
+  };
+
+  // عرض ملف الطالب الشخصي عند الاختيار
   if (selectedStudent) {
     return (
-      <StudentProfile 
-        student={selectedStudent} 
-        academyId={academyId} 
+      <StudentProfile
+        student={selectedStudent}
+        academyId={academyId}
         halaqas={halaqas}
         onBack={() => setSelectedStudent(null)}
         onEdit={(studentToEdit) => {
@@ -68,7 +77,7 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
         }}
         onDelete={(studentId) => {
           if (setStudents) {
-            setStudents(prev => prev.filter(s => s.id !== studentId));
+            setStudents((prev) => prev.filter((s) => s.id !== studentId));
           }
           setSelectedStudent(null);
         }}
@@ -90,10 +99,7 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="btn-primary w-fit"
-        >
+        <button onClick={() => setIsAddModalOpen(true)} className="btn-primary w-fit">
           <Plus className="w-5 h-5" />
           <span>إضافة طالب جديد</span>
         </button>
@@ -171,12 +177,8 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
           onClose={() => setIsAddModalOpen(false)}
           academyId={academyId}
           halaqas={halaqas}
-          onStudentAdded={(newStudent) => {
-            if (setStudents) {
-              setStudents(prev => [newStudent, ...prev]);
-            }
-            setIsAddModalOpen(false);
-          }}
+          onSuccess={handleStudentAdded}
+          onStudentAdded={handleStudentAdded}
         />
       )}
     </div>
