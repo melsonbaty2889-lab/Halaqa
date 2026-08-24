@@ -3,18 +3,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Book, Play, Pause, ChevronRight, ChevronLeft, 
-  X, Check, BookOpen, UserCheck, Sparkles, Loader2, Globe, FileText, Languages
+  X, Check, BookOpen, UserCheck, Sparkles, Loader2, Globe, FileText, Languages, Image as ImageIcon
 } from 'lucide-react';
 
-// قائمة القراء المعتمدين بروابط EveryAyah المستقرة 100%
+// قائمة القراء المعتمدين بروايات متعددة وروابط EveryAyah المستقرة 100%
 const RECITERS = [
   { id: 'alafasy', name: 'مشاري العفاسي', name_en: 'Mishary Alafasy', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Alafasy_128kbps/' },
+  { id: 'abdulbasit_warsh', name: 'عبد الباسط عبد الصمد', name_en: 'AbdulBaset AbdulSamad', rewaya: 'ورش عن نافع', url: 'https://everyayah.com/data/Warsh_Abdul_Basit_128kbps/' },
+  { id: 'hussary_qalon', name: 'محمود خليل الحصري', name_en: 'Mahmoud Al-Hussary', rewaya: 'قالون عن نافع', url: 'https://everyayah.com/data/Husary_Qasr_64kbps/' },
+  { id: 'hudhaify_duri', name: 'علي بن عبدالرحمن الحذيفي', name_en: 'Ali Al-Hudhaify', rewaya: 'الدوري عن أبي عمرو', url: 'https://everyayah.com/data/Hudhaify_Duri_128kbps/' },
   { id: 'hussary', name: 'محمود خليل الحصري', name_en: 'Mahmoud Al-Hussary', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Husary_128kbps/' },
   { id: 'minshawy', name: 'محمد صديق المنشاوي', name_en: 'Minshawy (Mujawwad)', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Minshawy_Mujawwad_192kbps/' },
   { id: 'dosari', name: 'ياسر الدوسري', name_en: 'Yasser Al-Dosari', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Yasser_Ad-Dussary_128kbps/' },
-  { id: 'basfar', name: 'عبد الله بصفر', name_en: 'Abdullah Basfar', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Abdullah_Basfar_192kbps/' },
-  { id: 'hudhaify', name: 'علي بن عبدالرحمن الحذيفي', name_en: 'Ali Al-Hudhaify', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Hudhaify_128kbps/' },
-  { id: 'ghamadi', name: 'سعد الغامدي', name_en: 'Saad Al-Ghamdi', rewaya: 'حفص عن عاصم', url: 'https://everyayah.com/data/Ghamadi_40kbps/' }
 ];
 
 const TRANSLATION_LANGS = [
@@ -27,16 +27,18 @@ const TRANSLATION_LANGS = [
 const toArabicIndic = (num) => String(num).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 
 export default function InteractiveQuran() {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const isRtl = i18n.language === 'ar';
 
   const [selectedSurah, setSelectedSurah] = useState(1);
+  const [selectedPage, setSelectedPage] = useState(1);
   const [selectedReciter, setSelectedReciter] = useState(RECITERS[0]);
   const [selectedTranslation, setSelectedTranslation] = useState(TRANSLATION_LANGS[0].code);
   const [surahsList, setSurahsList] = useState([]);
   const [surahDetail, setSurahDetail] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // أنماط العرض: quran (نصي), page (صفحات المصحف الحقيقي المعتمد), tafsir, translation
   const [viewMode, setViewMode] = useState('quran'); 
   const [tafsirData, setTafsirData] = useState({});
   const [translationData, setTranslationData] = useState({});
@@ -58,11 +60,15 @@ export default function InteractiveQuran() {
     document.head.appendChild(link);
   }, []);
 
-  const formatSurahName = (name, englishName) => {
+  // تصحيح أسماء السور وضبط الفاتحة
+  const formatSurahName = (surahNumber, originalName, englishName) => {
     if (!isRtl && englishName) return englishName;
-    if (!name) return '';
-    let cleaned = name.replace(/([^\u0621-\u064A\u0660-\u0669\s])/g, '').replace(/(اِ|اَ|اُ|أ|إ|آ)/g, 'ا').trim();
-    cleaned = cleaned.replace(/^سورة\s+/, '');
+    if (surahNumber === 1) return 'سورة الفاتحة';
+    if (!originalName) return '';
+    let cleaned = originalName
+      .replace(/([^\u0621-\u064A\u0660-\u0669\s])/g, '')
+      .replace(/^سورة\s+/, '')
+      .trim();
     return `سورة ${cleaned}`;
   };
 
@@ -91,7 +97,12 @@ export default function InteractiveQuran() {
     fetch(`https://api.alquran.cloud/v1/surah/${selectedSurah}/quran-uthmani`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.code === 200) setSurahDetail(data.data);
+        if (data.code === 200) {
+          setSurahDetail(data.data);
+          if (data.data.ayahs && data.data.ayahs.length > 0) {
+            setSelectedPage(data.data.ayahs[0].page);
+          }
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -143,9 +154,7 @@ export default function InteractiveQuran() {
       audio.play();
       setIsPlaying(true);
       audio.onended = () => setIsPlaying(false);
-      audio.onerror = () => {
-        stopAudio();
-      };
+      audio.onerror = () => stopAudio();
     }
   };
 
@@ -156,16 +165,19 @@ export default function InteractiveQuran() {
 
   const currentSurahObj = surahsList.find((s) => s.number === selectedSurah);
   const filteredSurahs = surahsList.filter((s) => {
-    const formatted = formatSurahName(s.name, s.englishName);
+    const formatted = formatSurahName(s.number, s.name, s.englishName);
     const query = searchSurahQuery.trim().toLowerCase();
     return formatted.toLowerCase().includes(query) || String(s.number).includes(query) || s.englishName.toLowerCase().includes(query);
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#090D16] text-slate-100 p-3 md:p-6 rounded-3xl border border-slate-800 shadow-2xl gap-5 font-cairo max-w-5xl mx-auto" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div 
+      className="flex flex-col h-full bg-[#090D16]/80 backdrop-blur-md text-slate-100 p-3 md:p-6 rounded-3xl border border-slate-800/80 shadow-2xl gap-5 font-cairo max-w-5xl mx-auto" 
+      style={{ direction: isRtl ? 'rtl' : 'ltr' }}
+    >
       
-      {/* 1️⃣ لوحة التحكم العليا */}
-      <div className="bg-[#0F172A] p-4 md:p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-4">
+      {/* 1️⃣ لوحة التحكم العليا الشفافة */}
+      <div className="bg-[#0F172A]/70 backdrop-blur-md p-4 md:p-5 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
@@ -176,7 +188,7 @@ export default function InteractiveQuran() {
                 {isRtl ? 'المصحف والتسميع التفاعلي' : 'Interactive Quran & Recitation'}
               </h1>
               <p className="text-xs text-slate-400 font-normal">
-                {isRtl ? 'تلاوات معتمدة، روايات متعددة، والتفسير الميسر' : 'Authentic Recitations & Multi-Language Translations'}
+                {isRtl ? 'تلاوات معتمدة بروايات مختلفة، والمصحف المصور المعتمد' : 'Authentic Multi-Riwayah Recitations & Uthmani Mushaf'}
               </p>
             </div>
           </div>
@@ -186,7 +198,7 @@ export default function InteractiveQuran() {
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
               recitationMode 
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-lg shadow-amber-500/10' 
-                : 'bg-slate-800/80 border border-slate-700/60 text-slate-300 hover:text-white hover:bg-slate-800'
+                : 'bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
           >
             <Sparkles className="w-4 h-4 text-amber-400" />
@@ -194,26 +206,26 @@ export default function InteractiveQuran() {
           </button>
         </div>
 
-        {/* أزرار اختيار السورة والقارئ */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-800">
+        {/* أزرار اختيار السورة والقارئ والرواية */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-800/60">
           <button
             onClick={() => setShowSurahModal(true)}
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-xs text-slate-200 hover:border-slate-500 transition cursor-pointer min-w-0"
+            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-200 hover:border-slate-500 transition cursor-pointer min-w-0"
           >
             <span className="flex items-center gap-2 min-w-0 flex-1">
               <Book className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="truncate font-medium">{currentSurahObj ? formatSurahName(currentSurahObj.name, currentSurahObj.englishName) : (isRtl ? 'اختر السورة' : 'Select Surah')}</span>
+              <span className="truncate font-medium">{currentSurahObj ? formatSurahName(currentSurahObj.number, currentSurahObj.name, currentSurahObj.englishName) : (isRtl ? 'اختر السورة' : 'Select Surah')}</span>
             </span>
             <ChevronRight className={`w-3.5 h-3.5 text-slate-400 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
           </button>
 
           <button
             onClick={() => setShowReciterModal(true)}
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-xs text-slate-200 hover:border-slate-500 transition cursor-pointer min-w-0"
+            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-200 hover:border-slate-500 transition cursor-pointer min-w-0"
           >
             <span className="flex items-center gap-2 min-w-0 flex-1">
               <UserCheck className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="truncate font-medium">{isRtl ? selectedReciter.name : selectedReciter.name_en}</span>
+              <span className="truncate font-medium">{isRtl ? `${selectedReciter.name} (${selectedReciter.rewaya})` : `${selectedReciter.name_en}`}</span>
             </span>
             <ChevronRight className={`w-3.5 h-3.5 text-slate-400 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
           </button>
@@ -232,9 +244,9 @@ export default function InteractiveQuran() {
         </div>
       </div>
 
-      {/* 2️⃣ تبويب أنواع العرض */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0F172A] p-1.5 rounded-2xl border border-slate-800 w-full">
-        <div className="flex items-center gap-1 w-full sm:w-auto flex-1">
+      {/* 2️⃣ تبويب أنواع العرض (إضافة خيار المصحف المصور الحقيقي) */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0F172A]/70 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800/80 w-full">
+        <div className="flex items-center gap-1 w-full sm:w-auto flex-1 flex-wrap">
           <button
             onClick={() => setViewMode('quran')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
@@ -242,8 +254,19 @@ export default function InteractiveQuran() {
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>{isRtl ? 'الرسم العثماني' : 'Uthmani Text'}</span>
+            <span>{isRtl ? 'الرسم العثماني' : 'Text View'}</span>
           </button>
+          
+          <button
+            onClick={() => setViewMode('page')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
+              viewMode === 'page' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>{isRtl ? 'المصحف المصور (المعتمد)' : 'Mushaf Page'}</span>
+          </button>
+
           <button
             onClick={() => setViewMode('tafsir')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
@@ -253,6 +276,7 @@ export default function InteractiveQuran() {
             <FileText className="w-3.5 h-3.5" />
             <span>{isRtl ? 'التفسير الميسر' : 'Tafsir'}</span>
           </button>
+
           <button
             onClick={() => setViewMode('translation')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
@@ -265,7 +289,7 @@ export default function InteractiveQuran() {
         </div>
 
         {viewMode === 'translation' && (
-          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-1 bg-slate-800/60 p-1 rounded-xl border border-slate-700/60 text-xs w-full sm:w-auto justify-end">
             {TRANSLATION_LANGS.map((lang) => (
               <button
                 key={lang.code}
@@ -281,19 +305,20 @@ export default function InteractiveQuran() {
         )}
       </div>
 
-      {/* 3️⃣ العرض الرئيسي للمحتوى */}
-      <div className="flex-1 bg-[#0F172A]/40 rounded-3xl border border-slate-800 p-4 md:p-6 overflow-y-auto max-h-[580px] flex flex-col items-center">
+      {/* 3️⃣ العرض الرئيسي للمحتوى الحافظ على الخلفية الشفافة */}
+      <div className="flex-1 bg-[#0F172A]/40 backdrop-blur-md rounded-3xl border border-slate-800/80 p-4 md:p-6 overflow-y-auto max-h-[580px] flex flex-col items-center">
         {loading || loadingExtra ? (
           <div className="flex flex-col items-center justify-center my-auto gap-3 text-slate-400 py-12">
             <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-            <span className="text-xs font-semibold">{isRtl ? 'جاري تحميل السورة...' : 'Loading Content...'}</span>
+            <span className="text-xs font-semibold">{isRtl ? 'جاري التحميل...' : 'Loading Content...'}</span>
           </div>
         ) : (
           <div className="max-w-3xl w-full">
+            
             {/* عنوان السورة والمعلومات */}
-            <div className="text-center pb-6 mb-6 border-b border-slate-800">
+            <div className="text-center pb-6 mb-6 border-b border-slate-800/80">
               <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-2">
-                {formatSurahName(surahDetail?.name, surahDetail?.englishName)}
+                {formatSurahName(surahDetail?.number, surahDetail?.name, surahDetail?.englishName)}
               </h2>
               <div className="flex items-center justify-center gap-3 text-xs text-slate-400 font-medium">
                 <span>{isRtl ? 'النوع:' : 'Type:'} <strong className="text-emerald-400">{surahDetail?.revelationType === 'Meccan' ? (isRtl ? 'مكيّة' : 'Meccan') : (isRtl ? 'مدنيّة' : 'Medinan')}</strong></span>
@@ -301,14 +326,48 @@ export default function InteractiveQuran() {
                 <span>{isRtl ? 'عدد الآيات:' : 'Ayahs:'} <strong className="text-emerald-400">{isRtl ? toArabicIndic(surahDetail?.numberOfAyahs) : surahDetail?.numberOfAyahs}</strong></span>
               </div>
 
-              {selectedSurah !== 9 && (
+              {selectedSurah !== 9 && viewMode !== 'page' && (
                 <div className="text-2xl md:text-3xl text-amber-200 mt-5 tracking-wide" style={{ fontFamily: "'Amiri Quran', serif" }} dir="rtl">
                   بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                 </div>
               )}
             </div>
 
-            {/* عرض النص العثماني - حظر أخطاء الاتجاه للآيات والأرقام */}
+            {/* أ) عرض المصحف المصور (المعتمد) */}
+            {viewMode === 'page' && (
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="relative rounded-2xl overflow-hidden border border-amber-500/20 shadow-2xl bg-amber-50/5 p-2 max-w-lg w-full">
+                  <img
+                    src={`https://quran-images-api.vercel.app/images/page/${String(selectedPage).padStart(3, '0')}.png`}
+                    alt={`صفحة المصحف ${selectedPage}`}
+                    className="w-full h-auto object-contain rounded-lg filter contrast-125"
+                    onError={(e) => {
+                      // رابط بديل عالي الجودة في حال التعثر
+                      e.target.src = `https://cdn.quran.com/images/page/${selectedPage}.png`;
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between w-full max-w-lg px-2 text-xs text-slate-400">
+                  <button 
+                    disabled={selectedPage <= 1} 
+                    onClick={() => setSelectedPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 disabled:opacity-30 cursor-pointer"
+                  >
+                    {isRtl ? 'الصفحة السابقة' : 'Prev Page'}
+                  </button>
+                  <span className="font-bold text-amber-400">{isRtl ? `صفحة ${toArabicIndic(selectedPage)}` : `Page ${selectedPage}`}</span>
+                  <button 
+                    disabled={selectedPage >= 604} 
+                    onClick={() => setSelectedPage((p) => Math.min(604, p + 1))}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 disabled:opacity-30 cursor-pointer"
+                  >
+                    {isRtl ? 'الصفحة التالية' : 'Next Page'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ب) عرض النص العثماني مع معالجة علامات الترقيم والأقواس المعكوسة */}
             {viewMode === 'quran' && (
               <div className="text-justify text-amber-300 text-2xl md:text-3xl leading-[2.6] tracking-wide" style={{ fontFamily: "'Amiri Quran', serif" }} dir="rtl">
                 {surahDetail?.ayahs?.map((ayah) => {
@@ -325,7 +384,7 @@ export default function InteractiveQuran() {
                       >
                         {cleanedText}
                       </span>
-                      <span className="inline-flex items-center justify-center mx-1 text-emerald-400 text-lg select-none font-sans" dir="ltr">
+                      <span className="inline-block mx-1 text-emerald-400 text-lg select-none font-sans" dir="ltr">
                         ﴿{isRtl ? toArabicIndic(ayah.numberInSurah) : ayah.numberInSurah}﴾
                       </span>
                     </React.Fragment>
@@ -334,7 +393,7 @@ export default function InteractiveQuran() {
               </div>
             )}
 
-            {/* كروت التفسير والترجمة المنسقة بدون تمرير مفرط */}
+            {/* جـ) كروت التفسير والترجمة */}
             {(viewMode === 'tafsir' || viewMode === 'translation') && (
               <div className="space-y-4">
                 {surahDetail?.ayahs?.map((ayah, index) => {
@@ -344,7 +403,7 @@ export default function InteractiveQuran() {
                     : translationData[`${selectedSurah}_${selectedTranslation}`]?.[index];
 
                   return (
-                    <div key={ayah.number} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-col gap-3">
+                    <div key={ayah.number} className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 p-4 rounded-2xl flex flex-col gap-3">
                       <div className="text-xl text-amber-300 leading-relaxed" style={{ fontFamily: "'Amiri Quran', serif" }} dir="rtl">
                         {cleanedText} <span className="text-emerald-400 text-sm font-sans" dir="ltr">﴿{isRtl ? toArabicIndic(ayah.numberInSurah) : ayah.numberInSurah}﴾</span>
                       </div>
@@ -356,16 +415,17 @@ export default function InteractiveQuran() {
                 })}
               </div>
             )}
+
           </div>
         )}
       </div>
 
       {/* 4️⃣ شريط التنقل السفلي */}
-      <div className="flex items-center justify-between bg-[#0F172A] p-3 rounded-2xl border border-slate-800 text-xs">
+      <div className="flex items-center justify-between bg-[#0F172A]/70 backdrop-blur-md p-3 rounded-2xl border border-slate-800/80 text-xs">
         <button
           disabled={selectedSurah <= 1}
           onClick={() => setSelectedSurah((prev) => Math.max(1, prev - 1))}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 transition cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/80 text-slate-300 hover:text-white disabled:opacity-30 transition cursor-pointer"
         >
           <ChevronRight className={`w-4 h-4 ${!isRtl ? 'rotate-180' : ''}`} />
           <span>{isRtl ? 'السورة السابقة' : 'Previous'}</span>
@@ -378,7 +438,7 @@ export default function InteractiveQuran() {
         <button
           disabled={selectedSurah >= 114}
           onClick={() => setSelectedSurah((prev) => Math.min(114, prev + 1))}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 transition cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/80 text-slate-300 hover:text-white disabled:opacity-30 transition cursor-pointer"
         >
           <span>{isRtl ? 'السورة التالية' : 'Next'}</span>
           <ChevronLeft className={`w-4 h-4 ${!isRtl ? 'rotate-180' : ''}`} />
@@ -423,7 +483,7 @@ export default function InteractiveQuran() {
                     <span className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
                       {isRtl ? toArabicIndic(surah.number) : surah.number}
                     </span>
-                    <span className="text-xs font-bold truncate">{formatSurahName(surah.name, surah.englishName)}</span>
+                    <span className="text-xs font-bold truncate">{formatSurahName(surah.number, surah.name, surah.englishName)}</span>
                   </div>
                   {surah.number === selectedSurah && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
                 </button>
@@ -433,14 +493,14 @@ export default function InteractiveQuran() {
         </div>
       )}
 
-      {/* Modal اختيار القارئ */}
+      {/* Modal اختيار القارئ والرواية */}
       {showReciterModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#0F172A] border border-slate-800 w-full max-w-md max-h-[80vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <h3 className="font-bold text-white text-sm flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-amber-400" />
-                <span>{isRtl ? 'اختر القارئ والرواية' : 'Select Reciter'}</span>
+                <span>{isRtl ? 'اختر القارئ والرواية' : 'Select Reciter & Riwayah'}</span>
               </h3>
               <button onClick={() => setShowReciterModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
                 <X className="w-4 h-4" />
@@ -473,6 +533,7 @@ export default function InteractiveQuran() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
