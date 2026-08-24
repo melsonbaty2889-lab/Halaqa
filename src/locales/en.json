@@ -167,9 +167,6 @@
     "switchLang": "العربية",
     "backToDashboard": "⬅️ Back to Analytics Dashboard"
   },
-
-    "student_added_failed": "Registration failed:",
-  "error_updating_surah": "Unable to update the current Surah",
   "documents": {
     "upload_title": "Upload New Document",
     "type_label": "Document Type",
@@ -189,8 +186,7 @@
       "certificate": "Certificate",
       "other": "Other"
     }
-  }
-}
+  },
   "gamification": {
     "title": "Achievements & Leaderboards",
     "subtitle": "Student motivation, badges, and daily streak tracking",
