@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { COUNTRIES_LIST } from '@/constants/countries';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
 import { calculateAge } from '@/utils/dateUtils';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
+import CountrySelect from '@/components/UI/CountrySelect';
 
 const AddStudentModal = ({
   isOpen,
@@ -278,22 +278,16 @@ const AddStudentModal = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* حقل اختيار الدولة مع المكون المخصص البحثي */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   دولة الإقامة
                 </label>
-                <select
+                <CountrySelect
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
-                >
-                  <option value="">اختر الدولة...</option>
-                  {COUNTRIES_LIST.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.nameAr} ({c.dialCode})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(code) => setFormData({ ...formData, country: code })}
+                  isArabic={true}
+                />
               </div>
             </div>
           </div>
