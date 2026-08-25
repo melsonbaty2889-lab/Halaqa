@@ -9,7 +9,10 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  
+  // حالة التحكم في فتح المودال والطالب المراد تعديله
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -56,12 +59,41 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
     }
   };
 
-  // دالة موحدة للتعامل مع إضافة الطالب الجديد وتحديث الواجهة فوراً
-  const handleStudentAdded = (newStudent) => {
-    if (setStudents && newStudent) {
-      setStudents((prev) => [newStudent, ...prev]);
+  // دالة التعامل مع فتح مودال الإضافة
+  const handleOpenAddModal = () => {
+    setEditingStudent(null);
+    setIsAddModalOpen(true);
+  };
+
+  // دالة التعامل مع فتح مودال التعديل
+  const handleOpenEditModal = (studentToEdit) => {
+    setEditingStudent(studentToEdit);
+    setIsAddModalOpen(true);
+  };
+
+  // دالة النجاح الموحدة للإضافة والتعديل
+  const handleModalSuccess = (savedStudent) => {
+    if (!savedStudent) return;
+
+    if (setStudents) {
+      setStudents((prev) => {
+        const exists = prev.some((s) => s.id === savedStudent.id);
+        if (exists) {
+          // تحديث بيانات طالب موجود
+          return prev.map((s) => (s.id === savedStudent.id ? savedStudent : s));
+        }
+        // إضافة طالب جديد
+        return [savedStudent, ...prev];
+      });
     }
+
+    // إذا كان الطالب المندرج حالياً هو المفتوح في صفحة العرض التفصيلية، نحدث بياناته
+    if (selectedStudent && selectedStudent.id === savedStudent.id) {
+      setSelectedStudent(savedStudent);
+    }
+
     setIsAddModalOpen(false);
+    setEditingStudent(null);
   };
 
   // عرض ملف الطالب الشخصي عند الاختيار
@@ -72,9 +104,7 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
         academyId={academyId}
         halaqas={halaqas}
         onBack={() => setSelectedStudent(null)}
-        onEdit={(studentToEdit) => {
-          // التعامل مع التعديل عند الحاجة
-        }}
+        onEdit={(studentToEdit) => handleOpenEditModal(studentToEdit)}
         onDelete={(studentId) => {
           if (setStudents) {
             setStudents((prev) => prev.filter((s) => s.id !== studentId));
@@ -99,7 +129,7 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
           </p>
         </div>
 
-        <button onClick={() => setIsAddModalOpen(true)} className="btn-primary w-fit">
+        <button onClick={handleOpenAddModal} className="btn-primary w-fit">
           <Plus className="w-5 h-5" />
           <span>إضافة طالب جديد</span>
         </button>
@@ -170,14 +200,18 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
         </div>
       )}
 
-      {/* مودال إضافة طالب جديد */}
+      {/* مودال الإضافة / التعديل */}
       {isAddModalOpen && (
         <AddStudentModal
           isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingStudent(null);
+          }}
+          studentToEdit={editingStudent}
           academyId={academyId}
           halaqas={halaqas}
-          onSuccess={handleStudentAdded}
+          onSuccess={handleModalSuccess}
         />
       )}
     </div>
