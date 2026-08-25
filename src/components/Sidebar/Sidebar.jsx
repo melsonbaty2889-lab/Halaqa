@@ -62,16 +62,18 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // قفل تمرير خلفية الصفحة فقط دون تعطيل أحداث اللمس
+  // تثبيت خلفية الصفحة كلياً عند فتح القائمة الجانبية في الهواتف
   useEffect(() => {
     if (isMobile && sidebarOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      document.documentElement.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.documentElement.style.overflow = '';
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isMobile, sidebarOpen]);
 
   useEffect(() => {
@@ -249,8 +251,8 @@ export default function Sidebar({
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
-    height: '100vh',
-    maxHeight: '100vh',
+    height: '100dvh', // استخدام dynamic viewport height للحفاظ على الطول بدقة في الجوال
+    maxHeight: '100dvh',
     [isRtl ? 'right' : 'left']: 0,
     width: '280px',
     maxWidth: '85vw',
@@ -274,10 +276,11 @@ export default function Sidebar({
 
   return (
     <>
-      {/* خلفية التعتيم عند فتح القائمة */}
+      {/* خلفية تعتيم تمنع تمرير الصفحة تماماً */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
+          onTouchMove={(e) => e.preventDefault()}
           style={{
             position: 'fixed',
             inset: 0,
@@ -291,13 +294,14 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* الحاوية القابلة للتمرير */}
+        {/* الحاوية القابلة للتمرير المستقل */}
         <div 
           style={{ 
             padding: '12px', 
             flex: 1, 
             overflowY: 'auto', 
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain'
           }}
         >
           {/* Header */}
