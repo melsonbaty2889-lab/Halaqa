@@ -42,6 +42,7 @@ const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.js
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 const Curriculum = safeLazy(() => import('@/components/Curriculum/CurriculumManagement.jsx'));
+const StudentDocuments = safeLazy(() => import('@/components/Student/StudentDocuments.jsx'));
 
 // ----------------------------------------------------
 // مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
