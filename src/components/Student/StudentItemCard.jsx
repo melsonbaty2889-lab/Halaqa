@@ -25,9 +25,9 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
             </h3>
             <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
               {student.phone && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1" dir="ltr">
                   <Phone className="w-3 h-3" />
-                  <span dir="ltr">{student.phone}</span>
+                  <span>{student.phone}</span>
                 </span>
               )}
               {student.join_date && (
