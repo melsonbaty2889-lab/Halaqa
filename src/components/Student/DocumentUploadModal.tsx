@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UploadCloud, FileText, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UploadCloud, X, CheckCircle2, AlertCircle } from 'lucide-react';
 
 // القائمة المطابقة لـ check constraint في قاعدة البيانات
 const DOCUMENT_TYPES = [
