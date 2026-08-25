@@ -1,24 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, 
-  Upload, 
-  FileText, 
-  Filter, 
-  Search, 
-  ExternalLink, 
-  Trash2, 
-  Eye 
+  ArrowRight, Upload, FileText, Filter, Search, Trash2, Eye 
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
 
-export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocument, onUploadDocument }) => {
+export const StudentDocuments = ({ studentId, studentName, onBack }) => {
   const { t, i18n } = useTranslation();
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // تصفية المستندات
+  // جلب المستندات الخاصة بالمستند من Supabase
+  const fetchDocuments = async () => {
+    if (!studentId) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('student_documents')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [studentId]);
+
+  // دالة الحذف
+  const handleDeleteDocument = async (docId) => {
+    if (!window.confirm(t('documents.confirm_delete', 'هل أنت تأكد من حذف هذا المستند؟'))) return;
+    try {
+      const { error } = await supabase.from('student_documents').delete().eq('id', docId);
+      if (error) throw error;
+      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  // دالة الرفع
+  const handleUploadDocument = async ({ file, documentType, notes }) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${studentId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('student_files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('student_files')
+        .getPublicUrl(filePath);
+
+      const { data, error: dbError } = await supabase
+        .from('student_documents')
+        .insert([{
+          student_id: studentId,
+          file_name: file.name,
+          file_url: publicUrl,
+          document_type: documentType,
+          notes: notes,
+          uploaded_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+      setDocuments((prev) => [data, ...prev]);
+    } catch (err) {
+      console.error('Upload Error:', err);
+      alert(err.message);
+    }
+  };
+
   const filteredDocuments = documents.filter((doc) => {
     const matchesType = filterType === 'all' || doc.document_type === filterType;
     const matchesSearch = doc.file_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -28,26 +96,25 @@ export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocu
 
   return (
     <div className="space-y-6 text-white" dir={i18n.dir()}>
-      
-      {/* 1. Header & Unified Breadcrumb Navigation */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] p-5 rounded-2xl border border-gray-800">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
-            title={t('common.back', 'رجوع')}
-          >
-            <ArrowRight className="w-5 h-5 rtl:rotate-0 ltr:rotate-180" />
-            <span>{t('students_module.back_to_list', 'قائمة الطلاب')}</span>
-          </button>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
+            >
+              <ArrowRight className="w-5 h-5 rtl:rotate-0 ltr:rotate-180" />
+              <span>{t('students_module.back_to_list', 'قائمة الطلاب')}</span>
+            </button>
+          )}
 
           <div className="h-6 w-px bg-gray-700 hidden sm:block" />
 
           <div>
             <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
               <FileText className="w-5 h-5 text-amber-500" />
-              <span>{t('documents.title', 'مستندات الطالب')}:</span>
-              <span className="text-amber-400">{student?.full_name}</span>
+              <span>{t('documents.title', 'مستندات الطالب')}</span>
+              {studentName && <span className="text-amber-400">({studentName})</span>}
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               {t('documents.subtitle', 'إدارة الوثائق الثبوتية والملفات المرفقة')}
@@ -55,7 +122,6 @@ export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocu
           </div>
         </div>
 
-        {/* Upload Trigger Button */}
         <button
           onClick={() => setIsUploadModalOpen(true)}
           className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-lg shadow-amber-500/10"
@@ -65,10 +131,7 @@ export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocu
         </button>
       </div>
 
-      {/* 2. Filters & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#1f2937]/50 p-4 rounded-xl border border-gray-800">
-        
-        {/* Search Input */}
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2" />
           <input
@@ -80,7 +143,6 @@ export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocu
           />
         </div>
 
-        {/* Category Filter Dropdown */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Filter className="w-4 h-4 text-gray-400 shrink-0" />
           <select
@@ -101,8 +163,9 @@ export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocu
         </div>
       </div>
 
-      {/* 3. Documents Table / Cards */}
-      {filteredDocuments.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-8 text-xs text-gray-400">جاري تحميل المستندات...</div>
+      ) : filteredDocuments.length === 0 ? (
         <div className="text-center py-12 bg-[#111827] rounded-2xl border border-gray-800 space-y-3">
           <FileText className="w-12 h-12 text-gray-600 mx-auto" />
           <p className="text-gray-400 text-sm">{t('documents.no_documents', 'لا توجد مستندات مرفوعة لهذا الطالب حتى الآن.')}</p>
@@ -129,42 +192,31 @@ export const StudentDocuments = ({ student, onBack, documents = [], onDeleteDocu
                 </p>
               </div>
 
-              {/* Document Action Icons */}
               <div className="flex items-center gap-1 shrink-0">
                 <a
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 text-gray-400 hover:text-amber-400 hover:bg-gray-800 rounded-lg transition-colors"
-                  title={t('common.view', 'معاينة')}
                 >
                   <Eye className="w-4 h-4" />
                 </a>
-                {onDeleteDocument && (
-                  <button
-                    onClick={() => onDeleteDocument(doc.id)}
-                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
-                    title={t('common.delete', 'حذف')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+                <button
+                  onClick={() => handleDeleteDocument(doc.id)}
+                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* 4. Document Upload Modal */}
       <DocumentUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onUpload={async (data) => {
-          if (onUploadDocument) {
-            await onUploadDocument(data);
-          }
-          setIsUploadModalOpen(false);
-        }}
+        onUpload={handleUploadDocument}
       />
     </div>
   );
