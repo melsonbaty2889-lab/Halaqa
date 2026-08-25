@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  User, Phone, Calendar, BookOpen, Award, FileText, 
+  User, Phone, Calendar, BookOpen, Award, 
   ArrowRight, Edit, Trash2, Flame, Crown, Sparkles
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
