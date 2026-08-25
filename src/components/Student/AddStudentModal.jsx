@@ -98,7 +98,7 @@ const AddStudentModal = ({
   const validate = () => {
     const newErrors = {};
     if (!formData.name_ar.trim()) {
-      newErrors.name_ar = 'اسم الطالب بالعربية مطلوب';
+      newErrors.name_ar = 'يرجى إدخال اسم الطالب بالعربية';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -180,6 +180,7 @@ const AddStudentModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         
+        {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary-500/10 text-primary-400 rounded-xl">
@@ -201,7 +202,9 @@ const AddStudentModal = ({
           </button>
         </div>
 
+        {/* Form Content */}
         <form id="add-student-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
+          {/* البيانات الأساسية */}
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-4 h-4" /> البيانات الأساسية
@@ -216,7 +219,7 @@ const AddStudentModal = ({
                   type="text"
                   value={formData.name_ar}
                   onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
-                  placeholder="مثال: عمار محمد"
+                  placeholder="ادخل الاسم بالعربية"
                   className={`w-full px-3 py-2.5 bg-slate-800 border ${
                     errors.name_ar ? 'border-rose-500' : 'border-slate-700'
                   } rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors`}
@@ -237,7 +240,7 @@ const AddStudentModal = ({
                   type="text"
                   value={formData.name_en}
                   onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                  placeholder="Ammar Mohamed"
+                  placeholder="Enter name in English"
                   className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                 />
               </div>
@@ -284,6 +287,7 @@ const AddStudentModal = ({
             </div>
           </div>
 
+          {/* الحلقة والتلاوة */}
           <div className="space-y-4 pt-4 border-t border-slate-800">
             <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" /> الحلقة والتلاوة
@@ -334,6 +338,7 @@ const AddStudentModal = ({
             </div>
           </div>
 
+          {/* بيانات ولي الأمر */}
           <div className="space-y-4 pt-4 border-t border-slate-800">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -358,7 +363,7 @@ const AddStudentModal = ({
                     type="text"
                     value={formData.parent_name}
                     onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
-                    placeholder="اسم ولي الأمر"
+                    placeholder="ادخل الاسم الكامل"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                   />
                 </div>
@@ -371,7 +376,7 @@ const AddStudentModal = ({
                     type="tel"
                     value={formData.parent_phone}
                     onChange={(e) => setFormData({ ...formData, parent_phone: e.target.value })}
-                    placeholder="+20 123456789"
+                    placeholder="رقم الهاتف مع رمز الدولة"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                   />
                 </div>
@@ -386,7 +391,7 @@ const AddStudentModal = ({
                     onChange={(e) =>
                       setFormData({ ...formData, parent_whatsapp: e.target.value })
                     }
-                    placeholder="+20 123456789"
+                    placeholder="رقم الواتساب مع رمز الدولة"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-primary-500 transition-colors"
                   />
                 </div>
@@ -394,6 +399,7 @@ const AddStudentModal = ({
             )}
           </div>
 
+          {/* ملاحظات */}
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
               ملاحظات إضافية
@@ -408,6 +414,7 @@ const AddStudentModal = ({
           </div>
         </form>
 
+        {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 bg-slate-900 shrink-0">
           <button
             type="button"
