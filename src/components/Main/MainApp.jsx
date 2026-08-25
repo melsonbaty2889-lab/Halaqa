@@ -304,7 +304,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     setCurrency(newCurrency);
   };
 
-  const renderActiveTabContent = () => {
+      const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
@@ -317,6 +317,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'affiliate-rewards':
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
       case 'realtime-audit':
+      case 'audit_logs':
         return <RealtimeAudit session={session} userRole={userRole} />;
       case 'communications-reports':
       case 'notifications_reports':
@@ -326,23 +327,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'student-profile':
       case 'students-management':
         return (
-        <Students 
-         students={students} 
-         setStudents={setStudents} 
-         academyId={academyId} 
-         halaqas={enrichedHalaqas} 
-         />
-       );
+          <Students 
+            students={students} 
+            setStudents={setStudents} 
+            academyId={academyId} 
+            halaqas={enrichedHalaqas} 
+          />
+        );
       case 'parents':
       case 'parents-guardians':
       case 'parents-management':
         return (
-        <Parents 
-        academyId={academyId} 
-        students={students} 
-        isRtl={isRtl} 
-        />
-       );
+          <Parents 
+            academyId={academyId} 
+            students={students} 
+            isRtl={isRtl} 
+          />
+        );
       case 'teachers':
         return (
           <Teachers 
@@ -359,32 +360,43 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'active-halaqas':
       case 'classes':
         return (
-    <ActiveHalaqas 
-      halaqas={enrichedHalaqas} 
-      teachers={teachers} 
-      students={students} 
-      isLoading={loadingData} 
-      error={null} 
-      isRtl={isRtl} 
-      isMobile={isMobile} 
-      onNavigateToAttendance={(halaqaId) => {
-        setSelectedHalaqaId(halaqaId);
-        setActiveTab('attendance');
-      }}
-    />
-  );
-        case 'curriculum':
-        case 'curricula':
-        case 'curricula-islamic-studies':
-        case 'curricula_islamic_studies':
-          return (
-             <Curriculum 
-      academyId={academyId} 
-      students={students} 
-      halaqas={halaqas} 
-      isRtl={isRtl} 
-    />
-  );
+          <ActiveHalaqas 
+            halaqas={enrichedHalaqas} 
+            teachers={teachers} 
+            students={students} 
+            isLoading={loadingData} 
+            error={null} 
+            isRtl={isRtl} 
+            isMobile={isMobile} 
+            onNavigateToAttendance={(halaqaId) => {
+              setSelectedHalaqaId(halaqaId);
+              setActiveTab('attendance');
+            }}
+          />
+        );
+      case 'curriculum':
+      case 'curricula':
+      case 'curricula-islamic-studies':
+      case 'curricula_islamic_studies':
+        return (
+          <Curriculum 
+            academyId={academyId} 
+            students={students} 
+            halaqas={halaqas} 
+            isRtl={isRtl} 
+          />
+        );
+      case 'documents':
+      case 'student-documents':
+      case 'documents-files':
+        return (
+          <StudentDocuments 
+            academyId={academyId} 
+            students={students} 
+            teachers={teachers} 
+            isRtl={isRtl} 
+          />
+        );
       case 'attendance':
         return <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} />;
       case 'exams':
@@ -394,13 +406,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'achievements':
       case 'rewards':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="leaderboard" />;
-
       case 'streaks':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="streaks" />;
-
       case 'badges':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="badges" />;
       case 'payments':
+      case 'finance':
         return <Payments students={students} academyId={academyId} currency={currency} />;
       case 'settings':
         return (
@@ -417,7 +428,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
     }
   };
-
   const skeletonLoader = (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Skeleton width="220px" height="32px" borderRadius="8px" />
