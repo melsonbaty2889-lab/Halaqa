@@ -14,7 +14,6 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // جلب المستندات الخاصة بالمستند من Supabase
   const fetchDocuments = async () => {
     if (!studentId) return;
     setLoading(true);
@@ -38,7 +37,6 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
     fetchDocuments();
   }, [studentId]);
 
-  // دالة الحذف
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm(t('documents.confirm_delete', 'هل أنت تأكد من حذف هذا المستند؟'))) return;
     try {
@@ -50,7 +48,6 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
     }
   };
 
-  // دالة الرفع
   const handleUploadDocument = async ({ file, documentType, notes }) => {
     try {
       const fileExt = file.name.split('.').pop();
@@ -96,27 +93,27 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
 
   return (
     <div className="space-y-6 text-white" dir={i18n.dir()}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] p-5 rounded-2xl border border-gray-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={onBack}
-              className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
+              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
             >
               <ArrowRight className="w-5 h-5 rtl:rotate-0 ltr:rotate-180" />
               <span>{t('students_module.back_to_list', 'قائمة الطلاب')}</span>
             </button>
           )}
 
-          <div className="h-6 w-px bg-gray-700 hidden sm:block" />
+          <div className="h-6 w-px bg-slate-800 hidden sm:block" />
 
           <div>
-            <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
               <FileText className="w-5 h-5 text-amber-500" />
               <span>{t('documents.title', 'مستندات الطالب')}</span>
               {studentName && <span className="text-amber-400">({studentName})</span>}
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               {t('documents.subtitle', 'إدارة الوثائق الثبوتية والملفات المرفقة')}
             </p>
           </div>
@@ -131,24 +128,24 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#1f2937]/50 p-4 rounded-xl border border-gray-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('common.searchPlaceholder', 'بحث في الملفات...')}
-            className="w-full bg-[#111827] border border-gray-700 rounded-xl ps-9 pe-4 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+            className="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-gray-400 shrink-0" />
+          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="w-full sm:w-auto bg-[#111827] border border-gray-700 text-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 transition-colors"
+            className="w-full sm:w-auto bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 transition-colors"
           >
             <option value="all">{t('documents.filter_all', 'جميع المستندات')}</option>
             <option value="id_card">{t('documents.types.id_card', 'بطاقة الهوية')}</option>
@@ -164,30 +161,30 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-xs text-gray-400">جاري تحميل المستندات...</div>
+        <div className="text-center py-8 text-xs text-slate-400">{t('common.loading', 'جاري التحميل...')}</div>
       ) : filteredDocuments.length === 0 ? (
-        <div className="text-center py-12 bg-[#111827] rounded-2xl border border-gray-800 space-y-3">
-          <FileText className="w-12 h-12 text-gray-600 mx-auto" />
-          <p className="text-gray-400 text-sm">{t('documents.no_documents', 'لا توجد مستندات مرفوعة لهذا الطالب حتى الآن.')}</p>
+        <div className="text-center py-12 bg-slate-900 rounded-2xl border border-slate-800 space-y-3">
+          <FileText className="w-12 h-12 text-slate-600 mx-auto" />
+          <p className="text-slate-400 text-sm">{t('documents.no_documents', 'لا توجد مستندات مرفوعة لهذا الطالب حتى الآن.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredDocuments.map((doc) => (
             <div 
               key={doc.id}
-              className="bg-[#111827] border border-gray-800 hover:border-gray-700 rounded-xl p-4 flex items-start justify-between gap-3 transition-all"
+              className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-4 flex items-start justify-between gap-3 transition-all"
             >
               <div className="space-y-1 overflow-hidden">
                 <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   {t(`documents.types.${doc.document_type}`, doc.document_type)}
                 </span>
-                <h4 className="font-medium text-sm text-gray-200 truncate" title={doc.file_name}>
+                <h4 className="font-medium text-sm text-slate-200 truncate" title={doc.file_name}>
                   {doc.file_name || 'مستند بدون اسم'}
                 </h4>
                 {doc.notes && (
-                  <p className="text-xs text-gray-400 line-clamp-2">{doc.notes}</p>
+                  <p className="text-xs text-slate-400 line-clamp-2">{doc.notes}</p>
                 )}
-                <p className="text-[11px] text-gray-500" dir="ltr">
+                <p className="text-[11px] text-slate-500" dir="ltr">
                   {new Date(doc.uploaded_at).toLocaleDateString()}
                 </p>
               </div>
@@ -197,13 +194,13 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-amber-400 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Eye className="w-4 h-4" />
                 </a>
                 <button
                   onClick={() => handleDeleteDocument(doc.id)}
-                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
