@@ -62,7 +62,7 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // قفل scroll خلفية الصفحة فقط على الجوال
+  // منع التمرير في خلفية الصفحة عند فتح القائمة في الجوال
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -96,7 +96,6 @@ export default function Sidebar({
       if (!user) return;
 
       let list = [];
-
       const { data: rpcAcademyId, error: rpcError } = await supabase.rpc('get_user_academy_id');
       if (rpcAcademyId && !rpcError) {
         const { data: academyData } = await supabase
@@ -138,7 +137,7 @@ export default function Sidebar({
         }
       }
     } catch (err) {
-      console.error("Error loading user academies:", err);
+      console.error("Error loading academies:", err);
     }
   };
 
@@ -243,19 +242,20 @@ export default function Sidebar({
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
+  // تحديث التموضع الديناميكي بناءً على الاتجاه RTL/LTR والجوال/الكمبيوتر
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
     height: '100dvh',
-    [isRtl ? 'right' : 'left']: 0,
-    width: '280px',
-    maxWidth: '85vw',
-    backgroundColor: C.dark.surfaceCard || 'rgba(15, 23, 42, 0.98)',
+    ...(isRtl ? { right: 0, left: 'auto' } : { left: 0, right: 'auto' }),
+    width: isMobile ? '82vw' : '280px',
+    maxWidth: '320px',
+    backgroundColor: C.dark.surfaceCard || '#0f172a',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderLeft: isRtl ? 'none' : `1px solid ${C.dark.border}`,
-    borderRight: isRtl ? `1px solid ${C.dark.border}` : 'none',
+    borderLeft: isRtl ? `1px solid ${C.dark.border}` : 'none',
+    borderRight: isRtl ? 'none' : `1px solid ${C.dark.border}`,
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -265,13 +265,13 @@ export default function Sidebar({
           : (isRtl ? 'translateX(100%)' : 'translateX(-100%)'))
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-    boxShadow: isMobile && sidebarOpen ? '0 0 50px rgba(0,0,0,0.85)' : 'none',
+    boxShadow: isMobile && sidebarOpen ? (isRtl ? '-10px 0 30px rgba(0,0,0,0.5)' : '10px 0 30px rgba(0,0,0,0.5)') : 'none',
     boxSizing: 'border-box'
   };
 
   return (
     <>
-      {/* خلفية التعتيم */}
+      {/* خلفية التعتيم على الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -279,34 +279,34 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
-            zIndex: 999,
-            transition: 'opacity 0.3s ease'
+            zIndex: 999
           }}
         />
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* Header الثابت */}
+        {/* Header ثابت */}
         <div style={{ 
-          padding: '12px 12px 8px 12px',
+          padding: '14px 14px 10px 14px',
           borderBottom: `1px solid ${C.dark.border}`,
           flexShrink: 0
         }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            flexDirection: isRtl ? 'row' : 'row'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <SmartHalaqaProLogo size={34} />
+              <SmartHalaqaProLogo size={32} />
               <div>
-                <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: C.text.title, lineHeight: '1.2' }}>
+                <h2 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: C.text.title, lineHeight: '1.2' }}>
                   {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
                 </h2>
-                <span style={{ fontSize: '0.62rem', color: C.text.muted, fontWeight: '500' }}>
+                <span style={{ fontSize: '0.65rem', color: C.text.muted, fontWeight: '500' }}>
                   {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
                 </span>
               </div>
@@ -317,9 +317,9 @@ export default function Sidebar({
                 type="button"
                 onClick={() => setSidebarOpen(false)}
                 style={{ 
-                  background: 'rgba(255,255,255,0.05)', 
+                  background: 'rgba(255,255,255,0.06)', 
                   border: `1px solid ${C.dark.border}`, 
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   color: C.text.muted, 
                   cursor: 'pointer', 
                   padding: '6px',
@@ -334,7 +334,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* المنتصف القابل للتمرير */}
+        {/* جسم القائمة - قابل للتمرير */}
         <div 
           style={{ 
             padding: '12px', 
@@ -388,10 +388,13 @@ export default function Sidebar({
           />
         </div>
 
-        {/* الفوتر الثابت في الأسفل */}
+        {/* الفوتر الثابت في الأسفل مع احتساب أزرار الأندرويد */}
         <div style={{ 
-          paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-          flexShrink: 0 
+          padding: '10px 12px',
+          paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+          borderTop: `1px solid ${C.dark.border}`,
+          flexShrink: 0,
+          backgroundColor: C.dark.surfaceCard || '#0f172a'
         }}>
           <SidebarFooter isRtl={isRtl} />
         </div>
