@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
+import CustomSelect from '@/components/UI/CustomSelect';
 
 export const StudentDocuments = ({ studentId, studentName, onBack }) => {
   const { t, i18n } = useTranslation();
@@ -91,6 +92,19 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
     return matchesType && matchesSearch;
   });
 
+  // قائمة خيارات التصفية المدعومة بالترجمة
+  const filterOptions = [
+    { value: 'all', label: t('documents.filter_all', 'جميع المستندات') },
+    { value: 'id_card', label: t('documents.types.id_card', 'بطاقة الهوية') },
+    { value: 'passport', label: t('documents.types.passport', 'جواز السفر') },
+    { value: 'birth_certificate', label: t('documents.types.birth_certificate', 'شهادة الميلاد') },
+    { value: 'parent_consent', label: t('documents.types.parent_consent', 'موافقة ولي الأمر') },
+    { value: 'medical_report', label: t('documents.types.medical_report', 'تقرير طبي') },
+    { value: 'payment_receipt', label: t('documents.types.payment_receipt', 'إيصال دفع') },
+    { value: 'certificate', label: t('documents.types.certificate', 'شهادة') },
+    { value: 'other', label: t('documents.types.other', 'أخرى') },
+  ];
+
   return (
     <div className="space-y-6 text-white" dir={i18n.dir()}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
@@ -140,23 +154,14 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-          <select
+        {/* استبدال Select العادي بـ CustomSelect المخصص */}
+        <div className="w-full sm:w-64">
+          <CustomSelect
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="w-full sm:w-auto bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 transition-colors"
-          >
-            <option value="all">{t('documents.filter_all', 'جميع المستندات')}</option>
-            <option value="id_card">{t('documents.types.id_card', 'بطاقة الهوية')}</option>
-            <option value="passport">{t('documents.types.passport', 'جواز السفر')}</option>
-            <option value="birth_certificate">{t('documents.types.birth_certificate', 'شهادة الميلاد')}</option>
-            <option value="parent_consent">{t('documents.types.parent_consent', 'موافقة ولي الأمر')}</option>
-            <option value="medical_report">{t('documents.types.medical_report', 'تقرير طبي')}</option>
-            <option value="payment_receipt">{t('documents.types.payment_receipt', 'إيصال دفع')}</option>
-            <option value="certificate">{t('documents.types.certificate', 'شهادة')}</option>
-            <option value="other">{t('documents.types.other', 'أخرى')}</option>
-          </select>
+            onChange={(val) => setFilterType(val)}
+            options={filterOptions}
+            placeholder={t('documents.filter_all', 'جميع المستندات')}
+          />
         </div>
       </div>
 
