@@ -62,7 +62,6 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // فتح القسم التابع للتبويب النشط أو فتح أول قسم افتراضياً
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items && sec.items.some(item => item.id === activeTab));
     if (activeSection) {
@@ -234,16 +233,16 @@ export default function Sidebar({
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
-  // تحديث وتحسين تنسيقات التجاوب والـ Mobile Overlay
+  // التعديل الجوهري هنا لضمان عمل Overlay في الهواتف بشكل دقيق
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
     height: '100vh',
     [isRtl ? 'right' : 'left']: 0,
-    width: isMobile ? '280px' : '280px',
+    width: '280px',
     maxWidth: '85vw',
-    backgroundColor: C.dark.surfaceCard || 'rgba(15, 23, 42, 0.95)',
+    backgroundColor: C.dark.surfaceCard || 'rgba(15, 23, 42, 0.98)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     borderLeft: isRtl ? 'none' : `1px solid ${C.dark.border}`,
@@ -258,8 +257,7 @@ export default function Sidebar({
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     boxShadow: isMobile && sidebarOpen ? '0 0 50px rgba(0,0,0,0.85)' : 'none',
-    boxSizing: 'border-box',
-    userSelect: 'none'
+    boxSizing: 'border-box'
   };
 
   return (
