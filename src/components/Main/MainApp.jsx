@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, AlertTriangle, MessageSquare, BarChart2 } from 'lucide-react';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
@@ -41,37 +41,38 @@ const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.js
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
 const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQuran.jsx'));
 const Curriculum = safeLazy(() => import('@/components/Curriculum/CurriculumManagement.jsx'));
-const StudentDocuments = safeLazy(() => import('@/components/Student/StudentDocuments.jsx'));
 
+// ----------------------------------------------------
+// مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
+// ----------------------------------------------------
 const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }) => {
-  const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState('communications');
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 p-1 rounded-xl border border-slate-700/50 w-fit" style={{ background: C.dark.card }}>
+      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit">
         <button
+          type="button"
           onClick={() => setActiveSubTab('communications')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
               ? 'bg-emerald-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          <MessageSquare className="w-4 h-4" />
-          <span>{t('communications.hub_title', 'مركز التواصل والإشعارات')}</span>
+          {isRtl ? 'مركز التواصل والإشعارات' : 'Communication Center'}
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('reports')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
               ? 'bg-emerald-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          <BarChart2 className="w-4 h-4" />
-          <span>{t('reports.smart_reports', 'التقارير الذكية')}</span>
+          {isRtl ? 'التقارير الذكية' : 'Reports'}
         </button>
       </div>
 
@@ -99,7 +100,7 @@ class ErrorBoundaryInner extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
-          <div style={{ display: 'flex', items: 'center', gap: '10px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <AlertTriangle size={22} />
             <h3 style={{ margin: 0, color: C.error.light, fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
@@ -107,6 +108,7 @@ class ErrorBoundaryInner extends React.Component {
             {this.state.error?.toString()}
           </pre>
           <button 
+            type="button"
             onClick={() => {
               this.setState({ hasError: false, error: null });
               window.location.reload();
@@ -157,7 +159,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => {
+      const mobileStatus = window.innerWidth <= 768;
+      setIsMobile(mobileStatus);
+      if (!mobileStatus) {
+        setSidebarOpen(false); // إغلاق خلفية الـ Overlay عند التكبير للشاشات الكبيرة
+      }
+    };
     handleResize(); 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -213,9 +221,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
-    } finally {
-      setLoadingData(false);
-    }
+    } opacity: 1;
+    setLoadingData(false);
   }, []);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
@@ -313,7 +320,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'affiliate-rewards':
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
       case 'realtime-audit':
-      case 'audit_logs':
         return <RealtimeAudit session={session} userRole={userRole} />;
       case 'communications-reports':
       case 'notifications_reports':
@@ -323,23 +329,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'student-profile':
       case 'students-management':
         return (
-          <Students 
-            students={students} 
-            setStudents={setStudents} 
-            academyId={academyId} 
-            halaqas={enrichedHalaqas} 
-          />
-        );
+        <Students 
+         students={students} 
+         setStudents={setStudents} 
+         academyId={academyId} 
+         halaqas={enrichedHalaqas} 
+         />
+       );
       case 'parents':
       case 'parents-guardians':
       case 'parents-management':
         return (
-          <Parents 
-            academyId={academyId} 
-            students={students} 
-            isRtl={isRtl} 
-          />
-        );
+        <Parents 
+        academyId={academyId} 
+        students={students} 
+        isRtl={isRtl} 
+        />
+       );
       case 'teachers':
         return (
           <Teachers 
@@ -356,43 +362,32 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'active-halaqas':
       case 'classes':
         return (
-          <ActiveHalaqas 
-            halaqas={enrichedHalaqas} 
-            teachers={teachers} 
-            students={students} 
-            isLoading={loadingData} 
-            error={null} 
-            isRtl={isRtl} 
-            isMobile={isMobile} 
-            onNavigateToAttendance={(halaqaId) => {
-              setSelectedHalaqaId(halaqaId);
-              setActiveTab('attendance');
-            }}
-          />
-        );
-      case 'curriculum':
-      case 'curricula':
-      case 'curricula-islamic-studies':
-      case 'curricula_islamic_studies':
-        return (
-          <Curriculum 
-            academyId={academyId} 
-            students={students} 
-            halaqas={halaqas} 
-            isRtl={isRtl} 
-          />
-        );
-      case 'documents':
-      case 'student-documents':
-      case 'documents-files':
-        return (
-          <StudentDocuments 
-            academyId={academyId} 
-            students={students} 
-            teachers={teachers} 
-            isRtl={isRtl} 
-          />
-        );
+    <ActiveHalaqas 
+      halaqas={enrichedHalaqas} 
+      teachers={teachers} 
+      students={students} 
+      isLoading={loadingData} 
+      error={null} 
+      isRtl={isRtl} 
+      isMobile={isMobile} 
+      onNavigateToAttendance={(halaqaId) => {
+        setSelectedHalaqaId(halaqaId);
+        setActiveTab('attendance');
+      }}
+    />
+  );
+        case 'curriculum':
+        case 'curricula':
+        case 'curricula-islamic-studies':
+        case 'curricula_islamic_studies':
+          return (
+             <Curriculum 
+      academyId={academyId} 
+      students={students} 
+      halaqas={halaqas} 
+      isRtl={isRtl} 
+    />
+  );
       case 'attendance':
         return <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} />;
       case 'exams':
@@ -402,12 +397,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'achievements':
       case 'rewards':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="leaderboard" />;
+
       case 'streaks':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="streaks" />;
+
       case 'badges':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="badges" />;
       case 'payments':
-      case 'finance':
         return <Payments students={students} academyId={academyId} currency={currency} />;
       case 'settings':
         return (
@@ -438,7 +434,19 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: C.dark.main, color: C.text.title, fontFamily: "'Cairo', system-ui, sans-serif" }} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div 
+      style={{ 
+        display: 'flex', 
+        minHeight: '100vh', 
+        width: '100%', 
+        background: C.dark.main, 
+        color: C.text.title, 
+        fontFamily: "'Cairo', system-ui, sans-serif",
+        position: 'relative',
+        overflowX: 'hidden'
+      }} 
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       <Sidebar 
         currentAcademyId={academyId}
         onSwitchAcademy={handleSwitchAcademy}
@@ -459,7 +467,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh', width: '100%' }}>
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
@@ -479,13 +487,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           }}
         />
 
-        <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, overflowY: 'auto' }}>
+        <main style={{ padding: isMobile ? '12px' : '24px', flex: 1, overflowY: 'auto', width: '100%', boxSizing: 'border-box' }}>
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={skeletonLoader}>
               {loadingData ? skeletonLoader : renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
-        </div>
+        </main>
       </div>
     </div>
   );
