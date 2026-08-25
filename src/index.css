@@ -13,7 +13,7 @@
     --surface-input: #0A101D;
     --surface-google: #162032;
 
-    /* 2. الهوية البصرية الرئيسية (Primary Orange) */
+    /* 2. الهوية البصرية الرئيسية (Amber/Gold) */
     --primary: #E07A00;
     --primary-hover: #C66B00;
     --primary-glow: rgba(224, 122, 0, 0.35);
@@ -39,17 +39,17 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden !important;
-    background-color: var(--bg-dark);
+    background-color: #070B11; /* اللون الأساسي للمشروع */
     
-    /* 🌟 خلفية النجوم والتوهج الزمردي المعتمدة */
+    /* 🌟 خلفية النجوم والتوهج الزمردي مثبتة خلف كل شيء */
     background-image: 
-      radial-gradient(circle at 50% 20%, var(--emerald-radial-glow) 0%, transparent 50%),
-      radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px);
-    background-size: 100% 100%, 24px 24px;
+      radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+      radial-gradient(rgba(255, 255, 255, 0.18) 1.2px, transparent 1.2px);
+    background-size: 100% 100%, 28px 28px;
     background-position: 0 0, 0 0;
-    background-attachment: fixed;
+    background-attachment: fixed; /* تثبيت النجوم أثناء التمرير */
 
-    color: var(--text-main);
+    color: #FFFFFF;
     font-family: 'Cairo', sans-serif;
     direction: rtl;
     -webkit-font-smoothing: antialiased;
@@ -58,6 +58,21 @@
 
   button, input, select, textarea {
     font-family: 'Cairo', sans-serif !important;
+  }
+
+  /* 🌟 إصلاح شكل القوائم المنسدلة على هواتف أندرويد لتعمل باللون الداكن 🌟 */
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #0A101D !important;
+    color: #FFFFFF !important;
+  }
+
+  select option {
+    background-color: #0F172A !important;
+    color: #FFFFFF !important;
+    padding: 10px;
   }
 
   *, *::before, *::after {
@@ -77,24 +92,24 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: var(--bg-dark);
+    background: #070B11;
   }
   ::-webkit-scrollbar-thumb {
     background: #1E293B;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
+    background: #E07A00;
   }
 }
 
 @layer components {
   /* 📦 1. بطاقة المحتوى الموحدة */
   .card-surface {
-    background-color: var(--surface-card);
+    background-color: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.5rem;
     padding: 2rem 1.5rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
@@ -103,9 +118,9 @@
   /* ✏️ 2. حقول الإدخال */
   .app-input {
     width: 100%;
-    background-color: var(--surface-input);
-    border: 1px solid var(--border-input);
-    color: var(--text-main);
+    background-color: #0A101D;
+    border: 1px solid #1B2738;
+    color: #FFFFFF;
     border-radius: 0.875rem;
     padding: 0.875rem 1rem;
     font-size: 0.95rem;
@@ -113,24 +128,24 @@
   }
 
   .app-input::placeholder {
-    color: var(--text-muted);
+    color: #475569;
   }
 
   .app-input:hover {
-    border-color: var(--border-hover);
+    border-color: #2E3E56;
   }
 
   .app-input:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-glow);
+    border-color: #E07A00;
+    box-shadow: 0 0 0 3px rgba(224, 122, 0, 0.35);
   }
 
   /* 🔘 3. الأزرار */
   .btn-primary {
     width: 100%;
-    background-color: var(--primary);
-    color: var(--text-main);
+    background: linear-gradient(180deg, #E67E00 0%, #D97706 100%);
+    color: #FFFFFF;
     font-weight: 700;
     font-size: 1rem;
     padding: 0.875rem 1.25rem;
@@ -146,8 +161,7 @@
   }
 
   .btn-primary:hover {
-    background-color: var(--primary-hover);
-    box-shadow: 0 6px 20px var(--primary-glow);
+    box-shadow: 0 6px 20px rgba(224, 122, 0, 0.45);
     transform: translateY(-1px);
   }
 
@@ -157,9 +171,9 @@
 
   .btn-secondary {
     width: 100%;
-    background-color: #1C293F;
-    color: var(--text-main);
-    border: 1px solid var(--border-input);
+    background-color: #162032;
+    color: #FFFFFF;
+    border: 1px solid #1B2738;
     font-weight: 600;
     padding: 0.875rem 1.25rem;
     border-radius: 0.875rem;
@@ -172,20 +186,20 @@
   }
 
   .btn-secondary:hover {
-    background-color: #253550;
-    border-color: var(--border-hover);
+    background-color: #1C293F;
+    border-color: #2E3E56;
   }
 
   /* 🔗 4. الروابط الملونة */
   .link-primary {
-    color: var(--primary);
+    color: #E07A00;
     font-weight: 700;
     transition: color 0.2s ease;
     text-decoration: none;
   }
 
   .link-primary:hover {
-    color: var(--primary-hover);
+    color: #C66B00;
     text-decoration: underline;
   }
 
@@ -209,25 +223,25 @@
    ========================================================= */
 .custom-dark-calendar {
   background-color: #0F172A !important;
-  border: 1px solid var(--border-input) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 1rem !important;
   font-family: 'Cairo', sans-serif !important;
-  color: var(--text-main) !important;
+  color: #FFFFFF !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
   overflow: hidden;
   z-index: 999 !important;
 }
 
 .custom-dark-calendar .react-datepicker__header {
-  background-color: var(--surface-google) !important;
-  border-bottom: 1px solid var(--border-input) !important;
+  background-color: #162032 !important;
+  border-bottom: 1px solid #1B2738 !important;
   padding-top: 0.75rem !important;
 }
 
 .custom-dark-calendar .react-datepicker__current-month,
 .custom-dark-calendar .react-datepicker-time__header,
 .custom-dark-calendar .react-datepicker__day-name {
-  color: var(--text-sub) !important;
+  color: #94A3B8 !important;
   font-weight: 600 !important;
 }
 
@@ -238,31 +252,27 @@
 }
 
 .custom-dark-calendar .react-datepicker__day:hover {
-  background-color: var(--border-input) !important;
-  color: var(--primary) !important;
+  background-color: #1B2738 !important;
+  color: #10B981 !important;
 }
 
 .custom-dark-calendar .react-datepicker__day--selected,
 .custom-dark-calendar .react-datepicker__day--in-range {
-  background-color: var(--primary) !important;
-  color: var(--text-main) !important;
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
   font-weight: bold !important;
 }
 
-.custom-dark-calendar .react-datepicker__day--selected:hover {
-  background-color: var(--primary-hover) !important;
-}
-
 .custom-dark-calendar .react-datepicker__day--in-selecting-range {
-  background-color: var(--primary-glow) !important;
-  color: var(--primary) !important;
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #10B981 !important;
 }
 
 .custom-dark-calendar .react-datepicker__day--disabled {
-  color: var(--text-muted) !important;
+  color: #475569 !important;
   opacity: 0.4;
 }
 
 .custom-dark-calendar .react-datepicker__navigation-icon::before {
-  border-color: var(--text-sub) !important;
+  border-color: #94A3B8 !important;
 }
