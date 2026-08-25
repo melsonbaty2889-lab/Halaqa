@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
-import { calculateAge } from '@/utils/dateUtils';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
 
@@ -169,7 +168,6 @@ const AddStudentModal = ({
       }
 
       if (onSuccess) await onSuccess(resultData);
-      if (onStudentAdded) await onStudentAdded(resultData);
 
       onClose();
     } catch (err) {
