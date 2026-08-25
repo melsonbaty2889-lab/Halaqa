@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
+import { calculateAge } from '@/utils/dateUtils';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
 
@@ -12,7 +13,6 @@ const AddStudentModal = ({
   academyId,
   halaqas = [],
   onSuccess,
-  onStudentAdded,
 }) => {
   const [formData, setFormData] = useState({
     name_ar: '',
@@ -84,7 +84,6 @@ const AddStudentModal = ({
     setErrors({});
   }, [studentToEdit, isOpen]);
 
-  // تحديث تاريخ الميلاد وحساب السن تلقائياً
   const handleDateChange = (date) => {
     const bDate = date ? date.toISOString().split('T')[0] : '';
     setFormData((prev) => ({ ...prev, birth_date: bDate }));
@@ -139,7 +138,7 @@ const AddStudentModal = ({
 
       let resultData = null;
 
-      if (studentToEdit) {
+      if (studentToEdit?.id) {
         const { data, error } = await supabase
           .from('students')
           .update(payload)
@@ -168,7 +167,6 @@ const AddStudentModal = ({
       }
 
       if (onSuccess) await onSuccess(resultData);
-
       onClose();
     } catch (err) {
       console.error('خطأ أثناء حفظ البيانات:', err);
@@ -182,7 +180,6 @@ const AddStudentModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         
-        {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary-500/10 text-primary-400 rounded-xl">
@@ -204,7 +201,6 @@ const AddStudentModal = ({
           </button>
         </div>
 
-        {/* Form Body */}
         <form id="add-student-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -260,7 +256,6 @@ const AddStudentModal = ({
                 </select>
               </div>
 
-              {/* حقل تاريخ الميلاد مع المكون المخصص */}
               <div className="sm:col-span-2">
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   تاريخ الميلاد
@@ -276,7 +271,6 @@ const AddStudentModal = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* حقل اختيار الدولة مع المكون المخصص البحثي */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   دولة الإقامة
@@ -290,7 +284,6 @@ const AddStudentModal = ({
             </div>
           </div>
 
-          {/* الحلقة والرواية */}
           <div className="space-y-4 pt-4 border-t border-slate-800">
             <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" /> الحلقة والتلاوة
@@ -341,7 +334,6 @@ const AddStudentModal = ({
             </div>
           </div>
 
-          {/* بيانات ولي الأمر */}
           <div className="space-y-4 pt-4 border-t border-slate-800">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -402,7 +394,6 @@ const AddStudentModal = ({
             )}
           </div>
 
-          {/* ملاحظات */}
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
               ملاحظات إضافية
@@ -417,7 +408,6 @@ const AddStudentModal = ({
           </div>
         </form>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 bg-slate-900 shrink-0">
           <button
             type="button"
