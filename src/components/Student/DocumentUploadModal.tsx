@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, CheckCircle2, AlertCircle } from 'lucide-react';
 
-// القائمة المطابقة لـ check constraint في قاعدة البيانات
 const DOCUMENT_TYPES = [
   'id_card',
   'passport',
@@ -12,32 +11,25 @@ const DOCUMENT_TYPES = [
   'payment_receipt',
   'certificate',
   'other'
-] as const;
+];
 
-interface DocumentUploadModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onUpload: (data: { file: File; documentType: string; notes: string }) => Promise<void>;
-  isLoading?: boolean;
-}
-
-export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
+export const DocumentUploadModal = ({
   isOpen,
   onClose,
   onUpload,
   isLoading = false,
 }) => {
   const { t, i18n } = useTranslation();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef(null);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<string>('id_card');
-  const [notes, setNotes] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [documentType, setDocumentType] = useState('id_card');
+  const [notes, setNotes] = useState('');
+  const [error, setError] = useState(null);
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) { // 10MB Limit
@@ -49,7 +41,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
       setError(t('documents.error_select_file', 'يرجى اختيار ملف أولاً'));
@@ -72,7 +64,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
         className="w-full max-w-lg bg-[#111827] text-white rounded-2xl shadow-2xl border border-gray-800 overflow-hidden animate-in fade-in zoom-in-95"
         dir={i18n.dir()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-[#1f2937]/50">
           <div className="flex items-center gap-2.5">
             <UploadCloud className="w-5 h-5 text-amber-500" />
@@ -89,7 +80,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Document Type Select */}
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-300">
               {t('documents.type_label', 'نوع المستند')} <span className="text-amber-500">*</span>
@@ -107,7 +97,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             </select>
           </div>
 
-          {/* Custom File Dropzone */}
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-300">
               {t('documents.file_label', 'الملف')} <span className="text-amber-500">*</span>
@@ -150,7 +139,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             </div>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -158,7 +146,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             </div>
           )}
 
-          {/* Notes Input */}
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-300">
               {t('documents.notes_label', 'ملاحظات')}
@@ -172,7 +159,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
@@ -195,4 +181,5 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     </div>
   );
 };
+
 export default DocumentUploadModal;
