@@ -52,6 +52,7 @@ export default function Sidebar({
     }
   };
 
+  // إغلاق قائمة الأكاديمية عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -61,6 +62,21 @@ export default function Sidebar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // تثبيت الجسم (body scroll) عند فتح القائمة على الهواتف لمنع تحرك الصفحة خلفها
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isMobile, sidebarOpen]);
 
   useEffect(() => {
     const activeSection = menuSections.find(sec => sec.items && sec.items.some(item => item.id === activeTab));
@@ -233,7 +249,6 @@ export default function Sidebar({
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
-  // التعديل الجوهري هنا لضمان عمل Overlay في الهواتف بشكل دقيق
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
@@ -257,12 +272,15 @@ export default function Sidebar({
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     boxShadow: isMobile && sidebarOpen ? '0 0 50px rgba(0,0,0,0.85)' : 'none',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    overflow: 'hidden',
+    touchAction: 'pan-y',
+    overscrollBehavior: 'contain'
   };
 
   return (
     <>
-      {/* خلفية تظليل عند فتح القائمة على الهواتف */}
+      {/* خلفية التعتيم عند فتح القائمة على الهواتف */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -273,14 +291,25 @@ export default function Sidebar({
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
             zIndex: 999,
-            transition: 'opacity 0.3s ease'
+            transition: 'opacity 0.3s ease',
+            touchAction: 'none'
           }}
         />
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        <div style={{ padding: '12px', flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
-          
+        {/* حاوية القائمة القابلة للتمرير الداخلي */}
+        <div 
+          style={{ 
+            padding: '12px', 
+            flex: 1, 
+            overflowY: 'auto', 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y'
+          }}
+        >
+          {/* Header */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
