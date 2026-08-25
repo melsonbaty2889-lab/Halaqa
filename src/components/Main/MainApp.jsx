@@ -131,6 +131,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
+  // استخدام Custom Hook المحدث لكشف الشاشات بدقة (أقل من 1024px يعتبر جوال/تابلت)
+  const isMobile = useIsMobile(1024);
+
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('smart_halaqa_tab') || 'dashboard');
   const [selectedHalaqaId, setSelectedHalaqaId] = useState(null);
 
@@ -139,7 +142,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [activeTab]); 
 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
-  const [isMobile, setIsMobile] = useState(false);
   
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -159,18 +161,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
 
+  // إغلاق خلفية الـ Overlay تلقائياً عند تكبير الشاشة لسطح المكتب
   useEffect(() => {
-    const handleResize = () => {
-      const mobileStatus = window.innerWidth <= 768;
-      setIsMobile(mobileStatus);
-      if (!mobileStatus) {
-        setSidebarOpen(false); // إغلاق خلفية الـ Overlay عند التكبير للشاشات الكبيرة
-      }
-    };
-    handleResize(); 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (!isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     const updateTime = () => {
@@ -222,7 +218,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
-    } opacity: 1;
+    }
     setLoadingData(false);
   }, []);
 
