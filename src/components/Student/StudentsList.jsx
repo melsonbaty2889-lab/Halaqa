@@ -3,6 +3,7 @@ import { Search, Plus, Filter, Users, UserCheck, UserX, AlertCircle } from 'luci
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
+import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
 
 const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isLoading }) => {
@@ -115,6 +116,13 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
     );
   }
 
+  // خيارات تصفية حالة الطالب
+  const statusOptions = [
+    { label: 'جميع الحالات', value: 'all' },
+    { label: 'نشط فقط', value: 'active' },
+    { label: 'غير نشط فقط', value: 'inactive' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* الهيدر وزر الإضافة */}
@@ -164,17 +172,16 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-appText-muted" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="app-input max-w-[160px]"
-          >
-            <option value="all">جميع الحالات</option>
-            <option value="active">نشط فقط</option>
-            <option value="inactive">غير نشط فقط</option>
-          </select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="w-5 h-5 text-appText-muted shrink-0" />
+          <div className="w-full sm:w-48">
+            <CustomSelect
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={statusOptions}
+              placeholder="جميع الحالات"
+            />
+          </div>
         </div>
       </div>
 
