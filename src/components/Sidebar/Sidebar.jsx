@@ -64,7 +64,7 @@ export default function Sidebar({
 
   // فتح القسم التابع للتبويب النشط أو فتح أول قسم افتراضياً
   useEffect(() => {
-    const activeSection = menuSections.find(sec => sec.items.some(item => item.id === activeTab));
+    const activeSection = menuSections.find(sec => sec.items && sec.items.some(item => item.id === activeTab));
     if (activeSection) {
       setOpenSectionId(activeSection.id);
     } else if (menuSections.length > 0) {
@@ -132,15 +132,23 @@ export default function Sidebar({
   };
 
   useEffect(() => {
-    loadAcademies();
+    let isMounted = true;
+
+    const fetchAcademies = async () => {
+      if (isMounted) await loadAcademies();
+    };
+
+    fetchAcademies();
+
     const channel = supabase
       .channel('sidebar-academy-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
-        loadAcademies();
+        if (isMounted) loadAcademies();
       })
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [currentAcademyId]);
@@ -220,53 +228,60 @@ export default function Sidebar({
   };
 
   const filteredMenuSections = menuSections.map(section => {
-    const filteredItems = section.items.filter(item =>
+    const filteredItems = (section.items || []).filter(item =>
       normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
     );
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
-    const sidebarStyles = {
+  // تحديث وتحسين تنسيقات التجاوب والـ Mobile Overlay
+  const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
     height: '100vh',
     [isRtl ? 'right' : 'left']: 0,
-    width: isMobile ? 'min(280px, 80vw)' : '280px',
-    backgroundColor: C.dark.surfaceCard || 'rgba(15, 23, 42, 0.85)',
+    width: isMobile ? '280px' : '280px',
+    maxWidth: '85vw',
+    backgroundColor: C.dark.surfaceCard || 'rgba(15, 23, 42, 0.95)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderLeft: isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
-    borderRight: !isRtl && !isMobile ? `1px solid ${C.dark.border}` : 'none',
+    borderLeft: isRtl ? 'none' : `1px solid ${C.dark.border}`,
+    borderRight: isRtl ? `1px solid ${C.dark.border}` : 'none',
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
-    transform: isMobile && !sidebarOpen 
-      ? (isRtl ? 'translateX(100%)' : 'translateX(-100%)') 
-      : 'translateX(0)',
+    transform: isMobile 
+      ? (sidebarOpen 
+          ? 'translateX(0)' 
+          : (isRtl ? 'translateX(100%)' : 'translateX(-100%)'))
+      : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-    boxShadow: isMobile && sidebarOpen ? '0 0 40px rgba(0,0,0,0.85)' : 'none',
+    boxShadow: isMobile && sidebarOpen ? '0 0 50px rgba(0,0,0,0.85)' : 'none',
     boxSizing: 'border-box',
     userSelect: 'none'
   };
 
   return (
     <>
+      {/* خلفية تظليل عند فتح القائمة على الهواتف */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(4px)',
-            zIndex: 999
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 999,
+            transition: 'opacity 0.3s ease'
           }}
         />
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        <div style={{ padding: '12px', flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '12px', flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
           
           <div style={{ 
             display: 'flex', 
@@ -290,6 +305,7 @@ export default function Sidebar({
 
             {isMobile && (
               <button 
+                type="button"
                 onClick={() => setSidebarOpen(false)}
                 style={{ 
                   background: 'rgba(255,255,255,0.05)', 
