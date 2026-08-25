@@ -62,18 +62,16 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // تثبيت خلفية الصفحة كلياً عند فتح القائمة الجانبية في الهواتف
+  // قفل scroll خلفية الصفحة فقط على الجوال
   useEffect(() => {
     if (isMobile && sidebarOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
       document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-
-      return () => {
-        document.body.style.overflow = originalStyle;
-        document.documentElement.style.overflow = '';
-      };
+    } else {
+      document.body.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isMobile, sidebarOpen]);
 
   useEffect(() => {
@@ -146,11 +144,9 @@ export default function Sidebar({
 
   useEffect(() => {
     let isMounted = true;
-
     const fetchAcademies = async () => {
       if (isMounted) await loadAcademies();
     };
-
     fetchAcademies();
 
     const channel = supabase
@@ -251,8 +247,7 @@ export default function Sidebar({
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
     bottom: 0,
-    height: '100dvh', // استخدام dynamic viewport height للحفاظ على الطول بدقة في الجوال
-    maxHeight: '100dvh',
+    height: '100dvh',
     [isRtl ? 'right' : 'left']: 0,
     width: '280px',
     maxWidth: '85vw',
@@ -276,7 +271,7 @@ export default function Sidebar({
 
   return (
     <>
-      {/* خلفية تعتيم تمنع تمرير الصفحة تماماً */}
+      {/* خلفية التعتيم */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -294,24 +289,16 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* الحاوية القابلة للتمرير المستقل */}
-        <div 
-          style={{ 
-            padding: '12px', 
-            flex: 1, 
-            overflowY: 'auto', 
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehaviorY: 'contain'
-          }}
-        >
-          {/* Header */}
+        {/* Header الثابت */}
+        <div style={{ 
+          padding: '12px 12px 8px 12px',
+          borderBottom: `1px solid ${C.dark.border}`,
+          flexShrink: 0
+        }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            justifyContent: 'space-between', 
-            marginBottom: '12px', 
-            paddingBottom: '10px', 
-            borderBottom: `1px solid ${C.dark.border}` 
+            justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <SmartHalaqaProLogo size={34} />
@@ -345,7 +332,18 @@ export default function Sidebar({
               </button>
             )}
           </div>
+        </div>
 
+        {/* المنتصف القابل للتمرير */}
+        <div 
+          style={{ 
+            padding: '12px', 
+            flex: 1, 
+            overflowY: 'auto', 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain'
+          }}
+        >
           <AcademySelector
             academiesList={academiesList}
             currentAcademyId={currentAcademyId}
@@ -388,10 +386,15 @@ export default function Sidebar({
             getText={getText}
             isRtl={isRtl}
           />
-
         </div>
 
-        <SidebarFooter isRtl={isRtl} />
+        {/* الفوتر الثابت في الأسفل */}
+        <div style={{ 
+          paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          flexShrink: 0 
+        }}>
+          <SidebarFooter isRtl={isRtl} />
+        </div>
       </aside>
     </>
   );
