@@ -5,6 +5,7 @@ import { RIWAYAT_LIST } from '@/constants/riwayat';
 import { calculateAge } from '@/utils/dateUtils';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
+import CustomSelect from '@/components/UI/CustomSelect';
 
 const AddStudentModal = ({
   isOpen,
@@ -247,17 +248,15 @@ const AddStudentModal = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">الجنس</label>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
-                >
-                  <option value="male">ذكر</option>
-                  <option value="female">أنثى</option>
-                </select>
-              </div>
+              <CustomSelect
+                label="الجنس"
+                value={formData.gender}
+                onChange={(val) => setFormData({ ...formData, gender: val })}
+                options={[
+                  { label: 'ذكر', value: 'male' },
+                  { label: 'أنثى', value: 'female' },
+                ]}
+              />
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
@@ -294,47 +293,30 @@ const AddStudentModal = ({
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  تسكين الحلقة
-                </label>
-                <select
-                  value={formData.halaqa_id}
-                  onChange={(e) => setFormData({ ...formData, halaqa_id: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
-                >
-                  <option value="">اختر الحلقة...</option>
-                  {halaqas.map((h) => {
-                    const hName =
-                      typeof h.name === 'object' && h.name !== null
-                        ? h.name.ar || h.name.en
-                        : h.name_ar || h.name;
-                    return (
-                      <option key={h.id} value={h.id}>
-                        {hName}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
+              <CustomSelect
+                label="تسكين الحلقة"
+                placeholder="اختر الحلقة..."
+                value={formData.halaqa_id}
+                onChange={(val) => setFormData({ ...formData, halaqa_id: val })}
+                options={halaqas.map((h) => ({
+                  value: h.id,
+                  label:
+                    typeof h.name === 'object' && h.name !== null
+                      ? h.name.ar || h.name.en
+                      : h.name_ar || h.name,
+                }))}
+              />
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  الرواية المفضلة
-                </label>
-                <select
-                  value={formData.preferred_riwayah}
-                  onChange={(e) => setFormData({ ...formData, preferred_riwayah: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors"
-                >
-                  <option value="">اختر الرواية...</option>
-                  {RIWAYAT_LIST.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nameAr}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomSelect
+                label="الرواية المفضلة"
+                placeholder="اختر الرواية..."
+                value={formData.preferred_riwayah}
+                onChange={(val) => setFormData({ ...formData, preferred_riwayah: val })}
+                options={RIWAYAT_LIST.map((r) => ({
+                  value: r.id,
+                  label: r.nameAr,
+                }))}
+              />
             </div>
           </div>
 
