@@ -178,7 +178,6 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
           academyId={academyId}
           halaqas={halaqas}
           onSuccess={handleStudentAdded}
-          onStudentAdded={handleStudentAdded}
         />
       )}
     </div>
