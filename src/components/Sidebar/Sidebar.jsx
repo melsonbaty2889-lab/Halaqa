@@ -52,7 +52,6 @@ export default function Sidebar({
     }
   };
 
-  // إغلاق قائمة الأكاديمية عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -63,18 +62,15 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // تثبيت الجسم (body scroll) عند فتح القائمة على الهواتف لمنع تحرك الصفحة خلفها
+  // قفل تمرير خلفية الصفحة فقط دون تعطيل أحداث اللمس
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isMobile, sidebarOpen]);
 
@@ -254,6 +250,7 @@ export default function Sidebar({
     top: 0,
     bottom: 0,
     height: '100vh',
+    maxHeight: '100vh',
     [isRtl ? 'right' : 'left']: 0,
     width: '280px',
     maxWidth: '85vw',
@@ -272,15 +269,12 @@ export default function Sidebar({
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     boxShadow: isMobile && sidebarOpen ? '0 0 50px rgba(0,0,0,0.85)' : 'none',
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-    touchAction: 'pan-y',
-    overscrollBehavior: 'contain'
+    boxSizing: 'border-box'
   };
 
   return (
     <>
-      {/* خلفية التعتيم عند فتح القائمة على الهواتف */}
+      {/* خلفية التعتيم عند فتح القائمة */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -291,22 +285,19 @@ export default function Sidebar({
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
             zIndex: 999,
-            transition: 'opacity 0.3s ease',
-            touchAction: 'none'
+            transition: 'opacity 0.3s ease'
           }}
         />
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* حاوية القائمة القابلة للتمرير الداخلي */}
+        {/* الحاوية القابلة للتمرير */}
         <div 
           style={{ 
             padding: '12px', 
             flex: 1, 
             overflowY: 'auto', 
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
-            touchAction: 'pan-y'
+            WebkitOverflowScrolling: 'touch'
           }}
         >
           {/* Header */}
