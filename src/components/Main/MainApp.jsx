@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
+import useIsMobile from '@/hooks/useIsMobile';
 
 import { supabase } from '@/lib/supabase';
 import { ROLES } from '@/constants/roles';
