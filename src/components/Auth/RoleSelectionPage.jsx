@@ -8,18 +8,20 @@ import {
   Users, 
   Building2, 
   CheckCircle2, 
-  Loader2 
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export default function RoleSelectionPage({ onRoleSelected, isRtl = true }) {
   const [selectedRole, setSelectedRole] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const roles = [
     {
       id: 'student',
       title: isRtl ? 'طالب / دارس' : 'Student',
-      desc: isRtl ? 'للانضمام للحلقات ومتابعة حفظ القرآن والدروس' : 'Join halaqas and track Quran memorization',
+      desc: isRtl ? 'لالانضمام للحلقات ومتابعة حفظ القرآن والدروس' : 'Join halaqas and track Quran memorization',
       icon: GraduationCap,
     },
     {
@@ -35,7 +37,7 @@ export default function RoleSelectionPage({ onRoleSelected, isRtl = true }) {
       icon: Users,
     },
     {
-      id: 'academy_admin',
+      id: 'admin', // تم التحديث لـ admin ليطابق نظام الصلاحيات
       title: isRtl ? 'مدير أكاديمية' : 'Academy Admin',
       desc: isRtl ? 'لإدارة المقرأة بالكامل والمعلمين والحلقات' : 'Full management of academy and teachers',
       icon: Building2,
@@ -45,20 +47,35 @@ export default function RoleSelectionPage({ onRoleSelected, isRtl = true }) {
   const handleSaveRole = async () => {
     if (!selectedRole) return;
     setLoading(true);
+    setErrorMsg('');
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error(isRtl ? 'عفواً، لم نتمكن من التحقق من الجلسة' : 'User session not found');
 
-      if (user) {
-        const { error } = await supabase.auth.updateUser({
-          data: { role: selectedRole }
-        });
+      // 1. تحديث بيانات المستخدم في user_metadata
+      await supabase.auth.updateUser({
+        data: { role: selectedRole }
+      });
 
-        if (error) throw error;
-        if (onRoleSelected) onRoleSelected(selectedRole);
+      // 2. تحديث جدول profiles الرئيسي لضمان الاستجابة في Context
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          role: selectedRole,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // 3. استدعاء التغيير لنقل المستخدم للشاشة التالية
+      if (onRoleSelected) {
+        onRoleSelected(selectedRole);
       }
     } catch (err) {
       console.error('Role update error:', err);
+      setErrorMsg(isRtl ? 'حدث خطأ أثناء حفظ الدور، يرجى المحاولة مرة أخرى' : 'Failed to update role. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -78,6 +95,14 @@ export default function RoleSelectionPage({ onRoleSelected, isRtl = true }) {
           {isRtl ? 'حدد دورك لنقوم بتخصيص الواجهة المناسبة لك' : 'Select your role to customize your interface'}
         </p>
       </div>
+
+      {/* رسالة الخطأ إن وجدت */}
+      {errorMsg && (
+        <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-2 text-rose-400 text-xs">
+          <AlertCircle size={16} className="shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {/* بطاقات الأدوار */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
@@ -128,7 +153,7 @@ export default function RoleSelectionPage({ onRoleSelected, isRtl = true }) {
         {loading ? (
           <Loader2 size={16} className="animate-spin" />
         ) : (
-          <span>{isRtl ? 'متابعة إلى لوحة التحكم' : 'Continue to Dashboard'}</span>
+          <span>{isRtl ? 'متابعة إلى الخطوة التالية' : 'Continue to Next Step'}</span>
         )}
       </button>
     </AuthLayout>
