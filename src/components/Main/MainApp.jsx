@@ -4,6 +4,7 @@ import { RefreshCw, AlertTriangle } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
 
 import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext'; // استيراد Context الأكاديمية
 import { ROLES } from '@/constants/roles';
 import { colors as C } from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
@@ -132,6 +133,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
+  // جلب بيانات الأكاديمية الحالية مباشرة من السياق العام
+  const { academy } = useAcademy();
+
   // استخدام Custom Hook المحدث لكشف الشاشات بدقة (أقل من 1024px يعتبر جوال/تابلت)
   const isMobile = useIsMobile(1024);
 
@@ -199,7 +203,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         .maybeSingle();
 
       if (academyData) {
-        setAcademyName(academyData.name || "");
+        setAcademyName(academyData.name || academy?.name || "");
         setIsAcademyActive(academyData.is_active ?? true);
         if (academyData.currency) setCurrency(academyData.currency);
         if (academyData.timezone) setTimezone(academyData.timezone);
@@ -221,7 +225,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       console.error("Error fetching academy data:", error);
     }
     setLoadingData(false);
-  }, []);
+  }, [academy?.name]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
     if (!newAcademyId || newAcademyId === academyId) return;
@@ -290,7 +294,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [halaqas, teachers, isRtl]);
 
   const preloadedDashboardData = useMemo(() => ({
-    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || (isRtl ? "الأكاديمية" : "Academy")),
+    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || academy?.name || (isRtl ? "الأكاديمية" : "Academy")),
     role: userRole || 'staff', 
     is_activated: isAcademyActive,
     stats: {
@@ -299,13 +303,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h?.is_archived).length : 0, 
       completedExams: completedExamsCount || 0
     }
-  }), [isPlatformAdmin, isRtl, academyName, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
+  }), [isPlatformAdmin, isRtl, academyName, academy?.name, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
   };
 
-      const renderActiveTabContent = () => {
+  const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
@@ -429,6 +433,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
     }
   };
+
   const skeletonLoader = (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Skeleton width="220px" height="32px" borderRadius="8px" />
@@ -457,6 +462,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     >
       <Sidebar 
         currentAcademyId={academyId}
+        academy={academy}
         onSwitchAcademy={handleSwitchAcademy}
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
