@@ -11,12 +11,21 @@ export function useSignUpForm(onSignUpSuccess) {
 
   const isRtl = i18n?.language === 'ar';
 
-  // 1. استرجاع البيانات المحفوظة مسبقاً لمنع ضياع مدخلات المستخدم
+  // 1. القراءة المباشرة من Local Storage مع معالجة حذرة
   const [fullName, setFullName] = useState(() => {
-    return localStorage.getItem('signup_draft_name') || '';
+    try {
+      return localStorage.getItem('signup_draft_name') || '';
+    } catch {
+      return '';
+    }
   });
+
   const [email, setEmail] = useState(() => {
-    return localStorage.getItem('signup_draft_email') || '';
+    try {
+      return localStorage.getItem('signup_draft_email') || '';
+    } catch {
+      return '';
+    }
   });
 
   const [password, setPassword] = useState('');
@@ -32,13 +41,29 @@ export function useSignUpForm(onSignUpSuccess) {
   const [fieldErrors, setFieldErrors] = useState({});
   const [status, setStatus] = useState({ type: null, msg: '' });
 
-  // 2. التحديث التلقائي للمسودة أثناء الكتابة
+  // 2. تحديث الحفظ التلقائي فور تغيير القيم
   useEffect(() => {
-    localStorage.setItem('signup_draft_name', fullName);
+    try {
+      if (fullName) {
+        localStorage.setItem('signup_draft_name', fullName);
+      } else {
+        localStorage.removeItem('signup_draft_name');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, [fullName]);
 
   useEffect(() => {
-    localStorage.setItem('signup_draft_email', email);
+    try {
+      if (email) {
+        localStorage.setItem('signup_draft_email', email);
+      } else {
+        localStorage.removeItem('signup_draft_email');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, [email]);
 
   const toggleLanguage = () => {
@@ -54,12 +79,10 @@ export function useSignUpForm(onSignUpSuccess) {
     }
   };
 
-  // وظيفة لتتبع محاولات التسجيل التعثرية (Lead Retention)
   const trackFailedAttempt = async (email, fullName, reason) => {
     try {
       if (!email) return;
-      // يمكنك ربط هذه النقطة برابط Webhook خاص بك على Make.com
-      // fetch('YOUR_MAKE_WEBHOOK_URL', { method: 'POST', body: JSON.stringify({ email, fullName, reason }) });
+      // يمكنك ربطه بشرط الـ Webhook الخاص بك مستقبلاً
     } catch (e) {
       console.error('Failed to log lead:', e);
     }
@@ -128,7 +151,7 @@ export function useSignUpForm(onSignUpSuccess) {
 
       if (authError) throw authError;
 
-      // 3. مسح المسودة عند نجاح التسجيل
+      // مسح المسودة فور نجاح عملية التسجيل
       localStorage.removeItem('signup_draft_name');
       localStorage.removeItem('signup_draft_email');
 
@@ -145,8 +168,6 @@ export function useSignUpForm(onSignUpSuccess) {
 
     } catch (err) {
       console.error('Sign Up Error:', err);
-      
-      // حفظ المحاولة التعثرية للتواصل مع المستخدم لاحقاً
       trackFailedAttempt(formData.email, formData.fullName, err.message);
 
       const userFriendlyMsg = handleAuthError(err, isRtl);
