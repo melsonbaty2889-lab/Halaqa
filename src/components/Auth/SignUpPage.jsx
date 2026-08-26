@@ -46,12 +46,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const [modalType, setModalType] = useState('terms');
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // التسجيل السريع عبر Google
   const handleGoogleSignUp = async () => {
     if (!agreeTerms) {
       setStatus({
         type: 'error',
-        msg: isRtl ? 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.' : 'Please agree to terms first.'
+        msg: isRtl ? 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.' : 'Please agree to terms and privacy policy first.'
       });
       return;
     }
@@ -74,10 +73,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       setGoogleLoading(false);
     }
   };
-
-  const inputPadding = isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11';
-  const iconPos = isRtl ? 'right-3.5' : 'left-3.5';
-  const togglePos = isRtl ? 'left-3.5' : 'right-3.5';
 
   const langBtn = (
     <button
@@ -155,11 +150,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       {/* نموذج إنشاء الحساب */}
       <form onSubmit={handleSignUp} className="flex flex-col gap-3">
         
-        {/* حقل الاسم الكامل */}
+        {/* الاسم الكامل */}
         <div className="relative flex items-center">
           <User 
             size={18} 
-            className={`absolute ${iconPos} pointer-events-none transition-colors ${fullName ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
+            className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${fullName ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
           />
           <input 
             type="text"
@@ -167,15 +162,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             onChange={(e) => setFullName(e.target.value)}
             placeholder={isRtl ? 'الاسم الكامل' : 'Full Name'}
             required
-            className={`w-full py-2.5 ${inputPadding} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
+            className={`w-full py-2.5 ${isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
           />
         </div>
 
-        {/* حقل البريد الإلكتروني */}
+        {/* البريد الإلكتروني */}
         <div className="relative flex items-center">
           <Mail 
             size={18} 
-            className={`absolute ${iconPos} pointer-events-none transition-colors ${email ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
+            className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${email ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
           />
           <input 
             type="email"
@@ -184,15 +179,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             placeholder={isRtl ? 'البريد الإلكتروني' : 'Email Address'}
             required
             dir="ltr"
-            className={`w-full py-2.5 ${inputPadding} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
+            className={`w-full py-2.5 ${isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
           />
         </div>
 
-        {/* حقل كلمة المرور */}
+        {/* كلمة المرور */}
         <div className="relative flex items-center">
           <Lock 
             size={18} 
-            className={`absolute ${iconPos} pointer-events-none transition-colors ${password ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
+            className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${password ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
           />
           <input 
             type={showPassword ? 'text' : 'password'}
@@ -202,22 +197,22 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             placeholder={isRtl ? 'كلمة المرور' : 'Password'}
             required
             dir="ltr"
-            className={`w-full py-2.5 ${inputPadding} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
+            className={`w-full py-2.5 ${isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className={`absolute ${togglePos} text-[var(--text-muted,#475569)] hover:text-slate-300 transition-colors cursor-pointer`}
+            className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} text-[var(--text-muted,#475569)] hover:text-slate-300 transition-colors cursor-pointer`}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
 
-        {/* حقل تأكيد كلمة المرور */}
+        {/* تأكيد كلمة المرور */}
         <div className="relative flex items-center">
           <Lock 
             size={18} 
-            className={`absolute ${iconPos} pointer-events-none transition-colors ${confirmPassword ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
+            className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} pointer-events-none transition-colors ${confirmPassword ? 'text-[var(--primary,#E07A00)]' : 'text-[var(--text-muted,#475569)]'}`} 
           />
           <input 
             type={showConfirmPassword ? 'text' : 'password'}
@@ -226,19 +221,19 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             placeholder={isRtl ? 'تأكيد كلمة المرور' : 'Confirm Password'}
             required
             dir="ltr"
-            className={`w-full py-2.5 ${inputPadding} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
+            className={`w-full py-2.5 ${isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'} rounded-xl border border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] text-xs outline-none transition-all focus:border-[var(--primary,#E07A00)] placeholder-[var(--text-muted,#475569)]`}
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className={`absolute ${togglePos} text-[var(--text-muted,#475569)] hover:text-slate-300 transition-colors cursor-pointer`}
+            className={`absolute ${isRtl ? 'left-3.5' : 'right-3.5'} text-[var(--text-muted,#475569)] hover:text-slate-300 transition-colors cursor-pointer`}
           >
             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
 
-        {/* التعهد والشروط مع إطار تمييز بصري عند الخطأ */}
-        <div className={`flex items-start gap-2.5 my-1 text-right p-2 rounded-xl transition-all ${
+        {/* التعهد والشروط تصحيح السياق LTR/RTL */}
+        <div className={`flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all ${
           fieldErrors?.agreeTerms ? 'bg-red-500/10 border border-red-500/30' : ''
         }`}>
           <input 
@@ -252,12 +247,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             {isRtl ? (
               <>أوافق على <button type="button" onClick={() => { setModalType('terms'); setShowModal(true); }} className="text-[var(--primary,#E07A00)] font-bold hover:underline bg-transparent border-none p-0 cursor-pointer">الشروط والأحكام</button> و <button type="button" onClick={() => { setModalType('privacy'); setShowModal(true); }} className="text-[var(--primary,#E07A00)] font-bold hover:underline bg-transparent border-none p-0 cursor-pointer">سياسة الخصوصية</button></>
             ) : (
-              <>I agree to <button type="button" onClick={() => { setModalType('terms'); setShowModal(true); }} className="text-[var(--primary,#E07A00)] font-bold hover:underline bg-transparent border-none p-0 cursor-pointer">Terms</button> & <button type="button" onClick={() => { setModalType('privacy'); setShowModal(true); }} className="text-[var(--primary,#E07A00)] font-bold hover:underline bg-transparent border-none p-0 cursor-pointer">Privacy</button></>
+              <>I agree to the <button type="button" onClick={() => { setModalType('terms'); setShowModal(true); }} className="text-[var(--primary,#E07A00)] font-bold hover:underline bg-transparent border-none p-0 cursor-pointer">Terms</button> & <button type="button" onClick={() => { setModalType('privacy'); setShowModal(true); }} className="text-[var(--primary,#E07A00)] font-bold hover:underline bg-transparent border-none p-0 cursor-pointer">Privacy Policy</button></>
             )}
           </label>
         </div>
 
-        {/* زر الإرسال */}
+        {/* زر إنشاء الحساب */}
         <button 
           type="submit" 
           disabled={loading}
@@ -271,21 +266,21 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </button>
       </form>
 
-      {/* شارة الأمان */}
+      {/* شارة التشفير المصححة لغوياً */}
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-[var(--text-muted,#475569)] mt-4">
         <ShieldCheck size={14} className="text-emerald-500" />
         <span>
           {isRtl ? (
             <>بياناتك مشفرة ومحمية وفق معايير <span dir="ltr">256-bit</span></>
           ) : (
-            '256-bit SSL encrypted & secure data'
+            <>256-bit SSL encrypted & secure data</>
           )}
         </span>
       </div>
 
-      {/* التحويل لتسجيل الدخول */}
+      {/* تحويل الدخول - المصحح بدون مقلوب علامات الاستفهام */}
       <div className="mt-3 text-center text-xs text-[var(--text-sub,#94A3B8)]">
-        {isRtl ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
+        <span>{isRtl ? 'لديك حساب بالفعل؟' : 'Already have an account?'}</span>{' '}
         <button 
           type="button"
           onClick={onSwitchToLogin} 
