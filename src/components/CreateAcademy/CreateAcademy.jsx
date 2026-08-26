@@ -1,65 +1,175 @@
-import React, { useState } from 'react';
-import { 
-  GraduationCap, 
-  Sparkles, 
-  Check, 
-  ChevronRight, 
-  LogOut, 
-  ChevronDown,
-  Globe,
-  Coins,
-  Calendar,
-  Clock,
-  Languages,
-  Building2,
-  Link as LinkIcon
-} from 'lucide-react';
-
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import AuthLayout from './AuthLayout';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import SelectModal from './SelectModal';
+
 import { CURRENCIES } from '../../constants/currencies';
 import { COUNTRIES } from '../../constants/countries';
 
-export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
+import { 
+  Building2, 
+  Check, 
+  ChevronRight, 
+  ChevronDown, 
+  Link as LinkIcon, 
+  Loader2, 
+  AlertCircle, 
+  Upload, 
+  CheckCircle2, 
+  BookOpen, 
+  Laptop, 
+  Users, 
+  Sliders,
+  Globe
+} from 'lucide-react';
+
+export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true, currentLanguage = 'ar' }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [modalType, setModalType] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // حالة النموذج بدون بيانات تجريبية
+  // حالات التحقق
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [isSlugAvailable, setIsSlugAvailable] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  // إدخال مخصص للدولة واللغة
+  const [isCustomCountry, setIsCustomCountry] = useState(false);
+  const [customCountryName, setCustomCountryName] = useState('');
+  const [isCustomLanguage, setIsCustomLanguage] = useState(false);
+  const [customLanguageName, setCustomLanguageName] = useState('');
+
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+
+  // النموذج الخالي من أي بيانات تجريبية
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
+    learning_type: 'online',
+    country_code: 'SA',
     currency: 'SAR',
-    calendar: 'Hijri',
+    calendar_type: 'hijri',
     timezone: 'Asia/Riyadh',
-    language: 'ar',
+    language_code: currentLanguage || 'ar',
+    default_qiraat: 'hafs',
+    teaching_methodology: 'mashreqi',
+    weekend_days: ['friday', 'saturday'],
+    contact_email: '',
+    contact_phone: '',
+    logo_url: ''
   });
 
-  const CALENDARS = [
-    { value: 'Hijri', label: 'هجري (Hijri)', icon: '📅' },
-    { value: 'Gregorian', label: 'ميلادي (Gregorian)', icon: '📆' },
+  const LEARNING_TYPES = [
+    { id: 'online', label: isRtl ? 'عن بُعد' : 'Online', icon: Laptop },
+    { id: 'onsite', label: isRtl ? 'حضوري' : 'On-Site', icon: Building2 },
+    { id: 'hybrid', label: isRtl ? 'مختلط' : 'Hybrid', icon: Users },
   ];
 
-  const LANGUAGES = [
-    { value: 'ar', label: 'العربية (Arabic)', icon: '🇸🇦' },
-    { value: 'en', label: 'English', icon: '🇺🇸' },
-    { value: 'fr', label: 'Français', icon: '🇫🇷' },
+  const DAYS_OF_WEEK = [
+    { id: 'sunday', label: isRtl ? 'الأحد' : 'Sunday' },
+    { id: 'monday', label: isRtl ? 'الإثنين' : 'Monday' },
+    { id: 'tuesday', label: isRtl ? 'الثلاثاء' : 'Tuesday' },
+    { id: 'wednesday', label: isRtl ? 'الأربعاء' : 'Wednesday' },
+    { id: 'thursday', label: isRtl ? 'الخميس' : 'Thursday' },
+    { id: 'friday', label: isRtl ? 'الجمعة' : 'Friday' },
+    { id: 'saturday', label: isRtl ? 'السبت' : 'Saturday' },
   ];
 
-  const currencyOptions = (CURRENCIES || []).map((c) => ({
-    value: c.code,
-    label: `${c.nameAr || c.labelAr || c.code} (${c.code})`,
-    subLabel: c.symbol ? `الرمز: ${c.symbol}` : c.code,
-    icon: c.symbol || '🪙',
-  }));
+  const QIRAAT_OPTIONS = [
+    { value: 'hafs', label: isRtl ? 'حفص عن عاصم' : 'Hafs an Asim' },
+    { value: 'warsh', label: isRtl ? 'ورش عن نافع' : 'Warsh an Nafi' },
+    { value: 'qalon', label: isRtl ? 'قالون عن نافع' : 'Qalon an Nafi' },
+    { value: 'aldoori', label: isRtl ? 'الدوري عن أبي عمرو' : 'Al-Doori an Abi Amr' },
+  ];
 
-  const timezoneOptions = (COUNTRIES || []).map((c) => ({
-    value: c.timezone,
-    label: c.nameAr,
-    subLabel: c.timezone,
-    icon: c.flag || '🌐',
-  }));
+  const METHODOLOGY_OPTIONS = [
+    { value: 'mashreqi', label: isRtl ? 'النظام المشرقي (حفظ ومراجعة صغرى وكبرى)' : 'Mashreqi Methodology' },
+    { value: 'maghrebi', label: isRtl ? 'النظام المغاربي (اللوح والرسم والراتب)' : 'Maghrebi Methodology' },
+    { value: 'repetitive', label: isRtl ? 'نظام التكرار والتلقين' : 'Repetitive Methodology' },
+  ];
 
-  // توليد الرابط المختصر تلقائياً عند كتابة الاسم
+  const BASE_LANGUAGES = [
+    { value: 'ar', label: 'العربية (Arabic)' },
+    { value: 'en', label: 'English' },
+    { value: 'fr', label: 'Français' },
+    { value: 'tr', label: 'Türkçe' },
+    { value: 'ur', label: 'اردو (Urdu)' },
+    { value: 'custom', label: isRtl ? 'لغة أخرى...' : 'Other Language...' }
+  ];
+
+  const countryOptions = [
+    ...(COUNTRIES || []).map((c) => ({
+      value: c.code,
+      label: c.nameAr || c.name,
+      subLabel: c.timezone,
+    })),
+    { value: 'CUSTOM', label: isRtl ? 'دولة أخرى...' : 'Other Country...' }
+  ];
+
+  // الاكتشاف والتلقين الذكي حسب الدولة
+  const handleCountrySelect = (countryCode) => {
+    if (countryCode === 'CUSTOM') {
+      setIsCustomCountry(true);
+      setFormData((prev) => ({ ...prev, country_code: 'CUSTOM' }));
+      return;
+    }
+
+    setIsCustomCountry(false);
+    const country = (COUNTRIES || []).find((c) => c.code === countryCode);
+    if (!country) return;
+
+    let updatedQiraat = 'hafs';
+    let updatedMethodology = 'mashreqi';
+
+    if (['MA', 'DZ', 'MR'].includes(countryCode)) {
+      updatedQiraat = 'warsh';
+      updatedMethodology = 'maghrebi';
+    } else if (['LY', 'TN'].includes(countryCode)) {
+      updatedQiraat = 'qalon';
+    } else if (['SD', 'SO'].includes(countryCode)) {
+      updatedQiraat = 'aldoori';
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      country_code: countryCode,
+      currency: country.currency || prev.currency,
+      timezone: country.timezone || prev.timezone,
+      default_qiraat: updatedQiraat,
+      teaching_methodology: updatedMethodology
+    }));
+  };
+
+  // فحص توفر الـ slug في قاعدة البيانات
+  useEffect(() => {
+    if (!formData.slug || formData.slug.trim().length < 2) {
+      setIsSlugAvailable(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingSlug(true);
+      try {
+        const { data, error } = await supabase
+          .from('academies')
+          .select('id')
+          .eq('slug', formData.slug.trim())
+          .maybeSingle();
+
+        if (error) throw error;
+        setIsSlugAvailable(!data);
+      } catch (err) {
+        console.error('Slug check error:', err);
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [formData.slug]);
+
   const handleNameChange = (e) => {
     const nameVal = e.target.value;
     const generatedSlug = nameVal
@@ -75,369 +185,430 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
     }));
   };
 
-  const getCurrencyDisplay = () => {
-    const item = (CURRENCIES || []).find((c) => c.code === formData.currency);
-    return item ? `${item.nameAr || item.labelAr} (${item.code})` : formData.currency;
+  const toggleWeekendDay = (dayId) => {
+    setFormData((prev) => {
+      const exists = prev.weekend_days.includes(dayId);
+      const updated = exists
+        ? prev.weekend_days.filter((d) => d !== dayId)
+        : [...prev.weekend_days, dayId];
+      return { ...prev, weekend_days: updated };
+    });
   };
 
-  const getTimezoneDisplay = () => {
-    const item = (COUNTRIES || []).find((c) => c.timezone === formData.timezone);
-    return item ? `${item.nameAr} (${item.timezone})` : formData.timezone;
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `academy_logo_${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('academies')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('academies')
+        .getPublicUrl(filePath);
+
+      setFormData((prev) => ({ ...prev, logo_url: publicUrlData.publicUrl }));
+    } catch (err) {
+      console.error('Logo upload error:', err);
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
-  const getCalendarDisplay = () => {
-    const item = CALENDARS.find((c) => c.value === formData.calendar);
-    return item ? item.label : formData.calendar;
-  };
-
-  const getLanguageDisplay = () => {
-    const item = LANGUAGES.find((l) => l.value === formData.language);
-    return item ? item.label : formData.language;
-  };
-
-  const isStep1Valid = formData.name.trim().length >= 2 && formData.slug.trim().length >= 2;
-
-  const handleNext = () => {
-    if (currentStep === 1 && !isStep1Valid) return;
-    setCurrentStep((prev) => Math.min(3, prev + 1));
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(1, prev - 1));
-  };
+  const isStep1Valid = formData.name.trim().length >= 2 && formData.slug.trim().length >= 2 && isSlugAvailable === true;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    setErrorMsg('');
+
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error(isRtl ? 'جلسة المستخدم غير متاحة' : 'User session expired');
+
+      const finalCountry = isCustomCountry ? customCountryName.trim() : formData.country_code;
+      const finalLanguage = isCustomLanguage ? customLanguageName.trim() : formData.language_code;
+
+      const { data: academyData, error: academyError } = await supabase
+        .from('academies')
+        .insert([
+          {
+            name: formData.name.trim(),
+            slug: formData.slug.trim(),
+            learning_type: formData.learning_type,
+            country_code: finalCountry,
+            custom_country_name: isCustomCountry ? customCountryName.trim() : null,
+            currency: formData.currency,
+            calendar_type: formData.calendar_type,
+            timezone: formData.timezone,
+            language_code: finalLanguage,
+            custom_language_name: isCustomLanguage ? customLanguageName.trim() : null,
+            default_qiraat: formData.default_qiraat,
+            teaching_methodology: formData.teaching_methodology,
+            weekend_days: formData.weekend_days,
+            contact_email: formData.contact_email.trim() || user.email,
+            contact_phone: formData.contact_phone.trim() || null,
+            logo_url: formData.logo_url || null,
+            owner_id: user.id,
+            is_active: true
+          }
+        ])
+        .select()
+        .single();
+
+      if (academyError) throw academyError;
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          academy_id: academyData.id,
+          role: 'admin',
+          is_activated: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
       if (onSubmitAcademy) {
-        await onSubmitAcademy(formData);
+        await onSubmitAcademy(academyData);
       }
     } catch (error) {
       console.error('Error creating academy:', error);
+      setErrorMsg(error.message || (isRtl ? 'تعذر إنشاء الأكاديمية' : 'Failed to create academy'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0B132A] text-slate-100 flex flex-col items-center p-4 md:p-8 dir-rtl font-sans">
-      
-      {/* زر الخروج */}
-      <div className="w-full max-w-md flex justify-start mb-4">
-        <button 
-          type="button"
-          onClick={onLogout}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition"
-        >
-          <LogOut size={14} />
-          <span>خروج</span>
-        </button>
-      </div>
-
-      {/* الرأس الرئيسي */}
-      <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-20 h-20 rounded-full bg-[#131D38] border border-amber-500/30 flex items-center justify-center mb-4 shadow-lg shadow-amber-500/5">
-          <GraduationCap className="w-10 h-10 text-amber-400" />
+    <AuthLayout>
+      <div className="flex flex-col items-center mb-4">
+        <div className="mb-1">
+          <SmartHalaqaProLogo size={44} />
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-100 tracking-tight">
-          تأسيس أكاديميتك الذكية
+        <h1 className="text-[var(--text-main,#FFFFFF)] text-lg font-bold mt-1 mb-0.5 text-center">
+          {isRtl ? 'تأسيس الأكاديمية' : 'Establish Academy'}
         </h1>
-        <p className="text-xs md:text-sm text-slate-400 mt-2 max-w-sm">
-          خطوات بسيطة لإطلاق منظومتك التعليمية وإدارتها عالمياً
+        <p className="text-[var(--text-sub,#94A3B8)] text-xs text-center m-0">
+          {isRtl ? 'إدخال البيانات الأساسية والخيارات التشغيلية' : 'Enter basic and operational configurations'}
         </p>
       </div>
 
-      {/* شريط المؤشر */}
-      <div className="w-full max-w-md flex items-center justify-between mb-8 px-4 relative">
-        <div className="absolute top-1/2 left-8 right-8 h-0.5 bg-slate-800 -translate-y-1/2 -z-0"></div>
-
-        <div className="flex flex-col items-center gap-2 z-10">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
-            currentStep > 1 
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
-              : currentStep === 1 
-              ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-400' 
-              : 'bg-slate-800 text-slate-400'
-          }`}>
-            {currentStep > 1 ? <Check size={18} /> : '1'}
+      <div className="flex items-center justify-center gap-2 mb-4 bg-[var(--surface-input,#0A101D)] p-2 rounded-xl border border-[var(--border-input,#1B2738)]">
+        {[1, 2].map((step) => (
+          <div key={step} className="flex items-center gap-2">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+              currentStep === step
+                ? 'bg-[var(--primary,#E07A00)] text-slate-950'
+                : currentStep > step
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-slate-800 text-slate-400'
+            }`}>
+              {currentStep > step ? <Check size={12} /> : step}
+            </div>
+            <span className="text-[11px] font-semibold text-slate-300">
+              {step === 1 ? (isRtl ? 'بيانات الهوية' : 'Identity') : (isRtl ? 'التكيف والإنشاء' : 'Configurations')}
+            </span>
+            {step < 2 && <div className="w-8 h-0.5 bg-slate-800 mx-1" />}
           </div>
-          <span className={`text-[11px] font-medium ${currentStep === 1 ? 'text-amber-400' : 'text-slate-300'}`}>
-            بيانات الأكاديمية
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center gap-2 z-10">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
-            currentStep > 2 
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
-              : currentStep === 2 
-              ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-400' 
-              : 'bg-slate-800 text-slate-400'
-          }`}>
-            {currentStep > 2 ? <Check size={18} /> : '2'}
-          </div>
-          <span className={`text-[11px] font-medium ${currentStep === 2 ? 'text-amber-400' : 'text-slate-300'}`}>
-            الإعدادات الإقليمية
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center gap-2 z-10">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
-            currentStep === 3 ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-400' : 'bg-slate-800 text-slate-400'
-          }`}>
-            <Sparkles size={18} />
-          </div>
-          <span className={`text-[11px] font-medium ${currentStep === 3 ? 'text-amber-400' : 'text-slate-300'}`}>
-            المراجعة والإنشاء
-          </span>
-        </div>
+        ))}
       </div>
 
-      {/* الكارت الرئيسي */}
-      <form onSubmit={handleSubmit} className="w-full max-w-md bg-[#10182E] border border-slate-800/80 rounded-3xl p-6 shadow-2xl">
+      {errorMsg && (
+        <div className="mb-4 p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-2 text-rose-400 text-xs">
+          <AlertCircle size={15} className="shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
-        {/* ----------------- الخطوة 1: البيانات الأساسية ----------------- */}
+      <form onSubmit={handleSubmit}>
         {currentStep === 1 && (
-          <div className="space-y-5">
-            <div className="pb-2 border-b border-slate-800/60">
-              <h2 className="font-bold text-base text-slate-100 flex items-center gap-2">
-                <Building2 size={18} className="text-amber-400" />
-                <span>بيانات الأكاديمية الأساسية</span>
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 pb-1.5 border-b border-[var(--border-input,#1B2738)]">
+              <Building2 size={16} className="text-[var(--primary,#E07A00)]" />
+              <h2 className="font-bold text-xs text-[var(--text-main,#FFFFFF)]">
+                {isRtl ? 'المعلومات التعريفية' : 'Basic Identifiers'}
               </h2>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">اسم الأكاديمية</label>
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)]">
+                {isRtl ? 'اسم الأكاديمية' : 'Academy Title'}
+              </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={handleNameChange}
-                placeholder=""
-                className="w-full px-4 py-3 bg-[#172033] text-slate-100 rounded-xl border border-slate-700/60 focus:outline-none focus:border-amber-500 text-sm transition"
+                className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs outline-none"
                 required
                 autoFocus
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <LinkIcon size={14} className="text-amber-400" />
-                <span>رابط الأكاديمية (بالإنجليزي)</span>
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)] flex items-center gap-1">
+                <LinkIcon size={12} className="text-[var(--primary,#E07A00)]" />
+                <span>{isRtl ? 'المعرف الفريد (Slug)' : 'Unique Identifier (Slug)'}</span>
               </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                  className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs dir-ltr outline-none pr-8"
+                  required
+                />
+                <div className="absolute top-2.5 left-2.5 flex items-center">
+                  {isCheckingSlug ? (
+                    <Loader2 size={14} className="animate-spin text-amber-400" />
+                  ) : isSlugAvailable === true ? (
+                    <CheckCircle2 size={14} className="text-emerald-400" />
+                  ) : isSlugAvailable === false ? (
+                    <AlertCircle size={14} className="text-rose-400" />
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="space-y-3.5">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)]">
+                {isRtl ? 'نموذج تقديم التعليم' : 'Learning Delivery Model'}
+              </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {LEARNING_TYPES.map((type) => {
+                  const Icon = type.icon;
+                  const isSelected = formData.learning_type === type.id;
+                  return (
+                    <button
+                      type="button"
+                      key={type.id}
+                      onClick={() => setFormData({ ...formData, learning_type: type.id })}
+                      className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center ${
+                        isSelected
+                          ? 'bg-[var(--primary,#E07A00)]/10 border-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)]'
+                          : 'bg-[var(--surface-input,#0A101D)] border-[var(--border-input,#1B2738)] text-slate-400'
+                      }`}
+                    >
+                      <Icon size={16} className={isSelected ? 'text-[var(--primary,#E07A00)]' : 'text-slate-400'} />
+                      <span className="text-[11px] font-bold mt-1">{type.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'النطاق الجغرافي' : 'Country Domain'}</label>
+                <button
+                  type="button"
+                  onClick={() => setModalType('country')}
+                  className="w-full flex items-center justify-between px-2.5 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)]"
+                >
+                  <span className="truncate">{isCustomCountry ? (customCountryName || (isRtl ? 'مخصص' : 'Custom')) : formData.country_code}</span>
+                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'اللغة التشغيلية' : 'Operational Language'}</label>
+                <button
+                  type="button"
+                  onClick={() => setModalType('language')}
+                  className="w-full flex items-center justify-between px-2.5 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)]"
+                >
+                  <span className="truncate">{isCustomLanguage ? (customLanguageName || (isRtl ? 'مخصص' : 'Custom')) : formData.language_code}</span>
+                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
+                </button>
+              </div>
+            </div>
+
+            {isCustomCountry && (
               <input
                 type="text"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                placeholder=""
-                className="w-full px-4 py-3 bg-[#172033] text-slate-100 rounded-xl border border-slate-700/60 focus:outline-none focus:border-amber-500 text-sm dir-ltr transition"
+                placeholder={isRtl ? 'ادخل اسم الدولة' : 'Enter Country Name'}
+                value={customCountryName}
+                onChange={(e) => setCustomCountryName(e.target.value)}
+                className="w-full px-3 py-1.5 bg-[var(--surface-input,#0A101D)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--primary,#E07A00)]/50 outline-none"
                 required
               />
-              
-              {/* معاينة حية للرابط */}
-              <div className="text-[11px] text-slate-400 dir-ltr pt-1 flex items-center gap-1">
-                <span className="text-slate-500">رابطك المباشر:</span>
-                <span className="text-amber-400/90 font-mono">
-                  https://.../{formData.slug || 'your-academy'}
-                </span>
+            )}
+
+            {isCustomLanguage && (
+              <input
+                type="text"
+                placeholder={isRtl ? 'ادخل اسم اللغة' : 'Enter Language Name'}
+                value={customLanguageName}
+                onChange={(e) => setCustomLanguageName(e.target.value)}
+                className="w-full px-3 py-1.5 bg-[var(--surface-input,#0A101D)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--primary,#E07A00)]/50 outline-none"
+                required
+              />
+            )}
+
+            <div className="space-y-1">
+              <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'أيام العطلة الأسبوعية' : 'Weekend Configuration'}</label>
+              <div className="flex flex-wrap gap-1">
+                {DAYS_OF_WEEK.map((day) => {
+                  const isSelected = formData.weekend_days.includes(day.id);
+                  return (
+                    <button
+                      type="button"
+                      key={day.id}
+                      onClick={() => toggleWeekendDay(day.id)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-medium border transition ${
+                        isSelected
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                          : 'bg-slate-800/50 text-slate-400 border-slate-700/50'
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
               </div>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--primary,#E07A00)] hover:underline"
+              >
+                <Sliders size={13} />
+                <span>{showAdvancedSettings ? (isRtl ? 'إخفاء الإعدادات الإضافية' : 'Hide Advanced Settings') : (isRtl ? 'إعدادات الرواية والمنهجية والشعار' : 'Configure Qiraat & Methodology')}</span>
+              </button>
+
+              {showAdvancedSettings && (
+                <div className="mt-2.5 p-3 bg-[var(--surface-input,#0A101D)] rounded-xl border border-[var(--border-input,#1B2738)] space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[var(--text-sub,#94A3B8)] flex items-center gap-1">
+                      <BookOpen size={11} className="text-[var(--primary,#E07A00)]" />
+                      <span>{isRtl ? 'رواية القراءة الاعتيادية' : 'Default Qiraat'}</span>
+                    </label>
+                    <select
+                      value={formData.default_qiraat}
+                      onChange={(e) => setFormData({ ...formData, default_qiraat: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-slate-900 text-[var(--text-main,#FFFFFF)] rounded-lg border border-slate-800 text-xs outline-none"
+                    >
+                      {QIRAAT_OPTIONS.map((q) => <option key={q.value} value={q.value}>{q.label}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'منهجية المتابعة والتحفيظ' : 'Methodology Standard'}</label>
+                    <select
+                      value={formData.teaching_methodology}
+                      onChange={(e) => setFormData({ ...formData, teaching_methodology: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-slate-900 text-[var(--text-main,#FFFFFF)] rounded-lg border border-slate-800 text-xs outline-none"
+                    >
+                      {METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-1">
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                      {formData.logo_url ? (
+                        <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <Upload size={16} className="text-slate-400" />
+                      )}
+                    </div>
+                    <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-medium text-slate-200 rounded-lg border border-slate-700">
+                      {uploadingLogo ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
+                      <span>{isRtl ? 'تحميل الشعار' : 'Upload Logo'}</span>
+                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* ----------------- الخطوة 2: الإعدادات الإقليمية ----------------- */}
-        {currentStep === 2 && (
-          <div className="space-y-4">
-            <div className="pb-2 border-b border-slate-800/60">
-              <h2 className="font-bold text-base text-slate-100 flex items-center gap-2">
-                <Globe size={18} className="text-amber-400" />
-                <span>الإعدادات الإقليمية</span>
-              </h2>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Coins size={14} className="text-amber-400" />
-                <span>العملة الرسمية</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setModalType('currency')}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#172033] hover:bg-[#1c2842] text-slate-100 rounded-xl border border-slate-700/60 text-sm transition"
-              >
-                <span>{getCurrencyDisplay()}</span>
-                <ChevronDown size={18} className="text-slate-400" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Calendar size={14} className="text-amber-400" />
-                <span>التقويم المعتمد</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setModalType('calendar')}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#172033] hover:bg-[#1c2842] text-slate-100 rounded-xl border border-slate-700/60 text-sm transition"
-              >
-                <span>{getCalendarDisplay()}</span>
-                <ChevronDown size={18} className="text-slate-400" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Clock size={14} className="text-amber-400" />
-                <span>المنطقة الزمنية</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setModalType('timezone')}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#172033] hover:bg-[#1c2842] text-slate-100 rounded-xl border border-slate-700/60 text-sm transition"
-              >
-                <span className="dir-ltr">{getTimezoneDisplay()}</span>
-                <ChevronDown size={18} className="text-slate-400" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Languages size={14} className="text-amber-400" />
-                <span>اللغة الأساسية</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setModalType('language')}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#172033] hover:bg-[#1c2842] text-slate-100 rounded-xl border border-slate-700/60 text-sm transition"
-              >
-                <span>{getLanguageDisplay()}</span>
-                <ChevronDown size={18} className="text-slate-400" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ----------------- الخطوة 3: المراجعة والإنشاء ----------------- */}
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 text-amber-400 pb-2 border-b border-slate-800/60">
-              <Sparkles size={18} />
-              <h2 className="font-bold text-base">ملخص بيانات الأكاديمية:</h2>
-            </div>
-
-            <div className="space-y-4 text-sm">
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">اسم الأكاديمية:</span>
-                <span className="text-slate-100 font-bold">{formData.name || 'غير محدد'}</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">عنوان الرابط المختصر:</span>
-                <span className="text-amber-400 font-semibold dir-ltr">{formData.slug || 'غير محدد'}</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">العملة الرسمية:</span>
-                <span className="text-slate-200">{getCurrencyDisplay()}</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">التقويم المعتمد:</span>
-                <span className="text-slate-200">{getCalendarDisplay()}</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">المنطقة الزمنية:</span>
-                <span className="text-slate-200 dir-ltr">{getTimezoneDisplay()}</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400 font-medium">اللغة الأساسية:</span>
-                <span className="text-slate-200">{getLanguageDisplay()}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* أزرار التنقل */}
-        <div className="flex items-center gap-3 mt-8 pt-4">
+        <div className="flex items-center gap-2 mt-4 pt-2">
           {currentStep > 1 && (
             <button
               type="button"
-              onClick={handleBack}
-              className="flex-1 py-3.5 px-4 bg-[#18223C] hover:bg-slate-800 text-slate-200 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border border-slate-700/40 transition"
+              onClick={() => setCurrentStep(1)}
+              className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1 border border-slate-700"
             >
-              <ChevronRight size={18} />
-              <span>السابق</span>
+              <ChevronRight size={14} />
+              <span>{isRtl ? 'السابق' : 'Previous'}</span>
             </button>
           )}
 
-          {currentStep < 3 ? (
+          {currentStep === 1 ? (
             <button
               type="button"
-              onClick={handleNext}
-              disabled={currentStep === 1 && !isStep1Valid}
-              className={`flex-1 py-3.5 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition ${
-                currentStep === 1 && !isStep1Valid
+              onClick={() => setCurrentStep(2)}
+              disabled={!isStep1Valid}
+              className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 ${
+                !isStep1Valid
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-lg shadow-amber-500/20'
+                  : 'bg-gradient-to-r from-[#E67E00] to-[#D97706] text-slate-950 cursor-pointer'
               }`}
             >
-              <span>التالي</span>
+              <span>{isRtl ? 'التالي' : 'Next'}</span>
             </button>
           ) : (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-[1.5] py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition disabled:opacity-50"
+              className="flex-[1.5] py-2.5 px-3 bg-gradient-to-r from-[#E67E00] to-[#D97706] text-slate-950 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md disabled:opacity-50 cursor-pointer"
             >
-              <Check size={18} />
-              <span>{isSubmitting ? 'جاري الإنشاء...' : 'تأكيد وإنشاء الأكاديمية'}</span>
+              {isSubmitting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <>
+                  <Check size={15} />
+                  <span>{isRtl ? 'إنهاء التأسيس' : 'Complete Setup'}</span>
+                </>
+              )}
             </button>
           )}
         </div>
-
       </form>
 
-      {/* النوافذ المنبثقة للاختيار */}
       <SelectModal
-        isOpen={modalType === 'currency'}
+        isOpen={modalType === 'country'}
         onClose={() => setModalType(null)}
-        title="اختر العملة الرسمية"
-        options={currencyOptions}
-        selectedValue={formData.currency}
-        onSelect={(val) => setFormData({ ...formData, currency: val })}
-      />
-
-      <SelectModal
-        isOpen={modalType === 'timezone'}
-        onClose={() => setModalType(null)}
-        title="اختر المنطقة الزمنية"
-        options={timezoneOptions}
-        selectedValue={formData.timezone}
-        onSelect={(val) => setFormData({ ...formData, timezone: val })}
-      />
-
-      <SelectModal
-        isOpen={modalType === 'calendar'}
-        onClose={() => setModalType(null)}
-        title="اختر التقويم المعتمد"
-        options={CALENDARS}
-        selectedValue={formData.calendar}
-        onSelect={(val) => setFormData({ ...formData, calendar: val })}
+        title={isRtl ? 'اختر الدولة' : 'Select Country'}
+        options={countryOptions}
+        selectedValue={formData.country_code}
+        onSelect={handleCountrySelect}
       />
 
       <SelectModal
         isOpen={modalType === 'language'}
         onClose={() => setModalType(null)}
-        title="اختر اللغة الأساسية"
-        options={LANGUAGES}
-        selectedValue={formData.language}
-        onSelect={(val) => setFormData({ ...formData, language: val })}
+        title={isRtl ? 'اختر اللغة' : 'Select Language'}
+        options={BASE_LANGUAGES}
+        selectedValue={formData.language_code}
+        onSelect={(val) => {
+          if (val === 'custom') {
+            setIsCustomLanguage(true);
+            setFormData((prev) => ({ ...prev, language_code: 'custom' }));
+          } else {
+            setIsCustomLanguage(false);
+            setFormData((prev) => ({ ...prev, language_code: val }));
+          }
+        }}
       />
-
-    </div>
+    </AuthLayout>
   );
 }
