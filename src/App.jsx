@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { 
   Loader2, Clock, LogOut, Wifi, 
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock 
@@ -19,7 +20,7 @@ import MainApp from '@/components/Main/MainApp';
 import CreateAcademy from '@/components/Auth/CreateAcademy';
 import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
-// 🎨 طبقة حماية وتوافق لكائن الألوان (تمنع الكراش والشاشة السوداء)
+// 🎨 طبقة حماية وتوافق لكائن الألوان
 const C = {
   ...rawColors,
   dark: {
@@ -50,8 +51,10 @@ const C = {
 
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
+// ProtectedRoute المحسنة بالاعتماد على الصلاحية والأكاديمية الـ Slug
 const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { profile, appState, logout } = useAcademy();
+  const { profile, appState, academy, logout } = useAcademy();
+  const { slug } = useParams();
 
   if (appState === 'LOADING') {
     return (
@@ -63,8 +66,9 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
 
   const cleanRole = profile?.role?.toLowerCase()?.trim();
   const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
+  const isCorrectAcademy = !slug || (academy && academy.slug === slug);
 
-  if (!isAllowed) {
+  if (!isAllowed || !isCorrectAcademy) {
     return (
       <div style={{
         background: C.dark.main,
@@ -84,7 +88,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
         </div>
         <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>غير مصرح لك بالوصول لهذه الشاشة</h2>
         <p style={{ color: C.text.muted, fontSize: '14px', maxWidth: '400px', marginBottom: '24px' }}>
-          دور حسابك الحقيقي ({profile?.role || 'غير معروف'}) لا يمتلك الصلاحية الكافية لعرض هذا القسم.
+          دور حسابك الحقيقي ({profile?.role || 'غير معروف'}) أو الأكاديمية المطلوبة غير متطابقة مع صلاحيتك الحالية.
         </p>
         <button
           onClick={logout}
@@ -294,10 +298,6 @@ function MainContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/verify/')) {
-    return <CertificateVerify />;
-  }
-
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -410,47 +410,53 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
-  return (
-    <CreateAcademy 
-      onLogout={logout} 
-      onSubmitAcademy={async (createdAcademyData) => {
-        // تم تنفيذ الإنشاء الذري وإسناد المالك داخل CreateAcademy عبر دالة create_academy_with_owner
-        // الكائن createdAcademyData يحتوي على بيانات الأكاديمية المنشأة حديثاً
-
-        // 1. تحديث حالة التطبيق أو جلب البيانات الجديدة
-        if (refreshStatus) {
-          await refreshStatus();
-        }
-
-        // 2. اختياري: حفظ الـ slug في التخزين المحلي لسرعة الوصول
-        if (createdAcademyData?.slug) {
-          localStorage.setItem('current_academy_slug', createdAcademyData.slug);
-        }
-      }} 
-    />
-  );
+    return (
+      <CreateAcademy 
+        onLogout={logout} 
+        onSubmitAcademy={async (createdAcademyData) => {
+          if (refreshStatus) {
+            await refreshStatus();
+          }
+          if (createdAcademyData?.slug) {
+            localStorage.setItem('current_academy_slug', createdAcademyData.slug);
+          }
+        }} 
+      />
+    );
   }
+
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
-      <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
-        {!isOnline && (
-          <div style={{ background: C.error.DEFAULT, color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <Wifi size={18} /> انقطع الاتصال بالإنترنت.
-          </div>
-        )}
-        <MainApp 
-          session={formattedSession} 
-          userRole={profile?.role || 'student'} 
-          setShowEarlyUpgrade={setShowEarlyUpgrade}
-        />
+      <Routes>
+        <Route 
+          path="/:slug/*" 
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
+              {!isOnline && (
+                <div style={{ background: C.error.DEFAULT, color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Wifi size={18} /> انقطع الاتصال بالإنترنت.
+                </div>
+              )}
+              <MainApp 
+                session={formattedSession} 
+                userRole={profile?.role || 'student'} 
+                setShowEarlyUpgrade={setShowEarlyUpgrade}
+              />
 
-        <InlineUpgradeModal 
-          isOpen={showEarlyUpgrade} 
-          onClose={() => setShowEarlyUpgrade(false)} 
-          academyName={academy?.name}
+              <InlineUpgradeModal 
+                isOpen={showEarlyUpgrade} 
+                onClose={() => setShowEarlyUpgrade(false)} 
+                academyName={academy?.name}
+              />
+            </ProtectedRoute>
+          } 
         />
-      </ProtectedRoute>
+        <Route 
+          path="*" 
+          element={<Navigate to={academy?.slug ? `/${academy.slug}` : '/'} replace />} 
+        />
+      </Routes>
     );
   }
 
@@ -502,7 +508,10 @@ export default function App() {
           <Loader2 className="animate-spin" size={32} />
         </div>
       }>
-        <MainContent />
+        <Routes>
+          <Route path="/verify/:certId" element={<CertificateVerify />} />
+          <Route path="/*" element={<MainContent />} />
+        </Routes>
       </Suspense>
     </GlobalErrorBoundary>
   );
