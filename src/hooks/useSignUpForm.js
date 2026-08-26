@@ -44,6 +44,18 @@ export function useSignUpForm(onSignUpSuccess) {
     setStatus({ type: null, msg: '' });
     setFieldErrors({});
 
+    // 1. التحقق المباشر من الشروط والأحكام أولاً لإظهار رسالة واضحة
+    if (!agreeTerms) {
+      setFieldErrors({ agreeTerms: true });
+      setStatus({
+        type: 'error',
+        msg: isRtl 
+          ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
+          : 'Please agree to the terms and privacy policy to continue.'
+      });
+      return;
+    }
+
     const formData = {
       fullName: fullName.trim(),
       email: email.trim(),
@@ -57,10 +69,21 @@ export function useSignUpForm(onSignUpSuccess) {
 
     if (!validationResult.valid) {
       setFieldErrors(validationResult.errors);
-      setStatus({
-        type: 'error',
-        msg: isRtl ? 'يرجى تصحيح الأخطاء الموضحة أدناه.' : 'Please correct the highlighted errors.'
-      });
+      
+      // إذا كان الخطأ في الشروط
+      if (validationResult.errors?.agreeTerms) {
+        setStatus({
+          type: 'error',
+          msg: isRtl 
+            ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
+            : 'Please agree to the terms and privacy policy to continue.'
+        });
+      } else {
+        setStatus({
+          type: 'error',
+          msg: isRtl ? 'يرجى التأكد من صحة البيانات المدخلة أعلاه.' : 'Please correct the highlighted errors above.'
+        });
+      }
       return;
     }
 
@@ -127,6 +150,7 @@ export function useSignUpForm(onSignUpSuccess) {
     fieldErrors,
     setFieldErrors,
     status,
+    setStatus,
     toggleLanguage,
     handleKeyUp,
     handleSignUp,
