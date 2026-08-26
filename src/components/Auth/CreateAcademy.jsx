@@ -142,9 +142,10 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
     }));
   };
 
-  // فحص توفر الـ slug في قاعدة البيانات
+  // فحص توفر الـ slug في قاعدة البيانات بأمان
   useEffect(() => {
-    if (!formData.slug || formData.slug.trim().length < 2) {
+    const cleanSlug = formData.slug.trim().toLowerCase();
+    if (!cleanSlug || cleanSlug.length < 2) {
       setIsSlugAvailable(null);
       return;
     }
@@ -152,16 +153,15 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
     const timer = setTimeout(async () => {
       setIsCheckingSlug(true);
       try {
-        const { data, error } = await supabase
-          .from('academies')
-          .select('id')
-          .eq('slug', formData.slug.trim())
-          .maybeSingle();
+        const { data, error } = await supabase.rpc('check_slug_availability', {
+          p_slug: cleanSlug
+        });
 
         if (error) throw error;
-        setIsSlugAvailable(!data);
+        setIsSlugAvailable(data);
       } catch (err) {
         console.error('Slug check error:', err);
+        setIsSlugAvailable(null);
       } finally {
         setIsCheckingSlug(false);
       }
@@ -176,13 +176,22 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
       .trim()
       .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[^\w-]+/g, '');
+      .replace(/[^a-z0-9-]/g, '');
 
     setFormData((prev) => ({
       ...prev,
       name: nameVal,
       slug: prev.slug === '' || prev.slug === generatedSlug ? generatedSlug : prev.slug
     }));
+  };
+
+  const handleSlugChange = (e) => {
+    const sanitized = e.target.value
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+
+    setFormData((prev) => ({ ...prev, slug: sanitized }));
   };
 
   const toggleWeekendDay = (dayId) => {
@@ -199,15 +208,26 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
     const file = e.target.files[0];
     if (!file) return;
 
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg(isRtl ? 'يُرجى اختيار ملف صورة صالح.' : 'Please select a valid image file.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg(isRtl ? 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت.' : 'Image size must not exceed 2MB.');
+      return;
+    }
+
     setUploadingLogo(true);
+    setErrorMsg('');
+
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `academy_logo_${Date.now()}.${fileExt}`;
+      const fileName = `logo_${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('academies')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -218,6 +238,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
       setFormData((prev) => ({ ...prev, logo_url: publicUrlData.publicUrl }));
     } catch (err) {
       console.error('Logo upload error:', err);
+      setErrorMsg(isRtl ? 'فشل رفع الشعار، يُرجى المحاولة مرة أخرى.' : 'Failed to upload logo.');
     } finally {
       setUploadingLogo(false);
     }
@@ -339,7 +360,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
                 <input
                   type="text"
                   value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                  onChange={handleSlugChange}
                   className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs dir-ltr outline-none pr-8"
                   required
                 />
