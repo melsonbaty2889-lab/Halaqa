@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 const AcademyContext = createContext({});
 
@@ -74,46 +74,32 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 4. مدير الأكاديمية (Admin)
-      if (profData.role === 'admin') {
-        const { data: acadData } = await supabase
-          .from('academies')
-          .select('*')
-          .eq('owner_id', currentUser.id)
-          .maybeSingle();
+      // 4 & 5. جلب الأكاديمية المرتبطة عبر جدول academy_members (لكافة الأدوار)
+      const { data: membershipData, error: memError } = await supabase
+        .from('academy_members')
+        .select(`
+          role,
+          academy:academies (*)
+        `)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
 
-        if (isMounted.current) {
-          if (acadData) {
-            setAcademy(acadData);
-            setAppState(acadData.is_active ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
-          } else {
-            setAcademy(null);
-            setAppState('NO_ACADEMY');
-          }
-        }
-        return;
+      if (memError) {
+        console.error("🚨 خطأ في جلب عضوية الأكاديمية:", memError);
       }
 
-      // 5. باقي الأدوار (طالب، معلم، ولي أمر)
-      if (['student', 'teacher', 'parent'].includes(profData.role)) {
-        if (profData.academy_id) {
-          const { data: userAcademy } = await supabase
-            .from('academies')
-            .select('*')
-            .eq('id', profData.academy_id)
-            .maybeSingle();
+      const currentAcademy = membershipData?.academy || null;
 
-          if (isMounted.current) setAcademy(userAcademy || null);
+      if (isMounted.current) {
+        if (currentAcademy) {
+          setAcademy(currentAcademy);
+          setAppState(currentAcademy.is_active !== false ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
         } else {
-          if (isMounted.current) setAcademy(null);
+          setAcademy(null);
+          // المدير بدون أكاديمية يوجه للتأسيس، وباقي الأدوار ينتظرون أو يوجهون بحسب النظام
+          setAppState(profData.role === 'admin' ? 'NO_ACADEMY' : 'FULLY_ACTIVE');
         }
-
-        if (isMounted.current) setAppState('FULLY_ACTIVE');
-        return;
       }
-
-      // افتراضي لأي دور آخر
-      if (isMounted.current) setAppState('FULLY_ACTIVE');
 
     } catch (e) {
       console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
@@ -137,7 +123,7 @@ export const AcademyProvider = ({ children }) => {
       fetchUserStatus(session?.user);
     });
 
-    // مؤقت أمان (4 ثوانٍ): يفحص الحالة الفعلية الحالية ولا يلغي الدخول إذا تم بنجاح
+    // مؤقت أمان (4 ثوانٍ)
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
         setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
