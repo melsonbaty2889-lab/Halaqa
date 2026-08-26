@@ -1,60 +1,64 @@
-// مكتبات خارجية
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-// ملفات CSS والإعدادات (باستخدام @/)
+// 1. تهيئة ملفات الـ CSS واللغات من المسار الموحد
 import '@/index.css';
 import '@/locales/i18n';
 
-// Components (باستخدام @/)
+// 2. المكونات الرئيسية
 import App from '@/App';
 
-// Providers / Context (باستخدام @/)
-import { AcademyProvider } from '@/context/AcademyContext';
+// 3. المزودات (مع تصحيح الترتيب الهيكلي)
 import { DataProvider } from '@/context/DataContext';
+import { AcademyProvider } from '@/context/AcademyContext';
 
-// =====================================================
-// Global Error Handler (تحسين للتعامل مع أخطاء الإقلاع فقط)
-// =====================================================
-window.onerror = function (message, source, lineno, colno, error) {
-  // نطبع الخطأ في الكونسول للتتبع
-  console.error("🚨 Critical Boot Error Detected:", { message, source, lineno, colno, error });
-  return false;
-};
+// Global Critical Error Listener
+window.addEventListener('error', (event) => {
+  console.error('🚨 Critical Boot Error:', event.error || event.message);
+});
 
+// شاشة التحميل الأولية المتناسقة مع هوية المنصة
 const InitialLoader = () => (
-  <div style={{ background: '#090F17', color: '#FBBF24', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-    <div>جاري تحميل النظام...</div>
+  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] font-cairo">
+    <div className="w-10 h-10 border-3 border-[var(--primary,#E07A00)] border-t-transparent rounded-full animate-spin mb-3"></div>
+    <p className="text-xs text-[var(--text-sub,#94A3B8)] font-semibold tracking-wide">جاري تحميل المنصة...</p>
   </div>
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AcademyProvider>
-        <DataProvider>
+      {/* تقديم DataProvider لأعلى الهرم لضمان توفر بيانات المستخدم أولاً */}
+      <DataProvider>
+        <AcademyProvider>
           <Suspense fallback={<InitialLoader />}>
             <App />
           </Suspense>
-        </DataProvider>
-      </AcademyProvider>
+        </AcademyProvider>
+      </DataProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
 
-// =====================================================
-// PWA Service Worker Registration
-// =====================================================
+// PWA Service Worker مع تحسين التحديث التلقائي
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
-      (registration) => {
-        console.log('✅ PWA ServiceWorker Registered with scope:', registration.scope);
-      },
-      (err) => {
-        console.warn('⚠️ ServiceWorker registration failed:', err);
-      }
-    );
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        // التحقق من وجود تحديثات جديدة للتطبيق
+        reg.onupdatefound = () => {
+          const installingWorker = reg.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('🔄 نسق جديد متوفر، يرجى إغلاق الصفحة وإعادة فتحها.');
+              }
+            };
+          }
+        };
+      })
+      .catch((err) => console.warn('⚠️ ServiceWorker Failed:', err));
   });
 }
