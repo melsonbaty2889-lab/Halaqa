@@ -20,14 +20,14 @@ import {
   BookOpen, 
   Laptop, 
   Users, 
-  Sliders,
-  Globe
+  Sliders
 } from 'lucide-react';
 
 export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true, currentLanguage = 'ar' }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [modalType, setModalType] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   // حالات التحقق
@@ -43,7 +43,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
 
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
-  // النموذج الخالي من أي بيانات تجريبية
+  // النموذج
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -108,7 +108,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
     { value: 'CUSTOM', label: isRtl ? 'دولة أخرى...' : 'Other Country...' }
   ];
 
-  // الاكتشاف والتلقين الذكي حسب الدولة
   const handleCountrySelect = (countryCode) => {
     if (countryCode === 'CUSTOM') {
       setIsCustomCountry(true);
@@ -258,7 +257,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
       const finalReading = formData.default_qiraat === 'OTHER' ? 'hafs' : formData.default_qiraat;
       const finalMethodology = formData.teaching_methodology === 'OTHER' ? 'mashreqi' : formData.teaching_methodology;
 
-      // استدعاء الدالة الذرية من Supabase
       const { data, error } = await supabase.rpc('create_academy_with_owner', {
         p_name: formData.name.trim(),
         p_slug: formData.slug.trim().toLowerCase(),
@@ -271,9 +269,14 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
 
       if (error) throw error;
 
-      if (onSubmitAcademy) {
-        await onSubmitAcademy(data);
-      }
+      setIsSuccess(true);
+
+      setTimeout(async () => {
+        if (onSubmitAcademy) {
+          await onSubmitAcademy(data);
+        }
+      }, 1200);
+
     } catch (error) {
       console.error('Error creating academy:', error);
       setErrorMsg(
@@ -281,10 +284,27 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
           ? (isRtl ? 'رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.' : 'Academy URL is already taken.')
           : (error.message || (isRtl ? 'حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.' : 'Failed to create academy. Please try again.'))
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center justify-center py-10 text-center animate-fadeIn">
+          <div className="w-14 h-14 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/10">
+            <CheckCircle2 size={32} />
+          </div>
+          <h2 className="text-base font-bold text-white mb-1">
+            {isRtl ? 'تم تأسيس الأكاديمية بنجاح!' : 'Academy Established Successfully!'}
+          </h2>
+          <p className="text-xs text-slate-400">
+            {isRtl ? 'جاري تجهيز لوحة التحكم الخاصة بك...' : 'Preparing your dashboard...'}
+          </p>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>
