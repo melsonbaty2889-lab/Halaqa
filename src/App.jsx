@@ -410,30 +410,26 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
-    return (
-      <CreateAcademy 
-        onLogout={logout} 
-        onSubmitAcademy={async (formData) => {
-          const { error } = await supabase.from('academies').insert([
-            {
-              name: formData.name,
-              slug: formData.slug,
-              currency: formData.currency,
-              calendar: formData.calendar,
-              timezone: formData.timezone,
-              language: formData.language,
-              owner_id: user?.id,
-            }
-          ]);
+  return (
+    <CreateAcademy 
+      onLogout={logout} 
+      onSubmitAcademy={async (createdAcademyData) => {
+        // تم تنفيذ الإنشاء الذري وإسناد المالك داخل CreateAcademy عبر دالة create_academy_with_owner
+        // الكائن createdAcademyData يحتوي على بيانات الأكاديمية المنشأة حديثاً
 
-          if (!error && refreshStatus) {
-            await refreshStatus();
-          }
-        }} 
-      />
-    );
+        // 1. تحديث حالة التطبيق أو جلب البيانات الجديدة
+        if (refreshStatus) {
+          await refreshStatus();
+        }
+
+        // 2. اختياري: حفظ الـ slug في التخزين المحلي لسرعة الوصول
+        if (createdAcademyData?.slug) {
+          localStorage.setItem('current_academy_slug', createdAcademyData.slug);
+        }
+      }} 
+    />
+  );
   }
-
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
     return (
