@@ -1,88 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, X, Check } from 'lucide-react';
 
-export default function SelectModal({ isOpen, onClose, title, options = [], selectedValue, onSelect }) {
-  const [searchTerm, setSearchTerm] = useState('');
+export default function SelectModal({
+  isOpen,
+  onClose,
+  title,
+  options = [],
+  selectedValue,
+  onSelect,
+  isRtl = true
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // تصفية الخيارات بناءً على البحث
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery.trim()) return options;
+    const query = searchQuery.toLowerCase().trim();
+    
+    return options.filter((opt) => {
+      const labelMatch = opt.label?.toLowerCase().includes(query);
+      const subLabelMatch = opt.subLabel?.toLowerCase().includes(query);
+      const valueMatch = opt.value?.toLowerCase().includes(query);
+      return labelMatch || subLabelMatch || valueMatch;
+    });
+  }, [options, searchQuery]);
 
   if (!isOpen) return null;
 
-  // تصفية القائمة بناءً على البحث
-  const filteredOptions = options.filter((item) => {
-    const term = searchTerm.toLowerCase().trim();
-    const label = (item.label || '').toLowerCase();
-    const subLabel = (item.subLabel || '').toLowerCase();
-    const code = (item.value || '').toLowerCase();
-    return label.includes(term) || subLabel.includes(term) || code.includes(term);
-  });
+  const handleSelect = (value) => {
+    onSelect(value);
+    setSearchQuery('');
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-md bg-[#111827] border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[82vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-[var(--surface-card,#0D1526)] border border-[var(--border-input,#1B2738)] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
         
-        {/* رأس النافذة */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-[#172033]">
-          <h3 className="text-base font-bold text-slate-100">{title}</h3>
-          <button 
+        {/* الهيدر */}
+        <div className="flex items-center justify-between p-3.5 border-b border-[var(--border-input,#1B2738)] bg-[var(--surface-input,#0A101D)]">
+          <h3 className="text-sm font-bold text-[var(--text-main,#FFFFFF)]">{title}</h3>
+          <button
             type="button"
-            onClick={onClose} 
-            className="p-1.5 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-xl transition"
+            onClick={() => {
+              setSearchQuery('');
+              onClose();
+            }}
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* حقل البحث */}
-        <div className="p-4 border-b border-slate-800/60 bg-[#111827]">
-          <div className="relative">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="بحث..."
-              className="w-full pr-11 pl-4 py-2.5 bg-[#192338] text-slate-100 placeholder-slate-500 rounded-xl border border-slate-700/50 focus:outline-none focus:border-amber-500/70 text-sm transition"
-              autoFocus
-            />
+        {/* حقل البحث (يظهر إذا كان عدد الخيارات أكثر من 5) */}
+        {options.length > 5 && (
+          <div className="p-3 border-b border-[var(--border-input,#1B2738)]">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={isRtl ? 'بحث...' : 'Search...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)] focus:border-[var(--primary,#E07A00)] outline-none"
+                autoFocus
+              />
+              <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* قائمة الخيارات */}
-        <div className="overflow-y-auto p-3 space-y-1.5 flex-1 custom-scrollbar">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((item) => {
-              const isSelected = selectedValue === item.value;
+        <div className="overflow-y-auto p-2 space-y-1 divide-y divide-slate-800/40">
+          {filteredOptions.length === 0 ? (
+            <div className="p-6 text-center text-xs text-slate-400">
+              {isRtl ? 'لا توجد نتائج مطابقة' : 'No options found'}
+            </div>
+          ) : (
+            filteredOptions.map((option) => {
+              const isSelected = selectedValue === option.value;
               return (
                 <button
-                  key={item.value}
+                  key={option.value}
                   type="button"
-                  onClick={() => {
-                    onSelect(item.value);
-                    onClose();
-                  }}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl transition duration-150 ${
+                  onClick={() => handleSelect(option.value)}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition text-right ${
                     isSelected
-                      ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400'
-                      : 'hover:bg-[#192338] text-slate-200 border border-transparent'
+                      ? 'bg-[var(--primary,#E07A00)]/15 text-[var(--primary,#E07A00)] font-bold'
+                      : 'hover:bg-slate-800/60 text-[var(--text-main,#FFFFFF)] font-medium'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    {item.icon && <span className="text-xl leading-none">{item.icon}</span>}
-                    <div className="text-right">
-                      <div className="font-semibold text-sm text-slate-100">{item.label}</div>
-                      {item.subLabel && <div className="text-xs text-slate-400 mt-0.5">{item.subLabel}</div>}
-                    </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span>{option.label}</span>
+                    {option.subLabel && (
+                      <span className="text-[10px] text-slate-400 font-normal dir-ltr text-right">
+                        {option.subLabel}
+                      </span>
+                    )}
                   </div>
-                  
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500 flex items-center justify-center">
-                      <Check size={13} className="text-amber-400" />
-                    </div>
-                  )}
+                  {isSelected && <Check size={15} className="text-[var(--primary,#E07A00)] shrink-0" />}
                 </button>
               );
             })
-          ) : (
-            <div className="p-8 text-center text-slate-500 text-sm">لا توجد نتائج مطابقة</div>
           )}
         </div>
 
