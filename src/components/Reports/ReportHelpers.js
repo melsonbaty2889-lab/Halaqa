@@ -1,4 +1,4 @@
-import i18n from '@/i18n';
+import i18n from '@/locales/i18n.js';
 
 /**
  * تنظيف رقم الهاتف وإرجاع الصياغة الدولية فقط
