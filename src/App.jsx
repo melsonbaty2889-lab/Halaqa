@@ -410,6 +410,18 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
+    // 🛑 تفادي القفز التلقائي لشاشة التأسيس إذا كان هناك أكاديمية سابقة مخزنة
+    const cachedSlug = localStorage.getItem('current_academy_slug');
+    if (cachedSlug) {
+      refreshStatus && refreshStatus();
+      return (
+        <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT, gap: '12px' }}>
+          <Loader2 className="animate-spin" size={32} />
+          <span style={{ fontSize: '0.85rem', color: C.text.muted, fontFamily: "'Cairo', system-ui, sans-serif" }}>جاري مزامنة بيانات الأكاديمية...</span>
+        </div>
+      );
+    }
+
     return (
       <CreateAcademy 
         onLogout={logout} 
@@ -454,7 +466,7 @@ function MainContent() {
         />
         <Route 
           path="*" 
-          element={<Navigate to={academy?.slug ? `/${academy.slug}` : '/'} replace />} 
+          element={<Navigate to={academy?.slug ? `/${academy.slug}` : `/${localStorage.getItem('current_academy_slug') || ''}`} replace />} 
         />
       </Routes>
     );
