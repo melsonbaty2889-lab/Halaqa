@@ -233,59 +233,33 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
     setErrorMsg('');
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error(isRtl ? 'جلسة المستخدم غير متاحة' : 'User session expired');
+      const finalCountry = isCustomCountry ? 'OTHER' : formData.country_code;
+      const finalReading = formData.default_qiraat === 'OTHER' ? 'hafs' : formData.default_qiraat;
+      const finalMethodology = formData.teaching_methodology === 'OTHER' ? 'mashreqi' : formData.teaching_methodology;
 
-      const finalCountry = isCustomCountry ? customCountryName.trim() : formData.country_code;
-      const finalLanguage = isCustomLanguage ? customLanguageName.trim() : formData.language_code;
+      // استدعاء الدالة الذرية من Supabase
+      const { data, error } = await supabase.rpc('create_academy_with_owner', {
+        p_name: formData.name.trim(),
+        p_slug: formData.slug.trim().toLowerCase(),
+        p_country_code: finalCountry,
+        p_custom_country_name: isCustomCountry ? customCountryName.trim() : null,
+        p_default_qiraat: finalReading,
+        p_teaching_methodology: finalMethodology,
+        p_logo_url: formData.logo_url || null,
+      });
 
-      const { data: academyData, error: academyError } = await supabase
-        .from('academies')
-        .insert([
-          {
-            name: formData.name.trim(),
-            slug: formData.slug.trim(),
-            learning_type: formData.learning_type,
-            country_code: finalCountry,
-            custom_country_name: isCustomCountry ? customCountryName.trim() : null,
-            currency: formData.currency,
-            calendar_type: formData.calendar_type,
-            timezone: formData.timezone,
-            language_code: finalLanguage,
-            custom_language_name: isCustomLanguage ? customLanguageName.trim() : null,
-            default_qiraat: formData.default_qiraat,
-            teaching_methodology: formData.teaching_methodology,
-            weekend_days: formData.weekend_days,
-            contact_email: formData.contact_email.trim() || user.email,
-            contact_phone: formData.contact_phone.trim() || null,
-            logo_url: formData.logo_url || null,
-            owner_id: user.id,
-            is_active: true
-          }
-        ])
-        .select()
-        .single();
-
-      if (academyError) throw academyError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          academy_id: academyData.id,
-          role: 'admin',
-          is_activated: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       if (onSubmitAcademy) {
-        await onSubmitAcademy(academyData);
+        await onSubmitAcademy(data);
       }
     } catch (error) {
       console.error('Error creating academy:', error);
-      setErrorMsg(error.message || (isRtl ? 'تعذر إنشاء الأكاديمية' : 'Failed to create academy'));
+      setErrorMsg(
+        error.message?.includes('duplicate key') || error.code === '23505'
+          ? (isRtl ? 'رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.' : 'Academy URL is already taken.')
+          : (error.message || (isRtl ? 'حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.' : 'Failed to create academy. Please try again.'))
+      );
     } finally {
       setIsSubmitting(false);
     }
