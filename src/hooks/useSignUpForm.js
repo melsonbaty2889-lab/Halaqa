@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -11,8 +11,14 @@ export function useSignUpForm(onSignUpSuccess) {
 
   const isRtl = i18n?.language === 'ar';
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  // 1. استرجاع البيانات المحفوظة مسبقاً لمنع ضياع مدخلات المستخدم
+  const [fullName, setFullName] = useState(() => {
+    return localStorage.getItem('signup_draft_name') || '';
+  });
+  const [email, setEmail] = useState(() => {
+    return localStorage.getItem('signup_draft_email') || '';
+  });
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('student');
@@ -25,6 +31,15 @@ export function useSignUpForm(onSignUpSuccess) {
 
   const [fieldErrors, setFieldErrors] = useState({});
   const [status, setStatus] = useState({ type: null, msg: '' });
+
+  // 2. التحديث التلقائي للمسودة أثناء الكتابة
+  useEffect(() => {
+    localStorage.setItem('signup_draft_name', fullName);
+  }, [fullName]);
+
+  useEffect(() => {
+    localStorage.setItem('signup_draft_email', email);
+  }, [email]);
 
   const toggleLanguage = () => {
     const nextLang = isRtl ? 'en' : 'ar';
@@ -39,12 +54,22 @@ export function useSignUpForm(onSignUpSuccess) {
     }
   };
 
+  // وظيفة لتتبع محاولات التسجيل التعثرية (Lead Retention)
+  const trackFailedAttempt = async (email, fullName, reason) => {
+    try {
+      if (!email) return;
+      // يمكنك ربط هذه النقطة برابط Webhook خاص بك على Make.com
+      // fetch('YOUR_MAKE_WEBHOOK_URL', { method: 'POST', body: JSON.stringify({ email, fullName, reason }) });
+    } catch (e) {
+      console.error('Failed to log lead:', e);
+    }
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
     setFieldErrors({});
 
-    // 1. التحقق المباشر من الشروط والأحكام أولاً لإظهار رسالة واضحة
     if (!agreeTerms) {
       setFieldErrors({ agreeTerms: true });
       setStatus({
@@ -70,7 +95,6 @@ export function useSignUpForm(onSignUpSuccess) {
     if (!validationResult.valid) {
       setFieldErrors(validationResult.errors);
       
-      // إذا كان الخطأ في الشروط
       if (validationResult.errors?.agreeTerms) {
         setStatus({
           type: 'error',
@@ -104,6 +128,10 @@ export function useSignUpForm(onSignUpSuccess) {
 
       if (authError) throw authError;
 
+      // 3. مسح المسودة عند نجاح التسجيل
+      localStorage.removeItem('signup_draft_name');
+      localStorage.removeItem('signup_draft_email');
+
       setStatus({
         type: 'success',
         msg: isRtl 
@@ -117,6 +145,10 @@ export function useSignUpForm(onSignUpSuccess) {
 
     } catch (err) {
       console.error('Sign Up Error:', err);
+      
+      // حفظ المحاولة التعثرية للتواصل مع المستخدم لاحقاً
+      trackFailedAttempt(formData.email, formData.fullName, err.message);
+
       const userFriendlyMsg = handleAuthError(err, isRtl);
       setStatus({
         type: 'error',
