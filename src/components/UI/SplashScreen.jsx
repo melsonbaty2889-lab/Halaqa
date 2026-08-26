@@ -122,7 +122,7 @@ export default function SplashScreen({
 
       {/* رقم الإصدار */}
       <div className="absolute bottom-5 text-xs text-[var(--text-muted,#475569)] tracking-wider font-mono">
-        SMART HALAQA • v2.4
+        SMART HALAQA • v2.5
       </div>
     </div>
   );
