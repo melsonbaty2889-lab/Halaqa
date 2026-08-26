@@ -34,6 +34,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     showConfirmPassword,
     setShowConfirmPassword,
     loading,
+    fieldErrors,
     status,
     setStatus,
     toggleLanguage,
@@ -50,7 +51,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     if (!agreeTerms) {
       setStatus({
         type: 'error',
-        msg: isRtl ? 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً' : 'Please agree to terms first.'
+        msg: isRtl ? 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.' : 'Please agree to terms first.'
       });
       return;
     }
@@ -236,8 +237,10 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </button>
         </div>
 
-        {/* التعهد والشروط */}
-        <div className="flex items-start gap-2.5 my-1 text-right">
+        {/* التعهد والشروط مع إطار تمييز بصري عند الخطأ */}
+        <div className={`flex items-start gap-2.5 my-1 text-right p-2 rounded-xl transition-all ${
+          fieldErrors?.agreeTerms ? 'bg-red-500/10 border border-red-500/30' : ''
+        }`}>
           <input 
             type="checkbox" 
             id="agreeTerms" 
