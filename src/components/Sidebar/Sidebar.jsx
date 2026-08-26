@@ -4,7 +4,7 @@ import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
-import { X } from "lucide-react";
+import { X, Building2 } from "lucide-react";
 import { colors as C } from '@/theme/colors';
 
 import AcademySelector from './AcademySelector';
@@ -15,6 +15,7 @@ import SidebarFooter from './SidebarFooter';
 
 export default function Sidebar({
   currentAcademyId,
+  academy, // استقبال كائن الأكاديمية الحالي
   onSwitchAcademy,
   activeTab,
   setActiveTab,
@@ -100,7 +101,7 @@ export default function Sidebar({
       if (rpcAcademyId && !rpcError) {
         const { data: academyData } = await supabase
           .from('academies')
-          .select('id, name, trial_ends_at, is_active')
+          .select('id, name, logo_url, slug, trial_ends_at, is_active')
           .eq('id', rpcAcademyId)
           .single();
         if (academyData) list.push(academyData);
@@ -109,7 +110,7 @@ export default function Sidebar({
       if (list.length === 0) {
         const { data: staffData } = await supabase
           .from('staff')
-          .select('academy_id, academies(id, name, trial_ends_at, is_active)')
+          .select('academy_id, academies(id, name, logo_url, slug, trial_ends_at, is_active)')
           .eq('user_id', user.id);
         if (staffData && staffData.length > 0) {
           list = staffData.map(s => s.academies).filter(Boolean);
@@ -119,7 +120,7 @@ export default function Sidebar({
       if (list.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
-          .select('id, name, trial_ends_at, is_active')
+          .select('id, name, logo_url, slug, trial_ends_at, is_active')
           .eq('owner_id', user.id);
         if (ownedAcademies && ownedAcademies.length > 0) {
           list = ownedAcademies;
@@ -161,8 +162,10 @@ export default function Sidebar({
     };
   }, [currentAcademyId]);
 
-  const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academiesList[0];
+  const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
   const currentAcademyName = getText(currentAcademy?.name) || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
+  const academyLogo = currentAcademy?.logo_url || academy?.logo_url;
+  const academySlug = currentAcademy?.slug || academy?.slug;
 
   const calculateEffectiveDaysLeft = () => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
@@ -242,7 +245,6 @@ export default function Sidebar({
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
 
-  // تحديث التموضع الديناميكي بناءً على الاتجاه RTL/LTR والجوال/الكمبيوتر
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
@@ -288,7 +290,7 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* Header ثابت */}
+        {/* Header القائمة الجانبية المحدث باللوجو والاسم والـ Slug */}
         <div style={{ 
           padding: '14px 14px 10px 14px',
           borderBottom: `1px solid ${C.dark.border}`,
@@ -298,16 +300,65 @@ export default function Sidebar({
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between',
-            flexDirection: isRtl ? 'row' : 'row'
+            gap: '8px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <SmartHalaqaProLogo size={32} />
-              <div>
-                <h2 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: C.text.title, lineHeight: '1.2' }}>
-                  {isRtl ? 'الحلقة الذكية' : 'Smart Halaqa'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+              {/* عرض شعار الأكاديمية أو الشعار الافتراضي للمنصة */}
+              {academyLogo ? (
+                <img 
+                  src={academyLogo} 
+                  alt={currentAcademyName} 
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    objectFit: 'cover',
+                    border: `1px solid ${C.dark.border}`,
+                    flexShrink: 0
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: C.brandEmerald?.light || '#10b981',
+                  flexShrink: 0
+                }}>
+                  <Building2 size={20} />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <h2 style={{ 
+                  margin: 0, 
+                  fontSize: '0.92rem', 
+                  fontWeight: '700', 
+                  color: C.text.title, 
+                  lineHeight: '1.2',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {currentAcademyName}
                 </h2>
-                <span style={{ fontSize: '0.65rem', color: C.text.muted, fontWeight: '500' }}>
-                  {isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform'}
+                <span style={{ 
+                  fontSize: '0.65rem', 
+                  color: C.text.muted, 
+                  fontWeight: '500',
+                  direction: 'ltr',
+                  textAlign: isRtl ? 'right' : 'left',
+                  fontFamily: 'monospace',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {academySlug ? `/${academySlug}` : (isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform')}
                 </span>
               </div>
             </div>
@@ -325,7 +376,8 @@ export default function Sidebar({
                   padding: '6px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  flexShrink: 0
                 }}
               >
                 <X size={18} />
@@ -388,7 +440,7 @@ export default function Sidebar({
           />
         </div>
 
-        {/* الفوتر الثابت في الأسفل مع احتساب أزرار الأندرويد */}
+        {/* الفوتر الثابت في الأسفل */}
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
