@@ -16,7 +16,7 @@ import SignUpPage from '@/components/Auth/SignUpPage';
 import ForgotPassword from '@/components/Auth/ForgotPassword';
 import UpdatePassword from '@/components/Auth/UpdatePassword';
 import MainApp from '@/components/Main/MainApp';
-import CreateAcademy from '@/components/CreateAcademy/CreateAcademy';
+import CreateAcademy from '@/components/Auth/CreateAcademy';
 import CertificateVerify from '@/components/Certificates/CertificateVerify';
 
 // 🎨 طبقة حماية وتوافق لكائن الألوان (تمنع الكراش والشاشة السوداء)
