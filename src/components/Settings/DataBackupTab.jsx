@@ -1,7 +1,11 @@
 import React from 'react';
 import { Database, Download, Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export default function DataBackupTab({ formData = {}, setFormData, importInputRef, showToast, isRtl }) {
+export default function DataBackupTab({ formData = {}, setFormData, importInputRef, showToast }) {
+  const { i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
+
   const handleExport = () => {
     const exportSlug = formData?.slug && formData.slug !== '-' ? formData.slug : 'academy';
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(formData, null, 2));
