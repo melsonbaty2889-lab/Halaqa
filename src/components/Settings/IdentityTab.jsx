@@ -1,5 +1,6 @@
 import React from 'react';
 import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function IdentityTab({ 
   formData = {}, 
@@ -8,9 +9,11 @@ export default function IdentityTab({
   handleLogoUpload, 
   handleRemoveLogo, 
   uploadingLogo, 
-  fileInputRef, 
-  isRtl 
+  fileInputRef 
 }) {
+  const { i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
+
   return (
     <div className="space-y-5 text-start">
       {/* قسم الشعار */}
