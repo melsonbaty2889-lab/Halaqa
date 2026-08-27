@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Select } from '@/components/UI/UI.jsx';
+import CustomSelect from '@/components/UI/CustomSelect.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
 import { CURRENCIES } from '@/constants/currencies.js';
 
@@ -10,16 +10,19 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const isAr = i18n.language === 'ar';
 
+  // تحضير خيارات الدول
   const countryOptions = (COUNTRIES_LIST || []).map(country => ({
     label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
     value: country.code
   }));
 
+  // تحضير خيارات العملات
   const currencyOptions = (CURRENCIES || []).map(currency => ({
     label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
     value: currency.code
   }));
 
+  // تحضير خيارات المناطق الزمنية
   const timezoneOptions = [
     { label: t('timezones.cairo', 'القاهرة (GMT+2 / GMT+3)'), value: 'Africa/Cairo' },
     { label: t('timezones.riyadh', 'مكة المكرمة / الرياض (GMT+3)'), value: 'Asia/Riyadh' },
@@ -28,6 +31,12 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { label: t('timezones.berlin', 'أوروبا الوسطى / برلين (GMT+1)'), value: 'Europe/Berlin' },
     { label: t('timezones.ny', 'التوقيت الشرقي - أمريكا (EST/EDT GMT-5)'), value: 'America/New_York' },
     { label: t('timezones.jakarta', 'جاكرتا (GMT+7)'), value: 'Asia/Jakarta' }
+  ];
+
+  // تحضير خيارات نوع التقويم
+  const calendarOptions = [
+    { label: t('calendar.gregorian', 'ميلادي'), value: 'gregorian' },
+    { label: t('calendar.hijri', 'هجري'), value: 'hijri' }
   ];
 
   const daysList = [
@@ -39,6 +48,21 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { key: 'thursday', label: t('days.thursday', 'الخميس') },
     { key: 'friday', label: t('days.friday', 'الجمعة') }
   ];
+
+  // ربط الدولة بالعملة والمنطقة الزمنية تلقائياً عند التغيير
+  const handleCountryChange = (countryCode) => {
+    updateField('country_code', countryCode);
+    
+    const matchedCountry = COUNTRIES_LIST.find(c => c.code === countryCode);
+    if (matchedCountry?.timezone) {
+      updateField('timezone', matchedCountry.timezone);
+    }
+    
+    const matchedCurrency = CURRENCIES.find(c => c.countryCode === countryCode);
+    if (matchedCurrency?.code) {
+      updateField('currency', matchedCurrency.code);
+    }
+  };
 
   const toggleWeekendDay = (dayKey) => {
     const days = Array.isArray(formData?.weekend_days) ? formData.weekend_days : [];
@@ -79,18 +103,20 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <Select 
+          <CustomSelect 
             label={t('settings.country', 'الدولة')}
             value={formData?.country_code || 'EG'}
-            onChange={(e) => updateField('country_code', e.target.value)}
+            onChange={handleCountryChange}
             options={countryOptions}
+            searchable={true}
           />
 
-          <Select 
+          <CustomSelect 
             label={t('settings.currency', 'العملة الرسمية')}
             value={formData?.currency || 'EGP'}
-            onChange={(e) => updateField('currency', e.target.value)}
+            onChange={(val) => updateField('currency', val)}
             options={currencyOptions}
+            searchable={true}
           />
         </div>
       </div>
@@ -121,21 +147,19 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <Select 
+              <CustomSelect 
                 label={t('settings.timezone', 'المنطقة الزمنية')}
                 value={formData?.timezone || 'Africa/Cairo'}
-                onChange={(e) => updateField('timezone', e.target.value)}
+                onChange={(val) => updateField('timezone', val)}
                 options={timezoneOptions}
+                searchable={true}
               />
 
-              <Select 
+              <CustomSelect 
                 label={t('settings.calendarType', 'نوع التقويم')}
                 value={formData?.calendar_type || 'gregorian'}
-                onChange={(e) => updateField('calendar_type', e.target.value)}
-                options={[
-                  { label: t('calendar.gregorian', 'ميلادي'), value: 'gregorian' },
-                  { label: t('calendar.hijri', 'هجري'), value: 'hijri' }
-                ]}
+                onChange={(val) => updateField('calendar_type', val)}
+                options={calendarOptions}
               />
             </div>
 
