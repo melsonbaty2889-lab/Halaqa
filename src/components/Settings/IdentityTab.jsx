@@ -22,9 +22,16 @@ export default function IdentityTab({
   const onNameChange = (lang, value) => {
     const fieldKey = lang === 'ar' ? 'name_ar' : 'name_en';
     if (typeof handleNameChange === 'function') {
-      handleNameChange(fieldKey, value);
+      handleNameChange(lang, value);
     } else {
       handleChange(fieldKey, value);
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef && fileInputRef.current) {
+      fileInputRef.current.value = ''; // إعادة ضبط القيمة لضمان رصد الملف حتى لو تكرر
+      fileInputRef.current.click();
     }
   };
 
@@ -57,11 +64,7 @@ export default function IdentityTab({
             <button
               type="button"
               disabled={uploadingLogo}
-              onClick={() => {
-                if (fileInputRef && fileInputRef.current) {
-                  fileInputRef.current.click();
-                }
-              }}
+              onClick={triggerFileInput}
               className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
             >
               <Upload size={14} />
