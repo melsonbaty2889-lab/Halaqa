@@ -4,48 +4,47 @@ import { Select } from '@/components/UI/UI.jsx';
 import { useTranslation } from 'react-i18next';
 
 export default function QuranicPoliciesTab({ formData = {}, updateField }) {
-  const { i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 text-start">
       {/* المنهجية والروايات */}
       <div className="space-y-4">
         <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
-          <BookOpen size={16} /> {isRtl ? 'الإعدادات القرآنية والتعليمية' : 'Quranic & Teaching Setup'}
+          <BookOpen size={16} /> {t('quranic.title', 'الإعدادات القرآنية والتعليمية')}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Select 
-            label={isRtl ? 'نمط التعليم' : 'Learning Type'}
+            label={t('quranic.learningType', 'نمط التعليم')}
             value={formData?.learning_type || 'online'}
             onChange={(e) => updateField('learning_type', e.target.value)}
             options={[
-              { label: isRtl ? 'عن بُعد (Online)' : 'Online', value: 'online' },
-              { label: isRtl ? 'حضوري (In-Person)' : 'In-Person', value: 'in_person' },
-              { label: isRtl ? 'مدمج (Hybrid)' : 'Hybrid', value: 'hybrid' }
+              { label: t('quranic.online', 'عن بُعد (Online)'), value: 'online' },
+              { label: t('quranic.inPerson', 'حضوري (In-Person)'), value: 'in_person' },
+              { label: t('quranic.hybrid', 'مدمج (Hybrid)'), value: 'hybrid' }
             ]}
           />
 
           <Select 
-            label={isRtl ? 'الرواية الافتراضية' : 'Default Qiraat'}
+            label={t('quranic.defaultQiraat', 'الرواية الافتراضية')}
             value={formData?.default_qiraat || 'hafs'}
             onChange={(e) => updateField('default_qiraat', e.target.value)}
             options={[
-              { label: isRtl ? 'حفص عن عاصم' : 'Hafs an Asim', value: 'hafs' },
-              { label: isRtl ? 'ورش عن نافع' : 'Warsh an Nafi', value: 'warsh' },
-              { label: isRtl ? 'قالون عن نافع' : 'Qaloon an Nafi', value: 'qaloon' },
-              { label: isRtl ? 'السبع / العشر المتواترة' : 'Mutawatir', value: 'all' }
+              { label: t('qiraat.hafs', 'حفص عن عاصم'), value: 'hafs' },
+              { label: t('qiraat.warsh', 'ورش عن نافع'), value: 'warsh' },
+              { label: t('qiraat.qaloon', 'قالون عن نافع'), value: 'qaloon' },
+              { label: t('qiraat.all', 'السبع / العشر المتواترة'), value: 'all' }
             ]}
           />
 
           <Select 
-            label={isRtl ? 'المدرسة والمنهجية' : 'Methodology'}
+            label={t('quranic.methodology', 'المدرسة والمنهجية')}
             value={formData?.teaching_methodology || 'mashreqi'}
             onChange={(e) => updateField('teaching_methodology', e.target.value)}
             options={[
-              { label: isRtl ? 'المشرقية (المعتادة)' : 'Mashreqi', value: 'mashreqi' },
-              { label: isRtl ? 'المغربية' : 'Maghrebi', value: 'maghrebi' }
+              { label: t('methodology.mashreqi', 'المشرقية (المعتادة)'), value: 'mashreqi' },
+              { label: t('methodology.maghrebi', 'المغربية'), value: 'maghrebi' }
             ]}
           />
         </div>
@@ -54,17 +53,17 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
       {/* سياسات القبول والتسجيل */}
       <div className="pt-4 border-t border-[var(--border-light)] space-y-4">
         <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
-          <UserCheck size={16} /> {isRtl ? 'سياسات تسجيل وقبول الطلاب' : 'Registration Policies'}
+          <UserCheck size={16} /> {t('registration.title', 'سياسات تسجيل وقبول الطلاب')}
         </h2>
 
         <div className="space-y-3">
           <label className="flex items-center justify-between p-3.5 bg-[var(--surface-input)] border border-[var(--border-input)] rounded-xl cursor-pointer">
             <div>
               <span className="text-xs font-bold text-[var(--text-main)] block">
-                {isRtl ? 'السماح للطلاب بالتسجيل الذاتي' : 'Allow Self-Registration'}
+                {t('registration.allowSelf', 'السماح للطلاب بالتسجيل الذاتي')}
               </span>
               <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">
-                {isRtl ? 'تمكين رابط التسجيل العام المباشر للطلاب الجدد' : 'Allow students to sign up via public link'}
+                {t('registration.allowSelfDesc', 'تمكين رابط التسجيل العام المباشر للطلاب الجدد')}
               </span>
             </div>
             <input 
@@ -78,10 +77,10 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
           <label className="flex items-center justify-between p-3.5 bg-[var(--surface-input)] border border-[var(--border-input)] rounded-xl cursor-pointer">
             <div>
               <span className="text-xs font-bold text-[var(--text-main)] block">
-                {isRtl ? 'اشتراط موافقة الإدارة على طالب جديد' : 'Require Admin Approval'}
+                {t('registration.requireApproval', 'اشتراط موافقة الإدارة على طالب جديد')}
               </span>
               <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">
-                {isRtl ? 'وضع الطالب في المراجعة حتى اعتماد الإدارة' : 'Hold student status as pending until approved'}
+                {t('registration.requireApprovalDesc', 'وضع الطالب في المراجعة حتى اعتماد الإدارة')}
               </span>
             </div>
             <input 
@@ -95,7 +94,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
           <div className="pt-2">
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-muted)] flex items-center gap-1.5">
               <Users size={14} />
-              {isRtl ? 'الحد الأقصى للطلاب في الحلقة الافتراضية' : 'Max Students Per Group'}
+              {t('registration.maxStudents', 'الحد الأقصى للطلاب في الحلقة الافتراضية')}
             </label>
             <input 
               type="number" 
