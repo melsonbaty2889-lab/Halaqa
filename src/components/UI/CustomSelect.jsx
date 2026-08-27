@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { createPortal as reactCreatePortal } from 'react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
 
 const CustomSelect = ({
