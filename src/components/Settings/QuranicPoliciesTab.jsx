@@ -12,67 +12,61 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
     }
   };
 
-  // تثبيت خيارات نمط التعليم
+  // خيارات نمط التعليم
   const educationModeOptions = useMemo(() => [
     { label: t('quranic.modeOnline', 'عن بعد (Online)'), value: 'online' },
     { label: t('quranic.modeOnsite', 'حضوري (In-person)'), value: 'onsite' },
     { label: t('quranic.modeHybrid', 'مختلط (Hybrid)'), value: 'hybrid' },
   ], [t]);
 
-  // تثبيت خيارات الروايات مع تحويل معيار القيمة بدقة
+  // خيارات الرواية / القراءة
   const riwayaOptions = useMemo(() => {
     if (!Array.isArray(RIWAYAT_LIST)) return [];
     return RIWAYAT_LIST.map((r, index) => {
-      if (typeof r === 'string') {
-        return { label: r, value: r };
-      }
+      if (typeof r === 'string') return { label: r, value: r };
       const rawValue = r?.id ?? r?.value ?? r?.code ?? r?.nameAr ?? index;
       const label = r?.nameAr || r?.name || r?.label || `رواية ${index + 1}`;
-      return {
-        label,
-        value: rawValue,
-      };
+      return { label, value: rawValue };
     });
   }, []);
 
-  // تثبيت خيارات المدرسة والمنهجية
+  // خيارات المنهجية والمدرسة
   const madrasaOptions = useMemo(() => [
-    { label: t('quranic.madrasaEastern', 'المشرقية (المعتادة)'), value: 'eastern' },
+    { label: t('quranic.madrasaEastern', 'المشرقية (المعتادة)'), value: 'mashreqi' },
     { label: t('quranic.madrasaMaghrebi', 'المغربية'), value: 'maghrebi' },
   ], [t]);
 
   return (
     <div className="space-y-5 text-start">
-      {/* تم إضافة !overflow-visible لضمان التوافق التام ومنع أي قص للقوائم المنسدلة */}
       <div className="card-surface space-y-4 !overflow-visible">
         <h3 className="text-xs font-bold text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
           {t('quranic.title', 'الإعدادات القرآنية والتعليمية')}
         </h3>
 
         <div className="space-y-3.5">
-          {/* نمط التعليم */}
+          {/* نمط التعليم: تم ربطه بـ learning_type */}
           <CustomSelect
             label={t('quranic.mode', 'نمط التعليم')}
-            value={formData?.education_mode ?? 'online'}
-            onChange={(val) => handleChange('education_mode', val)}
+            value={formData?.learning_type ?? 'online'}
+            onChange={(val) => handleChange('learning_type', val)}
             options={educationModeOptions}
           />
 
-          {/* الرواية الافتراضية */}
+          {/* الرواية الافتراضية: تم ربطها بـ default_qiraat */}
           <CustomSelect
             label={t('quranic.riwaya', 'الرواية الافتراضية')}
-            value={formData?.default_riwaya ?? 'hafs_an_asem'}
-            onChange={(val) => handleChange('default_riwaya', val)}
+            value={formData?.default_qiraat ?? 'hafs'}
+            onChange={(val) => handleChange('default_qiraat', val)}
             options={riwayaOptions}
             searchable={true}
             placeholder={t('quranic.selectRiwaya', 'اختر الرواية...')}
           />
 
-          {/* المدرسة والمنهجية */}
+          {/* المدرسة والمنهجية: تم ربطها بـ teaching_methodology */}
           <CustomSelect
             label={t('quranic.madrasa', 'المدرسة والمنهجية')}
-            value={formData?.madrasa_type ?? 'eastern'}
-            onChange={(val) => handleChange('madrasa_type', val)}
+            value={formData?.teaching_methodology ?? 'mashreqi'}
+            onChange={(val) => handleChange('teaching_methodology', val)}
             options={madrasaOptions}
           />
 
@@ -88,11 +82,12 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
               <span>{t('quranic.allowSelfReg', 'السماح للطلاب بالتسجيل الذاتي')}</span>
             </label>
 
+            {/* تم تغيير المفتاح إلى require_approval */}
             <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[var(--text-main)] select-none">
               <input
                 type="checkbox"
-                checked={Boolean(formData?.require_admin_approval ?? true)}
-                onChange={(e) => handleChange('require_admin_approval', e.target.checked)}
+                checked={Boolean(formData?.require_approval ?? true)}
+                onChange={(e) => handleChange('require_approval', e.target.checked)}
                 className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer"
               />
               <span>{t('quranic.requireApproval', 'اشتراط موافقة الإدارة على كل طالب جديد')}</span>
