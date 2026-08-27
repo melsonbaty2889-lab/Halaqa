@@ -48,7 +48,7 @@ export default function IdentityTab({
               {uploadingLogo ? <RefreshCw className="spin-animation" size={14} /> : <Upload size={14} />}
               {uploadingLogo 
                 ? (isRtl ? 'جاري الرفع...' : 'Uploading...') 
-                : (formData.logo_url ? (isRtl ? 'تغيير الشعار' : 'Change Logo') : (isRtl ? 'رفع الشعار' : 'Upload Logo'))
+                : (formData?.logo_url ? (isRtl ? 'تغيير الشعار' : 'Change Logo') : (isRtl ? 'رفع الشعار' : 'Upload Logo'))
               }
             </button>
           </div>
