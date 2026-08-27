@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
-// كائن البيانات الموحد الافتراضي
 export const INITIAL_ACADEMY_FORM = {
   name_ar: '',
   name_en: '',
@@ -58,7 +57,6 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     setTimeout(() => setToast(null), 4000);
   };
 
-  // 1. جلب البيانات من جدول academies
   const fetchAcademySettings = async () => {
     if (!isValidAcademyId) {
       setLoading(false);
@@ -114,7 +112,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
           
           allow_self_registration: data.allow_self_registration ?? true,
           require_approval: data.require_approval ?? true,
-          max_students_per_group: data.max_students_per_group || 25,
+          max_students_per_group: Number(data.max_students_per_group) || 25,
         };
 
         setFormData(fetched);
@@ -131,12 +129,10 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     fetchAcademySettings();
   }, [currentAcademyId, isRtl]);
 
-  // 2. معالجة تحديث الحقول المباشرة
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // 3. تغيير اسم الأكاديمية وإنشاء الـ Slug تلقائياً
   const handleNameChange = (lang, value) => {
     const generatedSlug = value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
     setFormData(prev => ({
@@ -146,7 +142,6 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     }));
   };
 
-  // 4. رفع اللوجو
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -201,7 +196,6 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     }
   };
 
-  // 5. حذف اللوجو
   const handleRemoveLogo = async () => {
     setFormData(prev => ({ ...prev, logo_url: '' }));
     if (isValidAcademyId) {
@@ -215,7 +209,6 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     showToast(isRtl ? 'تم حذف الشعار بنجاح' : 'Logo removed successfully');
   };
 
-  // 6. حفظ الإعدادات بالكامل
   const handleSave = async (e) => {
     if (e) e.preventDefault();
 
