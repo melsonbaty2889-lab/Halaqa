@@ -25,20 +25,19 @@ const CustomSelect = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // مطابقة الخيار المحدد مع مراعاة النصوص والأرقام
+  // مطابقة الخيار المحدد
   const selectedOption = options.find((opt) => String(opt.value) === String(value));
 
-  // تصفية الخيارات - تصفية صحيحة سواء في حالة البحث أو بدون بحث
+  // تصفية الخيارات
   const filteredOptions = options.filter((opt) => {
     if (!searchable || !searchTerm.trim()) return true;
     return String(opt.label || '').toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const handleSelect = (e, optionValue) => {
-    // منع انتشار الحدث وإلغاء أي سلوك إرسال افتراضي
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (typeof onChange === 'function') {
       onChange(optionValue);
     }
@@ -59,6 +58,7 @@ const CustomSelect = ({
         type="button"
         onClick={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           setIsOpen((prev) => !prev);
         }}
         className={`app-input w-full flex items-center justify-between cursor-pointer text-start transition-all ${
@@ -78,7 +78,7 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة الظاهرة فوق الكل */}
+      {/* القائمة المنسدلة */}
       {isOpen && (
         <div className="absolute top-full right-0 left-0 mt-1 max-h-56 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[9999] p-1 space-y-0.5 custom-scrollbar">
           {searchable && (
@@ -108,7 +108,7 @@ const CustomSelect = ({
                 <button
                   key={opt.value}
                   type="button"
-                  onMouseDown={(e) => handleSelect(e, opt.value)}
+                  onClick={(e) => handleSelect(e, opt.value)}
                   className={`w-full text-right px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
                       ? 'bg-[var(--primary)] text-white font-bold'
