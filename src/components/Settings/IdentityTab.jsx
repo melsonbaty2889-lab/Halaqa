@@ -60,7 +60,7 @@ export default function IdentityTab({
         </div>
       </div>
 
-      {/* قسم أسماء الأكاديمية */}
+      {/* قسم أسماء الأكاديمية والشعار الترويجي */}
       <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
@@ -70,7 +70,7 @@ export default function IdentityTab({
             <input 
               type="text" 
               value={formData?.name_ar || ''} 
-              onChange={(e) => handleNameChange('ar', e.target.value)} 
+              onChange={(e) => handleNameChange?.('ar', e.target.value)} 
               className="app-input text-start" 
             />
           </div>
@@ -82,7 +82,7 @@ export default function IdentityTab({
             <input 
               type="text" 
               value={formData?.name_en || ''} 
-              onChange={(e) => handleNameChange('en', e.target.value)} 
+              onChange={(e) => handleNameChange?.('en', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
           </div>
@@ -95,7 +95,7 @@ export default function IdentityTab({
           <input 
             type="text" 
             value={formData?.slug || ''} 
-            onChange={(e) => updateField('slug', e.target.value)} 
+            onChange={(e) => updateField?.('slug', e.target.value)} 
             className="app-input text-start dir-ltr text-xs" 
           />
         </div>
@@ -107,7 +107,7 @@ export default function IdentityTab({
           <input 
             type="text" 
             value={formData?.tagline || ''} 
-            onChange={(e) => updateField('tagline', e.target.value)} 
+            onChange={(e) => updateField?.('tagline', e.target.value)} 
             className="app-input text-start" 
           />
         </div>
@@ -119,7 +119,7 @@ export default function IdentityTab({
           <textarea 
             rows={3} 
             value={formData?.description || ''} 
-            onChange={(e) => updateField('description', e.target.value)} 
+            onChange={(e) => updateField?.('description', e.target.value)} 
             className="app-input text-start text-xs resize-none" 
           />
         </div>
