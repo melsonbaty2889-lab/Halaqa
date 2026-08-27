@@ -211,5 +211,74 @@
       "thu": "Thu",
       "fri": "Fri"
     }
+    {
+  "settings": {
+    "title": "Platform Governance & Settings",
+    "identityTab": "Identity & Logo",
+    "contactTab": "Contact & Regional",
+    "quranicTab": "Quranic Policies",
+    "backupTab": "Data Backup",
+    "officialEmail": "Official Email",
+    "phoneWhatsapp": "Phone / WhatsApp",
+    "country": "Country",
+    "currency": "Official Currency",
+    "advancedRegional": "Advanced Regional Settings",
+    "website": "Website",
+    "timezone": "Timezone",
+    "calendarType": "Calendar Type",
+    "weekendDays": "Weekend Days"
+  },
+  "identity": {
+    "logoLabel": "Academy Logo",
+    "uploadBtn": "Change Logo",
+    "nameAr": "Academy Name (Arabic)",
+    "nameEn": "Academy Name (English)",
+    "slug": "URL Slug",
+    "tagline": "Tagline",
+    "description": "Academy Description"
+  },
+  "quranic": {
+    "title": "Quranic & Teaching Setup",
+    "learningType": "Learning Type",
+    "online": "Online",
+    "inPerson": "In-Person",
+    "hybrid": "Hybrid",
+    "defaultQiraat": "Default Qiraat",
+    "methodology": "Teaching Methodology"
+  },
+  "qiraat": {
+    "hafs": "Hafs an Asim",
+    "warsh": "Warsh an Nafi",
+    "qaloon": "Qaloon an Nafi",
+    "all": "Mutawatir (All 10 Qira'at)"
+  },
+  "methodology": {
+    "mashreqi": "Mashreqi Standard",
+    "maghrebi": "Maghrebi Standard"
+  },
+  "registration": {
+    "title": "Student Registration Policies",
+    "allowSelf": "Allow Student Self-Registration",
+    "allowSelfDesc": "Enable public registration link for new applicants",
+    "requireApproval": "Require Admin Approval for New Students",
+    "requireApprovalDesc": "Hold new registrations in review pending admin action",
+    "maxStudents": "Max Students Per Halaqa Circle"
+  },
+  "backup": {
+    "title": "Data Backup & Restoration",
+    "description": "Export organization configuration as JSON for backup, or restore across systems instantly.",
+    "exportBtn": "Export Settings (JSON)",
+    "importBtn": "Import Settings (JSON)",
+    "exportSuccess": "Settings exported successfully!",
+    "importSuccess": "Settings imported successfully. Click save to confirm.",
+    "importError": "Invalid JSON configuration file"
+  },
+  "common": {
+    "uploading": "Uploading...",
+    "remove": "Remove",
+    "save": "Save Changes",
+    "cancel": "Cancel"
+  }
+  }
   }
 }
