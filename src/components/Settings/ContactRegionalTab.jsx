@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Select } from '@/components/UI/UI.jsx';
-import { COUNTRIES_LIST } from '@/constants/countries.js'; // مسار ملف الدول
-import { CURRENCIES } from '@/constants/currencies.js';    // مسار ملف العملات
+import { COUNTRIES_LIST } from '@/constants/countries.js';
+import { CURRENCIES } from '@/constants/currencies.js';
 
-export default function ContactRegionalTab({ formData, updateField, isRtl }) {
+export default function ContactRegionalTab({ formData = {}, updateField, isRtl }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // 1. تجهيز قائمة الدول من الملف المستورد
-  const countryOptions = COUNTRIES_LIST.map(country => ({
+  const countryOptions = (COUNTRIES_LIST || []).map(country => ({
     label: `${country.flag} ${isRtl ? country.nameAr : country.nameEn}`,
     value: country.code
   }));
 
-  // 2. تجهيز قائمة العملات من الملف المستورد
-  const currencyOptions = CURRENCIES.map(currency => ({
+  const currencyOptions = (CURRENCIES || []).map(currency => ({
     label: `${isRtl ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
     value: currency.code
   }));
 
-  // 3. القوائم المحلية (بما أن التوقيتات مجمعة بشكل محدد)
   const timezoneOptions = [
     { label: isRtl ? 'القاهرة (GMT+2 / GMT+3)' : 'Cairo (GMT+2/3)', value: 'Africa/Cairo' },
     { label: isRtl ? 'مكة المكرمة / الرياض (GMT+3)' : 'Makkah / Riyadh (GMT+3)', value: 'Asia/Riyadh' },
@@ -41,7 +38,7 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
   ];
 
   const toggleWeekendDay = (dayKey) => {
-    const days = Array.isArray(formData.weekend_days) ? formData.weekend_days : [];
+    const days = Array.isArray(formData?.weekend_days) ? formData.weekend_days : [];
     const updated = days.includes(dayKey) 
       ? days.filter(d => d !== dayKey) 
       : [...days, dayKey];
@@ -58,7 +55,7 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
             </label>
             <input 
               type="email" 
-              value={formData.contact_email} 
+              value={formData?.contact_email || ''} 
               onChange={(e) => updateField('contact_email', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
@@ -70,7 +67,7 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
             </label>
             <input 
               type="text" 
-              value={formData.contact_phone} 
+              value={formData?.contact_phone || ''} 
               onChange={(e) => updateField('contact_phone', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
@@ -80,14 +77,14 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <Select 
             label={isRtl ? 'الدولة' : 'Country'}
-            value={formData.country_code}
+            value={formData?.country_code || 'EG'}
             onChange={(e) => updateField('country_code', e.target.value)}
             options={countryOptions}
           />
 
           <Select 
             label={isRtl ? 'العملة الرسمية' : 'Currency'}
-            value={formData.currency}
+            value={formData?.currency || 'EGP'}
             onChange={(e) => updateField('currency', e.target.value)}
             options={currencyOptions}
           />
@@ -112,7 +109,7 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
               </label>
               <input 
                 type="url" 
-                value={formData.website} 
+                value={formData?.website || ''} 
                 onChange={(e) => updateField('website', e.target.value)} 
                 className="app-input text-start dir-ltr text-xs" 
               />
@@ -121,14 +118,14 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <Select 
                 label={isRtl ? 'المنطقة الزمنية' : 'Timezone'}
-                value={formData.timezone}
+                value={formData?.timezone || 'Africa/Cairo'}
                 onChange={(e) => updateField('timezone', e.target.value)}
                 options={timezoneOptions}
               />
 
               <Select 
                 label={isRtl ? 'نوع التقويم' : 'Calendar Type'}
-                value={formData.calendar_type}
+                value={formData?.calendar_type || 'gregorian'}
                 onChange={(e) => updateField('calendar_type', e.target.value)}
                 options={[
                   { label: isRtl ? 'ميلادي' : 'Gregorian', value: 'gregorian' },
@@ -143,7 +140,7 @@ export default function ContactRegionalTab({ formData, updateField, isRtl }) {
               </label>
               <div className="flex gap-1.5 flex-wrap">
                 {daysList.map((day) => {
-                  const active = (formData.weekend_days || []).includes(day.key);
+                  const active = (formData?.weekend_days || []).includes(day.key);
                   return (
                     <button
                       key={day.key}
