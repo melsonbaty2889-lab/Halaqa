@@ -113,7 +113,7 @@ const CustomSelect = ({
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
       {/* القائمة المنسدلة مع البورتال لرسمها مباشرة في الـ body */}
-      {isOpen && reactCreatePortal(
+      {isOpen && createPortal(
         <div
           id="portal-select-dropdown"
           style={{
