@@ -26,10 +26,10 @@ export default function Settings({
   const [activeTab, setActiveTab] = useState('identity');
 
   const tabs = [
-    { id: 'identity', label: t('settings.identityTab', 'الهوية والشعار'), icon: Building },
-    { id: 'contact', label: t('settings.contactTab', 'التواصل والإقليمية'), icon: Globe },
-    { id: 'quranic', label: t('settings.quranicTab', 'سياسات الحلقة'), icon: BookOpen },
-    { id: 'backup', label: t('settings.backupTab', 'النسخ الاحتياطي'), icon: Database },
+    { id: 'identity', label: t('settings.identityTab'), icon: Building },
+    { id: 'contact', label: t('settings.contactTab'), icon: Globe },
+    { id: 'quranic', label: t('settings.quranicTab'), icon: BookOpen },
+    { id: 'backup', label: t('settings.backupTab'), icon: Database },
   ];
 
   return (
@@ -104,7 +104,7 @@ export default function Settings({
                 className="w-full sm:w-auto btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw size={14} />
-                <span>{t('common.discard', 'تراجع عن التعديلات')}</span>
+                <span>{t('common.discard')}</span>
               </button>
             )}
           </div>
@@ -117,7 +117,7 @@ export default function Settings({
             }`}
           >
             <Save size={16} />
-            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.saveChanges', 'حفظ التغييرات')}</span>
+            <span>{saving ? t('common.saving') : t('common.save')}</span>
           </button>
         </div>
       </form>
