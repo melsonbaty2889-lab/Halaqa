@@ -2,9 +2,9 @@ import React from 'react';
 import { BookOpen, UserCheck, Users } from 'lucide-react';
 import { Select } from '@/components/UI/UI.jsx';
 
-export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
+export default function QuranicPoliciesTab({ formData = {}, updateField, isRtl }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-start">
       {/* المنهجية والروايات */}
       <div className="space-y-4">
         <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
@@ -14,7 +14,7 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Select 
             label={isRtl ? 'نمط التعليم' : 'Learning Type'}
-            value={formData.learning_type}
+            value={formData?.learning_type || 'online'}
             onChange={(e) => updateField('learning_type', e.target.value)}
             options={[
               { label: isRtl ? 'عن بُعد (Online)' : 'Online', value: 'online' },
@@ -25,7 +25,7 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
 
           <Select 
             label={isRtl ? 'الرواية الافتراضية' : 'Default Qiraat'}
-            value={formData.default_qiraat}
+            value={formData?.default_qiraat || 'hafs'}
             onChange={(e) => updateField('default_qiraat', e.target.value)}
             options={[
               { label: isRtl ? 'حفص عن عاصم' : 'Hafs an Asim', value: 'hafs' },
@@ -37,7 +37,7 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
 
           <Select 
             label={isRtl ? 'المدرسة والمنهجية' : 'Methodology'}
-            value={formData.teaching_methodology}
+            value={formData?.teaching_methodology || 'mashreqi'}
             onChange={(e) => updateField('teaching_methodology', e.target.value)}
             options={[
               { label: isRtl ? 'المشرقية (المعتادة)' : 'Mashreqi', value: 'mashreqi' },
@@ -65,7 +65,7 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
             </div>
             <input 
               type="checkbox" 
-              checked={formData.allow_self_registration} 
+              checked={formData?.allow_self_registration ?? true} 
               onChange={(e) => updateField('allow_self_registration', e.target.checked)} 
               className="w-4 h-4 accent-[var(--primary)] cursor-pointer"
             />
@@ -82,7 +82,7 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
             </div>
             <input 
               type="checkbox" 
-              checked={formData.require_approval} 
+              checked={formData?.require_approval ?? true} 
               onChange={(e) => updateField('require_approval', e.target.checked)} 
               className="w-4 h-4 accent-[var(--primary)] cursor-pointer"
             />
@@ -97,8 +97,8 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
               type="number" 
               min={1} 
               max={200}
-              value={formData.max_students_per_group} 
-              onChange={(e) => updateField('max_students_per_group', e.target.value)} 
+              value={formData?.max_students_per_group || 25} 
+              onChange={(e) => updateField('max_students_per_group', Number(e.target.value))} 
               className="app-input max-w-xs" 
             />
           </div>
@@ -106,4 +106,4 @@ export default function QuranicPoliciesTab({ formData, updateField, isRtl }) {
       </div>
     </div>
   );
-                }
+}
