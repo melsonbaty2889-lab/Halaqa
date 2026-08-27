@@ -1,40 +1,43 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Select } from '@/components/UI/UI.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
 import { CURRENCIES } from '@/constants/currencies.js';
 
-export default function ContactRegionalTab({ formData = {}, updateField, isRtl }) {
+export default function ContactRegionalTab({ formData = {}, updateField }) {
+  const { t, i18n } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const isAr = i18n.language === 'ar';
 
   const countryOptions = (COUNTRIES_LIST || []).map(country => ({
-    label: `${country.flag} ${isRtl ? country.nameAr : country.nameEn}`,
+    label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
     value: country.code
   }));
 
   const currencyOptions = (CURRENCIES || []).map(currency => ({
-    label: `${isRtl ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
+    label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
     value: currency.code
   }));
 
   const timezoneOptions = [
-    { label: isRtl ? 'القاهرة (GMT+2 / GMT+3)' : 'Cairo (GMT+2/3)', value: 'Africa/Cairo' },
-    { label: isRtl ? 'مكة المكرمة / الرياض (GMT+3)' : 'Makkah / Riyadh (GMT+3)', value: 'Asia/Riyadh' },
-    { label: isRtl ? 'دبي (GMT+4)' : 'Dubai (GMT+4)', value: 'Asia/Dubai' },
-    { label: isRtl ? 'جرينتش / التوقيت العالمي (UTC+0)' : 'UTC / London (GMT+0)', value: 'UTC' },
-    { label: isRtl ? 'أوروبا الوسطى / برلين (GMT+1)' : 'Central Europe / Berlin (GMT+1)', value: 'Europe/Berlin' },
-    { label: isRtl ? 'التوقيت الشرقي - أمريكا (EST/EDT GMT-5)' : 'US Eastern Time (GMT-5)', value: 'America/New_York' },
-    { label: isRtl ? 'جاكرتا (GMT+7)' : 'Jakarta (GMT+7)', value: 'Asia/Jakarta' }
+    { label: t('timezones.cairo', 'القاهرة (GMT+2 / GMT+3)'), value: 'Africa/Cairo' },
+    { label: t('timezones.riyadh', 'مكة المكرمة / الرياض (GMT+3)'), value: 'Asia/Riyadh' },
+    { label: t('timezones.dubai', 'دبي (GMT+4)'), value: 'Asia/Dubai' },
+    { label: t('timezones.utc', 'جرينتش / التوقيت العالمي (UTC+0)'), value: 'UTC' },
+    { label: t('timezones.berlin', 'أوروبا الوسطى / برلين (GMT+1)'), value: 'Europe/Berlin' },
+    { label: t('timezones.ny', 'التوقيت الشرقي - أمريكا (EST/EDT GMT-5)'), value: 'America/New_York' },
+    { label: t('timezones.jakarta', 'جاكرتا (GMT+7)'), value: 'Asia/Jakarta' }
   ];
 
   const daysList = [
-    { key: 'saturday', label: isRtl ? 'السبت' : 'Saturday' },
-    { key: 'sunday', label: isRtl ? 'الأحد' : 'Sunday' },
-    { key: 'monday', label: isRtl ? 'الإثنين' : 'Monday' },
-    { key: 'tuesday', label: isRtl ? 'الثلاثاء' : 'Tuesday' },
-    { key: 'wednesday', label: isRtl ? 'الأربعاء' : 'Wednesday' },
-    { key: 'thursday', label: isRtl ? 'الخميس' : 'Thursday' },
-    { key: 'friday', label: isRtl ? 'الجمعة' : 'Friday' }
+    { key: 'saturday', label: t('days.saturday', 'السبت') },
+    { key: 'sunday', label: t('days.sunday', 'الأحد') },
+    { key: 'monday', label: t('days.monday', 'الإثنين') },
+    { key: 'tuesday', label: t('days.tuesday', 'الثلاثاء') },
+    { key: 'wednesday', label: t('days.wednesday', 'الأربعاء') },
+    { key: 'thursday', label: t('days.thursday', 'الخميس') },
+    { key: 'friday', label: t('days.friday', 'الجمعة') }
   ];
 
   const toggleWeekendDay = (dayKey) => {
@@ -47,12 +50,11 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
 
   return (
     <div className="space-y-5 text-start">
-      {/* البطاقة الرئيسية للمعطيات الأساسية */}
       <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {isRtl ? 'البريد الإلكتروني الرسمي' : 'Official Email'}
+              {t('settings.officialEmail', 'البريد الإلكتروني الرسمي')}
             </label>
             <input 
               type="email" 
@@ -64,7 +66,7 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
 
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {isRtl ? 'الهاتف / الواتساب' : 'Phone / WhatsApp'}
+              {t('settings.phoneWhatsapp', 'الهاتف / الواتساب')}
             </label>
             <input 
               type="text" 
@@ -77,14 +79,14 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <Select 
-            label={isRtl ? 'الدولة' : 'Country'}
+            label={t('settings.country', 'الدولة')}
             value={formData?.country_code || 'EG'}
             onChange={(e) => updateField('country_code', e.target.value)}
             options={countryOptions}
           />
 
           <Select 
-            label={isRtl ? 'العملة الرسمية' : 'Currency'}
+            label={t('settings.currency', 'العملة الرسمية')}
             value={formData?.currency || 'EGP'}
             onChange={(e) => updateField('currency', e.target.value)}
             options={currencyOptions}
@@ -92,14 +94,13 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
         </div>
       </div>
 
-      {/* قسم الإعدادات المتقدمة المنسدل */}
       <div className="border border-[var(--border-light)] rounded-xl overflow-hidden bg-[var(--surface-card)]">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full p-3 bg.transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-muted)] border-none cursor-pointer"
+          className="w-full p-3 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-muted)] border-none cursor-pointer"
         >
-          <span>{isRtl ? 'إعدادات إقليمية متقدمة' : 'Advanced Regional Settings'}</span>
+          <span>{t('settings.advancedRegional', 'إعدادات إقليمية متقدمة')}</span>
           {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
@@ -107,7 +108,7 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
           <div className="p-4 border-t border-[var(--border-light)] space-y-4">
             <div>
               <label className="block text-xs font-bold mb-1 text-[var(--text-muted)]">
-                {isRtl ? 'الموقع الإلكتروني' : 'Website'}
+                {t('settings.website', 'الموقع الإلكتروني')}
               </label>
               <input 
                 type="url" 
@@ -119,27 +120,26 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <Select 
-                label={isRtl ? 'المنطقة الزمنية' : 'Timezone'}
+                label={t('settings.timezone', 'المنطقة الزمنية')}
                 value={formData?.timezone || 'Africa/Cairo'}
                 onChange={(e) => updateField('timezone', e.target.value)}
                 options={timezoneOptions}
               />
 
               <Select 
-                label={isRtl ? 'نوع التقويم' : 'Calendar Type'}
+                label={t('settings.calendarType', 'نوع التقويم')}
                 value={formData?.calendar_type || 'gregorian'}
                 onChange={(e) => updateField('calendar_type', e.target.value)}
                 options={[
-                  { label: isRtl ? 'ميلادي' : 'Gregorian', value: 'gregorian' },
-                  { label: isRtl ? 'هجري' : 'Hijri', value: 'hijri' }
+                  { label: t('calendar.gregorian', 'ميلادي'), value: 'gregorian' },
+                  { label: t('calendar.hijri', 'هجري'), value: 'hijri' }
                 ]}
               />
             </div>
 
-            {/* تم اصلاح العرض الأفقي المتناسق لأيام العطلة */}
             <div>
               <label className="block text-xs font-bold mb-2 text-[var(--text-muted)]">
-                {isRtl ? 'أيام العطلة الأسبوعية' : 'Weekend Days'}
+                {t('settings.weekendDays', 'أيام العطلة الأسبوعية')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {daysList.map((day) => {
