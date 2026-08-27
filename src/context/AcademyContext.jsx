@@ -43,7 +43,6 @@ export const AcademyProvider = ({ children }) => {
         console.error("🚨 خطأ في جلب البروفايل:", profError);
       }
 
-      // إذا لم يوجد بروفايل للمستخدم في قاعدة البيانات
       if (!profData) {
         console.warn("⚠️ لم يتم العثور على بروفايل للمستخدم في جدول profiles");
         if (isMounted.current) {
@@ -74,29 +73,49 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 4 & 5. جلب الأكاديمية المرتبطة عبر جدول academy_members (لكافة الأدوار)
-      const { data: membershipData, error: memError } = await supabase
+      // 4. جلب الأكاديمية عبر academy_members أولاً
+      let currentAcademy = null;
+
+      const { data: memList, error: memError } = await supabase
         .from('academy_members')
         .select(`
           role,
           academy:academies (*)
         `)
         .eq('user_id', currentUser.id)
-        .maybeSingle();
+        .limit(1);
 
       if (memError) {
         console.error("🚨 خطأ في جلب عضوية الأكاديمية:", memError);
       }
 
-      const currentAcademy = membershipData?.academy || null;
+      if (memList && memList.length > 0) {
+        currentAcademy = memList[0]?.academy || null;
+      }
+
+      // 5. خطة بديلة احتياطية (Fallback): إذا لم يُعثر على الأكاديمية في academy_members، نفحص جدول academies عن طريق owner_id
+      if (!currentAcademy) {
+        const { data: ownedAcademy, error: ownerError } = await supabase
+          .from('academies')
+          .select('*')
+          .eq('owner_id', currentUser.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (!ownerError && ownedAcademy) {
+          currentAcademy = ownedAcademy;
+        }
+      }
 
       if (isMounted.current) {
         if (currentAcademy) {
           setAcademy(currentAcademy);
+          if (currentAcademy.slug) {
+            localStorage.setItem('current_academy_slug', currentAcademy.slug);
+          }
           setAppState(currentAcademy.is_active !== false ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
         } else {
           setAcademy(null);
-          // المدير بدون أكاديمية يوجه للتأسيس، وباقي الأدوار ينتظرون أو يوجهون بحسب النظام
           setAppState(profData.role === 'admin' ? 'NO_ACADEMY' : 'FULLY_ACTIVE');
         }
       }
@@ -118,12 +137,10 @@ export const AcademyProvider = ({ children }) => {
   }, [fetchUserStatus]);
 
   useEffect(() => {
-    // الاستماع لإنشاء الجلسة أو تسجيل الدخول
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       fetchUserStatus(session?.user);
     });
 
-    // مؤقت أمان (4 ثوانٍ)
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
         setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
@@ -136,7 +153,6 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [fetchUserStatus]);
 
-  // التحديث اللحظي للبروفايل
   useEffect(() => {
     if (!user?.id) return;
 
@@ -162,6 +178,7 @@ export const AcademyProvider = ({ children }) => {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('block_splash');
         localStorage.removeItem('app_splash_seen_v4');
+        localStorage.removeItem('current_academy_slug');
       }
       if (isMounted.current) {
         setAcademy(null);
