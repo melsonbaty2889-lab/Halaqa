@@ -11,15 +11,14 @@ export default function IdentityTab({
   uploadingLogo, 
   fileInputRef 
 }) {
-  const { i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-5 text-start">
       {/* قسم الشعار */}
       <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-3">
         <label className="block text-xs font-bold text-[var(--text-main)]">
-          {isRtl ? 'شعار الأكاديمية' : 'Academy Logo'}
+          {t('identity.logoLabel', 'شعار الأكاديمية')}
         </label>
         
         <div className="flex items-center gap-4">
@@ -46,7 +45,7 @@ export default function IdentityTab({
               className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
             >
               <Upload size={14} />
-              <span>{uploadingLogo ? (isRtl ? 'جاري الرفع...' : 'Uploading...') : (isRtl ? 'تغيير الشعار' : 'Upload Logo')}</span>
+              <span>{uploadingLogo ? t('common.uploading', 'جاري الرفع...') : t('identity.uploadBtn', 'تغيير الشعار')}</span>
             </button>
 
             {formData?.logo_url && (
@@ -56,19 +55,19 @@ export default function IdentityTab({
                 className="text-xs px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 size={14} />
-                <span>{isRtl ? 'حذف' : 'Remove'}</span>
+                <span>{t('common.remove', 'حذف')}</span>
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* قسم أسماء الأكاديمية والشعار الترويجي */}
+      {/* قسم الأسماء والوصف */}
       <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {isRtl ? 'اسم الأكاديمية (بالعربية)' : 'Academy Name (Arabic)'}
+              {t('identity.nameAr', 'اسم الأكاديمية (بالعربية)')}
             </label>
             <input 
               type="text" 
@@ -80,7 +79,7 @@ export default function IdentityTab({
 
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {isRtl ? 'اسم الأكاديمية (بالإنجليزية)' : 'Academy Name (English)'}
+              {t('identity.nameEn', 'اسم الأكاديمية (بالإنجليزية)')}
             </label>
             <input 
               type="text" 
@@ -93,7 +92,7 @@ export default function IdentityTab({
 
         <div>
           <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {isRtl ? 'الرابط المختصر (Slug)' : 'URL Slug'}
+            {t('identity.slug', 'الرابط المختصر (Slug)')}
           </label>
           <input 
             type="text" 
@@ -105,7 +104,7 @@ export default function IdentityTab({
 
         <div>
           <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {isRtl ? 'الوصف الترويجي القصير (Tagline)' : 'Tagline'}
+            {t('identity.tagline', 'الوصف الترويجي القصير (Tagline)')}
           </label>
           <input 
             type="text" 
@@ -117,7 +116,7 @@ export default function IdentityTab({
 
         <div>
           <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {isRtl ? 'وصف الأكاديمية' : 'Description'}
+            {t('identity.description', 'وصف الأكاديمية')}
           </label>
           <textarea 
             rows={3} 
