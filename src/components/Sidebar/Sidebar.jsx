@@ -163,10 +163,13 @@ export default function Sidebar({
   }, [currentAcademyId]);
 
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
-  const currentAcademyName = getText(currentAcademy?.name) || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
-  const academyLogo = currentAcademy?.logo_url || academy?.logo_url;
-  const academySlug = currentAcademy?.slug || academy?.slug;
+const currentAcademyName = getText(currentAcademy?.name) || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
 
+// 🟢 إلغاء كاش المتصفح بإضافة تاريخ التعديل أو الوقت الحالي
+const rawLogo = currentAcademy?.logo_url || academy?.logo_url;
+const academyLogo = rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
+
+const academySlug = currentAcademy?.slug || academy?.slug;
   const calculateEffectiveDaysLeft = () => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
     if (currentAcademy.is_active && !currentAcademy.trial_ends_at) return Infinity;
