@@ -1,128 +1,98 @@
 import React from 'react';
-import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function IdentityTab({ 
-  formData = {}, 
-  updateField, 
-  handleNameChange, 
-  handleLogoUpload, 
-  handleRemoveLogo, 
-  uploadingLogo, 
-  fileInputRef 
-}) {
+export default function QuranicPoliciesTab({ formData = {}, updateField }) {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-5 text-start">
-      {/* قسم الشعار */}
-      <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-3">
-        <label className="block text-xs font-bold text-[var(--text-main)]">
-          {t('identity.logoLabel', 'شعار الأكاديمية')}
-        </label>
-        
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-xl border border-[var(--border-light)] bg-[var(--surface-input)] flex items-center justify-center overflow-hidden shrink-0">
-            {formData?.logo_url ? (
-              <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
-            ) : (
-              <ImageIcon className="text-[var(--text-muted)]" size={24} />
-            )}
-          </div>
+    <div className="space-y-6">
+      <div className="p-4 rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] space-y-4">
+        <h3 className="text-xs font-bold text-[var(--primary)] border-b border-[var(--border-light)] pb-2">
+          {t('settings.quranicSetup', 'الإعدادات القرآنية والتعليمية')}
+        </h3>
 
-          <div className="flex flex-wrap gap-2">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleLogoUpload} 
-              accept="image/*" 
-              className="hidden" 
-            />
-            <button
-              type="button"
-              disabled={uploadingLogo}
-              onClick={() => fileInputRef?.current?.click()}
-              className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
+              {t('settings.learningType', 'نمط التعليم')}
+            </label>
+            <select
+              value={formData.learning_type || 'online'}
+              onChange={(e) => updateField('learning_type', e.target.value)}
+              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none"
             >
-              <Upload size={14} />
-              <span>{uploadingLogo ? t('common.uploading', 'جاري الرفع...') : t('identity.uploadBtn', 'تغيير الشعار')}</span>
-            </button>
-
-            {formData?.logo_url && (
-              <button
-                type="button"
-                onClick={handleRemoveLogo}
-                className="text-xs px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 size={14} />
-                <span>{t('common.remove', 'حذف')}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* قسم الأسماء والوصف */}
-      <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('identity.nameAr', 'اسم الأكاديمية (بالعربية)')}
-            </label>
-            <input 
-              type="text" 
-              value={formData?.name_ar || ''} 
-              onChange={(e) => handleNameChange?.('ar', e.target.value)} 
-              className="app-input text-start" 
-            />
+              <option value="online">عن بعد (Online)</option>
+              <option value="in_person">حضوري (In-Person)</option>
+              <option value="hybrid">مدمج (Hybrid)</option>
+            </select>
           </div>
 
           <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('identity.nameEn', 'اسم الأكاديمية (بالإنجليزية)')}
+            <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
+              {t('settings.defaultQiraat', 'الرواية الافتراضية')}
             </label>
-            <input 
-              type="text" 
-              value={formData?.name_en || ''} 
-              onChange={(e) => handleNameChange?.('en', e.target.value)} 
-              className="app-input text-start dir-ltr" 
-            />
+            <select
+              value={formData.default_qiraat || 'hafs'}
+              onChange={(e) => updateField('default_qiraat', e.target.value)}
+              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none"
+            >
+              <option value="hafs">حفص عن عاصم</option>
+              <option value="warsh">ورش عن نافع</option>
+              <option value="qaloon">قالون عن نافع</option>
+              <option value="mutawatir">السبع / العشر المتواترة</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
+              {t('settings.teachingMethod', 'المدرسة والمنهجية')}
+            </label>
+            <select
+              value={formData.teaching_methodology || 'mashreqi'}
+              onChange={(e) => updateField('teaching_methodology', e.target.value)}
+              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none"
+            >
+              <option value="mashreqi">المشرقية (المعتادة)</option>
+              <option value="maghrebi">المغربية</option>
+            </select>
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {t('identity.slug', 'الرابط المختصر (Slug)')}
+        <div className="space-y-3 pt-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.allow_self_registration ?? true}
+              onChange={(e) => updateField('allow_self_registration', e.target.checked)}
+              className="rounded accent-[var(--primary)] w-4 h-4"
+            />
+            <span className="text-xs font-bold text-[var(--text-main)]">
+              {t('settings.allowSelfReg', 'السماح للطلاب بالتسجيل الذاتي')}
+            </span>
           </label>
-          <input 
-            type="text" 
-            value={formData?.slug || ''} 
-            onChange={(e) => updateField?.('slug', e.target.value)} 
-            className="app-input text-start dir-ltr text-xs" 
-          />
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.require_admin_approval ?? true}
+              onChange={(e) => updateField('require_admin_approval', e.target.checked)}
+              className="rounded accent-[var(--primary)] w-4 h-4"
+            />
+            <span className="text-xs font-bold text-[var(--text-main)]">
+              {t('settings.requireApproval', 'اشتراط موافقة الإدارة على طالب جديد')}
+            </span>
+          </label>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {t('identity.tagline', 'الوصف الترويجي القصير (Tagline)')}
+        <div className="pt-2">
+          <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
+            {t('settings.maxStudentsPerCircle', 'الحد الأقصى للطلاب في الحلقة')}
           </label>
-          <input 
-            type="text" 
-            value={formData?.tagline || ''} 
-            onChange={(e) => updateField?.('tagline', e.target.value)} 
-            className="app-input text-start" 
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {t('identity.description', 'وصف الأكاديمية')}
-          </label>
-          <textarea 
-            rows={3} 
-            value={formData?.description || ''} 
-            onChange={(e) => updateField?.('description', e.target.value)} 
-            className="app-input text-start text-xs resize-none" 
+          <input
+            type="number"
+            value={formData.max_students_per_circle || 25}
+            onChange={(e) => updateField('max_students_per_circle', parseInt(e.target.value, 10) || 0)}
+            className="w-full md:w-1/3 text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none"
           />
         </div>
       </div>
