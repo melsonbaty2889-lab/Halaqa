@@ -26,23 +26,22 @@ export default function Settings({
   const [activeTab, setActiveTab] = useState('identity');
 
   const tabs = [
-    { id: 'identity', label: t('settings.identityTab'), icon: Building },
-    { id: 'contact', label: t('settings.contactTab'), icon: Globe },
-    { id: 'quranic', label: t('settings.quranicTab'), icon: BookOpen },
-    { id: 'backup', label: t('settings.backupTab'), icon: Database },
+    { id: 'identity', label: t('settings.identityTab', 'الهوية والشعار'), icon: Building },
+    { id: 'contact', label: t('settings.contactTab', 'التواصل والإقليمية'), icon: Globe },
+    { id: 'quranic', label: t('settings.quranicTab', 'سياسات الحلقة'), icon: BookOpen },
+    { id: 'backup', label: t('settings.backupTab', 'النسخ الاحتياطي'), icon: Database },
   ];
 
-  // تأكيد التراجع عن التغييرات لمنع فقدان البيانات بالخطأ
   const onConfirmDiscard = () => {
-    if (window.confirm(t('common.confirmDiscard', 'هل أنت أصلًا متأكد من إلغاء التغييرات الغير محفوظة؟'))) {
+    if (window.confirm(t('common.confirmDiscard', 'هل أنت متأكد من إلغاء التغييرات غير محفوظة؟'))) {
       handleDiscardChanges();
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 text-start" dir={i18n.dir()}>
-      {/* 1. شريط التبويبات العلوي - تم حماية شريط التمرير من التشوه */}
-      <div className="flex border-b border-[var(--border-light)] gap-2 overflow-x-auto scrollbar-none style-scrollbar">
+      {/* شريط التبويبات العلوي */}
+      <div className="flex border-b border-[var(--border-card)] gap-2 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -54,7 +53,7 @@ export default function Settings({
               className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap bg-transparent focus:outline-none ${
                 isActive 
                   ? 'border-[var(--primary)] text-[var(--primary)]' 
-                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  : 'border-transparent text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               <Icon size={16} />
@@ -64,7 +63,7 @@ export default function Settings({
         })}
       </div>
 
-      {/* محتوى التبويبات الفعالة */}
+      {/* محتوى التبويبات */}
       <form onSubmit={onSave} className="space-y-6">
         {activeTab === 'identity' && (
           <IdentityTab 
@@ -78,20 +77,8 @@ export default function Settings({
           />
         )}
 
-        {activeTab === 'contact' && (
-          <ContactRegionalTab 
-            formData={formData} 
-            updateField={updateField} 
-          />
-        )}
-
-        {activeTab === 'quranic' && (
-          <QuranicPoliciesTab 
-            formData={formData} 
-            updateField={updateField} 
-          />
-        )}
-
+        {activeTab === 'contact' && <ContactRegionalTab formData={formData} updateField={updateField} />}
+        {activeTab === 'quranic' && <QuranicPoliciesTab formData={formData} updateField={updateField} />}
         {activeTab === 'backup' && (
           <DataBackupTab 
             formData={formData} 
@@ -101,14 +88,14 @@ export default function Settings({
           />
         )}
 
-        {/* 2. شريط التحكم السفلي - تم إصلاح القفز البصري وتداخل الكلاسات */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-light)]">
+        {/* شريط التحكم السفلي */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-card)]">
           <div className="w-full sm:w-auto min-h-[38px] flex items-center">
             {isDirty && (
               <button
                 type="button"
                 onClick={onConfirmDiscard}
-                className="w-full sm:w-auto btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5"
               >
                 <RotateCcw size={14} />
                 <span>{t('common.discard', 'تراجع')}</span>
@@ -119,14 +106,12 @@ export default function Settings({
           <button 
             type="submit" 
             disabled={saving || !isDirty} 
-            className={`w-full sm:w-auto btn-primary text-xs px-5 py-2.5 flex items-center justify-center gap-2 ${
-              (!isDirty || saving) 
-                ? 'opacity-50 cursor-not-allowed pointer-events-none' 
-                : 'cursor-pointer'
+            className={`btn-primary text-xs px-6 py-2.5 flex items-center justify-center gap-2 ${
+              (!isDirty || saving) ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
             }`}
           >
             <Save size={16} />
-            <span>{saving ? t('common.saving') : t('common.save')}</span>
+            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ التغييرات')}</span>
           </button>
         </div>
       </form>
