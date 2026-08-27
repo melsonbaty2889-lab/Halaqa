@@ -15,14 +15,14 @@ export default function IdentityTab({
 
   return (
     <div className="space-y-5 text-start">
-      {/* قسم الشعار */}
-      <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-3">
+      {/* قسم الشعار - تم توحيد المتغيرات مع الهوية */}
+      <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-light)] space-y-3">
         <label className="block text-xs font-bold text-[var(--text-main)]">
           {t('identity.logoLabel', 'شعار الأكاديمية')}
         </label>
         
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-xl border border-[var(--border-light)] bg-[var(--surface-input)] flex items-center justify-center overflow-hidden shrink-0">
+          <div className="w-16 h-16 rounded-xl border border-[var(--border-light)] bg-[var(--bg-main)] flex items-center justify-center overflow-hidden shrink-0">
             {formData?.logo_url ? (
               <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
             ) : (
@@ -52,7 +52,7 @@ export default function IdentityTab({
               <button
                 type="button"
                 onClick={handleRemoveLogo}
-                className="text-xs px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="text-xs px-3 py-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 size={14} />
                 <span>{t('common.remove', 'حذف')}</span>
@@ -62,8 +62,8 @@ export default function IdentityTab({
         </div>
       </div>
 
-      {/* قسم الأسماء والوصف */}
-      <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
+      {/* قسم الأسماء والوصف - تم تحديد ألوان الحقول بـ Tailwind الصريح */}
+      <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
@@ -72,8 +72,8 @@ export default function IdentityTab({
             <input 
               type="text" 
               value={formData?.name_ar || ''} 
-              onChange={(e) => handleNameChange?.('ar', e.target.value)} 
-              className="app-input text-start" 
+              onChange={(e) => handleNameChange?.('name_ar', e.target.value)} 
+              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none" 
             />
           </div>
 
@@ -84,8 +84,9 @@ export default function IdentityTab({
             <input 
               type="text" 
               value={formData?.name_en || ''} 
-              onChange={(e) => handleNameChange?.('en', e.target.value)} 
-              className="app-input text-start dir-ltr" 
+              onChange={(e) => handleNameChange?.('name_en', e.target.value)} 
+              dir="ltr"
+              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none text-left" 
             />
           </div>
         </div>
@@ -98,7 +99,8 @@ export default function IdentityTab({
             type="text" 
             value={formData?.slug || ''} 
             onChange={(e) => updateField?.('slug', e.target.value)} 
-            className="app-input text-start dir-ltr text-xs" 
+            dir="ltr"
+            className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none text-left" 
           />
         </div>
 
@@ -110,7 +112,7 @@ export default function IdentityTab({
             type="text" 
             value={formData?.tagline || ''} 
             onChange={(e) => updateField?.('tagline', e.target.value)} 
-            className="app-input text-start" 
+            className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none" 
           />
         </div>
 
@@ -122,7 +124,7 @@ export default function IdentityTab({
             rows={3} 
             value={formData?.description || ''} 
             onChange={(e) => updateField?.('description', e.target.value)} 
-            className="app-input text-start text-xs resize-none" 
+            className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none resize-none" 
           />
         </div>
       </div>
