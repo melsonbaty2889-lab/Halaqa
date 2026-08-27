@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import CustomSelect from '@/components/UI/CustomSelect.jsx';
 import { RIWAYAT_LIST } from '@/constants/riwayat.js';
@@ -12,29 +12,35 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
     }
   };
 
-  const educationModeOptions = [
+  // تثبيت خيارات نمط التعليم
+  const educationModeOptions = useMemo(() => [
     { label: t('quranic.modeOnline', 'عن بعد (Online)'), value: 'online' },
     { label: t('quranic.modeOnsite', 'حضوري (In-person)'), value: 'onsite' },
     { label: t('quranic.modeHybrid', 'مختلط (Hybrid)'), value: 'hybrid' },
-  ];
+  ], [t]);
 
-  // تأمين معالجة قائمة الروايات لضمان وجود value و label دائماً
-  const riwayaOptions = Array.isArray(RIWAYAT_LIST)
-    ? RIWAYAT_LIST.map((r, index) => {
-        if (typeof r === 'string') {
-          return { label: r, value: r };
-        }
-        return {
-          label: r?.nameAr || r?.name || r?.label || `رواية ${index + 1}`,
-          value: String(r?.id ?? r?.value ?? r?.code ?? r?.nameAr ?? index),
-        };
-      })
-    : [];
+  // تثبيت خيارات الروايات مع تحويل معيار القيمة بدقة
+  const riwayaOptions = useMemo(() => {
+    if (!Array.isArray(RIWAYAT_LIST)) return [];
+    return RIWAYAT_LIST.map((r, index) => {
+      if (typeof r === 'string') {
+        return { label: r, value: r };
+      }
+      // الاحتفاظ بالقيمة الأصلية لضمان المطابقة
+      const rawValue = r?.id ?? r?.value ?? r?.code ?? r?.nameAr ?? index;
+      const label = r?.nameAr || r?.name || r?.label || `رواية ${index + 1}`;
+      return {
+        label,
+        value: rawValue,
+      };
+    });
+  }, []);
 
-  const madrasaOptions = [
+  // تثبيت خيارات المدرسة والمنهجية
+  const madrasaOptions = useMemo(() => [
     { label: t('quranic.madrasaEastern', 'المشرقية (المعتادة)'), value: 'eastern' },
     { label: t('quranic.madrasaMaghrebi', 'المغربية'), value: 'maghrebi' },
-  ];
+  ], [t]);
 
   return (
     <div className="space-y-5 text-start">
