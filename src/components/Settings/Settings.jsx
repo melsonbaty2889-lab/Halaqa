@@ -7,12 +7,15 @@ import DataBackupTab from './DataBackupTab';
 
 export default function Settings({ 
   formData = {}, 
+  setFormData,
   updateField, 
   handleNameChange, 
   handleLogoUpload, 
   handleRemoveLogo, 
   uploadingLogo, 
   fileInputRef, 
+  importInputRef,
+  showToast,
   onSave, 
   saving, 
   isDirty,
@@ -29,7 +32,7 @@ export default function Settings({
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 text-start">
+    <div className="max-w-4xl mx-auto space-y-6 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* شريط التبويبات */}
       <div className="flex border-b border-[var(--border-light)] gap-2 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => {
@@ -87,19 +90,21 @@ export default function Settings({
         {activeTab === 'backup' && (
           <DataBackupTab 
             formData={formData} 
-            updateField={updateField} 
+            setFormData={setFormData}
+            importInputRef={importInputRef}
+            showToast={showToast}
             isRtl={isRtl} 
           />
         )}
 
         {/* شريط الأزرار السفلي */}
-        <div className="flex items-center justify-between pt-4 border-t border-[var(--border-light)]">
-          <div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-light)]">
+          <div className="w-full sm:w-auto">
             {isDirty && (
               <button
                 type="button"
                 onClick={handleDiscardChanges}
-                className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw size={14} />
                 <span>{isRtl ? 'تراجع عن التعديلات' : 'Discard Changes'}</span>
@@ -110,7 +115,7 @@ export default function Settings({
           <button 
             type="submit" 
             disabled={saving || !isDirty} 
-            className={`btn-primary text-xs px-5 py-2.5 flex items-center gap-2 cursor-pointer ${
+            className={`w-full sm:w-auto btn-primary text-xs px-5 py-2.5 flex items-center justify-center gap-2 cursor-pointer ${
               (!isDirty || saving) ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
