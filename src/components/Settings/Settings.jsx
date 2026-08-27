@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Building, Globe, BookOpen, Database, Save, RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import IdentityTab from './IdentityTab';
 import ContactRegionalTab from './ContactRegionalTab';
 import QuranicPoliciesTab from './QuranicPoliciesTab';
@@ -19,20 +20,20 @@ export default function Settings({
   onSave, 
   saving, 
   isDirty,
-  handleDiscardChanges,
-  isRtl 
+  handleDiscardChanges 
 }) {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState('identity');
 
   const tabs = [
-    { id: 'identity', label: isRtl ? 'الهوية والشعار' : 'Identity & Logo', icon: Building },
-    { id: 'contact', label: isRtl ? 'التواصل والإقليمية' : 'Contact & Regional', icon: Globe },
-    { id: 'quranic', label: isRtl ? 'سياسات الحلقة' : 'Quranic Policies', icon: BookOpen },
-    { id: 'backup', label: isRtl ? 'النسخ الاحتياطي' : 'Data Backup', icon: Database },
+    { id: 'identity', label: t('settings.identityTab', 'الهوية والشعار'), icon: Building },
+    { id: 'contact', label: t('settings.contactTab', 'التواصل والإقليمية'), icon: Globe },
+    { id: 'quranic', label: t('settings.quranicTab', 'سياسات الحلقة'), icon: BookOpen },
+    { id: 'backup', label: t('settings.backupTab', 'النسخ الاحتياطي'), icon: Database },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="max-w-4xl mx-auto space-y-6 text-start" dir={i18n.dir()}>
       {/* شريط التبويبات العلوي */}
       <div className="flex border-b border-[var(--border-light)] gap-2 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => {
@@ -67,7 +68,6 @@ export default function Settings({
             handleRemoveLogo={handleRemoveLogo} 
             uploadingLogo={uploadingLogo} 
             fileInputRef={fileInputRef} 
-            isRtl={isRtl} 
           />
         )}
 
@@ -75,7 +75,6 @@ export default function Settings({
           <ContactRegionalTab 
             formData={formData} 
             updateField={updateField} 
-            isRtl={isRtl} 
           />
         )}
 
@@ -83,7 +82,6 @@ export default function Settings({
           <QuranicPoliciesTab 
             formData={formData} 
             updateField={updateField} 
-            isRtl={isRtl} 
           />
         )}
 
@@ -93,7 +91,6 @@ export default function Settings({
             setFormData={setFormData}
             importInputRef={importInputRef}
             showToast={showToast}
-            isRtl={isRtl} 
           />
         )}
 
@@ -107,7 +104,7 @@ export default function Settings({
                 className="w-full sm:w-auto btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw size={14} />
-                <span>{isRtl ? 'تراجع عن التعديلات' : 'Discard Changes'}</span>
+                <span>{t('common.discard', 'تراجع عن التعديلات')}</span>
               </button>
             )}
           </div>
@@ -120,7 +117,7 @@ export default function Settings({
             }`}
           >
             <Save size={16} />
-            <span>{saving ? (isRtl ? 'جاري الحفظ...' : 'Saving...') : (isRtl ? 'حفظ التغييرات' : 'Save Changes')}</span>
+            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.saveChanges', 'حفظ التغييرات')}</span>
           </button>
         </div>
       </form>
