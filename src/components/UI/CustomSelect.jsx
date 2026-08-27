@@ -24,22 +24,25 @@ const CustomSelect = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  // مقارنة شاملة للـ value تتفادى اختلاف الأنواع (String vs Number)
+  const selectedOption = options.find((opt) => String(opt.value) === String(value));
 
   // تصفية الخيارات بناءً على البحث
   const filteredOptions = searchable && searchTerm
-    ? options.filter((opt) => opt.label.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? options.filter((opt) =>
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : options;
 
   return (
-    <div className="relative w-full text-start" ref={containerRef}>
+    <div className={`relative w-full text-start ${isOpen ? 'z-50' : 'z-10'}`} ref={containerRef}>
       {label && (
         <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
           {label}
         </label>
       )}
 
-      {/* زر القائمة المنسدلة */}
+      {/* زر فتح القائمة */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -60,11 +63,11 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة */}
+      {/* القائمة المنسدلة الظاهرة فوق الكل */}
       {isOpen && (
-        <div className="absolute top-full right-0 left-0 mt-1 max-h-52 overflow-y-auto bg-[var(--surface-card)] border border-[var(--border-card)] rounded-xl shadow-2xl z-50 p-1 space-y-0.5 custom-scrollbar backdrop-blur-md">
+        <div className="absolute top-full right-0 left-0 mt-1 max-h-48 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[999] p-1 space-y-0.5 custom-scrollbar">
           {searchable && (
-            <div className="sticky top-0 p-1 bg-[var(--surface-card)] z-10 border-b border-[var(--border-card)] pb-1.5">
+            <div className="sticky top-0 p-1 bg-[#0A101D] z-10 border-b border-[var(--border-card)] pb-1.5">
               <div className="relative flex items-center">
                 <Search size={12} className="absolute right-2.5 text-[var(--text-sub)] pointer-events-none" />
                 <input
@@ -85,7 +88,7 @@ const CustomSelect = ({
             </div>
           ) : (
             filteredOptions.map((opt) => {
-              const isSelected = value === opt.value;
+              const isSelected = String(value) === String(opt.value);
               return (
                 <button
                   key={opt.value}
