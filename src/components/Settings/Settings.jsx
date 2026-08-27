@@ -32,10 +32,17 @@ export default function Settings({
     { id: 'backup', label: t('settings.backupTab'), icon: Database },
   ];
 
+  // تأكيد التراجع عن التغييرات لمنع فقدان البيانات بالخطأ
+  const onConfirmDiscard = () => {
+    if (window.confirm(t('common.confirmDiscard', 'هل أنت أصلًا متأكد من إلغاء التغييرات الغير محفوظة؟'))) {
+      handleDiscardChanges();
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 text-start" dir={i18n.dir()}>
-      {/* شريط التبويبات العلوي */}
-      <div className="flex border-b border-[var(--border-light)] gap-2 overflow-x-auto no-scrollbar">
+      {/* 1. شريط التبويبات العلوي - تم حماية شريط التمرير من التشوه */}
+      <div className="flex border-b border-[var(--border-light)] gap-2 overflow-x-auto scrollbar-none style-scrollbar">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -44,7 +51,7 @@ export default function Settings({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap bg-transparent ${
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap bg-transparent focus:outline-none ${
                 isActive 
                   ? 'border-[var(--primary)] text-[var(--primary)]' 
                   : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -94,17 +101,17 @@ export default function Settings({
           />
         )}
 
-        {/* شريط التحكم السفلي للحفظ والتراجع */}
+        {/* 2. شريط التحكم السفلي - تم إصلاح القفز البصري وتداخل الكلاسات */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-light)]">
-          <div className="w-full sm:w-auto">
+          <div className="w-full sm:w-auto min-h-[38px] flex items-center">
             {isDirty && (
               <button
                 type="button"
-                onClick={handleDiscardChanges}
+                onClick={onConfirmDiscard}
                 className="w-full sm:w-auto btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw size={14} />
-                <span>{t('common.discard')}</span>
+                <span>{t('common.discard', 'تراجع')}</span>
               </button>
             )}
           </div>
@@ -112,8 +119,10 @@ export default function Settings({
           <button 
             type="submit" 
             disabled={saving || !isDirty} 
-            className={`w-full sm:w-auto btn-primary text-xs px-5 py-2.5 flex items-center justify-center gap-2 cursor-pointer ${
-              (!isDirty || saving) ? 'opacity-50 cursor-not-allowed' : ''
+            className={`w-full sm:w-auto btn-primary text-xs px-5 py-2.5 flex items-center justify-center gap-2 ${
+              (!isDirty || saving) 
+                ? 'opacity-50 cursor-not-allowed pointer-events-none' 
+                : 'cursor-pointer'
             }`}
           >
             <Save size={16} />
