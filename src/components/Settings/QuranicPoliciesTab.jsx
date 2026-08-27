@@ -26,7 +26,6 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
       if (typeof r === 'string') {
         return { label: r, value: r };
       }
-      // الاحتفاظ بالقيمة الأصلية لضمان المطابقة
       const rawValue = r?.id ?? r?.value ?? r?.code ?? r?.nameAr ?? index;
       const label = r?.nameAr || r?.name || r?.label || `رواية ${index + 1}`;
       return {
@@ -44,6 +43,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
 
   return (
     <div className="space-y-5 text-start">
+      {/* تم إضافة !overflow-visible لضمان التوافق التام ومنع أي قص للقوائم المنسدلة */}
       <div className="card-surface space-y-4 !overflow-visible">
         <h3 className="text-xs font-bold text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
           {t('quranic.title', 'الإعدادات القرآنية والتعليمية')}
