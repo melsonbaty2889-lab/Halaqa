@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-[#0A101D]dom'; // أو 'react-dom' مباشرة
+import { createPortal as reactCreatePortal } from 'react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
 
 const CustomSelect = ({
@@ -12,28 +14,55 @@ const CustomSelect = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  
   const containerRef = useRef(null);
+  const buttonRef = useRef(null);
 
-  // إغلاق القائمة عند النقر خارجها
+  // تحديث موقع القائمة بالنسبة للـ viewport عند الفتح أو التمرير
+  const updateCoords = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  };
+
+  // إغلاق القائمة عند النقر خارجها أو عند التمرير
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current && 
+        !containerRef.current.contains(event.target) &&
+        !document.getElementById('portal-select-dropdown')?.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
-  // تحويل القيمة الحالية لنص آمن
+    if (isOpen) {
+      updateCoords();
+      window.addEventListener('scroll', updateCoords, true);
+      window.addEventListener('resize', updateCoords);
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', updateCoords, true);
+      window.removeEventListener('resize', updateCoords);
+    };
+  }, [isOpen]);
+
   const safeValue = value !== undefined && value !== null ? String(value) : '';
 
-  // مطابقة الخيار المحدد بشكل آمن
   const selectedOption = options.find(
     (opt) => opt && opt.value !== undefined && String(opt.value) === safeValue
   );
 
-  // تصفية الخيارات
   const filteredOptions = options.filter((opt) => {
     if (!searchable || !searchTerm.trim()) return true;
     return String(opt?.label || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -51,7 +80,7 @@ const CustomSelect = ({
   };
 
   return (
-    <div className={`relative w-full text-start ${isOpen ? 'z-50' : 'z-10'}`} ref={containerRef}>
+    <div className="relative w-full text-start" ref={containerRef}>
       {label && (
         <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
           {label}
@@ -60,6 +89,7 @@ const CustomSelect = ({
 
       {/* زر فتح القائمة */}
       <button
+        ref={buttonRef}
         type="button"
         onClick={(e) => {
           e.preventDefault();
@@ -83,9 +113,18 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة */}
-      {isOpen && (
-        <div className="absolute top-full right-0 left-0 mt-1 max-h-56 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[9999] p-1 space-y-0.5 custom-scrollbar">
+      {/* القائمة المنسدلة مع البورتال لرسمها مباشرة في الـ body */}
+      {isOpen && reactCreatePortal(
+        <div
+          id="portal-select-dropdown"
+          style={{
+            position: 'absolute',
+            top: `${coords.top + 4}px`,
+            left: `${coords.left}px`,
+            width: `${coords.width}px`,
+          }}
+          className="max-h-56 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[99999] p-1 space-y-0.5 custom-scrollbar"
+        >
           {searchable && (
             <div className="sticky top-0 p-1 bg-[#0A101D] z-10 border-b border-[var(--border-card)] pb-1.5">
               <div className="relative flex items-center">
@@ -128,7 +167,8 @@ const CustomSelect = ({
               );
             })
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
