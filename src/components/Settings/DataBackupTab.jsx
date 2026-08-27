@@ -1,9 +1,9 @@
 import React from 'react';
 import { Database, Download, Upload } from 'lucide-react';
 
-export default function DataBackupTab({ formData, setFormData, importInputRef, showToast, isRtl }) {
+export default function DataBackupTab({ formData = {}, setFormData, importInputRef, showToast, isRtl }) {
   const handleExport = () => {
-    const exportSlug = formData.slug && formData.slug !== '-' ? formData.slug : 'academy';
+    const exportSlug = formData?.slug && formData.slug !== '-' ? formData.slug : 'academy';
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(formData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
@@ -11,7 +11,7 @@ export default function DataBackupTab({ formData, setFormData, importInputRef, s
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    showToast(isRtl ? 'تم تصدير الإعدادات بنجاح' : 'Settings exported successfully');
+    if (showToast) showToast(isRtl ? 'تم تصدير الإعدادات بنجاح' : 'Settings exported successfully');
   };
 
   const handleImport = (e) => {
@@ -21,21 +21,23 @@ export default function DataBackupTab({ formData, setFormData, importInputRef, s
       fileReader.onload = (event) => {
         try {
           const parsed = JSON.parse(event.target.result);
-          setFormData((prev) => ({ 
-            ...prev, 
-            ...parsed,
-            weekend_days: Array.isArray(parsed.weekend_days) ? parsed.weekend_days : ['friday', 'saturday']
-          }));
-          showToast(isRtl ? 'تم استيراد الإعدادات بنجاح، اضغط حفظ لتأكيدها' : 'Settings imported successfully, click save to confirm');
+          if (setFormData) {
+            setFormData((prev) => ({ 
+              ...prev, 
+              ...parsed,
+              weekend_days: Array.isArray(parsed.weekend_days) ? parsed.weekend_days : ['friday', 'saturday']
+            }));
+          }
+          if (showToast) showToast(isRtl ? 'تم استيراد الإعدادات بنجاح، اضغط حفظ لتأكيدها' : 'Settings imported successfully, click save to confirm');
         } catch (err) {
-          showToast(isRtl ? 'ملف JSON غير صالح' : 'Invalid JSON file', 'error');
+          if (showToast) showToast(isRtl ? 'ملف JSON غير صالح' : 'Invalid JSON file', 'error');
         }
       };
     }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-start">
       <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
         <Database size={16} /> {isRtl ? 'النسخ الاحتياطي واستعادة البيانات' : 'Backup & Restoration'}
       </h2>
@@ -48,19 +50,21 @@ export default function DataBackupTab({ formData, setFormData, importInputRef, s
         <button 
           type="button" 
           onClick={handleExport} 
-          className="btn-secondary text-xs"
+          className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
         >
-          <Download size={15} /> {isRtl ? 'تصدير الإعدادات (JSON)' : 'Export Settings (JSON)'}
+          <Download size={15} /> 
+          <span>{isRtl ? 'تصدير الإعدادات (JSON)' : 'Export Settings (JSON)'}</span>
         </button>
         <input ref={importInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
         <button 
           type="button" 
-          onClick={() => importInputRef.current?.click()} 
-          className="btn-secondary text-xs"
+          onClick={() => importInputRef?.current?.click()} 
+          className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
         >
-          <Upload size={15} /> {isRtl ? 'استيراد إعدادات (JSON)' : 'Import Settings (JSON)'}
+          <Upload size={15} /> 
+          <span>{isRtl ? 'استيراد إعدادات (JSON)' : 'Import Settings (JSON)'}</span>
         </button>
       </div>
     </div>
   );
-        }
+}
