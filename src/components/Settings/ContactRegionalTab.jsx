@@ -50,7 +50,8 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
 
   return (
     <div className="space-y-5 text-start">
-      <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
+      {/* القسم الرئيسي: بيانات التواصل والدولة */}
+      <div className="card-surface space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
@@ -94,20 +95,21 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
         </div>
       </div>
 
-      <div className="border border-[var(--border-light)] rounded-xl overflow-hidden bg-[var(--surface-card)]">
+      {/* القسم المتقدم: الإعدادات الإقليمية */}
+      <div className="card-surface p-0 overflow-hidden">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full p-3 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-muted)] border-none cursor-pointer"
+          className="w-full p-4 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-sub)] border-none cursor-pointer"
         >
           <span>{t('settings.advancedRegional', 'إعدادات إقليمية متقدمة')}</span>
           {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         {showAdvanced && (
-          <div className="p-4 border-t border-[var(--border-light)] space-y-4">
+          <div className="p-4 border-t border-[var(--border-card)] space-y-4">
             <div>
-              <label className="block text-xs font-bold mb-1 text-[var(--text-muted)]">
+              <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
                 {t('settings.website', 'الموقع الإلكتروني')}
               </label>
               <input 
@@ -138,7 +140,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 text-[var(--text-muted)]">
+              <label className="block text-xs font-bold mb-2 text-[var(--text-main)]">
                 {t('settings.weekendDays', 'أيام العطلة الأسبوعية')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -149,10 +151,10 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
                       key={day.key}
                       type="button"
                       onClick={() => toggleWeekendDay(day.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
                         active 
-                          ? 'bg-[var(--primary)] text-white border-[var(--primary)]' 
-                          : 'bg-[var(--surface-input)] text-[var(--text-muted)] border-[var(--border-input)] hover:text-[var(--text-main)]'
+                          ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-[var(--primary-glow)]' 
+                          : 'bg-[var(--surface-input)] text-[var(--text-sub)] border-[var(--border-input)] hover:text-[var(--text-main)]'
                       }`}
                     >
                       {day.label}
