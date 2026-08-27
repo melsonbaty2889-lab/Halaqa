@@ -1,8 +1,12 @@
 import React from 'react';
 import { BookOpen, UserCheck, Users } from 'lucide-react';
 import { Select } from '@/components/UI/UI.jsx';
+import { useTranslation } from 'react-i18next';
 
-export default function QuranicPoliciesTab({ formData = {}, updateField, isRtl }) {
+export default function QuranicPoliciesTab({ formData = {}, updateField }) {
+  const { i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
+
   return (
     <div className="space-y-6 text-start">
       {/* المنهجية والروايات */}
