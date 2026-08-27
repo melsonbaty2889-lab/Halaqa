@@ -105,9 +105,6 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
         };
         setFormData(fetched);
         setInitialData(fetched);
-
-        // 🟢 ملاحظة: تم إزالة استدعاء الأحداث والـ localStorage من هنا لمنع إجبار الهيدر
-        // على التغير لمجرد فتح الصفحة بدون حفظ.
       }
     } catch (err) {
       showToast(isRtl ? 'حدث خطأ أثناء جلب البيانات: ' + err.message : 'Error fetching data: ' + err.message, 'error');
@@ -169,22 +166,22 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
       setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
 
       // 3. تحديث جدول الأكاديميات
-const { error: dbError } = await supabase
-  .from('academies')
-  .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
-  .eq('id', currentAcademyId);
+      const { error: dbError } = await supabase
+        .from('academies')
+        .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('id', currentAcademyId);
 
-if (dbError) {
-  console.error('DB error:', dbError);
-  throw new Error(`[Database RLS] ${dbError.message}`);
-}
+      if (dbError) {
+        console.error('DB error:', dbError);
+        throw new Error(`[Database RLS] ${dbError.message}`);
+      }
 
-// 🟢 تحديث الـ Context المباشر فور رفع الشعار
-if (refreshStatus) {
-  await refreshStatus();
-}
+      // 🟢 تحديث حالة الأكاديمية في Context فور رفع الصورة
+      if (refreshStatus) {
+        await refreshStatus();
+      }
 
-showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
+      showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
     } catch (err) {
       showToast((isRtl ? 'فشل رفع الشعار: ' : 'Logo upload failed: ') + err.message, 'error');
     } finally {
@@ -193,20 +190,20 @@ showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded success
   };
 
   const handleRemoveLogo = async () => {
-  setFormData(prev => ({ ...prev, logo_url: '' }));
-  if (isValidAcademyId) {
-    await supabase
-      .from('academies')
-      .update({ logo_url: '', updated_at: new Date().toISOString() })
-      .eq('id', currentAcademyId);
-    
-    // 🟢 تحديث الـ Context عند حذف الشعار
-    if (refreshStatus) {
-      await refreshStatus();
+    setFormData(prev => ({ ...prev, logo_url: '' }));
+    if (isValidAcademyId) {
+      await supabase
+        .from('academies')
+        .update({ logo_url: '', updated_at: new Date().toISOString() })
+        .eq('id', currentAcademyId);
+
+      // 🟢 تحديث حالة الأكاديمية في Context فور الحذف
+      if (refreshStatus) {
+        await refreshStatus();
+      }
     }
-  }
-  showToast(isRtl ? 'تم حذف الشعار بنجاح' : 'Logo removed successfully');
-};
+    showToast(isRtl ? 'تم حذف الشعار بنجاح' : 'Logo removed successfully');
+  };
 
   const validateForm = () => {
     if (!formData.name.trim()) {
@@ -291,12 +288,12 @@ showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded success
       setFormData(updatedState);
       setInitialData(updatedState);
 
-      // 🟢 1. تحديث الـ Context العام فوراً
+      // 🟢 تحديث الـ Context العام فوراً
       if (refreshStatus) {
         await refreshStatus();
       }
 
-      // 🟢 2. حفظ العملة محلياً وإطلاق حدث البث للهيدر عند الحفظ الفعلي
+      // 🟢 حفظ العملة محلياً وإطلاق حدث البث للهيدر عند الحفظ الفعلي
       localStorage.setItem('app_currency', formData.currency);
       window.dispatchEvent(new CustomEvent('currencyUpdated', { detail: formData.currency }));
 
@@ -391,7 +388,7 @@ showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded success
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent)] flex justify-center items-center text-[var(--primary)]">
+      <div className="min-h-screen bg-transparent flex justify-center items-center text-[var(--primary)]">
         <RefreshCw className="spin-animation" size={32} />
       </div>
     );
