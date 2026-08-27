@@ -3,8 +3,7 @@ import { Database, Download, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function DataBackupTab({ formData = {}, setFormData, importInputRef, showToast }) {
-  const { i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
 
   const handleExport = () => {
     const exportSlug = formData?.slug && formData.slug !== '-' ? formData.slug : 'academy';
@@ -15,7 +14,7 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    if (showToast) showToast(isRtl ? 'تم تصدير الإعدادات بنجاح' : 'Settings exported successfully');
+    if (showToast) showToast(t('backup.exportSuccess', 'تم تصدير الإعدادات بنجاح'));
   };
 
   const handleImport = (e) => {
@@ -32,9 +31,9 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
               weekend_days: Array.isArray(parsed.weekend_days) ? parsed.weekend_days : ['friday', 'saturday']
             }));
           }
-          if (showToast) showToast(isRtl ? 'تم استيراد الإعدادات بنجاح، اضغط حفظ لتأكيدها' : 'Settings imported successfully, click save to confirm');
+          if (showToast) showToast(t('backup.importSuccess', 'تم استيراد الإعدادات بنجاح، اضغط حفظ لتأكيدها'));
         } catch (err) {
-          if (showToast) showToast(isRtl ? 'ملف JSON غير صالح' : 'Invalid JSON file', 'error');
+          if (showToast) showToast(t('backup.importError', 'ملف JSON غير صالح'), 'error');
         }
       };
     }
@@ -43,12 +42,10 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
   return (
     <div className="space-y-4 text-start">
       <h2 className="text-sm font-bold text-[var(--primary)] flex items-center gap-2">
-        <Database size={16} /> {isRtl ? 'النسخ الاحتياطي واستعادة البيانات' : 'Backup & Restoration'}
+        <Database size={16} /> {t('backup.title', 'النسخ الاحتياطي واستعادة البيانات')}
       </h2>
       <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-        {isRtl 
-          ? 'تصدير إعدادات المنظومة لحفظها احتياطياً أو استيرادها في أكاديمية أخرى بنقرة واحدة.' 
-          : 'Export platform configuration as a backup or restore it across organizations with a single click.'}
+        {t('backup.description', 'تصدير إعدادات المنظومة لحفظها احتياطياً أو استيرادها في أكاديمية أخرى بنقرة واحدة.')}
       </p>
       <div className="flex gap-3 flex-wrap pt-2">
         <button 
@@ -57,7 +54,7 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
           className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
         >
           <Download size={15} /> 
-          <span>{isRtl ? 'تصدير الإعدادات (JSON)' : 'Export Settings (JSON)'}</span>
+          <span>{t('backup.exportBtn', 'تصدير الإعدادات (JSON)')}</span>
         </button>
         <input ref={importInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
         <button 
@@ -66,7 +63,7 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
           className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
         >
           <Upload size={15} /> 
-          <span>{isRtl ? 'استيراد إعدادات (JSON)' : 'Import Settings (JSON)'}</span>
+          <span>{t('backup.importBtn', 'استيراد إعدادات (JSON)')}</span>
         </button>
       </div>
     </div>
