@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import CustomSelect from '@/components/UI/CustomSelect.jsx';
+import { RIWAYAT_LIST } from '@/constants/riwayat.js';
 
 export default function QuranicPoliciesTab({ formData = {}, updateField }) {
   const { t } = useTranslation();
@@ -10,6 +12,25 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
     }
   };
 
+  // تحضير خيارات نمط التعليم
+  const educationModeOptions = [
+    { label: t('quranic.modeOnline', 'عن بعد (Online)'), value: 'online' },
+    { label: t('quranic.modeOnsite', 'حضوري (In-person)'), value: 'onsite' },
+    { label: t('quranic.modeHybrid', 'مختلط (Hybrid)'), value: 'hybrid' },
+  ];
+
+  // تحضير قائمة الروايات الكاملة من ملف riwayat.js
+  const riwayaOptions = (RIWAYAT_LIST || []).map((r) => ({
+    label: r.nameAr,
+    value: r.id,
+  }));
+
+  // تحضير خيارات المنهجية
+  const madrasaOptions = [
+    { label: t('quranic.madrasaEastern', 'المشرقية (المعتادة)'), value: 'eastern' },
+    { label: t('quranic.madrasaMaghrebi', 'المغربية'), value: 'maghrebi' },
+  ];
+
   return (
     <div className="space-y-5 text-start">
       <div className="card-surface space-y-4">
@@ -18,51 +39,33 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
         </h3>
 
         <div className="space-y-3.5">
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('quranic.mode', 'نمط التعليم')}
-            </label>
-            <select
-              value={formData?.education_mode || 'online'}
-              onChange={(e) => handleChange('education_mode', e.target.value)}
-              className="app-input text-start cursor-pointer"
-            >
-              <option value="online">عن بعد (Online)</option>
-              <option value="onsite">حضوري (In-person)</option>
-              <option value="hybrid">مختلط (Hybrid)</option>
-            </select>
-          </div>
+          {/* نمط التعليم */}
+          <CustomSelect
+            label={t('quranic.mode', 'نمط التعليم')}
+            value={formData?.education_mode || 'online'}
+            onChange={(val) => handleChange('education_mode', val)}
+            options={educationModeOptions}
+          />
 
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('quranic.riwaya', 'الرواية الافتراضية')}
-            </label>
-            <select
-              value={formData?.default_riwaya || 'hafs'}
-              onChange={(e) => handleChange('default_riwaya', e.target.value)}
-              className="app-input text-start cursor-pointer"
-            >
-              <option value="hafs">حفص عن عاصم</option>
-              <option value="warsh">ورش عن نافع</option>
-              <option value="qaloon">قالون عن نافع</option>
-              <option value="alduri">الدوري عن أبي عمرو</option>
-            </select>
-          </div>
+          {/* الرواية الافتراضية مع دعم البحث وجميع الروايات العشر */}
+          <CustomSelect
+            label={t('quranic.riwaya', 'الرواية الافتراضية')}
+            value={formData?.default_riwaya || 'hafs_an_asem'}
+            onChange={(val) => handleChange('default_riwaya', val)}
+            options={riwayaOptions}
+            searchable={true}
+            placeholder={t('quranic.selectRiwaya', 'اختر الرواية...')}
+          />
 
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('quranic.madrasa', 'المدرسة والمنهجية')}
-            </label>
-            <select
-              value={formData?.madrasa_type || 'eastern'}
-              onChange={(e) => handleChange('madrasa_type', e.target.value)}
-              className="app-input text-start cursor-pointer"
-            >
-              <option value="eastern">المشرقية (المعتادة)</option>
-              <option value="maghrebi">المغربية</option>
-            </select>
-          </div>
+          {/* المدرسة والمنهجية */}
+          <CustomSelect
+            label={t('quranic.madrasa', 'المدرسة والمنهجية')}
+            value={formData?.madrasa_type || 'eastern'}
+            onChange={(val) => handleChange('madrasa_type', val)}
+            options={madrasaOptions}
+          />
 
+          {/* خيارات التسجيل الذاتي والموافقة */}
           <div className="pt-2 space-y-2">
             <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[var(--text-main)]">
               <input
@@ -85,6 +88,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
             </label>
           </div>
 
+          {/* الحد الأقصى للطلاب */}
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
               {t('quranic.maxStudents', 'الحد الأقصى للطلاب في الحلقة')}
