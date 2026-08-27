@@ -14,23 +14,23 @@ export default function IdentityTab({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-5 text-start">
-      {/* قسم الشعار - تم توحيد المتغيرات مع الهوية */}
-      <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-light)] space-y-3">
+    <div className="space-y-6 text-start">
+      {/* قسم الشعار */}
+      <div className="card-surface space-y-4">
         <label className="block text-xs font-bold text-[var(--text-main)]">
           {t('identity.logoLabel', 'شعار الأكاديمية')}
         </label>
         
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-xl border border-[var(--border-light)] bg-[var(--bg-main)] flex items-center justify-center overflow-hidden shrink-0">
+          <div className="w-20 h-20 rounded-2xl border border-[var(--border-input)] bg-[var(--surface-input)] flex items-center justify-center overflow-hidden shrink-0">
             {formData?.logo_url ? (
               <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
             ) : (
-              <ImageIcon className="text-[var(--text-muted)]" size={24} />
+              <ImageIcon className="text-[var(--text-sub)]" size={28} />
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -42,9 +42,9 @@ export default function IdentityTab({
               type="button"
               disabled={uploadingLogo}
               onClick={() => fileInputRef?.current?.click()}
-              className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
+              className="btn-secondary text-xs px-4 py-2 flex items-center gap-2"
             >
-              <Upload size={14} />
+              <Upload size={15} />
               <span>{uploadingLogo ? t('common.uploading', 'جاري الرفع...') : t('identity.uploadBtn', 'تغيير الشعار')}</span>
             </button>
 
@@ -52,9 +52,9 @@ export default function IdentityTab({
               <button
                 type="button"
                 onClick={handleRemoveLogo}
-                className="text-xs px-3 py-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="text-xs px-3.5 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <Trash2 size={14} />
+                <Trash2 size={15} />
                 <span>{t('common.remove', 'حذف')}</span>
               </button>
             )}
@@ -62,9 +62,9 @@ export default function IdentityTab({
         </div>
       </div>
 
-      {/* قسم الأسماء والوصف - تم تحديد ألوان الحقول بـ Tailwind الصريح */}
-      <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      {/* قسم الأسماء والوصف */}
+      <div className="card-surface space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
               {t('identity.nameAr', 'اسم الأكاديمية (بالعربية)')}
@@ -73,7 +73,7 @@ export default function IdentityTab({
               type="text" 
               value={formData?.name_ar || ''} 
               onChange={(e) => handleNameChange?.('name_ar', e.target.value)} 
-              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none" 
+              className="app-input" 
             />
           </div>
 
@@ -86,7 +86,7 @@ export default function IdentityTab({
               value={formData?.name_en || ''} 
               onChange={(e) => handleNameChange?.('name_en', e.target.value)} 
               dir="ltr"
-              className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none text-left" 
+              className="app-input text-left" 
             />
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function IdentityTab({
             value={formData?.slug || ''} 
             onChange={(e) => updateField?.('slug', e.target.value)} 
             dir="ltr"
-            className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none text-left" 
+            className="app-input text-left" 
           />
         </div>
 
@@ -112,7 +112,7 @@ export default function IdentityTab({
             type="text" 
             value={formData?.tagline || ''} 
             onChange={(e) => updateField?.('tagline', e.target.value)} 
-            className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none" 
+            className="app-input" 
           />
         </div>
 
@@ -121,10 +121,10 @@ export default function IdentityTab({
             {t('identity.description', 'وصف الأكاديمية')}
           </label>
           <textarea 
-            rows={3} 
+            rows={4} 
             value={formData?.description || ''} 
             onChange={(e) => updateField?.('description', e.target.value)} 
-            className="w-full text-xs p-2.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-main)] text-[var(--text-main)] focus:border-[var(--primary)] outline-none resize-none" 
+            className="app-input resize-none" 
           />
         </div>
       </div>
