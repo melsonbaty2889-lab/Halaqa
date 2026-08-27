@@ -53,12 +53,12 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   const handleCountryChange = (countryCode) => {
     updateField('country_code', countryCode);
     
-    const matchedCountry = COUNTRIES_LIST.find(c => c.code === countryCode);
+    const matchedCountry = (COUNTRIES_LIST || []).find(c => c.code === countryCode);
     if (matchedCountry?.timezone) {
       updateField('timezone', matchedCountry.timezone);
     }
     
-    const matchedCurrency = CURRENCIES.find(c => c.countryCode === countryCode);
+    const matchedCurrency = (CURRENCIES || []).find(c => c.countryCode === countryCode);
     if (matchedCurrency?.code) {
       updateField('currency', matchedCurrency.code);
     }
@@ -75,7 +75,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   return (
     <div className="space-y-5 text-start">
       {/* القسم الرئيسي: بيانات التواصل والدولة */}
-      <div className="card-surface space-y-4">
+      <div className="card-surface space-y-4 !overflow-visible">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
@@ -83,7 +83,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             </label>
             <input 
               type="email" 
-              value={formData?.contact_email || ''} 
+              value={formData?.contact_email ?? ''} 
               onChange={(e) => updateField('contact_email', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
@@ -95,7 +95,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             </label>
             <input 
               type="text" 
-              value={formData?.contact_phone || ''} 
+              value={formData?.contact_phone ?? ''} 
               onChange={(e) => updateField('contact_phone', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
@@ -105,7 +105,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <CustomSelect 
             label={t('settings.country', 'الدولة')}
-            value={formData?.country_code || 'EG'}
+            value={formData?.country_code ?? 'EG'}
             onChange={handleCountryChange}
             options={countryOptions}
             searchable={true}
@@ -113,7 +113,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
 
           <CustomSelect 
             label={t('settings.currency', 'العملة الرسمية')}
-            value={formData?.currency || 'EGP'}
+            value={formData?.currency ?? 'EGP'}
             onChange={(val) => updateField('currency', val)}
             options={currencyOptions}
             searchable={true}
@@ -122,25 +122,25 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
       </div>
 
       {/* القسم المتقدم: الإعدادات الإقليمية */}
-      <div className="card-surface p-0 overflow-hidden">
+      <div className="card-surface p-0 !overflow-visible border border-[var(--border-card)] rounded-xl">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full p-4 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-sub)] border-none cursor-pointer"
+          className="w-full p-4 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-sub)] border-none cursor-pointer rounded-xl"
         >
           <span>{t('settings.advancedRegional', 'إعدادات إقليمية متقدمة')}</span>
           {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         {showAdvanced && (
-          <div className="p-4 border-t border-[var(--border-card)] space-y-4">
+          <div className="p-4 border-t border-[var(--border-card)] space-y-4 !overflow-visible">
             <div>
               <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
                 {t('settings.website', 'الموقع الإلكتروني')}
               </label>
               <input 
                 type="url" 
-                value={formData?.website || ''} 
+                value={formData?.website ?? ''} 
                 onChange={(e) => updateField('website', e.target.value)} 
                 className="app-input text-start dir-ltr text-xs" 
               />
@@ -149,7 +149,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <CustomSelect 
                 label={t('settings.timezone', 'المنطقة الزمنية')}
-                value={formData?.timezone || 'Africa/Cairo'}
+                value={formData?.timezone ?? 'Africa/Cairo'}
                 onChange={(val) => updateField('timezone', val)}
                 options={timezoneOptions}
                 searchable={true}
@@ -157,7 +157,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
 
               <CustomSelect 
                 label={t('settings.calendarType', 'نوع التقويم')}
-                value={formData?.calendar_type || 'gregorian'}
+                value={formData?.calendar_type ?? 'gregorian'}
                 onChange={(val) => updateField('calendar_type', val)}
                 options={calendarOptions}
               />
