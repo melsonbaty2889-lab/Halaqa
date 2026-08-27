@@ -33,7 +33,7 @@ export default function Settings({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* شريط التبويبات */}
+      {/* شريط التبويبات العلوي */}
       <div className="flex border-b border-[var(--border-light)] gap-2 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -56,7 +56,7 @@ export default function Settings({
         })}
       </div>
 
-      {/* محتوى التبويبات */}
+      {/* محتوى التبويبات الفعالة */}
       <form onSubmit={onSave} className="space-y-6">
         {activeTab === 'identity' && (
           <IdentityTab 
@@ -97,7 +97,7 @@ export default function Settings({
           />
         )}
 
-        {/* شريط الأزرار السفلي */}
+        {/* شريط التحكم السفلي للحفظ والتراجع */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-light)]">
           <div className="w-full sm:w-auto">
             {isDirty && (
