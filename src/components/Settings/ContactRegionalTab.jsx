@@ -47,6 +47,7 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
 
   return (
     <div className="space-y-5 text-start">
+      {/* البطاقة الرئيسية للمعطيات الأساسية */}
       <div className="bg-[var(--surface-card)] p-4 rounded-xl border border-[var(--border-light)] space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
@@ -91,18 +92,19 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
         </div>
       </div>
 
-      <div className="border border-[var(--border-light)] rounded-xl overflow-hidden">
+      {/* قسم الإعدادات المتقدمة المنسدل */}
+      <div className="border border-[var(--border-light)] rounded-xl overflow-hidden bg-[var(--surface-card)]">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full p-3 bg-[var(--surface-card)] hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-muted)] border-none cursor-pointer"
+          className="w-full p-3 bg.transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-muted)] border-none cursor-pointer"
         >
           <span>{isRtl ? 'إعدادات إقليمية متقدمة' : 'Advanced Regional Settings'}</span>
           {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         {showAdvanced && (
-          <div className="p-4 bg-[var(--surface-card)] border-t border-[var(--border-light)] space-y-4">
+          <div className="p-4 border-t border-[var(--border-light)] space-y-4">
             <div>
               <label className="block text-xs font-bold mb-1 text-[var(--text-muted)]">
                 {isRtl ? 'الموقع الإلكتروني' : 'Website'}
@@ -134,11 +136,12 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
               />
             </div>
 
+            {/* تم اصلاح العرض الأفقي المتناسق لأيام العطلة */}
             <div>
               <label className="block text-xs font-bold mb-2 text-[var(--text-muted)]">
                 {isRtl ? 'أيام العطلة الأسبوعية' : 'Weekend Days'}
               </label>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex flex-wrap gap-2">
                 {daysList.map((day) => {
                   const active = (formData?.weekend_days || []).includes(day.key);
                   return (
@@ -146,8 +149,10 @@ export default function ContactRegionalTab({ formData = {}, updateField, isRtl }
                       key={day.key}
                       type="button"
                       onClick={() => toggleWeekendDay(day.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                        active ? 'btn-primary' : 'btn-secondary'
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                        active 
+                          ? 'bg-[var(--primary)] text-white border-[var(--primary)]' 
+                          : 'bg-[var(--surface-input)] text-[var(--text-muted)] border-[var(--border-input)] hover:text-[var(--text-main)]'
                       }`}
                     >
                       {day.label}
