@@ -18,10 +18,18 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
     { label: t('quranic.modeHybrid', 'مختلط (Hybrid)'), value: 'hybrid' },
   ];
 
-  const riwayaOptions = (RIWAYAT_LIST || []).map((r) => ({
-    label: r.nameAr || r.name || r.label,
-    value: r.id || r.value,
-  }));
+  // تأمين معالجة قائمة الروايات لضمان وجود value و label دائماً
+  const riwayaOptions = Array.isArray(RIWAYAT_LIST)
+    ? RIWAYAT_LIST.map((r, index) => {
+        if (typeof r === 'string') {
+          return { label: r, value: r };
+        }
+        return {
+          label: r?.nameAr || r?.name || r?.label || `رواية ${index + 1}`,
+          value: String(r?.id ?? r?.value ?? r?.code ?? r?.nameAr ?? index),
+        };
+      })
+    : [];
 
   const madrasaOptions = [
     { label: t('quranic.madrasaEastern', 'المشرقية (المعتادة)'), value: 'eastern' },
