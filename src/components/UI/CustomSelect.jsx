@@ -14,6 +14,7 @@ const CustomSelect = ({
   const [searchTerm, setSearchTerm] = useState('');
   const containerRef = useRef(null);
 
+  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -24,15 +25,26 @@ const CustomSelect = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // مقارنة شاملة للـ value تتفادى اختلاف الأنواع (String vs Number)
+  // مطابقة الخيار المحدد مع مراعاة النصوص والأرقام
   const selectedOption = options.find((opt) => String(opt.value) === String(value));
 
-  // تصفية الخيارات بناءً على البحث
-  const filteredOptions = searchable && searchTerm
-    ? options.filter((opt) =>
-        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : options;
+  // تصفية الخيارات - تصفية صحيحة سواء في حالة البحث أو بدون بحث
+  const filteredOptions = options.filter((opt) => {
+    if (!searchable || !searchTerm.trim()) return true;
+    return String(opt.label || '').toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const handleSelect = (e, optionValue) => {
+    // منع انتشار الحدث وإلغاء أي سلوك إرسال افتراضي
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (typeof onChange === 'function') {
+      onChange(optionValue);
+    }
+    setIsOpen(false);
+    setSearchTerm('');
+  };
 
   return (
     <div className={`relative w-full text-start ${isOpen ? 'z-50' : 'z-10'}`} ref={containerRef}>
@@ -45,7 +57,10 @@ const CustomSelect = ({
       {/* زر فتح القائمة */}
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={(e) => {
+          e.preventDefault();
+          setIsOpen((prev) => !prev);
+        }}
         className={`app-input w-full flex items-center justify-between cursor-pointer text-start transition-all ${
           error ? 'border-rose-500' : ''
         }`}
@@ -65,7 +80,7 @@ const CustomSelect = ({
 
       {/* القائمة المنسدلة الظاهرة فوق الكل */}
       {isOpen && (
-        <div className="absolute top-full right-0 left-0 mt-1 max-h-48 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[999] p-1 space-y-0.5 custom-scrollbar">
+        <div className="absolute top-full right-0 left-0 mt-1 max-h-56 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[9999] p-1 space-y-0.5 custom-scrollbar">
           {searchable && (
             <div className="sticky top-0 p-1 bg-[#0A101D] z-10 border-b border-[var(--border-card)] pb-1.5">
               <div className="relative flex items-center">
@@ -93,11 +108,7 @@ const CustomSelect = ({
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => {
-                    onChange(opt.value);
-                    setIsOpen(false);
-                    setSearchTerm('');
-                  }}
+                  onMouseDown={(e) => handleSelect(e, opt.value)}
                   className={`w-full text-right px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
                       ? 'bg-[var(--primary)] text-white font-bold'
