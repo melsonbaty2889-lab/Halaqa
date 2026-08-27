@@ -75,7 +75,7 @@ export default function Settings({
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
         {/* الخطوة الأولى: تضمين الهوية والتواصل الإقليمي */}
         {activeStep === 'general' && (
-          <div className="space-y-6">
+          <div className="space-y-6 !overflow-visible">
             <IdentityTab 
               formData={formData} 
               updateField={updateField} 
@@ -91,7 +91,7 @@ export default function Settings({
 
         {/* الخطوة الثانية: تضمين السياسات القرآنية والنسخ الاحتياطي */}
         {activeStep === 'system' && (
-          <div className="space-y-6">
+          <div className="space-y-6 !overflow-visible">
             <QuranicPoliciesTab formData={formData} updateField={updateField} />
             <DataBackupTab 
               formData={formData} 
@@ -102,31 +102,33 @@ export default function Settings({
           </div>
         )}
 
-        {/* شريط التحكم السفلي */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-card)]">
-          <div className="w-full sm:w-auto min-h-[38px] flex items-center">
-            {isDirty && (
-              <button
-                type="button"
-                onClick={onConfirmDiscard}
-                className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5 cursor-pointer w-full sm:w-auto"
-              >
-                <RotateCcw size={14} />
-                <span>{t('common.discard', 'تراجع')}</span>
-              </button>
-            )}
-          </div>
-          
+        {/* شريط التحكم السفلي الموحد والثابت موقعه في الخطوتين */}
+        <div className="flex flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-card)] w-full">
+          {/* زر حفظ التغييرات */}
           <button 
             type="submit" 
             disabled={saving} 
-            className={`btn-primary text-xs px-6 py-2.5 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto ${
+            className={`btn-primary text-xs px-6 py-2.5 flex items-center justify-center gap-2 cursor-pointer ${
               saving ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             <Save size={16} />
             <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ التغييرات')}</span>
           </button>
+
+          {/* حاوية زر التراجع لضمان عدم اهتزاز مكان زر الحفظ */}
+          <div className="min-h-[38px] flex items-center">
+            {isDirty && (
+              <button
+                type="button"
+                onClick={onConfirmDiscard}
+                className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw size={14} />
+                <span>{t('common.discard', 'تراجع')}</span>
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>
