@@ -6,8 +6,8 @@
 @tailwind utilities;
 
 @layer base {
+  /* 1. الخلفيات والأسطح */
   :root {
-    /* 1. الخلفيات والأسطح */
     --bg-dark: #070B11;
     --surface-card: rgba(15, 23, 42, 0.85);
     --surface-input: #0A101D;
@@ -39,15 +39,14 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden !important;
-    background-color: #070B11; /* اللون الأساسي للمشروع */
+    background-color: #070B11;
     
-    /* 🌟 خلفية النجوم والتوهج الزمردي مثبتة خلف كل شيء */
     background-image: 
       radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
       radial-gradient(rgba(255, 255, 255, 0.18) 1.2px, transparent 1.2px);
     background-size: 100% 100%, 28px 28px;
     background-position: 0 0, 0 0;
-    background-attachment: fixed; /* تثبيت النجوم أثناء التمرير */
+    background-attachment: fixed;
 
     color: #FFFFFF;
     font-family: 'Cairo', sans-serif;
@@ -60,7 +59,6 @@
     font-family: 'Cairo', sans-serif !important;
   }
 
-  /* 🌟 إصلاح شكل القوائم المنسدلة على هواتف أندرويد لتعمل باللون الداكن 🌟 */
   select {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -86,7 +84,7 @@
     flex-direction: column;
   }
 
-  /* شريط التمرير */
+  /* شريط التمرير العام */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -104,26 +102,33 @@
 }
 
 @layer components {
-  /* 📦 1. بطاقة المحتوى الموحدة */
+  /* 📦 1. بطاقة المحتوى الموحدة (معدلة لتصبح مناسبة للجوال) */
   .card-surface {
     background-color: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.5rem;
-    padding: 2rem 1.5rem;
+    border-radius: 1.25rem;
+    padding: 1.25rem 1rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   }
 
-  /* ✏️ 2. حقول الإدخال */
+  @media (min-width: 640px) {
+    .card-surface {
+      padding: 1.5rem 1.25rem;
+    }
+  }
+
+  /* ✏️ 2. حقول الإدخال (معدلة لتقليل الارتفاع والبادنج) */
   .app-input {
     width: 100%;
+    height: 2.375rem; /* ~38px بدل الكبر السابق */
     background-color: #0A101D;
     border: 1px solid #1B2738;
     color: #FFFFFF;
-    border-radius: 0.875rem;
-    padding: 0.875rem 1rem;
-    font-size: 0.95rem;
+    border-radius: 0.625rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
     transition: all 0.2s ease-in-out;
   }
 
@@ -147,9 +152,9 @@
     background: linear-gradient(180deg, #E67E00 0%, #D97706 100%);
     color: #FFFFFF;
     font-weight: 700;
-    font-size: 1rem;
-    padding: 0.875rem 1.25rem;
-    border-radius: 0.875rem;
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.75rem;
     transition: all 0.2s ease-in-out;
     display: flex;
     align-items: center;
@@ -175,8 +180,9 @@
     color: #FFFFFF;
     border: 1px solid #1B2738;
     font-weight: 600;
-    padding: 0.875rem 1.25rem;
-    border-radius: 0.875rem;
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.75rem;
     transition: all 0.2s ease-in-out;
     display: flex;
     align-items: center;
@@ -205,17 +211,26 @@
 
   /* 📖 5. الشعار الأعلى */
   .logo-icon-wrapper {
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 3.5rem;
+    height: 3.5rem;
     background: linear-gradient(135deg, #059669 0%, #10B981 100%);
     border: 1px solid rgba(52, 211, 153, 0.3);
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.25rem auto;
+    margin: 0 auto 1rem auto;
     box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
   }
+}
+
+/* 🌟 إخفاء شريط التمرير الأفقي لتبويبات الملاحة */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* =========================================================
