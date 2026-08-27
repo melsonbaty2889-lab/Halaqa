@@ -37,7 +37,7 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
 
   return (
     <div className="space-y-5 text-start">
-      <div className="card-surface space-y-4">
+      <div className="card-surface space-y-4 !overflow-visible">
         <div className="flex items-center gap-2 text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
           <Database size={18} />
           <h3 className="text-xs font-bold">
