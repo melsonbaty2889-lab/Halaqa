@@ -6,7 +6,7 @@ import QuranicPoliciesTab from './QuranicPoliciesTab';
 import DataBackupTab from './DataBackupTab';
 
 export default function Settings({ 
-  formData, 
+  formData = {}, 
   updateField, 
   handleNameChange, 
   handleLogoUpload, 
