@@ -25,13 +25,18 @@ const CustomSelect = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // مطابقة الخيار المحدد
-  const selectedOption = options.find((opt) => String(opt.value) === String(value));
+  // تحويل القيمة الحالية لنص آمن
+  const safeValue = value !== undefined && value !== null ? String(value) : '';
+
+  // مطابقة الخيار المحدد بشكل آمن
+  const selectedOption = options.find(
+    (opt) => opt && opt.value !== undefined && String(opt.value) === safeValue
+  );
 
   // تصفية الخيارات
   const filteredOptions = options.filter((opt) => {
     if (!searchable || !searchTerm.trim()) return true;
-    return String(opt.label || '').toLowerCase().includes(searchTerm.toLowerCase());
+    return String(opt?.label || '').toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const handleSelect = (e, optionValue) => {
@@ -90,6 +95,7 @@ const CustomSelect = ({
                   placeholder="بحث..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
                   className="w-full bg-[var(--surface-input)] border border-[var(--border-input)] rounded-lg pr-7 pl-2 py-1 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] placeholder:text-[var(--text-muted)]"
                   autoFocus
                 />
@@ -102,11 +108,12 @@ const CustomSelect = ({
               لا توجد خيارات متاحة
             </div>
           ) : (
-            filteredOptions.map((opt) => {
-              const isSelected = String(value) === String(opt.value);
+            filteredOptions.map((opt, idx) => {
+              const optVal = opt?.value !== undefined ? String(opt.value) : String(idx);
+              const isSelected = optVal === safeValue;
               return (
                 <button
-                  key={opt.value}
+                  key={optVal || idx}
                   type="button"
                   onClick={(e) => handleSelect(e, opt.value)}
                   className={`w-full text-right px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
