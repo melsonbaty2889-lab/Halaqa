@@ -19,7 +19,7 @@ export default function Settings({
   showToast,
   onSave, 
   saving, 
-  isDirty = true, // تم توحيد القيمة الافتراضية لمنع تجميد الأزرار
+  isDirty = true,
   handleDiscardChanges 
 }) {
   const { t, i18n } = useTranslation();
@@ -72,8 +72,8 @@ export default function Settings({
         })}
       </div>
 
-      {/* محتوى التبويبات */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* محتوى التبويبات داخل نموذج يضمن عدم قص العناصر */}
+      <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
         {activeTab === 'identity' && (
           <IdentityTab 
             formData={formData} 
