@@ -169,17 +169,22 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
       setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
 
       // 3. تحديث جدول الأكاديميات
-      const { error: dbError } = await supabase
-        .from('academies')
-        .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
-        .eq('id', currentAcademyId);
+const { error: dbError } = await supabase
+  .from('academies')
+  .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+  .eq('id', currentAcademyId);
 
-      if (dbError) {
-        console.error('DB error:', dbError);
-        throw new Error(`[Database RLS] ${dbError.message}`);
-      }
+if (dbError) {
+  console.error('DB error:', dbError);
+  throw new Error(`[Database RLS] ${dbError.message}`);
+}
 
-      showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
+// 🟢 تحديث الـ Context المباشر فور رفع الشعار
+if (refreshStatus) {
+  await refreshStatus();
+}
+
+showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
     } catch (err) {
       showToast((isRtl ? 'فشل رفع الشعار: ' : 'Logo upload failed: ') + err.message, 'error');
     } finally {
@@ -188,15 +193,20 @@ export default function Settings({ currentAcademyId: propAcademyId, isRtl = true
   };
 
   const handleRemoveLogo = async () => {
-    setFormData(prev => ({ ...prev, logo_url: '' }));
-    if (isValidAcademyId) {
-      await supabase
-        .from('academies')
-        .update({ logo_url: '', updated_at: new Date().toISOString() })
-        .eq('id', currentAcademyId);
+  setFormData(prev => ({ ...prev, logo_url: '' }));
+  if (isValidAcademyId) {
+    await supabase
+      .from('academies')
+      .update({ logo_url: '', updated_at: new Date().toISOString() })
+      .eq('id', currentAcademyId);
+    
+    // 🟢 تحديث الـ Context عند حذف الشعار
+    if (refreshStatus) {
+      await refreshStatus();
     }
-    showToast(isRtl ? 'تم حذف الشعار بنجاح' : 'Logo removed successfully');
-  };
+  }
+  showToast(isRtl ? 'تم حذف الشعار بنجاح' : 'Logo removed successfully');
+};
 
   const validateForm = () => {
     if (!formData.name.trim()) {
