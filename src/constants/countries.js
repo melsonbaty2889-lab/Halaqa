@@ -68,6 +68,10 @@ export const COUNTRIES_LIST = [
   { code: 'NE', flag: '🇳🇪', dialCode: '+227', timezone: 'Africa/Niamey', nameAr: 'النيجر', nameEn: 'Niger' }
 ];
 
-// تصدير متوافق لمنع أي تعارض مستقبلي
+export const COUNTRIES_MAP = COUNTRIES_LIST.reduce((acc, curr) => {
+  acc[curr.code] = curr;
+  return acc;
+}, {});
+
 export const COUNTRIES = COUNTRIES_LIST;
 export default COUNTRIES_LIST;
