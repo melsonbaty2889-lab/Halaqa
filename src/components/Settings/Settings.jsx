@@ -19,7 +19,7 @@ export default function Settings({
   showToast,
   onSave, 
   saving, 
-  isDirty,
+  isDirty = true, // تم توحيد القيمة الافتراضية لمنع تجميد الأزرار
   handleDiscardChanges 
 }) {
   const { t, i18n } = useTranslation();
@@ -33,8 +33,17 @@ export default function Settings({
   ];
 
   const onConfirmDiscard = () => {
-    if (window.confirm(t('common.confirmDiscard', 'هل أنت متأكد من إلغاء التغييرات غير محفوظة؟'))) {
-      handleDiscardChanges();
+    if (window.confirm(t('common.confirmDiscard', 'هل أنت متأكد من إلغاء التغييرات غير المحفوظة؟'))) {
+      if (typeof handleDiscardChanges === 'function') {
+        handleDiscardChanges();
+      }
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (typeof onSave === 'function') {
+      onSave(e);
     }
   };
 
@@ -64,7 +73,7 @@ export default function Settings({
       </div>
 
       {/* محتوى التبويبات */}
-      <form onSubmit={onSave} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {activeTab === 'identity' && (
           <IdentityTab 
             formData={formData} 
@@ -95,7 +104,7 @@ export default function Settings({
               <button
                 type="button"
                 onClick={onConfirmDiscard}
-                className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5"
+                className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw size={14} />
                 <span>{t('common.discard', 'تراجع')}</span>
@@ -105,9 +114,9 @@ export default function Settings({
           
           <button 
             type="submit" 
-            disabled={saving || !isDirty} 
-            className={`btn-primary text-xs px-6 py-2.5 flex items-center justify-center gap-2 ${
-              (!isDirty || saving) ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
+            disabled={saving} 
+            className={`btn-primary text-xs px-6 py-2.5 flex items-center justify-center gap-2 cursor-pointer ${
+              saving ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             <Save size={16} />
