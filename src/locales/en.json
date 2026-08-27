@@ -43,7 +43,7 @@
   },
   "common": {
     "welcome": "Welcome to Smart Halaqa",
-    "welcome_back": "Welcome Back 👋",
+    "welcome_back": "Welcome Back",
     "upgrade": "Upgrade",
     "searchPlaceholder": "Quick search...",
     "noResults": "No matching results",
@@ -59,7 +59,9 @@
     "notes": "Add notes or feedback...",
     "save_attendance": "Approve & Save Attendance",
     "currency": "EGP",
-    "lang_switch": "العربية"
+    "lang_switch": "العربية",
+    "uploading": "Uploading...",
+    "remove": "Remove"
   },
   "header": {
     "admin": "Admin"
@@ -211,7 +213,7 @@
       "thu": "Thu",
       "fri": "Fri"
     }
-    {
+  },
   "settings": {
     "title": "Platform Governance & Settings",
     "identityTab": "Identity & Logo",
@@ -272,10 +274,5 @@
     "exportSuccess": "Settings exported successfully!",
     "importSuccess": "Settings imported successfully. Click save to confirm.",
     "importError": "Invalid JSON configuration file"
-  },
-  "common": {
-    "uploading": "Uploading...",
-    "remove": "Remove",
-    "save": "Save Changes",
-    "cancel": "Cancel"
-  }   
+  }
+}
