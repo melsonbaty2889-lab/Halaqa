@@ -208,6 +208,14 @@ export default function Settings({
 
       setInitialData(formData);
       setIsDirty(false);
+
+      if (typeof onAcademyUpdate === 'function') {
+        onAcademyUpdate({
+          ...updatePayload,
+          id: academyId
+        });
+      }
+      
       alert(t('common.saveSuccess', 'تم حفظ التغييرات بنجاح'));
     } catch (error) {
       console.error('Error saving settings:', error);
