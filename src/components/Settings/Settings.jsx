@@ -124,7 +124,7 @@ export default function Settings({
     });
   };
 
-  // 2. دالة رفع الشعار المعالجة للأخطاء بشكل تفصيلي
+  // 2. دالة رفع الشعار إلى avatars/logos
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -132,11 +132,10 @@ export default function Settings({
     try {
       setUploadingLogo(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `logo_${Date.now()}.${fileExt}`;
-      const filePath = `${academyId}/${fileName}`;
+      // الرفع داخل مجلد logos المباشر
+      const filePath = `logos/logo-${academyId}.${fileExt}`;
 
-      // الرفع لمجلد الحاوية academy-assets
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
           cacheControl: '3600',
@@ -153,11 +152,11 @@ export default function Settings({
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const newLogoUrl = publicUrlData.publicUrl;
+      // إضافة طابع زمني لتجاوز التخزين المؤقت للبديل الجديد
+      const newLogoUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
       updateField('logo_url', newLogoUrl);
     } catch (error) {
       console.error('Error uploading logo:', error);
-      // إظهار نص الخطأ الفعلي من Supabase إن وجد للتشخيص
       const errorMsg = error?.message || t('common.uploadError', 'حدث خطأ أثناء رفع الشعار، يرجى المحاولة لاحقاً.');
       alert(`خطأ في الرفع: ${errorMsg}`);
     } finally {
