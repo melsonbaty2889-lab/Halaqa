@@ -257,10 +257,16 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ باقي البيانات
+  // 4. حفظ باقي البيانات مع التحقق الإلزامي من وجود اسم للأكاديمية
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
+
+    // التحقق من أن الاسم بالعربية ليس فارغاً أو عبارة عن مسافات فقط
+    if (!formData.name?.ar || !formData.name.ar.trim()) {
+      showToast(t('settings.nameRequired', 'اسم الأكاديمية (بالعربية) حقل إلزامي ولا يمكن تركه فارغاً'), 'error');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -316,6 +322,7 @@ export default function Settings({
       setSaving(false);
     }
   };
+  
 
   const handleDiscardChanges = () => {
     setFormData(initialData);
