@@ -21,6 +21,16 @@ export default function Settings({
   const { updateAcademyState } = useAcademy();
   const [activeStep, setActiveStep] = useState('general');
 
+  // حالة رسائل التنبيه الفورية (Toast)
+  const [toastMessage, setToastMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+
+  const showToast = (text, type = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000); // تختفي الرسالة تلقائياً بعد 4 ثوانٍ
+  };
+
   // مراجع رفع الملفات والنسخ الاحتياطي
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
@@ -187,8 +197,11 @@ export default function Settings({
         onAcademyUpdate({ id: academyId, logo_url: newLogoUrl });
       }
 
+      showToast(t('settings.logoUploadSuccess', 'تم تحديث الشعار بنجاح!'), 'success');
+
     } catch (error) {
       console.error('Error uploading logo:', error);
+      showToast(t('settings.logoUploadError', 'حدث خطأ أثناء رفع الشعار'), 'error');
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) {
@@ -226,8 +239,11 @@ export default function Settings({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+
+      showToast(t('settings.logoRemoveSuccess', 'تم إزالة الشعار بنجاح!'), 'success');
     } catch (error) {
       console.error('Error removing logo:', error);
+      showToast(t('settings.logoRemoveError', 'حدث خطأ أثناء إزالة الشعار'), 'error');
     }
   };
 
@@ -267,6 +283,9 @@ export default function Settings({
       setInitialData(formData);
       setIsDirty(false);
 
+      // رسالة نجاح الحفظ في الواجهة
+      showToast(t('settings.saveSuccess', 'تم حفظ التغييرات بنجاح!'), 'success');
+
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({
           ...updatePayload,
@@ -282,6 +301,7 @@ export default function Settings({
       }
     } catch (error) {
       console.error('Error saving settings:', error);
+      showToast(t('settings.saveError', 'حدث خطأ أثناء حفظ التغييرات'), 'error');
     } finally {
       setSaving(false);
     }
@@ -324,6 +344,25 @@ export default function Settings({
 
       {/* محتوى النموذج */}
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
+        
+        {/* شريط تنبيه النجاح/الخطأ الفوري */}
+        {toastMessage && (
+          <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-lg ${
+            toastMessage.type === 'success' 
+              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400' 
+              : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+          }`}>
+            <span>{toastMessage.text}</span>
+            <button 
+              type="button" 
+              onClick={() => setToastMessage(null)} 
+              className="text-xs opacity-70 hover:opacity-100 cursor-pointer px-1"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* الخطوة الأولى */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'general' ? 'block' : 'hidden'}`}>
           <IdentityTab 
