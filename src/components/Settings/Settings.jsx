@@ -47,7 +47,7 @@ export default function Settings({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 text-start" dir={i18n.dir()}>
+    <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={i18n.dir()}>
       {/* شريط الخطوات المكون من خطوتين متساويتين */}
       <div className="grid grid-cols-2 border-b border-[var(--border-card)] gap-2">
         {steps.map((step) => {
