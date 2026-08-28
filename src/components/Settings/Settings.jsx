@@ -257,14 +257,24 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ باقي البيانات مع التحقق الإلزامي من وجود اسم للأكاديمية
+  // 4. حفظ باقي البيانات مع التحقق الديناميكي من اسم الأكاديمية
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
 
-    // التحقق من أن الاسم بالعربية ليس فارغاً أو عبارة عن مسافات فقط
-    if (!formData.name?.ar || !formData.name.ar.trim()) {
-      showToast(t('settings.nameRequired', 'اسم الأكاديمية (بالعربية) حقل إلزامي ولا يمكن تركه فارغاً'), 'error');
+    // استخراج الأسماء مع تنظيف المسافات
+    const arName = formData.name?.ar?.trim();
+    const enName = formData.name?.en?.trim();
+
+    // التحقق الديناميكي: يتأكد من وجود اسم باللغة الحالية أو أي اسم صالح على الأقل
+    const isValid = isRtl ? (arName || enName) : (enName || arName);
+
+    if (!isValid) {
+      const errorMessage = isRtl
+        ? t('settings.nameRequiredAr', 'يرجى إدخال اسم الأكاديمية')
+        : t('settings.nameRequiredEn', 'Please enter the academy name');
+
+      showToast(errorMessage, 'error');
       return;
     }
 
