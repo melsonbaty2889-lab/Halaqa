@@ -127,7 +127,7 @@ export default function Settings({
     });
   };
 
-  // 2. دالة رفع الشعار مباشرة وحذف اللوجو القديم من مجلد logos
+  // 2. دالة رفع الشعار وحذف القديم نهائياً مع تخطي Caching المتصفح
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -135,7 +135,7 @@ export default function Settings({
     try {
       setUploadingLogo(true);
 
-      // أ) البحث عن أي ملفات قديمة تخص هذه الأكاديمية وحذفها
+      // أ) استعلام عن أي صور قديمة داخل مجلد logos لحذفها
       const { data: existingFiles } = await supabase.storage
         .from('avatars')
         .list('logos', { search: `logo-${academyId}` });
@@ -145,28 +145,29 @@ export default function Settings({
         await supabase.storage.from('avatars').remove(filesToRemove);
       }
 
-      // ب) تحديد المسار الجديد بداخل مجلد logos
+      // ب) إعطاء اسم فريد للملف باستخدام التاريخ الحاضر
       const fileExt = file.name.split('.').pop();
-      const filePath = `logos/logo-${academyId}.${fileExt}`;
+      const fileName = `logo-${academyId}-${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
 
-      // ج) رفع اللوجو الجديد
+      // ج) رفع الملف الجديد إلى avatars
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
-          cacheControl: '3600',
+          cacheControl: '0',
           upsert: true 
         });
 
       if (uploadError) throw uploadError;
 
-      // د) الحصول على رابط اللوجو العام المباشر
+      // د) جلب الرابط العام الجديد
       const { data: publicUrlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const newLogoUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+      const newLogoUrl = publicUrlData.publicUrl;
 
-      // هـ) التحديث الفوري في جدول الأكاديميات (academies)
+      // هـ) الحفظ المباشر في قاعدة البيانات
       const { error: dbError } = await supabase
         .from('academies')
         .update({ logo_url: newLogoUrl })
@@ -174,22 +175,18 @@ export default function Settings({
 
       if (dbError) throw dbError;
 
-      // و) تحديث الحالة المحلية والـ Context ليظهر اللوجو الجديد فوراً
-      updateField('logo_url', newLogoUrl);
+      // و) تحديث State والـ Context وحالة initialData
+      setFormData(prev => ({ ...prev, logo_url: newLogoUrl }));
+      setInitialData(prev => ({ ...prev, logo_url: newLogoUrl }));
 
       if (typeof updateAcademyState === 'function') {
-        updateAcademyState({
-          id: academyId,
-          logo_url: newLogoUrl
-        });
+        updateAcademyState({ id: academyId, logo_url: newLogoUrl });
       }
 
       if (typeof onAcademyUpdate === 'function') {
-        onAcademyUpdate({
-          id: academyId,
-          logo_url: newLogoUrl
-        });
+        onAcademyUpdate({ id: academyId, logo_url: newLogoUrl });
       }
+
     } catch (error) {
       console.error('Error uploading logo:', error);
     } finally {
@@ -200,12 +197,11 @@ export default function Settings({
     }
   };
 
-  // 3. حذف الشعار وحذفه أيضاً من Storage وقاعدة البيانات
+  // 3. دالة حذف الشعار من Storage وقاعدة البيانات
   const handleRemoveLogo = async () => {
     if (!academyId) return;
 
     try {
-      // البحث عن الملف في Storage وحذفه
       const { data: existingFiles } = await supabase.storage
         .from('avatars')
         .list('logos', { search: `logo-${academyId}` });
@@ -215,13 +211,13 @@ export default function Settings({
         await supabase.storage.from('avatars').remove(filesToRemove);
       }
 
-      // إزالة الرابط من قاعدة البيانات
       await supabase
         .from('academies')
         .update({ logo_url: null })
         .eq('id', academyId);
 
-      updateField('logo_url', '');
+      setFormData(prev => ({ ...prev, logo_url: '' }));
+      setInitialData(prev => ({ ...prev, logo_url: '' }));
 
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({ id: academyId, logo_url: null });
