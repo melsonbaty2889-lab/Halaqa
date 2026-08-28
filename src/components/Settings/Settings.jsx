@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Building, ShieldCheck, Save, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext'; // 👈 استيراد هوك الأكاديمية
 import IdentityTab from './IdentityTab';
 import ContactRegionalTab from './ContactRegionalTab';
 import QuranicPoliciesTab from './QuranicPoliciesTab';
@@ -17,6 +18,7 @@ export default function Settings({
   onAcademyUpdate
 }) {
   const { t, i18n } = useTranslation();
+  const { updateAcademyState } = useAcademy(); // 👈 سحب دالة تحديث الحالة لحظياً
   const [activeStep, setActiveStep] = useState('general');
 
   // مراجع رفع الملفات والنسخ الاحتياطي
@@ -165,7 +167,7 @@ export default function Settings({
     }
   };
 
-  // 3. حذف الشعار مؤقتًا (الخيار الثاني)
+  // 3. حذف الشعار مؤقتًا
   const handleRemoveLogo = () => {
     updateField('logo_url', '');
     if (fileInputRef.current) {
@@ -173,7 +175,7 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ البيانات
+  // 4. حفظ البيانات والتحديث اللحظي
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -209,6 +211,15 @@ export default function Settings({
       setInitialData(formData);
       setIsDirty(false);
 
+      // 👈 تحديث حالة الأكاديمية في الـ Context ليراها السايدبار في نفس اللحظة
+      if (typeof updateAcademyState === 'function') {
+        updateAcademyState({
+          ...updatePayload,
+          id: academyId
+        });
+      }
+
+      // استدعاء الـ Callback الخارجي إذا كان ممرراً
       if (typeof onAcademyUpdate === 'function') {
         onAcademyUpdate({
           ...updatePayload,
