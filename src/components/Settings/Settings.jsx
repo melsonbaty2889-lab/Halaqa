@@ -22,10 +22,9 @@ export default function Settings({
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
-  // حالات البيانات والرفع
+  // حالة البيانات بما يتوافق مع هيكل الجدول تمامًا
   const [formData, setFormData] = useState({
-    name_ar: '',
-    name_en: '',
+    name: { ar: '', en: '' },
     description: '',
     logo_url: '',
     currency: currentCurrency || 'EGP',
@@ -47,7 +46,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 1. جلب بيانات الأكاديمية مع معالجة حقل name من نوع JSONB
+  // 1. جلب بيانات الأكاديمية وقراءة حقل name المباشر من type jsonb
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -61,12 +60,20 @@ export default function Settings({
         if (error) throw error;
 
         if (data) {
-          // استخراج الاسم من كائن jsonb بأمان
-          const nameObj = typeof data.name === 'object' && data.name !== null ? data.name : {};
-          
+          // التعامل مع name كـ jsonb مباشر
+          let parsedName = { ar: '', en: '' };
+          if (typeof data.name === 'object' && data.name !== null) {
+            parsedName = {
+              ar: data.name.ar || '',
+              en: data.name.en || ''
+            };
+          } else if (typeof data.name === 'string') {
+            parsedName.ar = data.name;
+          }
+
           const loaded = {
-            name_ar: nameObj.ar || (typeof data.name === 'string' ? data.name : ''),
-            name_en: nameObj.en || '',
+            ...data,
+            name: parsedName,
             description: data.description || '',
             logo_url: data.logo_url || '',
             currency: data.currency || currentCurrency || 'EGP',
@@ -80,8 +87,7 @@ export default function Settings({
             learning_type: data.learning_type || 'online',
             max_students_per_group: data.max_students_per_group ?? 25,
             allow_self_registration: data.allow_self_registration ?? true,
-            require_approval: data.require_approval ?? true,
-            ...data
+            require_approval: data.require_approval ?? true
           };
 
           setFormData(loaded);
@@ -96,7 +102,7 @@ export default function Settings({
     loadAcademySettings();
   }, [academyId, currentCurrency, currentTimezone, currentCountryCode]);
 
-  // تحديث الحقول وتتبع التغيير
+  // تحديث الحقول العامة
   const updateField = (field, value) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
@@ -109,12 +115,17 @@ export default function Settings({
     }
   };
 
+  // تحديث اللغات داخل حقل name الـ jsonb
   const handleNameChange = (lang, value) => {
-    const key = lang === 'ar' ? 'name_ar' : 'name_en';
-    updateField(key, value);
+    setFormData((prev) => {
+      const updatedName = { ...prev.name, [lang]: value };
+      const updated = { ...prev, name: updatedName };
+      setIsDirty(JSON.stringify(updated) !== JSON.stringify(initialData));
+      return updated;
+    });
   };
 
-  // 2. دالة رفع الشعار إلى Supabase Storage
+  // 2. رفع الشعار
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -155,7 +166,7 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ التغييرات في قاعدة البيانات متوافقاً مع Schema
+  // 4. حفظ البيانات المباشرة للجدول
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -164,10 +175,7 @@ export default function Settings({
       setSaving(true);
 
       const updatePayload = {
-        name: {
-          ar: formData.name_ar,
-          en: formData.name_en
-        },
+        name: formData.name, // يرسل كـ jsonb مباشر { ar: "...", en: "..." }
         description: formData.description,
         logo_url: formData.logo_url,
         currency: formData.currency,
