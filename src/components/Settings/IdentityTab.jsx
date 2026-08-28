@@ -22,9 +22,6 @@ export default function IdentityTab({
   const onNameChange = (lang, value) => {
     if (typeof handleNameChange === 'function') {
       handleNameChange(lang, value);
-    } else {
-      const fieldKey = lang === 'ar' ? 'name_ar' : 'name_en';
-      handleChange(fieldKey, value);
     }
   };
 
@@ -34,6 +31,18 @@ export default function IdentityTab({
       fileInputRef.current.value = '';
       fileInputRef.current.click();
     }
+  };
+
+  // استخراج القيم بأمان سواء كانت كائن أو نص قديم
+  const getArabicName = () => {
+    if (!formData?.name) return '';
+    if (typeof formData.name === 'object') return formData.name.ar || '';
+    return formData.name; // لو كانت نصًا عاديًا
+  };
+
+  const getEnglishName = () => {
+    if (!formData?.name || typeof formData.name !== 'object') return '';
+    return formData.name.en || '';
   };
 
   return (
@@ -96,7 +105,7 @@ export default function IdentityTab({
             </label>
             <input 
               type="text" 
-              value={formData?.name_ar || ''} 
+              value={getArabicName()} 
               onChange={(e) => onNameChange('ar', e.target.value)} 
               className="app-input text-start" 
             />
@@ -108,7 +117,7 @@ export default function IdentityTab({
             </label>
             <input 
               type="text" 
-              value={formData?.name_en || ''} 
+              value={getEnglishName()} 
               onChange={(e) => onNameChange('en', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
