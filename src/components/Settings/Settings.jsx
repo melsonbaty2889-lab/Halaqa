@@ -132,7 +132,6 @@ export default function Settings({
     try {
       setUploadingLogo(true);
       const fileExt = file.name.split('.').pop();
-      // الرفع داخل مجلد logos المباشر
       const filePath = `logos/logo-${academyId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -147,12 +146,10 @@ export default function Settings({
         throw uploadError;
       }
 
-      // جلب رابط الصورة المباشر
       const { data: publicUrlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // إضافة طابع زمني لتجاوز التخزين المؤقت للبديل الجديد
       const newLogoUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
       updateField('logo_url', newLogoUrl);
     } catch (error) {
@@ -167,7 +164,7 @@ export default function Settings({
     }
   };
 
-  // 3. حذف الشعار
+  // 3. حذف الشعار مؤقتًا (الخيار الثاني)
   const handleRemoveLogo = () => {
     updateField('logo_url', '');
     if (fileInputRef.current) {
