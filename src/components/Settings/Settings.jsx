@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Building, ShieldCheck, Save, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { useAcademy } from '@/context/AcademyContext'; // 👈 استيراد هوك الأكاديمية
+import { useAcademy } from '@/context/AcademyContext';
 import IdentityTab from './IdentityTab';
 import ContactRegionalTab from './ContactRegionalTab';
 import QuranicPoliciesTab from './QuranicPoliciesTab';
@@ -18,7 +18,7 @@ export default function Settings({
   onAcademyUpdate
 }) {
   const { t, i18n } = useTranslation();
-  const { updateAcademyState } = useAcademy(); // 👈 سحب دالة تحديث الحالة لحظياً
+  const { updateAcademyState } = useAcademy();
   const [activeStep, setActiveStep] = useState('general');
 
   // مراجع رفع الملفات والنسخ الاحتياطي
@@ -127,16 +127,29 @@ export default function Settings({
     });
   };
 
-  // 2. دالة رفع الشعار إلى avatars/logos
+  // 2. دالة رفع الشعار مباشرة وحذف اللوجو القديم من مجلد logos
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
 
     try {
       setUploadingLogo(true);
+
+      // أ) البحث عن أي ملفات قديمة تخص هذه الأكاديمية وحذفها
+      const { data: existingFiles } = await supabase.storage
+        .from('avatars')
+        .list('logos', { search: `logo-${academyId}` });
+
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToRemove = existingFiles.map(f => `logos/${f.name}`);
+        await supabase.storage.from('avatars').remove(filesToRemove);
+      }
+
+      // ب) تحديد المسار الجديد بداخل مجلد logos
       const fileExt = file.name.split('.').pop();
       const filePath = `logos/logo-${academyId}.${fileExt}`;
 
+      // ج) رفع اللوجو الجديد
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
@@ -144,21 +157,41 @@ export default function Settings({
           upsert: true 
         });
 
-      if (uploadError) {
-        console.error('Supabase Storage Error Details:', uploadError);
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
+      // د) الحصول على رابط اللوجو العام المباشر
       const { data: publicUrlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
       const newLogoUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+      // هـ) التحديث الفوري في جدول الأكاديميات (academies)
+      const { error: dbError } = await supabase
+        .from('academies')
+        .update({ logo_url: newLogoUrl })
+        .eq('id', academyId);
+
+      if (dbError) throw dbError;
+
+      // و) تحديث الحالة المحلية والـ Context ليظهر اللوجو الجديد فوراً
       updateField('logo_url', newLogoUrl);
+
+      if (typeof updateAcademyState === 'function') {
+        updateAcademyState({
+          id: academyId,
+          logo_url: newLogoUrl
+        });
+      }
+
+      if (typeof onAcademyUpdate === 'function') {
+        onAcademyUpdate({
+          id: academyId,
+          logo_url: newLogoUrl
+        });
+      }
     } catch (error) {
       console.error('Error uploading logo:', error);
-      const errorMsg = error?.message || t('common.uploadError', 'حدث خطأ أثناء رفع الشعار، يرجى المحاولة لاحقاً.');
-      alert(`خطأ في الرفع: ${errorMsg}`);
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) {
@@ -167,15 +200,42 @@ export default function Settings({
     }
   };
 
-  // 3. حذف الشعار مؤقتًا
-  const handleRemoveLogo = () => {
-    updateField('logo_url', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  // 3. حذف الشعار وحذفه أيضاً من Storage وقاعدة البيانات
+  const handleRemoveLogo = async () => {
+    if (!academyId) return;
+
+    try {
+      // البحث عن الملف في Storage وحذفه
+      const { data: existingFiles } = await supabase.storage
+        .from('avatars')
+        .list('logos', { search: `logo-${academyId}` });
+
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToRemove = existingFiles.map(f => `logos/${f.name}`);
+        await supabase.storage.from('avatars').remove(filesToRemove);
+      }
+
+      // إزالة الرابط من قاعدة البيانات
+      await supabase
+        .from('academies')
+        .update({ logo_url: null })
+        .eq('id', academyId);
+
+      updateField('logo_url', '');
+
+      if (typeof updateAcademyState === 'function') {
+        updateAcademyState({ id: academyId, logo_url: null });
+      }
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error removing logo:', error);
     }
   };
 
-  // 4. حفظ البيانات والتحديث اللحظي
+  // 4. حفظ باقي البيانات
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -211,7 +271,6 @@ export default function Settings({
       setInitialData(formData);
       setIsDirty(false);
 
-      // 👈 تحديث حالة الأكاديمية في الـ Context ليراها السايدبار في نفس اللحظة
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({
           ...updatePayload,
@@ -219,28 +278,22 @@ export default function Settings({
         });
       }
 
-      // استدعاء الـ Callback الخارجي إذا كان ممرراً
       if (typeof onAcademyUpdate === 'function') {
         onAcademyUpdate({
           ...updatePayload,
           id: academyId
         });
       }
-      
-      alert(t('common.saveSuccess', 'تم حفظ التغييرات بنجاح'));
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert(t('common.saveError', 'حدث خطأ أثناء حفظ التغييرات'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDiscardChanges = () => {
-    if (window.confirm(t('common.confirmDiscard', 'هل أنت متأكد من إلغاء التغييرات غير المحفوظة؟'))) {
-      setFormData(initialData);
-      setIsDirty(false);
-    }
+    setFormData(initialData);
+    setIsDirty(false);
   };
 
   const steps = [
