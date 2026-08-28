@@ -97,45 +97,64 @@ export default function IdentityTab({
       </div>
 
       {/* 2. قسم البيانات الأساسية (الاسم والوصف) */}
-      <div className="card-surface space-y-4 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('identity.nameAr', 'اسم الأكاديمية (بالعربية)')} <span className="text-red-400">*</span>
-            </label>
-            <input 
-              type="text" 
-              value={getArabicName()} 
-              onChange={(e) => onNameChange('ar', e.target.value)} 
-              className="app-input text-start" 
-            />
-          </div>
+<div className="card-surface space-y-4 w-full">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+    {/* الحقل الأساسي (حسب لغة الواجهة الحالية) */}
+    <div>
+      <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+        {isRtl 
+          ? t('identity.nameAr', 'اسم الأكاديمية (بالعربية)') 
+          : t('identity.nameEnPrimary', 'Academy Name (English)')} <span className="text-red-500 font-bold">*</span>
+      </label>
+      <input 
+        type="text" 
+        required
+        maxLength={100}
+        placeholder={isRtl ? t('identity.nameArPlaceholder', 'اكتب اسم الأكاديمية هنا...') : 'Enter academy name...'}
+        value={isRtl ? getArabicName() : getEnglishName()} 
+        onChange={(e) => onNameChange(isRtl ? 'ar' : 'en', e.target.value)} 
+        className={`app-input text-start transition-all duration-200 focus:ring-2 focus:ring-amber-500/20 ${!isRtl ? 'dir-ltr' : ''}`} 
+      />
+    </div>
 
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('identity.nameEn', 'اسم الأكاديمية (بالإنجليزية)')} <span className="text-[var(--text-sub)] font-normal">(اختياري)</span>
-            </label>
-            <input 
-              type="text" 
-              value={getEnglishName()} 
-              onChange={(e) => onNameChange('en', e.target.value)} 
-              className="app-input text-start dir-ltr" 
-            />
-          </div>
-        </div>
+    {/* الحقل الثانوية/الإضافي (اللغة البديلة - اختياري) */}
+    <div>
+      <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+        {isRtl 
+          ? t('identity.nameEn', 'اسم الأكاديمية (بالإنجليزية)') 
+          : t('identity.nameArSecondary', 'Academy Name (Arabic)')} <span className="text-[var(--text-sub)] font-normal text-[11px]">({t('common.optional', 'اختياري')})</span>
+      </label>
+      <input 
+        type="text" 
+        maxLength={100}
+        placeholder={isRtl ? 'Enter academy name in English...' : 'أدخل اسم الأكاديمية بالعربية...'}
+        value={isRtl ? getEnglishName() : getArabicName()} 
+        onChange={(e) => onNameChange(isRtl ? 'en' : 'ar', e.target.value)} 
+        className={`app-input text-start transition-all duration-200 focus:ring-2 focus:ring-amber-500/20 ${isRtl ? 'dir-ltr' : ''}`} 
+      />
+    </div>
+  </div>
 
-        <div>
-          <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-            {t('identity.description', 'وصف الأكاديمية')} <span className="text-[var(--text-sub)] font-normal">(اختياري)</span>
-          </label>
-          <textarea 
-            rows={3} 
-            value={formData?.description || ''} 
-            onChange={(e) => handleChange('description', e.target.value)} 
-            className="app-input text-start text-xs resize-none" 
-          />
-        </div>
-      </div>
+  {/* وصف الأكاديمية - اختيارية مع عداد الحروف */}
+  <div>
+    <div className="flex justify-between items-center mb-1.5">
+      <label className="block text-xs font-bold text-[var(--text-main)]">
+        {t('identity.description', 'وصف الأكاديمية')} <span className="text-[var(--text-sub)] font-normal text-[11px]">({t('common.optional', 'اختياري')})</span>
+      </label>
+      <span className="text-[10px] text-[var(--text-sub)]">
+        {(formData?.description || '').length}/300
+      </span>
+    </div>
+    <textarea 
+      rows={3} 
+      maxLength={300}
+      placeholder={t('identity.descriptionPlaceholder', 'اكتب نبذة مختصرة عن الأكاديمية أهدافها ورسالتها...')}
+      value={formData?.description || ''} 
+      onChange={(e) => handleChange('description', e.target.value)} 
+      className="app-input text-start text-xs resize-none transition-all duration-200 focus:ring-2 focus:ring-amber-500/20" 
+    />
+  </div>
+</div>
     </div>
   );
 }
