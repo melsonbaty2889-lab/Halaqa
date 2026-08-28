@@ -293,167 +293,166 @@ const academySlug = currentAcademy?.slug || academy?.slug;
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* Header القائمة الجانبية المحدث باللوجو والاسم والـ Slug */}
-        <div style={{ 
-          padding: '14px 14px 10px 14px',
-          borderBottom: `1px solid ${C.dark.border}`,
-          flexShrink: 0
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            gap: '8px'
+  {/* Header القائمة الجانبية المحدث باللوجو والاسم والـ Slug */}
+  <div style={{ 
+    padding: '14px 14px 10px 14px',
+    borderBottom: `1px solid ${C.dark.border}`,
+    flexShrink: 0
+  }}>
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between',
+      gap: '8px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        {/* عرض شعار الأكاديمية أو الشعار الافتراضي للمنصة */}
+        {academyLogo ? (
+          <img 
+            src={academyLogo} 
+            alt={currentAcademyName || 'Academy Logo'} 
+            loading="eager"
+            decoding="sync"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              objectFit: 'cover',
+              border: `1px solid ${C.dark.border}`,
+              flexShrink: 0
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: C.brandEmerald?.light || '#10b981',
+            flexShrink: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-              {/* عرض شعار الأكاديمية أو الشعار الافتراضي للمنصة */}
-              {academyLogo ? (
-                <img 
-                  src={academyLogo} 
-                  alt={currentAcademyName} 
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    objectFit: 'cover',
-                    border: `1px solid ${C.dark.border}`,
-                    flexShrink: 0
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.brandEmerald?.light || '#10b981',
-                  flexShrink: 0
-                }}>
-                  <Building2 size={20} />
-                </div>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <h2 style={{ 
-                  margin: 0, 
-                  fontSize: '0.92rem', 
-                  fontWeight: '700', 
-                  color: C.text.title, 
-                  lineHeight: '1.2',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {currentAcademyName}
-                </h2>
-                <span style={{ 
-                  fontSize: '0.65rem', 
-                  color: C.text.muted, 
-                  fontWeight: '500',
-                  direction: 'ltr',
-                  textAlign: isRtl ? 'right' : 'left',
-                  fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {academySlug ? `/${academySlug}` : (isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform')}
-                </span>
-              </div>
-            </div>
-
-            {isMobile && (
-              <button 
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                style={{ 
-                  background: 'rgba(255,255,255,0.06)', 
-                  border: `1px solid ${C.dark.border}`, 
-                  borderRadius: '8px',
-                  color: C.text.muted, 
-                  cursor: 'pointer', 
-                  padding: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                <X size={18} />
-              </button>
-            )}
+            <Building2 size={20} />
           </div>
-        </div>
+        )}
 
-        {/* جسم القائمة - قابل للتمرير */}
-        <div 
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <h2 style={{ 
+            margin: 0, 
+            fontSize: '0.92rem', 
+            fontWeight: '700', 
+            color: C.text.title, 
+            lineHeight: '1.2',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {currentAcademyName}
+          </h2>
+          <span style={{ 
+            fontSize: '0.65rem', 
+            color: C.text.muted, 
+            fontWeight: '500',
+            direction: 'ltr',
+            textAlign: isRtl ? 'right' : 'left',
+            fontFamily: 'monospace',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {academySlug ? `/${academySlug}` : (isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform')}
+          </span>
+        </div>
+      </div>
+
+      {isMobile && (
+        <button 
+          type="button"
+          onClick={() => setSidebarOpen(false)}
           style={{ 
-            padding: '12px', 
-            flex: 1, 
-            overflowY: 'auto', 
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehaviorY: 'contain'
+            background: 'rgba(255,255,255,0.06)', 
+            border: `1px solid ${C.dark.border}`, 
+            borderRadius: '8px',
+            color: C.text.muted, 
+            cursor: 'pointer', 
+            padding: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
           }}
         >
-          <AcademySelector
-            academiesList={academiesList}
-            currentAcademyId={currentAcademyId}
-            currentAcademyName={currentAcademyName}
-            dropdownOpen={dropdownOpen}
-            setDropdownOpen={setDropdownOpen}
-            dropdownRef={dropdownRef}
-            statusBadge={statusBadge}
-            onSwitchAcademy={onSwitchAcademy}
-            getText={getText}
-            isRtl={isRtl}
-          />
+          <X size={18} />
+        </button>
+      )}
+    </div>
+  </div>
 
-          <SidebarWidget
-            academyTime={academyTime}
-            hijri={hijri}
-            setActiveTab={handleSelectTab}
-            setShowEarlyUpgrade={setShowEarlyUpgrade}
-            isMobile={isMobile}
-            setSidebarOpen={setSidebarOpen}
-            isRtl={isRtl}
-            effectiveDaysLeft={effectiveDaysLeft}
-          />
+  {/* جسم القائمة - قابل للتمرير */}
+  <div 
+    style={{ 
+      padding: '12px', 
+      flex: 1, 
+      overflowY: 'auto', 
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehaviorY: 'contain'
+    }}
+  >
+    <AcademySelector
+      academiesList={academiesList}
+      currentAcademyId={currentAcademyId}
+      currentAcademyName={currentAcademyName}
+      dropdownOpen={dropdownOpen}
+      setDropdownOpen={setDropdownOpen}
+      dropdownRef={dropdownRef}
+      statusBadge={statusBadge}
+      onSwitchAcademy={onSwitchAcademy}
+      getText={getText}
+      isRtl={isRtl}
+    />
 
-          <SidebarSearch
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            isRtl={isRtl}
-          />
+    <SidebarWidget
+      academyTime={academyTime}
+      hijri={hijri}
+      setActiveTab={handleSelectTab}
+      setShowEarlyUpgrade={setShowEarlyUpgrade}
+      isMobile={isMobile}
+      setSidebarOpen={setSidebarOpen}
+      isRtl={isRtl}
+      effectiveDaysLeft={effectiveDaysLeft}
+    />
 
-          <SidebarMenu
-            filteredMenuSections={filteredMenuSections}
-            openSectionId={openSectionId}
-            toggleSection={toggleSection}
-            searchQuery={searchQuery}
-            activeTab={activeTab}
-            setActiveTab={handleSelectTab}
-            isMobile={isMobile}
-            setSidebarOpen={setSidebarOpen}
-            getText={getText}
-            isRtl={isRtl}
-          />
-        </div>
+    <SidebarSearch
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      isRtl={isRtl}
+    />
 
-        {/* الفوتر الثابت في الأسفل */}
-        <div style={{ 
-          padding: '10px 12px',
-          paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
-          borderTop: `1px solid ${C.dark.border}`,
-          flexShrink: 0,
-          backgroundColor: C.dark.surfaceCard || '#0f172a'
-        }}>
-          <SidebarFooter isRtl={isRtl} />
-        </div>
-      </aside>
-    </>
-  );
-}
+    <SidebarMenu
+      filteredMenuSections={filteredMenuSections}
+      openSectionId={openSectionId}
+      toggleSection={toggleSection}
+      searchQuery={searchQuery}
+      activeTab={activeTab}
+      setActiveTab={handleSelectTab}
+      isMobile={isMobile}
+      setSidebarOpen={setSidebarOpen}
+      getText={getText}
+      isRtl={isRtl}
+    />
+  </div>
+
+  {/* الفوتر الثابت في الأسفل */}
+  <div style={{ 
+    padding: '10px 12px',
+    paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+    borderTop: `1px solid ${C.dark.border}`,
+    flexShrink: 0,
+    backgroundColor: C.dark.surfaceCard || '#0f172a'
+  }}>
+    <SidebarFooter isRtl={isRtl} />
+  </div>
+</aside>
