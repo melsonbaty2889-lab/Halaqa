@@ -22,7 +22,7 @@ export default function Settings({
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
-  // حالة البيانات بما يتوافق مع هيكل الجدول تمامًا
+  // حالة البيانات
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
     description: '',
@@ -46,7 +46,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 1. جلب بيانات الأكاديمية وقراءة حقل name المباشر من type jsonb
+  // 1. جلب بيانات الأكاديمية
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -60,7 +60,6 @@ export default function Settings({
         if (error) throw error;
 
         if (data) {
-          // التعامل مع name كـ jsonb مباشر
           let parsedName = { ar: '', en: '' };
           if (typeof data.name === 'object' && data.name !== null) {
             parsedName = {
@@ -125,7 +124,7 @@ export default function Settings({
     });
   };
 
-  // 2. رفع الشعار
+  // 2. دالة رفع الشعار المعالجة للأخطاء بشكل تفصيلي
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -133,14 +132,23 @@ export default function Settings({
     try {
       setUploadingLogo(true);
       const fileExt = file.name.split('.').pop();
-      const filePath = `academies/${academyId}/logo_${Date.now()}.${fileExt}`;
+      const fileName = `logo_${Date.now()}.${fileExt}`;
+      const filePath = `${academyId}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      // الرفع لمجلد الحاوية academy-assets
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('academy-assets')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          cacheControl: '3600',
+          upsert: true 
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Supabase Storage Error Details:', uploadError);
+        throw uploadError;
+      }
 
+      // جلب رابط الصورة المباشر
       const { data: publicUrlData } = supabase.storage
         .from('academy-assets')
         .getPublicUrl(filePath);
@@ -149,7 +157,9 @@ export default function Settings({
       updateField('logo_url', newLogoUrl);
     } catch (error) {
       console.error('Error uploading logo:', error);
-      alert(t('common.uploadError', 'حدث خطأ أثناء رفع الشعار، يرجى المحاولة لاحقاً.'));
+      // إظهار نص الخطأ الفعلي من Supabase إن وجد للتشخيص
+      const errorMsg = error?.message || t('common.uploadError', 'حدث خطأ أثناء رفع الشعار، يرجى المحاولة لاحقاً.');
+      alert(`خطأ في الرفع: ${errorMsg}`);
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) {
@@ -166,7 +176,7 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ البيانات المباشرة للجدول
+  // 4. حفظ البيانات
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -175,7 +185,7 @@ export default function Settings({
       setSaving(true);
 
       const updatePayload = {
-        name: formData.name, // يرسل كـ jsonb مباشر { ar: "...", en: "..." }
+        name: formData.name,
         description: formData.description,
         logo_url: formData.logo_url,
         currency: formData.currency,
@@ -224,7 +234,7 @@ export default function Settings({
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={i18n.dir()}>
-      {/* شريط التنقل بين الخطوات */}
+      {/* شريط التنقل */}
       <div className="grid grid-cols-2 border-b border-[var(--border-card)] gap-2">
         {steps.map((step) => {
           const Icon = step.icon;
