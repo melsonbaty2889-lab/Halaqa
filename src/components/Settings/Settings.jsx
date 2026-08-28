@@ -35,7 +35,7 @@ export default function Settings({
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
-  // حالة البيانات الأساسية
+  // حالة البيانات الأساسية (تم إدراج weekend_days هنا)
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
     description: '',
@@ -46,6 +46,7 @@ export default function Settings({
     contact_email: '',
     contact_phone: '',
     website: '',
+    weekend_days: ['friday', 'saturday'],
     default_qiraat: 'hafs',
     teaching_methodology: 'mashreqi',
     learning_type: 'online',
@@ -59,7 +60,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 1. جلب بيانات الأكاديمية وتفكيك كائن الاسم بحماية كاملة
+  // 1. جلب بيانات الأكاديمية (تم قراءة weekend_days هنا)
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -100,6 +101,7 @@ export default function Settings({
             contact_email: data.contact_email || '',
             contact_phone: data.contact_phone || '',
             website: data.website || '',
+            weekend_days: Array.isArray(data.weekend_days) ? data.weekend_days : ['friday', 'saturday'],
             default_qiraat: data.default_qiraat || 'hafs',
             teaching_methodology: data.teaching_methodology || 'mashreqi',
             learning_type: data.learning_type || 'online',
@@ -248,7 +250,7 @@ export default function Settings({
     }
   };
 
-  // حفظ التغييرات
+  // حفظ التغييرات (تم إضافة weekend_days لكائن updatePayload)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -278,6 +280,7 @@ export default function Settings({
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
         website: formData.website,
+        weekend_days: formData.weekend_days,
         default_qiraat: formData.default_qiraat,
         teaching_methodology: formData.teaching_methodology,
         learning_type: formData.learning_type,
