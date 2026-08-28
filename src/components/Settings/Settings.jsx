@@ -137,7 +137,7 @@ export default function Settings({
 
       // الرفع لمجلد الحاوية academy-assets
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('academy-assets')
+        .from('avatars')
         .upload(filePath, file, { 
           cacheControl: '3600',
           upsert: true 
@@ -150,7 +150,7 @@ export default function Settings({
 
       // جلب رابط الصورة المباشر
       const { data: publicUrlData } = supabase.storage
-        .from('academy-assets')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       const newLogoUrl = publicUrlData.publicUrl;
