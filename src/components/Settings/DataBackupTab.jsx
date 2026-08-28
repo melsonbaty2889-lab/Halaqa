@@ -3,17 +3,22 @@ import { Download, Upload, Database } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function DataBackupTab({ formData = {}, setFormData, importInputRef, showToast }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
   const handleExport = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `settings_backup_${Date.now()}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    if (showToast) showToast(t('backup.exportSuccess', 'تم تصدير النسخة الاحتياطية بنجاح'), 'success');
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `settings_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      if (showToast) showToast(t('backup.exportSuccess', 'تم تصدير النسخة الاحتياطية بنجاح'), 'success');
+    } catch (err) {
+      if (showToast) showToast(t('backup.exportError', 'حدث خطأ أثناء تصدير البيانات'), 'error');
+    }
   };
 
   const handleImport = (e) => {
@@ -33,11 +38,14 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
       }
     };
     reader.readAsText(file);
+    
+    // تصفير المدخل لضمان إمكانية رفع نفس الملف مرة أخرى إذا لزم الأمر
+    e.target.value = '';
   };
 
   return (
-    <div className="space-y-5 text-start">
-      <div className="card-surface space-y-4 !overflow-visible">
+    <div className="space-y-5 text-start w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="card-surface space-y-4 !overflow-visible border border-[var(--border-card)] p-4 rounded-xl">
         <div className="flex items-center gap-2 text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
           <Database size={18} />
           <h3 className="text-xs font-bold">
