@@ -25,7 +25,7 @@ export default function Settings({
   const { t, i18n } = useTranslation();
   const [activeStep, setActiveStep] = useState('general');
 
-  // اختصار الخيارات إلى خطوتين أساسيتين لتسهيل التصفح على الهواتف
+  // خطوتين أساسيتين للتنقل السلس
   const steps = [
     { id: 'general', label: t('settings.generalStep', '1. البيانات الأساسية والإقليمية'), icon: Building },
     { id: 'system', label: t('settings.systemStep', '2. السياسات والنسخ الاحتياطي'), icon: ShieldCheck },
@@ -48,7 +48,7 @@ export default function Settings({
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={i18n.dir()}>
-      {/* شريط الخطوات المكون من خطوتين متساويتين */}
+      {/* شريط التنقل بين الخطوات */}
       <div className="grid grid-cols-2 border-b border-[var(--border-card)] gap-2">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -71,38 +71,34 @@ export default function Settings({
         })}
       </div>
 
-      {/* محتوى النموذج للخطوات */}
+      {/* محتوى النموذج */}
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
-        {/* الخطوة الأولى: تضمين الهوية والتواصل الإقليمي */}
-        {activeStep === 'general' && (
-          <div className="space-y-6 !overflow-visible">
-            <IdentityTab 
-              formData={formData} 
-              updateField={updateField} 
-              handleNameChange={handleNameChange} 
-              handleLogoUpload={handleLogoUpload} 
-              handleRemoveLogo={handleRemoveLogo} 
-              uploadingLogo={uploadingLogo} 
-              fileInputRef={fileInputRef} 
-            />
-            <ContactRegionalTab formData={formData} updateField={updateField} />
-          </div>
-        )}
+        {/* الخطوة الأولى: البيانات الأساسية والإقليمية (تظل موجودة في الـ DOM لمنع فقدان الـ Ref) */}
+        <div className={`space-y-6 !overflow-visible ${activeStep === 'general' ? 'block' : 'hidden'}`}>
+          <IdentityTab 
+            formData={formData} 
+            updateField={updateField} 
+            handleNameChange={handleNameChange} 
+            handleLogoUpload={handleLogoUpload} 
+            handleRemoveLogo={handleRemoveLogo} 
+            uploadingLogo={uploadingLogo} 
+            fileInputRef={fileInputRef} 
+          />
+          <ContactRegionalTab formData={formData} updateField={updateField} />
+        </div>
 
-        {/* الخطوة الثانية: تضمين السياسات القرآنية والنسخ الاحتياطي */}
-        {activeStep === 'system' && (
-          <div className="space-y-6 !overflow-visible">
-            <QuranicPoliciesTab formData={formData} updateField={updateField} />
-            <DataBackupTab 
-              formData={formData} 
-              setFormData={setFormData}
-              importInputRef={importInputRef}
-              showToast={showToast}
-            />
-          </div>
-        )}
+        {/* الخطوة الثانية: السياسات القرآنية والنسخ الاحتياطي */}
+        <div className={`space-y-6 !overflow-visible ${activeStep === 'system' ? 'block' : 'hidden'}`}>
+          <QuranicPoliciesTab formData={formData} updateField={updateField} />
+          <DataBackupTab 
+            formData={formData} 
+            setFormData={setFormData}
+            importInputRef={importInputRef}
+            showToast={showToast}
+          />
+        </div>
 
-        {/* شريط التحكم السفلي الموحد والثابت موقعه في الخطوتين */}
+        {/* شريط التحكم السفلي الموحد */}
         <div className="flex flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-card)] w-full">
           {/* زر حفظ التغييرات */}
           <button 
@@ -116,7 +112,7 @@ export default function Settings({
             <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ التغييرات')}</span>
           </button>
 
-          {/* حاوية زر التراجع لضمان عدم اهتزاز مكان زر الحفظ */}
+          {/* زر التراجع */}
           <div className="min-h-[38px] flex items-center">
             {isDirty && (
               <button
