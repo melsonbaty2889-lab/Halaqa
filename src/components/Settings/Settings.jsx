@@ -20,8 +20,8 @@ export default function Settings({
   const { t, i18n } = useTranslation();
   const { updateAcademyState } = useAcademy();
 
-  // 🟢 تحديد اتجاه واجهة المستخدم ديناميكياً لتفادي ReferenceError
-  const isRtl = i18n.language === 'ar' || i18n.dir() === 'rtl';
+  // 🟢 تعريف المتغير isRtl لتحديد اتجاه اللغة وتفادي ReferenceError
+  const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
   const [activeStep, setActiveStep] = useState('general');
 
@@ -32,7 +32,7 @@ export default function Settings({
     setToastMessage({ text, type });
     setTimeout(() => {
       setToastMessage(null);
-    }, 4000); // تختفي الرسالة تلقائياً بعد 4 ثوانٍ
+    }, 4000);
   };
 
   // مراجع رفع الملفات والنسخ الاحتياطي
@@ -140,7 +140,6 @@ export default function Settings({
       return updated;
     });
 
-    // التحديث اللحظي الفوري في القائمة الجانبية والهيدر أثناء الكتابة
     if (typeof updateAcademyState === 'function') {
       updateAcademyState({
         name: {
@@ -151,7 +150,7 @@ export default function Settings({
     }
   };
 
-  // 2. دالة رفع الشعار وحذف القديم نهائياً مع تخطي Caching المتصفح
+  // 2. دالة رفع الشعار
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -159,7 +158,6 @@ export default function Settings({
     try {
       setUploadingLogo(true);
 
-      // أ) استعلام عن أي صور قديمة داخل مجلد logos لحذفها
       const { data: existingFiles } = await supabase.storage
         .from('avatars')
         .list('logos', { search: `logo-${academyId}` });
@@ -169,12 +167,10 @@ export default function Settings({
         await supabase.storage.from('avatars').remove(filesToRemove);
       }
 
-      // ب) إعطاء اسم فريد للملف باستخدام التاريخ الحاضر
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${academyId}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
-      // ج) رفع الملف الجديد إلى avatars
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
@@ -184,14 +180,12 @@ export default function Settings({
 
       if (uploadError) throw uploadError;
 
-      // د) جلب الرابط العام الجديد
       const { data: publicUrlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
       const newLogoUrl = publicUrlData.publicUrl;
 
-      // هـ) الحفظ المباشر في قاعدة البيانات
       const { error: dbError } = await supabase
         .from('academies')
         .update({ logo_url: newLogoUrl })
@@ -199,7 +193,6 @@ export default function Settings({
 
       if (dbError) throw dbError;
 
-      // و) تحديث State والـ Context وحالة initialData
       setFormData(prev => ({ ...prev, logo_url: newLogoUrl }));
       setInitialData(prev => ({ ...prev, logo_url: newLogoUrl }));
 
@@ -224,7 +217,7 @@ export default function Settings({
     }
   };
 
-  // 3. دالة حذف الشعار من Storage وقاعدة البيانات
+  // 3. دالة حذف الشعار
   const handleRemoveLogo = async () => {
     if (!academyId) return;
 
@@ -261,16 +254,15 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ باقي البيانات مع التحقق الديناميكي من اسم الأكاديمية
+  // 4. حفظ البيانات
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
 
-    // استخراج الأسماء مع تنظيف المسافات
     const arName = formData.name?.ar?.trim();
     const enName = formData.name?.en?.trim();
 
-    // التحقق الديناميكي: يتأكد من وجود اسم باللغة الحالية أو أي اسم صالح على الأقل
+    // استخدام isRtl الذي تم تعريفه في أعلى المكون
     const isValid = isRtl ? (arName || enName) : (enName || arName);
 
     if (!isValid) {
@@ -313,7 +305,6 @@ export default function Settings({
       setInitialData(formData);
       setIsDirty(false);
 
-      // رسالة نجاح الحفظ في الواجهة
       showToast(t('settings.saveSuccess', 'تم حفظ التغييرات بنجاح!'), 'success');
 
       if (typeof updateAcademyState === 'function') {
@@ -349,7 +340,6 @@ export default function Settings({
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={i18n.dir()}>
-      {/* شريط التنقل */}
       <div className="grid grid-cols-2 border-b border-[var(--border-card)] gap-2">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -372,10 +362,7 @@ export default function Settings({
         })}
       </div>
 
-      {/* محتوى النموذج */}
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
-        
-        {/* شريط تنبيه النجاح/الخطأ الفوري */}
         {toastMessage && (
           <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-lg ${
             toastMessage.type === 'success' 
@@ -393,7 +380,6 @@ export default function Settings({
           </div>
         )}
 
-        {/* الخطوة الأولى */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'general' ? 'block' : 'hidden'}`}>
           <IdentityTab 
             formData={formData} 
@@ -407,7 +393,6 @@ export default function Settings({
           <ContactRegionalTab formData={formData} updateField={updateField} />
         </div>
 
-        {/* الخطوة الثانية */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'system' ? 'block' : 'hidden'}`}>
           <QuranicPoliciesTab formData={formData} updateField={updateField} />
           <DataBackupTab 
@@ -417,7 +402,6 @@ export default function Settings({
           />
         </div>
 
-        {/* شريط التحكم السفلي */}
         <div className="flex flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-card)] w-full">
           <button 
             type="submit" 
