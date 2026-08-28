@@ -163,7 +163,7 @@ export default function Sidebar({
   }, [currentAcademyId]);
 
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
-  const currentAcademyName = getText(currentAcademy?.name) || (isRtl ? 'الأكاديمية الرئيسية' : 'Primary Academy');
+  const currentAcademyName = getText(currentAcademy?.name)?.trim() || (isRtl ? 'أكاديمية بدون اسم' : 'Unnamed Academy');
 
   // إلغاء كاش المتصفح بإضافة تاريخ التعديل أو الوقت الحالي
   const rawLogo = currentAcademy?.logo_url || academy?.logo_url;
