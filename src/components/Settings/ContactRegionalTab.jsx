@@ -72,14 +72,36 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     }
   };
 
+  // معالجة اختيار وإلغاء أيام العطلة بشكل نقي وآمن
   const toggleWeekendDay = (dayKey) => {
     if (typeof updateField !== 'function') return;
-    const days = Array.isArray(formData?.weekend_days) ? formData.weekend_days : [];
-    const updated = days.includes(dayKey) 
-      ? days.filter(d => d !== dayKey) 
-      : [...days, dayKey];
+
+    let currentDays = [];
+    if (Array.isArray(formData?.weekend_days)) {
+      currentDays = formData.weekend_days;
+    } else if (typeof formData?.weekend_days === 'string') {
+      try {
+        currentDays = JSON.parse(formData.weekend_days);
+      } catch {
+        currentDays = [];
+      }
+    }
+
+    const updated = currentDays.includes(dayKey)
+      ? currentDays.filter(d => d !== dayKey)
+      : [...currentDays, dayKey];
+
     updateField('weekend_days', updated);
   };
+
+  // استخراج الأيام المختارة كـ Array بأمان لعرضها في الواجهة
+  const selectedWeekendDays = useMemo(() => {
+    if (Array.isArray(formData?.weekend_days)) return formData.weekend_days;
+    if (typeof formData?.weekend_days === 'string') {
+      try { return JSON.parse(formData.weekend_days); } catch { return []; }
+    }
+    return [];
+  }, [formData?.weekend_days]);
 
   return (
     <div className="space-y-5 text-start w-full" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -139,7 +161,14 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="w-full p-4 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-sub)] border-none cursor-pointer rounded-xl"
         >
-          <span>{t('settings.advancedRegional', isRtl ? 'إعدادات إقليمية متقدمة' : 'Advanced Regional Settings')}</span>
+          <div className="flex items-center gap-2">
+            <span>{t('settings.advancedRegional', isRtl ? 'إعدادات إقليمية متقدمة' : 'Advanced Regional Settings')}</span>
+            {selectedWeekendDays.length > 0 && (
+              <span className="text-[10px] bg-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-full font-bold">
+                {selectedWeekendDays.length} {isRtl ? 'أيام عطلة' : 'weekend days'}
+              </span>
+            )}
+          </div>
           {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
@@ -181,7 +210,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               </label>
               <div className="flex flex-wrap gap-2">
                 {daysList.map((day) => {
-                  const active = (formData?.weekend_days || []).includes(day.key);
+                  const active = selectedWeekendDays.includes(day.key);
                   return (
                     <button
                       key={day.key}
