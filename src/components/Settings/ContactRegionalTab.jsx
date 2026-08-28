@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import CustomSelect from '@/components/UI/CustomSelect.jsx';
@@ -10,20 +10,24 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const isAr = i18n.language === 'ar';
 
-  // تحضير خيارات الدول
-  const countryOptions = (COUNTRIES_LIST || []).map(country => ({
-    label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
-    value: country.code
-  }));
+  // تحضير وتثبيت خيارات الدول لضمان عدم حدوث Re-render غير ضروري
+  const countryOptions = useMemo(() => {
+    return (COUNTRIES_LIST || []).map(country => ({
+      label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
+      value: country.code
+    }));
+  }, [isAr]);
 
-  // تحضير خيارات العملات
-  const currencyOptions = (CURRENCIES || []).map(currency => ({
-    label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
-    value: currency.code
-  }));
+  // تحضير وتثبيت خيارات العملات
+  const currencyOptions = useMemo(() => {
+    return (CURRENCIES || []).map(currency => ({
+      label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
+      value: currency.code
+    }));
+  }, [isAr]);
 
-  // تحضير خيارات المناطق الزمنية
-  const timezoneOptions = [
+  // تحضير وتثبيت خيارات المناطق الزمنية
+  const timezoneOptions = useMemo(() => [
     { label: t('timezones.cairo', 'القاهرة (GMT+2 / GMT+3)'), value: 'Africa/Cairo' },
     { label: t('timezones.riyadh', 'مكة المكرمة / الرياض (GMT+3)'), value: 'Asia/Riyadh' },
     { label: t('timezones.dubai', 'دبي (GMT+4)'), value: 'Asia/Dubai' },
@@ -31,15 +35,15 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { label: t('timezones.berlin', 'أوروبا الوسطى / برلين (GMT+1)'), value: 'Europe/Berlin' },
     { label: t('timezones.ny', 'التوقيت الشرقي - أمريكا (EST/EDT GMT-5)'), value: 'America/New_York' },
     { label: t('timezones.jakarta', 'جاكرتا (GMT+7)'), value: 'Asia/Jakarta' }
-  ];
+  ], [t]);
 
   // تحضير خيارات نوع التقويم
-  const calendarOptions = [
+  const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', 'ميلادي'), value: 'gregorian' },
     { label: t('calendar.hijri', 'هجري'), value: 'hijri' }
-  ];
+  ], [t]);
 
-  const daysList = [
+  const daysList = useMemo(() => [
     { key: 'saturday', label: t('days.saturday', 'السبت') },
     { key: 'sunday', label: t('days.sunday', 'الأحد') },
     { key: 'monday', label: t('days.monday', 'الإثنين') },
@@ -47,10 +51,12 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { key: 'wednesday', label: t('days.wednesday', 'الأربعاء') },
     { key: 'thursday', label: t('days.thursday', 'الخميس') },
     { key: 'friday', label: t('days.friday', 'الجمعة') }
-  ];
+  ], [t]);
 
   // ربط الدولة بالعملة والمنطقة الزمنية تلقائياً عند التغيير
   const handleCountryChange = (countryCode) => {
+    if (typeof updateField !== 'function') return;
+
     updateField('country_code', countryCode);
     
     const matchedCountry = (COUNTRIES_LIST || []).find(c => c.code === countryCode);
@@ -65,6 +71,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   };
 
   const toggleWeekendDay = (dayKey) => {
+    if (typeof updateField !== 'function') return;
     const days = Array.isArray(formData?.weekend_days) ? formData.weekend_days : [];
     const updated = days.includes(dayKey) 
       ? days.filter(d => d !== dayKey) 
@@ -73,9 +80,9 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   };
 
   return (
-    <div className="space-y-5 text-start">
+    <div className="space-y-5 text-start w-full">
       {/* القسم الرئيسي: بيانات التواصل والدولة */}
-      <div className="card-surface space-y-4 !overflow-visible">
+      <div className="card-surface space-y-4 !overflow-visible w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
@@ -84,7 +91,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             <input 
               type="email" 
               value={formData?.contact_email ?? ''} 
-              onChange={(e) => updateField('contact_email', e.target.value)} 
+              onChange={(e) => updateField && updateField('contact_email', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
           </div>
@@ -96,13 +103,13 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             <input 
               type="text" 
               value={formData?.contact_phone ?? ''} 
-              onChange={(e) => updateField('contact_phone', e.target.value)} 
+              onChange={(e) => updateField && updateField('contact_phone', e.target.value)} 
               className="app-input text-start dir-ltr" 
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 !overflow-visible">
           <CustomSelect 
             label={t('settings.country', 'الدولة')}
             value={formData?.country_code ?? 'EG'}
@@ -114,7 +121,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
           <CustomSelect 
             label={t('settings.currency', 'العملة الرسمية')}
             value={formData?.currency ?? 'EGP'}
-            onChange={(val) => updateField('currency', val)}
+            onChange={(val) => updateField && updateField('currency', val)}
             options={currencyOptions}
             searchable={true}
           />
@@ -122,7 +129,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
       </div>
 
       {/* القسم المتقدم: الإعدادات الإقليمية */}
-      <div className="card-surface p-0 !overflow-visible border border-[var(--border-card)] rounded-xl">
+      <div className="card-surface p-0 !overflow-visible border border-[var(--border-card)] rounded-xl w-full">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
@@ -133,7 +140,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
         </button>
 
         {showAdvanced && (
-          <div className="p-4 border-t border-[var(--border-card)] space-y-4 !overflow-visible">
+          <div className="p-4 border-t border-[var(--border-card)] space-y-4 !overflow-visible w-full">
             <div>
               <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
                 {t('settings.website', 'الموقع الإلكتروني')}
@@ -141,16 +148,16 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               <input 
                 type="url" 
                 value={formData?.website ?? ''} 
-                onChange={(e) => updateField('website', e.target.value)} 
+                onChange={(e) => updateField && updateField('website', e.target.value)} 
                 className="app-input text-start dir-ltr text-xs" 
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 !overflow-visible">
               <CustomSelect 
                 label={t('settings.timezone', 'المنطقة الزمنية')}
                 value={formData?.timezone ?? 'Africa/Cairo'}
-                onChange={(val) => updateField('timezone', val)}
+                onChange={(val) => updateField && updateField('timezone', val)}
                 options={timezoneOptions}
                 searchable={true}
               />
@@ -158,7 +165,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               <CustomSelect 
                 label={t('settings.calendarType', 'نوع التقويم')}
                 value={formData?.calendar_type ?? 'gregorian'}
-                onChange={(val) => updateField('calendar_type', val)}
+                onChange={(val) => updateField && updateField('calendar_type', val)}
                 options={calendarOptions}
               />
             </div>
