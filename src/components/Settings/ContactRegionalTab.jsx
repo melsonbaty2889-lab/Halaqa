@@ -8,9 +8,11 @@ import { CURRENCIES } from '@/constants/currencies.js';
 export default function ContactRegionalTab({ formData = {}, updateField }) {
   const { t, i18n } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
   const isAr = i18n.language === 'ar';
 
-  // تحضير وتثبيت خيارات الدول لضمان عدم حدوث Re-render غير ضروري
+  // تحضير وتثبيت خيارات الدول
   const countryOptions = useMemo(() => {
     return (COUNTRIES_LIST || []).map(country => ({
       label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
@@ -35,13 +37,13 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { label: t('timezones.berlin', 'أوروبا الوسطى / برلين (GMT+1)'), value: 'Europe/Berlin' },
     { label: t('timezones.ny', 'التوقيت الشرقي - أمريكا (EST/EDT GMT-5)'), value: 'America/New_York' },
     { label: t('timezones.jakarta', 'جاكرتا (GMT+7)'), value: 'Asia/Jakarta' }
-  ], [t]);
+  ], [t, i18n.language]);
 
   // تحضير خيارات نوع التقويم
   const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', 'ميلادي'), value: 'gregorian' },
     { label: t('calendar.hijri', 'هجري'), value: 'hijri' }
-  ], [t]);
+  ], [t, i18n.language]);
 
   const daysList = useMemo(() => [
     { key: 'saturday', label: t('days.saturday', 'السبت') },
@@ -51,7 +53,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { key: 'wednesday', label: t('days.wednesday', 'الأربعاء') },
     { key: 'thursday', label: t('days.thursday', 'الخميس') },
     { key: 'friday', label: t('days.friday', 'الجمعة') }
-  ], [t]);
+  ], [t, i18n.language]);
 
   // ربط الدولة بالعملة والمنطقة الزمنية تلقائياً عند التغيير
   const handleCountryChange = (countryCode) => {
@@ -80,9 +82,9 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   };
 
   return (
-    <div className="space-y-5 text-start w-full">
+    <div className="space-y-5 text-start w-full" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* القسم الرئيسي: بيانات التواصل والدولة */}
-      <div className="card-surface space-y-4 !overflow-visible w-full">
+      <div className="card-surface space-y-4 !overflow-visible w-full border border-[var(--border-card)] p-4 rounded-xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
@@ -92,7 +94,8 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               type="email" 
               value={formData?.contact_email ?? ''} 
               onChange={(e) => updateField && updateField('contact_email', e.target.value)} 
-              className="app-input text-start dir-ltr" 
+              dir="ltr"
+              className="app-input text-start w-full" 
             />
           </div>
 
@@ -104,7 +107,8 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               type="text" 
               value={formData?.contact_phone ?? ''} 
               onChange={(e) => updateField && updateField('contact_phone', e.target.value)} 
-              className="app-input text-start dir-ltr" 
+              dir="ltr"
+              className="app-input text-start w-full" 
             />
           </div>
         </div>
@@ -149,7 +153,8 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
                 type="url" 
                 value={formData?.website ?? ''} 
                 onChange={(e) => updateField && updateField('website', e.target.value)} 
-                className="app-input text-start dir-ltr text-xs" 
+                dir="ltr"
+                className="app-input text-start text-xs w-full" 
               />
             </div>
 
