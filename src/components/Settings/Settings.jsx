@@ -20,13 +20,12 @@ export default function Settings({
   const { t, i18n } = useTranslation();
   const { updateAcademyState } = useAcademy();
 
-  // 🟢 تعريف المتغير isRtl لتحديد اتجاه اللغة وتفادي ReferenceError
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
   const [activeStep, setActiveStep] = useState('general');
 
   // حالة رسائل التنبيه الفورية (Toast)
-  const [toastMessage, setToastMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+  const [toastMessage, setToastMessage] = useState(null);
 
   const showToast = (text, type = 'success') => {
     setToastMessage({ text, type });
@@ -131,7 +130,7 @@ export default function Settings({
     }
   };
 
-  // تحديث اللغات داخل حقل name الـ jsonb مع التحديث اللحظي للواجهة
+  // تحديث اللغات داخل حقل name الـ jsonb
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
@@ -262,7 +261,6 @@ export default function Settings({
     const arName = formData.name?.ar?.trim();
     const enName = formData.name?.en?.trim();
 
-    // استخدام isRtl الذي تم تعريفه في أعلى المكون
     const isValid = isRtl ? (arName || enName) : (enName || arName);
 
     if (!isValid) {
@@ -333,13 +331,26 @@ export default function Settings({
     setIsDirty(false);
   };
 
+  // ترجمة ديناميكية للتبويبات
   const steps = [
-    { id: 'general', label: t('settings.generalStep', '1. البيانات الأساسية والإقليمية'), icon: Building },
-    { id: 'system', label: t('settings.systemStep', '2. السياسات والنسخ الاحتياطي'), icon: ShieldCheck },
+    { 
+      id: 'general', 
+      label: isRtl 
+        ? t('settings.generalStep', '1. البيانات الأساسية والإقليمية') 
+        : t('settings.generalStep', '1. Basic & Regional Info'), 
+      icon: Building 
+    },
+    { 
+      id: 'system', 
+      label: isRtl 
+        ? t('settings.systemStep', '2. السياسات والنسخ الاحتياطي') 
+        : t('settings.systemStep', '2. Policies & Data Backup'), 
+      icon: ShieldCheck 
+    },
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={i18n.dir()}>
+    <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="grid grid-cols-2 border-b border-[var(--border-card)] gap-2">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -399,6 +410,7 @@ export default function Settings({
             formData={formData} 
             setFormData={setFormData}
             importInputRef={importInputRef}
+            showToast={showToast}
           />
         </div>
 
@@ -411,7 +423,7 @@ export default function Settings({
             }`}
           >
             <Save size={16} />
-            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ التغييرات')}</span>
+            <span>{saving ? t('common.saving', isRtl ? 'جاري الحفظ...' : 'Saving...') : t('common.save', isRtl ? 'حفظ التغييرات' : 'Save Changes')}</span>
           </button>
 
           <div className="min-h-[38px] flex items-center">
@@ -422,7 +434,7 @@ export default function Settings({
                 className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw size={14} />
-                <span>{t('common.discard', 'تراجع')}</span>
+                <span>{t('common.discard', isRtl ? 'تراجع' : 'Discard')}</span>
               </button>
             )}
           </div>
