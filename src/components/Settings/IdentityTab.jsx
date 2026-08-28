@@ -13,7 +13,6 @@ export default function IdentityTab({
 }) {
   const { t, i18n } = useTranslation();
 
-  // 🟢 تعريف المتغير isRtl لتفادي ReferenceError
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
   const handleChange = (field, value) => {
@@ -28,7 +27,6 @@ export default function IdentityTab({
     }
   };
 
-  // فتح نافذة الملفات وتصفير القيمة السابقة لضمان الاستجابة التامة
   const triggerFileInput = () => {
     if (fileInputRef && fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -36,11 +34,10 @@ export default function IdentityTab({
     }
   };
 
-  // استخراج القيم بأمان سواء كانت كائن أو نص قديم
   const getArabicName = () => {
     if (!formData?.name) return '';
     if (typeof formData.name === 'object') return formData.name.ar || '';
-    return formData.name; // لو كانت نصًا عاديًا
+    return formData.name;
   };
 
   const getEnglishName = () => {
@@ -53,7 +50,7 @@ export default function IdentityTab({
       {/* 1. قسم الشعار */}
       <div className="card-surface space-y-4 w-full">
         <label className="block text-xs font-bold text-[var(--text-main)]">
-          {t('identity.logoLabel', 'شعار الأكاديمية')}
+          {t('identity.logoLabel', isRtl ? 'شعار الأكاديمية' : 'Academy Logo')}
         </label>
         
         <div className="flex items-center gap-4">
@@ -66,7 +63,6 @@ export default function IdentityTab({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {/* مدخل رفع الملفات المخفي */}
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -82,7 +78,11 @@ export default function IdentityTab({
               className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
             >
               <Upload size={14} />
-              <span>{uploadingLogo ? t('common.uploading', 'جاري الرفع...') : t('identity.uploadBtn', 'تغيير الشعار')}</span>
+              <span>
+                {uploadingLogo 
+                  ? t('common.uploading', isRtl ? 'جاري الرفع...' : 'Uploading...') 
+                  : t('identity.uploadBtn', isRtl ? 'تغيير الشعار' : 'Change Logo')}
+              </span>
             </button>
 
             {formData?.logo_url && (
@@ -92,7 +92,7 @@ export default function IdentityTab({
                 className="text-xs px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 size={14} />
-                <span>{t('common.remove', 'حذف')}</span>
+                <span>{t('common.remove', isRtl ? 'حذف' : 'Remove')}</span>
               </button>
             )}
           </div>
@@ -113,24 +113,31 @@ export default function IdentityTab({
               type="text" 
               required
               maxLength={100}
-              placeholder={isRtl ? t('identity.nameArPlaceholder', 'اكتب اسم الأكاديمية هنا...') : 'Enter academy name...'}
+              placeholder={isRtl 
+                ? t('identity.nameArPlaceholder', 'اكتب اسم الأكاديمية بالعربية...') 
+                : t('identity.nameEnPlaceholder', 'Enter academy name in English...')}
               value={isRtl ? getArabicName() : getEnglishName()} 
               onChange={(e) => onNameChange(isRtl ? 'ar' : 'en', e.target.value)} 
               className={`app-input text-start transition-all duration-200 focus:ring-2 focus:ring-amber-500/20 ${!isRtl ? 'dir-ltr' : ''}`} 
             />
           </div>
 
-          {/* الحقل الثانوي/الإضافي (اللغة البديلة - اختياري) */}
+          {/* الحقل الثانوي (اللغة البديلة - اختياري) */}
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
               {isRtl 
                 ? t('identity.nameEn', 'اسم الأكاديمية (بالإنجليزية)') 
-                : t('identity.nameArSecondary', 'Academy Name (Arabic)')} <span className="text-[var(--text-sub)] font-normal text-[11px]">({t('common.optional', 'اختياري')})</span>
+                : t('identity.nameArSecondary', 'Academy Name (Arabic)')}{' '}
+              <span className="text-[var(--text-sub)] font-normal text-[11px]">
+                ({t('common.optional', isRtl ? 'اختياري' : 'Optional')})
+              </span>
             </label>
             <input 
               type="text" 
               maxLength={100}
-              placeholder={isRtl ? 'Enter academy name in English...' : 'أدخل اسم الأكاديمية بالعربية...'}
+              placeholder={isRtl 
+                ? t('identity.nameEnPlaceholder', 'Enter academy name in English...') 
+                : t('identity.nameArPlaceholder', 'اكتب اسم الأكاديمية بالعربية...')}
               value={isRtl ? getEnglishName() : getArabicName()} 
               onChange={(e) => onNameChange(isRtl ? 'en' : 'ar', e.target.value)} 
               className={`app-input text-start transition-all duration-200 focus:ring-2 focus:ring-amber-500/20 ${isRtl ? 'dir-ltr' : ''}`} 
@@ -138,11 +145,14 @@ export default function IdentityTab({
           </div>
         </div>
 
-        {/* وصف الأكاديمية - اختيارية مع عداد الحروف */}
+        {/* وصف الأكاديمية */}
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <label className="block text-xs font-bold text-[var(--text-main)]">
-              {t('identity.description', 'وصف الأكاديمية')} <span className="text-[var(--text-sub)] font-normal text-[11px]">({t('common.optional', 'اختياري')})</span>
+              {t('identity.description', isRtl ? 'وصف الأكاديمية' : 'Academy Description')}{' '}
+              <span className="text-[var(--text-sub)] font-normal text-[11px]">
+                ({t('common.optional', isRtl ? 'اختياري' : 'Optional')})
+              </span>
             </label>
             <span className="text-[10px] text-[var(--text-sub)]">
               {(formData?.description || '').length}/300
@@ -151,7 +161,7 @@ export default function IdentityTab({
           <textarea 
             rows={3} 
             maxLength={300}
-            placeholder={t('identity.descriptionPlaceholder', 'اكتب نبذة مختصرة عن الأكاديمية أهدافها ورسالتها...')}
+            placeholder={t('identity.descriptionPlaceholder', isRtl ? 'اكتب نبذة مختصرة عن الأكاديمية أهدافها ورسالتها...' : 'Write a brief description of the academy...')}
             value={formData?.description || ''} 
             onChange={(e) => handleChange('description', e.target.value)} 
             className="app-input text-start text-xs resize-none transition-all duration-200 focus:ring-2 focus:ring-amber-500/20" 
