@@ -18,6 +18,13 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
+  // 👈 دالة التحديث اللحظي لبيانات الأكاديمية في الواجهة
+  const updateAcademyState = useCallback((newAcademyData) => {
+    if (isMounted.current) {
+      setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
+    }
+  }, []);
+
   const fetchUserStatus = useCallback(async (currentUser) => {
     if (!currentUser) {
       if (isMounted.current) {
@@ -198,6 +205,7 @@ export const AcademyProvider = ({ children }) => {
       profile,
       academy,
       appState,
+      updateAcademyState, // 👈 تصدير الدالة هنا
       logout,
       refreshStatus
     }}>
