@@ -13,7 +13,8 @@ export default function Settings({
   currentCurrency,
   currentTimezone,
   currentCountryCode,
-  onCurrencyChange
+  onCurrencyChange,
+  onAcademyUpdate
 }) {
   const { t, i18n } = useTranslation();
   const [activeStep, setActiveStep] = useState('general');
