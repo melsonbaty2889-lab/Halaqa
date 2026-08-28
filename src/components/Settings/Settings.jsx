@@ -127,7 +127,7 @@ export default function Settings({
     }
   };
 
-  // تحديث اللغات داخل حقل name الـ jsonb
+  // تحديث اللغات داخل حقل name الـ jsonb مع التحديث اللحظي للواجهة
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
@@ -135,6 +135,16 @@ export default function Settings({
       setIsDirty(JSON.stringify(updated) !== JSON.stringify(initialData));
       return updated;
     });
+
+    // التحديث اللحظي الفوري في القائمة الجانبية والهيدر أثناء الكتابة
+    if (typeof updateAcademyState === 'function') {
+      updateAcademyState({
+        name: {
+          ...formData.name,
+          [lang]: value
+        }
+      });
+    }
   };
 
   // 2. دالة رفع الشعار وحذف القديم نهائياً مع تخطي Caching المتصفح
