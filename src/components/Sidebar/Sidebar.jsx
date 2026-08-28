@@ -293,51 +293,52 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* Header القائمة الجانبية */}
-        <div style={{ 
-          padding: '14px 14px 10px 14px',
-          borderBottom: `1px solid ${C.dark.border}`,
-          flexShrink: 0
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            gap: '8px'
+  {/* Header القائمة الجانبية */}
+  <div style={{ 
+    padding: '14px 14px 10px 14px',
+    borderBottom: `1px solid ${C.dark.border}`,
+    flexShrink: 0
+  }}>
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between',
+      gap: '8px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        {/* عرض شعار الأكاديمية إن وجد، أو شعار المنظومة SmartHalaqaProLogo افتراضيًا */}
+        {academyLogo ? (
+          <img 
+            src={academyLogo} 
+            alt={currentAcademyName || 'Academy Logo'} 
+            loading="eager"
+            decoding="sync"
+            onError={(e) => {
+              // في حال وجود رابط مكسور، إخفاء الصورة لإظهار الفولباك
+              e.currentTarget.style.display = 'none';
+            }}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              objectFit: 'cover',
+              border: `1px solid ${C.dark.border}`,
+              flexShrink: 0
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-              {/* عرض شعار الأكاديمية أو الشعار الافتراضي للمنصة */}
-              {academyLogo ? (
-                <img 
-                  src={academyLogo} 
-                  alt={currentAcademyName || 'Academy Logo'} 
-                  loading="eager"
-                  decoding="sync"
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    objectFit: 'cover',
-                    border: `1px solid ${C.dark.border}`,
-                    flexShrink: 0
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.brandEmerald?.light || '#10b981',
-                  flexShrink: 0
-                }}>
-                  <Building2 size={20} />
-                </div>
-              )}
+            <SmartHalaqaProLogo size={36} />
+          </div>
+        )}
 
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <h2 style={{ 
