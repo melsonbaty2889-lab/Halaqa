@@ -28,9 +28,18 @@ export default function Settings({
     name_en: '',
     description: '',
     logo_url: '',
-    currency: currentCurrency || 'USD',
-    timezone: currentTimezone || 'UTC',
-    country_code: currentCountryCode || 'US'
+    currency: currentCurrency || 'EGP',
+    timezone: currentTimezone || 'Africa/Cairo',
+    country_code: currentCountryCode || 'EG',
+    contact_email: '',
+    contact_phone: '',
+    website: '',
+    default_qiraat: 'hafs',
+    teaching_methodology: 'mashreqi',
+    learning_type: 'online',
+    max_students_per_group: 25,
+    allow_self_registration: true,
+    require_approval: true
   });
 
   const [initialData, setInitialData] = useState({});
@@ -38,7 +47,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 1. جلب بيانات الأكاديمية عند التحميل أو تغير academyId
+  // 1. جلب بيانات الأكاديمية مع معالجة حقل name من نوع JSONB
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -52,16 +61,29 @@ export default function Settings({
         if (error) throw error;
 
         if (data) {
+          // استخراج الاسم من كائن jsonb بأمان
+          const nameObj = typeof data.name === 'object' && data.name !== null ? data.name : {};
+          
           const loaded = {
-            name_ar: data.name_ar || data.name || '',
-            name_en: data.name_en || '',
+            name_ar: nameObj.ar || (typeof data.name === 'string' ? data.name : ''),
+            name_en: nameObj.en || '',
             description: data.description || '',
             logo_url: data.logo_url || '',
-            currency: data.currency || currentCurrency || 'USD',
-            timezone: data.timezone || currentTimezone || 'UTC',
-            country_code: data.country_code || currentCountryCode || 'US',
+            currency: data.currency || currentCurrency || 'EGP',
+            timezone: data.timezone || currentTimezone || 'Africa/Cairo',
+            country_code: data.country_code || currentCountryCode || 'EG',
+            contact_email: data.contact_email || '',
+            contact_phone: data.contact_phone || '',
+            website: data.website || '',
+            default_qiraat: data.default_qiraat || 'hafs',
+            teaching_methodology: data.teaching_methodology || 'mashreqi',
+            learning_type: data.learning_type || 'online',
+            max_students_per_group: data.max_students_per_group ?? 25,
+            allow_self_registration: data.allow_self_registration ?? true,
+            require_approval: data.require_approval ?? true,
             ...data
           };
+
           setFormData(loaded);
           setInitialData(loaded);
           setIsDirty(false);
@@ -92,7 +114,7 @@ export default function Settings({
     updateField(key, value);
   };
 
-  // 2. دالة رفع الشعار لـ Supabase Storage المعالجة للأخطاء
+  // 2. دالة رفع الشعار إلى Supabase Storage
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -133,25 +155,38 @@ export default function Settings({
     }
   };
 
-  // 4. حفظ التغييرات في قاعدة البيانات
+  // 4. حفظ التغييرات في قاعدة البيانات متوافقاً مع Schema
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
 
     try {
       setSaving(true);
+
+      const updatePayload = {
+        name: {
+          ar: formData.name_ar,
+          en: formData.name_en
+        },
+        description: formData.description,
+        logo_url: formData.logo_url,
+        currency: formData.currency,
+        timezone: formData.timezone,
+        country_code: formData.country_code ? formData.country_code.toUpperCase() : null,
+        contact_email: formData.contact_email,
+        contact_phone: formData.contact_phone,
+        website: formData.website,
+        default_qiraat: formData.default_qiraat,
+        teaching_methodology: formData.teaching_methodology,
+        learning_type: formData.learning_type,
+        max_students_per_group: formData.max_students_per_group,
+        allow_self_registration: formData.allow_self_registration,
+        require_approval: formData.require_approval
+      };
+
       const { error } = await supabase
         .from('academies')
-        .update({
-          name: formData.name_ar,
-          name_ar: formData.name_ar,
-          name_en: formData.name_en,
-          description: formData.description,
-          logo_url: formData.logo_url,
-          currency: formData.currency,
-          timezone: formData.timezone,
-          country_code: formData.country_code
-        })
+        .update(updatePayload)
         .eq('id', academyId);
 
       if (error) throw error;
@@ -206,7 +241,7 @@ export default function Settings({
 
       {/* محتوى النموذج */}
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
-        {/* الخطوة الأولى: الحفاظ عليها في الـ DOM بواسطة hidden لمنع تدمير المراجع */}
+        {/* الخطوة الأولى */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'general' ? 'block' : 'hidden'}`}>
           <IdentityTab 
             formData={formData} 
