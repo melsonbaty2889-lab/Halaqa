@@ -19,6 +19,10 @@ export default function Settings({
 }) {
   const { t, i18n } = useTranslation();
   const { updateAcademyState } = useAcademy();
+
+  // 🟢 تحديد اتجاه واجهة المستخدم ديناميكياً لتفادي ReferenceError
+  const isRtl = i18n.language === 'ar' || i18n.dir() === 'rtl';
+
   const [activeStep, setActiveStep] = useState('general');
 
   // حالة رسائل التنبيه الفورية (Toast)
@@ -332,7 +336,6 @@ export default function Settings({
       setSaving(false);
     }
   };
-  
 
   const handleDiscardChanges = () => {
     setFormData(initialData);
