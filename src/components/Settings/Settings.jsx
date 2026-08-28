@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Building, ShieldCheck, Save, RotateCcw } from 'lucide-react';
+import { Building, ShieldCheck, Save, RotateCcw, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
@@ -23,8 +23,6 @@ export default function Settings({
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
   const [activeStep, setActiveStep] = useState('general');
-
-  // حالة رسائل التنبيه الفورية (Toast)
   const [toastMessage, setToastMessage] = useState(null);
 
   const showToast = (text, type = 'success') => {
@@ -34,11 +32,10 @@ export default function Settings({
     }, 4000);
   };
 
-  // مراجع رفع الملفات والنسخ الاحتياطي
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
-  // حالة البيانات
+  // حالة البيانات الأساسية
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
     description: '',
@@ -62,7 +59,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 1. جلب بيانات الأكاديمية
+  // 1. جلب بيانات الأكاديمية وتفكيك كائن الاسم بحماية كاملة
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -77,13 +74,19 @@ export default function Settings({
 
         if (data) {
           let parsedName = { ar: '', en: '' };
+          
           if (typeof data.name === 'object' && data.name !== null) {
             parsedName = {
               ar: data.name.ar || '',
               en: data.name.en || ''
             };
           } else if (typeof data.name === 'string') {
-            parsedName.ar = data.name;
+            try {
+              const jsonParsed = JSON.parse(data.name);
+              parsedName = { ar: jsonParsed.ar || '', en: jsonParsed.en || '' };
+            } catch {
+              parsedName.ar = data.name;
+            }
           }
 
           const loaded = {
@@ -117,7 +120,7 @@ export default function Settings({
     loadAcademySettings();
   }, [academyId, currentCurrency, currentTimezone, currentCountryCode]);
 
-  // تحديث الحقول العامة
+  // تحديث الحقول العامة مع تتبع التغيير
   const updateField = (field, value) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
@@ -130,7 +133,7 @@ export default function Settings({
     }
   };
 
-  // تحديث اللغات داخل حقل name الـ jsonb
+  // تحديث حقل الاسم مزدوج اللغة
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
@@ -149,7 +152,7 @@ export default function Settings({
     }
   };
 
-  // 2. دالة رفع الشعار
+  // رفع الشعار
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !academyId) return;
@@ -172,10 +175,7 @@ export default function Settings({
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
-          cacheControl: '0',
-          upsert: true 
-        });
+        .upload(filePath, file, { cacheControl: '0', upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -203,20 +203,17 @@ export default function Settings({
         onAcademyUpdate({ id: academyId, logo_url: newLogoUrl });
       }
 
-      showToast(t('settings.logoUploadSuccess', 'تم تحديث الشعار بنجاح!'), 'success');
-
+      showToast(t('settings.logoUploadSuccess', isRtl ? 'تم تحديث الشعار بنجاح!' : 'Logo updated successfully!'), 'success');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      showToast(t('settings.logoUploadError', 'حدث خطأ أثناء رفع الشعار'), 'error');
+      showToast(t('settings.logoUploadError', isRtl ? 'حدث خطأ أثناء رفع الشعار' : 'Error uploading logo'), 'error');
     } finally {
       setUploadingLogo(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // 3. دالة حذف الشعار
+  // حذف الشعار
   const handleRemoveLogo = async () => {
     if (!academyId) return;
 
@@ -242,18 +239,16 @@ export default function Settings({
         updateAcademyState({ id: academyId, logo_url: null });
       }
 
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
 
-      showToast(t('settings.logoRemoveSuccess', 'تم إزالة الشعار بنجاح!'), 'success');
+      showToast(t('settings.logoRemoveSuccess', isRtl ? 'تم إزالة الشعار بنجاح!' : 'Logo removed successfully!'), 'success');
     } catch (error) {
       console.error('Error removing logo:', error);
-      showToast(t('settings.logoRemoveError', 'حدث خطأ أثناء إزالة الشعار'), 'error');
+      showToast(t('settings.logoRemoveError', isRtl ? 'حدث خطأ أثناء إزالة الشعار' : 'Error removing logo'), 'error');
     }
   };
 
-  // 4. حفظ البيانات
+  // حفظ التغييرات
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -261,9 +256,7 @@ export default function Settings({
     const arName = formData.name?.ar?.trim();
     const enName = formData.name?.en?.trim();
 
-    const isValid = isRtl ? (arName || enName) : (enName || arName);
-
-    if (!isValid) {
+    if (!arName && !enName) {
       const errorMessage = isRtl
         ? t('settings.nameRequiredAr', 'يرجى إدخال اسم الأكاديمية')
         : t('settings.nameRequiredEn', 'Please enter the academy name');
@@ -303,24 +296,18 @@ export default function Settings({
       setInitialData(formData);
       setIsDirty(false);
 
-      showToast(t('settings.saveSuccess', 'تم حفظ التغييرات بنجاح!'), 'success');
+      showToast(t('settings.saveSuccess', isRtl ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!'), 'success');
 
       if (typeof updateAcademyState === 'function') {
-        updateAcademyState({
-          ...updatePayload,
-          id: academyId
-        });
+        updateAcademyState({ ...updatePayload, id: academyId });
       }
 
       if (typeof onAcademyUpdate === 'function') {
-        onAcademyUpdate({
-          ...updatePayload,
-          id: academyId
-        });
+        onAcademyUpdate({ ...updatePayload, id: academyId });
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      showToast(t('settings.saveError', 'حدث خطأ أثناء حفظ التغييرات'), 'error');
+      showToast(t('settings.saveError', isRtl ? 'حدث خطأ أثناء حفظ التغييرات' : 'Error saving settings'), 'error');
     } finally {
       setSaving(false);
     }
@@ -331,27 +318,28 @@ export default function Settings({
     setIsDirty(false);
   };
 
-  // ترجمة ديناميكية للتبويبات
+  // التبويبات الرئيسية
   const steps = [
-    { 
-      id: 'general', 
-      label: isRtl 
-        ? t('settings.generalStep', '1. البيانات الأساسية والإقليمية') 
-        : t('settings.generalStep', '1. Basic & Regional Info'), 
-      icon: Building 
+    {
+      id: 'general',
+      label: isRtl
+        ? t('settings.generalStep', '1. البيانات الأساسية والإقليمية')
+        : t('settings.generalStep', '1. Basic & Regional Info'),
+      icon: Building
     },
-    { 
-      id: 'system', 
-      label: isRtl 
-        ? t('settings.systemStep', '2. السياسات والنسخ الاحتياطي') 
-        : t('settings.systemStep', '2. Policies & Data Backup'), 
-      icon: ShieldCheck 
+    {
+      id: 'system',
+      label: isRtl
+        ? t('settings.systemStep', '2. السياسات والنسخ الاحتياطي')
+        : t('settings.systemStep', '2. Policies & Data Backup'),
+      icon: ShieldCheck
     },
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="grid grid-cols-2 border-b border-[var(--border-card)] gap-2">
+    <div className="w-full max-w-5xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* شريط التبويبات العلوي المتجاوب */}
+      <div className="flex border-b border-[var(--border-card)] gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {steps.map((step) => {
           const Icon = step.icon;
           const isActive = activeStep === step.id;
@@ -360,69 +348,76 @@ export default function Settings({
               key={step.id}
               type="button"
               onClick={() => setActiveStep(step.id)}
-              className={`flex items-center justify-center gap-2 px-3 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] cursor-pointer bg-transparent focus:outline-none ${
-                isActive 
-                  ? 'border-[var(--primary)] text-[var(--primary)] font-extrabold' 
+              className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? 'border-[var(--primary)] text-[var(--primary)] font-extrabold bg-[var(--surface-input)]/20 rounded-t-lg'
                   : 'border-transparent text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               <Icon size={16} />
-              <span className="truncate">{step.label}</span>
+              <span>{step.label}</span>
             </button>
           );
         })}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
+        {/* التنبيهات الفورية (Toast) */}
         {toastMessage && (
-          <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-lg ${
-            toastMessage.type === 'success' 
-              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400' 
-              : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+          <div className={`p-4 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-md animate-in fade-in slide-in-from-top-2 ${
+            toastMessage.type === 'success'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-500'
+              : 'bg-rose-500/10 border border-rose-500/30 text-rose-500'
           }`}>
-            <span>{toastMessage.text}</span>
-            <button 
-              type="button" 
-              onClick={() => setToastMessage(null)} 
-              className="text-xs opacity-70 hover:opacity-100 cursor-pointer px-1"
+            <div className="flex items-center gap-2">
+              {toastMessage.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              <span>{toastMessage.text}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="opacity-70 hover:opacity-100 cursor-pointer p-1"
             >
-              ✕
+              <X size={14} />
             </button>
           </div>
         )}
 
+        {/* محتوى التبويب الأول */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'general' ? 'block' : 'hidden'}`}>
-          <IdentityTab 
-            formData={formData} 
-            updateField={updateField} 
-            handleNameChange={handleNameChange} 
-            handleLogoUpload={handleLogoUpload} 
-            handleRemoveLogo={handleRemoveLogo} 
-            uploadingLogo={uploadingLogo} 
-            fileInputRef={fileInputRef} 
+          <IdentityTab
+            formData={formData}
+            updateField={updateField}
+            handleNameChange={handleNameChange}
+            handleLogoUpload={handleLogoUpload}
+            handleRemoveLogo={handleRemoveLogo}
+            uploadingLogo={uploadingLogo}
+            fileInputRef={fileInputRef}
           />
           <ContactRegionalTab formData={formData} updateField={updateField} />
         </div>
 
+        {/* محتوى التبويب الثاني */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'system' ? 'block' : 'hidden'}`}>
           <QuranicPoliciesTab formData={formData} updateField={updateField} />
-          <DataBackupTab 
-            formData={formData} 
+          <DataBackupTab
+            formData={formData}
             setFormData={setFormData}
             importInputRef={importInputRef}
             showToast={showToast}
           />
         </div>
 
-        <div className="flex flex-row items-center justify-between gap-3 pt-4 border-t border-[var(--border-card)] w-full">
-          <button 
-            type="submit" 
-            disabled={saving} 
-            className={`btn-primary text-xs px-6 py-2.5 flex items-center justify-center gap-2 cursor-pointer ${
-              saving ? 'opacity-50 cursor-not-allowed' : ''
+        {/* شريط الإجراءات الثابت بأسفل النموذج */}
+        <div className="flex flex-row items-center justify-between gap-3 pt-5 border-t border-[var(--border-card)] w-full">
+          <button
+            type="submit"
+            disabled={saving}
+            className={`btn-primary text-xs px-6 py-3 flex items-center justify-center gap-2 cursor-pointer shadow-md rounded-xl font-bold transition-all ${
+              saving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.01]'
             }`}
           >
-            <Save size={16} />
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             <span>{saving ? t('common.saving', isRtl ? 'جاري الحفظ...' : 'Saving...') : t('common.save', isRtl ? 'حفظ التغييرات' : 'Save Changes')}</span>
           </button>
 
@@ -431,7 +426,7 @@ export default function Settings({
               <button
                 type="button"
                 onClick={handleDiscardChanges}
-                className="btn-secondary text-xs px-4 py-2 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="btn-secondary text-xs px-4 py-2.5 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl font-medium transition-all animate-in fade-in"
               >
                 <RotateCcw size={14} />
                 <span>{t('common.discard', isRtl ? 'تراجع' : 'Discard')}</span>
