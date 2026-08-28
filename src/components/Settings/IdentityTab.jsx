@@ -20,25 +20,26 @@ export default function IdentityTab({
   };
 
   const onNameChange = (lang, value) => {
-    const fieldKey = lang === 'ar' ? 'name_ar' : 'name_en';
     if (typeof handleNameChange === 'function') {
       handleNameChange(lang, value);
     } else {
+      const fieldKey = lang === 'ar' ? 'name_ar' : 'name_en';
       handleChange(fieldKey, value);
     }
   };
 
+  // فتح نافذة الملفات وتصفير القيمة السابقة لضمان الاستجابة التامة
   const triggerFileInput = () => {
     if (fileInputRef && fileInputRef.current) {
-      fileInputRef.current.value = ''; // إعادة ضبط القيمة لضمان رصد الملف حتى لو تكرر
+      fileInputRef.current.value = '';
       fileInputRef.current.click();
     }
   };
 
   return (
-    <div className="space-y-5 text-start">
+    <div className="space-y-5 text-start w-full">
       {/* 1. قسم الشعار */}
-      <div className="card-surface space-y-4">
+      <div className="card-surface space-y-4 w-full">
         <label className="block text-xs font-bold text-[var(--text-main)]">
           {t('identity.logoLabel', 'شعار الأكاديمية')}
         </label>
@@ -53,6 +54,7 @@ export default function IdentityTab({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {/* مدخل رفع الملفات المخفي */}
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -86,7 +88,7 @@ export default function IdentityTab({
       </div>
 
       {/* 2. قسم البيانات الأساسية (الاسم والوصف) */}
-      <div className="card-surface space-y-4">
+      <div className="card-surface space-y-4 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
