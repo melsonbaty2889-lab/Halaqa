@@ -13,21 +13,20 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
     }
   };
 
-  // خيارات نمط التعليم - محدثة ومربوطة بـ i18n وتدعم اللغتين افتراضياً
+  // خيارات نمط التعليم
   const educationModeOptions = useMemo(() => [
     { label: t('quranic.modeOnline', isRtl ? 'عن بعد (Online)' : 'Online'), value: 'online' },
     { label: t('quranic.modeOnsite', isRtl ? 'حضوري (In-person)' : 'In-person'), value: 'onsite' },
     { label: t('quranic.modeHybrid', isRtl ? 'مختلط (Hybrid)' : 'Hybrid'), value: 'hybrid' },
   ], [t, i18n.language, isRtl]);
 
-  // خيارات الرواية / القراءة - داعمة للغتين ومجلبة الاسم المناسب ديناميكياً
+  // خيارات الرواية / القراءة - جلب الاسم حسب اللغة الحالية للواجهة
   const riwayaOptions = useMemo(() => {
     if (!Array.isArray(RIWAYAT_LIST)) return [];
     return RIWAYAT_LIST.map((r, index) => {
       if (typeof r === 'string') return { label: r, value: r };
       const rawValue = r?.id ?? r?.value ?? r?.code ?? r?.nameAr ?? index;
-      
-      // التكيّف حسب اللغة الحالية للواجهة
+
       const label = isRtl 
         ? (r?.nameAr || r?.name || r?.label || `رواية ${index + 1}`)
         : (r?.nameEn || r?.name || r?.label || r?.nameAr || `Riwaya ${index + 1}`);
@@ -36,7 +35,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
     });
   }, [isRtl, i18n.language]);
 
-  // خيارات المنهجية والمدرسة - محدثة ومربوطة بـ i18n
+  // خيارات المنهجية والمدرسة
   const madrasaOptions = useMemo(() => [
     { label: t('quranic.madrasaEastern', isRtl ? 'المشرقية (المعتادة)' : 'Mashreqi (Standard)'), value: 'mashreqi' },
     { label: t('quranic.madrasaMaghrebi', isRtl ? 'المغربية' : 'Maghrebi'), value: 'maghrebi' },
@@ -60,12 +59,12 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
 
           {/* الرواية الافتراضية */}
           <CustomSelect
-            label={t('quranic.riwaya', isRtl ? 'الرواية الافتراضية' : 'Default Recitation (Riwaya)')}
-            value={formData?.default_qiraat ?? 'hafs'}
+            label={t('quranic.riwaya', isRtl ? 'الرواية الافتراضية' : 'Default Recitation / Riwaya')}
+            value={formData?.default_qiraat ?? 'hafs_an_asem'}
             onChange={(val) => handleChange('default_qiraat', val)}
             options={riwayaOptions}
             searchable={true}
-            placeholder={t('quranic.selectRiwaya', isRtl ? 'اختر الرواية...' : 'Select Riwaya...')}
+            placeholder={t('quranic.selectRiwaya', isRtl ? 'اختر الرواية...' : 'Select Recitation / Riwaya...')}
           />
 
           {/* المدرسة والمنهجية */}
@@ -85,7 +84,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
                 onChange={(e) => handleChange('allow_self_registration', e.target.checked)}
                 className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer shrink-0"
               />
-              <span>{t('quranic.allowSelfReg', isRtl ? 'السماح للطلاب بالتسجيل الذاتي' : 'Allow student self-registration')}</span>
+              <span>{t('quranic.allowSelfReg', isRtl ? 'السماح للطلاب بالتسجيل الذاتي' : 'Allow Student Self-Registration')}</span>
             </label>
 
             <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-[var(--text-main)] select-none">
@@ -95,7 +94,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
                 onChange={(e) => handleChange('require_approval', e.target.checked)}
                 className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer shrink-0"
               />
-              <span>{t('quranic.requireApproval', isRtl ? 'اشتراط موافقة الإدارة على كل طالب جديد' : 'Require admin approval for new students')}</span>
+              <span>{t('quranic.requireApproval', isRtl ? 'اشتراط موافقة الإدارة على كل طالب جديد' : 'Require Admin Approval for New Students')}</span>
             </label>
           </div>
 
