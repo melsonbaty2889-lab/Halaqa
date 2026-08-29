@@ -262,9 +262,9 @@
   "quranic": {
   "title": "الإعدادات القرآنية والتعليمية",
   "learningType": "نمط التعليم",
-  "modeOnline": "عن بُعد (Online)",
-  "modeOnsite": "حضوري (In-Person)",
-  "modeHybrid": "مدمج (Hybrid)",
+  "online": "عن بُعد",
+  "onsite": "حضوري",
+  "hybrid": "مدمج",
   "defaultQiraat": "الرواية الافتراضية",
   "methodology": "المدرسة والمنهجية"
 }
