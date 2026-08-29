@@ -142,14 +142,21 @@ export default function Dashboard({
   if (isSuperAdmin) {
     return (
       <Suspense fallback={<div className="p-5 text-center text-slate-400">جاري تحميل لوحة التحكم...</div>}>
-        <AdminDashboard isRtl={isRtl} academyName={String(displayName || '')} onLogout={() => supabase.auth.signOut()} />
+        <AdminDashboard 
+          isRtl={isRtl} 
+          academyName={String(displayName || '')} 
+          onLogout={() => supabase.auth.signOut()} 
+          onSelectAcademy={(academy) => {
+            // عند اختيار أكاديمية، يتم الانتقال لتبويب الحلقات أو إدارة الأكاديمية
+            if (setActiveTab) setActiveTab('halaqas');
+          }}
+        />
       </Suspense>
     );
   }
 
   return (
     <div className={`p-3 pb-20 text-right ${isRtl ? 'rtl' : 'ltr'}`}>
-      
       {/* الترويسة الرئيسية */}
       <div className="flex flex-col gap-2 mb-5">
         <div className="flex justify-between items-start flex-wrap gap-2">
