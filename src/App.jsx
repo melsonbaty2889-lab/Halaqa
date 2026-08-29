@@ -454,12 +454,13 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 🛡️ استخراج سبب الحظر بأمان لتفادي Minified React error #31
+  // 🛡️ استخراج سبب الحظر بأمان وتامين الشاشة من Minified React error #31
   const getSuspensionReason = () => {
     const reason = academy?.suspension_reason || academy?.status_reason;
     if (!reason) return 'تم إيقاف هذه الأكاديمية مؤقتاً من قبل إدارة المنصة.';
-    if (typeof reason === 'object') {
-      return reason.ar || reason.en || JSON.stringify(reason);
+    
+    if (typeof reason === 'object' && reason !== null) {
+      return reason.ar || reason.en || Object.values(reason)[0] || JSON.stringify(reason);
     }
     return String(reason);
   };
