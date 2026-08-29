@@ -109,7 +109,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       fetchDashboardData(true);
     } catch (err) {
       showToast(isRtl ? `فشل الحفظ: ${err.message}` : `Failed to save: ${err.message}`, "error");
-    } fontally {
+    } finally {
       setProcessingId(null);
     }
   };
