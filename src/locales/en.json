@@ -240,14 +240,14 @@
     "description": "Academy Description"
   },
   "quranic": {
-    "title": "Quranic & Teaching Setup",
-    "learningType": "Learning Type",
-    "online": "Online",
-    "inPerson": "In-Person",
-    "hybrid": "Hybrid",
-    "defaultQiraat": "Default Qiraat",
-    "methodology": "Teaching Methodology"
-  },
+  "title": "Quranic & Teaching Setup",
+  "learningType": "Learning Mode",
+  "modeOnline": "Online",
+  "modeOnsite": "In-Person",
+  "modeHybrid": "Hybrid",
+  "defaultQiraat": "Default Qiraat",
+  "methodology": "Teaching Methodology"
+}
   "qiraat": {
     "hafs": "Hafs an Asim",
     "warsh": "Warsh an Nafi",
