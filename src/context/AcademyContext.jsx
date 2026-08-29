@@ -120,7 +120,15 @@ export const AcademyProvider = ({ children }) => {
           if (currentAcademy.slug) {
             localStorage.setItem('current_academy_slug', currentAcademy.slug);
           }
-          setAppState(currentAcademy.is_active !== false ? 'FULLY_ACTIVE' : 'PENDING_APPROVAL');
+
+          // 🔴 التعديل هنا: فحص حالة حظر أو إيقاف الأكاديمية صراحةً
+          if (currentAcademy.is_suspended || currentAcademy.status === 'suspended') {
+            setAppState('SUSPENDED');
+          } else if (currentAcademy.is_active !== false) {
+            setAppState('FULLY_ACTIVE');
+          } else {
+            setAppState('PENDING_APPROVAL');
+          }
         } else {
           setAcademy(null);
           setAppState(profData.role === 'admin' ? 'NO_ACADEMY' : 'FULLY_ACTIVE');
@@ -205,7 +213,7 @@ export const AcademyProvider = ({ children }) => {
       profile,
       academy,
       appState,
-      updateAcademyState, // 👈 تصدير الدالة هنا
+      updateAcademyState,
       logout,
       refreshStatus
     }}>
