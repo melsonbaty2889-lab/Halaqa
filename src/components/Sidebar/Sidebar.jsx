@@ -4,7 +4,7 @@ import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
-import { X, Building2 } from "lucide-react";
+import { X } from "lucide-react";
 import { colors as C } from '@/theme/colors';
 
 import AcademySelector from './AcademySelector';
@@ -15,7 +15,7 @@ import SidebarFooter from './SidebarFooter';
 
 export default function Sidebar({
   currentAcademyId,
-  academy, // استقبال كائن الأكاديمية الحالي
+  academy,
   onSwitchAcademy,
   activeTab,
   setActiveTab,
@@ -37,11 +37,18 @@ export default function Sidebar({
   const menuSections = getMenuSections(isRtl, userRole);
   const [openSectionId, setOpenSectionId] = useState(null);
 
+  // 🟢 دالة منيعة ومحميّة ضد خطأ Minified React error #31
   const getText = (val) => {
-    if (!val) return '';
+    if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      return isRtl ? (val.ar || val.en || '') : (val.en || val.ar || '');
+      const extracted = isRtl ? (val.ar || val.en) : (val.en || val.ar);
+      if (extracted && typeof extracted !== 'object') return String(extracted);
+      
+      // في حال كان الكائن يتكون من قيم نصوص أخرى غير ar/en
+      const firstVal = Object.values(val)[0];
+      if (firstVal && typeof firstVal !== 'object') return String(firstVal);
+      return '';
     }
     return '';
   };
@@ -63,7 +70,6 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // منع التمرير في خلفية الصفحة عند فتح القائمة في الجوال
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -163,13 +169,18 @@ export default function Sidebar({
   }, [currentAcademyId]);
 
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
-  const currentAcademyName = getText(currentAcademy?.name)?.trim() || (isRtl ? 'أكاديمية بدون اسم' : 'Unnamed Academy');
+  
+  // 🟢 استخراج الاسم بأمان تام كـ String حصراً
+  const rawAcademyName = getText(currentAcademy?.name);
+  const currentAcademyName = typeof rawAcademyName === 'string' && rawAcademyName.trim() !== '' 
+    ? rawAcademyName.trim() 
+    : (isRtl ? 'أكاديمية بدون اسم' : 'Unnamed Academy');
 
-  // إلغاء كاش المتصفح بإضافة تاريخ التعديل أو الوقت الحالي
   const rawLogo = currentAcademy?.logo_url || academy?.logo_url;
-  const academyLogo = rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
+  const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
-  const academySlug = currentAcademy?.slug || academy?.slug;
+  const academySlug = typeof currentAcademy?.slug === 'string' ? currentAcademy?.slug : (typeof academy?.slug === 'string' ? academy?.slug : '');
+  
   const calculateEffectiveDaysLeft = () => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
     if (currentAcademy.is_active && !currentAcademy.trial_ends_at) return Infinity;
@@ -276,7 +287,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* خلفية التعتيم على الموبايل */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -293,52 +303,49 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-  {/* Header القائمة الجانبية */}
-  <div style={{ 
-    padding: '14px 14px 10px 14px',
-    borderBottom: `1px solid ${C.dark.border}`,
-    flexShrink: 0
-  }}>
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'space-between',
-      gap: '8px'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-        {/* عرض شعار الأكاديمية إن وجد، أو شعار المنظومة SmartHalaqaProLogo افتراضيًا */}
-        {academyLogo ? (
-          <img 
-            src={academyLogo} 
-            alt={currentAcademyName || 'Academy Logo'} 
-            loading="eager"
-            decoding="sync"
-            onError={(e) => {
-              // في حال وجود رابط مكسور، إخفاء الصورة لإظهار الفولباك
-              e.currentTarget.style.display = 'none';
-            }}
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              objectFit: 'cover',
-              border: `1px solid ${C.dark.border}`,
-              flexShrink: 0
-            }}
-          />
-        ) : (
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
+        <div style={{ 
+          padding: '14px 14px 10px 14px',
+          borderBottom: `1px solid ${C.dark.border}`,
+          flexShrink: 0
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            gap: '8px'
           }}>
-            <SmartHalaqaProLogo size={36} />
-          </div>
-        )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+              {academyLogo ? (
+                <img 
+                  src={academyLogo} 
+                  alt={currentAcademyName} 
+                  loading="eager"
+                  decoding="sync"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    objectFit: 'cover',
+                    border: `1px solid ${C.dark.border}`,
+                    flexShrink: 0
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <SmartHalaqaProLogo size={36} />
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <h2 style={{ 
@@ -392,7 +399,6 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* جسم القائمة - قابل للتمرير */}
         <div 
           style={{ 
             padding: '12px', 
@@ -446,7 +452,6 @@ export default function Sidebar({
           />
         </div>
 
-        {/* الفوتر الثابت في الأسفل */}
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
