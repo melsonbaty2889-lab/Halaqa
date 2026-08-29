@@ -76,7 +76,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justify: 'center',
+        justifyContent: 'center',
         color: C.text.title,
         padding: '20px',
         textAlign: 'center',
@@ -139,7 +139,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
       backdropFilter: 'blur(5px)',
       display: 'flex',
       alignItems: 'center',
-      justify: 'center',
+      justifyContent: 'center',
       zIndex: 10000,
       padding: '20px',
       direction: 'rtl',
@@ -180,7 +180,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             color: C.primary.DEFAULT,
             display: 'flex',
             alignItems: 'center',
-            justify: 'center',
+            justifyContent: 'center',
             margin: '0 auto 12px'
           }}>
             <Zap size={24} />
@@ -287,7 +287,7 @@ class GlobalErrorBoundary extends Component {
           background: C.dark.main,
           display: 'flex',
           alignItems: 'center',
-          justify: 'center',
+          justifyContent: 'center',
           padding: '24px',
           fontFamily: "'Cairo', system-ui, sans-serif",
           direction: 'rtl',
@@ -327,7 +327,7 @@ class GlobalErrorBoundary extends Component {
               color: C.error.DEFAULT,
               display: 'flex',
               alignItems: 'center',
-              justify: 'center',
+              justifyContent: 'center',
               margin: '0 auto 24px',
               boxShadow: '0 8px 16px -4px rgba(239, 68, 68, 0.2)'
             }}>
@@ -366,7 +366,7 @@ class GlobalErrorBoundary extends Component {
                 fontFamily: 'monospace',
                 marginBottom: '6px',
                 display: 'flex',
-                justify: 'space-between',
+                justifyContent: 'space-between',
                 direction: 'rtl'
               }}>
                 <span>تفاصيل الخطأ:</span>
@@ -390,7 +390,7 @@ class GlobalErrorBoundary extends Component {
             <div style={{
               display: 'flex',
               gap: '12px',
-              justify: 'center'
+              justifyContent: 'center'
             }}>
               <button
                 onClick={this.handleReload}
@@ -406,7 +406,7 @@ class GlobalErrorBoundary extends Component {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
                   boxShadow: '0 4px 12px rgba(217, 119, 6, 0.3)'
                 }}
@@ -594,7 +594,7 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
-    const cachedSlug = localStorage.getItem('current_academy_slug');
+    const cachedSlug = typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
     if (cachedSlug) {
       refreshStatus && refreshStatus();
       return (
@@ -622,6 +622,8 @@ function MainContent() {
 
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
+    const targetSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : '') || '';
+
     return (
       <Routes>
         <Route 
@@ -649,7 +651,7 @@ function MainContent() {
         />
         <Route 
           path="*" 
-          element={<Navigate to={academy?.slug ? `/${academy.slug}` : `/${localStorage.getItem('current_academy_slug') || ''}`} replace />} 
+          element={<Navigate to={targetSlug ? `/${targetSlug}` : '/'} replace />} 
         />
       </Routes>
     );
@@ -680,7 +682,11 @@ export default function App() {
 
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return !sessionStorage.getItem('app_splash_seen');
+    try {
+      return !sessionStorage.getItem('app_splash_seen');
+    } catch {
+      return false;
+    }
   });
 
   const handleSplashFinish = () => {
