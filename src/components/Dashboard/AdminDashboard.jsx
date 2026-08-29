@@ -109,7 +109,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       fetchDashboardData(true);
     } catch (err) {
       showToast(isRtl ? `فشل الحفظ: ${err.message}` : `Failed to save: ${err.message}`, "error");
-    } finally {
+    } fontally {
       setProcessingId(null);
     }
   };
@@ -423,14 +423,14 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       newDateIso = baseDate.toISOString();
     } else {
       const lifetimeDate = new Date();
-      lifetimeDate.setDate(lifetimeDate.getDate() + 36500);
+      lifetimeDate.setFullYear(lifetimeDate.getFullYear() + 100);
       newDateIso = lifetimeDate.toISOString();
     }
 
     try {
       const { error: acadErr } = await supabase
         .from('academies')
-        .update({ trial_ends_at: isLifetime ? null : newDateIso })
+        .update({ trial_ends_at: newDateIso })
         .eq('id', id);
       if (acadErr) throw acadErr;
 
