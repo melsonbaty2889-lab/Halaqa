@@ -8,6 +8,18 @@ import ContactRegionalTab from './ContactRegionalTab';
 import QuranicPoliciesTab from './QuranicPoliciesTab';
 import DataBackupTab from './DataBackupTab';
 
+// دالة لتنظيف وتنسيق الـ Slug
+const generateSlug = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')        // استبدال المسافات بـ -
+    .replace(/[^\w\-]+/g, '')    // إزالة كافة الرموز غير النصية
+    .replace(/\-\-+/g, '-');     // استبدال الشرطات المتعددة بشرطة واحدة
+};
+
 export default function Settings({
   academyId,
   session,
@@ -34,13 +46,12 @@ export default function Settings({
 
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
-
-  // مرجع لتتبع هل بدأ المستخدم بالتعديل لمنع المسح أثناء الجلب المتأخر
   const isDirtyRef = useRef(false);
 
-  // حالة البيانات الأساسية (تمت إضافة calendar_type)
+  // حالة البيانات الأساسية (تمت إضافة slug)
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
+    slug: '',
     description: '',
     logo_url: '',
     currency: currentCurrency || 'EGP',
@@ -64,7 +75,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // جلب بيانات الأكاديمية مع حماية البيانات المعدلة عبر useRef
+  // جلب البيانات
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -103,6 +114,7 @@ export default function Settings({
           const loaded = {
             ...data,
             name: parsedName,
+            slug: data.slug || '',
             description: data.description || '',
             logo_url: data.logo_url || '',
             currency: data.currency || currentCurrency || 'EGP',
@@ -121,7 +133,6 @@ export default function Settings({
             require_approval: data.require_approval ?? true
           };
 
-          // عدم استبدال Form Data إذا كان المستخدم قد بدأ بالتعديل بالفعل
           if (!isDirtyRef.current) {
             setFormData(loaded);
             setInitialData(loaded);
@@ -135,7 +146,7 @@ export default function Settings({
     loadAcademySettings();
   }, [academyId]);
 
-  // تحديث الحقول العامة مع تتبع التغيير
+  // تحديث الحقول العامة
   const updateField = (field, value) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
@@ -152,11 +163,18 @@ export default function Settings({
     }
   };
 
-  // تحديث حقل الاسم مزدوج اللغة
+  // تحديث حقل الاسم مزدوج اللغة مع اقتراح slug تلقائي إذا كان يدوياً فارغاً
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
-      const updated = { ...prev, name: updatedName };
+      let newSlug = prev.slug;
+
+      // إنشاء Slug تلقائي من الاسم الإنجليزي في حال لم يدخل المستخدم Slug مخصص
+      if (lang === 'en' && (!prev.slug || prev.slug.startsWith('academy-'))) {
+        newSlug = generateSlug(value);
+      }
+
+      const updated = { ...prev, name: updatedName, slug: newSlug };
       const hasChanged = JSON.stringify(updated) !== JSON.stringify(initialData);
       
       isDirtyRef.current = hasChanged;
@@ -282,8 +300,11 @@ export default function Settings({
     try {
       setSaving(true);
 
+      const cleanSlug = generateSlug(formData.slug) || generateSlug(enName) || `academy-${academyId.slice(0, 8)}`;
+
       const updatePayload = {
         name: formData.name,
+        slug: cleanSlug,
         description: formData.description,
         logo_url: formData.logo_url,
         currency: formData.currency,
@@ -309,13 +330,13 @@ export default function Settings({
 
       if (error) throw error;
 
-      setInitialData(formData);
+      setFormData(prev => ({ ...prev, slug: cleanSlug }));
+      setInitialData({ ...formData, slug: cleanSlug });
       isDirtyRef.current = false;
       setIsDirty(false);
 
       showToast(t('settings.saveSuccess', isRtl ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!'), 'success');
 
-      // تحديث الحالة العامة فقط بعد النجاح الفعلي للحفظ
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({ ...updatePayload, id: academyId });
       }
@@ -325,7 +346,7 @@ export default function Settings({
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      showToast(t('settings.saveError', isRtl ? 'حدث خطأ أثناء حفظ التغييرات' : 'Error saving settings'), 'error');
+      showToast(t('settings.saveError', isRtl ? 'حدث خطأ أثناء حفظ التغييرات (قد يكون الرابط مُستخدماً من قبل أكاديمية أخرى)' : 'Error saving settings (slug might already be taken)'), 'error');
     } finally {
       setSaving(false);
     }
@@ -337,7 +358,6 @@ export default function Settings({
     setIsDirty(false);
   };
 
-  // التبويبات الرئيسية
   const steps = [
     {
       id: 'general',
@@ -357,7 +377,7 @@ export default function Settings({
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* شريط التبويبات العلوي المتجاوب */}
+      {/* شريط التبويبات العلوي */}
       <div className="flex border-b border-[var(--border-card)] gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -381,7 +401,7 @@ export default function Settings({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
-        {/* التنبيهات الفورية (Toast) */}
+        {/* التنبيهات الفورية */}
         {toastMessage && (
           <div className={`p-4 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-md animate-in fade-in slide-in-from-top-2 ${
             toastMessage.type === 'success'
@@ -427,7 +447,7 @@ export default function Settings({
           />
         </div>
 
-        {/* شريط الإجراءات الثابت بأسفل النموذج */}
+        {/* شريط الإجراءات الثابت */}
         <div className="flex flex-row items-center justify-between gap-3 pt-5 border-t border-[var(--border-card)] w-full">
           <button
             type="submit"
