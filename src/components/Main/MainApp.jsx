@@ -66,7 +66,7 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           onClick={() => setActiveSubTab('communications')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
-              ? 'bg-emerald-600 text-white shadow-lg' 
+              ? 'bg-amber-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -78,7 +78,7 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           onClick={() => setActiveSubTab('reports')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
-              ? 'bg-emerald-600 text-white shadow-lg' 
+              ? 'bg-amber-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -109,7 +109,7 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
+        <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border || C.dark.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <AlertTriangle size={22} />
             <h3 style={{ margin: 0, color: C.error.light, fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
@@ -144,11 +144,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const isMobile = useIsMobile(1024);
 
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('smart_halaqa_tab') || 'dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('smart_halaqa_tab') || 'dashboard';
+    }
+    return 'dashboard';
+  });
   const [selectedHalaqaId, setSelectedHalaqaId] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('smart_halaqa_tab', activeTab);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('smart_halaqa_tab', activeTab);
+    }
   }, [activeTab]); 
 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
@@ -207,7 +214,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         .maybeSingle();
 
       if (academyData) {
-        // 🟢 ضمان حفظ الاسم كـ String دائماً تجنباً لخطأ React #31
         const rawName = academyData.name || academy?.name || "";
         setAcademyName(formatLocalizedText(rawName, currentLang));
         
@@ -230,8 +236,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
+    } finally {
+      setLoadingData(false);
     }
-    setLoadingData(false);
   }, [academy?.name, currentLang]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
@@ -301,7 +308,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [halaqas, teachers, isRtl]);
 
   const preloadedDashboardData = useMemo(() => {
-    // 🟢 استخراج اسم آمن دائمًا
     const rawAcademyName = academyName || academy?.name;
     const resolvedName = formatLocalizedText(rawAcademyName, currentLang) || (isRtl ? "الأكاديمية" : "Academy");
 
