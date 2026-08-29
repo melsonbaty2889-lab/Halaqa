@@ -46,11 +46,21 @@ export default function Dashboard({
   
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
+  // 🛡️ دالة معالجة النصوص المحصنة لمنع خطأ React #31
   const safeText = useCallback((val, fallback = '') => {
-    if (!val) return fallback;
+    if (val === null || val === undefined) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      return isArabic ? (val.ar || val.en || fallback) : (val.en || val.ar || fallback);
+      const extracted = isArabic ? (val.ar || val.en) : (val.en || val.ar);
+      if (extracted && (typeof extracted === 'string' || typeof extracted === 'number')) {
+        return String(extracted);
+      }
+      // في حالة وجود كائنات متداخلة
+      const firstVal = Object.values(val)[0];
+      if (firstVal && (typeof firstVal === 'string' || typeof firstVal === 'number')) {
+        return String(firstVal);
+      }
+      return fallback;
     }
     return fallback;
   }, [isArabic]);
@@ -82,7 +92,7 @@ export default function Dashboard({
       setLastSyncTime(new Date().toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error("Error loading dashboard data:", err);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   }, [userRole, academyId, currentLang]);
@@ -132,7 +142,7 @@ export default function Dashboard({
   if (isSuperAdmin) {
     return (
       <Suspense fallback={<div className="p-5 text-center text-slate-400">جاري تحميل لوحة التحكم...</div>}>
-        <AdminDashboard isRtl={isRtl} academyName={displayName} onLogout={() => supabase.auth.signOut()} />
+        <AdminDashboard isRtl={isRtl} academyName={String(displayName || '')} onLogout={() => supabase.auth.signOut()} />
       </Suspense>
     );
   }
@@ -152,7 +162,7 @@ export default function Dashboard({
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/60 border border-emerald-500/30 rounded-full text-xs color-emerald-400 font-semibold">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/60 border border-emerald-500/30 rounded-full text-xs font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
             <span className="text-emerald-400">{isArabic ? 'متزامن لحظياً' : 'Realtime Synced'}</span>
             {lastSyncTime && <span className="text-slate-400 text-[10px]">({lastSyncTime})</span>}
@@ -305,7 +315,7 @@ export default function Dashboard({
               return (
                 <div key={halaqa.id || idx} className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/40">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="m-0 color-slate-100 text-sm font-bold">
+                    <h4 className="m-0 text-slate-100 text-sm font-bold">
                       {halaqaName}
                     </h4>
                     <span className={`px-2 py-0.5 rounded-lg border text-[10px] font-bold inline-flex items-center gap-1 ${statusBg} ${statusColor}`}>
