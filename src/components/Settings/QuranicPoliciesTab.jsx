@@ -15,10 +15,10 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
 
   // خيارات نمط التعليم
   const educationModeOptions = useMemo(() => [
-    { label: t('quranic.modeOnline', isRtl ? 'عن بعد (Online)' : 'Online'), value: 'online' },
-    { label: t('quranic.modeOnsite', isRtl ? 'حضوري (In-person)' : 'In-person'), value: 'onsite' },
-    { label: t('quranic.modeHybrid', isRtl ? 'مختلط (Hybrid)' : 'Hybrid'), value: 'hybrid' },
-  ], [t, i18n.language, isRtl]);
+  { label: t('quranic.online', isRtl ? 'عن بُعد (Online)' : 'Online'), value: 'online' },
+  { label: t('quranic.inPerson', isRtl ? 'حضوري (In-person)' : 'In-Person'), value: 'onsite' },
+  { label: t('quranic.hybrid', isRtl ? 'مدمج (Hybrid)' : 'Hybrid'), value: 'hybrid' },
+], [t, isRtl]);
 
   // خيارات الرواية / القراءة - جلب الاسم حسب اللغة الحالية للواجهة
   const riwayaOptions = useMemo(() => {
