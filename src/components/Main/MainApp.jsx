@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
 
 import { supabase } from '@/lib/supabase';
@@ -17,12 +17,68 @@ import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
 // 🟢 دالة آمنة لمعالجة الكائنات المترجمة ومنع خطأ React #31
 const formatLocalizedText = (val, lang = 'ar') => {
-  if (!val) return '';
-  if (typeof val === 'string') return val;
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string' || typeof val === 'number') return String(val);
   if (typeof val === 'object') {
     return val[lang] || val.ar || val.en || Object.values(val)[0] || '';
   }
   return String(val);
+};
+
+// 🛑 مكون شاشة الحظر التفاعلية المستقلة
+const BlockedView = ({ academy, onLogout, isRtl = true }) => {
+  const academyName = formatLocalizedText(academy?.name) || (isRtl ? "الأكاديمية" : "Academy");
+  const blockReason = formatLocalizedText(
+    academy?.blocked_reason, 
+    isRtl ? 'ar' : 'en'
+  ) || (isRtl 
+    ? "تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب مراجعة الاشتراك أو الحساب." 
+    : "Your academy account has been suspended by administration.");
+
+  const handleSupportContact = () => {
+    const supportPhone = "201000000000"; // 👈 استبدله برقم الدعم الفني الخاص بك
+    const msg = encodeURIComponent(`السلام عليكم، أنا مالك أكاديمية (${academyName})، تم تعليق الحساب وأود الاستفسار والتفعيل.`);
+    window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="max-w-md w-full bg-slate-900 border border-rose-500/30 rounded-2xl p-6 text-center shadow-2xl space-y-5">
+        <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500">
+          <AlertOctagon size={36} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white mb-1">
+            {isRtl ? 'تم تعليق حساب الأكاديمية' : 'Academy Account Suspended'}
+          </h2>
+          <p className="text-sm font-semibold text-rose-400">{academyName}</p>
+        </div>
+        <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-xs text-slate-300 leading-relaxed text-right">
+          {blockReason}
+        </div>
+        <div className="space-y-2 pt-2">
+          <button
+            type="button"
+            onClick={handleSupportContact}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors"
+          >
+            <MessageCircle size={18} />
+            {isRtl ? 'التواصل مع الإدارة عبر الواتساب' : 'Contact Support on WhatsApp'}
+          </button>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 border-0 py-2.5 rounded-xl font-semibold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors"
+            >
+              <LogOut size={16} />
+              {isRtl ? 'تسجيل الخروج' : 'Log Out'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const safeLazy = (importFn) => {
@@ -134,7 +190,7 @@ class ErrorBoundaryInner extends React.Component {
   }
 }
 
-export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated, setShowEarlyUpgrade }) {
+export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated, setShowEarlyUpgrade, onLogout }) {
   const { t, i18n } = useTranslation(); 
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
   const currentLang = i18n?.language || 'ar';
@@ -166,6 +222,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [academyId, setAcademyId] = useState(null);
   const [academyName, setAcademyName] = useState(""); 
   const [isAcademyActive, setIsAcademyActive] = useState(true);
+  const [rawAcademyData, setRawAcademyData] = useState(null);
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
 
@@ -209,11 +266,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     try {
       const { data: academyData } = await supabase
         .from('academies')
-        .select('id, name, currency, timezone, country_code, is_active')
+        .select('id, name, currency, timezone, country_code, is_active, blocked_reason')
         .eq('id', targetAcademyId)
         .maybeSingle();
 
       if (academyData) {
+        setRawAcademyData(academyData);
         const rawName = academyData.name || academy?.name || "";
         setAcademyName(formatLocalizedText(rawName, currentLang));
         
@@ -236,7 +294,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
-    } finally {
+    } fontally {
       setLoadingData(false);
     }
   }, [academy?.name, currentLang]);
@@ -258,7 +316,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         
         const { data: staff } = await supabase
           .from('staff')
-          .select('academy_id, academies(id, name, currency, timezone, country_code, is_active)')
+          .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
           .eq('user_id', currentUserId)
           .maybeSingle();
 
@@ -296,16 +354,27 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     loadInitialData();
   }, [session, fetchAcademyData]);
 
+  // 🛑 اعتراض الشاشة فور رصد حالة الحظر (مستثنى منها المشرفين العموميين)
+  if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
+    return (
+      <BlockedView 
+        academy={rawAcademyData || academy} 
+        onLogout={onLogout} 
+        isRtl={isRtl} 
+      />
+    );
+  }
+
   const enrichedHalaqas = useMemo(() => {
     if (!Array.isArray(halaqas)) return [];
     return halaqas.map(h => {
       const teacher = Array.isArray(teachers) ? teachers.find(t => t.id === h.teacher_id) : null;
       return {
         ...h,
-        teacher_name: teacher ? teacher.name : (h.teacher_name || (isRtl ? 'غير معين' : 'Unassigned'))
+        teacher_name: teacher ? formatLocalizedText(teacher.name, currentLang) : (h.teacher_name || (isRtl ? 'غير معين' : 'Unassigned'))
       };
     });
-  }, [halaqas, teachers, isRtl]);
+  }, [halaqas, teachers, isRtl, currentLang]);
 
   const preloadedDashboardData = useMemo(() => {
     const rawAcademyName = academyName || academy?.name;
