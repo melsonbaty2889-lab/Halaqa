@@ -4,7 +4,7 @@ import { RefreshCw, AlertTriangle } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
 
 import { supabase } from '@/lib/supabase';
-import { useAcademy } from '@/context/AcademyContext'; // استيراد Context الأكاديمية
+import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
 import { colors as C } from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
@@ -14,6 +14,16 @@ import Header from '@/components/Header/Header';
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
+
+// 🟢 دالة آمنة لمعالجة الكائنات المترجمة ومنع خطأ React #31
+const formatLocalizedText = (val, lang = 'ar') => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    return val[lang] || val.ar || val.en || Object.values(val)[0] || '';
+  }
+  return String(val);
+};
 
 const safeLazy = (importFn) => {
   return lazy(() =>
@@ -45,9 +55,6 @@ const InteractiveQuran = safeLazy(() => import('@/components/Quran/InteractiveQu
 const Curriculum = safeLazy(() => import('@/components/Curriculum/CurriculumManagement.jsx'));
 const StudentDocuments = safeLazy(() => import('@/components/Student/StudentDocuments.jsx'));
 
-// ----------------------------------------------------
-// مكوّن مدمج للتحكم بتبويب الإشعارات والتقارير عبر أزرار علوية
-// ----------------------------------------------------
 const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }) => {
   const [activeSubTab, setActiveSubTab] = useState('communications');
 
@@ -133,10 +140,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
-  // جلب بيانات الأكاديمية الحالية مباشرة من السياق العام
   const { academy } = useAcademy();
 
-  // استخدام Custom Hook المحدث لكشف الشاشات بدقة (أقل من 1024px يعتبر جوال/تابلت)
   const isMobile = useIsMobile(1024);
 
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('smart_halaqa_tab') || 'dashboard');
@@ -166,7 +171,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
 
-  // إغلاق خلفية الـ Overlay تلقائياً عند تكبير الشاشة لسطح المكتب
   useEffect(() => {
     if (!isMobile) {
       setSidebarOpen(false);
@@ -203,7 +207,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         .maybeSingle();
 
       if (academyData) {
-        setAcademyName(academyData.name || academy?.name || "");
+        // 🟢 ضمان حفظ الاسم كـ String دائماً تجنباً لخطأ React #31
+        const rawName = academyData.name || academy?.name || "";
+        setAcademyName(formatLocalizedText(rawName, currentLang));
+        
         setIsAcademyActive(academyData.is_active ?? true);
         if (academyData.currency) setCurrency(academyData.currency);
         if (academyData.timezone) setTimezone(academyData.timezone);
@@ -225,7 +232,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       console.error("Error fetching academy data:", error);
     }
     setLoadingData(false);
-  }, [academy?.name]);
+  }, [academy?.name, currentLang]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
     if (!newAcademyId || newAcademyId === academyId) return;
@@ -293,17 +300,25 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     });
   }, [halaqas, teachers, isRtl]);
 
-  const preloadedDashboardData = useMemo(() => ({
-    academyName: isPlatformAdmin ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") : (academyName || academy?.name || (isRtl ? "الأكاديمية" : "Academy")),
-    role: userRole || 'staff', 
-    is_activated: isAcademyActive,
-    stats: {
-      students: Array.isArray(students) ? students.length : 0,
-      pending: Array.isArray(students) ? students.filter(s => s?.payment_status === 'unpaid' || s?.payment_status === 'pending').length : 0,
-      activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h?.is_archived).length : 0, 
-      completedExams: completedExamsCount || 0
-    }
-  }), [isPlatformAdmin, isRtl, academyName, academy?.name, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
+  const preloadedDashboardData = useMemo(() => {
+    // 🟢 استخراج اسم آمن دائمًا
+    const rawAcademyName = academyName || academy?.name;
+    const resolvedName = formatLocalizedText(rawAcademyName, currentLang) || (isRtl ? "الأكاديمية" : "Academy");
+
+    return {
+      academyName: isPlatformAdmin 
+        ? (isRtl ? "إدارة المنصة العامة" : "Global Platform Admin") 
+        : resolvedName,
+      role: userRole || 'staff', 
+      is_activated: isAcademyActive,
+      stats: {
+        students: Array.isArray(students) ? students.length : 0,
+        pending: Array.isArray(students) ? students.filter(s => s?.payment_status === 'unpaid' || s?.payment_status === 'pending').length : 0,
+        activeHalagas: Array.isArray(halaqas) ? halaqas.filter(h => !h?.is_archived).length : 0, 
+        completedExams: completedExamsCount || 0
+      }
+    };
+  }, [isPlatformAdmin, isRtl, academyName, academy?.name, currentLang, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
