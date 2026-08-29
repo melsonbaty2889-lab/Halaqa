@@ -16,7 +16,9 @@ import {
   RefreshCw, 
   Landmark,
   Flame,
-  Award
+  Award,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
@@ -34,6 +36,7 @@ export default function Dashboard({
   const currentLang = i18n.language || 'ar';
   
   const [loading, setLoading] = useState(true);
+  const [selectedAdminAcademy, setSelectedAdminAcademy] = useState(null); // 🟢 حالة حفظ الأكاديمية المختارة
   const [stats, setStats] = useState({
     studentsCount: 0,
     academiesCount: 0,
@@ -55,7 +58,6 @@ export default function Dashboard({
       if (extracted && (typeof extracted === 'string' || typeof extracted === 'number')) {
         return String(extracted);
       }
-      // في حالة وجود كائنات متداخلة
       const firstVal = Object.values(val)[0];
       if (firstVal && (typeof firstVal === 'string' || typeof firstVal === 'number')) {
         return String(firstVal);
@@ -66,7 +68,17 @@ export default function Dashboard({
   }, [isArabic]);
 
   const isSuperAdmin = userRole === 'super_admin';
-  const rawAcademyName = preloadedDashboardData?.academyName || preloadedDashboardData?.name || "";
+
+  // 🎯 تحديد ID الأكاديمية (إما من الأكاديمية التي اختارها الـ Super Admin أو المعرف الافتراضي)
+  const academyId = selectedAdminAcademy?.id || 
+                    preloadedDashboardData?.academy_id || 
+                    preloadedDashboardData?.id || 
+                    session?.user?.user_metadata?.academy_id;
+
+  const rawAcademyName = selectedAdminAcademy?.name || 
+                         preloadedDashboardData?.academyName || 
+                         preloadedDashboardData?.name || "";
+                         
   const rawUserName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
   
   const displayName = useMemo(() => {
@@ -79,12 +91,13 @@ export default function Dashboard({
     return parsedUserName;
   }, [rawAcademyName, rawUserName, isArabic, safeText]);
 
-  const academyId = preloadedDashboardData?.academy_id || preloadedDashboardData?.id || session?.user?.user_metadata?.academy_id;
-
   const fetchDashboardData = useCallback(async (showOverlay = true) => {
     if (showOverlay) setLoading(true);
     try {
-      const profile = { role: userRole, academy_id: academyId };
+      const profile = { 
+        role: selectedAdminAcademy ? 'academy_admin' : userRole, 
+        academy_id: academyId 
+      };
       const data = await getDashboardStats(supabase, profile);
       if (data) {
         setStats(data);
@@ -95,7 +108,7 @@ export default function Dashboard({
     } finally {
       setLoading(false);
     }
-  }, [userRole, academyId, currentLang]);
+  }, [userRole, academyId, currentLang, selectedAdminAcademy]);
 
   useEffect(() => {
     fetchDashboardData(true);
@@ -139,7 +152,8 @@ export default function Dashboard({
     );
   }
 
-  if (isSuperAdmin) {
+  // 🎯 عرض لوحة الـ Super Admin فقط إذا لم يتم اختيار أكاديمية معينة للمعاينة
+  if (isSuperAdmin && !selectedAdminAcademy) {
     return (
       <Suspense fallback={<div className="p-5 text-center text-slate-400">جاري تحميل لوحة التحكم...</div>}>
         <AdminDashboard 
@@ -147,8 +161,7 @@ export default function Dashboard({
           academyName={String(displayName || '')} 
           onLogout={() => supabase.auth.signOut()} 
           onSelectAcademy={(academy) => {
-            // عند اختيار أكاديمية، يتم الانتقال لتبويب الحلقات أو إدارة الأكاديمية
-            if (setActiveTab) setActiveTab('halaqas');
+            setSelectedAdminAcademy(academy); // 🟢 الانتقال لواجهة الأكاديمية عند الضغط
           }}
         />
       </Suspense>
@@ -157,6 +170,20 @@ export default function Dashboard({
 
   return (
     <div className={`p-3 pb-20 text-right ${isRtl ? 'rtl' : 'ltr'}`}>
+      
+      {/* 🔴 زر الرجوع للمدير العام إذا كان يعاين أكاديمية */}
+      {isSuperAdmin && selectedAdminAcademy && (
+        <div className="mb-4">
+          <button
+            onClick={() => setSelectedAdminAcademy(null)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+          >
+            {isRtl ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
+            <span>{isArabic ? 'الرجوع للوحة التحكم الرئيسية (Super Admin)' : 'Back to Super Admin'}</span>
+          </button>
+        </div>
+      )}
+
       {/* الترويسة الرئيسية */}
       <div className="flex flex-col gap-2 mb-5">
         <div className="flex justify-between items-start flex-wrap gap-2">
