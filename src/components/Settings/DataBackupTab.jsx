@@ -15,9 +15,20 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
-      if (showToast) showToast(t('backup.exportSuccess', 'تم تصدير النسخة الاحتياطية بنجاح'), 'success');
+
+      if (showToast) {
+        showToast(
+          t('backup.exportSuccess', isRtl ? 'تم تصدير النسخة الاحتياطية بنجاح' : 'Backup exported successfully'),
+          'success'
+        );
+      }
     } catch (err) {
-      if (showToast) showToast(t('backup.exportError', 'حدث خطأ أثناء تصدير البيانات'), 'error');
+      if (showToast) {
+        showToast(
+          t('backup.exportError', isRtl ? 'حدث خطأ أثناء تصدير البيانات' : 'Error exporting configuration data'),
+          'error'
+        );
+      }
     }
   };
 
@@ -31,15 +42,23 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
         const parsedData = JSON.parse(event.target.result);
         if (typeof setFormData === 'function') {
           setFormData(parsedData);
-          if (showToast) showToast(t('backup.importSuccess', 'تم استيراد البيانات بنجاح'), 'success');
+          if (showToast) {
+            showToast(
+              t('backup.importSuccess', isRtl ? 'تم استيراد البيانات بنجاح' : 'Configuration imported successfully'),
+              'success'
+            );
+          }
         }
       } catch (err) {
-        if (showToast) showToast(t('backup.importError', 'ملف النسخة الاحتياطية غير صالحة'), 'error');
+        if (showToast) {
+          showToast(
+            t('backup.importError', isRtl ? 'ملف النسخة الاحتياطية غير صالحة' : 'Invalid backup JSON file'),
+            'error'
+          );
+        }
       }
     };
     reader.readAsText(file);
-    
-    // تصفير المدخل لضمان إمكانية رفع نفس الملف مرة أخرى إذا لزم الأمر
     e.target.value = '';
   };
 
@@ -49,22 +68,24 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
         <div className="flex items-center gap-2 text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
           <Database size={18} />
           <h3 className="text-xs font-bold">
-            {t('backup.title', 'النسخ الاحتياطي واستعادة البيانات')}
+            {t('backup.title', isRtl ? 'النسخ الاحتياطي واستعادة البيانات' : 'Data Backup & Export')}
           </h3>
         </div>
 
         <p className="text-xs text-[var(--text-sub)] leading-relaxed">
-          {t('backup.description', 'تصدير إعدادات المنظومة لحفظها احتياطياً أو استيرادها في أكاديمية أخرى بنقرة واحدة.')}
+          {t('backup.description', isRtl 
+            ? 'تصدير إعدادات المنظومة لحفظها احتياطياً أو استيرادها في أكاديمية أخرى بنقرة واحدة.' 
+            : 'Export system settings for backup or import them into another academy in one click.')}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
             type="button"
             onClick={handleExport}
-            className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer"
+            className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl font-bold transition-all"
           >
             <Download size={15} />
-            <span>{t('backup.exportBtn', 'تصدير الإعدادات (JSON)')}</span>
+            <span>{t('backup.exportBtn', isRtl ? 'تصدير الإعدادات (JSON)' : 'Export Configuration (.json)')}</span>
           </button>
 
           <input
@@ -78,10 +99,10 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
           <button
             type="button"
             onClick={() => importInputRef?.current?.click()}
-            className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer"
+            className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl font-bold transition-all"
           >
             <Upload size={15} />
-            <span>{t('backup.importBtn', 'استيراد إعدادات (JSON)')}</span>
+            <span>{t('backup.importBtn', isRtl ? 'استيراد الإعدادات (JSON)' : 'Import Configuration (.json)')}</span>
           </button>
         </div>
       </div>
