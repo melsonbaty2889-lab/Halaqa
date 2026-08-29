@@ -301,7 +301,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       });
     } catch (err) {
       console.error("Failed to load deep stats:", err);
-    } fontally {
+    } finally {
       setAcademyStatsLoading(false);
     }
   };
