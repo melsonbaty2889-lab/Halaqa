@@ -60,7 +60,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // جلب بيانات الأكاديمية
+  // جلب بيانات الأكاديمية (تم عزل الاعتماديات لحماية التغييرات)
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -90,7 +90,6 @@ export default function Settings({
             }
           }
 
-          // معالجة آمنة لأيام العطلات للتوافق مع نوع text[]
           const loadedWeekendDays = Array.isArray(data.weekend_days)
             ? data.weekend_days
             : (typeof data.weekend_days === 'string'
@@ -117,9 +116,9 @@ export default function Settings({
             require_approval: data.require_approval ?? true
           };
 
-          setFormData(loaded);
+          // كتابة البيانات المجلوبة فقط في حال عدم إدخال تعديلات جديدة
+          setFormData((prev) => (isDirty ? prev : loaded));
           setInitialData(loaded);
-          setIsDirty(false);
         }
       } catch (err) {
         console.error('Error fetching academy settings:', err);
@@ -127,7 +126,7 @@ export default function Settings({
     }
 
     loadAcademySettings();
-  }, [academyId, currentCurrency, currentTimezone, currentCountryCode]);
+  }, [academyId]); // الأعتماد على academyId فقط يمنع التحديث التلقائي أثناء الكتابة
 
   // تحديث الحقول العامة مع تتبع التغيير
   const updateField = (field, value) => {
