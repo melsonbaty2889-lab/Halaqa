@@ -25,7 +25,7 @@ import {
   History,
   CheckSquare,
   Square,
-  ExternalLink
+  ExternalLink // 👈 1. تم إضافة الأيقونة هنا
 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
@@ -46,6 +46,7 @@ const getSafeText = (val, defaultVal = '') => {
   return String(val);
 };
 
+// 👈 2. تم استقبال onSelectAcademy هنا
 export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy }) {
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
   const [academies, setAcademies] = useState([]); 
@@ -703,6 +704,15 @@ export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy
 
                   {/* أزرار التحكم */}
                   <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-800/60">
+                    
+                    {/* 🟢 3. زر الدخول للأكاديمية الجديد */}
+                    <button 
+                      onClick={() => onSelectAcademy && onSelectAcademy(academy.id)} 
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1 transition-colors"
+                    >
+                      <ExternalLink size={14} /> {isRtl ? 'دخول للأكاديمية' : 'Enter Academy'}
+                    </button>
+
                     {academy.ownerProfile?.phone ? (
                       <button 
                         onClick={() => handleWhatsAppClick(academy.ownerProfile.phone, getSafeText(academy.name))}
@@ -831,7 +841,6 @@ export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy
               <History size={16} className="text-amber-400" /> {isRtl ? 'سجل المدفوعات والاشتراكات' : 'Payment History'}
             </h4>
 
-            {/* 🛡️ رندر آمن لسجل المدفوعات لمنع الخطأ #31 */}
             <div className="flex-1 overflow-y-auto space-y-2">
               {deepStats.payments.length === 0 ? (
                 <p className="text-xs text-slate-500 text-center mt-5">{isRtl ? 'لا يوجد سجل مدفوعات سابق' : 'No prior payment history'}</p>
