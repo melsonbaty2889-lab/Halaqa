@@ -967,7 +967,9 @@ export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy
                 <MessageCircle size={20} className="text-emerald-400" />
                 {isRtl ? 'إدخال رقم هاتف المالك' : 'Enter Owner Phone'}
               </h3>
-              <button onClick={() => setPhoneModalData(null)} className="bg-transparent border-0 text-slate-400 cursor-pointer"><X size={18} /></button>
+              <button onClick={() => setPhoneModalData(null)} className="bg-transparent border-0 text-slate-400 cursor-pointer">
+                <X size={18} />
+              </button>
             </div>
 
             <p className="text-slate-400 text-xs mb-4">
@@ -1007,3 +1009,5 @@ export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy
     </div>
   );
 }
+
+export default AdminDashboard;
