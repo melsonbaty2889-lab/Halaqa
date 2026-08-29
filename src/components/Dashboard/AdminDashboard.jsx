@@ -490,7 +490,14 @@ export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy
     return { text: isRtl ? `متبقي ${diffDays} يوم` : `${diffDays}d left`, color: '#10B981' };
   };
 
-  const totalPages = Math.ceil(totalAcademiesCount / PAGE_SIZE) || 1;
+  // 🟢 1. تقطيع العناصر المفلترة لعرض عناصر الصفحة الحالية فقط
+  const paginatedAcademies = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredAcademies.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredAcademies, currentPage]);
+
+  // 🟢 2. حساب عدد الصفحات بناءً على العناصر المفلترة الفعلية
+  const totalPages = Math.ceil(filteredAcademies.length / PAGE_SIZE) || 1;
 
   return (
     <div className={`space-y-6 ${isRtl ? 'rtl' : 'ltr'}`}>
@@ -557,6 +564,68 @@ export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy
           <div className="bg-emerald-950/50 p-2.5 rounded-xl"><FileSpreadsheet size={24} className="text-emerald-400" /></div>
         </div>
       </div>
+
+      {/* قائمة الأكاديميات */}
+      <section className="space-y-3">
+        {paginatedAcademies.length === 0 ? (
+          <EmptyState icon={<Building2 size={36} />} title={isRtl ? "لا توجد نتائج مطابقة" : "No Matching Academies"} description={isRtl ? "جرب تعديل عبارة البحث أو خيار التصفية." : "Try adjusting your filters or query."} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {paginatedAcademies.map(academy => {
+              const isBlocked = !academy.is_active;
+              const isSelected = selectedAcademyIds.includes(academy.id);
+
+              return (
+                <div 
+                  key={academy.id} 
+                  className={`relative p-4 rounded-xl border transition-colors ${
+                    isSelected ? 'bg-slate-800/90 border-sky-500' : isBlocked ? 'bg-slate-900 border-rose-500/40' : 'bg-slate-900/90 border-slate-800'
+                  }`}
+                >
+                  <div className="space-y-1 mb-4">
+                    <h3 onClick={() => openAcademyDrawer(academy)} className="text-sm font-bold text-white hover:underline cursor-pointer m-0">
+                      {getSafeText(academy.name, 'أكاديمية بدون اسم')}
+                    </h3>
+                  </div>
+
+                  {/* أزرار التحكم */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-800/60">
+                    
+                    {/* 🟢 زر دخول للأكاديمية */}
+                    {onSelectAcademy && (
+                      <button 
+                        onClick={() => onSelectAcademy(academy)} 
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1"
+                      >
+                        <ExternalLink size={14} />
+                        {isRtl ? 'دخول للأكاديمية' : 'Enter Academy'}
+                      </button>
+                    )}
+
+                    <button 
+                      onClick={() => openAcademyDrawer(academy)} 
+                      className="bg-sky-950/30 border border-sky-500/30 text-sky-400 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Eye size={14} /> {isRtl ? 'تفاصيل' : 'Details'}
+                    </button>
+
+                    <button 
+                      onClick={() => setExtendModalAcademy(academy)} 
+                      disabled={processingId !== null} 
+                      className="bg-slate-800 border border-amber-500/40 text-amber-400 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Plus size={14} /> {isRtl ? 'تمديد' : 'Extend'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+      
 
       {/* شريط البحث والفلترة والفرز */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-900 p-3.5 rounded-xl border border-slate-800">
