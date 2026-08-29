@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Trash2, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function IdentityTab({ 
@@ -99,7 +99,7 @@ export default function IdentityTab({
         </div>
       </div>
 
-      {/* 2. قسم البيانات الأساسية (الاسم والوصف) */}
+      {/* 2. قسم البيانات الأساسية (الاسم والـ Slug والوصف) */}
       <div className="card-surface space-y-4 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* الحقل الأساسي (حسب لغة الواجهة الحالية) */}
@@ -143,6 +143,32 @@ export default function IdentityTab({
               className={`app-input text-start transition-all duration-200 focus:ring-2 focus:ring-amber-500/20 ${isRtl ? 'dir-ltr' : ''}`} 
             />
           </div>
+        </div>
+
+        {/* حقل الـ Slug (رابط الأكاديمية المختصر) */}
+        <div>
+          <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+            {t('identity.slugLabel', isRtl ? 'الرابط المختصر للأكاديمية (Slug)' : 'Academy Slug / URL Identifier')}
+          </label>
+          <div className="relative flex items-center dir-ltr">
+            <span className="absolute left-3 text-[var(--text-sub)] text-xs font-mono select-none flex items-center gap-1">
+              <LinkIcon size={12} />
+              <span>/</span>
+            </span>
+            <input 
+              type="text" 
+              maxLength={60}
+              placeholder="my-academy"
+              value={formData?.slug || ''} 
+              onChange={(e) => handleChange('slug', e.target.value)} 
+              className="app-input pl-8 text-xs font-mono text-start dir-ltr transition-all duration-200 focus:ring-2 focus:ring-amber-500/20" 
+            />
+          </div>
+          <p className="text-[10px] text-[var(--text-sub)] mt-1">
+            {t('identity.slugHint', isRtl 
+              ? 'يستخدم هذا المعرّف في روابط التسجيل والصفحات الخاصة بالأكاديمية (أحرف إنجليزية وشُرط فقط).' 
+              : 'Used in registration links and unique URLs (lowercase letters, numbers, and hyphens only).')}
+          </p>
         </div>
 
         {/* وصف الأكاديمية */}
