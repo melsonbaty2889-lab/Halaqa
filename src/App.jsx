@@ -256,34 +256,166 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   );
 }
 
+// 🛡️ واجهة التعامل مع الأخطاء العامة بتصميم SaaS احترافي
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
-  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+
+  static getDerivedStateFromError(error) { 
+    return { hasError: true, error }; 
+  }
+
   componentDidCatch(error, errorInfo) {
     console.error("🚨 Global App Crash:", error, errorInfo);
   }
+
+  handleReload = () => {
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        for (let name of names) caches.delete(name);
+      });
+    }
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
+      const errorMessage = this.state.error?.toString() || 'حدث خطأ غير متوقع في النظام';
+
       return (
-        <div style={{ color: C.text.title, textAlign: 'center', marginTop: '50px', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif", background: C.dark.main, minHeight: '100vh' }}>
-          <AlertTriangle size={48} style={{ color: C.error.DEFAULT, marginBottom: '15px' }} />
-          <h2 style={{ color: C.error.DEFAULT, marginBottom: '10px' }}>حدث خطأ تقني في النظام</h2>
-          <div style={{ background: C.dark.card, padding: '15px', borderRadius: '8px', border: `1px solid ${C.dark.border}`, maxWidth: '600px', margin: '15px auto', textAlign: 'left', direction: 'ltr', fontSize: '0.85rem', color: C.error.light, overflowX: 'auto' }}>
-            {this.state.error?.toString()}
+        <div style={{
+          minHeight: '100vh',
+          background: C.dark.main,
+          display: 'flex',
+          alignItems: 'center',
+          justify: 'center',
+          padding: '24px',
+          fontFamily: "'Cairo', system-ui, sans-serif",
+          direction: 'rtl',
+          color: C.text.title
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '520px',
+            background: C.dark.card,
+            border: `1px solid ${C.dark.border}`,
+            borderRadius: '24px',
+            padding: '36px 28px',
+            textAlign: 'center',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-60px',
+              right: '50%',
+              transform: 'translateX(50%)',
+              width: '180px',
+              height: '180px',
+              background: C.error.DEFAULT,
+              filter: 'blur(90px)',
+              opacity: 0.25,
+              pointerEvents: 'none'
+            }} />
+
+            <div style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '20px',
+              background: C.error.bgGlow,
+              border: `1px solid rgba(239, 68, 68, 0.3)`,
+              color: C.error.DEFAULT,
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'center',
+              margin: '0 auto 24px',
+              boxShadow: '0 8px 16px -4px rgba(239, 68, 68, 0.2)'
+            }}>
+              <AlertTriangle size={36} />
+            </div>
+
+            <h2 style={{
+              fontSize: '1.4rem',
+              fontWeight: '700',
+              margin: '0 0 8px 0',
+              color: C.text.title
+            }}>
+              عذراً، حدث خطأ تقني غير متوقع
+            </h2>
+            <p style={{
+              fontSize: '0.875rem',
+              color: C.text.muted,
+              margin: '0 0 24px 0',
+              lineHeight: '1.6'
+            }}>
+              واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.
+            </p>
+
+            <div style={{
+              background: C.dark.surface,
+              border: `1px solid ${C.dark.border}`,
+              borderRadius: '12px',
+              padding: '14px 16px',
+              textAlign: 'left',
+              direction: 'ltr',
+              marginBottom: '28px'
+            }}>
+              <div style={{
+                fontSize: '0.75rem',
+                color: C.text.muted,
+                fontFamily: 'monospace',
+                marginBottom: '6px',
+                display: 'flex',
+                justify: 'space-between',
+                direction: 'rtl'
+              }}>
+                <span>تفاصيل الخطأ:</span>
+                <span style={{ color: C.error.light }}>CRASH_REPORT</span>
+              </div>
+              <p style={{
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                fontSize: '0.8rem',
+                color: C.error.light,
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                maxHeight: '110px',
+                overflowY: 'auto',
+                lineHeight: '1.5'
+              }}>
+                {errorMessage}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justify: 'center'
+            }}>
+              <button
+                onClick={this.handleReload}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: C.primary.gradient,
+                  color: C.dark.main,
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(217, 119, 6, 0.3)'
+                }}
+              >
+                <RefreshCw size={18} />
+                إعادة تحميل الصفحة
+              </button>
+            </div>
           </div>
-          <button 
-            onClick={() => {
-              if ('caches' in window) {
-                caches.keys().then((names) => {
-                  for (let name of names) caches.delete(name);
-                });
-              }
-              window.location.reload();
-            }} 
-            style={{ padding: '10px 20px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            إعادة تحميل الصفحة
-          </button>
         </div>
       );
     }
