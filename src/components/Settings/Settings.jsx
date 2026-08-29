@@ -90,6 +90,13 @@ export default function Settings({
             }
           }
 
+          // معالجة آمنة لأيام العطلات للتوافق مع نوع text[]
+          const loadedWeekendDays = Array.isArray(data.weekend_days)
+            ? data.weekend_days
+            : (typeof data.weekend_days === 'string'
+                ? JSON.parse(data.weekend_days)
+                : ['friday', 'saturday']);
+
           const loaded = {
             ...data,
             name: parsedName,
@@ -101,7 +108,7 @@ export default function Settings({
             contact_email: data.contact_email || '',
             contact_phone: data.contact_phone || '',
             website: data.website || '',
-            weekend_days: Array.isArray(data.weekend_days) ? data.weekend_days : ['friday', 'saturday'],
+            weekend_days: loadedWeekendDays,
             default_qiraat: data.default_qiraat || 'hafs_an_asem',
             teaching_methodology: data.teaching_methodology || 'mashreqi',
             learning_type: data.learning_type || 'online',
@@ -280,13 +287,13 @@ export default function Settings({
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
         website: formData.website,
-        weekend_days: formData.weekend_days,
-        default_qiraat: formData.default_qiraat,
+        weekend_days: Array.isArray(formData.weekend_days) ? formData.weekend_days : ['friday', 'saturday'],
+        default_qiraat: formData.default_qiraat || 'hafs_an_asem',
         teaching_methodology: formData.teaching_methodology,
         learning_type: formData.learning_type,
-        max_students_per_group: formData.max_students_per_group,
-        allow_self_registration: formData.allow_self_registration,
-        require_approval: formData.require_approval
+        max_students_per_group: Number(formData.max_students_per_group) || 25,
+        allow_self_registration: Boolean(formData.allow_self_registration),
+        require_approval: Boolean(formData.require_approval)
       };
 
       const { error } = await supabase
@@ -321,7 +328,7 @@ export default function Settings({
     setIsDirty(false);
   };
 
-  // التبويبات الرئيسية (تم تقصير العناوين لمنع الاقتطاع على الهواتف)
+  // التبويبات الرئيسية
   const steps = [
     {
       id: 'general',
