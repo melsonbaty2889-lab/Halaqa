@@ -8,16 +8,33 @@ import ContactRegionalTab from './ContactRegionalTab';
 import QuranicPoliciesTab from './QuranicPoliciesTab';
 import DataBackupTab from './DataBackupTab';
 
-// دالة لتنظيف وتنسيق الـ Slug
-const generateSlug = (text) => {
-  if (!text) return '';
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')        // استبدال المسافات بـ -
-    .replace(/[^\w\-]+/g, '')    // إزالة كافة الرموز غير النصية
-    .replace(/\-\-+/g, '-');     // استبدال الشرطات المتعددة بشرطة واحدة
+// دالة ذكية لتوليد الـ Slug تدعم الاسم الإنجليزي أو تنشئ رابطاً نظيفاً للمستخدم العربي
+const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
+  // 1. إذا أدخل المستخدم Slug مخصص بيده، ننظفه ونعتمده
+  if (rawSlug && !rawSlug.startsWith('academy-')) {
+    const cleanedCustom = rawSlug
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-');
+    if (cleanedCustom) return cleanedCustom;
+  }
+
+  // 2. إذا كان الاسم الإنجليزي موجوداً، نولّد منه الـ Slug
+  if (enName && enName.trim() !== '') {
+    const cleanedEn = enName
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-');
+    if (cleanedEn) return cleanedEn;
+  }
+
+  // 3. للمستخدم العربي: إذا لم يتوفر اسم إنجليزي أو slug مخصص، ننشئ رابطاً نظيفاً يعتمد على المعرف
+  const shortId = currentId ? currentId.slice(0, 8) : Math.random().toString(36).substring(2, 8);
+  return `academy-${shortId}`;
 };
 
 export default function Settings({
@@ -48,7 +65,7 @@ export default function Settings({
   const importInputRef = useRef(null);
   const isDirtyRef = useRef(false);
 
-  // حالة البيانات الأساسية (تمت إضافة slug)
+  // حالة البيانات الأساسية
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
     slug: '',
@@ -75,7 +92,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // جلب البيانات
+  // جلب البيانات من قاعدة البيانات
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -114,7 +131,7 @@ export default function Settings({
           const loaded = {
             ...data,
             name: parsedName,
-            slug: data.slug || '',
+            slug: data.slug || `academy-${academyId.slice(0, 8)}`,
             description: data.description || '',
             logo_url: data.logo_url || '',
             currency: data.currency || currentCurrency || 'EGP',
@@ -163,15 +180,15 @@ export default function Settings({
     }
   };
 
-  // تحديث حقل الاسم مزدوج اللغة مع اقتراح slug تلقائي إذا كان يدوياً فارغاً
+  // تحديث الاسم مع توليد ذكي للـ Slug
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
+      
+      // ننشئ الـ slug تلقائياً فقط إذا كان الـ slug الحالي فارغاً أو معرفاً افتراضياً
       let newSlug = prev.slug;
-
-      // إنشاء Slug تلقائي من الاسم الإنجليزي في حال لم يدخل المستخدم Slug مخصص
-      if (lang === 'en' && (!prev.slug || prev.slug.startsWith('academy-'))) {
-        newSlug = generateSlug(value);
+      if (!prev.slug || prev.slug.startsWith('academy-')) {
+        newSlug = generateSmartSlug(updatedName.en, updatedName.ar, '', academyId);
       }
 
       const updated = { ...prev, name: updatedName, slug: newSlug };
@@ -300,7 +317,8 @@ export default function Settings({
     try {
       setSaving(true);
 
-      const cleanSlug = generateSlug(formData.slug) || generateSlug(enName) || `academy-${academyId.slice(0, 8)}`;
+      // تنظيف وتوليد الـ slug النهائي الذكي
+      const cleanSlug = generateSmartSlug(enName, arName, formData.slug, academyId);
 
       const updatePayload = {
         name: formData.name,
@@ -346,7 +364,15 @@ export default function Settings({
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      showToast(t('settings.saveError', isRtl ? 'حدث خطأ أثناء حفظ التغييرات (قد يكون الرابط مُستخدماً من قبل أكاديمية أخرى)' : 'Error saving settings (slug might already be taken)'), 'error');
+      showToast(
+        t(
+          'settings.saveError',
+          isRtl 
+            ? 'حدث خطأ أثناء الحفظ (قد يكون الرابط المُستخدَم مستخدماً من أكاديمية أخرى)' 
+            : 'Error saving settings (slug might already be taken)'
+        ),
+        'error'
+      );
     } finally {
       setSaving(false);
     }
