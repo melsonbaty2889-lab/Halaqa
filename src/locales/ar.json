@@ -260,14 +260,14 @@
     "description": "وصف الأكاديمية"
   },
   "quranic": {
-    "title": "الإعدادات القرآنية والتعليمية",
-    "learningType": "نمط التعليم",
-    "online": "عن بُعد (Online)",
-    "inPerson": "حضوري (In-Person)",
-    "hybrid": "مدمج (Hybrid)",
-    "defaultQiraat": "الرواية الافتراضية",
-    "methodology": "المدرسة والمنهجية"
-  },
+  "title": "الإعدادات القرآنية والتعليمية",
+  "learningType": "نمط التعليم",
+  "modeOnline": "عن بُعد (Online)",
+  "modeOnsite": "حضوري (In-Person)",
+  "modeHybrid": "مدمج (Hybrid)",
+  "defaultQiraat": "الرواية الافتراضية",
+  "methodology": "المدرسة والمنهجية"
+}
   "qiraat": {
     "hafs": "حفص عن عاصم",
     "warsh": "ورش عن نافع",
