@@ -2,7 +2,7 @@ import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { 
   Loader2, Clock, LogOut, Wifi, 
-  AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock 
+  AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock, ShieldAlert 
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -76,7 +76,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justify: 'center',
         color: C.text.title,
         padding: '20px',
         textAlign: 'center',
@@ -139,7 +139,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
       backdropFilter: 'blur(5px)',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justify: 'center',
       zIndex: 10000,
       padding: '20px',
       direction: 'rtl',
@@ -180,7 +180,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             color: C.primary.DEFAULT,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justify: 'center',
             margin: '0 auto 12px'
           }}>
             <Zap size={24} />
@@ -322,6 +322,16 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  // 🛡️ استخراج سبب الحظر بأمان لتفادي Minified React error #31
+  const getSuspensionReason = () => {
+    const reason = academy?.suspension_reason || academy?.status_reason;
+    if (!reason) return 'تم إيقاف هذه الأكاديمية مؤقتاً من قبل إدارة المنصة.';
+    if (typeof reason === 'object') {
+      return reason.ar || reason.en || JSON.stringify(reason);
+    }
+    return String(reason);
+  };
+
   if (authView === 'update_password') {
     return (
       <UpdatePassword 
@@ -395,6 +405,48 @@ function MainContent() {
     );
   }
 
+  // 🛑 شاشة الحظر / إيقاف الأكاديمية (SUSPENDED)
+  if (appState === 'SUSPENDED') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark.main, padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: C.dark.card, padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${C.dark.border}` }}>
+          <div style={{ background: C.error.bgGlow, width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: C.error.DEFAULT }}>
+            <ShieldAlert size={36} />
+          </div>
+          <h2 style={{ color: C.text.title, marginBottom: '12px', fontSize: '1.4rem', fontWeight: 'bold' }}>تم إيقاف حساب الأكاديمية</h2>
+          <div style={{ background: C.dark.surface, padding: '16px', borderRadius: '12px', border: `1px solid ${C.dark.border}`, marginBottom: '24px', textAlign: 'right' }}>
+            <span style={{ fontSize: '0.8rem', color: C.text.muted, display: 'block', marginBottom: '4px' }}>سبب الإيقاف:</span>
+            <p style={{ color: C.error.light, margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>
+              {getSuspensionReason()}
+            </p>
+          </div>
+          <p style={{ color: C.text.muted, marginBottom: '25px', fontSize: '0.85rem' }}>
+            للمراجعة وتفعيل الحساب مرة أخرى، يُرجى التواصل مع الدعم الفني للمنصة.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              onClick={handleManualRefresh} 
+              disabled={isRefreshing}
+              style={{ padding: '10px 20px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? 'جاري التحقق...' : 'إعادة التحديث'}
+            </button>
+            
+            <button 
+              onClick={logout} 
+              style={{ padding: '10px 20px', background: 'transparent', color: C.error.DEFAULT, border: `1px solid ${C.error.DEFAULT}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <LogOut size={16} />
+              تسجيل الخروج
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (appState === 'SUPER_ADMIN') {
     return (
       <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
@@ -410,7 +462,6 @@ function MainContent() {
   }
 
   if (appState === 'NO_ACADEMY') {
-    // 🛑 تفادي القفز التلقائي لشاشة التأسيس إذا كان هناك أكاديمية سابقة مخزنة
     const cachedSlug = localStorage.getItem('current_academy_slug');
     if (cachedSlug) {
       refreshStatus && refreshStatus();
