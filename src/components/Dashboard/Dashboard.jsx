@@ -36,7 +36,7 @@ export default function Dashboard({
   const currentLang = i18n.language || 'ar';
   
   const [loading, setLoading] = useState(true);
-  const [selectedAdminAcademy, setSelectedAdminAcademy] = useState(null); // 🟢 حالة حفظ الأكاديمية المختارة
+  const [selectedAdminAcademy, setSelectedAdminAcademy] = useState(null);
   const [stats, setStats] = useState({
     studentsCount: 0,
     academiesCount: 0,
@@ -49,7 +49,6 @@ export default function Dashboard({
   
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
-  // 🛡️ دالة معالجة النصوص المحصنة لمنع خطأ React #31
   const safeText = useCallback((val, fallback = '') => {
     if (val === null || val === undefined) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -69,7 +68,20 @@ export default function Dashboard({
 
   const isSuperAdmin = userRole === 'super_admin';
 
-  // 🎯 تحديد ID الأكاديمية (إما من الأكاديمية التي اختارها الـ Super Admin أو المعرف الافتراضي)
+  // 🟢 استماع مباشر للحدث للضمان المطلق لفتح الأكاديمية
+  useEffect(() => {
+    const handleAcademySelect = (event) => {
+      if (event.detail) {
+        setSelectedAdminAcademy(event.detail);
+      }
+    };
+
+    window.addEventListener('select-admin-academy', handleAcademySelect);
+    return () => {
+      window.removeEventListener('select-admin-academy', handleAcademySelect);
+    };
+  }, []);
+
   const academyId = selectedAdminAcademy?.id || 
                     preloadedDashboardData?.academy_id || 
                     preloadedDashboardData?.id || 
@@ -152,7 +164,6 @@ export default function Dashboard({
     );
   }
 
-  // 🎯 عرض لوحة الـ Super Admin فقط إذا لم يتم اختيار أكاديمية معينة للمعاينة
   if (isSuperAdmin && !selectedAdminAcademy) {
     return (
       <Suspense fallback={<div className="p-5 text-center text-slate-400">جاري تحميل لوحة التحكم...</div>}>
@@ -161,7 +172,7 @@ export default function Dashboard({
           academyName={String(displayName || '')} 
           onLogout={() => supabase.auth.signOut()} 
           onSelectAcademy={(academy) => {
-            setSelectedAdminAcademy(academy); // 🟢 الانتقال لواجهة الأكاديمية عند الضغط
+            setSelectedAdminAcademy(academy);
           }}
         />
       </Suspense>
@@ -171,7 +182,6 @@ export default function Dashboard({
   return (
     <div className={`p-3 pb-20 text-right ${isRtl ? 'rtl' : 'ltr'}`}>
       
-      {/* 🔴 زر الرجوع للمدير العام إذا كان يعاين أكاديمية */}
       {isSuperAdmin && selectedAdminAcademy && (
         <div className="mb-4">
           <button
@@ -184,7 +194,6 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* الترويسة الرئيسية */}
       <div className="flex flex-col gap-2 mb-5">
         <div className="flex justify-between items-start flex-wrap gap-2">
           <div>
@@ -204,7 +213,6 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* شريط الوصول السريع */}
       <div className="flex gap-2.5 overflow-x-auto pb-2 mb-5 scrollbar-none">
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
@@ -231,10 +239,7 @@ export default function Dashboard({
         </button>
       </div>
 
-      {/* البطاقات الإحصائية */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
-        
-        {/* إجمالي الدارسين */}
         <div 
           onClick={() => setActiveTab && setActiveTab('students')}
           className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
@@ -249,7 +254,6 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* متوسط الاستمرارية */}
         <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50">
           <div className="flex justify-between items-center text-slate-400 text-xs font-semibold mb-1.5">
             <span>{isArabic ? 'مؤشر الاستمرارية' : 'Consistency'}</span>
@@ -263,7 +267,6 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* نسبة الحضور */}
         <div 
           onClick={() => setActiveTab && setActiveTab('attendance')}
           className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
@@ -278,7 +281,6 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* جلسات التسميع */}
         <div 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
           className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
@@ -295,7 +297,6 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* المتأخرات */}
         <div 
           onClick={() => setActiveTab && setActiveTab('payments')}
           className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/50 cursor-pointer hover:border-slate-600 transition-colors"
@@ -311,10 +312,8 @@ export default function Dashboard({
             {isArabic ? 'طلبات التعديل' : 'Tasks'}
           </div>
         </div>
-
       </div>
 
-      {/* الحلقات المباشرة */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 && (
         <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/50 mb-5">
           <div className="flex justify-between items-center mb-3.5">
