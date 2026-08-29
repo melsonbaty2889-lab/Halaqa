@@ -35,7 +35,7 @@ export default function Settings({
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
-  // حالة البيانات الأساسية (تم إدراج weekend_days هنا)
+  // حالة البيانات الأساسية
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
     description: '',
@@ -47,7 +47,7 @@ export default function Settings({
     contact_phone: '',
     website: '',
     weekend_days: ['friday', 'saturday'],
-    default_qiraat: 'hafs',
+    default_qiraat: 'hafs_an_asem',
     teaching_methodology: 'mashreqi',
     learning_type: 'online',
     max_students_per_group: 25,
@@ -60,7 +60,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 1. جلب بيانات الأكاديمية (تم قراءة weekend_days هنا)
+  // جلب بيانات الأكاديمية
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -102,7 +102,7 @@ export default function Settings({
             contact_phone: data.contact_phone || '',
             website: data.website || '',
             weekend_days: Array.isArray(data.weekend_days) ? data.weekend_days : ['friday', 'saturday'],
-            default_qiraat: data.default_qiraat || 'hafs',
+            default_qiraat: data.default_qiraat || 'hafs_an_asem',
             teaching_methodology: data.teaching_methodology || 'mashreqi',
             learning_type: data.learning_type || 'online',
             max_students_per_group: data.max_students_per_group ?? 25,
@@ -250,7 +250,7 @@ export default function Settings({
     }
   };
 
-  // حفظ التغييرات (تم إضافة weekend_days لكائن updatePayload)
+  // حفظ التغييرات
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyId) return;
@@ -321,20 +321,20 @@ export default function Settings({
     setIsDirty(false);
   };
 
-  // التبويبات الرئيسية
+  // التبويبات الرئيسية (تم تقصير العناوين لمنع الاقتطاع على الهواتف)
   const steps = [
     {
       id: 'general',
       label: isRtl
-        ? t('settings.generalStep', '1. البيانات الأساسية والإقليمية')
-        : t('settings.generalStep', '1. Basic & Regional Info'),
+        ? t('settings.generalStep', '1. الأساسية والإقليمية')
+        : t('settings.generalStep', '1. Basic & Regional'),
       icon: Building
     },
     {
       id: 'system',
       label: isRtl
         ? t('settings.systemStep', '2. السياسات والنسخ الاحتياطي')
-        : t('settings.systemStep', '2. Policies & Data Backup'),
+        : t('settings.systemStep', '2. Policies & Backup'),
       icon: ShieldCheck
     },
   ];
@@ -351,7 +351,7 @@ export default function Settings({
               key={step.id}
               type="button"
               onClick={() => setActiveStep(step.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'border-[var(--primary)] text-[var(--primary)] font-extrabold bg-[var(--surface-input)]/20 rounded-t-lg'
                   : 'border-transparent text-[var(--text-sub)] hover:text-[var(--text-main)]'
