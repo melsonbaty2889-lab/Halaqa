@@ -29,11 +29,18 @@ import {
 
 const PAGE_SIZE = 10;
 
+// 🛡️ دالة آمنة لتحويل الكائنات والنصوص والترجمات إلى نصوص مقبولة لدى React لمنع الخطأ #31
 const getSafeText = (val, defaultVal = '') => {
   if (val === null || val === undefined) return defaultVal;
   if (typeof val === 'string' || typeof val === 'number') return String(val);
   if (typeof val === 'object') {
-    return val.ar || val.en || val.name || val.title || Object.values(val)[0] || defaultVal;
+    if (val.ar) return String(val.ar);
+    if (val.en) return String(val.en);
+    if (val.name) return String(val.name);
+    if (val.title) return String(val.title);
+    const firstVal = Object.values(val)[0];
+    if (firstVal && typeof firstVal !== 'object') return String(firstVal);
+    return defaultVal;
   }
   return String(val);
 };
@@ -232,11 +239,11 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         : item.saas_subscriptions;
 
       const durationRaw = (
-        item.plan_duration || 
-        sub?.plan_duration || 
-        item.plan_tier || 
-        sub?.plan_tier || 
-        sub?.billing_period || 
+        getSafeText(item.plan_duration) || 
+        getSafeText(sub?.plan_duration) || 
+        getSafeText(item.plan_tier) || 
+        getSafeText(sub?.plan_tier) || 
+        getSafeText(sub?.billing_period) || 
         ''
       ).toLowerCase();
 
@@ -294,7 +301,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       });
     } catch (err) {
       console.error("Failed to load deep stats:", err);
-    } finally {
+    } fontally {
       setAcademyStatsLoading(false);
     }
   };
@@ -821,6 +828,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
               <History size={16} className="text-amber-400" /> {isRtl ? 'سجل المدفوعات والاشتراكات' : 'Payment History'}
             </h4>
 
+            {/* 🛡️ رندر آمن لسجل المدفوعات لمنع الخطأ #31 */}
             <div className="flex-1 overflow-y-auto space-y-2">
               {deepStats.payments.length === 0 ? (
                 <p className="text-xs text-slate-500 text-center mt-5">{isRtl ? 'لا يوجد سجل مدفوعات سابق' : 'No prior payment history'}</p>
@@ -828,12 +836,14 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                 deepStats.payments.map(p => (
                   <div key={p.id} className="bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs">
                     <div className="flex justify-between text-white mb-1">
-                      <strong>{p.plan_tier} ({p.plan_duration})</strong>
-                      <span className={p.status === 'active' ? 'text-emerald-400' : 'text-amber-400'}>{p.status}</span>
+                      <strong>{getSafeText(p.plan_tier, 'خطة')} ({getSafeText(p.plan_duration, 'شهري')})</strong>
+                      <span className={p.status === 'active' ? 'text-emerald-400' : 'text-amber-400'}>
+                        {getSafeText(p.status, 'نشط')}
+                      </span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-[11px]">
-                      <span>{p.price} {p.currency || 'EGP'}</span>
-                      <span>{new Date(p.created_at).toLocaleDateString()}</span>
+                      <span>{getSafeText(p.price, '0')} {getSafeText(p.currency, 'EGP')}</span>
+                      <span>{p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}</span>
                     </div>
                   </div>
                 ))
