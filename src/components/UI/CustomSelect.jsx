@@ -1,20 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const CustomSelect = ({
   label,
   options = [],
   value,
   onChange,
-  placeholder = 'اختر من القائمة...',
+  placeholder,
+  searchPlaceholder,
+  noOptionsMessage,
   error = null,
   searchable = false,
 }) => {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
+
+  // نصوص افتراضية مترجمة بحسب لغة الواجهة الحالية
+  const resolvedPlaceholder = placeholder || t('common.select', isRtl ? 'اختر من القائمة...' : 'Select...');
+  const resolvedSearchPlaceholder = searchPlaceholder || t('common.search', isRtl ? 'بحث...' : 'Search...');
+  const resolvedNoOptionsMessage = noOptionsMessage || t('common.noOptions', isRtl ? 'لا توجد خيارات متاحة' : 'No options available');
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
-  
+
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
 
@@ -79,7 +90,7 @@ const CustomSelect = ({
   };
 
   return (
-    <div className="relative w-full text-start" ref={containerRef}>
+    <div className="relative w-full text-start" ref={containerRef} dir={isRtl ? 'rtl' : 'ltr'}>
       {label && (
         <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
           {label}
@@ -100,7 +111,7 @@ const CustomSelect = ({
         }`}
       >
         <span className={`truncate text-xs ${selectedOption ? 'text-[var(--text-main)] font-semibold' : 'text-[var(--text-muted)]'}`}>
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? selectedOption.label : resolvedPlaceholder}
         </span>
         <ChevronDown
           size={14}
@@ -112,10 +123,11 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة مع البورتال لرسمها مباشرة في الـ body */}
+      {/* القائمة المنسدلة مع البورتال לרسمها مباشرة في الـ body */}
       {isOpen && createPortal(
         <div
           id="portal-select-dropdown"
+          dir={isRtl ? 'rtl' : 'ltr'}
           style={{
             position: 'absolute',
             top: `${coords.top + 4}px`,
@@ -127,14 +139,14 @@ const CustomSelect = ({
           {searchable && (
             <div className="sticky top-0 p-1 bg-[#0A101D] z-10 border-b border-[var(--border-card)] pb-1.5">
               <div className="relative flex items-center">
-                <Search size={12} className="absolute right-2.5 text-[var(--text-sub)] pointer-events-none" />
+                <Search size={12} className="absolute start-2.5 text-[var(--text-sub)] pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="بحث..."
+                  placeholder={resolvedSearchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full bg-[var(--surface-input)] border border-[var(--border-input)] rounded-lg pr-7 pl-2 py-1 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] placeholder:text-[var(--text-muted)]"
+                  className="w-full bg-[var(--surface-input)] border border-[var(--border-input)] rounded-lg ps-7 pe-2 py-1 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] placeholder:text-[var(--text-muted)] text-start"
                   autoFocus
                 />
               </div>
@@ -143,7 +155,7 @@ const CustomSelect = ({
 
           {filteredOptions.length === 0 ? (
             <div className="px-3 py-2 text-xs text-[var(--text-sub)] text-center">
-              لا توجد خيارات متاحة
+              {resolvedNoOptionsMessage}
             </div>
           ) : (
             filteredOptions.map((opt, idx) => {
@@ -154,7 +166,7 @@ const CustomSelect = ({
                   key={optVal || idx}
                   type="button"
                   onClick={(e) => handleSelect(e, opt.value)}
-                  className={`w-full text-right px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                  className={`w-full text-start px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
                       ? 'bg-[var(--primary)] text-white font-bold'
                       : 'text-[var(--text-main)] hover:bg-[var(--surface-input)]'
