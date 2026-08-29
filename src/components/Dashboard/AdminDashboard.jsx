@@ -4,7 +4,6 @@ import {
   CheckCircle, ShieldAlert, AlertTriangle, Layers, Calendar
 } from 'lucide-react';
 
-// 1. استدعي الخدمات من src/lib/
 import { 
   fetchAdminDashboardData, 
   fetchAcademyDeepDetails, 
@@ -14,7 +13,6 @@ import {
   getSafeText 
 } from '../../lib/adminDashboardService';
 
-// 2. استدعي المكونات الفرعية والمودالات
 import AdminStatsCards from './AdminStatsCards';
 import AcademyCard from './AcademyCard';
 import AcademyDrawerDetails from './Modals/AcademyDrawerDetails';
@@ -22,7 +20,6 @@ import ExtendTrialModal from './Modals/ExtendTrialModal';
 import AddPhoneModal from './Modals/AddPhoneModal';
 
 export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy }) {
-  // البيانات الأساسية
   const [stats, setStats] = useState({
     totalAcademiesCount: 0,
     pendingCount: 0,
@@ -34,13 +31,11 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // التحكم والفلترة
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // all, active, blocked
-  const [sortBy, setSortBy] = useState('created_at_desc'); // created_at_desc, created_at_asc, trial_ends_asc
+  const [activeTab, setActiveTab] = useState('all');
+  const [sortBy, setSortBy] = useState('created_at_desc');
   const [selectedAcademyIds, setSelectedAcademyIds] = useState([]);
 
-  // الحالات الفرعية للمودالات والدرج
   const [selectedAcademyDetails, setSelectedAcademyDetails] = useState(null);
   const [deepStats, setDeepStats] = useState({ studentsCount: 0, halaqatCount: 0, payments: [] });
   const [academyStatsLoading, setAcademyStatsLoading] = useState(false);
@@ -50,7 +45,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   const [processingId, setProcessingId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // جلب البيانات الأساسية
   const loadData = async () => {
     setLoading(true);
     try {
@@ -80,7 +74,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // فتح الدرج وجلب التفاصيل العميقة
   const handleOpenDrawer = async (academy) => {
     setSelectedAcademyDetails(academy);
     setAcademyStatsLoading(true);
@@ -94,7 +87,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     }
   };
 
-  // الإجراءات الفردية والجماعية
   const handleStatusToggle = async (academyId, currentStatus) => {
     setProcessingId(academyId);
     try {
@@ -144,7 +136,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
       const cleanPhone = await saveOwnerPhone(phoneModalData.ownerId, inputPhone);
       showToast('تم حفظ رقم الهاتف بنجاح', 'success');
       
-      // تحديث الهاتف محلياً لتفادي إعادة الجلب
       setAcademies(prev => prev.map(a => 
         a.owner_id === phoneModalData.ownerId 
           ? { ...a, ownerProfile: { ...a.ownerProfile, phone: cleanPhone } } 
@@ -172,7 +163,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
-  // الفلترة بالبحث النصي
   const filteredAcademies = academies.filter(a => {
     const q = searchTerm.toLowerCase().trim();
     if (!q) return true;
@@ -182,18 +172,9 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     return nameStr.includes(q) || ownerNameStr.includes(q) || ownerEmailStr.includes(q);
   });
 
-  const toggleSelectAll = () => {
-    if (selectedAcademyIds.length === filteredAcademies.length) {
-      setSelectedAcademyIds([]);
-    } else {
-      setSelectedAcademyIds(filteredAcademies.map(a => a.id));
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 font-sans dir-rtl">
       
-      {/* Toast الإشعارات */}
       {toastMessage && (
         <div className={`fixed bottom-5 left-5 z-[5000] px-4 py-3 rounded-xl shadow-2xl text-xs font-bold border transition-all ${
           toastMessage.type === 'error' ? 'bg-rose-900 border-rose-700 text-white' : 'bg-emerald-900 border-emerald-700 text-white'
@@ -202,7 +183,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       )}
 
-      {/* الهيدر الرئيسي */}
       <div className="flex justify-between items-center mb-6 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold">
@@ -226,13 +206,10 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       </div>
 
-      {/* بطاقات الإحصائيات الأربع */}
       <AdminStatsCards stats={stats} isRtl={isRtl} />
 
-      {/* شريط البحث والفلترة والفرز */}
       <div className="flex flex-col md:flex-row gap-3 mb-4 justify-between items-stretch md:items-center bg-slate-900/40 p-3 rounded-xl border border-slate-800/80">
         
-        {/* حقل البحث */}
         <div className="relative flex-1">
           <Search size={16} className="absolute right-3 top-3 text-slate-400" />
           <input
@@ -245,7 +222,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
 
         <div className="flex gap-2 items-center flex-wrap">
-          {/* تبويبات التصفية */}
           <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
             <button onClick={() => setActiveTab('all')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
               {isRtl ? 'الكل' : 'All'}
@@ -258,7 +234,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
             </button>
           </div>
 
-          {/* قائمة الترتيب والفرز */}
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -271,7 +246,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       </div>
 
-      {/* شريط الإجراءات الجماعية (Bulk Actions Bar) */}
       {selectedAcademyIds.length > 0 && (
         <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fadeIn">
           <span className="text-xs text-sky-300 font-bold">
@@ -288,7 +262,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       )}
 
-      {/* عرض الأكاديميات في شبكة Grid */}
       {loading ? (
         <div className="text-center py-20 text-slate-500 text-xs">
           <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-sky-500" />
@@ -332,7 +305,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       )}
 
-      {/* المودالات والدرج المنبثق */}
       <AcademyDrawerDetails
         selectedAcademyDetails={selectedAcademyDetails}
         onClose={() => setSelectedAcademyDetails(null)}
