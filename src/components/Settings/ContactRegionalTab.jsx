@@ -43,7 +43,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
     { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' }
-  ], [t, i18n.language, isRtl]);
+  ], [t, isRtl]);
 
   const daysList = useMemo(() => [
     { key: 'saturday', label: t('days.saturday', isRtl ? 'السبت' : 'Saturday') },
