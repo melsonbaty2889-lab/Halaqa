@@ -25,7 +25,7 @@ const formatLocalizedText = (val, lang = 'ar') => {
   return String(val);
 };
 
-// 🛑 مكون شاشة الحظر التفاعلية المستقلة
+// 🛑 مكون شاشة الحظر التفاعلية للأكاديمية
 const BlockedView = ({ academy, onLogout, isRtl = true }) => {
   const academyName = formatLocalizedText(academy?.name) || (isRtl ? "الأكاديمية" : "Academy");
   const blockReason = formatLocalizedText(
@@ -36,7 +36,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
     : "Your academy account has been suspended by administration.");
 
   const handleSupportContact = () => {
-    const supportPhone = "201000000000"; // 👈 استبدله برقم الدعم الفني الخاص بك
+    const supportPhone = "201000000000"; // 👈 استبدله برقم الدعم الخاص بك
     const msg = encodeURIComponent(`السلام عليكم، أنا مالك أكاديمية (${academyName})، تم تعليق الحساب وأود الاستفسار والتفعيل.`);
     window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
   };
