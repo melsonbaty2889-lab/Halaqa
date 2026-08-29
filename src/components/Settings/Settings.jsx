@@ -35,6 +35,9 @@ export default function Settings({
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
 
+  // مرجع لتتبع هل بدأ المستخدم بالتعديل لمنع المسح أثناء الجلب المتأخر
+  const isDirtyRef = useRef(false);
+
   // حالة البيانات الأساسية
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
@@ -60,7 +63,7 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // جلب بيانات الأكاديمية (تم عزل الاعتماديات لحماية التغييرات)
+  // جلب بيانات الأكاديمية مع حماية البيانات المعدلة عبر useRef
   useEffect(() => {
     async function loadAcademySettings() {
       if (!academyId) return;
@@ -116,9 +119,11 @@ export default function Settings({
             require_approval: data.require_approval ?? true
           };
 
-          // كتابة البيانات المجلوبة فقط في حال عدم إدخال تعديلات جديدة
-          setFormData((prev) => (isDirty ? prev : loaded));
-          setInitialData(loaded);
+          // عدم استبدال Form Data إذا كان المستخدم قد بدأ بالتعديل بالفعل
+          if (!isDirtyRef.current) {
+            setFormData(loaded);
+            setInitialData(loaded);
+          }
         }
       } catch (err) {
         console.error('Error fetching academy settings:', err);
@@ -126,13 +131,17 @@ export default function Settings({
     }
 
     loadAcademySettings();
-  }, [academyId]); // الأعتماد على academyId فقط يمنع التحديث التلقائي أثناء الكتابة
+  }, [academyId]);
 
   // تحديث الحقول العامة مع تتبع التغيير
   const updateField = (field, value) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
-      setIsDirty(JSON.stringify(updated) !== JSON.stringify(initialData));
+      const hasChanged = JSON.stringify(updated) !== JSON.stringify(initialData);
+      
+      isDirtyRef.current = hasChanged;
+      setIsDirty(hasChanged);
+      
       return updated;
     });
 
@@ -146,18 +155,13 @@ export default function Settings({
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
       const updated = { ...prev, name: updatedName };
-      setIsDirty(JSON.stringify(updated) !== JSON.stringify(initialData));
+      const hasChanged = JSON.stringify(updated) !== JSON.stringify(initialData);
+      
+      isDirtyRef.current = hasChanged;
+      setIsDirty(hasChanged);
+      
       return updated;
     });
-
-    if (typeof updateAcademyState === 'function') {
-      updateAcademyState({
-        name: {
-          ...formData.name,
-          [lang]: value
-        }
-      });
-    }
   };
 
   // رفع الشعار
@@ -303,10 +307,12 @@ export default function Settings({
       if (error) throw error;
 
       setInitialData(formData);
+      isDirtyRef.current = false;
       setIsDirty(false);
 
       showToast(t('settings.saveSuccess', isRtl ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!'), 'success');
 
+      // تحديث الحالة العامة فقط بعد النجاح الفعلي للحفظ
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({ ...updatePayload, id: academyId });
       }
@@ -324,6 +330,7 @@ export default function Settings({
 
   const handleDiscardChanges = () => {
     setFormData(initialData);
+    isDirtyRef.current = false;
     setIsDirty(false);
   };
 
