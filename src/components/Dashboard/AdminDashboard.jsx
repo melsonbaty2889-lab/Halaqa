@@ -36,8 +36,8 @@ const getSafeText = (val, defaultVal = '') => {
   if (typeof val === 'object') {
     if (val.ar) return String(val.ar);
     if (val.en) return String(val.en);
-    if (val.name) return String(val.name);
-    if (val.title) return String(val.title);
+    if (val.name) return getSafeText(val.name, defaultVal);
+    if (val.title) return getSafeText(val.title, defaultVal);
     const firstVal = Object.values(val)[0];
     if (firstVal && typeof firstVal !== 'object') return String(firstVal);
     return defaultVal;
@@ -83,7 +83,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
 
   const handleWhatsAppClick = (phone, academyName) => {
     if (!phone) return;
-    const cleanPhone = phone.replace(/\D/g, '');
+    const cleanPhone = String(phone).replace(/\D/g, '');
     const message = encodeURIComponent(`السلام عليكم، نأتيك من إدارة المنصة بشأن أكاديمية (${academyName})`);
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
@@ -247,10 +247,12 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ''
       ).toLowerCase();
 
-      const isLongDuration = item.trial_ends_at && (new Date(item.trial_ends_at).getFullYear() > 2090);
-      const isLifetime = durationRaw.includes('lifetime') || durationRaw.includes('permanent') || isLongDuration || !item.trial_ends_at;
+      const trialEndsStr = getSafeText(item.trial_ends_at);
+      const trialEndsDate = trialEndsStr ? new Date(trialEndsStr) : null;
+      const isLongDuration = trialEndsDate && trialEndsDate.getFullYear() > 2090;
+      const isLifetime = durationRaw.includes('lifetime') || durationRaw.includes('permanent') || isLongDuration || !trialEndsDate;
 
-      const isTrial = !isLifetime && (durationRaw.includes('trial') || Boolean(item.trial_ends_at));
+      const isTrial = !isLifetime && (durationRaw.includes('trial') || Boolean(trialEndsDate));
       const isMonthly = !isLifetime && (durationRaw.includes('month') || durationRaw.includes('شهري'));
       const isYearly = !isLifetime && (durationRaw.includes('year') || durationRaw.includes('annual') || durationRaw.includes('سنوي'));
 
@@ -260,18 +262,17 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       else if (planFilter === 'monthly') matchesPlan = isMonthly;
       else if (planFilter === 'yearly') matchesPlan = isYearly;
       else if (planFilter === 'expiring_soon') {
-        if (!item.trial_ends_at || isLifetime) {
+        if (!trialEndsDate || isLifetime) {
           matchesPlan = false;
         } else {
-          const endDate = new Date(item.trial_ends_at);
           const now = new Date();
-          const diffDays = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+          const diffDays = Math.ceil((trialEndsDate - now) / (1000 * 60 * 60 * 24));
           matchesPlan = diffDays > 0 && diffDays <= 7;
         }
       }
 
       if (activeTab === 'expired') {
-        const isExpired = item.trial_ends_at && new Date(item.trial_ends_at) <= new Date();
+        const isExpired = trialEndsDate && trialEndsDate <= new Date();
         return matchesSearch && matchesPlan && isExpired;
       }
 
@@ -424,7 +425,8 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
     if (!isLifetime) {
       const target = academies.find(a => a.id === id);
       const now = new Date();
-      const currentEnd = target?.trial_ends_at ? new Date(target.trial_ends_at) : now;
+      const rawEnd = getSafeText(target?.trial_ends_at);
+      const currentEnd = rawEnd ? new Date(rawEnd) : now;
       const baseDate = currentEnd > now ? currentEnd : now;
       baseDate.setDate(baseDate.getDate() + daysToAdd);
       newDateIso = baseDate.toISOString();
@@ -462,7 +464,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
       `"${getSafeText(a.ownerProfile?.email)}"`,
       `"${getSafeText(a.ownerProfile?.phone)}"`,
       a.is_active ? "Active" : "Blocked", 
-      a.trial_ends_at ? new Date(a.trial_ends_at).toLocaleDateString() : "Lifetime"
+      a.trial_ends_at ? new Date(getSafeText(a.trial_ends_at)).toLocaleDateString() : "Lifetime"
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -473,10 +475,11 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
   };
 
   const getTrialStatusBadge = (trialEndsAt) => {
-    if (!trialEndsAt) return { text: isRtl ? 'حساب دائم' : 'Lifetime', color: '#38BDF8' };
+    const safeDateStr = getSafeText(trialEndsAt);
+    if (!safeDateStr) return { text: isRtl ? 'حساب دائم' : 'Lifetime', color: '#38BDF8' };
     
-    const endDate = new Date(trialEndsAt);
-    if (endDate.getFullYear() > 2090) {
+    const endDate = new Date(safeDateStr);
+    if (isNaN(endDate.getTime()) || endDate.getFullYear() > 2090) {
       return { text: isRtl ? 'حساب دائم' : 'Lifetime', color: '#38BDF8' };
     }
 
@@ -495,7 +498,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl max-w-[90%] text-center ${
           toast.type === 'error' ? 'bg-rose-600' : toast.type === 'info' ? 'bg-blue-600' : 'bg-emerald-600'
         }`}>
-          {toast.message}
+          {getSafeText(toast.message)}
         </div>
       )}
 
@@ -658,7 +661,6 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {filteredAcademies.map(academy => {
-              const isExpired = academy.trial_ends_at && new Date(academy.trial_ends_at) <= new Date();
               const isBlocked = !academy.is_active;
               const isSelected = selectedAcademyIds.includes(academy.id);
 
@@ -713,9 +715,9 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                           setPhoneModalData({
                             ownerId: academy.owner_id,
                             academyName: getSafeText(academy.name),
-                            currentPhone: academy.ownerProfile?.phone || ''
+                            currentPhone: getSafeText(academy.ownerProfile?.phone)
                           });
-                          setInputPhone(academy.ownerProfile?.phone || '');
+                          setInputPhone(getSafeText(academy.ownerProfile?.phone));
                         }}
                         className="bg-rose-950/30 border border-rose-500/40 text-rose-400 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold flex items-center gap-1"
                       >
@@ -799,9 +801,9 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                       setPhoneModalData({
                         ownerId: selectedAcademyDetails.owner_id,
                         academyName: getSafeText(selectedAcademyDetails.name),
-                        currentPhone: selectedAcademyDetails.ownerProfile?.phone || ''
+                        currentPhone: getSafeText(selectedAcademyDetails.ownerProfile?.phone)
                       });
-                      setInputPhone(selectedAcademyDetails.ownerProfile?.phone || '');
+                      setInputPhone(getSafeText(selectedAcademyDetails.ownerProfile?.phone));
                     }}
                     className="bg-rose-950/40 border border-rose-500/40 text-rose-400 px-2 py-1 rounded text-xs cursor-pointer"
                   >
@@ -837,13 +839,13 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
                   <div key={p.id} className="bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs">
                     <div className="flex justify-between text-white mb-1">
                       <strong>{getSafeText(p.plan_tier, 'خطة')} ({getSafeText(p.plan_duration, 'شهري')})</strong>
-                      <span className={p.status === 'active' ? 'text-emerald-400' : 'text-amber-400'}>
+                      <span className={getSafeText(p.status) === 'active' ? 'text-emerald-400' : 'text-amber-400'}>
                         {getSafeText(p.status, 'نشط')}
                       </span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-[11px]">
                       <span>{getSafeText(p.price, '0')} {getSafeText(p.currency, 'EGP')}</span>
-                      <span>{p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}</span>
+                      <span>{p.created_at ? new Date(getSafeText(p.created_at)).toLocaleDateString() : ''}</span>
                     </div>
                   </div>
                 ))
@@ -890,7 +892,7 @@ export default function AdminDashboard({ isRtl = true, onLogout }) {
             </div>
 
             <p className="text-slate-400 text-xs mb-4">
-              {isRtl ? `أدخل رقم هاتف مالك أكاديمية (${phoneModalData.academyName}) لتفعيل التواصل عبر الواتساب:` : `Enter phone for (${phoneModalData.academyName}):`}
+              {isRtl ? `أدخل رقم هاتف مالك أكاديمية (${getSafeText(phoneModalData.academyName)}) لتفعيل التواصل عبر الواتساب:` : `Enter phone for (${getSafeText(phoneModalData.academyName)}):`}
             </p>
 
             <div className="mb-5">
