@@ -24,7 +24,8 @@ import {
   BookOpen,
   History,
   CheckSquare,
-  Square
+  Square,
+  ExternalLink
 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
@@ -45,7 +46,7 @@ const getSafeText = (val, defaultVal = '') => {
   return String(val);
 };
 
-export default function AdminDashboard({ isRtl = true, onLogout }) {
+export default function AdminDashboard({ isRtl = true, onLogout, onSelectAcademy }) {
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
   const [academies, setAcademies] = useState([]); 
   const [totalAcademiesCount, setTotalAcademiesCount] = useState(0);
