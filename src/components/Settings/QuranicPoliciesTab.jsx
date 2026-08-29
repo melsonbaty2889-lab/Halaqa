@@ -98,20 +98,19 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
             </label>
           </div>
 
-          {/* الحد الأقصى للطلاب */}
-          <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-              {t('quranic.maxStudents', isRtl ? 'الحد الأقصى للطلاب في الحلقة' : 'Max Students per Group')}
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={200}
-              value={formData?.max_students_per_group ?? 25}
-              onChange={(e) => handleChange('max_students_per_group', Number(e.target.value))}
-              className="app-input w-full text-start"
-            />
-          </div>
+          {/* الحد الأقصى للطلاب */}{/* الحد الأقصى للطلاب */}
+<div>
+  <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+    {t('quranic.maxStudents', isRtl ? 'الحد الأقصى للطلاب في الحلقة' : 'Max Students per Group')}
+  </label>
+  <input
+    type="number"
+    min={1}
+    value={formData?.max_students_per_group ?? 25}
+    onChange={(e) => handleChange('max_students_per_group', Number(e.target.value))}
+    className="app-input w-full text-start"
+  />
+</div>
         </div>
       </div>
     </div>
