@@ -38,7 +38,7 @@ export default function Settings({
   // مرجع لتتبع هل بدأ المستخدم بالتعديل لمنع المسح أثناء الجلب المتأخر
   const isDirtyRef = useRef(false);
 
-  // حالة البيانات الأساسية
+  // حالة البيانات الأساسية (تمت إضافة calendar_type)
   const [formData, setFormData] = useState({
     name: { ar: '', en: '' },
     description: '',
@@ -46,6 +46,7 @@ export default function Settings({
     currency: currentCurrency || 'EGP',
     timezone: currentTimezone || 'Africa/Cairo',
     country_code: currentCountryCode || 'EG',
+    calendar_type: 'gregorian',
     contact_email: '',
     contact_phone: '',
     website: '',
@@ -107,6 +108,7 @@ export default function Settings({
             currency: data.currency || currentCurrency || 'EGP',
             timezone: data.timezone || currentTimezone || 'Africa/Cairo',
             country_code: data.country_code || currentCountryCode || 'EG',
+            calendar_type: data.calendar_type || 'gregorian',
             contact_email: data.contact_email || '',
             contact_phone: data.contact_phone || '',
             website: data.website || '',
@@ -287,6 +289,7 @@ export default function Settings({
         currency: formData.currency,
         timezone: formData.timezone,
         country_code: formData.country_code ? formData.country_code.toUpperCase() : null,
+        calendar_type: formData.calendar_type || 'gregorian',
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
         website: formData.website,
