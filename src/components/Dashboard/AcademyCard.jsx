@@ -20,6 +20,19 @@ export default function AcademyCard({
 }) {
   const isSelected = selectedAcademyIds.includes(academy.id);
 
+  const handleEnterAcademy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 1. الاستدعاﺀ عبر ה-Props المباشرة
+    if (typeof onSelectAcademy === 'function') {
+      onSelectAcademy(academy);
+    }
+    
+    // 2. إطلاق حدث عام احتياطي لمنع التعليق
+    window.dispatchEvent(new CustomEvent('select-admin-academy', { detail: academy }));
+  };
+
   return (
     <div className={`bg-slate-900/90 border rounded-xl p-4 transition-all relative ${
       isSelected ? 'border-sky-500 bg-slate-900' : academy.is_active ? 'border-slate-800' : 'border-rose-900/40 bg-rose-950/10'
@@ -79,10 +92,10 @@ export default function AcademyCard({
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/60">
         <div className="flex items-center gap-1.5 flex-wrap">
           
-          {/* زر دخول للأكاديمية - يظهر دائماً */}
+          {/* زر دخول للأكاديمية */}
           <button
-            onClick={() => onSelectAcademy && onSelectAcademy(academy)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1 transition-colors"
+            onClick={handleEnterAcademy}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1 transition-colors z-20"
           >
             <ExternalLink size={14} /> {isRtl ? 'دخول للأكاديمية' : 'Enter Academy'}
           </button>
