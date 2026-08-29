@@ -71,7 +71,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 3. الحسابات غير المفعلة
+      // 3. الحسابات غير المفعلة على مستوى المستخدم
       if (profData.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
@@ -121,13 +121,11 @@ export const AcademyProvider = ({ children }) => {
             localStorage.setItem('current_academy_slug', currentAcademy.slug);
           }
 
-          // 🔴 التعديل هنا: فحص حالة حظر أو إيقاف الأكاديمية صراحةً
-          if (currentAcademy.is_suspended || currentAcademy.status === 'suspended') {
+          // 🛑 التعديل المحدث: الاعتماد على is_active وحقل blocked_reason من جدول academies
+          if (currentAcademy.is_active === false) {
             setAppState('SUSPENDED');
-          } else if (currentAcademy.is_active !== false) {
-            setAppState('FULLY_ACTIVE');
           } else {
-            setAppState('PENDING_APPROVAL');
+            setAppState('FULLY_ACTIVE');
           }
         } else {
           setAcademy(null);
