@@ -53,7 +53,7 @@ export default function RealtimeAudit() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // دالة مساعدة تضمن إرجاع نص صافي دائماً لتجنب أخطاء الرندرة
+  // دالة مساعدة تضمن إرجاع نص صافي دائماً
   const safeTranslate = (key, fallback = '') => {
     if (!t || typeof t !== 'function') return String(fallback || key || '');
     const res = t(key, { defaultValue: fallback || key });
@@ -63,56 +63,51 @@ export default function RealtimeAudit() {
     return String(res || fallback || key || '');
   };
 
-  // دالة مضمونة لاستخراج اسم المشرف كنص صريح دعم للأدوار المخصصة وصيغ الـ JSON
+  // دالة مساعدة لاستخراج الاسم من الـ JSON أو النصوص
+  const parseName = (rawName) => {
+    if (!rawName) return null;
+    if (typeof rawName === 'object') {
+      return rawName.ar || rawName.en || Object.values(rawName)[0] || null;
+    }
+    if (typeof rawName === 'string') {
+      const trimmed = rawName.trim();
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          return parsed.ar || parsed.en || Object.values(parsed)[0] || null;
+        } catch (e) {}
+      }
+      return trimmed !== '' ? trimmed : null;
+    }
+    return null;
+  };
+
+  // دالة استخراج اسم المشرف الديناميكية
   const getProfileName = (log) => {
     if (!log) return safeTranslate('logs.systemUser', 'النظام الآلي');
     
     const profile = log.profiles;
-
-    // تحويل رموز الأدوار إلى مسميات عربية صريحة
-    const getRoleLabel = (role) => {
-      switch (role) {
-        case 'super_admin': return 'سوبر أدمن';
-        case 'admin': return 'مدير أكاديمية';
-        case 'teacher': return 'معلم';
-        case 'student': return 'طالب';
-        case 'parent': return 'ولي أمر';
-        default: return 'مستخدم';
-      }
-    };
-
-    const parseName = (rawName) => {
-      if (!rawName) return null;
-      if (typeof rawName === 'object') {
-        return rawName.ar || rawName.en || Object.values(rawName)[0] || null;
-      }
-      if (typeof rawName === 'string') {
-        const trimmed = rawName.trim();
-        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            return parsed.ar || parsed.en || Object.values(parsed)[0] || null;
-          } catch (e) {
-            // فشل تحليل JSON
-          }
-        }
-        return trimmed !== '' ? trimmed : null;
-      }
-      return null;
-    };
+    const academyName = parseName(log.academies?.name) || parseName(profile?.academies?.name);
 
     if (profile && typeof profile === 'object') {
       const name = parseName(profile.full_name) || parseName(profile.name);
-      if (name) return name;
 
-      if (profile.role) {
-        return getRoleLabel(profile.role);
+      // إذا كان الاسم المخزن يحتوي على "أكاديمية" قديمة أو غير محدد بشكل شخصي وكان الدور مديراً
+      if (profile.role === 'admin') {
+        if (academyName) return `مدير أكاديمية ${academyName}`;
+        return 'مدير الأكاديمية';
       }
-    }
 
-    if (typeof profile === 'string') {
-      const name = parseName(profile);
-      if (name) return name;
+      if (name && !name.includes('أكاديمية الفرقان')) return name;
+
+      // للأدوار الأخرى
+      switch (profile.role) {
+        case 'super_admin': return 'سوبر أدمن';
+        case 'teacher': return 'معلم';
+        case 'student': return 'طالب';
+        case 'parent': return 'ولي أمر';
+        default: return name || 'مستخدم';
+      }
     }
 
     if (log.changed_by && typeof log.changed_by === 'string') {
@@ -122,7 +117,6 @@ export default function RealtimeAudit() {
     return safeTranslate('logs.systemUser', 'النظام الآلي');
   };
 
-  // دالة مضمونة لاستخراج اسم الجدول كنص صريح فقط
   const getTableName = (tableName) => {
     if (!tableName) return '';
     if (typeof tableName !== 'string') return String(tableName);
@@ -137,10 +131,15 @@ export default function RealtimeAudit() {
         .from('audit_logs')
         .select(`
           *,
+          academies:academy_id (
+            id,
+            name
+          ),
           profiles:changed_by (
             id,
             full_name,
-            role
+            role,
+            academies:academy_id ( name )
           )
         `)
         .order('created_at', { ascending: false })
@@ -162,16 +161,27 @@ export default function RealtimeAudit() {
       .channel('realtime_audit_changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, async (payload) => {
         let userProfile = null;
+        let academyData = null;
+
+        if (payload.new?.academy_id) {
+          const { data } = await supabase
+            .from('academies')
+            .select('id, name')
+            .eq('id', payload.new.academy_id)
+            .maybeSingle();
+          academyData = data;
+        }
+
         if (payload.new?.changed_by) {
           const { data } = await supabase
             .from('profiles')
-            .select('full_name, role')
+            .select('id, full_name, role')
             .eq('id', payload.new.changed_by)
             .maybeSingle();
           userProfile = data;
         }
 
-        setLogs((prev) => [{ ...payload.new, profiles: userProfile }, ...prev]);
+        setLogs((prev) => [{ ...payload.new, profiles: userProfile, academies: academyData }, ...prev]);
         showToast(`${safeTranslate('logs.realtime', 'مباشر')}: ${safeTranslate('logs.title', 'سجل العمليات')}`, 'info');
       })
       .subscribe();
@@ -181,7 +191,6 @@ export default function RealtimeAudit() {
     };
   }, []);
 
-  // الترسيت التلقائي للصفحة عند تغيير أي عنصر من عناصر التصفية
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedOperation, selectedUser, startDate, endDate]);
@@ -197,7 +206,6 @@ export default function RealtimeAudit() {
     };
   }, [logs]);
 
-  // قائمة المشرفين في التصفية (Dropdown)
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     logs.forEach((log) => {
