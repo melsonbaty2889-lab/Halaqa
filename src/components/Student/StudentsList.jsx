@@ -345,6 +345,7 @@ const StudentsList = ({
               student={student}
               onClick={() => setSelectedStudent(student)}
               getStatusBadge={getStatusBadge}
+              calendarType={academy?.calendar_type || 'gregorian'}
             />
           ))}
         </div>
