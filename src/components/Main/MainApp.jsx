@@ -307,20 +307,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   // 🟢 دالة حذف الطالب من Supabase وتحديث الـ State
   const handleDeleteStudent = useCallback(async (studentId) => {
-    try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
+  try {
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', studentId);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      setStudents(prev => prev.filter(s => s.id !== studentId));
-    } catch (error) {
-      console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
-      alert("حدث خطأ أثناء محاولة حذف الطالب، يرجى المحاولة لاحقاً.");
-    }
-  }, []);
+    // تحديث الواجهة فوراً
+    setStudents(prev => prev.filter(s => s.id !== studentId));
+    
+    return { success: true };
+  } catch (error) {
+    console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
+    return { success: false, error: error.message };
+  }
+}, []);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
