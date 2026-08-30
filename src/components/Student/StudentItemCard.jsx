@@ -10,6 +10,7 @@ const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gre
   const { t, i18n } = useTranslation();
   const { academy } = useAcademy?.() || {};
   const isRtl = i18n.dir() === 'rtl';
+  const activeCalendarType = calendarType || academy?.calendar_type || 'gregorian';
 
   const studentName = formatName(student.name || student.full_name || t('students.unnamed', 'بدون اسم'));
   const phone = student.parent_phone || student.parent_whatsapp || student.phone || '';
