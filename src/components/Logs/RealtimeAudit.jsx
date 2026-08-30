@@ -101,6 +101,7 @@ export default function RealtimeAudit() {
         .select(`
           *,
           profiles:changed_by (
+            id,
             full_name,
             role
           )
