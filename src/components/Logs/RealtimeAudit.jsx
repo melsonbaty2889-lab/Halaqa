@@ -63,6 +63,36 @@ export default function RealtimeAudit() {
     return String(res || fallback || key || '');
   };
 
+  // دالة مضمونة لاستخراج اسم المشرف كنص صريح فقط
+  const getProfileName = (log) => {
+    if (!log) return safeTranslate('logs.systemUser', 'النظام الآلي');
+    
+    const profile = log.profiles;
+    if (typeof profile === 'string' && profile.trim() !== '') return profile;
+    if (profile && typeof profile === 'object') {
+      if (typeof profile.full_name === 'string' && profile.full_name.trim() !== '') {
+        return profile.full_name;
+      }
+      if (typeof profile.name === 'string' && profile.name.trim() !== '') {
+        return profile.name;
+      }
+    }
+    
+    if (log.changed_by && typeof log.changed_by === 'string') {
+      return `#${log.changed_by.substring(0, 6)}`;
+    }
+    
+    return safeTranslate('logs.systemUser', 'النظام الآلي');
+  };
+
+  // دالة مضمونة لاستخراج اسم الجدول كنص صريح فقط
+  const getTableName = (tableName) => {
+    if (!tableName) return '';
+    if (typeof tableName !== 'string') return String(tableName);
+    const translated = safeTranslate(`tables.${tableName}`, tableName);
+    return typeof translated === 'string' ? translated : String(tableName);
+  };
+
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
@@ -126,8 +156,8 @@ export default function RealtimeAudit() {
     const userMap = new Map();
     logs.forEach((log) => {
       if (log.changed_by) {
-        const rawName = log.profiles?.full_name || `#${String(log.changed_by).substring(0, 6)}`;
-        userMap.set(log.changed_by, String(rawName));
+        const name = getProfileName(log);
+        userMap.set(String(log.changed_by), String(name));
       }
     });
     return Array.from(userMap.entries()).map(([id, name]) => ({ id, name }));
@@ -137,7 +167,7 @@ export default function RealtimeAudit() {
     return logs.filter((log) => {
       const tableName = String(log.table_name || '');
       const translatedTable = safeTranslate(`tables.${tableName}`, tableName);
-      const userName = String(log.profiles?.full_name || safeTranslate('logs.systemUser', 'النظام الآلي'));
+      const userName = String(getProfileName(log));
 
       const matchesSearch =
         translatedTable.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,7 +175,7 @@ export default function RealtimeAudit() {
         userName.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesOp = selectedOperation === 'ALL' || log.operation === selectedOperation;
-      const matchesUser = selectedUser === 'ALL' || log.changed_by === selectedUser;
+      const matchesUser = selectedUser === 'ALL' || String(log.changed_by) === String(selectedUser);
 
       let matchesDate = true;
       if (startDate && endDate && log.created_at) {
@@ -166,13 +196,14 @@ export default function RealtimeAudit() {
   }, [filteredLogs, currentPage]);
 
   const formatHumanActionSentence = (log) => {
-    const userName = String(log.profiles?.full_name || safeTranslate('logs.systemUser', 'النظام الآلي'));
-    const tableName = safeTranslate(`tables.${log.table_name}`, String(log.table_name || ''));
+    const userName = getProfileName(log);
+    const tableName = getTableName(log.table_name);
     
     const getTitle = (obj) => {
-      if (!obj) return '';
+      if (!obj || typeof obj !== 'object') return '';
       if (typeof obj.full_name === 'string') return obj.full_name;
       if (typeof obj.name === 'string') return obj.name;
+      if (typeof obj.title === 'string') return obj.title;
       return '';
     };
 
@@ -335,7 +366,9 @@ export default function RealtimeAudit() {
             >
               <option value="ALL">{safeTranslate('logs.allUsers', 'جميع المشرفين')} ({uniqueUsers.length})</option>
               {uniqueUsers.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
+                <option key={String(u.id)} value={String(u.id)}>
+                  {String(u.name)}
+                </option>
               ))}
             </select>
             <ChevronDown size={13} className={`absolute ${isRtl ? 'left-3' : 'right-3'} text-[var(--text-sub,#94A3B8)] pointer-events-none`} />
@@ -483,15 +516,15 @@ export default function RealtimeAudit() {
           <span>{safeTranslate('logs.page', 'صفحة')} {currentPage} {safeTranslate('logs.of', 'من')} {totalPages}</span>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
               className="p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] disabled:opacity-30 hover:bg-[var(--border-input,#1B2738)]"
             >
               {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
               className="p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] disabled:opacity-30 hover:bg-[var(--border-input,#1B2738)]"
             >
               {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
