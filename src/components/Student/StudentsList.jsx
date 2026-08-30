@@ -27,23 +27,21 @@ const StudentsList = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [halaqaFilter, setHalaqaFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name'); // name | newest
+  const [sortBy, setSortBy] = useState('name');
   
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
-  // منطق البحث والفلترة الشامل المتوافق مع Supabase Schema
+  // منطق البحث والفلترة الشامل
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
-      // استخراج وتنسيق الأسماء
       const formattedName = formatName(student.name || student.full_name || '');
       const parentName = formatName(student.parent_name || student.guardian_name || '');
       const studentCode = student.student_code || '';
       
       const query = searchQuery.toLowerCase().trim();
 
-      // البحث يشمل: اسم الطالب، اسم ولي الأمر، كود الطالب، رقم هاتف ولي الأمر، ورقم الواتساب
       const matchesSearch =
         !query ||
         formattedName.toLowerCase().includes(query) ||
@@ -58,7 +56,6 @@ const StudentsList = ({
       return matchesSearch && matchesStatus && matchesHalaqa;
     });
 
-    // ترتيب النتائج حسب الاسم أو الأحدث
     return result.sort((a, b) => {
       if (sortBy === 'newest') {
         return new Date(b.created_at || 0) - new Date(a.created_at || 0);
@@ -180,7 +177,6 @@ const StudentsList = ({
     { label: t('students.filter_inactive', 'غير نشط فقط'), value: 'inactive' },
   ];
 
-  // تجهيز خيارات الحلقات مع معالجة حقول JSONB بشكل آمن
   const halaqaOptions = [
     { label: t('students.filter_all_halaqas', 'جميع الحلقات'), value: 'all' },
     ...halaqas.map((h) => ({
@@ -196,7 +192,8 @@ const StudentsList = ({
     { label: t('students.sort_newest', 'الأحدث إضافةً'), value: 'newest' },
   ];
 
-  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || halaqaFilter !== 'all' || sortBy !== 'name';
+  // التحقق الدقيق من الفلاتر لإظهار زر "إلغاء الفلاتر"
+  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || halaqaFilter !== 'all' || sortBy !== 'name';
 
   return (
     <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
@@ -226,7 +223,7 @@ const StudentsList = ({
         </button>
       </div>
 
-      {/* 2. كروت الإحصائيات مع الحفاظ على النص في سطر واحد */}
+      {/* 2. كروت الإحصائيات */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
           <div className="absolute top-0 start-0 end-0 h-1 bg-primary"></div>
@@ -247,11 +244,11 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 3. عناصر البحث والفلترة والترتيب */}
-      <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md">
+      {/* 3. عناصر البحث والفلترة والترتيب (تخطيط متجاوب وتجنب تداخل Z-Index) */}
+      <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
           {/* البحث الشامل */}
-          <div className="relative w-full lg:col-span-1">
+          <div className="relative w-full col-span-1 sm:col-span-2 lg:col-span-1">
             <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -263,32 +260,38 @@ const StudentsList = ({
           </div>
 
           {/* فلتر الحالة */}
-          <CustomSelect
-            value={statusFilter}
-            onChange={(val) => setStatusFilter(val)}
-            options={statusOptions}
-            placeholder={t('students.filter_all', 'جميع الحالات')}
-          />
+          <div className="relative z-30">
+            <CustomSelect
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={statusOptions}
+              placeholder={t('students.filter_all', 'جميع الحالات')}
+            />
+          </div>
 
           {/* فلتر الحلقة */}
-          <CustomSelect
-            value={halaqaFilter}
-            onChange={(val) => setHalaqaFilter(val)}
-            options={halaqaOptions}
-            placeholder={t('students.filter_all_halaqas', 'جميع الحلقات')}
-          />
+          <div className="relative z-20">
+            <CustomSelect
+              value={halaqaFilter}
+              onChange={(val) => setHalaqaFilter(val)}
+              options={halaqaOptions}
+              placeholder={t('students.filter_all_halaqas', 'جميع الحلقات')}
+            />
+          </div>
 
           {/* ترتيب النتائج */}
-          <CustomSelect
-            value={sortBy}
-            onChange={(val) => setSortBy(val)}
-            options={sortOptions}
-            placeholder={t('students.sort_by', 'ترتيب حسب')}
-          />
+          <div className="relative z-10">
+            <CustomSelect
+              value={sortBy}
+              onChange={(val) => setSortBy(val)}
+              options={sortOptions}
+              placeholder={t('students.sort_by', 'ترتيب حسب')}
+            />
+          </div>
         </div>
 
-        {/* شريط معلومات الفلترة وإلغاء التصفية */}
-        <div className="flex items-center justify-between text-xs text-appText-sub pt-2 px-1 border-t border-appBorder-card/40">
+        {/* شريط معلومات الفلترة */}
+        <div className="flex items-center justify-between text-xs text-appText-sub pt-2 px-1 border-t border-appBorder-card/40 relative z-0">
           <span className="flex items-center gap-1.5">
             <ListFilter className="w-3.5 h-3.5 text-primary" />
             <span>
@@ -336,7 +339,7 @@ const StudentsList = ({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-0">
           {filteredStudents.map((student) => (
             <StudentItemCard
               key={student.id}
