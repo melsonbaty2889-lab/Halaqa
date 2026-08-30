@@ -63,26 +63,62 @@ export default function RealtimeAudit() {
     return String(res || fallback || key || '');
   };
 
-  // دالة مضمونة لاستخراج اسم المشرف كنص صريح فقط
+  // دالة مضمونة لاستخراج اسم المشرف كنص صريح دعم للأدوار المخصصة وصيغ الـ JSON
   const getProfileName = (log) => {
     if (!log) return safeTranslate('logs.systemUser', 'النظام الآلي');
     
     const profile = log.profiles;
-    if (profile && typeof profile === 'object') {
-      if (typeof profile.full_name === 'string' && profile.full_name.trim() !== '') {
-        return profile.full_name;
+
+    // تحويل رموز الأدوار إلى مسميات عربية صريحة
+    const getRoleLabel = (role) => {
+      switch (role) {
+        case 'super_admin': return 'سوبر أدمن';
+        case 'admin': return 'مدير أكاديمية';
+        case 'teacher': return 'معلم';
+        case 'student': return 'طالب';
+        case 'parent': return 'ولي أمر';
+        default: return 'مستخدم';
       }
-      if (typeof profile.name === 'string' && profile.name.trim() !== '') {
-        return profile.name;
+    };
+
+    const parseName = (rawName) => {
+      if (!rawName) return null;
+      if (typeof rawName === 'object') {
+        return rawName.ar || rawName.en || Object.values(rawName)[0] || null;
+      }
+      if (typeof rawName === 'string') {
+        const trimmed = rawName.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return parsed.ar || parsed.en || Object.values(parsed)[0] || null;
+          } catch (e) {
+            // فشل تحليل JSON
+          }
+        }
+        return trimmed !== '' ? trimmed : null;
+      }
+      return null;
+    };
+
+    if (profile && typeof profile === 'object') {
+      const name = parseName(profile.full_name) || parseName(profile.name);
+      if (name) return name;
+
+      if (profile.role) {
+        return getRoleLabel(profile.role);
       }
     }
 
-    if (typeof profile === 'string' && profile.trim() !== '') return profile;
-    
-    if (log.changed_by && typeof log.changed_by === 'string') {
-      return `#${log.changed_by.substring(0, 6)}`;
+    if (typeof profile === 'string') {
+      const name = parseName(profile);
+      if (name) return name;
     }
-    
+
+    if (log.changed_by && typeof log.changed_by === 'string') {
+      return `مشرف (${log.changed_by.substring(0, 4)})`;
+    }
+
     return safeTranslate('logs.systemUser', 'النظام الآلي');
   };
 
