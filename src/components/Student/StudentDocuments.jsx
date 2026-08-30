@@ -95,7 +95,6 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
     return matchesType && matchesSearch;
   });
 
-  // قائمة خيارات التصفية المدعومة بالترجمة
   const filterOptions = [
     { value: 'all', label: t('documents.filter_all', 'جميع المستندات') },
     { value: 'id_card', label: t('documents.types.id_card', 'بطاقة الهوية') },
@@ -189,7 +188,7 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
                   {t(`documents.types.${doc.document_type}`, doc.document_type)}
                 </span>
                 <h4 className="font-medium text-sm text-appText-main truncate" title={doc.file_name}>
-                  {doc.file_name || 'مستند بدون اسم'}
+                  {doc.file_name || t('documents.unnamed_doc', 'مستند بدون اسم')}
                 </h4>
                 {doc.notes && (
                   <p className="text-xs text-appText-sub line-clamp-2">{doc.notes}</p>
