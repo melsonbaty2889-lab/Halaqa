@@ -2,7 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Users, UserCheck, UserX, AlertCircle } from 'lucide-react';
+import { 
+  Search, Plus, Users, UserCheck, UserX, AlertCircle, 
+  FilterX, LayoutGrid, ListFilter, BookOpen 
+} from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
@@ -18,24 +21,33 @@ const StudentsList = ({
   onDeleteStudent
 }) => {
   const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [halaqaFilter, setHalaqaFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState(null);
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
+  // تصفية الطلاب حسب البحث، الحالة، والحلقة
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const formattedName = formatName(student.name || student.full_name || '');
       const matchesSearch =
         formattedName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (student.parent_phone && student.parent_phone.includes(searchQuery)) ||
         (student.phone && student.phone.includes(searchQuery));
-      const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [students, searchQuery, statusFilter]);
 
+      const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+      const matchesHalaqa = halaqaFilter === 'all' || student.halaqa_id === halaqaFilter;
+
+      return matchesSearch && matchesStatus && matchesHalaqa;
+    });
+  }, [students, searchQuery, statusFilter, halaqaFilter]);
+
+  // إحصائيات سريعة
   const stats = useMemo(() => {
     return {
       total: students.length,
@@ -44,12 +56,17 @@ const StudentsList = ({
     };
   }, [students]);
 
-  // شارات الحالة المتوافقة مع ألوان الهوية الرسمية
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setHalaqaFilter('all');
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'active':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brandEmerald-bg text-brandEmerald border border-brandEmerald-border">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <UserCheck className="w-3.5 h-3.5" />
             <span>{t('common.active', 'نشط')}</span>
           </span>
@@ -140,11 +157,23 @@ const StudentsList = ({
     { label: t('students.filter_inactive', 'غير نشط فقط'), value: 'inactive' },
   ];
 
+  const halaqaOptions = [
+    { label: t('students.filter_all_halaqas', 'جميع الحلقات'), value: 'all' },
+    ...halaqas.map((h) => ({
+      value: h.id,
+      label: typeof h.name === 'object' && h.name !== null
+        ? (isRtl ? h.name.ar || h.name.en : h.name.en || h.name.ar)
+        : h.name_ar || h.name,
+    })),
+  ];
+
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || halaqaFilter !== 'all';
+
   return (
     <div className="space-y-5 text-appText-main" dir={i18n.dir()}>
-      {/* 1. كارت الهيدر الرئيسي وزر الإضافة */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-6 text-center relative overflow-hidden space-y-3">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 text-primary">
+      {/* 1. الهيدر الرئيسي وزر الإضافة */}
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-6 text-center relative overflow-hidden space-y-3 shadow-xl">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20">
           <Users className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-appText-main">
@@ -166,42 +195,75 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 2. كروت الإحصائيات مع الحفاظ على الترتيب والاتجاه ثابت */}
+      {/* 2. كروت الإحصائيات المحدثة */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center">
-          <p className="text-xs text-appText-sub">{t('students.total_count', 'إجمالي الطلاب')}</p>
+        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center relative overflow-hidden shadow-md">
+          <div className="absolute top-0 start-0 end-0 h-1 bg-primary/40"></div>
+          <p className="text-xs text-appText-sub font-medium">{t('students.total_count', 'إجمالي الطلاب')}</p>
           <p className="text-lg sm:text-2xl font-bold text-appText-main mt-1">{stats.total}</p>
         </div>
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center">
-          <p className="text-xs text-appText-sub">{t('students.active_count', 'النشطون')}</p>
-          <p className="text-lg sm:text-2xl font-bold text-brandEmerald mt-1">{stats.active}</p>
+        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center relative overflow-hidden shadow-md">
+          <div className="absolute top-0 start-0 end-0 h-1 bg-emerald-500/50"></div>
+          <p className="text-xs text-appText-sub font-medium">{t('students.active_count', 'النشطون')}</p>
+          <p className="text-lg sm:text-2xl font-bold text-emerald-400 mt-1">{stats.active}</p>
         </div>
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center">
-          <p className="text-xs text-appText-sub">{t('students.inactive_count', 'غير النشطين')}</p>
+        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center relative overflow-hidden shadow-md">
+          <div className="absolute top-0 start-0 end-0 h-1 bg-rose-500/50"></div>
+          <p className="text-xs text-appText-sub font-medium">{t('students.inactive_count', 'غير النشطين')}</p>
           <p className="text-lg sm:text-2xl font-bold text-rose-400 mt-1">{stats.inactive}</p>
         </div>
       </div>
 
-      {/* 3. شريط البحث والتصفية الموحد في سطر واحد لتوفير المساحة */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-dark-card/50 p-3 rounded-2xl border border-appBorder-card">
-        <div className="relative flex-1 w-full">
+      {/* 3. شريط البحث والتصفية المتقدم */}
+      <div className="bg-dark-card/60 p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md">
+        <div className="relative w-full">
           <Search className="w-4 h-4 text-appText-muted absolute start-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('students.search_placeholder', 'البحث باسم الطالب أو رقم الهاتف...')}
-            className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-10 pe-4 py-2 text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
+            className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-10 pe-4 py-2.5 text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
           />
         </div>
 
-        <div className="w-full sm:w-52 shrink-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CustomSelect
             value={statusFilter}
             onChange={(val) => setStatusFilter(val)}
             options={statusOptions}
             placeholder={t('students.filter_all', 'جميع الحالات')}
           />
+
+          <CustomSelect
+            value={halaqaFilter}
+            onChange={(val) => setHalaqaFilter(val)}
+            options={halaqaOptions}
+            placeholder={t('students.filter_all_halaqas', 'جميع الحلقات')}
+          />
+        </div>
+
+        {/* شريط معلومات الفلترة وزر التصفير */}
+        <div className="flex items-center justify-between text-xs text-appText-sub pt-1 px-1 border-t border-appBorder-card/50">
+          <span className="flex items-center gap-1.5">
+            <ListFilter className="w-3.5 h-3.5 text-primary" />
+            <span>
+              {t('students.results_count', 'عرض {{count}} من إجمالي {{total}} طالب', {
+                count: filteredStudents.length,
+                total: students.length,
+              })}
+            </span>
+          </span>
+
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1 text-primary hover:underline font-medium transition-colors"
+            >
+              <FilterX className="w-3.5 h-3.5" />
+              <span>{t('common.reset_filters', 'إلغاء الفلاتر')}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -219,6 +281,15 @@ const StudentsList = ({
           <p className="text-xs text-appText-sub">
             {t('students.no_match_hint', 'جرّب تغيير البحث أو إضافة طالب جديد')}
           </p>
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="mt-2 inline-flex items-center gap-1 text-xs text-primary underline"
+            >
+              <FilterX className="w-3 h-3" />
+              <span>{t('common.reset_filters', 'إلغاء الفلاتر')}</span>
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
