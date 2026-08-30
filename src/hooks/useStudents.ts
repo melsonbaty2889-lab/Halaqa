@@ -86,10 +86,29 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
 
       if (updateError) throw updateError;
       
-      fetchStudents();
+      await fetchStudents();
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
+    }
+  };
+
+  // 👈 دالة حذف طالب من قاعدة البيانات (تمت الإضافة)
+  const deleteStudent = async (studentId: string) => {
+    try {
+      const { error: deleteError } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (deleteError) throw deleteError;
+
+      // تحديث القائمة تلقائياً بعد نجاح الحذف
+      await fetchStudents();
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error deleting student:', err);
+      return { success: false, error: err.message || 'فشلت عملية الحذف' };
     }
   };
 
@@ -101,5 +120,6 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     setFilters,
     refetch: fetchStudents,
     toggleArchiveStudent,
+    deleteStudent, // 👈 تصدير الدالة هنا
   };
 };
