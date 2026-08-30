@@ -1,3 +1,5 @@
+// src/components/Student/StudentProfile.jsx
+
 import React, { useState } from 'react';
 import { 
   ArrowRight, Edit, Trash2, Phone, Calendar, Globe, MapPin, 
@@ -44,11 +46,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
             <span>تعديل</span>
           </button>
           <button
-            onClick={() => {
-              if (window.confirm('هل أنت تأكد من حذف هذا الطالب؟')) {
-                onDelete(student.id);
-              }
-            }}
+            onClick={() => onDelete(student.id)}
             className="btn-secondary text-rose-400 hover:bg-rose-500/10 border-rose-500/20"
           >
             <Trash2 className="w-4 h-4" />
