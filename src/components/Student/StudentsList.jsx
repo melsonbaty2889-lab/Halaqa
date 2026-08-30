@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Plus, Users, UserCheck, UserX, AlertCircle, 
-  FilterX, ListFilter, ArrowUpDown
+  FilterX, ListFilter 
 } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
@@ -23,7 +23,7 @@ const StudentsList = ({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  // حالات البحث والفلترة المتقدمة
+  // حالات البحث والفلترة والترتيب
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [halaqaFilter, setHalaqaFilter] = useState('all');
@@ -33,20 +33,24 @@ const StudentsList = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
-  // توسيع دائرة البحث والفلترة
+  // منطق البحث والفلترة الشامل المتوافق مع Supabase Schema
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
+      // استخراج وتنسيق الأسماء
       const formattedName = formatName(student.name || student.full_name || '');
-      const parentName = formatName(student.guardian_name || student.parent_name || '');
+      const parentName = formatName(student.parent_name || student.guardian_name || '');
+      const studentCode = student.student_code || '';
+      
       const query = searchQuery.toLowerCase().trim();
 
-      // بحث موحد في الاسم، هاتف الطالب، هاتف ولي الأمر، واسم ولي الأمر
+      // البحث يشمل: اسم الطالب، اسم ولي الأمر، كود الطالب، رقم هاتف ولي الأمر، ورقم الواتساب
       const matchesSearch =
+        !query ||
         formattedName.toLowerCase().includes(query) ||
         parentName.toLowerCase().includes(query) ||
+        studentCode.toLowerCase().includes(query) ||
         (student.parent_phone && student.parent_phone.includes(query)) ||
-        (student.phone && student.phone.includes(query)) ||
-        (student.national_id && student.national_id.includes(query));
+        (student.parent_whatsapp && student.parent_whatsapp.includes(query));
 
       const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
       const matchesHalaqa = halaqaFilter === 'all' || student.halaqa_id === halaqaFilter;
@@ -54,7 +58,7 @@ const StudentsList = ({
       return matchesSearch && matchesStatus && matchesHalaqa;
     });
 
-    // ترتيب النتائج
+    // ترتيب النتائج حسب الاسم أو الأحدث
     return result.sort((a, b) => {
       if (sortBy === 'newest') {
         return new Date(b.created_at || 0) - new Date(a.created_at || 0);
@@ -65,6 +69,7 @@ const StudentsList = ({
     });
   }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, isRtl]);
 
+  // إحصائيات الطلاب
   const stats = useMemo(() => {
     return {
       total: students.length,
@@ -175,26 +180,27 @@ const StudentsList = ({
     { label: t('students.filter_inactive', 'غير نشط فقط'), value: 'inactive' },
   ];
 
+  // تجهيز خيارات الحلقات مع معالجة حقول JSONB بشكل آمن
   const halaqaOptions = [
     { label: t('students.filter_all_halaqas', 'جميع الحلقات'), value: 'all' },
     ...halaqas.map((h) => ({
       value: h.id,
       label: typeof h.name === 'object' && h.name !== null
         ? (isRtl ? h.name.ar || h.name.en : h.name.en || h.name.ar)
-        : h.name_ar || h.name,
+        : h.name_ar || h.name || '',
     })),
   ];
 
   const sortOptions = [
     { label: t('students.sort_name', 'ترتيب أبجدي'), value: 'name' },
-    { label: t('students.sort_newest', 'الأحدث إضافتاً'), value: 'newest' },
+    { label: t('students.sort_newest', 'الأحدث إضافةً'), value: 'newest' },
   ];
 
   const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || halaqaFilter !== 'all' || sortBy !== 'name';
 
   return (
     <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
-      {/* 1. هيدر مدمج وعصري */}
+      {/* 1. رأس الصفحة */}
       <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3 text-start w-full sm:w-auto">
           <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-primary/10 text-primary border border-primary/20">
@@ -220,7 +226,7 @@ const StudentsList = ({
         </button>
       </div>
 
-      {/* 2. كروت الإحصائيات الأنيقة بأحجام خطوط متناسقة تمنع التفاف النص */}
+      {/* 2. كروت الإحصائيات مع الحفاظ على النص في سطر واحد */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
           <div className="absolute top-0 start-0 end-0 h-1 bg-primary"></div>
@@ -241,7 +247,7 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 3. شريط البحث الموسع والفلاتر المتقدمة */}
+      {/* 3. عناصر البحث والفلترة والترتيب */}
       <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
           {/* البحث الشامل */}
@@ -251,7 +257,7 @@ const StudentsList = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('students.search_placeholder_expanded', 'بحث بالاسم، الهوية، أو الهاتف...')}
+              placeholder={t('students.search_placeholder_expanded', 'بحث بالاسم، الكود، أو الهاتف...')}
               className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-primary transition-colors"
             />
           </div>
@@ -305,7 +311,7 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 4. قائمة الطلاب */}
+      {/* 4. عرض النتائج */}
       {isLoading ? (
         <div className="text-center py-12 text-sm text-appText-sub">
           {t('common.loading', 'جاري تحميل الطلاب...')}
@@ -314,7 +320,7 @@ const StudentsList = ({
         <div className="text-center py-12 bg-dark-card rounded-2xl border border-appBorder-card space-y-2">
           <Users className="w-10 h-10 text-appText-muted mx-auto" />
           <p className="text-appText-main font-medium text-sm">
-            {t('students.no_match', 'لا يوجد طلاب مطبقون للبحث')}
+            {t('students.no_match', 'لا يوجد طلاب مطابقون للبحث')}
           </p>
           <p className="text-xs text-appText-sub">
             {t('students.no_match_hint', 'جرّب تغيير البحث أو إضافة طالب جديد')}
@@ -342,7 +348,7 @@ const StudentsList = ({
         </div>
       )}
 
-      {/* 5. مودال الإضافة والتعديل */}
+      {/* 5. النافذة المنبثقة للإضافة والتعديل */}
       {isAddModalOpen && (
         <AddStudentModal
           isOpen={isAddModalOpen}
