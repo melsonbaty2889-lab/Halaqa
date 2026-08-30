@@ -11,6 +11,7 @@ import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
+import { useAcademy } from '@/context/AcademyContext'; // 1. استيراد useAcademy
 
 const StudentsList = ({ 
   students = [], 
@@ -19,13 +20,16 @@ const StudentsList = ({
   halaqas = [], 
   isLoading,
   onDeleteStudent,
-  academySettings // إضافة كـ prop اختياري إن وجد
+  academySettings // prop اختياري
 }) => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  // استخراج نوع التقويم بأمان من الإعدادات دون التسبب في خطأ ReferenceError
-  const calendarType = academySettings?.calendar_type || 'gregorian';
+  // 2. جلب بيانات الأكاديمية من السياق كخيار احتياطي في حال عدم إرسال academySettings
+  const { academy } = useAcademy?.() || {};
+
+  // 3. تحديد نوع التقويم (من prop أولاً، ثم من سياق الأكاديمية، ثم gregorian)
+  const calendarType = academySettings?.calendar_type || academy?.calendar_type || 'gregorian';
 
   // حالات البحث والفلترة والترتيب
   const [searchQuery, setSearchQuery] = useState('');
