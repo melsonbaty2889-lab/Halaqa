@@ -12,26 +12,39 @@ export const TECHNICAL_KEYS = [
 // دالة تحويل القيم للغة مفهومة
 export const toHumanValue = (val, t) => {
   if (val === null || val === undefined || val === '' || val === '{}') return '—';
-  const strVal = String(val).toLowerCase();
-  
-  if (t?.values && t.values[strVal] !== undefined) {
-    return t.values[strVal];
-  }
-  
-  if (typeof val === 'boolean') return val ? (t?.values?.true || 'نعم') : (t?.values?.false || 'لا');
-  if (typeof val === 'string' || typeof val === 'number') return String(val);
 
+  // 1. التعامل مع القيم البولينية (Boolean)
+  if (typeof val === 'boolean') {
+    return val ? (t ? t('values.true', 'نعم') : 'نعم') : (t ? t('values.false', 'لا') : 'لا');
+  }
+
+  // 2. التعامل مع الكائنات والمصفوفات (Objects & Arrays)
   if (typeof val === 'object') {
     if (Array.isArray(val)) {
       return val.map(item => toHumanValue(item, t)).filter(Boolean).join(', ');
     }
-    if (val.ar) return toHumanValue(val.ar, t);
-    if (val.en) return toHumanValue(val.en, t);
+    if (val.ar || val.en) {
+      return toHumanValue(val.ar || val.en, t);
+    }
     try {
       return JSON.stringify(val);
     } catch {
-      return '';
+      return '—';
     }
   }
-  return String(val);
+
+  // 3. التعامل مع النصوص والأرقام والترجمات المباشرة عبر i18next
+  const strVal = String(val).trim();
+  const lowerKey = strVal.toLowerCase();
+
+  // محاولة جلب الترجمة من مفتاح values.key عبر دالة t الآمنة
+  if (t && typeof t === 'function') {
+    const translationKey = `values.${lowerKey}`;
+    const translated = t(translationKey, { defaultValue: '' });
+    if (translated && translated !== translationKey) {
+      return translated;
+    }
+  }
+
+  return strVal;
 };
