@@ -11,7 +11,7 @@ import {
   updateAcademyStatus, 
   extendAcademySubscription, 
   getSafeText 
-} from '../../lib/adminDashboardService';
+} from '@/lib/adminDashboardService';
 
 import AdminStatsCards from './AdminStatsCards';
 import AcademyCard from './AcademyCard';
