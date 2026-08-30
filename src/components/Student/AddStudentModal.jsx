@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Globe } from 'lucide-react';
+import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
 import { calculateAge } from '@/utils/dateUtils';
@@ -99,6 +99,15 @@ const AddStudentModal = ({
       setShowParentFields(age !== null && age < 18);
     } else {
       setShowParentFields(true);
+    }
+  };
+
+  const handleCopyPhoneToWhatsapp = () => {
+    if (formData.parent_phone) {
+      setFormData((prev) => ({
+        ...prev,
+        parent_whatsapp: prev.parent_phone,
+      }));
     }
   };
 
@@ -239,7 +248,7 @@ const AddStudentModal = ({
                   placeholder={t('students.ph_name_ar', 'ادخل الاسم بالعربية')}
                   className={`w-full px-3 py-2.5 bg-dark-input border ${
                     errors.name_ar ? 'border-rose-500' : 'border-appBorder-input'
-                  } rounded-xl text-appText-main text-sm placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors`}
+                  } rounded-xl text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors`}
                 />
                 {errors.name_ar && (
                   <p className="text-rose-400 text-xs mt-1 flex items-center gap-1">
@@ -258,7 +267,7 @@ const AddStudentModal = ({
                   value={formData.name_en}
                   onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
                   placeholder={t('students.ph_name_en', 'Enter name in English')}
-                  className="w-full px-3 py-2.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
+                  className="w-full px-3 py-2.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors"
                 />
               </div>
             </div>
@@ -353,19 +362,35 @@ const AddStudentModal = ({
                 <Shield className="w-4 h-4" />
                 <span>{t('students.parent_info', 'بيانات ولي الأمر')}</span>
               </h3>
-              <button
-                type="button"
-                onClick={() => setShowParentFields(!showParentFields)}
-                className="text-xs text-appText-sub hover:text-appText-main underline transition-colors"
-              >
-                {showParentFields
-                  ? t('students.hide_parent_fields', 'إخفاء حقول ولي الأمر')
-                  : t('students.show_parent_fields', 'إظهار حقول ولي الأمر')}
-              </button>
+
+              {/* Toggle Switch بدلاً من الرابط النصي */}
+              <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                <span className="text-xs text-appText-sub">
+                  {showParentFields ? t('common.enabled', 'مفعل') : t('common.disabled', 'معطل')}
+                </span>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={showParentFields}
+                    onChange={() => setShowParentFields(!showParentFields)}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-9 h-5 rounded-full transition-colors ${
+                      showParentFields ? 'bg-primary' : 'bg-dark-input border border-appBorder-input'
+                    }`}
+                  />
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                      showParentFields ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
+              </label>
             </div>
 
             {showParentFields && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-dark-input/50 p-4 rounded-xl border border-appBorder-card">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-dark-input/40 p-4 rounded-xl border border-appBorder-card animate-in fade-in duration-150">
                 <div>
                   <label className="block text-xs font-medium text-appText-sub mb-1.5">
                     {t('students.parent_name', 'اسم ولي الأمر')}
@@ -375,7 +400,7 @@ const AddStudentModal = ({
                     value={formData.parent_name}
                     onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
                     placeholder={t('students.ph_parent_name', 'ادخل الاسم الكامل')}
-                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
+                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors"
                   />
                 </div>
 
@@ -389,14 +414,25 @@ const AddStudentModal = ({
                     value={formData.parent_phone}
                     onChange={(e) => setFormData({ ...formData, parent_phone: e.target.value })}
                     placeholder={t('students.ph_phone', 'رقم الهاتف مع رمز الدولة')}
-                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors text-start"
+                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors text-start"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-appText-sub mb-1.5">
-                    {t('students.parent_whatsapp', 'واتساب ولي الأمر')}
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium text-appText-sub">
+                      {t('students.parent_whatsapp', 'واتساب ولي الأمر')}
+                    </label>
+                    {formData.parent_phone && (
+                      <button
+                        type="button"
+                        onClick={handleCopyPhoneToWhatsapp}
+                        className="text-[11px] text-primary hover:underline transition-all"
+                      >
+                        {t('common.same_as_phone', 'نفس الهاتف')}
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="tel"
                     dir="ltr"
@@ -405,7 +441,7 @@ const AddStudentModal = ({
                       setFormData({ ...formData, parent_whatsapp: e.target.value })
                     }
                     placeholder={t('students.ph_whatsapp', 'رقم الواتساب مع رمز الدولة')}
-                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors text-start"
+                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors text-start"
                   />
                 </div>
               </div>
@@ -422,13 +458,13 @@ const AddStudentModal = ({
               value={formData.notes_text}
               onChange={(e) => setFormData({ ...formData, notes_text: e.target.value })}
               placeholder={t('students.ph_notes', 'أي ملاحظات تخص الطالب...')}
-              className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors resize-none"
+              className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors resize-none"
             />
           </div>
         </form>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card shrink-0">
+        {/* Footer ثابت مع ظل خفيف وتأثير خلفية ناعم */}
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card/95 backdrop-blur-md shrink-0">
           <button
             type="button"
             onClick={onClose}
