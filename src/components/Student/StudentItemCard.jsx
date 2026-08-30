@@ -9,7 +9,6 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  // مطابقة الحقول الفعالية من جدول Supabase
   const studentName = formatName(student.name || student.full_name || t('students.unnamed', 'بدون اسم'));
   const phone = student.parent_phone || student.parent_whatsapp || student.phone || '';
   const joinDate = student.created_at || student.join_date || null;
@@ -20,22 +19,24 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
   return (
     <div 
       onClick={() => onClick(student)}
-      className="bg-dark-card border border-appBorder-card rounded-2xl p-3.5 sm:p-4 hover:border-appBorder-hover transition-all cursor-pointer group hover:shadow-lg hover:shadow-primary-glow/10 relative overflow-hidden"
+      className="bg-dark-card border border-appBorder-card hover:border-primary/40 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg hover:shadow-primary-glow/10 relative overflow-hidden"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2.5 sm:gap-4">
         {/* معلومات الطالب الأساسية */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="w-11 h-11 rounded-xl bg-dark-input border border-appBorder-input flex items-center justify-center text-appText-sub font-semibold group-hover:border-primary/50 group-hover:text-primary transition-colors shrink-0 overflow-hidden">
+          {/* الصورة الشخصية */}
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-dark-input border border-appBorder-input flex items-center justify-center text-appText-sub font-semibold group-hover:border-primary/50 group-hover:text-primary transition-colors shrink-0 overflow-hidden">
             {student.avatar_url ? (
               <img src={student.avatar_url} alt={studentName} className="w-full h-full object-cover" />
             ) : (
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5 sm:w-6 sm:h-6" />
             )}
           </div>
 
+          {/* اسم الطالب وتفاصيله */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors truncate">
+              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors truncate min-w-0 leading-tight">
                 {studentName}
               </h3>
               {student.student_code && (
@@ -45,25 +46,26 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
               )}
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-appText-sub mt-1 flex-wrap">
+            {/* تفاصيل الهواتف والتاريخ والحلقة */}
+            <div className="flex items-center gap-x-3 gap-y-1.5 text-xs text-appText-sub mt-1.5 flex-wrap">
               {halaqaName && (
-                <span className="flex items-center gap-1 truncate max-w-[130px] sm:max-w-none">
-                  <BookOpen className="w-3 h-3 text-primary shrink-0" />
+                <span className="flex items-center gap-1 truncate max-w-[120px] sm:max-w-none">
+                  <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
                   <span className="truncate">{halaqaName}</span>
                 </span>
               )}
 
               {phone && (
-                <span className="flex items-center gap-1 dir-ltr" dir="ltr">
+                <span className="flex items-center gap-1 dir-ltr font-mono text-[11px] text-appText-sub/90" dir="ltr">
                   <Phone className="w-3 h-3 text-appText-muted shrink-0" />
-                  <span className="truncate">{phone}</span>
+                  <span>{phone}</span>
                 </span>
               )}
 
               {joinDate && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 text-[11px] text-appText-sub/80">
                   <Calendar className="w-3 h-3 text-appText-muted shrink-0" />
-                  <span className="truncate">
+                  <span>
                     {new Date(joinDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
                   </span>
                 </span>
@@ -74,8 +76,12 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
 
         {/* شارة الحالة والسهم الانتقالي */}
         <div className="flex items-center gap-2 shrink-0">
-          {getStatusBadge && getStatusBadge(student.status)}
-          <ArrowIcon className="w-4 h-4 text-appText-muted group-hover:text-appText-main transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+          {getStatusBadge && (
+            <div className="shrink-0">
+              {getStatusBadge(student.status)}
+            </div>
+          )}
+          <ArrowIcon className="w-4 h-4 text-appText-muted group-hover:text-primary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
         </div>
       </div>
     </div>
