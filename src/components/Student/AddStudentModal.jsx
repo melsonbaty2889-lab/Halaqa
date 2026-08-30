@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
 import { calculateAge } from '@/utils/dateUtils';
@@ -45,7 +45,7 @@ const AddStudentModal = ({
       const nameObj =
         typeof studentToEdit.name === 'object' && studentToEdit.name !== null
           ? studentToEdit.name
-          : { ar: studentToEdit.name || '', en: '' };
+          : { ar: studentToEdit.name || studentToEdit.full_name || '', en: '' };
 
       const notesObj =
         typeof studentToEdit.notes === 'object' && studentToEdit.notes !== null
@@ -53,7 +53,7 @@ const AddStudentModal = ({
           : { text: studentToEdit.notes || '' };
 
       setFormData({
-        name_ar: nameObj.ar || '',
+        name_ar: nameObj.ar || (typeof studentToEdit.name === 'string' ? studentToEdit.name : ''),
         name_en: nameObj.en || '',
         gender: studentToEdit.gender || 'male',
         birth_date: studentToEdit.birth_date || '',
@@ -125,7 +125,7 @@ const AddStudentModal = ({
         en: formData.name_en.trim() || formData.name_ar.trim(),
       };
 
-      const notesJson = formData.notes_text.trim() ? { text: formData.notes_text.trim() } : {};
+      const notesJson = formData.notes_text.trim() ? { text: formData.notes_text.trim() } : null;
 
       const payload = {
         academy_id: academyId,
@@ -136,9 +136,9 @@ const AddStudentModal = ({
         nationality: formData.nationality || null,
         halaqa_id: formData.halaqa_id || null,
         preferred_riwayah: formData.preferred_riwayah || null,
-        parent_name: showParentFields ? formData.parent_name : null,
-        parent_phone: showParentFields ? formData.parent_phone : null,
-        parent_whatsapp: showParentFields ? formData.parent_whatsapp : null,
+        parent_name: showParentFields && formData.parent_name.trim() ? formData.parent_name.trim() : null,
+        parent_phone: showParentFields && formData.parent_phone.trim() ? formData.parent_phone.trim() : null,
+        parent_whatsapp: showParentFields && formData.parent_whatsapp.trim() ? formData.parent_whatsapp.trim() : null,
         notes: notesJson,
         updated_at: new Date().toISOString(),
       };
@@ -178,7 +178,7 @@ const AddStudentModal = ({
     } catch (err) {
       console.error('Error saving data:', err);
       alert(`${t('common.save_error', 'حدث خطأ أثناء الحفظ:')} ${err.message || ''}`);
-    } finally {
+    } flex {
       setIsSubmitting(false);
     }
   };
@@ -294,6 +294,18 @@ const AddStudentModal = ({
                   value={formData.country}
                   onChange={(code) => setFormData({ ...formData, country: code })}
                   isArabic={isRtl}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                  {t('students.nationality', 'الجنسية')}
+                </label>
+                <CountrySelect
+                  value={formData.nationality}
+                  onChange={(code) => setFormData({ ...formData, nationality: code })}
+                  isArabic={isRtl}
+                  placeholder={t('students.ph_select_nationality', 'اختر الجنسية...')}
                 />
               </div>
             </div>
