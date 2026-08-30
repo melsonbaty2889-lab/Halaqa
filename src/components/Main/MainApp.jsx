@@ -294,7 +294,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
-    } fontally {
+    } finally {
       setLoadingData(false);
     }
   }, [academy?.name, currentLang]);
