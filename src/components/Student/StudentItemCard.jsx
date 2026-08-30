@@ -53,7 +53,7 @@ const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gre
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors truncate min-w-0 leading-tight">
+              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors line-clamp-1 min-w-0 leading-tight">
                 {studentName}
               </h3>
               {student.student_code && (
