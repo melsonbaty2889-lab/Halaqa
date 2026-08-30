@@ -228,8 +228,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
   
-  const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");          
-  const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");          
+  const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");         
+  const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");         
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
   const [academyTime, setAcademyTime] = useState("");
 
@@ -294,7 +294,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setHalaqas(halaqasRes.data || []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
-    } finally {
+    } fontally {
       setLoadingData(false);
     }
   }, [academy?.name, currentLang]);
@@ -304,6 +304,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     setAcademyId(newAcademyId);
     fetchAcademyData(newAcademyId);
   }, [academyId, fetchAcademyData]);
+
+  // 🟢 دالة حذف الطالب من Supabase وتحديث الـ State
+  const handleDeleteStudent = useCallback(async (studentId) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      setStudents(prev => prev.filter(s => s.id !== studentId));
+    } catch (error) {
+      console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
+      alert("حدث خطأ أثناء محاولة حذف الطالب، يرجى المحاولة لاحقاً.");
+    }
+  }, []);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
@@ -427,6 +444,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             setStudents={setStudents} 
             academyId={academyId} 
             halaqas={enrichedHalaqas} 
+            onDeleteStudent={handleDeleteStudent}
           />
         );
       case 'parents':
