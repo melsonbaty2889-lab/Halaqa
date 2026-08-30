@@ -29,7 +29,7 @@ import CompactDiffViewer from './CompactDiffViewer';
 
 export default function RealtimeAudit() {
   const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const isRtl = i18n?.language === 'ar';
 
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,12 +46,22 @@ export default function RealtimeAudit() {
 
   const [toast, setToast] = useState(null);
   const showToast = (message, type = 'success') => {
-    setToast({ message, type });
+    setToast({ message: String(message), type });
     setTimeout(() => setToast(null), 3500);
   };
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // دالة مساعدة تضمن إرجاع نص صافي دائماً لتجنب أخطاء الرندرة
+  const safeTranslate = (key, fallback = '') => {
+    if (!t || typeof t !== 'function') return String(fallback || key || '');
+    const res = t(key, { defaultValue: fallback || key });
+    if (typeof res === 'object') {
+      return res?.ar || res?.en || String(fallback || key || '');
+    }
+    return String(res || fallback || key || '');
+  };
 
   const fetchAuditLogs = async () => {
     setLoading(true);
@@ -84,7 +94,7 @@ export default function RealtimeAudit() {
       .channel('realtime_audit_changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, async (payload) => {
         let userProfile = null;
-        if (payload.new.changed_by) {
+        if (payload.new?.changed_by) {
           const { data } = await supabase
             .from('profiles')
             .select('full_name, role')
@@ -94,16 +104,16 @@ export default function RealtimeAudit() {
         }
 
         setLogs((prev) => [{ ...payload.new, profiles: userProfile }, ...prev]);
-        showToast(`${t('logs.realtime')}: ${t('logs.title')}`, 'info');
+        showToast(`${safeTranslate('logs.realtime', 'مباشر')}: ${safeTranslate('logs.title', 'سجل العمليات')}`, 'info');
       })
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [t]);
+  }, []);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    const todayLogs = logs.filter(l => l.created_at && l.created_at.startsWith(today));
+    const todayLogs = logs.filter(l => l.created_at && String(l.created_at).startsWith(today));
     return {
       todayTotal: todayLogs.length,
       inserts: todayLogs.filter(l => l.operation === 'INSERT').length,
@@ -116,8 +126,8 @@ export default function RealtimeAudit() {
     const userMap = new Map();
     logs.forEach((log) => {
       if (log.changed_by) {
-        const rawName = log.profiles?.full_name || `#${log.changed_by.substring(0, 6)}`;
-        userMap.set(log.changed_by, rawName);
+        const rawName = log.profiles?.full_name || `#${String(log.changed_by).substring(0, 6)}`;
+        userMap.set(log.changed_by, String(rawName));
       }
     });
     return Array.from(userMap.entries()).map(([id, name]) => ({ id, name }));
@@ -125,9 +135,9 @@ export default function RealtimeAudit() {
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      const tableName = log.table_name || '';
-      const translatedTable = t(`tables.${tableName}`, tableName);
-      const userName = log.profiles?.full_name || t('logs.systemUser', 'النظام الآلي');
+      const tableName = String(log.table_name || '');
+      const translatedTable = safeTranslate(`tables.${tableName}`, tableName);
+      const userName = String(log.profiles?.full_name || safeTranslate('logs.systemUser', 'النظام الآلي'));
 
       const matchesSearch =
         translatedTable.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -147,7 +157,7 @@ export default function RealtimeAudit() {
 
       return matchesSearch && matchesOp && matchesUser && matchesDate;
     });
-  }, [logs, searchTerm, selectedOperation, selectedUser, startDate, endDate, t]);
+  }, [logs, searchTerm, selectedOperation, selectedUser, startDate, endDate]);
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
   const paginatedLogs = useMemo(() => {
@@ -156,9 +166,17 @@ export default function RealtimeAudit() {
   }, [filteredLogs, currentPage]);
 
   const formatHumanActionSentence = (log) => {
-    const userName = log.profiles?.full_name || t('logs.systemUser', 'النظام الآلي');
-    const tableName = t(`tables.${log.table_name}`, log.table_name);
-    const entityTitle = log.new_data?.full_name || log.new_data?.name || log.old_data?.full_name || log.old_data?.name;
+    const userName = String(log.profiles?.full_name || safeTranslate('logs.systemUser', 'النظام الآلي'));
+    const tableName = safeTranslate(`tables.${log.table_name}`, String(log.table_name || ''));
+    
+    const getTitle = (obj) => {
+      if (!obj) return '';
+      if (typeof obj.full_name === 'string') return obj.full_name;
+      if (typeof obj.name === 'string') return obj.name;
+      return '';
+    };
+
+    const entityTitle = getTitle(log.new_data) || getTitle(log.old_data);
     const entityText = entityTitle ? ` (${entityTitle})` : '';
 
     if (log.operation === 'INSERT') {
@@ -205,8 +223,8 @@ export default function RealtimeAudit() {
               <ShieldAlert size={20} />
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-bold tracking-tight text-[var(--text-main,#FFFFFF)]">{t('logs.title', 'سجل العمليات المباشر')}</h1>
-              <p className="text-[11px] text-[var(--text-sub,#94A3B8)] hidden sm:block">{t('logs.subtitle', 'متابعة التغييرات في الأكاديمية لحظة بلحظة')}</p>
+              <h1 className="text-base sm:text-xl font-bold tracking-tight text-[var(--text-main,#FFFFFF)]">{safeTranslate('logs.title', 'سجل العمليات المباشر')}</h1>
+              <p className="text-[11px] text-[var(--text-sub,#94A3B8)] hidden sm:block">{safeTranslate('logs.subtitle', 'متابعة التغييرات في الأكاديمية لحظة بلحظة')}</p>
             </div>
           </div>
 
@@ -219,7 +237,7 @@ export default function RealtimeAudit() {
             </button>
             <button 
               className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all"
-              title={t('logs.purgeOld', 'تنظيف السجلات القديمة')}
+              title={safeTranslate('logs.purgeOld', 'تنظيف السجلات القديمة')}
             >
               <Eraser size={15} />
             </button>
@@ -237,7 +255,7 @@ export default function RealtimeAudit() {
             }`}
           >
             <Sparkles size={14} />
-            <span>{t('logs.managerMode', 'وضع المدير (مبسط)')}</span>
+            <span>{safeTranslate('logs.managerMode', 'وضع المدير (مبسط)')}</span>
           </button>
           <button
             onClick={() => setIsAdvancedMode(true)}
@@ -248,7 +266,7 @@ export default function RealtimeAudit() {
             }`}
           >
             <Code size={14} />
-            <span>{t('logs.developerMode', 'وضع المطور (متقدم)')}</span>
+            <span>{safeTranslate('logs.developerMode', 'وضع المطور (متقدم)')}</span>
           </button>
         </div>
       </div>
@@ -263,7 +281,7 @@ export default function RealtimeAudit() {
               : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{t('logs.todayTotal', 'إجمالي اليوم')}</span>
+          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{safeTranslate('logs.todayTotal', 'إجمالي اليوم')}</span>
           <span className="text-sm sm:text-xl font-black text-[var(--text-main,#FFFFFF)]">{stats.todayTotal}</span>
         </div>
         <div 
@@ -274,7 +292,7 @@ export default function RealtimeAudit() {
               : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{t('logs.todayModifications', 'تعديلات اليوم')}</span>
+          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{safeTranslate('logs.todayModifications', 'تعديلات اليوم')}</span>
           <span className="text-sm sm:text-xl font-black text-[var(--text-main,#FFFFFF)]">{stats.inserts + stats.updates}</span>
         </div>
         <div 
@@ -285,7 +303,7 @@ export default function RealtimeAudit() {
               : 'bg-[var(--surface-card,rgba(15,23,42,0.85))] border-[var(--border-card,rgba(255,255,255,0.08))]'
           }`}
         >
-          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{t('logs.todayDeletes', 'حذف اليوم')}</span>
+          <span className="text-[10px] sm:text-xs text-[var(--text-sub,#94A3B8)] block truncate">{safeTranslate('logs.todayDeletes', 'حذف اليوم')}</span>
           <span className="text-sm sm:text-xl font-black text-red-400">{stats.deletes}</span>
         </div>
       </div>
@@ -299,7 +317,7 @@ export default function RealtimeAudit() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t('logs.searchPlaceholder', 'بحث باسم القسم، الطالب، أو المشرف...')}
+              placeholder={safeTranslate('logs.searchPlaceholder', 'بحث باسم القسم، الطالب، أو المشرف...')}
               className={`w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl py-2 text-xs text-[var(--text-main,#FFFFFF)] placeholder:text-[var(--text-sub,#94A3B8)] focus:outline-none focus:border-[var(--primary)] ${
                 isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
@@ -315,7 +333,7 @@ export default function RealtimeAudit() {
                 isRtl ? 'pr-9 pl-7' : 'pl-9 pr-7'
               }`}
             >
-              <option value="ALL">{t('logs.allUsers', 'جميع المشرفين')} ({uniqueUsers.length})</option>
+              <option value="ALL">{safeTranslate('logs.allUsers', 'جميع المشرفين')} ({uniqueUsers.length})</option>
               {uniqueUsers.map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
@@ -330,7 +348,7 @@ export default function RealtimeAudit() {
             startDate={startDate}
             endDate={endDate}
             onChange={(update) => setDateRange(update)}
-            placeholderText={t('logs.dateRangePlaceholder', 'اختر نطاق التاريخ...')}
+            placeholderText={safeTranslate('logs.dateRangePlaceholder', 'اختر نطاق التاريخ...')}
             isArabic={isRtl}
             className="w-full bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl py-2 px-3 focus:outline-none"
           />
@@ -340,10 +358,10 @@ export default function RealtimeAudit() {
         <div className="flex items-center justify-between gap-1.5 overflow-x-auto scrollbar-none pt-1">
           <div className="flex items-center gap-1.5">
             {[
-              { id: 'ALL', label: t('logs.allOps', 'الكل') },
-              { id: 'INSERT', label: t('logs.insertOp', 'إضافة') },
-              { id: 'UPDATE', label: t('logs.updateOp', 'تعديل') },
-              { id: 'DELETE', label: t('logs.deleteOp', 'حذف') }
+              { id: 'ALL', label: safeTranslate('logs.allOps', 'الكل') },
+              { id: 'INSERT', label: safeTranslate('logs.insertOp', 'إضافة') },
+              { id: 'UPDATE', label: safeTranslate('logs.updateOp', 'تعديل') },
+              { id: 'DELETE', label: safeTranslate('logs.deleteOp', 'حذف') }
             ].map((op) => (
               <button
                 key={op.id}
@@ -369,7 +387,7 @@ export default function RealtimeAudit() {
               }`}
             >
               <Filter size={12} />
-              <span>{onlyChanged ? t('logs.hideUnchanged', 'الحقول المعدلة فقط') : t('logs.showUnchanged', 'جميع الحقول')}</span>
+              <span>{onlyChanged ? safeTranslate('logs.hideUnchanged', 'الحقول المعدلة فقط') : safeTranslate('logs.showUnchanged', 'جميع الحقول')}</span>
             </button>
           )}
         </div>
@@ -380,11 +398,11 @@ export default function RealtimeAudit() {
         {loading ? (
           <div className="p-12 text-center text-xs text-[var(--text-sub,#94A3B8)] flex flex-col items-center gap-3">
             <Loader2 size={24} className="animate-spin text-[var(--primary)]" />
-            <span>{t('logs.loading', 'جاري تحميل البيانات...')}</span>
+            <span>{safeTranslate('logs.loading', 'جاري تحميل البيانات...')}</span>
           </div>
         ) : paginatedLogs.length === 0 ? (
           <div className="p-8 text-center text-xs text-[var(--text-sub,#94A3B8)] bg-[var(--surface-card,rgba(15,23,42,0.85))] rounded-xl border border-dashed border-[var(--border-card,rgba(255,255,255,0.08))]">
-            {t('logs.noLogs', 'لا توجد سجلات تطابق خيارات البحث الحالية')}
+            {safeTranslate('logs.noLogs', 'لا توجد سجلات تطابق خيارات البحث الحالية')}
           </div>
         ) : (
           paginatedLogs.map((log) => {
@@ -426,7 +444,7 @@ export default function RealtimeAudit() {
                         className="text-[10px] font-bold text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)] flex items-center gap-1 bg-[var(--surface-card,rgba(15,23,42,0.85))] px-2 py-1 rounded-lg border border-[var(--border-card,rgba(255,255,255,0.08))]"
                       >
                         <Code2 size={12} />
-                        <span>{showRaw ? t('logs.showFormatted', 'عرض التنسيق المنسق') : t('logs.showRaw', 'عرض JSON الخام')}</span>
+                        <span>{showRaw ? safeTranslate('logs.showFormatted', 'عرض التنسيق المنسق') : safeTranslate('logs.showRaw', 'عرض JSON الخام')}</span>
                       </button>
                     </div>
 
@@ -435,7 +453,7 @@ export default function RealtimeAudit() {
                         <button 
                           onClick={() => {
                             navigator.clipboard.writeText(JSON.stringify(log, null, 2));
-                            showToast(t('logs.copied', 'تم نسخ كود JSON'), 'success');
+                            showToast(safeTranslate('logs.copied', 'تم نسخ كود JSON'), 'success');
                           }}
                           className="absolute top-2 right-2 p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-sub,#94A3B8)] hover:text-[var(--text-main,#FFFFFF)]"
                         >
@@ -462,7 +480,7 @@ export default function RealtimeAudit() {
       {/* Pagination */}
       {!loading && filteredLogs.length > 0 && (
         <div className="p-3 rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md flex items-center justify-between text-xs text-[var(--text-sub,#94A3B8)] relative z-10">
-          <span>{t('logs.page', 'صفحة')} {currentPage} {t('logs.of', 'من')} {totalPages}</span>
+          <span>{safeTranslate('logs.page', 'صفحة')} {currentPage} {safeTranslate('logs.of', 'من')} {totalPages}</span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
