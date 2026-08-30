@@ -178,7 +178,7 @@ const AddStudentModal = ({
     } catch (err) {
       console.error('Error saving data:', err);
       alert(`${t('common.save_error', 'حدث خطأ أثناء الحفظ:')} ${err.message || ''}`);
-    } flex {
+    } finally {
       setIsSubmitting(false);
     }
   };
