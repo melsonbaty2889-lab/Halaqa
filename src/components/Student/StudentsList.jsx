@@ -18,10 +18,14 @@ const StudentsList = ({
   academyId, 
   halaqas = [], 
   isLoading,
-  onDeleteStudent
+  onDeleteStudent,
+  academySettings // إضافة كـ prop اختياري إن وجد
 }) => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
+
+  // استخراج نوع التقويم بأمان من الإعدادات دون التسبب في خطأ ReferenceError
+  const calendarType = academySettings?.calendar_type || 'gregorian';
 
   // حالات البحث والفلترة والترتيب
   const [searchQuery, setSearchQuery] = useState('');
@@ -243,10 +247,9 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 3. عناصر البحث والفلترة والترتيب (تخطيط متجاوب مضبوط) */}
+      {/* 3. عناصر البحث والفلترة والترتيب */}
       <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          {/* البحث الشامل: يأخذ السطر كاملاً في الشاشة الرأسية للموبايل وفي الشاشة العريضة يأخذ 1 column */}
           <div className="relative w-full col-span-2 md:col-span-1">
             <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
             <input
@@ -258,7 +261,6 @@ const StudentsList = ({
             />
           </div>
 
-          {/* فلتر الحالة */}
           <div className="relative z-30 col-span-1">
             <CustomSelect
               value={statusFilter}
@@ -268,7 +270,6 @@ const StudentsList = ({
             />
           </div>
 
-          {/* فلتر الحلقة */}
           <div className="relative z-20 col-span-1">
             <CustomSelect
               value={halaqaFilter}
@@ -278,7 +279,6 @@ const StudentsList = ({
             />
           </div>
 
-          {/* ترتيب النتائج */}
           <div className="relative z-10 col-span-2 md:col-span-1">
             <CustomSelect
               value={sortBy}
@@ -289,7 +289,6 @@ const StudentsList = ({
           </div>
         </div>
 
-        {/* شريط معلومات الفلترة */}
         <div className="flex items-center justify-between text-xs text-appText-sub pt-2 px-1 border-t border-appBorder-card/40 relative z-0">
           <span className="flex items-center gap-1.5">
             <ListFilter className="w-3.5 h-3.5 text-primary" />
@@ -345,7 +344,8 @@ const StudentsList = ({
               student={student}
               onClick={() => setSelectedStudent(student)}
               getStatusBadge={getStatusBadge}
-                />
+              calendarType={calendarType}
+            />
           ))}
         </div>
       )}
