@@ -6,10 +6,12 @@ import { User, ChevronLeft, ChevronRight, Phone, Calendar, BookOpen } from 'luci
 import { formatName } from '@/utils/formatters';
 import { useAcademy } from '@/context/AcademyContext';
 
-const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gregorian' }) => {
+const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType }) => {
   const { t, i18n } = useTranslation();
   const { academy } = useAcademy?.() || {};
   const isRtl = i18n.dir() === 'rtl';
+
+  // اعتماد التقويم الممرر كـ prop أو المأخوذ من Context
   const activeCalendarType = calendarType || academy?.calendar_type || 'gregorian';
 
   const studentName = formatName(student.name || student.full_name || t('students.unnamed', 'بدون اسم'));
@@ -22,7 +24,7 @@ const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gre
     if (!dateString) return '';
     const date = new Date(dateString);
 
-    if (calendarType === 'hijri') {
+    if (activeCalendarType === 'hijri') {
       return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
         day: 'numeric',
         month: 'short',
@@ -52,8 +54,8 @@ const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gre
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors line-clamp-1 min-w-0 leading-tight">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors leading-tight">
                 {studentName}
               </h3>
               {student.student_code && (
