@@ -192,7 +192,6 @@ const StudentsList = ({
     { label: t('students.sort_newest', 'الأحدث إضافةً'), value: 'newest' },
   ];
 
-  // التحقق الدقيق من الفلاتر لإظهار زر "إلغاء الفلاتر"
   const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || halaqaFilter !== 'all' || sortBy !== 'name';
 
   return (
@@ -244,11 +243,11 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 3. عناصر البحث والفلترة والترتيب (تخطيط متجاوب وتجنب تداخل Z-Index) */}
+      {/* 3. عناصر البحث والفلترة والترتيب (معدلة لتصبح 2x2 في المحمول و 4 أفقية في الشاشات الواسعة) */}
       <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {/* البحث الشامل */}
-          <div className="relative w-full col-span-1 sm:col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* البحث الشامل (يأخذ صفاً كاملاً في الموبايل إذا لزم الأمر، أو نصف الشاشات) */}
+          <div className="relative w-full col-span-2 lg:col-span-1">
             <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -260,7 +259,7 @@ const StudentsList = ({
           </div>
 
           {/* فلتر الحالة */}
-          <div className="relative z-30">
+          <div className="relative z-30 col-span-1">
             <CustomSelect
               value={statusFilter}
               onChange={(val) => setStatusFilter(val)}
@@ -270,7 +269,7 @@ const StudentsList = ({
           </div>
 
           {/* فلتر الحلقة */}
-          <div className="relative z-20">
+          <div className="relative z-20 col-span-1">
             <CustomSelect
               value={halaqaFilter}
               onChange={(val) => setHalaqaFilter(val)}
@@ -280,7 +279,7 @@ const StudentsList = ({
           </div>
 
           {/* ترتيب النتائج */}
-          <div className="relative z-10">
+          <div className="relative z-10 col-span-2 lg:col-span-1">
             <CustomSelect
               value={sortBy}
               onChange={(val) => setSortBy(val)}
