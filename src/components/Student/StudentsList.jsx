@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Plus, Users, UserCheck, UserX, AlertCircle, 
-  FilterX, ListFilter 
+  FilterX, ListFilter, ArrowUpDown
 } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
@@ -23,28 +23,47 @@ const StudentsList = ({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
+  // حالات البحث والفلترة المتقدمة
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [halaqaFilter, setHalaqaFilter] = useState('all');
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [sortBy, setSortBy] = useState('name'); // name | newest
   
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
+  // توسيع دائرة البحث والفلترة
   const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
+    let result = students.filter((student) => {
       const formattedName = formatName(student.name || student.full_name || '');
+      const parentName = formatName(student.guardian_name || student.parent_name || '');
+      const query = searchQuery.toLowerCase().trim();
+
+      // بحث موحد في الاسم، هاتف الطالب، هاتف ولي الأمر، واسم ولي الأمر
       const matchesSearch =
-        formattedName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (student.parent_phone && student.parent_phone.includes(searchQuery)) ||
-        (student.phone && student.phone.includes(searchQuery));
+        formattedName.toLowerCase().includes(query) ||
+        parentName.toLowerCase().includes(query) ||
+        (student.parent_phone && student.parent_phone.includes(query)) ||
+        (student.phone && student.phone.includes(query)) ||
+        (student.national_id && student.national_id.includes(query));
 
       const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
       const matchesHalaqa = halaqaFilter === 'all' || student.halaqa_id === halaqaFilter;
 
       return matchesSearch && matchesStatus && matchesHalaqa;
     });
-  }, [students, searchQuery, statusFilter, halaqaFilter]);
+
+    // ترتيب النتائج
+    return result.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      }
+      const nameA = formatName(a.name || a.full_name || '');
+      const nameB = formatName(b.name || b.full_name || '');
+      return nameA.localeCompare(nameB, isRtl ? 'ar' : 'en');
+    });
+  }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, isRtl]);
 
   const stats = useMemo(() => {
     return {
@@ -58,6 +77,7 @@ const StudentsList = ({
     setSearchQuery('');
     setStatusFilter('all');
     setHalaqaFilter('all');
+    setSortBy('name');
   };
 
   const getStatusBadge = (status) => {
@@ -165,12 +185,17 @@ const StudentsList = ({
     })),
   ];
 
-  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || halaqaFilter !== 'all';
+  const sortOptions = [
+    { label: t('students.sort_name', 'ترتيب أبجدي'), value: 'name' },
+    { label: t('students.sort_newest', 'الأحدث إضافتاً'), value: 'newest' },
+  ];
+
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || halaqaFilter !== 'all' || sortBy !== 'name';
 
   return (
     <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
-      {/* 1. هيدر مدمج وعصري لمظهر احترافي يضمن استغلال المساحة */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl relative overflow-hidden">
+      {/* 1. هيدر مدمج وعصري */}
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3 text-start w-full sm:w-auto">
           <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Users className="w-5 h-5" />
@@ -195,41 +220,43 @@ const StudentsList = ({
         </button>
       </div>
 
-      {/* 2. كروت الإحصائيات بترتيب صحيحي من اليمين للشمال مع ضبط الأحجام */}
+      {/* 2. كروت الإحصائيات الأنيقة بأحجام خطوط متناسقة تمنع التفاف النص */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <div className="bg-dark-card border border-appBorder-card rounded-xl p-3 text-center relative overflow-hidden shadow-sm">
+        <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
           <div className="absolute top-0 start-0 end-0 h-1 bg-primary"></div>
-          <p className="text-[11px] sm:text-xs text-appText-sub truncate font-medium">{t('students.total_count', 'إجمالي الطلاب')}</p>
+          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.total_count', 'إجمالي الطلاب')}</p>
           <p className="text-base sm:text-xl font-bold text-appText-main mt-1">{stats.total}</p>
         </div>
 
-        <div className="bg-dark-card border border-appBorder-card rounded-xl p-3 text-center relative overflow-hidden shadow-sm">
+        <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
           <div className="absolute top-0 start-0 end-0 h-1 bg-emerald-500"></div>
-          <p className="text-[11px] sm:text-xs text-appText-sub truncate font-medium">{t('students.active_count', 'النشطون')}</p>
+          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.active_count', 'النشطون')}</p>
           <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{stats.active}</p>
         </div>
 
-        <div className="bg-dark-card border border-appBorder-card rounded-xl p-3 text-center relative overflow-hidden shadow-sm">
+        <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
           <div className="absolute top-0 start-0 end-0 h-1 bg-rose-500"></div>
-          <p className="text-[11px] sm:text-xs text-appText-sub truncate font-medium">{t('students.inactive_count', 'غير النشطين')}</p>
+          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.inactive_count', 'غير النشطين')}</p>
           <p className="text-base sm:text-xl font-bold text-rose-400 mt-1">{stats.inactive}</p>
         </div>
       </div>
 
-      {/* 3. شريط البحث والتصفية المدمج */}
+      {/* 3. شريط البحث الموسع والفلاتر المتقدمة */}
       <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-          <div className="relative w-full md:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* البحث الشامل */}
+          <div className="relative w-full lg:col-span-1">
             <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('students.search_placeholder', 'البحث باسم الطالب أو الهاتف...')}
+              placeholder={t('students.search_placeholder_expanded', 'بحث بالاسم، الهوية، أو الهاتف...')}
               className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-primary transition-colors"
             />
           </div>
 
+          {/* فلتر الحالة */}
           <CustomSelect
             value={statusFilter}
             onChange={(val) => setStatusFilter(val)}
@@ -237,15 +264,24 @@ const StudentsList = ({
             placeholder={t('students.filter_all', 'جميع الحالات')}
           />
 
+          {/* فلتر الحلقة */}
           <CustomSelect
             value={halaqaFilter}
             onChange={(val) => setHalaqaFilter(val)}
             options={halaqaOptions}
             placeholder={t('students.filter_all_halaqas', 'جميع الحلقات')}
           />
+
+          {/* ترتيب النتائج */}
+          <CustomSelect
+            value={sortBy}
+            onChange={(val) => setSortBy(val)}
+            options={sortOptions}
+            placeholder={t('students.sort_by', 'ترتيب حسب')}
+          />
         </div>
 
-        {/* شريط معلومات الفلترة */}
+        {/* شريط معلومات الفلترة وإلغاء التصفية */}
         <div className="flex items-center justify-between text-xs text-appText-sub pt-2 px-1 border-t border-appBorder-card/40">
           <span className="flex items-center gap-1.5">
             <ListFilter className="w-3.5 h-3.5 text-primary" />
