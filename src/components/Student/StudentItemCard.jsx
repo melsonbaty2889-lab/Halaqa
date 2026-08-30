@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, ChevronLeft, ChevronRight, Phone, Calendar, BookOpen } from 'lucide-react';
 import { formatName } from '@/utils/formatters';
+import { useAcademy } from '@/context/AcademyContext';
 
 const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gregorian' }) => {
   const { t, i18n } = useTranslation();
