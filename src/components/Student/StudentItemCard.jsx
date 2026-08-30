@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { User, ChevronLeft, ChevronRight, Phone, Calendar, BookOpen } from 'lucide-react';
 import { formatName } from '@/utils/formatters';
 
-const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
+const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gregorian' }) => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
@@ -14,6 +14,22 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
   const joinDate = student.created_at || student.join_date || null;
   const halaqaName = student.halaqa_name || student.halaqas?.name || '';
 
+  // دالة تنسيق التاريخ بناءً على نوع التقويم المعتمد للأكاديمية
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+
+    if (calendarType === 'hijri') {
+      return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }).format(date);
+    }
+
+    return date.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US');
+  };
+
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
   return (
@@ -21,10 +37,9 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
       onClick={() => onClick(student)}
       className="bg-dark-card border border-appBorder-card hover:border-primary/40 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg hover:shadow-primary-glow/10 relative overflow-hidden"
     >
-      <div className="flex items-center justify-between gap-2.5 sm:gap-4">
-        {/* معلومات الطالب الأساسية */}
+      <div className="flex items-center justify-between gap-3">
+        {/* معلومات الطالب */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* الصورة الشخصية */}
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-dark-input border border-appBorder-input flex items-center justify-center text-appText-sub font-semibold group-hover:border-primary/50 group-hover:text-primary transition-colors shrink-0 overflow-hidden">
             {student.avatar_url ? (
               <img src={student.avatar_url} alt={studentName} className="w-full h-full object-cover" />
@@ -33,10 +48,9 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
             )}
           </div>
 
-          {/* اسم الطالب وتفاصيله */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors truncate min-w-0 leading-tight">
+              <h3 className="font-bold text-appText-main text-sm sm:text-base group-hover:text-primary transition-colors truncate">
                 {studentName}
               </h3>
               {student.student_code && (
@@ -46,41 +60,34 @@ const StudentItemCard = ({ student, onClick, getStatusBadge }) => {
               )}
             </div>
 
-            {/* تفاصيل الهواتف والتاريخ والحلقة */}
-            <div className="flex items-center gap-x-3 gap-y-1.5 text-xs text-appText-sub mt-1.5 flex-wrap">
+            <div className="flex items-center gap-x-3 gap-y-1 text-xs text-appText-sub mt-1 flex-wrap">
               {halaqaName && (
-                <span className="flex items-center gap-1 truncate max-w-[120px] sm:max-w-none">
-                  <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="flex items-center gap-1 text-primary/90 font-medium">
+                  <BookOpen className="w-3 h-3 shrink-0" />
                   <span className="truncate">{halaqaName}</span>
                 </span>
               )}
 
               {phone && (
-                <span className="flex items-center gap-1 dir-ltr font-mono text-[11px] text-appText-sub/90" dir="ltr">
+                <span className="flex items-center gap-1 dir-ltr font-mono text-[11px]" dir="ltr">
                   <Phone className="w-3 h-3 text-appText-muted shrink-0" />
                   <span>{phone}</span>
                 </span>
               )}
 
               {joinDate && (
-                <span className="flex items-center gap-1 text-[11px] text-appText-sub/80">
+                <span className="flex items-center gap-1 text-[11px]">
                   <Calendar className="w-3 h-3 text-appText-muted shrink-0" />
-                  <span>
-                    {new Date(joinDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
-                  </span>
+                  <span>{formatDate(joinDate)}</span>
                 </span>
               )}
             </div>
           </div>
         </div>
 
-        {/* شارة الحالة والسهم الانتقالي */}
+        {/* شارة الحالة والسهم */}
         <div className="flex items-center gap-2 shrink-0">
-          {getStatusBadge && (
-            <div className="shrink-0">
-              {getStatusBadge(student.status)}
-            </div>
-          )}
+          {getStatusBadge && getStatusBadge(student.status)}
           <ArrowIcon className="w-4 h-4 text-appText-muted group-hover:text-primary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
         </div>
       </div>
