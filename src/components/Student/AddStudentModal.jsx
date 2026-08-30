@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle, Calendar } from 'lucide-react';
+import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
 import { calculateAge } from '@/utils/dateUtils';
@@ -30,6 +30,8 @@ const AddStudentModal = ({
     nationality: '',
     halaqa_id: '',
     preferred_riwayah: '',
+    current_juz: null,
+    memorization_system: '',
     parent_name: '',
     parent_phone: '',
     parent_whatsapp: '',
@@ -61,6 +63,8 @@ const AddStudentModal = ({
         nationality: studentToEdit.nationality || '',
         halaqa_id: studentToEdit.halaqa_id || '',
         preferred_riwayah: studentToEdit.preferred_riwayah || '',
+        current_juz: studentToEdit.current_juz || null,
+        memorization_system: studentToEdit.memorization_system || '',
         parent_name: studentToEdit.parent_name || '',
         parent_phone: studentToEdit.parent_phone || '',
         parent_whatsapp: studentToEdit.parent_whatsapp || '',
@@ -81,6 +85,8 @@ const AddStudentModal = ({
         nationality: '',
         halaqa_id: '',
         preferred_riwayah: '',
+        current_juz: null,
+        memorization_system: '',
         parent_name: '',
         parent_phone: '',
         parent_whatsapp: '',
@@ -145,6 +151,8 @@ const AddStudentModal = ({
         nationality: formData.nationality || null,
         halaqa_id: formData.halaqa_id || null,
         preferred_riwayah: formData.preferred_riwayah || null,
+        current_juz: formData.current_juz || null,
+        memorization_system: formData.memorization_system || null,
         parent_name: showParentFields && formData.parent_name.trim() ? formData.parent_name.trim() : null,
         parent_phone: showParentFields && formData.parent_phone.trim() ? formData.parent_phone.trim() : null,
         parent_whatsapp: showParentFields && formData.parent_whatsapp.trim() ? formData.parent_whatsapp.trim() : null,
@@ -320,11 +328,11 @@ const AddStudentModal = ({
             </div>
           </div>
 
-          {/* الحلقة والتلاوة */}
+          {/* الحلقة والتلاوة والمستوى */}
           <div className="space-y-4 pt-4 border-t border-appBorder-card">
             <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" />
-              <span>{t('students.halaqa_and_recitation', 'الحلقة والتلاوة')}</span>
+              <span>{t('students.halaqa_and_recitation', 'الحلقة والتلاوة والمستوى')}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -353,6 +361,35 @@ const AddStudentModal = ({
                 }))}
               />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                  {t('students.current_juz', 'الجزء الحالي (1 - 30)')}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={formData.current_juz || ''}
+                  onChange={(e) => setFormData({ ...formData, current_juz: e.target.value ? parseInt(e.target.value) : null })}
+                  placeholder="1 - 30"
+                  className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm focus:outline-none focus:border-appBorder-hover transition-colors"
+                />
+              </div>
+
+              <CustomSelect
+                label={t('students.memorization_system', 'نظام المراجعة/الحفظ')}
+                placeholder={t('students.ph_memorization_system', 'اختر النظام...')}
+                value={formData.memorization_system || ''}
+                onChange={(val) => setFormData({ ...formData, memorization_system: val })}
+                options={[
+                  { label: t('students.sys_juz', 'أجزاء كاملة'), value: 'juz' },
+                  { label: t('students.sys_pages', 'صفحات'), value: 'pages' },
+                  { label: t('students.sys_quarters', 'أرباع'), value: 'quarters' },
+                ]}
+              />
+            </div>
           </div>
 
           {/* بيانات ولي الأمر */}
@@ -363,7 +400,6 @@ const AddStudentModal = ({
                 <span>{t('students.parent_info', 'بيانات ولي الأمر')}</span>
               </h3>
 
-              {/* Toggle Switch بدلاً من الرابط النصي */}
               <label className="inline-flex items-center gap-2 cursor-pointer select-none">
                 <span className="text-xs text-appText-sub">
                   {showParentFields ? t('common.enabled', 'مفعل') : t('common.disabled', 'معطل')}
@@ -463,7 +499,7 @@ const AddStudentModal = ({
           </div>
         </form>
 
-        {/* Footer ثابت مع ظل خفيف وتأثير خلفية ناعم */}
+        {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card/95 backdrop-blur-md shrink-0">
           <button
             type="button"
