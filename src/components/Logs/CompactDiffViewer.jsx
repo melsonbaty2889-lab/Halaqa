@@ -4,11 +4,24 @@ import { ArrowLeftRight } from 'lucide-react';
 import { TECHNICAL_KEYS, toHumanValue } from './logs.config';
 
 export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
-  const isUpdate = log.operation === 'UPDATE' && log.old_data && log.new_data;
+  const isUpdate = log?.operation === 'UPDATE' && log?.old_data && log?.new_data;
+
+  // دالة مساعدة لضمان إرجاع نص دائماً للتسميات (Labels)
+  const getLabel = (key) => {
+    if (!key) return '';
+    const fieldTranslation = t?.fields?.[key];
+    if (fieldTranslation) {
+      if (typeof fieldTranslation === 'string') return fieldTranslation;
+      if (typeof fieldTranslation === 'object') {
+        return fieldTranslation.ar || fieldTranslation.en || key;
+      }
+    }
+    return key;
+  };
 
   if (isUpdate) {
     const allKeys = Array.from(new Set([...Object.keys(log.old_data || {}), ...Object.keys(log.new_data || {})]));
-    
+
     const filteredKeys = allKeys.filter((key) => {
       if (!isAdvancedMode && TECHNICAL_KEYS.includes(key)) return false;
 
@@ -34,7 +47,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
           {filteredKeys.map((key) => {
             const oldVal = toHumanValue(log.old_data?.[key], t);
             const newVal = toHumanValue(log.new_data?.[key], t);
-            const label = toHumanValue(t?.fields?.[key], t) || key;
+            const label = getLabel(key);
 
             return (
               <div key={key} className="p-2.5 text-xs flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
@@ -43,11 +56,11 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
                 </span>
                 <div className="flex items-center gap-2 text-[11px] font-mono">
                   <span className="line-through text-red-400 bg-red-950/30 px-2 py-0.5 rounded border border-red-900/30">
-                    {oldVal}
+                    {String(oldVal)}
                   </span>
                   <ArrowLeftRight size={12} className="text-[var(--text-sub,#94A3B8)] shrink-0" />
                   <span className="text-[var(--primary)] font-bold bg-[var(--primary)]/10 px-2 py-0.5 rounded border border-[var(--primary)]/20">
-                    {newVal}
+                    {String(newVal)}
                   </span>
                 </div>
               </div>
@@ -58,7 +71,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
     );
   }
 
-  const displayData = log.new_data || log.old_data || {};
+  const displayData = log?.new_data || log?.old_data || {};
   const entries = Object.entries(displayData).filter(([key, val]) => {
     if (!isAdvancedMode) {
       if (TECHNICAL_KEYS.includes(key)) return false;
@@ -71,7 +84,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {entries.map(([key, val]) => {
-        const label = toHumanValue(t?.fields?.[key], t) || key;
+        const label = getLabel(key);
         const formattedVal = toHumanValue(val, t);
 
         return (
@@ -80,7 +93,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
               {label}
             </span>
             <span className="font-semibold text-[var(--text-main,#FFFFFF)] text-[11px] truncate max-w-[180px]">
-              {formattedVal}
+              {String(formattedVal)}
             </span>
           </div>
         );
