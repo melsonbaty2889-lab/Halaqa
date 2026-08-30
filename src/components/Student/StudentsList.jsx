@@ -243,11 +243,11 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 3. عناصر البحث والفلترة والترتيب (معدلة لتصبح 2x2 في المحمول و 4 أفقية في الشاشات الواسعة) */}
+      {/* 3. عناصر البحث والفلترة والترتيب (تخطيط متجاوب مضبوط) */}
       <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {/* البحث الشامل (يأخذ صفاً كاملاً في الموبايل إذا لزم الأمر، أو نصف الشاشات) */}
-          <div className="relative w-full col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          {/* البحث الشامل: يأخذ السطر كاملاً في الشاشة الرأسية للموبايل وفي الشاشة العريضة يأخذ 1 column */}
+          <div className="relative w-full col-span-2 md:col-span-1">
             <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -279,7 +279,7 @@ const StudentsList = ({
           </div>
 
           {/* ترتيب النتائج */}
-          <div className="relative z-10 col-span-2 lg:col-span-1">
+          <div className="relative z-10 col-span-2 md:col-span-1">
             <CustomSelect
               value={sortBy}
               onChange={(val) => setSortBy(val)}
