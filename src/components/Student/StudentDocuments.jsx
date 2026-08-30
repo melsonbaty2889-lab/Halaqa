@@ -31,7 +31,7 @@ export const StudentDocuments = ({ studentId, studentName, onBack }) => {
       setDocuments(data || []);
     } catch (err) {
       console.error('Error fetching documents:', err);
-    } font
+    } 
     finally {
       setLoading(false);
     }
