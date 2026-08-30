@@ -68,7 +68,6 @@ export default function RealtimeAudit() {
     if (!log) return safeTranslate('logs.systemUser', 'النظام الآلي');
     
     const profile = log.profiles;
-    if (typeof profile === 'string' && profile.trim() !== '') return profile;
     if (profile && typeof profile === 'object') {
       if (typeof profile.full_name === 'string' && profile.full_name.trim() !== '') {
         return profile.full_name;
@@ -77,6 +76,8 @@ export default function RealtimeAudit() {
         return profile.name;
       }
     }
+
+    if (typeof profile === 'string' && profile.trim() !== '') return profile;
     
     if (log.changed_by && typeof log.changed_by === 'string') {
       return `#${log.changed_by.substring(0, 6)}`;
@@ -130,7 +131,7 @@ export default function RealtimeAudit() {
             .from('profiles')
             .select('full_name, role')
             .eq('id', payload.new.changed_by)
-            .single();
+            .maybeSingle();
           userProfile = data;
         }
 
@@ -160,6 +161,7 @@ export default function RealtimeAudit() {
     };
   }, [logs]);
 
+  // قائمة المشرفين في التصفية (Dropdown)
   const uniqueUsers = useMemo(() => {
     const userMap = new Map();
     logs.forEach((log) => {
