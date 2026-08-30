@@ -1,3 +1,5 @@
+// src/components/Student/StudentsList.jsx
+
 import React, { useState, useMemo } from 'react';
 import { Search, Plus, Filter, Users, UserCheck, UserX, AlertCircle } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
@@ -6,7 +8,14 @@ import AddStudentModal from './AddStudentModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
 
-const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isLoading }) => {
+const StudentsList = ({ 
+  students = [], 
+  setStudents, 
+  academyId, 
+  halaqas = [], 
+  isLoading,
+  onDeleteStudent // 👈 تمت إضافة دالة الحذف الخاصة بالـ Hook
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -106,11 +115,25 @@ const StudentsList = ({ students = [], setStudents, academyId, halaqas = [], isL
         halaqas={halaqas}
         onBack={() => setSelectedStudent(null)}
         onEdit={(studentToEdit) => handleOpenEditModal(studentToEdit)}
-        onDelete={(studentId) => {
-          if (setStudents) {
-            setStudents((prev) => prev.filter((s) => s.id !== studentId));
+        onDelete={async (studentId) => {
+          if (window.confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
+            if (onDeleteStudent) {
+              const res = await onDeleteStudent(studentId);
+              if (res?.success) {
+                if (setStudents) {
+                  setStudents((prev) => prev.filter((s) => s.id !== studentId));
+                }
+                setSelectedStudent(null);
+              } else {
+                alert('فشل الحذف من قاعدة البيانات: ' + (res?.error || 'حدث خطأ غیر معروف'));
+              }
+            } else {
+              if (setStudents) {
+                setStudents((prev) => prev.filter((s) => s.id !== studentId));
+              }
+              setSelectedStudent(null);
+            }
           }
-          setSelectedStudent(null);
         }}
       />
     );
