@@ -20,34 +20,37 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
     : 'غير مسكن بحلقة';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-appText-main">
       {/* شريط التحكم والأزرار العلوي */}
-      <div className="card-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={onBack}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
+            className="p-2 bg-dark-input hover:bg-appBorder-input/50 text-appText-sub hover:text-appText-main rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
           >
             <ArrowRight className="w-5 h-5 rtl:rotate-0 ltr:rotate-180" />
             <span>رجوع</span>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">{studentName}</h1>
+            <h1 className="text-xl font-bold text-appText-main">{studentName}</h1>
             <p className="text-xs text-appText-sub mt-0.5">الملف الشخصي للطالب</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onEdit(student)}
-            className="btn-secondary text-amber-400 hover:bg-amber-500/10 border-amber-500/20"
+            className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
           >
             <Edit className="w-4 h-4" />
             <span>تعديل</span>
           </button>
           <button
+            type="button"
             onClick={() => onDelete(student.id)}
-            className="btn-secondary text-rose-400 hover:bg-rose-500/10 border-rose-500/20"
+            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
           >
             <Trash2 className="w-4 h-4" />
             <span>حذف</span>
@@ -58,21 +61,23 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       {/* التبويبات Tabs */}
       <div className="flex items-center gap-2 border-b border-appBorder-card pb-2">
         <button
+          type="button"
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
             activeTab === 'overview'
-              ? 'bg-primary-600 text-white'
-              : 'text-appText-sub hover:bg-dark-card hover:text-white'
+              ? 'bg-primary text-appText-main shadow-md shadow-primary-glow font-bold'
+              : 'text-appText-sub hover:bg-dark-card hover:text-appText-main'
           }`}
         >
           نظرة عامة
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('documents')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors flex items-center gap-2 ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all flex items-center gap-2 ${
             activeTab === 'documents'
-              ? 'bg-primary-600 text-white'
-              : 'text-appText-sub hover:bg-dark-card hover:text-white'
+              ? 'bg-primary text-appText-main shadow-md shadow-primary-glow font-bold'
+              : 'text-appText-sub hover:bg-dark-card hover:text-appText-main'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -83,19 +88,19 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       {/* محتوى التبويب */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card-surface space-y-4">
-            <h3 className="text-sm font-bold text-white border-b border-appBorder-card pb-2 flex items-center gap-2">
+          <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" />
               البيانات الأكاديمية
             </h3>
             <div className="space-y-3 text-sm">
               <div>
                 <span className="text-appText-sub block text-xs">الحلقة:</span>
-                <span className="text-white font-medium">{halaqaName}</span>
+                <span className="text-appText-main font-medium">{halaqaName}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">الرواية المفضلة:</span>
-                <span className="text-white font-medium">{student.preferred_riwayah || 'غير محددة'}</span>
+                <span className="text-appText-main font-medium">{student.preferred_riwayah || 'غير محددة'}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">حالة الطالب:</span>
@@ -114,41 +119,41 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
             </div>
           </div>
 
-          <div className="card-surface space-y-4 md:col-span-2">
-            <h3 className="text-sm font-bold text-white border-b border-appBorder-card pb-2">
+          <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4 md:col-span-2">
+            <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2">
               البيانات الشخصية وولي الأمر
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-appText-sub block text-xs">الجنس:</span>
-                <span className="text-white font-medium">{student.gender === 'female' ? 'أنثى' : 'ذكر'}</span>
+                <span className="text-appText-main font-medium">{student.gender === 'female' ? 'أنثى' : 'ذكر'}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">تاريخ الميلاد:</span>
-                <span className="text-white font-medium" dir="ltr">{student.birth_date || 'غير محدد'}</span>
+                <span className="text-appText-main font-medium" dir="ltr">{student.birth_date || 'غير محدد'}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">الدولة:</span>
-                <span className="text-white font-medium">{student.country || 'غير محددة'}</span>
+                <span className="text-appText-main font-medium">{student.country || 'غير محددة'}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">ولي الأمر:</span>
-                <span className="text-white font-medium">{student.parent_name || 'غير محدد'}</span>
+                <span className="text-appText-main font-medium">{student.parent_name || 'غير محدد'}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">هاتف ولي الأمر:</span>
-                <span className="text-white font-medium" dir="ltr">{student.parent_phone || 'غير محدد'}</span>
+                <span className="text-appText-main font-medium" dir="ltr">{student.parent_phone || 'غير محدد'}</span>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">واتساب ولي الأمر:</span>
-                <span className="text-white font-medium" dir="ltr">{student.parent_whatsapp || 'غير محدد'}</span>
+                <span className="text-appText-main font-medium" dir="ltr">{student.parent_whatsapp || 'غير محدد'}</span>
               </div>
             </div>
 
             {student.notes?.text && (
               <div className="pt-3 border-t border-appBorder-card">
                 <span className="text-appText-sub block text-xs mb-1">ملاحظات:</span>
-                <p className="text-xs text-slate-300 bg-dark-card p-3 rounded-xl border border-appBorder-input">
+                <p className="text-xs text-appText-sub bg-dark-input p-3 rounded-xl border border-appBorder-input">
                   {student.notes.text}
                 </p>
               </div>
