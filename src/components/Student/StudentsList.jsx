@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Plus, Users, UserCheck, UserX, AlertCircle, 
-  FilterX, LayoutGrid, ListFilter, BookOpen 
+  FilterX, ListFilter 
 } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
@@ -31,7 +31,6 @@ const StudentsList = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
-  // تصفية الطلاب حسب البحث، الحالة، والحلقة
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const formattedName = formatName(student.name || student.full_name || '');
@@ -47,7 +46,6 @@ const StudentsList = ({
     });
   }, [students, searchQuery, statusFilter, halaqaFilter]);
 
-  // إحصائيات سريعة
   const stats = useMemo(() => {
     return {
       total: students.length,
@@ -170,64 +168,68 @@ const StudentsList = ({
   const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || halaqaFilter !== 'all';
 
   return (
-    <div className="space-y-5 text-appText-main" dir={i18n.dir()}>
-      {/* 1. الهيدر الرئيسي وزر الإضافة */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-6 text-center relative overflow-hidden space-y-3 shadow-xl">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20">
-          <Users className="w-6 h-6" />
+    <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
+      {/* 1. هيدر مدمج وعصري لمظهر احترافي يضمن استغلال المساحة */}
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl relative overflow-hidden">
+        <div className="flex items-center gap-3 text-start w-full sm:w-auto">
+          <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-primary/10 text-primary border border-primary/20">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-appText-main leading-snug">
+              {t('students.title', 'قائمة الطلاب')}
+            </h1>
+            <p className="text-xs text-appText-sub">
+              {t('students.subtitle', 'إدارة وتنظيم بيانات الطلاب والمتابعة اليومية')}
+            </p>
+          </div>
         </div>
-        <h1 className="text-xl font-bold text-appText-main">
-          {t('students.title', 'قائمة الطلاب')}
-        </h1>
-        <p className="text-xs text-appText-sub max-w-md mx-auto">
-          {t('students.subtitle', 'إدارة وتنظيم بيانات الطلاب والمتابعة اليومية')}
-        </p>
 
-        <div className="pt-2">
-          <button 
-            type="button"
-            onClick={handleOpenAddModal} 
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-appText-main font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary-glow active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('students.add_new', 'إضافة طالب جديد')}</span>
-          </button>
+        <button 
+          type="button"
+          onClick={handleOpenAddModal} 
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-appText-main font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-primary-glow active:scale-95 shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{t('students.add_new', 'إضافة طالب جديد')}</span>
+        </button>
+      </div>
+
+      {/* 2. كروت الإحصائيات بترتيب صحيحي من اليمين للشمال مع ضبط الأحجام */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-dark-card border border-appBorder-card rounded-xl p-3 text-center relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 start-0 end-0 h-1 bg-primary"></div>
+          <p className="text-[11px] sm:text-xs text-appText-sub truncate font-medium">{t('students.total_count', 'إجمالي الطلاب')}</p>
+          <p className="text-base sm:text-xl font-bold text-appText-main mt-1">{stats.total}</p>
+        </div>
+
+        <div className="bg-dark-card border border-appBorder-card rounded-xl p-3 text-center relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 start-0 end-0 h-1 bg-emerald-500"></div>
+          <p className="text-[11px] sm:text-xs text-appText-sub truncate font-medium">{t('students.active_count', 'النشطون')}</p>
+          <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{stats.active}</p>
+        </div>
+
+        <div className="bg-dark-card border border-appBorder-card rounded-xl p-3 text-center relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 start-0 end-0 h-1 bg-rose-500"></div>
+          <p className="text-[11px] sm:text-xs text-appText-sub truncate font-medium">{t('students.inactive_count', 'غير النشطين')}</p>
+          <p className="text-base sm:text-xl font-bold text-rose-400 mt-1">{stats.inactive}</p>
         </div>
       </div>
 
-      {/* 2. كروت الإحصائيات المحدثة */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center relative overflow-hidden shadow-md">
-          <div className="absolute top-0 start-0 end-0 h-1 bg-primary/40"></div>
-          <p className="text-xs text-appText-sub font-medium">{t('students.total_count', 'إجمالي الطلاب')}</p>
-          <p className="text-lg sm:text-2xl font-bold text-appText-main mt-1">{stats.total}</p>
-        </div>
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center relative overflow-hidden shadow-md">
-          <div className="absolute top-0 start-0 end-0 h-1 bg-emerald-500/50"></div>
-          <p className="text-xs text-appText-sub font-medium">{t('students.active_count', 'النشطون')}</p>
-          <p className="text-lg sm:text-2xl font-bold text-emerald-400 mt-1">{stats.active}</p>
-        </div>
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 text-center relative overflow-hidden shadow-md">
-          <div className="absolute top-0 start-0 end-0 h-1 bg-rose-500/50"></div>
-          <p className="text-xs text-appText-sub font-medium">{t('students.inactive_count', 'غير النشطين')}</p>
-          <p className="text-lg sm:text-2xl font-bold text-rose-400 mt-1">{stats.inactive}</p>
-        </div>
-      </div>
+      {/* 3. شريط البحث والتصفية المدمج */}
+      <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          <div className="relative w-full md:col-span-1">
+            <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('students.search_placeholder', 'البحث باسم الطالب أو الهاتف...')}
+              className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
 
-      {/* 3. شريط البحث والتصفية المتقدم */}
-      <div className="bg-dark-card/60 p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md">
-        <div className="relative w-full">
-          <Search className="w-4 h-4 text-appText-muted absolute start-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('students.search_placeholder', 'البحث باسم الطالب أو رقم الهاتف...')}
-            className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-10 pe-4 py-2.5 text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CustomSelect
             value={statusFilter}
             onChange={(val) => setStatusFilter(val)}
@@ -243,8 +245,8 @@ const StudentsList = ({
           />
         </div>
 
-        {/* شريط معلومات الفلترة وزر التصفير */}
-        <div className="flex items-center justify-between text-xs text-appText-sub pt-1 px-1 border-t border-appBorder-card/50">
+        {/* شريط معلومات الفلترة */}
+        <div className="flex items-center justify-between text-xs text-appText-sub pt-2 px-1 border-t border-appBorder-card/40">
           <span className="flex items-center gap-1.5">
             <ListFilter className="w-3.5 h-3.5 text-primary" />
             <span>
@@ -267,7 +269,7 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 4. قائمة الطلاب المفلترة */}
+      {/* 4. قائمة الطلاب */}
       {isLoading ? (
         <div className="text-center py-12 text-sm text-appText-sub">
           {t('common.loading', 'جاري تحميل الطلاب...')}
