@@ -1,3 +1,5 @@
+// src/components/Student/DocumentUploadModal.jsx
+
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -59,54 +61,61 @@ export const DocumentUploadModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div 
-        className="w-full max-w-lg bg-[#111827] text-white rounded-2xl shadow-2xl border border-gray-800 overflow-hidden animate-in fade-in zoom-in-95"
+        className="w-full max-w-lg bg-dark-card text-appText-main rounded-2xl shadow-2xl border border-appBorder-card overflow-hidden animate-in fade-in zoom-in-95"
         dir={i18n.dir()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-[#1f2937]/50">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-appBorder-card bg-dark-card shrink-0">
           <div className="flex items-center gap-2.5">
-            <UploadCloud className="w-5 h-5 text-amber-500" />
-            <h3 className="text-base font-bold text-gray-100">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <UploadCloud className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-appText-main">
               {t('documents.upload_title', 'رفع ملف جديد')}
             </h3>
           </div>
           <button 
+            type="button"
             onClick={handleClose} 
-            className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-gray-800"
+            className="text-appText-sub hover:text-appText-main transition-colors p-1.5 rounded-lg hover:bg-dark-input"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Document Type Select */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-300">
-              {t('documents.type_label', 'نوع المستند')} <span className="text-amber-500">*</span>
+            <label className="block text-xs font-medium text-appText-sub">
+              {t('documents.type_label', 'نوع المستند')} <span className="text-primary">*</span>
             </label>
             <select
               value={documentType}
               onChange={(e) => setDocumentType(e.target.value)}
-              className="w-full bg-[#1f2937] border border-gray-700 text-gray-100 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500 transition-colors"
+              className="w-full bg-dark-input border border-appBorder-input text-appText-main text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-appBorder-hover transition-colors"
             >
               {DOCUMENT_TYPES.map((type) => (
-                <option key={type} value={type}>
+                <option key={type} value={type} className="bg-dark-card text-appText-main">
                   {t(`documents.types.${type}`, type.replace('_', ' '))}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* File Upload Zone */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-300">
-              {t('documents.file_label', 'الملف')} <span className="text-amber-500">*</span>
+            <label className="block text-xs font-medium text-appText-sub">
+              {t('documents.file_label', 'الملف')} <span className="text-primary">*</span>
             </label>
             <div 
               onClick={() => fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                 selectedFile 
-                  ? 'border-emerald-500/50 bg-emerald-500/5' 
-                  : 'border-gray-700 hover:border-amber-500/50 bg-[#1f2937]/40 hover:bg-[#1f2937]/80'
+                  ? 'border-brandEmerald-border bg-brandEmerald-bg' 
+                  : 'border-appBorder-input hover:border-primary/50 bg-dark-input/50 hover:bg-dark-input'
               }`}
             >
               <input
@@ -119,35 +128,37 @@ export const DocumentUploadModal = ({
 
               {selectedFile ? (
                 <div className="flex items-center justify-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-6 h-6 text-brandEmerald shrink-0" />
                   <div className="text-start overflow-hidden">
-                    <p className="text-sm font-medium text-gray-200 truncate">{selectedFile.name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm font-medium text-appText-main truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-appText-sub">
                       {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2 pointer-events-none">
-                  <UploadCloud className="w-8 h-8 text-amber-500 mx-auto" />
-                  <p className="text-sm font-medium text-gray-300">
+                  <UploadCloud className="w-8 h-8 text-primary mx-auto" />
+                  <p className="text-sm font-medium text-appText-main">
                     {t('documents.drag_drop_text', 'انقر هنا لاختيار ملف من جهازك')}
                   </p>
-                  <p className="text-xs text-gray-500">PDF, PNG, JPG (MAX. 10MB)</p>
+                  <p className="text-xs text-appText-muted">PDF, PNG, JPG (MAX. 10MB)</p>
                 </div>
               )}
             </div>
           </div>
 
+          {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+            <div className="flex items-center gap-2 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
+          {/* Notes */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-300">
+            <label className="block text-xs font-medium text-appText-sub">
               {t('documents.notes_label', 'ملاحظات')}
             </label>
             <textarea
@@ -155,23 +166,24 @@ export const DocumentUploadModal = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('documents.notes_placeholder', 'تفاصيل أو ملاحظات إضافية...')}
               rows={3}
-              className="w-full bg-[#1f2937] border border-gray-700 text-gray-100 placeholder-gray-500 text-sm rounded-xl p-3 focus:outline-none focus:border-amber-500 transition-colors resize-none"
+              className="w-full bg-dark-input border border-appBorder-input text-appText-main placeholder-appText-muted text-sm rounded-xl p-3 focus:outline-none focus:border-appBorder-hover transition-colors resize-none"
             />
           </div>
 
+          {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="px-5 py-2.5 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 text-sm font-medium text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors disabled:opacity-50"
             >
               {t('common.cancel', 'إلغاء')}
             </button>
             <button
               type="submit"
               disabled={isLoading || !selectedFile}
-              className="px-6 py-2.5 text-sm font-medium text-black bg-amber-500 hover:bg-amber-400 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
+              className="px-6 py-2.5 text-sm font-bold text-appText-main bg-primary hover:bg-primary-hover rounded-xl transition-all shadow-lg shadow-primary-glow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? t('common.uploading', 'جاري الرفع...') : t('common.upload', 'رفع')}
             </button>
