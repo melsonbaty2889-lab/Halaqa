@@ -3,6 +3,28 @@ import React from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 import { TECHNICAL_KEYS, toHumanValue } from './logs.config';
 
+// دالة مساعدة لضمان تحويل أي قيمة (حتى الكائنات) إلى نص صريح وآمن
+const formatSafeDisplay = (val, t) => {
+  const humanValue = toHumanValue(val, t);
+  
+  if (humanValue === null || humanValue === undefined) return '—';
+  if (typeof humanValue === 'object') {
+    if (typeof humanValue.full_name === 'string') return humanValue.full_name;
+    if (typeof humanValue.name === 'string') return humanValue.name;
+    if (typeof humanValue.title === 'string') return humanValue.title;
+    if (typeof humanValue.ar === 'string') return humanValue.ar;
+    if (typeof humanValue.en === 'string') return humanValue.en;
+    
+    try {
+      return JSON.stringify(humanValue);
+    } catch {
+      return '—';
+    }
+  }
+  
+  return String(humanValue);
+};
+
 export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t }) {
   const isUpdate = log?.operation === 'UPDATE' && log?.old_data && log?.new_data;
 
@@ -25,8 +47,8 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
     const filteredKeys = allKeys.filter((key) => {
       if (!isAdvancedMode && TECHNICAL_KEYS.includes(key)) return false;
 
-      const oldVal = toHumanValue(log.old_data?.[key], t);
-      const newVal = toHumanValue(log.new_data?.[key], t);
+      const oldVal = formatSafeDisplay(log.old_data?.[key], t);
+      const newVal = formatSafeDisplay(log.new_data?.[key], t);
       const isChanged = oldVal !== newVal;
 
       if (onlyChanged && !isChanged) return false;
@@ -45,8 +67,8 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
       <div className="space-y-1.5">
         <div className="divide-y divide-[var(--border-card,rgba(255,255,255,0.08))] border border-[var(--border-card,rgba(255,255,255,0.08))] rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] overflow-hidden">
           {filteredKeys.map((key) => {
-            const oldVal = toHumanValue(log.old_data?.[key], t);
-            const newVal = toHumanValue(log.new_data?.[key], t);
+            const oldVal = formatSafeDisplay(log.old_data?.[key], t);
+            const newVal = formatSafeDisplay(log.new_data?.[key], t);
             const label = getLabel(key);
 
             return (
@@ -56,11 +78,11 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
                 </span>
                 <div className="flex items-center gap-2 text-[11px] font-mono">
                   <span className="line-through text-red-400 bg-red-950/30 px-2 py-0.5 rounded border border-red-900/30">
-                    {String(oldVal)}
+                    {oldVal}
                   </span>
                   <ArrowLeftRight size={12} className="text-[var(--text-sub,#94A3B8)] shrink-0" />
                   <span className="text-[var(--primary)] font-bold bg-[var(--primary)]/10 px-2 py-0.5 rounded border border-[var(--primary)]/20">
-                    {String(newVal)}
+                    {newVal}
                   </span>
                 </div>
               </div>
@@ -75,7 +97,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
   const entries = Object.entries(displayData).filter(([key, val]) => {
     if (!isAdvancedMode) {
       if (TECHNICAL_KEYS.includes(key)) return false;
-      const strVal = toHumanValue(val, t);
+      const strVal = formatSafeDisplay(val, t);
       if (!strVal || strVal === 'false' || strVal === '0' || strVal === '—') return false;
     }
     return true;
@@ -85,7 +107,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {entries.map(([key, val]) => {
         const label = getLabel(key);
-        const formattedVal = toHumanValue(val, t);
+        const formattedVal = formatSafeDisplay(val, t);
 
         return (
           <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] text-xs">
@@ -93,7 +115,7 @@ export default function CompactDiffViewer({ log, isAdvancedMode, onlyChanged, t 
               {label}
             </span>
             <span className="font-semibold text-[var(--text-main,#FFFFFF)] text-[11px] truncate max-w-[180px]">
-              {String(formattedVal)}
+              {formattedVal}
             </span>
           </div>
         );
