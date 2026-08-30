@@ -138,8 +138,15 @@ export default function RealtimeAudit() {
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // الترسيت التلقائي للصفحة عند تغيير أي عنصر من عناصر التصفية
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedOperation, selectedUser, startDate, endDate]);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -516,15 +523,15 @@ export default function RealtimeAudit() {
           <span>{safeTranslate('logs.page', 'صفحة')} {currentPage} {safeTranslate('logs.of', 'من')} {totalPages}</span>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
               className="p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] disabled:opacity-30 hover:bg-[var(--border-input,#1B2738)]"
             >
               {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
             <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
               className="p-1.5 rounded-lg bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] disabled:opacity-30 hover:bg-[var(--border-input,#1B2738)]"
             >
               {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
