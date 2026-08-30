@@ -8,6 +8,7 @@ import { useAcademy } from '@/context/AcademyContext';
 
 const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType = 'gregorian' }) => {
   const { t, i18n } = useTranslation();
+  const { academy } = useAcademy?.() || {};
   const isRtl = i18n.dir() === 'rtl';
 
   const studentName = formatName(student.name || student.full_name || t('students.unnamed', 'بدون اسم'));
