@@ -14,7 +14,7 @@ const StudentsList = ({
   academyId, 
   halaqas = [], 
   isLoading,
-  onDeleteStudent // 👈 تمت إضافة دالة الحذف الخاصة بالـ Hook
+  onDeleteStudent
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -89,15 +89,12 @@ const StudentsList = ({
       setStudents((prev) => {
         const exists = prev.some((s) => s.id === savedStudent.id);
         if (exists) {
-          // تحديث بيانات طالب موجود
           return prev.map((s) => (s.id === savedStudent.id ? savedStudent : s));
         }
-        // إضافة طالب جديد
         return [savedStudent, ...prev];
       });
     }
 
-    // إذا كان الطالب المندرج حالياً هو المفتوح في صفحة العرض التفصيلية، نحدث بياناته
     if (selectedStudent && selectedStudent.id === savedStudent.id) {
       setSelectedStudent(savedStudent);
     }
@@ -125,7 +122,7 @@ const StudentsList = ({
                 }
                 setSelectedStudent(null);
               } else {
-                alert('فشل الحذف من قاعدة البيانات: ' + (res?.error || 'حدث خطأ غیر معروف'));
+                alert('فشل الحذف من قاعدة البيانات: ' + (res?.error || 'حدث خطأ غير معروف'));
               }
             } else {
               if (setStudents) {
@@ -139,7 +136,6 @@ const StudentsList = ({
     );
   }
 
-  // خيارات تصفية حالة الطالب
   const statusOptions = [
     { label: 'جميع الحالات', value: 'all' },
     { label: 'نشط فقط', value: 'active' },
