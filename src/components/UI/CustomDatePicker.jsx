@@ -30,6 +30,38 @@ export default function CustomDatePicker({
     "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
   ];
 
+  // خريطة تحويل الأيام لضمان ظهور الاسم الكامل دائماً
+  const formatFullDayName = (nameOfDay) => {
+    if (!isArabic) return nameOfDay;
+    
+    const daysMap = {
+      'أحد': 'الأحد',
+      'إثنين': 'الإثنين',
+      'ثلاثاء': 'الثلاثاء',
+      'أربعاء': 'الأربعاء',
+      'خميس': 'الخميس',
+      'جمعة': 'الجمعة',
+      'سبت': 'السبت',
+      'الأحد': 'الأحد',
+      'الإثنين': 'الإثنين',
+      'الثلاثاء': 'الثلاثاء',
+      'الأربعاء': 'الأربعاء',
+      'الخميس': 'الخميس',
+      'الجمعة': 'الجمعة',
+      'السبت': 'السبت',
+      'Sun': 'الأحد',
+      'Mon': 'الإثنين',
+      'Tue': 'الثلاثاء',
+      'Wed': 'الأربعاء',
+      'Thu': 'الخميس',
+      'Fri': 'الجمعة',
+      'Sat': 'السبت'
+    };
+
+    const cleanName = nameOfDay.trim();
+    return daysMap[cleanName] || cleanName;
+  };
+
   return (
     <div className="flex flex-col w-full space-y-2 dir-rtl">
       {/* شريط التحكم العلوي */}
@@ -64,12 +96,12 @@ export default function CustomDatePicker({
           dateFormat="yyyy/MM/dd"
           maxDate={new Date()}
           placeholderText={placeholder || (isArabic ? "اختر التاريخ..." : "Select date...")}
+          formatWeekDay={formatFullDayName}
           className="w-full bg-slate-900/90 text-slate-100 border border-slate-700/80 rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
           calendarClassName="custom-dark-calendar"
           popperClassName="z-[9999]"
           popperPlacement="bottom-start"
           
-          // هيدر مخصص لحل مشكلة القوائم المنسدلة في الموبايل
           renderCustomHeader={({
             date,
             changeYear,
