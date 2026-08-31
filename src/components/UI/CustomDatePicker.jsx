@@ -48,7 +48,7 @@ export default function CustomDatePicker({
       </div>
 
       {/* حقل اختيار التاريخ */}
-      <div className="relative flex items-center">
+      <div className="relative flex items-center w-full">
         {isRange ? (
           <DatePicker
             selectsRange={true}
@@ -59,10 +59,12 @@ export default function CustomDatePicker({
             dateFormat="yyyy/MM/dd"
             showMonthDropdown
             showYearDropdown
-            dropdownMode="scroll"
+            dropdownMode="select"
             placeholderText={placeholder || (isArabic ? "اختر نطاق التاريخ..." : "Select date range...")}
             className="w-full bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-xl px-10 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
             calendarClassName="custom-dark-calendar"
+            popperClassName="z-[9999]"
+            popperPlacement="bottom-start"
           />
         ) : (
           <DatePicker
@@ -72,19 +74,21 @@ export default function CustomDatePicker({
             dateFormat="yyyy/MM/dd"
             showMonthDropdown
             showYearDropdown
-            dropdownMode="scroll"
+            dropdownMode="select"
             maxDate={new Date()}
             yearDropdownItemNumber={80}
             scrollableYearDropdown
             placeholderText={placeholder || (isArabic ? "اختر التاريخ..." : "Select date...")}
             className="w-full bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-xl px-10 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
             calendarClassName="custom-dark-calendar"
+            popperClassName="z-[9999]"
+            popperPlacement="bottom-start"
           />
         )}
 
         <CalendarIcon 
           size={16} 
-          className={`absolute text-emerald-400 pointer-events-none ${isArabic ? 'right-3' : 'left-3'}`} 
+          className={`absolute text-emerald-400 pointer-events-none ${isArabic ? 'left-3' : 'right-3'}`} 
         />
       </div>
 
