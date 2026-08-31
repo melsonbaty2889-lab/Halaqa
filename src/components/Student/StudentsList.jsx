@@ -9,6 +9,7 @@ import {
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
+import ConfirmModal from '@/components/UI/ConfirmModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
 import { useAcademy } from '@/context/AcademyContext';
@@ -50,6 +51,14 @@ const StudentsList = ({
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+
+  // حالة التحكم بنموذج التأكيد المخصص (ConfirmModal)
+  const [confirmModalState, setConfirmModalState] = useState({
+    isOpen: false,
+    student: null,
+    type: null, // 'archive' | 'unarchive' | 'delete'
+    isLoading: false,
+  });
 
   // 1. حساب إحصائيات الطلاب بأسلوب موحد
   const stats = useMemo(() => {
@@ -151,36 +160,82 @@ const StudentsList = ({
     setIsAddModalOpen(true);
   };
 
-  const handleArchiveStudent = async (student) => {
-    const newArchivedState = !student.is_archived;
-    
-    const confirmMessage = newArchivedState
-      ? t('students.confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟')
-      : t('students.confirm_unarchive', 'هل ترغب في إلغاء أرشفة هذا الطالب؟');
+  // فتح نافذة تأكيد الأرشفة / إلغاء الأرشفة
+  const handleRequestArchive = (student) => {
+    const isCurrentlyArchived = student.is_archived || student.status === 'graduated';
+    setConfirmModalState({
+      isOpen: true,
+      student,
+      type: isCurrentlyArchived ? 'unarchive' : 'archive',
+      isLoading: false,
+    });
+  };
 
-    if (!window.confirm(confirmMessage)) return;
+  // فتح نافذة تأكيد الحذف
+  const handleRequestDelete = (studentId) => {
+    const student = students.find((s) => s.id === studentId) || selectedStudent;
+    setConfirmModalState({
+      isOpen: true,
+      student: student || { id: studentId },
+      type: 'delete',
+      isLoading: false,
+    });
+  };
+
+  // دالة تنفيذ الإجراء التأكيدي (أرشفة أو حذف)
+  const handleConfirmAction = async () => {
+    const { student, type } = confirmModalState;
+    if (!student) return;
+
+    setConfirmModalState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const { error } = await supabase
-        .from('students')
-        .update({ is_archived: newArchivedState })
-        .eq('id', student.id);
+      if (type === 'archive' || type === 'unarchive') {
+        const newArchivedState = type === 'archive';
+        const { error } = await supabase
+          .from('students')
+          .update({ is_archived: newArchivedState })
+          .eq('id', student.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const updatedStudent = { ...student, is_archived: newArchivedState };
+        const updatedStudent = { ...student, is_archived: newArchivedState };
 
-      if (setStudents) {
-        setStudents((prev) =>
-          prev.map((s) => (s.id === student.id ? updatedStudent : s))
-        );
-      }
+        if (setStudents) {
+          setStudents((prev) =>
+            prev.map((s) => (s.id === student.id ? updatedStudent : s))
+          );
+        }
 
-      if (selectedStudent && selectedStudent.id === student.id) {
-        setSelectedStudent(updatedStudent);
+        if (selectedStudent && selectedStudent.id === student.id) {
+          setSelectedStudent(updatedStudent);
+        }
+      } else if (type === 'delete') {
+        if (onDeleteStudent) {
+          const res = await onDeleteStudent(student.id);
+          if (res?.success) {
+            if (setStudents) {
+              setStudents((prev) => prev.filter((s) => s.id !== student.id));
+            }
+            if (selectedStudent && selectedStudent.id === student.id) {
+              setSelectedStudent(null);
+            }
+          } else {
+            alert(t('common.delete_failed', 'فشل الحذف من قاعدة البيانات: ') + (res?.error || ''));
+          }
+        } else {
+          if (setStudents) {
+            setStudents((prev) => prev.filter((s) => s.id !== student.id));
+          }
+          if (selectedStudent && selectedStudent.id === student.id) {
+            setSelectedStudent(null);
+          }
+        }
       }
     } catch (err) {
-      alert(t('common.update_failed', 'فشل تغيير حالة أرشفة الطالب: ') + (err?.message || ''));
+      alert(t('common.update_failed', 'فشل تنفيذ الإجراء: ') + (err?.message || ''));
+    } finally {
+      setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false });
     }
   };
 
@@ -207,34 +262,46 @@ const StudentsList = ({
 
   if (selectedStudent) {
     return (
-      <StudentProfile
-        student={selectedStudent}
-        academyId={academyId}
-        halaqas={halaqas}
-        onBack={() => setSelectedStudent(null)}
-        onEdit={(studentToEdit) => handleOpenEditModal(studentToEdit)}
-        onArchive={(studentToArchive) => handleArchiveStudent(studentToArchive)}
-        onDelete={async (studentId) => {
-          if (window.confirm(t('students.confirm_delete', 'هل أنت متأكد من حذف هذا الطالب؟'))) {
-            if (onDeleteStudent) {
-              const res = await onDeleteStudent(studentId);
-              if (res?.success) {
-                if (setStudents) {
-                  setStudents((prev) => prev.filter((s) => s.id !== studentId));
-                }
-                setSelectedStudent(null);
-              } else {
-                alert(t('common.delete_failed', 'فشل الحذف من قاعدة البيانات: ') + (res?.error || ''));
-              }
-            } else {
-              if (setStudents) {
-                setStudents((prev) => prev.filter((s) => s.id !== studentId));
-              }
-              setSelectedStudent(null);
-            }
+      <>
+        <StudentProfile
+          student={selectedStudent}
+          academyId={academyId}
+          halaqas={halaqas}
+          onBack={() => setSelectedStudent(null)}
+          onEdit={(studentToEdit) => handleOpenEditModal(studentToEdit)}
+          onArchive={(studentToArchive) => handleRequestArchive(studentToArchive)}
+          onDelete={(studentId) => handleRequestDelete(studentId)}
+        />
+
+        <ConfirmModal
+          isOpen={confirmModalState.isOpen}
+          onClose={() => setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false })}
+          onConfirm={handleConfirmAction}
+          isLoading={confirmModalState.isLoading}
+          variant={confirmModalState.type === 'delete' ? 'danger' : confirmModalState.type === 'unarchive' ? 'info' : 'warning'}
+          title={
+            confirmModalState.type === 'unarchive'
+              ? t('students.unarchive_title', 'إلغاء أرشفة الطالب')
+              : confirmModalState.type === 'archive'
+              ? t('students.archive_title', 'أرشفة الطالب')
+              : t('students.delete_title', 'حذف الطالب')
           }
-        }}
-      />
+          message={
+            confirmModalState.type === 'unarchive'
+              ? t('students.confirm_unarchive', 'هل ترغب في إلغاء أرشفة هذا الطالب وإعادته للقائمة النشطة؟')
+              : confirmModalState.type === 'archive'
+              ? t('students.confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟')
+              : t('students.confirm_delete', 'هل أنت متأكد من حذف هذا الطالب نهائياً؟')
+          }
+          confirmText={
+            confirmModalState.type === 'unarchive'
+              ? t('common.unarchive', 'إلغاء الأرشفة')
+              : confirmModalState.type === 'archive'
+              ? t('common.archive', 'أرشفة')
+              : t('common.delete', 'حذف')
+          }
+        />
+      </>
     );
   }
 
@@ -290,7 +357,7 @@ const StudentsList = ({
         </button>
       </div>
 
-      {/* 2. كروت الإحصائيات (متاح الفلترة بضغطة زر) */}
+      {/* 2. كروت الإحصائيات */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <div 
           onClick={() => setStatusFilter('all')}
@@ -446,6 +513,36 @@ const StudentsList = ({
           onSuccess={handleModalSuccess}
         />
       )}
+
+      {/* 6. نافذة التأكيد المخصصة (ConfirmModal) للأرشفة والحذف */}
+      <ConfirmModal
+        isOpen={confirmModalState.isOpen}
+        onClose={() => setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false })}
+        onConfirm={handleConfirmAction}
+        isLoading={confirmModalState.isLoading}
+        variant={confirmModalState.type === 'delete' ? 'danger' : confirmModalState.type === 'unarchive' ? 'info' : 'warning'}
+        title={
+          confirmModalState.type === 'unarchive'
+            ? t('students.unarchive_title', 'إلغاء أرشفة الطالب')
+            : confirmModalState.type === 'archive'
+            ? t('students.archive_title', 'أرشفة الطالب')
+            : t('students.delete_title', 'حذف الطالب')
+        }
+        message={
+          confirmModalState.type === 'unarchive'
+            ? t('students.confirm_unarchive', 'هل ترغب في إلغاء أرشفة هذا الطالب وإعادته للقائمة النشطة؟')
+            : confirmModalState.type === 'archive'
+            ? t('students.confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟')
+            : t('students.confirm_delete', 'هل أنت متأكد من حذف هذا الطالب نهائياً؟')
+        }
+        confirmText={
+          confirmModalState.type === 'unarchive'
+            ? t('common.unarchive', 'إلغاء الأرشفة')
+            : confirmModalState.type === 'archive'
+            ? t('common.archive', 'أرشفة')
+            : t('common.delete', 'حذف')
+        }
+      />
     </div>
   );
 };
