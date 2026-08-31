@@ -14,6 +14,19 @@ import { formatName } from '@/utils/formatters';
 import { useAcademy } from '@/context/AcademyContext';
 import { supabase } from '@/lib/supabase';
 
+/**
+ * دالة توحيد وتصنيف حالات الطالب المعتمدة في الواجهة مع الحفاظ على قيم قاعدة البيانات
+ */
+const getStudentStatusCategory = (student) => {
+  if (student.is_archived || student.status === 'graduated') {
+    return 'archived';
+  }
+  if (student.status === 'inactive' || student.status === 'paused') {
+    return 'inactive';
+  }
+  return 'active';
+};
+
 const StudentsList = ({ 
   students = [], 
   setStudents, 
@@ -38,6 +51,17 @@ const StudentsList = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
+  // 1. حساب إحصائيات الطلاب بأسلوب موحد
+  const stats = useMemo(() => {
+    return {
+      total: students.length,
+      active: students.filter((s) => getStudentStatusCategory(s) === 'active').length,
+      inactive: students.filter((s) => getStudentStatusCategory(s) === 'inactive').length,
+      archived: students.filter((s) => getStudentStatusCategory(s) === 'archived').length,
+    };
+  }, [students]);
+
+  // 2. الفلترة والترتيب للنتائج المعروضة
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
       const formattedName = formatName(student.name || student.full_name || '');
@@ -54,13 +78,8 @@ const StudentsList = ({
         (student.parent_phone && student.parent_phone.includes(query)) ||
         (student.parent_whatsapp && student.parent_whatsapp.includes(query));
 
-      // التعديل: عند اختيار all يتم عرض الجميع لعدم تصفير القائمة
-      const matchesStatus =
-        statusFilter === 'all'
-          ? true
-          : statusFilter === 'archived'
-          ? student.is_archived === true
-          : student.status === statusFilter && !student.is_archived;
+      const category = getStudentStatusCategory(student);
+      const matchesStatus = statusFilter === 'all' || category === statusFilter;
 
       const matchesHalaqa = halaqaFilter === 'all' || student.halaqa_id === halaqaFilter;
 
@@ -77,15 +96,6 @@ const StudentsList = ({
     });
   }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, isRtl]);
 
-  const stats = useMemo(() => {
-    return {
-      total: students.length,
-      active: students.filter((s) => s.status === 'active' && !s.is_archived).length,
-      inactive: students.filter((s) => s.status === 'inactive' && !s.is_archived).length,
-      archived: students.filter((s) => s.is_archived).length,
-    };
-  }, [students]);
-
   const resetFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
@@ -94,38 +104,41 @@ const StudentsList = ({
   };
 
   const getStatusBadge = (student) => {
-    if (student.is_archived) {
+    const category = getStudentStatusCategory(student);
+
+    if (category === 'archived') {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
           <Archive className="w-3.5 h-3.5" />
-          <span>{t('common.archived', 'مؤرشف')}</span>
+          <span>{student.status === 'graduated' ? t('common.graduated', 'متخرج') : t('common.archived', 'مؤرشف')}</span>
         </span>
       );
     }
 
-    switch (student.status) {
-      case 'active':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>{t('common.active', 'نشط')}</span>
-          </span>
-        );
-      case 'inactive':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <UserX className="w-3.5 h-3.5" />
-            <span>{t('common.inactive', 'غير نشط')}</span>
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-dark-input text-appText-sub border border-appBorder-input">
-            <AlertCircle className="w-3.5 h-3.5" />
-            <span>{t('common.unspecified', 'غير محدد')}</span>
-          </span>
-        );
+    if (category === 'active') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <UserCheck className="w-3.5 h-3.5" />
+          <span>{t('common.active', 'نشط')}</span>
+        </span>
+      );
     }
+
+    if (category === 'inactive') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <UserX className="w-3.5 h-3.5" />
+          <span>{student.status === 'paused' ? t('common.paused', 'موقوف') : t('common.inactive', 'غير نشط')}</span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-dark-input text-appText-sub border border-appBorder-input">
+        <AlertCircle className="w-3.5 h-3.5" />
+        <span>{t('common.unspecified', 'غير محدد')}</span>
+      </span>
+    );
   };
 
   const handleOpenAddModal = () => {
@@ -227,9 +240,9 @@ const StudentsList = ({
 
   const statusOptions = [
     { label: t('students.filter_all', 'جميع الحالات'), value: 'all' },
-    { label: t('students.filter_active', 'نشط فقط'), value: 'active' },
-    { label: t('students.filter_inactive', 'غير نشط فقط'), value: 'inactive' },
-    { label: t('students.filter_archived', 'المؤرشفون فقط'), value: 'archived' },
+    { label: t('students.filter_active', 'نشط'), value: 'active' },
+    { label: t('students.filter_inactive', 'غير نشط'), value: 'inactive' },
+    { label: t('students.filter_archived', 'مؤرشف'), value: 'archived' },
   ];
 
   const halaqaOptions = [
@@ -277,28 +290,46 @@ const StudentsList = ({
         </button>
       </div>
 
-      {/* 2. كروت الإحصائيات */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
+      {/* 2. كروت الإحصائيات (متاح الفلترة بضغطة زر) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div 
+          onClick={() => setStatusFilter('all')}
+          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'all' ? 'border-primary ring-1 ring-primary' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+        >
           <div className="absolute top-0 start-0 end-0 h-1 bg-primary"></div>
           <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.total_count', 'إجمالي الطلاب')}</p>
           <p className="text-base sm:text-xl font-bold text-appText-main mt-1">{stats.total}</p>
         </div>
 
-        <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
+        <div 
+          onClick={() => setStatusFilter('active')}
+          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'active' ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+        >
           <div className="absolute top-0 start-0 end-0 h-1 bg-emerald-500"></div>
           <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.active_count', 'النشطون')}</p>
           <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{stats.active}</p>
         </div>
 
-        <div className="bg-dark-card border border-appBorder-card rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm">
+        <div 
+          onClick={() => setStatusFilter('inactive')}
+          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'inactive' ? 'border-rose-500 ring-1 ring-rose-500' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+        >
           <div className="absolute top-0 start-0 end-0 h-1 bg-rose-500"></div>
           <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.inactive_count', 'غير النشطين')}</p>
           <p className="text-base sm:text-xl font-bold text-rose-400 mt-1">{stats.inactive}</p>
         </div>
+
+        <div 
+          onClick={() => setStatusFilter('archived')}
+          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'archived' ? 'border-sky-500 ring-1 ring-sky-500' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+        >
+          <div className="absolute top-0 start-0 end-0 h-1 bg-sky-500"></div>
+          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('students.archived_count', 'المؤرشفون')}</p>
+          <p className="text-base sm:text-xl font-bold text-sky-400 mt-1">{stats.archived}</p>
+        </div>
       </div>
 
-      {/* 3. عناصر البحث والفلترة والترتيب */}
+      {/* 3. شريط البحث والفلترة والترتيب */}
       <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           <div className="relative w-full col-span-2 md:col-span-1 z-10">
@@ -363,7 +394,7 @@ const StudentsList = ({
         </div>
       </div>
 
-      {/* 4. عرض النتائج */}
+      {/* 4. قائمة الطلاب */}
       {isLoading ? (
         <div className="text-center py-12 text-sm text-appText-sub">
           {t('common.loading', 'جاري تحميل الطلاب...')}
@@ -401,7 +432,7 @@ const StudentsList = ({
         </div>
       )}
 
-      {/* 5. النافذة المنبثقة للإضافة والتعديل */}
+      {/* 5. نافذة إضافة / تعديل الطالب */}
       {isAddModalOpen && (
         <AddStudentModal
           isOpen={isAddModalOpen}
