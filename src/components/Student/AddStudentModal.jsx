@@ -41,6 +41,7 @@ const AddStudentModal = ({
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showParentFields, setShowParentFields] = useState(true);
+  const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
 
   useEffect(() => {
     if (studentToEdit) {
@@ -54,6 +55,9 @@ const AddStudentModal = ({
           ? studentToEdit.notes
           : { text: studentToEdit.notes || '' };
 
+      const phone = studentToEdit.parent_phone || '';
+      const whatsapp = studentToEdit.parent_whatsapp || '';
+
       setFormData({
         name_ar: nameObj.ar || (typeof studentToEdit.name === 'string' ? studentToEdit.name : ''),
         name_en: nameObj.en || '',
@@ -66,10 +70,12 @@ const AddStudentModal = ({
         current_juz: studentToEdit.current_juz || null,
         memorization_system: studentToEdit.memorization_system || '',
         parent_name: studentToEdit.parent_name || '',
-        parent_phone: studentToEdit.parent_phone || '',
-        parent_whatsapp: studentToEdit.parent_whatsapp || '',
+        parent_phone: phone,
+        parent_whatsapp: whatsapp,
         notes_text: notesObj.text || '',
       });
+
+      setIsWhatsappManuallyEdited(Boolean(whatsapp && whatsapp !== phone));
 
       if (studentToEdit.birth_date) {
         const age = calculateAge(studentToEdit.birth_date);
@@ -93,6 +99,7 @@ const AddStudentModal = ({
         notes_text: '',
       });
       setShowParentFields(true);
+      setIsWhatsappManuallyEdited(false);
     }
     setErrors({});
   }, [studentToEdit, isOpen]);
@@ -115,13 +122,27 @@ const AddStudentModal = ({
     }
   };
 
+  const handlePhoneChange = (e) => {
+    const val = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      parent_phone: val,
+      ...(!isWhatsappManuallyEdited ? { parent_whatsapp: val } : {}),
+    }));
+  };
+
+  const handleWhatsappChange = (e) => {
+    const val = e.target.value;
+    setIsWhatsappManuallyEdited(true);
+    setFormData((prev) => ({ ...prev, parent_whatsapp: val }));
+  };
+
   const handleCopyPhoneToWhatsapp = () => {
-    if (formData.parent_phone) {
-      setFormData((prev) => ({
-        ...prev,
-        parent_whatsapp: prev.parent_phone,
-      }));
-    }
+    setIsWhatsappManuallyEdited(false);
+    setFormData((prev) => ({
+      ...prev,
+      parent_whatsapp: prev.parent_phone,
+    }));
   };
 
   const validate = () => {
@@ -455,7 +476,7 @@ const AddStudentModal = ({
                     type="tel"
                     dir="ltr"
                     value={formData.parent_phone}
-                    onChange={(e) => setFormData({ ...formData, parent_phone: e.target.value })}
+                    onChange={handlePhoneChange}
                     placeholder={t('students.ph_phone', 'رقم الهاتف مع رمز الدولة')}
                     className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors text-start"
                   />
@@ -480,9 +501,7 @@ const AddStudentModal = ({
                     type="tel"
                     dir="ltr"
                     value={formData.parent_whatsapp}
-                    onChange={(e) =>
-                      setFormData({ ...formData, parent_whatsapp: e.target.value })
-                    }
+                    onChange={handleWhatsappChange}
                     placeholder={t('students.ph_whatsapp', 'رقم الواتساب مع رمز الدولة')}
                     className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors text-start"
                   />
