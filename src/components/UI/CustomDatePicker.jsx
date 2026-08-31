@@ -19,11 +19,11 @@ function hijriToGregorian(hYear, hMonthIdx, hDay) {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
 
-    for (let i = -35; i <= 35; i++) {
+    for (let i = -40; i <= 40; i++) {
       const checkDate = new Date(testDate.getTime() + i * 86400000);
       const parts = formatter.formatToParts(checkDate);
       const hy = parseInt(parts.find(p => p.type === 'year')?.value || '0', 10);
-      const hm = parseInt(parts.find(p => p.type === 'month')?.value || '0', 10) - 1;
+      const hm = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
       const hd = parseInt(parts.find(p => p.type === 'day')?.value || '0', 10);
 
       if (hy === hYear && hm === hMonthIdx && hd === hDay) {
@@ -46,7 +46,7 @@ function getHijriDetails(date) {
     const parts = formatter.formatToParts(validDate);
 
     const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-    const monthIdx = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
+    const monthIdx = Math.max(0, Math.min(11, parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1));
     const yearNum = parseInt(parts.find(p => p.type === 'year')?.value || '1445', 10);
 
     return {
@@ -109,17 +109,22 @@ export default function CustomDatePicker({
   const dayOptions = Array.from({ length: 30 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
   const monthOptions = HIJRI_MONTHS.map((m, idx) => ({ label: m, value: idx }));
   
-  // سنوات هجرية بأسماء واضحة ومحددة العرض بدون "اختر من الـ..."
-  const yearOptions = Array.from({ length: 90 }, (_, i) => {
+  // زيادة النطاق لـ 120 سنة لتغطية كبار السن بالكامل
+  const yearOptions = Array.from({ length: 120 }, (_, i) => {
     const y = currentHijriYear - i;
     return { label: `${y} هـ`, value: y };
   });
 
   const handleHijriChange = (d, m, y) => {
-    setHDay(d);
-    setHMonth(m);
-    setHYear(y);
-    const convertedGregorian = hijriToGregorian(y, m, d);
+    const cleanD = Number(d);
+    const cleanM = Number(m);
+    const cleanY = Number(y);
+
+    setHDay(cleanD);
+    setHMonth(cleanM);
+    setHYear(cleanY);
+
+    const convertedGregorian = hijriToGregorian(cleanY, cleanM, cleanD);
     onChange(convertedGregorian);
   };
 
@@ -136,7 +141,6 @@ export default function CustomDatePicker({
 
   return (
     <div className="flex flex-col w-full space-y-2 text-start">
-      {/* شريط الأدوات العلوي: زر التبديل وحساب العمر */}
       <div className="flex items-center justify-between text-xs gap-2">
         <button
           type="button"
@@ -156,7 +160,6 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* نموذج الإدخال (الميلادي / الهجري) */}
       {calendarMode === 'gregorian' ? (
         <div className="relative flex items-center w-full">
           <DatePicker
@@ -170,7 +173,7 @@ export default function CustomDatePicker({
             maxDate={new Date()}
             showYearDropdown
             scrollableYearDropdown
-            yearDropdownItemNumber={90}
+            yearDropdownItemNumber={120}
             placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
             formatWeekDay={formatShortDayName}
             showMonthDropdown
@@ -183,30 +186,28 @@ export default function CustomDatePicker({
           <CalendarIcon size={16} className="absolute start-3 text-[var(--primary)] pointer-events-none" />
         </div>
       ) : (
-        /* توزيع المساحات وتفادي القَطْع: اليوم (1fr)، الشهر (1.2fr)، السنة (1.1fr) */
         <div className="grid grid-cols-[1fr_1.2fr_1.1fr] gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={hDay}
-            onChange={(val) => handleHijriChange(Number(val), hMonth, hYear)}
+            onChange={(val) => handleHijriChange(val, hMonth, hYear)}
             className="text-[11px]"
           />
           <CustomSelect
             options={monthOptions}
             value={hMonth}
-            onChange={(val) => handleHijriChange(hDay, Number(val), hYear)}
+            onChange={(val) => handleHijriChange(hDay, val, hYear)}
             className="text-[11px]"
           />
           <CustomSelect
             options={yearOptions}
             value={hYear}
-            onChange={(val) => handleHijriChange(hDay, hMonth, Number(val))}
+            onChange={(val) => handleHijriChange(hDay, hMonth, val)}
             className="text-[11px]"
           />
         </div>
       )}
 
-      {/* الشريط السفلي للموافق بالميلادي/الهجري */}
       {mainDate && (
         <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[var(--surface-input)] border border-[var(--border-input)] text-xs text-[var(--text-sub)] font-medium">
           <span>{calendarMode === 'gregorian' ? 'الموافق هجرياً:' : 'الموافق ميلادياً:'}</span>
