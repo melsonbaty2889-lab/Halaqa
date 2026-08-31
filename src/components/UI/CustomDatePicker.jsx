@@ -23,11 +23,11 @@ export default function CustomDatePicker({
   // حساب النص الهجري
   const hijriText = mainDate ? formatHijriDate(mainDate, isArabic) : '';
   
-  // حساب العمر ومنع إظهاره إذا كان 0 أو التاريخ غير محدد
+  // حساب العمر
   const rawAge = (showAge && mainDate) ? calculateAge(mainDate) : null;
   const age = (rawAge !== null && rawAge > 0) ? rawAge : null;
 
-  // توليد السنوات لاختيار سريع (من 100 سنة مضت حتى السنة الحالية)
+  // توليد السنوات (من 100 سنة مضت حتى السنة الحالية)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
   const monthsArabic = [
@@ -35,7 +35,7 @@ export default function CustomDatePicker({
     "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
   ];
 
-  // خريطة أسماء الأيام الكاملة للمحاذاة والوضوح
+  // خريطة أسماء الأيام
   const formatFullDayName = (nameOfDay) => {
     if (!isArabic) return nameOfDay;
     const daysMap = {
@@ -46,13 +46,6 @@ export default function CustomDatePicker({
       'خميس': 'الخميس',
       'جمعة': 'الجمعة',
       'سبت': 'السبت',
-      'الأحد': 'الأحد',
-      'الإثنين': 'الإثنين',
-      'الثلاثاء': 'الثلاثاء',
-      'الأربعاء': 'الأربعاء',
-      'الخميس': 'الخميس',
-      'الجمعة': 'الجمعة',
-      'السبت': 'السبت',
       'Sun': 'الأحد',
       'Mon': 'الإثنين',
       'Tue': 'الثلاثاء',
@@ -66,13 +59,13 @@ export default function CustomDatePicker({
   };
 
   return (
-    <div className="flex flex-col w-full space-y-2 dir-rtl">
+    <div className="flex flex-col w-full space-y-2">
       {/* شريط التحكم العلوي */}
       <div className="flex items-center justify-between text-xs">
         <button
           type="button"
           onClick={() => setCalendarMode(calendarMode === 'gregorian' ? 'hijri' : 'gregorian')}
-          className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition-all active:scale-95"
+          className="flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary-hover bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 transition-all active:scale-95"
         >
           <Repeat size={13} />
           {calendarMode === 'gregorian' 
@@ -81,7 +74,7 @@ export default function CustomDatePicker({
         </button>
 
         {age !== null && (
-          <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
             {isArabic ? `العمر: ${age} سنة` : `Age: ${age} yrs`}
           </span>
         )}
@@ -100,12 +93,20 @@ export default function CustomDatePicker({
           maxDate={new Date()}
           placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
           formatWeekDay={formatFullDayName}
-          /* استخدام withPortal أو popperProps لحل مشكلة البروز والتداولات على الموبايل */
-          withPortal={window.innerWidth < 640}
-          className="w-full bg-slate-900/90 text-slate-100 border border-slate-700/80 rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
+          /* معالجة فتح التقويم بأسلوب portal لمنع التداخل والـ overflow داخل المودال */
+          withPortal={typeof window !== 'undefined' && window.innerWidth < 640}
+          className="w-full bg-dark-input text-appText-main border border-appBorder-input rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover transition-all cursor-pointer shadow-inner placeholder:text-appText-sub/50"
           calendarClassName="custom-dark-calendar"
           popperClassName="z-[9999]"
           popperPlacement="bottom-start"
+          popperModifiers={[
+            {
+              name: 'preventOverflow',
+              options: {
+                boundary: 'viewport',
+              },
+            },
+          ]}
           renderCustomHeader={({
             date,
             changeYear,
@@ -115,22 +116,22 @@ export default function CustomDatePicker({
             prevMonthButtonDisabled,
             nextMonthButtonDisabled,
           }) => (
-            <div className="flex items-center justify-between px-3 py-2 bg-slate-800/90 rounded-t-xl border-b border-slate-700/60">
+            <div className="flex items-center justify-between px-3 py-2 bg-dark-card rounded-t-xl border-b border-appBorder-card">
               <button
                 type="button"
                 onClick={decreaseMonth}
                 disabled={prevMonthButtonDisabled}
-                className="p-1 text-slate-300 hover:text-white disabled:opacity-30"
+                className="p-1 text-appText-sub hover:text-appText-main disabled:opacity-30"
               >
                 <ChevronRight size={18} />
               </button>
 
               <div className="flex items-center gap-1.5">
-                {/* اختيار السنة برمجياً للوصول السريع لسنوات الميلاد */}
+                {/* اختيار السنة */}
                 <select
                   value={date.getFullYear()}
                   onChange={({ target: { value } }) => changeYear(Number(value))}
-                  className="bg-slate-900 text-emerald-400 font-bold text-xs px-2 py-1 rounded-md border border-slate-700 focus:outline-none cursor-pointer"
+                  className="bg-dark-input text-primary font-bold text-xs px-2 py-1 rounded-md border border-appBorder-input focus:outline-none cursor-pointer"
                 >
                   {years.map((option) => (
                     <option key={option} value={option}>
@@ -143,7 +144,7 @@ export default function CustomDatePicker({
                 <select
                   value={date.getMonth()}
                   onChange={({ target: { value } }) => changeMonth(Number(value))}
-                  className="bg-slate-900 text-emerald-400 font-bold text-xs px-2 py-1 rounded-md border border-slate-700 focus:outline-none cursor-pointer"
+                  className="bg-dark-input text-primary font-bold text-xs px-2 py-1 rounded-md border border-appBorder-input focus:outline-none cursor-pointer"
                 >
                   {monthsArabic.map((option, index) => (
                     <option key={option} value={index}>
@@ -157,7 +158,7 @@ export default function CustomDatePicker({
                 type="button"
                 onClick={increaseMonth}
                 disabled={nextMonthButtonDisabled}
-                className="p-1 text-slate-300 hover:text-white disabled:opacity-30"
+                className="p-1 text-appText-sub hover:text-appText-main disabled:opacity-30"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -167,15 +168,15 @@ export default function CustomDatePicker({
 
         <CalendarIcon 
           size={16} 
-          className="absolute right-3 text-emerald-400 pointer-events-none" 
+          className="absolute right-3 text-primary pointer-events-none" 
         />
       </div>
 
-      {/* شريط المعاينة الهجرية والميلادية بتباين ألوان ممتاز */}
+      {/* شريط المعاينة الهجرية */}
       {mainDate && (
-        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 font-medium">
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-xs text-appText-sub font-medium">
           <span>{isArabic ? 'الموافق هجرياً:' : 'Hijri:'}</span>
-          <span className="font-semibold text-emerald-200">{hijriText}</span>
+          <span className="font-semibold text-primary">{hijriText}</span>
         </div>
       )}
     </div>
