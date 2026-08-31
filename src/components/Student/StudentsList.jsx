@@ -12,7 +12,7 @@ import AddStudentModal from './AddStudentModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
 import { useAcademy } from '@/context/AcademyContext';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 const StudentsList = ({ 
   students = [], 
