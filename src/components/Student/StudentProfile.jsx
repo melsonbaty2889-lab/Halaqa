@@ -5,11 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { 
   ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX 
 } from 'lucide-react';
-import { formatName } from '@/utils/formatters';
+import { formatName, formatRiwayah, formatCountry } from '@/utils/formatters';
 import StudentDocuments from './StudentDocuments';
 
 const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDelete }) => {
   const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
   const isRtl = i18n.dir() === 'rtl';
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -106,7 +107,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.preferred_riwayah', 'الرواية المفضلة:')}</span>
                 <span className="text-appText-main font-medium">
-                  {student.preferred_riwayah || t('common.unspecified', 'غير محددة')}
+                  {formatRiwayah(student.preferred_riwayah, currentLang, t('common.unspecified', 'غير محددة'))}
                 </span>
               </div>
               <div>
@@ -146,9 +147,15 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.country', 'الدولة:')}</span>
+                <span className="text-appText-sub block text-xs">{t('students.country', 'دولة الإقامة:')}</span>
                 <span className="text-appText-main font-medium">
-                  {student.country || t('common.unspecified', 'غير محددة')}
+                  {formatCountry(student.country, currentLang, t('common.unspecified', 'غير محددة'))}
+                </span>
+              </div>
+              <div>
+                <span className="text-appText-sub block text-xs">{t('students.nationality', 'الجنسية:')}</span>
+                <span className="text-appText-main font-medium">
+                  {formatCountry(student.nationality, currentLang, t('common.unspecified', 'غير محددة'))}
                 </span>
               </div>
               <div>
@@ -166,7 +173,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.parent_whatsapp', 'واتساب ولي الأمر:')}</span>
                 <span className="text-appText-main font-medium" dir="ltr">
-                  {student.parent_whatsapp || t('common.unspecified', 'غير محدد')}
+                  {student.parent_whatsapp || student.parent_phone || t('common.unspecified', 'غير محدد')}
                 </span>
               </div>
             </div>
