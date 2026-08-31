@@ -234,17 +234,17 @@ const AddStudentModal = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" dir={i18n.dir()}>
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-hidden" dir={i18n.dir()}>
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-2xl max-h-[90dvh] h-[90dvh] md:h-auto flex flex-col shadow-2xl overflow-hidden my-auto">
         
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-appBorder-card bg-dark-card shrink-0">
+        {/* Header - ثابت */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-appBorder-card bg-dark-card shrink-0 z-10">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
               {studentToEdit ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-appText-main">
+              <h2 className="text-base sm:text-lg font-bold text-appText-main leading-snug">
                 {studentToEdit
                   ? t('students.edit_title', 'تعديل بيانات الطالب')
                   : t('students.add_title', 'إضافة طالب جديد')}
@@ -257,14 +257,14 @@ const AddStudentModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg hover:bg-dark-input transition-colors"
+            className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg hover:bg-dark-input transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form Content */}
-        <form id="add-student-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
+        {/* Form Content - قابل للتمرير فقط */}
+        <form id="add-student-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 overflow-y-auto min-h-0 flex-1 custom-scrollbar">
           {/* البيانات الأساسية */}
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
@@ -525,8 +525,8 @@ const AddStudentModal = ({
           </div>
         </form>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card/95 backdrop-blur-md shrink-0">
+        {/* Footer - ثابت */}
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card/95 backdrop-blur-md shrink-0 z-10">
           <button
             type="button"
             onClick={onClose}
@@ -538,7 +538,7 @@ const AddStudentModal = ({
             type="submit"
             form="add-student-form"
             disabled={isSubmitting}
-            className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-appText-main rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-glow disabled:opacity-50"
+            className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-appText-main rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-glow disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting
               ? t('common.saving', 'جاري الحفظ...')
