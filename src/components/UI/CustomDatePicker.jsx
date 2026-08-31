@@ -19,10 +19,15 @@ export default function CustomDatePicker({
 
   const currentLocale = isArabic ? ar : enUS;
   const mainDate = isRange ? startDate : selectedDate;
+  
+  // حساب النص الهجري
   const hijriText = mainDate ? formatHijriDate(mainDate, isArabic) : '';
-  const age = (showAge && mainDate) ? calculateAge(mainDate) : null;
+  
+  // حساب العمر ومنع إظهاره إذا كان 0 أو التاريخ غير محدد
+  const rawAge = (showAge && mainDate) ? calculateAge(mainDate) : null;
+  const age = (rawAge !== null && rawAge > 0) ? rawAge : null;
 
-  // توليد السنوات لاختيار سريع
+  // توليد السنوات لاختيار سريع (من 100 سنة مضت حتى السنة الحالية)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
   const monthsArabic = [
@@ -30,10 +35,9 @@ export default function CustomDatePicker({
     "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
   ];
 
-  // خريطة تحويل الأيام لضمان ظهور الاسم الكامل دائماً
+  // خريطة أسماء الأيام الكاملة للمحاذاة والوضوح
   const formatFullDayName = (nameOfDay) => {
     if (!isArabic) return nameOfDay;
-    
     const daysMap = {
       'أحد': 'الأحد',
       'إثنين': 'الإثنين',
@@ -57,7 +61,6 @@ export default function CustomDatePicker({
       'Fri': 'الجمعة',
       'Sat': 'السبت'
     };
-
     const cleanName = nameOfDay.trim();
     return daysMap[cleanName] || cleanName;
   };
@@ -95,13 +98,14 @@ export default function CustomDatePicker({
           locale={currentLocale}
           dateFormat="yyyy/MM/dd"
           maxDate={new Date()}
-          placeholderText={placeholder || (isArabic ? "اختر التاريخ..." : "Select date...")}
+          placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
           formatWeekDay={formatFullDayName}
+          /* استخدام withPortal أو popperProps لحل مشكلة البروز والتداولات على الموبايل */
+          withPortal={window.innerWidth < 640}
           className="w-full bg-slate-900/90 text-slate-100 border border-slate-700/80 rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-emerald-500/80 transition-all cursor-pointer shadow-inner placeholder:text-slate-500"
           calendarClassName="custom-dark-calendar"
           popperClassName="z-[9999]"
           popperPlacement="bottom-start"
-          
           renderCustomHeader={({
             date,
             changeYear,
@@ -122,10 +126,11 @@ export default function CustomDatePicker({
               </button>
 
               <div className="flex items-center gap-1.5">
+                {/* اختيار السنة برمجياً للوصول السريع لسنوات الميلاد */}
                 <select
                   value={date.getFullYear()}
                   onChange={({ target: { value } }) => changeYear(Number(value))}
-                  className="bg-slate-900 text-emerald-400 font-bold text-xs px-2 py-1 rounded-md border border-slate-700 focus:outline-none"
+                  className="bg-slate-900 text-emerald-400 font-bold text-xs px-2 py-1 rounded-md border border-slate-700 focus:outline-none cursor-pointer"
                 >
                   {years.map((option) => (
                     <option key={option} value={option}>
@@ -134,10 +139,11 @@ export default function CustomDatePicker({
                   ))}
                 </select>
 
+                {/* اختيار الشهر */}
                 <select
                   value={date.getMonth()}
                   onChange={({ target: { value } }) => changeMonth(Number(value))}
-                  className="bg-slate-900 text-emerald-400 font-bold text-xs px-2 py-1 rounded-md border border-slate-700 focus:outline-none"
+                  className="bg-slate-900 text-emerald-400 font-bold text-xs px-2 py-1 rounded-md border border-slate-700 focus:outline-none cursor-pointer"
                 >
                   {monthsArabic.map((option, index) => (
                     <option key={option} value={index}>
@@ -165,11 +171,11 @@ export default function CustomDatePicker({
         />
       </div>
 
-      {/* شريط المعاينة الهجرية والميلادية */}
+      {/* شريط المعاينة الهجرية والميلادية بتباين ألوان ممتاز */}
       {mainDate && (
-        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 font-medium">
           <span>{isArabic ? 'الموافق هجرياً:' : 'Hijri:'}</span>
-          <span className="font-semibold">{hijriText}</span>
+          <span className="font-semibold text-emerald-200">{hijriText}</span>
         </div>
       )}
     </div>
