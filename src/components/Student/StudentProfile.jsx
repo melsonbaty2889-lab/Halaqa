@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX, Phone, MessageSquare, Archive
+  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, 
+  UserCheck, UserX, Phone, MessageSquare, Archive, ArchiveRestore 
 } from 'lucide-react';
 import { formatName, formatRiwayah, formatCountry } from '@/utils/formatters';
 import { calculateAge } from '@/utils/dateUtils';
@@ -25,7 +26,9 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
     : t('students.no_halaqa', 'غير مسكن بحلقة');
 
   const age = student.birth_date ? calculateAge(student.birth_date) : null;
-  const isArchived = student.status === 'archived' || student.status === 'inactive';
+  
+  // التحقق الدقيق من حالة الأرشفة (مباشرة عبر is_archived أو status)
+  const isArchived = Boolean(student.is_archived || student.status === 'archived' || student.status === 'graduated');
 
   const getMemorizationSystemLabel = (sys) => {
     switch (sys) {
@@ -42,7 +45,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
   return (
     <div className="space-y-6 text-appText-main" dir={i18n.dir()}>
       {/* شريط التحكم والأزرار العلوي */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -70,13 +73,27 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
             <span>{t('common.edit', 'تعديل')}</span>
           </button>
 
+          {/* زر الأرشفة التكيفي الحرج */}
           <button
             type="button"
             onClick={() => onArchive && onArchive(student)}
-            className="px-3 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+            className={`px-3 py-2 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              isArchived
+                ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border-sky-500/20'
+            }`}
           >
-            <Archive className="w-4 h-4" />
-            <span>{isArchived ? t('students.unarchive', 'إلغاء الأرشفة') : t('students.archive', 'أرشفة')}</span>
+            {isArchived ? (
+              <>
+                <ArchiveRestore className="w-4 h-4" />
+                <span>{t('students.unarchive', 'إلغاء الأرشفة')}</span>
+              </>
+            ) : (
+              <>
+                <Archive className="w-4 h-4" />
+                <span>{t('students.archive', 'أرشفة')}</span>
+              </>
+            )}
           </button>
 
           <button
@@ -151,15 +168,15 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.status', 'حالة الطالب:')}</span>
                 <span className="inline-block mt-1">
-                  {student.status === 'active' ? (
+                  {isArchived ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      <Archive className="w-3 h-3" />
+                      <span>{student.status === 'graduated' ? t('common.graduated', 'متخرج') : t('common.archived', 'مؤرشف')}</span>
+                    </span>
+                  ) : student.status === 'active' ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       <UserCheck className="w-3 h-3" />
                       <span>{t('common.active', 'نشط')}</span>
-                    </span>
-                  ) : isArchived ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                      <Archive className="w-3 h-3" />
-                      <span>{t('common.archived', 'مؤرشف')}</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
