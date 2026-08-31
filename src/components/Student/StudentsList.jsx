@@ -54,10 +54,10 @@ const StudentsList = ({
         (student.parent_phone && student.parent_phone.includes(query)) ||
         (student.parent_whatsapp && student.parent_whatsapp.includes(query));
 
-      // التعديل: الاعتماد على is_archived للفلترة
+      // التعديل: عند اختيار all يتم عرض الجميع لعدم تصفير القائمة
       const matchesStatus =
         statusFilter === 'all'
-          ? !student.is_archived
+          ? true
           : statusFilter === 'archived'
           ? student.is_archived === true
           : student.status === statusFilter && !student.is_archived;
@@ -79,7 +79,7 @@ const StudentsList = ({
 
   const stats = useMemo(() => {
     return {
-      total: students.filter((s) => !s.is_archived).length,
+      total: students.length,
       active: students.filter((s) => s.status === 'active' && !s.is_archived).length,
       inactive: students.filter((s) => s.status === 'inactive' && !s.is_archived).length,
       archived: students.filter((s) => s.is_archived).length,
@@ -138,7 +138,6 @@ const StudentsList = ({
     setIsAddModalOpen(true);
   };
 
-  // التعديل: تحديث عمود is_archived بدلاً من status
   const handleArchiveStudent = async (student) => {
     const newArchivedState = !student.is_archived;
     
