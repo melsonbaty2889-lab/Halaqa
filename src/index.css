@@ -102,7 +102,7 @@
 }
 
 @layer components {
-  /* 📦 1. بطاقة المحتوى الموحدة (معدلة للتأكد من عدم قص القوائم المنسدلة) */
+  /* 📦 1. بطاقة المحتوى الموحدة */
   .card-surface {
     background-color: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(16px);
@@ -255,10 +255,42 @@
 }
 
 .custom-dark-calendar .react-datepicker__current-month,
-.custom-dark-calendar .react-datepicker-time__header,
-.custom-dark-calendar .react-datepicker__day-name {
+.custom-dark-calendar .react-datepicker-time__header {
   color: #94A3B8 !important;
   font-weight: 600 !important;
+}
+
+/* 🟢 إصلاح محاداة وأبعاد أسماء الأيام الكاملة (السبت، الأحد، الإثنين...) */
+.custom-dark-calendar .react-datepicker__day-names,
+.custom-dark-calendar .react-datepicker__week {
+  display: flex !important;
+  justify-content: space-around !important;
+  align-items: center !important;
+}
+
+.custom-dark-calendar .react-datepicker__day-name {
+  color: #10B981 !important;
+  font-weight: 700 !important;
+  width: 2.75rem !important;
+  line-height: 2rem !important;
+  font-size: 0.75rem !important;
+  margin: 0.1rem !important;
+  text-align: center !important;
+}
+
+.custom-dark-calendar .react-datepicker__day {
+  color: #E2E8F0 !important;
+  border-radius: 0.5rem !important;
+  width: 2.75rem !important;
+  height: 2.25rem !important;
+  line-height: 2.25rem !important;
+  margin: 0.1rem !important;
+  font-size: 0.8125rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-dark-calendar .react-datepicker__month {
+  margin: 0.4rem 0.2rem !important;
 }
 
 /* 🟢 إصلاح تباين وألوان قوائم المنسدلة (الأشهر والسنوات) */
@@ -292,12 +324,6 @@
   background-color: #0F172A !important;
   color: #FFFFFF !important;
   padding: 8px !important;
-}
-
-.custom-dark-calendar .react-datepicker__day {
-  color: #E2E8F0 !important;
-  border-radius: 0.5rem !important;
-  transition: all 0.15s ease !important;
 }
 
 .custom-dark-calendar .react-datepicker__day:hover {
