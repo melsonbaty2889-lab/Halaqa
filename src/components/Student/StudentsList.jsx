@@ -54,7 +54,14 @@ const StudentsList = ({
         (student.parent_phone && student.parent_phone.includes(query)) ||
         (student.parent_whatsapp && student.parent_whatsapp.includes(query));
 
-      const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+      // التعديل: الاعتماد على is_archived للفلترة
+      const matchesStatus =
+        statusFilter === 'all'
+          ? !student.is_archived
+          : statusFilter === 'archived'
+          ? student.is_archived === true
+          : student.status === statusFilter && !student.is_archived;
+
       const matchesHalaqa = halaqaFilter === 'all' || student.halaqa_id === halaqaFilter;
 
       return matchesSearch && matchesStatus && matchesHalaqa;
@@ -72,10 +79,10 @@ const StudentsList = ({
 
   const stats = useMemo(() => {
     return {
-      total: students.length,
-      active: students.filter((s) => s.status === 'active').length,
-      inactive: students.filter((s) => s.status === 'inactive').length,
-      archived: students.filter((s) => s.status === 'archived').length,
+      total: students.filter((s) => !s.is_archived).length,
+      active: students.filter((s) => s.status === 'active' && !s.is_archived).length,
+      inactive: students.filter((s) => s.status === 'inactive' && !s.is_archived).length,
+      archived: students.filter((s) => s.is_archived).length,
     };
   }, [students]);
 
@@ -86,8 +93,17 @@ const StudentsList = ({
     setSortBy('name');
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
+  const getStatusBadge = (student) => {
+    if (student.is_archived) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          <Archive className="w-3.5 h-3.5" />
+          <span>{t('common.archived', 'مؤرشف')}</span>
+        </span>
+      );
+    }
+
+    switch (student.status) {
       case 'active':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -100,13 +116,6 @@ const StudentsList = ({
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
             <UserX className="w-3.5 h-3.5" />
             <span>{t('common.inactive', 'غير نشط')}</span>
-          </span>
-        );
-      case 'archived':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-            <Archive className="w-3.5 h-3.5" />
-            <span>{t('common.archived', 'مؤرشف')}</span>
           </span>
         );
       default:
@@ -129,25 +138,25 @@ const StudentsList = ({
     setIsAddModalOpen(true);
   };
 
+  // التعديل: تحديث عمود is_archived بدلاً من status
   const handleArchiveStudent = async (student) => {
-    const isCurrentlyArchived = student.status === 'archived' || student.status === 'inactive';
-    const newStatus = isCurrentlyArchived ? 'active' : 'archived';
+    const newArchivedState = !student.is_archived;
     
-    const confirmMessage = isCurrentlyArchived
-      ? t('students.confirm_unarchive', 'هل ترغب في إعادة تنشيط هذا الطالب؟')
-      : t('students.confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟');
+    const confirmMessage = newArchivedState
+      ? t('students.confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟')
+      : t('students.confirm_unarchive', 'هل ترغب في إلغاء أرشفة هذا الطالب؟');
 
     if (!window.confirm(confirmMessage)) return;
 
     try {
       const { error } = await supabase
         .from('students')
-        .update({ status: newStatus })
+        .update({ is_archived: newArchivedState })
         .eq('id', student.id);
 
       if (error) throw error;
 
-      const updatedStudent = { ...student, status: newStatus };
+      const updatedStudent = { ...student, is_archived: newArchivedState };
 
       if (setStudents) {
         setStudents((prev) =>
@@ -159,7 +168,7 @@ const StudentsList = ({
         setSelectedStudent(updatedStudent);
       }
     } catch (err) {
-      alert(t('common.update_failed', 'فشل تغيير حالة الطالب: ') + (err?.message || ''));
+      alert(t('common.update_failed', 'فشل تغيير حالة أرشفة الطالب: ') + (err?.message || ''));
     }
   };
 
@@ -338,7 +347,7 @@ const StudentsList = ({
             <span>
               {t('students.results_count', 'عرض {{count}} من إجمالي {{total}} طالب', {
                 count: filteredStudents.length,
-                total: students.length,
+                total: stats.total,
               })}
             </span>
           </span>
@@ -386,7 +395,7 @@ const StudentsList = ({
               key={student.id}
               student={student}
               onClick={() => setSelectedStudent(student)}
-              getStatusBadge={getStatusBadge}
+              getStatusBadge={() => getStatusBadge(student)}
               calendarType={calendarType}
             />
           ))}
