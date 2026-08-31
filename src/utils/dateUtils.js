@@ -136,3 +136,26 @@ export const calculateAge = (birthDate) => {
   }
   return age >= 0 ? age : 0;
 };
+
+/**
+ * تحويل تاريخ هجري (سنة، شهر، يوم) إلى كائن Date ميلادي
+ */
+export const hijriToGregorian = (hYear, hMonth, hDay) => {
+  try {
+    const julianDay = Math.floor((11 * hYear + 3) / 30) + 354 * hYear + 30 * hMonth - Math.floor((hMonth - 1) / 2) + hDay + 1948440 - 385;
+    const l = julianDay + 68569;
+    const n = Math.floor((4 * l) / 146097);
+    const l2 = l - Math.floor((146097 * n + 3) / 4);
+    const i = Math.floor((4000 * (l2 + 1)) / 1461001);
+    const l3 = l2 - Math.floor((1461 * i) / 4) + 31;
+    const j = Math.floor((80 * l3) / 2447);
+    const day = l3 - Math.floor((2447 * j) / 80);
+    const l4 = Math.floor(j / 11);
+    const month = j + 2 - 12 * l4;
+    const year = 100 * (n - 49) + i + l4;
+
+    return new Date(year, month - 1, day);
+  } catch (error) {
+    return new Date();
+  }
+};
