@@ -260,6 +260,7 @@ const StudentsList = ({
     setEditingStudent(null);
   };
 
+  // عرض صفحة الطالب في حال اختياره
   if (selectedStudent) {
     return (
       <>
@@ -272,6 +273,21 @@ const StudentsList = ({
           onArchive={(studentToArchive) => handleRequestArchive(studentToArchive)}
           onDelete={(studentId) => handleRequestDelete(studentId)}
         />
+
+        {/* إضافة النافذة المنبثقة هنا تضمن فتحها فوراً فوق صفحة البروفايل */}
+        {isAddModalOpen && (
+          <AddStudentModal
+            isOpen={isAddModalOpen}
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setEditingStudent(null);
+            }}
+            studentToEdit={editingStudent}
+            academyId={academyId}
+            halaqas={halaqas}
+            onSuccess={handleModalSuccess}
+          />
+        )}
 
         <ConfirmModal
           isOpen={confirmModalState.isOpen}
