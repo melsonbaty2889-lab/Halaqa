@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX, Phone, MessageSquare
+  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX, Phone, MessageSquare, Archive
 } from 'lucide-react';
 import { formatName, formatRiwayah, formatCountry } from '@/utils/formatters';
 import { calculateAge } from '@/utils/dateUtils';
 import StudentDocuments from './StudentDocuments';
 
-const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDelete }) => {
+const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDelete, onArchive }) => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const isRtl = i18n.dir() === 'rtl';
@@ -25,8 +25,8 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
     : t('students.no_halaqa', 'غير مسكن بحلقة');
 
   const age = student.birth_date ? calculateAge(student.birth_date) : null;
+  const isArchived = student.status === 'archived' || student.status === 'inactive';
 
-  // جلب مسمى نظام المراجعة مع إضافة جميع الخيارات الممكنة من قاعدة البيانات
   const getMemorizationSystemLabel = (sys) => {
     switch (sys) {
       case 'juz': return t('students.sys_juz', 'أجزاء كاملة');
@@ -60,18 +60,28 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={() => onEdit(student)}
+            onClick={() => onEdit && onEdit(student)}
             className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
           >
             <Edit className="w-4 h-4" />
             <span>{t('common.edit', 'تعديل')}</span>
           </button>
+
           <button
             type="button"
-            onClick={() => onDelete(student.id)}
+            onClick={() => onArchive && onArchive(student)}
+            className="px-3 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          >
+            <Archive className="w-4 h-4" />
+            <span>{isArchived ? t('students.unarchive', 'إلغاء الأرشفة') : t('students.archive', 'أرشفة')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onDelete && onDelete(student.id)}
             className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
           >
             <Trash2 className="w-4 h-4" />
@@ -110,8 +120,6 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       {/* محتوى التبويب */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* البيانات الأكاديمية والحفظ */}
           <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4">
             <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" />
@@ -148,6 +156,11 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
                       <UserCheck className="w-3 h-3" />
                       <span>{t('common.active', 'نشط')}</span>
                     </span>
+                  ) : isArchived ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      <Archive className="w-3 h-3" />
+                      <span>{t('common.archived', 'مؤرشف')}</span>
+                    </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
                       <UserX className="w-3 h-3" />
@@ -159,7 +172,6 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
             </div>
           </div>
 
-          {/* البيانات الشخصية وولي الأمر */}
           <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4 md:col-span-2">
             <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2">
               {t('students.personal_and_parent_info', 'البيانات الشخصية وولي الأمر')}
