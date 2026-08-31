@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Plus, Users, UserCheck, UserX, AlertCircle, 
-  FilterX, ListFilter 
+  FilterX, ListFilter, Archive 
 } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
@@ -12,6 +12,7 @@ import AddStudentModal from './AddStudentModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
 import { useAcademy } from '@/context/AcademyContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const StudentsList = ({ 
   students = [], 
@@ -74,6 +75,7 @@ const StudentsList = ({
       total: students.length,
       active: students.filter((s) => s.status === 'active').length,
       inactive: students.filter((s) => s.status === 'inactive').length,
+      archived: students.filter((s) => s.status === 'archived').length,
     };
   }, [students]);
 
@@ -100,6 +102,13 @@ const StudentsList = ({
             <span>{t('common.inactive', 'غير نشط')}</span>
           </span>
         );
+      case 'archived':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <Archive className="w-3.5 h-3.5" />
+            <span>{t('common.archived', 'مؤرشف')}</span>
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-dark-input text-appText-sub border border-appBorder-input">
@@ -118,6 +127,40 @@ const StudentsList = ({
   const handleOpenEditModal = (studentToEdit) => {
     setEditingStudent(studentToEdit);
     setIsAddModalOpen(true);
+  };
+
+  const handleArchiveStudent = async (student) => {
+    const isCurrentlyArchived = student.status === 'archived' || student.status === 'inactive';
+    const newStatus = isCurrentlyArchived ? 'active' : 'archived';
+    
+    const confirmMessage = isCurrentlyArchived
+      ? t('students.confirm_unarchive', 'هل ترغب في إعادة تنشيط هذا الطالب؟')
+      : t('students.confirm_archive', 'هل أنت متأكد من أرشفة هذا الطالب؟');
+
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ status: newStatus })
+        .eq('id', student.id);
+
+      if (error) throw error;
+
+      const updatedStudent = { ...student, status: newStatus };
+
+      if (setStudents) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === student.id ? updatedStudent : s))
+        );
+      }
+
+      if (selectedStudent && selectedStudent.id === student.id) {
+        setSelectedStudent(updatedStudent);
+      }
+    } catch (err) {
+      alert(t('common.update_failed', 'فشل تغيير حالة الطالب: ') + (err?.message || ''));
+    }
   };
 
   const handleModalSuccess = (savedStudent) => {
@@ -149,6 +192,7 @@ const StudentsList = ({
         halaqas={halaqas}
         onBack={() => setSelectedStudent(null)}
         onEdit={(studentToEdit) => handleOpenEditModal(studentToEdit)}
+        onArchive={(studentToArchive) => handleArchiveStudent(studentToArchive)}
         onDelete={async (studentId) => {
           if (window.confirm(t('students.confirm_delete', 'هل أنت متأكد من حذف هذا الطالب؟'))) {
             if (onDeleteStudent) {
@@ -177,6 +221,7 @@ const StudentsList = ({
     { label: t('students.filter_all', 'جميع الحالات'), value: 'all' },
     { label: t('students.filter_active', 'نشط فقط'), value: 'active' },
     { label: t('students.filter_inactive', 'غير نشط فقط'), value: 'inactive' },
+    { label: t('students.filter_archived', 'المؤرشفون فقط'), value: 'archived' },
   ];
 
   const halaqaOptions = [
