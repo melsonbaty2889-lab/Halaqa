@@ -26,7 +26,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
 
   const age = student.birth_date ? calculateAge(student.birth_date) : null;
 
-  // تحسين دالة جلب مسمى نظام المراجعة لتشمل كافة الحالات من قاعدة البيانات
+  // جلب مسمى نظام المراجعة مع إضافة جميع الخيارات الممكنة من قاعدة البيانات
   const getMemorizationSystemLabel = (sys) => {
     switch (sys) {
       case 'juz': return t('students.sys_juz', 'أجزاء كاملة');
@@ -34,7 +34,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       case 'quarters': return t('students.sys_quarters', 'أرباع');
       case 'hizb': return t('students.sys_hizb', 'أحزاب');
       case 'lines': return t('students.sys_lines', 'أسطر');
-      case 'ayah_based': return t('students.sys_ayah_based', 'مستند إلى الآيات');
+      case 'ayah_based': return t('students.sys_ayah_based', 'بالآيات');
       default: return t('common.unspecified', 'غير محدد');
     }
   };
@@ -173,14 +173,14 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.birth_date', 'تاريخ الميلاد والعمر:')}</span>
-                <span className="text-appText-main font-medium inline-flex items-center gap-2">
-                  <span dir="ltr">{student.birth_date || t('common.unspecified', 'غير محدد')}</span>
+                <div className="text-appText-main font-medium flex items-center gap-2 mt-0.5" dir={isRtl ? 'rtl' : 'ltr'}>
+                  <span dir="ltr" className="text-sm">{student.birth_date || t('common.unspecified', 'غير محدد')}</span>
                   {age !== null && (
                     <span className="text-xs text-primary font-normal bg-primary/10 px-2 py-0.5 rounded-md">
-                      ({t('common.years_old', 'سنة {{count}}', { count: age }) || `${age} سنة`})
+                      ({age} {t('common.years_old', 'سنة')})
                     </span>
                   )}
-                </span>
+                </div>
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.country', 'دولة الإقامة:')}</span>
