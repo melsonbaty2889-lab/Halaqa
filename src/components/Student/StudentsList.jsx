@@ -11,7 +11,7 @@ import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 import { formatName } from '@/utils/formatters';
-import { useAcademy } from '@/context/AcademyContext'; // 1. استيراد useAcademy
+import { useAcademy } from '@/context/AcademyContext';
 
 const StudentsList = ({ 
   students = [], 
@@ -20,18 +20,14 @@ const StudentsList = ({
   halaqas = [], 
   isLoading,
   onDeleteStudent,
-  academySettings // prop اختياري
+  academySettings
 }) => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  // 2. جلب بيانات الأكاديمية من السياق كخيار احتياطي في حال عدم إرسال academySettings
   const { academy } = useAcademy?.() || {};
-
-  // 3. تحديد نوع التقويم (من prop أولاً، ثم من سياق الأكاديمية، ثم gregorian)
   const calendarType = academySettings?.calendar_type || academy?.calendar_type || 'gregorian';
 
-  // حالات البحث والفلترة والترتيب
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [halaqaFilter, setHalaqaFilter] = useState('all');
@@ -41,7 +37,6 @@ const StudentsList = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
-  // منطق البحث والفلترة الشامل
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
       const formattedName = formatName(student.name || student.full_name || '');
@@ -74,7 +69,6 @@ const StudentsList = ({
     });
   }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, isRtl]);
 
-  // إحصائيات الطلاب
   const stats = useMemo(() => {
     return {
       total: students.length,
@@ -252,9 +246,9 @@ const StudentsList = ({
       </div>
 
       {/* 3. عناصر البحث والفلترة والترتيب */}
-      <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-10">
+      <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          <div className="relative w-full col-span-2 md:col-span-1">
+          <div className="relative w-full col-span-2 md:col-span-1 z-10">
             <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -265,7 +259,7 @@ const StudentsList = ({
             />
           </div>
 
-          <div className="relative z-30 col-span-1">
+          <div className="relative z-40 col-span-1">
             <CustomSelect
               value={statusFilter}
               onChange={(val) => setStatusFilter(val)}
@@ -274,7 +268,7 @@ const StudentsList = ({
             />
           </div>
 
-          <div className="relative z-20 col-span-1">
+          <div className="relative z-30 col-span-1">
             <CustomSelect
               value={halaqaFilter}
               onChange={(val) => setHalaqaFilter(val)}
@@ -283,7 +277,7 @@ const StudentsList = ({
             />
           </div>
 
-          <div className="relative z-10 col-span-2 md:col-span-1">
+          <div className="relative z-20 col-span-2 md:col-span-1">
             <CustomSelect
               value={sortBy}
               onChange={(val) => setSortBy(val)}
