@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import { Calendar as CalendarIcon, Repeat } from 'lucide-react';
-import { ar, enUS } from 'date-fns/locale';
+import { Repeat } from 'lucide-react';
 import CustomSelect from './CustomSelect';
-import 'react-datepicker/dist/react-datepicker.css';
 
 const HIJRI_MONTHS = [
   "محرم", "صفر", "ربيع الأول", "ربيع الآخر", 
   "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", 
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+];
+
+const GREGORIAN_MONTHS = [
+  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
 ];
 
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
@@ -75,15 +77,12 @@ function calcAge(date) {
 export default function CustomDatePicker({ 
   selectedDate, 
   startDate, 
-  endDate, 
   onChange, 
   isArabic = true, 
   isRange = false,
-  placeholder,
   showAge = true
 }) {
   const [calendarMode, setCalendarMode] = useState('gregorian');
-  const currentLocale = isArabic ? ar : enUS;
 
   const rawDate = isRange ? startDate : selectedDate;
   const mainDate = (rawDate && !isNaN(new Date(rawDate).getTime())) ? new Date(rawDate) : new Date();
@@ -91,12 +90,22 @@ export default function CustomDatePicker({
   const hijriDetails = getHijriDetails(mainDate);
   const age = showAge ? calcAge(mainDate) : null;
 
+  // الحالات الميلادية
+  const [gDay, setGDay] = useState(mainDate.getDate());
+  const [gMonth, setGMonth] = useState(mainDate.getMonth());
+  const [gYear, setGYear] = useState(mainDate.getFullYear());
+
+  // الحالات الهجرية
   const [hDay, setHDay] = useState(hijriDetails.day);
   const [hMonth, setHMonth] = useState(hijriDetails.month);
   const [hYear, setHYear] = useState(hijriDetails.year);
 
   useEffect(() => {
     if (mainDate) {
+      setGDay(mainDate.getDate());
+      setGMonth(mainDate.getMonth());
+      setGYear(mainDate.getFullYear());
+
       const hd = getHijriDetails(mainDate);
       setHDay(hd.day);
       setHMonth(hd.month);
@@ -104,16 +113,40 @@ export default function CustomDatePicker({
     }
   }, [mainDate?.getTime()]);
 
+  const currentGregorianYear = new Date().getFullYear();
   const currentHijriYear = getHijriDetails(new Date()).year;
-  
-  const dayOptions = Array.from({ length: 30 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
-  const monthOptions = HIJRI_MONTHS.map((m, idx) => ({ label: m, value: idx }));
-  
-  // زيادة النطاق لـ 120 سنة لتغطية كبار السن بالكامل
-  const yearOptions = Array.from({ length: 120 }, (_, i) => {
+
+  // خيارات الأيام
+  const dayOptions = Array.from({ length: 31 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
+
+  // خيارات التقويم الميلادي
+  const gMonthOptions = GREGORIAN_MONTHS.map((m, idx) => ({ label: m, value: idx }));
+  const gYearOptions = Array.from({ length: 120 }, (_, i) => {
+    const y = currentGregorianYear - i;
+    return { label: String(y), value: y };
+  });
+
+  // خيارات التقويم الهجري
+  const hMonthOptions = HIJRI_MONTHS.map((m, idx) => ({ label: m, value: idx }));
+  const hYearOptions = Array.from({ length: 120 }, (_, i) => {
     const y = currentHijriYear - i;
     return { label: `${y} هـ`, value: y };
   });
+
+  const handleGregorianChange = (d, m, y) => {
+    const cleanD = Number(d);
+    const cleanM = Number(m);
+    const cleanY = Number(y);
+    const maxDays = new Date(cleanY, cleanM + 1, 0).getDate();
+    const safeD = Math.min(cleanD, maxDays);
+
+    setGDay(safeD);
+    setGMonth(cleanM);
+    setGYear(cleanY);
+
+    const newDate = new Date(cleanY, cleanM, safeD);
+    onChange(newDate);
+  };
 
   const handleHijriChange = (d, m, y) => {
     const cleanD = Number(d);
@@ -126,17 +159,6 @@ export default function CustomDatePicker({
 
     const convertedGregorian = hijriToGregorian(cleanY, cleanM, cleanD);
     onChange(convertedGregorian);
-  };
-
-  const formatShortDayName = (nameOfDay) => {
-    if (!isArabic) return nameOfDay.substring(0, 3);
-    const daysMap = {
-      'أحد': 'أحد', 'إثنين': 'إثن', 'ثلاثاء': 'ثلا',
-      'أربعاء': 'أرب', 'خميس': 'خمي', 'جمعة': 'جمع', 'سبت': 'سبت',
-      'Sun': 'أحد', 'Mon': 'إثن', 'Tue': 'ثلا',
-      'Wed': 'أرب', 'Thu': 'خمي', 'Fri': 'جمع', 'Sat': 'سبت'
-    };
-    return daysMap[nameOfDay.trim()] || nameOfDay.substring(0, 3);
   };
 
   return (
@@ -161,46 +183,42 @@ export default function CustomDatePicker({
       </div>
 
       {calendarMode === 'gregorian' ? (
-        <div className="relative flex items-center w-full">
-          <DatePicker
-            selected={mainDate}
-            selectsRange={isRange}
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(date) => onChange(date)}
-            locale={currentLocale}
-            dateFormat="yyyy/MM/dd"
-            maxDate={new Date()}
-            showYearDropdown
-            scrollableYearDropdown
-            yearDropdownItemNumber={120}
-            placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
-            formatWeekDay={formatShortDayName}
-            showMonthDropdown
-            useShortMonthInDropdown
-            className="app-input w-full pr-10 pl-4 py-2 text-xs transition-all cursor-pointer"
-            calendarClassName="custom-dark-calendar"
-            popperClassName="z-[9999]"
-            popperPlacement="bottom-start"
+        <div className="grid grid-cols-[1fr_1.2fr_1.1fr] gap-1.5 w-full">
+          <CustomSelect
+            options={dayOptions}
+            value={gDay}
+            onChange={(val) => handleGregorianChange(val, gMonth, gYear)}
+            className="text-[11px]"
           />
-          <CalendarIcon size={16} className="absolute start-3 text-[var(--primary)] pointer-events-none" />
+          <CustomSelect
+            options={gMonthOptions}
+            value={gMonth}
+            onChange={(val) => handleGregorianChange(gDay, val, gYear)}
+            className="text-[11px]"
+          />
+          <CustomSelect
+            options={gYearOptions}
+            value={gYear}
+            onChange={(val) => handleGregorianChange(gDay, gMonth, val)}
+            className="text-[11px]"
+          />
         </div>
       ) : (
         <div className="grid grid-cols-[1fr_1.2fr_1.1fr] gap-1.5 w-full">
           <CustomSelect
-            options={dayOptions}
+            options={dayOptions.slice(0, 30)}
             value={hDay}
             onChange={(val) => handleHijriChange(val, hMonth, hYear)}
             className="text-[11px]"
           />
           <CustomSelect
-            options={monthOptions}
+            options={hMonthOptions}
             value={hMonth}
             onChange={(val) => handleHijriChange(hDay, val, hYear)}
             className="text-[11px]"
           />
           <CustomSelect
-            options={yearOptions}
+            options={hYearOptions}
             value={hYear}
             onChange={(val) => handleHijriChange(hDay, hMonth, val)}
             className="text-[11px]"
