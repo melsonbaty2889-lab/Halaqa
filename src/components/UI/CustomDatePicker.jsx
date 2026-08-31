@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import { Calendar as CalendarIcon, Repeat, ChevronRight, ChevronLeft } from 'lucide-react';
 import { ar, enUS } from 'date-fns/locale';
 import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 import 'react-datepicker/dist/react-datepicker.css';
+
+// قائمة الشهور الهجرية والميلادية
+const HIJRI_MONTHS = [
+  "محرم", "صفر", "ربيع الأول", "ربيع الآخر", 
+  "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", 
+  "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+];
+
+const GREGORIAN_MONTHS_AR = [
+  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", 
+  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+];
 
 export default function CustomDatePicker({ 
   selectedDate, 
@@ -19,40 +31,35 @@ export default function CustomDatePicker({
 
   const currentLocale = isArabic ? ar : enUS;
   const mainDate = isRange ? startDate : selectedDate;
-  
-  // حساب النص الهجري
+
+  // حساب الهجري والميلادي للعرض
   const hijriText = mainDate ? formatHijriDate(mainDate, isArabic) : '';
-  
-  // حساب العمر
   const rawAge = (showAge && mainDate) ? calculateAge(mainDate) : null;
   const age = (rawAge !== null && rawAge > 0) ? rawAge : null;
 
-  // توليد السنوات (من 100 سنة مضت حتى السنة الحالية)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
-  const monthsArabic = [
-    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", 
-    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-  ];
+  // توليد السنوات الميلادية والهجرية
+  const currentYearGregorian = new Date().getFullYear();
+  const gregorianYears = Array.from({ length: 100 }, (_, i) => currentYearGregorian - i);
+  
+  // تقدير السنة الهجرية الحالية
+  const currentYearHijri = Math.floor((currentYearGregorian - 622) * (33 / 32));
+  const hijriYears = Array.from({ length: 100 }, (_, i) => currentYearHijri - i);
 
-  // خريطة أسماء الأيام
+  // تحويل من هجري إلى ميلادي تقريبي عند تغيير الاختيار في التقويم الهجري
+  const handleHijriSelection = (hijriYear, hijriMonthIndex, day = 1) => {
+    // معادلة تحويل هجري إلى ميلادي تقريبية لتحديد التاريخ الصحيح
+    const gYear = Math.floor(hijriYear + 622 - (hijriYear / 33));
+    const newDate = new Date(gYear, hijriMonthIndex, day);
+    onChange(newDate);
+  };
+
   const formatFullDayName = (nameOfDay) => {
     if (!isArabic) return nameOfDay;
     const daysMap = {
-      'أحد': 'الأحد',
-      'إثنين': 'الإثنين',
-      'ثلاثاء': 'الثلاثاء',
-      'أربعاء': 'الأربعاء',
-      'خميس': 'الخميس',
-      'جمعة': 'الجمعة',
-      'سبت': 'السبت',
-      'Sun': 'الأحد',
-      'Mon': 'الإثنين',
-      'Tue': 'الثلاثاء',
-      'Wed': 'الأربعاء',
-      'Thu': 'الخميس',
-      'Fri': 'الجمعة',
-      'Sat': 'السبت'
+      'أحد': 'الأحد', 'إثنين': 'الإثنين', 'ثلاثاء': 'الثلاثاء',
+      'أربعاء': 'الأربعاء', 'خميس': 'الخميس', 'جمعة': 'الجمعة', 'سبت': 'السبت',
+      'Sun': 'الأحد', 'Mon': 'الإثنين', 'Tue': 'الثلاثاء',
+      'Wed': 'الأربعاء', 'Thu': 'الخميس', 'Fri': 'الجمعة', 'Sat': 'السبت'
     };
     const cleanName = nameOfDay.trim();
     return daysMap[cleanName] || cleanName;
@@ -91,9 +98,13 @@ export default function CustomDatePicker({
           locale={currentLocale}
           dateFormat="yyyy/MM/dd"
           maxDate={new Date()}
-          placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
+          placeholderText={
+            placeholder || 
+            (calendarMode === 'hijri' 
+              ? (isArabic ? "اختر التاريخ الهجري..." : "Select Hijri date...") 
+              : (isArabic ? "اختر تاريخ الميلاد..." : "Select date..."))
+          }
           formatWeekDay={formatFullDayName}
-          /* معالجة فتح التقويم بأسلوب portal لمنع التداخل والـ overflow داخل المودال */
           withPortal={typeof window !== 'undefined' && window.innerWidth < 640}
           className="w-full bg-dark-input text-appText-main border border-appBorder-input rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover transition-all cursor-pointer shadow-inner placeholder:text-appText-sub/50"
           calendarClassName="custom-dark-calendar"
@@ -115,55 +126,73 @@ export default function CustomDatePicker({
             increaseMonth,
             prevMonthButtonDisabled,
             nextMonthButtonDisabled,
-          }) => (
-            <div className="flex items-center justify-between px-3 py-2 bg-dark-card rounded-t-xl border-b border-appBorder-card">
-              <button
-                type="button"
-                onClick={decreaseMonth}
-                disabled={prevMonthButtonDisabled}
-                className="p-1 text-appText-sub hover:text-appText-main disabled:opacity-30"
-              >
-                <ChevronRight size={18} />
-              </button>
+          }) => {
+            // في الوضع الهجري يتم استخراج القيم الهجرية الحالية
+            const activeHijriYear = Math.floor((date.getFullYear() - 622) * (33 / 32));
+            const activeHijriMonth = date.getMonth(); // استخدام كدليل شهر هجري
 
-              <div className="flex items-center gap-1.5">
-                {/* اختيار السنة */}
-                <select
-                  value={date.getFullYear()}
-                  onChange={({ target: { value } }) => changeYear(Number(value))}
-                  className="bg-dark-input text-primary font-bold text-xs px-2 py-1 rounded-md border border-appBorder-input focus:outline-none cursor-pointer"
+            return (
+              <div className="flex items-center justify-between px-3 py-2 bg-dark-card rounded-t-xl border-b border-appBorder-card">
+                <button
+                  type="button"
+                  onClick={decreaseMonth}
+                  disabled={prevMonthButtonDisabled}
+                  className="p-1 text-appText-sub hover:text-appText-main disabled:opacity-30"
                 >
-                  {years.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  <ChevronRight size={18} />
+                </button>
 
-                {/* اختيار الشهر */}
-                <select
-                  value={date.getMonth()}
-                  onChange={({ target: { value } }) => changeMonth(Number(value))}
-                  className="bg-dark-input text-primary font-bold text-xs px-2 py-1 rounded-md border border-appBorder-input focus:outline-none cursor-pointer"
+                <div className="flex items-center gap-1.5">
+                  {/* اختيار السنة (هجري / ميلادي) */}
+                  <select
+                    value={calendarMode === 'hijri' ? activeHijriYear : date.getFullYear()}
+                    onChange={({ target: { value } }) => {
+                      if (calendarMode === 'hijri') {
+                        handleHijriSelection(Number(value), activeHijriMonth);
+                      } else {
+                        changeYear(Number(value));
+                      }
+                    }}
+                    className="bg-dark-input text-primary font-bold text-xs px-2 py-1 rounded-md border border-appBorder-input focus:outline-none cursor-pointer"
+                  >
+                    {(calendarMode === 'hijri' ? hijriYears : gregorianYears).map((option) => (
+                      <option key={option} value={option}>
+                        {option} {calendarMode === 'hijri' ? 'هـ' : ''}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* اختيار الشهر (هجري / ميلادي) */}
+                  <select
+                    value={calendarMode === 'hijri' ? activeHijriMonth : date.getMonth()}
+                    onChange={({ target: { value } }) => {
+                      if (calendarMode === 'hijri') {
+                        handleHijriSelection(activeHijriYear, Number(value));
+                      } else {
+                        changeMonth(Number(value));
+                      }
+                    }}
+                    className="bg-dark-input text-primary font-bold text-xs px-2 py-1 rounded-md border border-appBorder-input focus:outline-none cursor-pointer"
+                  >
+                    {(calendarMode === 'hijri' ? HIJRI_MONTHS : GREGORIAN_MONTHS_AR).map((option, index) => (
+                      <option key={option} value={index}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={increaseMonth}
+                  disabled={nextMonthButtonDisabled}
+                  className="p-1 text-appText-sub hover:text-appText-main disabled:opacity-30"
                 >
-                  {monthsArabic.map((option, index) => (
-                    <option key={option} value={index}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  <ChevronLeft size={18} />
+                </button>
               </div>
-
-              <button
-                type="button"
-                onClick={increaseMonth}
-                disabled={nextMonthButtonDisabled}
-                className="p-1 text-appText-sub hover:text-appText-main disabled:opacity-30"
-              >
-                <ChevronLeft size={18} />
-              </button>
-            </div>
-          )}
+            );
+          }}
         />
 
         <CalendarIcon 
@@ -172,11 +201,15 @@ export default function CustomDatePicker({
         />
       </div>
 
-      {/* شريط المعاينة الهجرية */}
+      {/* شريط المعاينة والربط بين الهجري والميلادي */}
       {mainDate && (
         <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-xs text-appText-sub font-medium">
-          <span>{isArabic ? 'الموافق هجرياً:' : 'Hijri:'}</span>
-          <span className="font-semibold text-primary">{hijriText}</span>
+          <span>{calendarMode === 'hijri' ? (isArabic ? 'الموافق ميلادياً:' : 'Gregorian:') : (isArabic ? 'الموافق هجرياً:' : 'Hijri:')}</span>
+          <span className="font-semibold text-primary">
+            {calendarMode === 'hijri' 
+              ? `${mainDate.getFullYear()}/${String(mainDate.getMonth() + 1).padStart(2, '0')}/${String(mainDate.getDate()).padStart(2, '0')} م`
+              : hijriText}
+          </span>
         </div>
       )}
     </div>
