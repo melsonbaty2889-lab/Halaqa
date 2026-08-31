@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import { Calendar as CalendarIcon, Repeat } from 'lucide-react';
 import { ar, enUS } from 'date-fns/locale';
-import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const HIJRI_MONTHS = [
@@ -11,25 +10,23 @@ const HIJRI_MONTHS = [
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
 ];
 
-// تحويل دقيق جداً باستخدام Intl الخاص بالنظام
-function hijriToGregorianDate(hYear, hMonthIndex, hDay) {
+// دالة تحويل دقيقة من هجري إلى ميلادي
+function hijriToGregorian(hYear, hMonthIdx, hDay) {
   try {
-    // نقطة بداية تقريبية
-    let gYear = Math.round((hYear - 1397) * 0.970224 + 1977);
-    let testDate = new Date(gYear, hMonthIndex, hDay);
-
+    const gYearEst = Math.round((hYear - 1397) * 0.970224 + 1977);
+    const testDate = new Date(gYearEst, hMonthIdx, Math.min(hDay, 28));
     const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umaqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
 
-    for (let i = -30; i <= 30; i++) {
-      let checkDate = new Date(testDate.getTime() + i * 86400000);
-      let parts = formatter.formatToParts(checkDate);
-      let hy = parseInt(parts.find(p => p.type === 'year')?.value || 0, 10);
-      let hm = parseInt(parts.find(p => p.type === 'month')?.value || 0, 10) - 1;
-      let hd = parseInt(parts.find(p => p.type === 'day')?.value || 0, 10);
+    for (let i = -35; i <= 35; i++) {
+      const checkDate = new Date(testDate.getTime() + i * 86400000);
+      const parts = formatter.formatToParts(checkDate);
+      const hy = parseInt(parts.find(p => p.type === 'year')?.value || '0', 10);
+      const hm = parseInt(parts.find(p => p.type === 'month')?.value || '0', 10) - 1;
+      const hd = parseInt(parts.find(p => p.type === 'day')?.value || '0', 10);
 
-      if (hy === hYear && hm === hMonthIndex && hd === hDay) {
+      if (hy === hYear && hm === hMonthIdx && hd === hDay) {
         return checkDate;
       }
     }
@@ -39,23 +36,41 @@ function hijriToGregorianDate(hYear, hMonthIndex, hDay) {
   }
 }
 
-function getHijriParts(date) {
-  if (!date || isNaN(date.getTime())) {
-    date = new Date();
-  }
+// استخراج المكونات الهجرية والنص التوضيحي
+function getHijriDetails(date) {
+  const validDate = (date && !isNaN(new Date(date).getTime())) ? new Date(date) : new Date();
   try {
     const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umaqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
-    const parts = formatter.formatToParts(date);
+    const parts = formatter.formatToParts(validDate);
+
+    const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+    const monthIdx = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
+    const yearNum = parseInt(parts.find(p => p.type === 'year')?.value || '1445', 10);
+
     return {
-      day: parseInt(parts.find(p => p.type === 'day')?.value || 1, 10),
-      month: parseInt(parts.find(p => p.type === 'month')?.value || 1, 10) - 1,
-      year: parseInt(parts.find(p => p.type === 'year')?.value || 1445, 10)
+      day: dayNum,
+      month: monthIdx,
+      year: yearNum,
+      text: `${dayNum} ${HIJRI_MONTHS[monthIdx]} ${yearNum} هـ`
     };
   } catch (e) {
-    return { day: 1, month: 0, year: 1445 };
+    return { day: 1, month: 0, year: 1445, text: '' };
   }
+}
+
+// حساب العمر
+function calcAge(date) {
+  if (!date || isNaN(new Date(date).getTime())) return null;
+  const d = new Date(date);
+  const today = new Date();
+  let age = today.getFullYear() - d.getFullYear();
+  const m = today.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : null;
 }
 
 export default function CustomDatePicker({ 
@@ -69,39 +84,38 @@ export default function CustomDatePicker({
   showAge = false
 }) {
   const [calendarMode, setCalendarMode] = useState('gregorian');
-
   const currentLocale = isArabic ? ar : enUS;
-  const mainDate = isRange ? startDate : selectedDate;
 
-  // استخراج المكونات الهجرية للتاريخ الحالي
-  const hijriParts = getHijriParts(mainDate || new Date());
-  const hijriText = mainDate ? formatHijriDate(mainDate, isArabic) : '';
-  const rawAge = (showAge && mainDate) ? calculateAge(mainDate) : null;
-  const age = (rawAge !== null && rawAge > 0) ? rawAge : null;
+  // تأمين التمرير والتأكد من تحويل النص لـ Date إن وجد
+  const rawDate = isRange ? startDate : selectedDate;
+  const mainDate = (rawDate && !isNaN(new Date(rawDate).getTime())) ? new Date(rawDate) : null;
 
-  const [hDay, setHDay] = useState(hijriParts.day);
-  const [hMonth, setHMonth] = useState(hijriParts.month);
-  const [hYear, setHYear] = useState(hijriParts.year);
+  const hijriDetails = getHijriDetails(mainDate);
+  const age = (showAge && mainDate) ? calcAge(mainDate) : null;
 
-  // مزامنة الاختيارات الهجرية فور تغيير التاريخ من التقويم الميلادي
+  const [hDay, setHDay] = useState(hijriDetails.day);
+  const [hMonth, setHMonth] = useState(hijriDetails.month);
+  const [hYear, setHYear] = useState(hijriDetails.year);
+
+  // مزامنة القيم عند تغير DatePicker الميلادي
   useEffect(() => {
-    if (mainDate && !isNaN(mainDate.getTime())) {
-      const hp = getHijriParts(mainDate);
-      setHDay(hp.day);
-      setHMonth(hp.month);
-      setHYear(hp.year);
+    if (mainDate) {
+      const hd = getHijriDetails(mainDate);
+      setHDay(hd.day);
+      setHMonth(hd.month);
+      setHYear(hd.year);
     }
-  }, [mainDate]);
+  }, [mainDate?.getTime()]);
 
-  // قائمة السنوات الهجرية المنطقية (من السنة الحالية وحسب 90 سنة للخلف)
-  const currentHijriYear = getHijriParts(new Date()).year;
+  // توليد السنوات الهجرية (السنة الحالية - 90 سنة)
+  const currentHijriYear = getHijriDetails(new Date()).year;
   const hijriYears = Array.from({ length: 90 }, (_, i) => currentHijriYear - i);
 
-  const handleHijriChange = (day, monthIdx, year) => {
-    setHDay(day);
-    setHMonth(monthIdx);
-    setHYear(year);
-    const convertedGregorian = hijriToGregorianDate(year, monthIdx, day);
+  const handleHijriChange = (d, m, y) => {
+    setHDay(d);
+    setHMonth(m);
+    setHYear(y);
+    const convertedGregorian = hijriToGregorian(y, m, d);
     onChange(convertedGregorian);
   };
 
@@ -142,11 +156,11 @@ export default function CustomDatePicker({
       {calendarMode === 'gregorian' ? (
         <div className="relative flex items-center w-full">
           <DatePicker
-            selected={mainDate && !isNaN(mainDate.getTime()) ? mainDate : null}
+            selected={mainDate}
             selectsRange={isRange}
             startDate={startDate}
             endDate={endDate}
-            onChange={onChange}
+            onChange={(date) => onChange(date)}
             locale={currentLocale}
             dateFormat="yyyy/MM/dd"
             maxDate={new Date()}
@@ -201,12 +215,12 @@ export default function CustomDatePicker({
       )}
 
       {/* الشريط السفلي للتأكيد */}
-      {mainDate && !isNaN(mainDate.getTime()) && (
+      {mainDate && (
         <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-xs text-appText-sub font-medium">
           <span>{calendarMode === 'gregorian' ? 'الموافق هجرياً:' : 'الموافق ميلادياً:'}</span>
           <span className="font-semibold text-primary">
             {calendarMode === 'gregorian' 
-              ? hijriText 
+              ? hijriDetails.text 
               : `${mainDate.getFullYear()}/${String(mainDate.getMonth() + 1).padStart(2, '0')}/${String(mainDate.getDate()).padStart(2, '0')} م`}
           </span>
         </div>
