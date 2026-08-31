@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import { Calendar as CalendarIcon, Repeat } from 'lucide-react';
 import { ar, enUS } from 'date-fns/locale';
+import CustomSelect from './CustomSelect';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const HIJRI_MONTHS = [
@@ -10,7 +11,6 @@ const HIJRI_MONTHS = [
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
 ];
 
-// تحويل دقيق من هجري إلى ميلادي مع ضمان سلامة النطاق
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
   try {
     const approxGYear = Math.round((hYear - 1397) * 0.970224 + 1977);
@@ -36,7 +36,6 @@ function hijriToGregorian(hYear, hMonthIdx, hDay) {
   }
 }
 
-// استخراج بيانات الهجري الحقيقية
 function getHijriDetails(date) {
   if (!date || isNaN(new Date(date).getTime())) return { day: 1, month: 0, year: 1445, text: '' };
   const validDate = new Date(date);
@@ -96,7 +95,6 @@ export default function CustomDatePicker({
   const [hMonth, setHMonth] = useState(hijriDetails.month);
   const [hYear, setHYear] = useState(hijriDetails.year);
 
-  // تحديث التزامن فور تغيير التاريخ الميلادي
   useEffect(() => {
     if (mainDate) {
       const hd = getHijriDetails(mainDate);
@@ -107,7 +105,12 @@ export default function CustomDatePicker({
   }, [mainDate?.getTime()]);
 
   const currentHijriYear = getHijriDetails(new Date()).year;
-  const hijriYears = Array.from({ length: 90 }, (_, i) => currentHijriYear - i);
+  const dayOptions = Array.from({ length: 30 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
+  const monthOptions = HIJRI_MONTHS.map((m, idx) => ({ label: m, value: idx }));
+  const yearOptions = Array.from({ length: 90 }, (_, i) => {
+    const y = currentHijriYear - i;
+    return { label: `${y} هـ`, value: y };
+  });
 
   const handleHijriChange = (d, m, y) => {
     setHDay(d);
@@ -117,7 +120,6 @@ export default function CustomDatePicker({
     onChange(convertedGregorian);
   };
 
-  // اختصار اسم اليوم لمنع التساقط والتداخل
   const formatShortDayName = (nameOfDay) => {
     if (!isArabic) return nameOfDay.substring(0, 3);
     const daysMap = {
@@ -177,35 +179,21 @@ export default function CustomDatePicker({
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2 w-full">
-          <select
+          <CustomSelect
+            options={dayOptions}
             value={hDay}
-            onChange={(e) => handleHijriChange(Number(e.target.value), hMonth, hYear)}
-            className="bg-dark-input text-appText-main border border-appBorder-input rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover cursor-pointer"
-          >
-            {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
-              <option key={day} value={day}>{day}</option>
-            ))}
-          </select>
-
-          <select
+            onChange={(val) => handleHijriChange(Number(val), hMonth, hYear)}
+          />
+          <CustomSelect
+            options={monthOptions}
             value={hMonth}
-            onChange={(e) => handleHijriChange(hDay, Number(e.target.value), hYear)}
-            className="bg-dark-input text-appText-main border border-appBorder-input rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover cursor-pointer font-medium"
-          >
-            {HIJRI_MONTHS.map((m, idx) => (
-              <option key={m} value={idx}>{m}</option>
-            ))}
-          </select>
-
-          <select
+            onChange={(val) => handleHijriChange(hDay, Number(val), hYear)}
+          />
+          <CustomSelect
+            options={yearOptions}
             value={hYear}
-            onChange={(e) => handleHijriChange(hDay, hMonth, Number(e.target.value))}
-            className="bg-dark-input text-appText-main border border-appBorder-input rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover cursor-pointer font-bold"
-          >
-            {hijriYears.map((yr) => (
-              <option key={yr} value={yr}>{yr} هـ</option>
-            ))}
-          </select>
+            onChange={(val) => handleHijriChange(hDay, hMonth, Number(val))}
+          />
         </div>
       )}
 
