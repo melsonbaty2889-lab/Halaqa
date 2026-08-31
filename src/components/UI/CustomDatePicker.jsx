@@ -13,26 +13,36 @@ const GREGORIAN_MONTHS = [
   "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
 ];
 
+// دالة تحويل دقيقة تعتمد على Intl API
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
   try {
-    const approxGYear = Math.round((hYear - 1397) * 0.970224 + 1977);
-    const testDate = new Date(approxGYear, hMonthIdx, Math.min(hDay, 28));
+    let approxYear = Math.floor(1397 + (hYear - 1397) * 1.03068);
+    let testDate = new Date(approxYear, 0, 1);
     const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
 
-    for (let i = -40; i <= 40; i++) {
-      const checkDate = new Date(testDate.getTime() + i * 86400000);
-      const parts = formatter.formatToParts(checkDate);
-      const hy = parseInt(parts.find(p => p.type === 'year')?.value || '0', 10);
-      const hm = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
-      const hd = parseInt(parts.find(p => p.type === 'day')?.value || '0', 10);
+    let foundDate = null;
+    let minDiff = Infinity;
+
+    for (let offset = -400; offset <= 400; offset++) {
+      let d = new Date(testDate.getTime() + offset * 86400000);
+      let parts = formatter.formatToParts(d);
+      let hy = parseInt(parts.find(p => p.type === 'year')?.value || '0', 10);
+      let hm = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
+      let hd = parseInt(parts.find(p => p.type === 'day')?.value || '0', 10);
 
       if (hy === hYear && hm === hMonthIdx && hd === hDay) {
-        return checkDate;
+        return d;
+      }
+
+      let diff = Math.abs(hy - hYear) * 354 + Math.abs(hm - hMonthIdx) * 30 + Math.abs(hd - hDay);
+      if (diff < minDiff) {
+        minDiff = diff;
+        foundDate = d;
       }
     }
-    return testDate;
+    return foundDate || new Date();
   } catch (e) {
     return new Date();
   }
@@ -90,16 +100,15 @@ export default function CustomDatePicker({
   const hijriDetails = getHijriDetails(mainDate);
   const age = showAge ? calcAge(mainDate) : null;
 
-  // الحالات الميلادية
   const [gDay, setGDay] = useState(mainDate.getDate());
   const [gMonth, setGMonth] = useState(mainDate.getMonth());
   const [gYear, setGYear] = useState(mainDate.getFullYear());
 
-  // الحالات الهجرية
   const [hDay, setHDay] = useState(hijriDetails.day);
   const [hMonth, setHMonth] = useState(hijriDetails.month);
   const [hYear, setHYear] = useState(hijriDetails.year);
 
+  // تحديث القيم عند تغير التاريخ الخارجي
   useEffect(() => {
     if (mainDate) {
       setGDay(mainDate.getDate());
@@ -116,17 +125,14 @@ export default function CustomDatePicker({
   const currentGregorianYear = new Date().getFullYear();
   const currentHijriYear = getHijriDetails(new Date()).year;
 
-  // خيارات الأيام
   const dayOptions = Array.from({ length: 31 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
 
-  // خيارات التقويم الميلادي
   const gMonthOptions = GREGORIAN_MONTHS.map((m, idx) => ({ label: m, value: idx }));
   const gYearOptions = Array.from({ length: 120 }, (_, i) => {
     const y = currentGregorianYear - i;
     return { label: String(y), value: y };
   });
 
-  // خيارات التقويم الهجري
   const hMonthOptions = HIJRI_MONTHS.map((m, idx) => ({ label: m, value: idx }));
   const hYearOptions = Array.from({ length: 120 }, (_, i) => {
     const y = currentHijriYear - i;
@@ -140,11 +146,17 @@ export default function CustomDatePicker({
     const maxDays = new Date(cleanY, cleanM + 1, 0).getDate();
     const safeD = Math.min(cleanD, maxDays);
 
+    const newDate = new Date(cleanY, cleanM, safeD);
+    
     setGDay(safeD);
     setGMonth(cleanM);
     setGYear(cleanY);
 
-    const newDate = new Date(cleanY, cleanM, safeD);
+    const updatedHijri = getHijriDetails(newDate);
+    setHDay(updatedHijri.day);
+    setHMonth(updatedHijri.month);
+    setHYear(updatedHijri.year);
+
     onChange(newDate);
   };
 
@@ -158,6 +170,11 @@ export default function CustomDatePicker({
     setHYear(cleanY);
 
     const convertedGregorian = hijriToGregorian(cleanY, cleanM, cleanD);
+    
+    setGDay(convertedGregorian.getDate());
+    setGMonth(convertedGregorian.getMonth());
+    setGYear(convertedGregorian.getFullYear());
+
     onChange(convertedGregorian);
   };
 
