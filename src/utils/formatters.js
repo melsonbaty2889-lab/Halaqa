@@ -3,7 +3,12 @@
  * تدعم المعايير الدولية (Intl) والتعدد اللغوي الكامل.
  */
 
+import { RIWAYAT_MAP } from '@/constants/riwayat';
+import { COUNTRIES_MAP } from '@/constants/countries';
+
+// ==========================================
 // 1. تنسيق الأسماء وتعدد اللغات
+// ==========================================
 export const formatName = (name, lang = 'ar', fallback = 'غير محدد') => {
   if (!name) return fallback;
   
@@ -26,7 +31,9 @@ export const formatShortName = (name, lang = 'ar') => {
   return `${parts[0]} ${parts[parts.length - 1]}`;
 };
 
+// ==========================================
 // 2. تنسيق الأرقام والنسب والعملات دولياً
+// ==========================================
 export const formatNumber = (number, locale = 'ar-EG', options = {}) => {
   if (number === null || number === undefined || isNaN(number)) return '0';
   return new Intl.NumberFormat(locale, options).format(number);
@@ -51,7 +58,9 @@ export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
   }).format(normalizedValue);
 };
 
+// ==========================================
 // 3. تنسيق الهواتف الدولية
+// ==========================================
 export const formatPhoneNumber = (phone, defaultCountryCode = '+20') => {
   if (!phone) return '';
   const cleaned = phone.replace(/[^\d+]/g, '');
@@ -63,7 +72,9 @@ export const formatPhoneNumber = (phone, defaultCountryCode = '+20') => {
   return `${defaultCountryCode}${cleaned}`;
 };
 
-// 4. تنسيق الآيات والسور والأجزاء القرآ نية
+// ==========================================
+// 4. تنسيق الآيات والسور والأجزاء القرآنية
+// ==========================================
 export const formatAyahRange = (surahName, startAyah, endAyah, lang = 'ar') => {
   if (!surahName) return '';
   const surah = typeof surahName === 'object' ? formatName(surahName, lang) : surahName;
@@ -77,7 +88,9 @@ export const formatAyahRange = (surahName, startAyah, endAyah, lang = 'ar') => {
     : `${surah}: Ayah ${startAyah}-${endAyah}`;
 };
 
+// ==========================================
 // 5. اقتطاع النصوص وحجم الملفات
+// ==========================================
 export const truncateText = (text, maxLength = 50, fallback = '') => {
   if (!text) return fallback;
   if (text.length <= maxLength) return text;
@@ -93,4 +106,27 @@ export const formatFileSize = (bytes, lang = 'ar') => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const size = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
   return `${formatNumber(size, lang === 'ar' ? 'ar-EG' : 'en-US')} ${sizes[i]}`;
+};
+
+// ==========================================
+// 6. تنسيق الروايات القرآنية
+// ==========================================
+export const formatRiwayah = (riwayahKey, lang = 'ar', fallback = 'غير محددة') => {
+  if (!riwayahKey) return fallback;
+  if (lang === 'ar') {
+    return RIWAYAT_MAP[riwayahKey] || riwayahKey;
+  }
+  return riwayahKey;
+};
+
+// ==========================================
+// 7. تنسيق أسماء الدول والجنسيات من القائمة الثابتة
+// ==========================================
+export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير محددة') => {
+  if (!countryCode) return fallback;
+  const country = COUNTRIES_MAP[countryCode.toUpperCase()];
+  if (country) {
+    return lang === 'ar' ? country.nameAr : country.nameEn;
+  }
+  return countryCode;
 };
