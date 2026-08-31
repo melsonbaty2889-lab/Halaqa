@@ -98,7 +98,14 @@ const AddStudentModal = ({
   }, [studentToEdit, isOpen]);
 
   const handleDateChange = (date) => {
-    const bDate = date ? date.toISOString().split('T')[0] : '';
+    let bDate = '';
+    if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      bDate = `${year}-${month}-${day}`;
+    }
+
     setFormData((prev) => ({ ...prev, birth_date: bDate }));
     if (bDate) {
       const age = calculateAge(bDate);
@@ -195,7 +202,7 @@ const AddStudentModal = ({
     } catch (err) {
       console.error('Error saving data:', err);
       alert(`${t('common.save_error', 'حدث خطأ أثناء الحفظ:')} ${err.message || ''}`);
-    } finally {
+    } flex {
       setIsSubmitting(false);
     }
   };
