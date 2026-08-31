@@ -10,12 +10,12 @@ const HIJRI_MONTHS = [
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
 ];
 
-// دالة تحويل دقيقة من هجري إلى ميلادي
+// تحويل دقيق من هجري إلى ميلادي مع ضمان سلامة النطاق
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
   try {
-    const gYearEst = Math.round((hYear - 1397) * 0.970224 + 1977);
-    const testDate = new Date(gYearEst, hMonthIdx, Math.min(hDay, 28));
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umaqura', {
+    const approxGYear = Math.round((hYear - 1397) * 0.970224 + 1977);
+    const testDate = new Date(approxGYear, hMonthIdx, Math.min(hDay, 28));
+    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
 
@@ -36,11 +36,12 @@ function hijriToGregorian(hYear, hMonthIdx, hDay) {
   }
 }
 
-// استخراج المكونات الهجرية والنص التوضيحي
+// استخراج بيانات الهجري الحقيقية
 function getHijriDetails(date) {
-  const validDate = (date && !isNaN(new Date(date).getTime())) ? new Date(date) : new Date();
+  if (!date || isNaN(new Date(date).getTime())) return { day: 1, month: 0, year: 1445, text: '' };
+  const validDate = new Date(date);
   try {
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umaqura', {
+    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
     const parts = formatter.formatToParts(validDate);
@@ -60,7 +61,6 @@ function getHijriDetails(date) {
   }
 }
 
-// حساب العمر
 function calcAge(date) {
   if (!date || isNaN(new Date(date).getTime())) return null;
   const d = new Date(date);
@@ -86,7 +86,6 @@ export default function CustomDatePicker({
   const [calendarMode, setCalendarMode] = useState('gregorian');
   const currentLocale = isArabic ? ar : enUS;
 
-  // تأمين التمرير والتأكد من تحويل النص لـ Date إن وجد
   const rawDate = isRange ? startDate : selectedDate;
   const mainDate = (rawDate && !isNaN(new Date(rawDate).getTime())) ? new Date(rawDate) : null;
 
@@ -97,7 +96,7 @@ export default function CustomDatePicker({
   const [hMonth, setHMonth] = useState(hijriDetails.month);
   const [hYear, setHYear] = useState(hijriDetails.year);
 
-  // مزامنة القيم عند تغير DatePicker الميلادي
+  // تحديث التزامن فور تغيير التاريخ الميلادي
   useEffect(() => {
     if (mainDate) {
       const hd = getHijriDetails(mainDate);
@@ -107,7 +106,6 @@ export default function CustomDatePicker({
     }
   }, [mainDate?.getTime()]);
 
-  // توليد السنوات الهجرية (السنة الحالية - 90 سنة)
   const currentHijriYear = getHijriDetails(new Date()).year;
   const hijriYears = Array.from({ length: 90 }, (_, i) => currentHijriYear - i);
 
@@ -119,20 +117,20 @@ export default function CustomDatePicker({
     onChange(convertedGregorian);
   };
 
-  const formatFullDayName = (nameOfDay) => {
-    if (!isArabic) return nameOfDay;
+  // اختصار اسم اليوم لمنع التساقط والتداخل
+  const formatShortDayName = (nameOfDay) => {
+    if (!isArabic) return nameOfDay.substring(0, 3);
     const daysMap = {
-      'أحد': 'الأحد', 'إثنين': 'الإثنين', 'ثلاثاء': 'الثلاثاء',
-      'أربعاء': 'الأربعاء', 'خميس': 'الخميس', 'جمعة': 'الجمعة', 'سبت': 'السبت',
-      'Sun': 'الأحد', 'Mon': 'الإثنين', 'Tue': 'الثلاثاء',
-      'Wed': 'الأربعاء', 'Thu': 'الخميس', 'Fri': 'الجمعة', 'Sat': 'السبت'
+      'أحد': 'أحد', 'إثنين': 'إثن', 'ثلاثاء': 'ثلا',
+      'أربعاء': 'أرب', 'خميس': 'خمي', 'جمعة': 'جمع', 'سبت': 'سبت',
+      'Sun': 'أحد', 'Mon': 'إثن', 'Tue': 'ثلا',
+      'Wed': 'أرب', 'Thu': 'خمي', 'Fri': 'جمع', 'Sat': 'سبت'
     };
-    return daysMap[nameOfDay.trim()] || nameOfDay;
+    return daysMap[nameOfDay.trim()] || nameOfDay.substring(0, 3);
   };
 
   return (
     <div className="flex flex-col w-full space-y-2">
-      {/* شريط التحويل العلوي */}
       <div className="flex items-center justify-between text-xs">
         <button
           type="button"
@@ -152,7 +150,6 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* حقول الإدخال */}
       {calendarMode === 'gregorian' ? (
         <div className="relative flex items-center w-full">
           <DatePicker
@@ -168,8 +165,9 @@ export default function CustomDatePicker({
             scrollableYearDropdown
             yearDropdownItemNumber={90}
             placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
-            formatWeekDay={formatFullDayName}
-            withPortal={typeof window !== 'undefined' && window.innerWidth < 640}
+            formatWeekDay={formatShortDayName}
+            showMonthDropdown
+            useShortMonthInDropdown
             className="w-full bg-dark-input text-appText-main border border-appBorder-input rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover transition-all cursor-pointer shadow-inner placeholder:text-appText-sub/50"
             calendarClassName="custom-dark-calendar"
             popperClassName="z-[9999]"
@@ -179,7 +177,6 @@ export default function CustomDatePicker({
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2 w-full">
-          {/* اليوم الهجري */}
           <select
             value={hDay}
             onChange={(e) => handleHijriChange(Number(e.target.value), hMonth, hYear)}
@@ -190,7 +187,6 @@ export default function CustomDatePicker({
             ))}
           </select>
 
-          {/* الشهر الهجري */}
           <select
             value={hMonth}
             onChange={(e) => handleHijriChange(hDay, Number(e.target.value), hYear)}
@@ -201,7 +197,6 @@ export default function CustomDatePicker({
             ))}
           </select>
 
-          {/* السنة الهجرية */}
           <select
             value={hYear}
             onChange={(e) => handleHijriChange(hDay, hMonth, Number(e.target.value))}
@@ -214,7 +209,6 @@ export default function CustomDatePicker({
         </div>
       )}
 
-      {/* الشريط السفلي للتأكيد */}
       {mainDate && (
         <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-xs text-appText-sub font-medium">
           <span>{calendarMode === 'gregorian' ? 'الموافق هجرياً:' : 'الموافق ميلادياً:'}</span>
