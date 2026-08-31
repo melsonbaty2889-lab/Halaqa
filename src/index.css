@@ -261,7 +261,7 @@
   font-weight: 600 !important;
 }
 
-/* 🟢 محاذاة الأعمدة وضبط المسافات بالتساوي */
+/* محاذاة وتوزيع الأيام بمرونة */
 .custom-dark-calendar .react-datepicker__day-names,
 .custom-dark-calendar .react-datepicker__week {
   display: flex !important;
@@ -272,71 +272,55 @@
 .custom-dark-calendar .react-datepicker__day-name {
   color: #10B981 !important;
   font-weight: 700 !important;
-  width: 2.4rem !important;
+  width: 2.2rem !important;
   line-height: 2rem !important;
   font-size: 0.725rem !important;
-  margin: 0.05rem !important;
+  margin: 0.02rem !important;
   text-align: center !important;
 }
 
 .custom-dark-calendar .react-datepicker__day {
   color: #E2E8F0 !important;
   border-radius: 0.5rem !important;
-  width: 2.4rem !important;
-  height: 2.25rem !important;
-  line-height: 2.25rem !important;
-  margin: 0.05rem !important;
+  width: 2.2rem !important;
+  height: 2.2rem !important;
+  line-height: 2.2rem !important;
+  margin: 0.02rem !important;
   font-size: 0.8125rem !important;
   text-align: center !important;
   transition: all 0.15s ease !important;
 }
 
-.custom-dark-calendar .react-datepicker__month {
-  margin: 0.4rem 0.2rem !important;
+/* إصلاح تباين وألوان قائمة اختيار السنة المنسدلة Dropdown */
+.custom-dark-calendar .react-datepicker__year-dropdown,
+.custom-dark-calendar .react-datepicker__month-dropdown {
+  background-color: #0F172A !important;
+  border: 1px solid #1B2738 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  color: #FFFFFF !important;
+  padding: 6px 0 !important;
 }
 
-/* 🟢 تخصيص العرض في الشاشات الصغيرة (Modal Portal) */
-.react-datepicker-popper {
-  z-index: 9999 !important;
+.custom-dark-calendar .react-datepicker__year-option,
+.custom-dark-calendar .react-datepicker__month-option {
+  padding: 6px 12px !important;
+  color: #E2E8F0 !important;
+  font-size: 0.8125rem !important;
 }
 
-.react-datepicker__portal {
-  background-color: rgba(7, 11, 17, 0.8) !important;
-  backdrop-filter: blur(4px) !important;
-  z-index: 99999 !important;
+.custom-dark-calendar .react-datepicker__year-option:hover,
+.custom-dark-calendar .react-datepicker__month-option:hover {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
 }
 
-/* 🟢 تباين وألوان قوائم المنسدلة (الأشهر والسنوات) */
-.custom-dark-calendar .react-datepicker__month-dropdown-container,
-.custom-dark-calendar .react-datepicker__year-dropdown-container {
-  margin: 0 4px;
-}
-
-.custom-dark-calendar select.react-datepicker__month-select,
-.custom-dark-calendar select.react-datepicker__year-select {
+.custom-dark-calendar select.react-datepicker__year-select,
+.custom-dark-calendar select.react-datepicker__month-select {
   background-color: #0A101D !important;
   color: #10B981 !important;
   border: 1px solid #1B2738 !important;
   border-radius: 0.5rem !important;
   padding: 4px 8px !important;
-  font-size: 0.8125rem !important;
-  font-weight: 700 !important;
-  outline: none !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-}
-
-.custom-dark-calendar select.react-datepicker__month-select:hover,
-.custom-dark-calendar select.react-datepicker__year-select:hover {
-  border-color: #10B981 !important;
-}
-
-/* 🟢 خلفية خيارات القائمة المنسدلة عند فتحها */
-.custom-dark-calendar select.react-datepicker__month-select option,
-.custom-dark-calendar select.react-datepicker__year-select option {
-  background-color: #0F172A !important;
-  color: #FFFFFF !important;
-  padding: 8px !important;
 }
 
 .custom-dark-calendar .react-datepicker__day:hover {
@@ -363,4 +347,14 @@
 
 .custom-dark-calendar .react-datepicker__navigation-icon::before {
   border-color: #94A3B8 !important;
+}
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker__portal {
+  background-color: rgba(7, 11, 17, 0.8) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 99999 !important;
 }
