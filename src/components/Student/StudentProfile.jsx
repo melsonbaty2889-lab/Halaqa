@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX 
+  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX, Phone, MessageSquare, Calendar
 } from 'lucide-react';
 import { formatName, formatRiwayah, formatCountry } from '@/utils/formatters';
+import { calculateAge } from '@/utils/dateUtils';
 import StudentDocuments from './StudentDocuments';
 
 const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDelete }) => {
@@ -22,6 +23,17 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
   const halaqaName = currentHalaqa
     ? formatName(currentHalaqa.name || currentHalaqa.name_ar || '')
     : t('students.no_halaqa', 'غير مسكن بحلقة');
+
+  const age = student.birth_date ? calculateAge(student.birth_date) : null;
+
+  const getMemorizationSystemLabel = (sys) => {
+    switch (sys) {
+      case 'juz': return t('students.sys_juz', 'أجزاء كاملة');
+      case 'pages': return t('students.sys_pages', 'صفحات');
+      case 'quarters': return t('students.sys_quarters', 'أرباع');
+      default: return t('common.unspecified', 'غير محدد');
+    }
+  };
 
   return (
     <div className="space-y-6 text-appText-main" dir={i18n.dir()}>
@@ -94,6 +106,8 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       {/* محتوى التبويب */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* البيانات الأكاديمية والحفظ */}
           <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4">
             <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" />
@@ -108,6 +122,18 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
                 <span className="text-appText-sub block text-xs">{t('students.preferred_riwayah', 'الرواية المفضلة:')}</span>
                 <span className="text-appText-main font-medium">
                   {formatRiwayah(student.preferred_riwayah, currentLang, t('common.unspecified', 'غير محددة'))}
+                </span>
+              </div>
+              <div>
+                <span className="text-appText-sub block text-xs">{t('students.current_juz', 'الجزء الحالي:')}</span>
+                <span className="text-appText-main font-medium">
+                  {student.current_juz ? `${t('students.juz', 'الجزء')} ${student.current_juz}` : t('common.unspecified', 'غير محدد')}
+                </span>
+              </div>
+              <div>
+                <span className="text-appText-sub block text-xs">{t('students.memorization_system', 'نظام المراجعة:')}</span>
+                <span className="text-appText-main font-medium">
+                  {getMemorizationSystemLabel(student.memorization_system)}
                 </span>
               </div>
               <div>
@@ -129,6 +155,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
             </div>
           </div>
 
+          {/* البيانات الشخصية وولي الأمر */}
           <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4 md:col-span-2">
             <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2">
               {t('students.personal_and_parent_info', 'البيانات الشخصية وولي الأمر')}
@@ -141,9 +168,14 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.birth_date', 'تاريخ الميلاد:')}</span>
-                <span className="text-appText-main font-medium" dir="ltr">
-                  {student.birth_date || t('common.unspecified', 'غير محدد')}
+                <span className="text-appText-sub block text-xs">{t('students.birth_date', 'تاريخ الميلاد والعمر:')}</span>
+                <span className="text-appText-main font-medium flex items-center gap-1.5" dir="ltr">
+                  <span>{student.birth_date || t('common.unspecified', 'غير محدد')}</span>
+                  {age !== null && (
+                    <span className="text-xs text-primary font-normal bg-primary/10 px-2 py-0.5 rounded-md">
+                      ({age} {t('common.years_old', 'سنة')})
+                    </span>
+                  )}
                 </span>
               </div>
               <div>
@@ -166,15 +198,35 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.parent_phone', 'هاتف ولي الأمر:')}</span>
-                <span className="text-appText-main font-medium" dir="ltr">
-                  {student.parent_phone || t('common.unspecified', 'غير محدد')}
-                </span>
+                {student.parent_phone ? (
+                  <a
+                    href={`tel:${student.parent_phone}`}
+                    className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+                    dir="ltr"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{student.parent_phone}</span>
+                  </a>
+                ) : (
+                  <span className="text-appText-main font-medium">{t('common.unspecified', 'غير محدد')}</span>
+                )}
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.parent_whatsapp', 'واتساب ولي الأمر:')}</span>
-                <span className="text-appText-main font-medium" dir="ltr">
-                  {student.parent_whatsapp || student.parent_phone || t('common.unspecified', 'غير محدد')}
-                </span>
+                {student.parent_whatsapp || student.parent_phone ? (
+                  <a
+                    href={`https://wa.me/${(student.parent_whatsapp || student.parent_phone).replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:underline font-medium inline-flex items-center gap-1"
+                    dir="ltr"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>{student.parent_whatsapp || student.parent_phone}</span>
+                  </a>
+                ) : (
+                  <span className="text-appText-main font-medium">{t('common.unspecified', 'غير محدد')}</span>
+                )}
               </div>
             </div>
 
