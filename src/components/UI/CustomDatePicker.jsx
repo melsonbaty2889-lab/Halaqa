@@ -69,7 +69,7 @@ function calcAge(date) {
   if (m < 0 || (m === 0 && today.getDate() < d.getDate())) {
     age--;
   }
-  return age >= 0 ? age : null;
+  return age >= 0 ? age : 0;
 }
 
 export default function CustomDatePicker({ 
@@ -80,16 +80,16 @@ export default function CustomDatePicker({
   isArabic = true, 
   isRange = false,
   placeholder,
-  showAge = false
+  showAge = true
 }) {
   const [calendarMode, setCalendarMode] = useState('gregorian');
   const currentLocale = isArabic ? ar : enUS;
 
   const rawDate = isRange ? startDate : selectedDate;
-  const mainDate = (rawDate && !isNaN(new Date(rawDate).getTime())) ? new Date(rawDate) : null;
+  const mainDate = (rawDate && !isNaN(new Date(rawDate).getTime())) ? new Date(rawDate) : new Date();
 
   const hijriDetails = getHijriDetails(mainDate);
-  const age = (showAge && mainDate) ? calcAge(mainDate) : null;
+  const age = showAge ? calcAge(mainDate) : null;
 
   const [hDay, setHDay] = useState(hijriDetails.day);
   const [hMonth, setHMonth] = useState(hijriDetails.month);
@@ -105,9 +105,13 @@ export default function CustomDatePicker({
   }, [mainDate?.getTime()]);
 
   const currentHijriYear = getHijriDetails(new Date()).year;
+  
+  // خيارات الأيام والأشهر والسنوات منطقية للطلاب
   const dayOptions = Array.from({ length: 30 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
   const monthOptions = HIJRI_MONTHS.map((m, idx) => ({ label: m, value: idx }));
-  const yearOptions = Array.from({ length: 90 }, (_, i) => {
+  
+  // حصر السنوات للطلاب (من السنة الحالية الهجرية وحتى 70 سنة سابقة)
+  const yearOptions = Array.from({ length: 70 }, (_, i) => {
     const y = currentHijriYear - i;
     return { label: `${y} هـ`, value: y };
   });
@@ -132,12 +136,12 @@ export default function CustomDatePicker({
   };
 
   return (
-    <div className="flex flex-col w-full space-y-2">
+    <div className="flex flex-col w-full space-y-2 text-start">
       <div className="flex items-center justify-between text-xs">
         <button
           type="button"
           onClick={() => setCalendarMode(calendarMode === 'gregorian' ? 'hijri' : 'gregorian')}
-          className="flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary-hover bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 transition-all active:scale-95"
+          className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--primary)] hover:opacity-80 bg-[var(--primary)]/10 px-2.5 py-1 rounded-lg border border-[var(--primary)]/20 transition-all active:scale-95 cursor-pointer"
         >
           <Repeat size={13} />
           {calendarMode === 'gregorian' 
@@ -146,7 +150,7 @@ export default function CustomDatePicker({
         </button>
 
         {age !== null && (
-          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
+          <span className="text-[11px] font-semibold text-[var(--primary)] bg-[var(--primary)]/10 px-2.5 py-1 rounded-lg border border-[var(--primary)]/20">
             {isArabic ? `العمر: ${age} سنة` : `Age: ${age} yrs`}
           </span>
         )}
@@ -165,20 +169,20 @@ export default function CustomDatePicker({
             maxDate={new Date()}
             showYearDropdown
             scrollableYearDropdown
-            yearDropdownItemNumber={90}
+            yearDropdownItemNumber={70}
             placeholderText={placeholder || (isArabic ? "اختر تاريخ الميلاد..." : "Select date...")}
             formatWeekDay={formatShortDayName}
             showMonthDropdown
             useShortMonthInDropdown
-            className="w-full bg-dark-input text-appText-main border border-appBorder-input rounded-xl pr-10 pl-4 py-2.5 text-xs focus:outline-none focus:border-appBorder-hover transition-all cursor-pointer shadow-inner placeholder:text-appText-sub/50"
+            className="app-input w-full pr-10 pl-4 py-2 text-xs transition-all cursor-pointer"
             calendarClassName="custom-dark-calendar"
             popperClassName="z-[9999]"
             popperPlacement="bottom-start"
           />
-          <CalendarIcon size={16} className="absolute right-3 text-primary pointer-events-none" />
+          <CalendarIcon size={16} className="absolute start-3 text-[var(--primary)] pointer-events-none" />
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2 w-full">
+        <div className="grid grid-cols-3 gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={hDay}
@@ -198,9 +202,9 @@ export default function CustomDatePicker({
       )}
 
       {mainDate && (
-        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-xs text-appText-sub font-medium">
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[var(--surface-input)] border border-[var(--border-input)] text-xs text-[var(--text-sub)] font-medium">
           <span>{calendarMode === 'gregorian' ? 'الموافق هجرياً:' : 'الموافق ميلادياً:'}</span>
-          <span className="font-semibold text-primary">
+          <span className="font-semibold text-[var(--primary)]">
             {calendarMode === 'gregorian' 
               ? hijriDetails.text 
               : `${mainDate.getFullYear()}/${String(mainDate.getMonth() + 1).padStart(2, '0')}/${String(mainDate.getDate()).padStart(2, '0')} م`}
