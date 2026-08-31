@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX, Phone, MessageSquare, Calendar
+  ArrowRight, ArrowLeft, Edit, Trash2, BookOpen, FileText, UserCheck, UserX, Phone, MessageSquare
 } from 'lucide-react';
 import { formatName, formatRiwayah, formatCountry } from '@/utils/formatters';
 import { calculateAge } from '@/utils/dateUtils';
@@ -26,11 +26,15 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
 
   const age = student.birth_date ? calculateAge(student.birth_date) : null;
 
+  // تحسين دالة جلب مسمى نظام المراجعة لتشمل كافة الحالات من قاعدة البيانات
   const getMemorizationSystemLabel = (sys) => {
     switch (sys) {
       case 'juz': return t('students.sys_juz', 'أجزاء كاملة');
       case 'pages': return t('students.sys_pages', 'صفحات');
       case 'quarters': return t('students.sys_quarters', 'أرباع');
+      case 'hizb': return t('students.sys_hizb', 'أحزاب');
+      case 'lines': return t('students.sys_lines', 'أسطر');
+      case 'ayah_based': return t('students.sys_ayah_based', 'مستند إلى الآيات');
       default: return t('common.unspecified', 'غير محدد');
     }
   };
@@ -140,7 +144,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
                 <span className="text-appText-sub block text-xs">{t('students.status', 'حالة الطالب:')}</span>
                 <span className="inline-block mt-1">
                   {student.status === 'active' ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-brandEmerald-bg text-brandEmerald border border-brandEmerald-border">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       <UserCheck className="w-3 h-3" />
                       <span>{t('common.active', 'نشط')}</span>
                     </span>
@@ -169,11 +173,11 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.birth_date', 'تاريخ الميلاد والعمر:')}</span>
-                <span className="text-appText-main font-medium flex items-center gap-1.5" dir="ltr">
-                  <span>{student.birth_date || t('common.unspecified', 'غير محدد')}</span>
+                <span className="text-appText-main font-medium inline-flex items-center gap-2">
+                  <span dir="ltr">{student.birth_date || t('common.unspecified', 'غير محدد')}</span>
                   {age !== null && (
                     <span className="text-xs text-primary font-normal bg-primary/10 px-2 py-0.5 rounded-md">
-                      ({age} {t('common.years_old', 'سنة')})
+                      ({t('common.years_old', 'سنة {{count}}', { count: age }) || `${age} سنة`})
                     </span>
                   )}
                 </span>
@@ -213,7 +217,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.parent_whatsapp', 'واتساب ولي الأمر:')}</span>
-                {student.parent_whatsapp || student.parent_phone ? (
+                {(student.parent_whatsapp || student.parent_phone) ? (
                   <a
                     href={`https://wa.me/${(student.parent_whatsapp || student.parent_phone).replace(/[^0-9]/g, '')}`}
                     target="_blank"
@@ -230,11 +234,11 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
             </div>
 
-            {student.notes?.text && (
+            {student.notes && (typeof student.notes === 'string' ? student.notes : student.notes?.text) && (
               <div className="pt-3 border-t border-appBorder-card">
                 <span className="text-appText-sub block text-xs mb-1">{t('common.notes', 'ملاحظات:')}</span>
                 <p className="text-xs text-appText-sub bg-dark-input p-3 rounded-xl border border-appBorder-input">
-                  {student.notes.text}
+                  {typeof student.notes === 'string' ? student.notes : student.notes?.text}
                 </p>
               </div>
             )}
