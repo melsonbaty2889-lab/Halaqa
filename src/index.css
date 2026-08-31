@@ -245,7 +245,7 @@
   color: #FFFFFF !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
   overflow: hidden;
-  z-index: 999 !important;
+  z-index: 9999 !important;
 }
 
 .custom-dark-calendar .react-datepicker__header {
@@ -259,6 +259,39 @@
 .custom-dark-calendar .react-datepicker__day-name {
   color: #94A3B8 !important;
   font-weight: 600 !important;
+}
+
+/* 🟢 إصلاح تباين وألوان قوائم المنسدلة (الأشهر والسنوات) */
+.custom-dark-calendar .react-datepicker__month-dropdown-container,
+.custom-dark-calendar .react-datepicker__year-dropdown-container {
+  margin: 0 4px;
+}
+
+.custom-dark-calendar select.react-datepicker__month-select,
+.custom-dark-calendar select.react-datepicker__year-select {
+  background-color: #0A101D !important;
+  color: #10B981 !important;
+  border: 1px solid #1B2738 !important;
+  border-radius: 0.5rem !important;
+  padding: 4px 8px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-dark-calendar select.react-datepicker__month-select:hover,
+.custom-dark-calendar select.react-datepicker__year-select:hover {
+  border-color: #10B981 !important;
+}
+
+/* 🟢 إصلاح خلفية خيارات القائمة المنسدلة عند فتحها */
+.custom-dark-calendar select.react-datepicker__month-select option,
+.custom-dark-calendar select.react-datepicker__year-select option {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  padding: 8px !important;
 }
 
 .custom-dark-calendar .react-datepicker__day {
