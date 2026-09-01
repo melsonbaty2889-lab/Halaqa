@@ -1,5 +1,3 @@
-// src/components/Student/DocumentUploadModal.jsx
-
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -55,6 +53,7 @@ export const DocumentUploadModal = ({
   };
 
   const handleClose = () => {
+    if (isLoading) return;
     setSelectedFile(null);
     setNotes('');
     setError(null);
@@ -67,9 +66,9 @@ export const DocumentUploadModal = ({
   }));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div 
-        className="w-full max-w-lg bg-dark-card text-appText-main rounded-2xl shadow-2xl border border-appBorder-card overflow-visible animate-in fade-in zoom-in-95"
+        className="w-full max-w-lg bg-dark-card text-appText-main rounded-2xl shadow-2xl border border-appBorder-card overflow-visible"
         dir={i18n.dir()}
       >
         {/* Header */}
@@ -94,7 +93,7 @@ export const DocumentUploadModal = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Document Type Select - Integrated CustomSelect */}
+          {/* Document Type Select */}
           <div className="space-y-1.5 relative z-20">
             <label className="block text-xs font-medium text-appText-sub">
               {t('documents.type_label', 'نوع المستند')} <span className="text-primary">*</span>
@@ -113,7 +112,7 @@ export const DocumentUploadModal = ({
               {t('documents.file_label', 'الملف')} <span className="text-primary">*</span>
             </label>
             <div 
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !isLoading && fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                 selectedFile 
                   ? 'border-emerald-500/50 bg-emerald-500/5' 
@@ -168,7 +167,8 @@ export const DocumentUploadModal = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('documents.notes_placeholder', 'تفاصيل أو ملاحظات إضافية...')}
               rows={3}
-              className="w-full bg-dark-input border border-appBorder-input text-appText-main placeholder-appText-muted text-sm rounded-xl p-3 focus:outline-none focus:border-appBorder-hover transition-colors resize-none"
+              disabled={isLoading}
+              className="w-full bg-dark-input border border-appBorder-input text-appText-main placeholder-appText-muted text-sm rounded-xl p-3 focus:outline-none focus:border-appBorder-hover transition-colors resize-none disabled:opacity-50"
             />
           </div>
 
