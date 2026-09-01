@@ -54,9 +54,10 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     try {
       // 1. حذف الملف من Supabase Storage لو المسار متوفر
       if (deleteDocPath) {
+        const decodedPath = decodeURIComponent(deleteDocPath);
         const { error: storageError } = await supabase.storage
           .from('documents')
-          .remove([deleteDocPath]);
+          .remove([decodedPath]);
 
         if (storageError) {
           console.warn('Storage delete warning:', storageError.message);
@@ -83,6 +84,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     }
   };
 
+  // دالة الرفع الذكية (تضمن استبدال المستندات الأساسية والسماح بتعدد المستندات الفرعية)
   const handleUploadDocument = async ({ file, documentType, notes }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -99,8 +101,26 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         currentAcademyId = studentData?.academy_id;
       }
 
+      // 1. تحديد ما إذا كان المستند من الأنواع الفريدة التي تتطلب نسخة واحدة محدثة فقط
+      const singleInstanceTypes = ['id_card', 'passport', 'birth_certificate'];
+      const isSingleInstance = singleInstanceTypes.includes(documentType);
+
+      // 2. إذا كان المستند فريداً، يتم حذف الملف القديم من الـ Storage والـ DB تلقائياً
+      if (isSingleInstance) {
+        const existingDoc = documents.find((doc) => doc.document_type === documentType);
+        if (existingDoc) {
+          if (existingDoc.file_url && existingDoc.file_url.includes('/documents/')) {
+            const oldPath = decodeURIComponent(existingDoc.file_url.split('/documents/')[1]);
+            await supabase.storage.from('documents').remove([oldPath]);
+          }
+          await supabase.from('student_documents').delete().eq('id', existingDoc.id);
+        }
+      }
+
+      // 3. إنتاج مسار فريد للملف الجديد لمنع تداخل الأسماء
       const fileExt = file.name.split('.').pop();
-      const filePath = `students/${studentId}/${Date.now()}.${fileExt}`;
+      const uniqueId = crypto.randomUUID();
+      const filePath = `students/${studentId}/${Date.now()}_${uniqueId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
@@ -112,6 +132,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         .from('documents')
         .getPublicUrl(filePath);
 
+      // 4. حفظ البيانات الجديدة
       const { data, error: dbError } = await supabase
         .from('student_documents')
         .insert([{
@@ -130,7 +151,15 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         .single();
 
       if (dbError) throw dbError;
-      setDocuments((prev) => [data, ...prev]);
+
+      // 5. تحديث الواجهة فوراً
+      setDocuments((prev) => {
+        const filtered = isSingleInstance 
+          ? prev.filter((doc) => doc.document_type !== documentType)
+          : prev;
+        return [data, ...filtered];
+      });
+
     } catch (err) {
       console.error('Upload Error:', err);
       alert(err.message);
@@ -275,7 +304,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                   type="button"
                   onClick={() => {
                     setDeleteDocId(doc.id);
-                    // استخراج مسار الملف داخل Storage للحذف الكامل
                     let storagePath = null;
                     if (doc.file_url && doc.file_url.includes('/documents/')) {
                       storagePath = doc.file_url.split('/documents/')[1];
