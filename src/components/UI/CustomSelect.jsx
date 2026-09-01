@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useFloating, autoUpdate, offset, flip, shift, size } from '@floating-ui/react-dom';
+import { useFloating, autoUpdate, offset, shift, size, autoPlacement } from '@floating-ui/react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,21 +26,24 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // استخدام strategy: 'fixed' لمنع نزول/تزحيف القائمة مع سكرول المودال
+  // إعدادات التموضع المتقدمة لمنع التداخل والتزحيف داخل المودالات
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
-    placement: 'bottom-start',
     strategy: 'fixed',
+    transform: false, // يمنع استيعاب الإحداثيات داخل العناصر ذات الـ transform المسبق
     whileElementsMounted: autoUpdate,
     middleware: [
-      offset(4),
-      flip({ fallbackPlacements: ['top-start'] }),
-      shift({ padding: 10 }),
+      offset(6),
+      autoPlacement({
+        allowedPlacements: ['bottom-start', 'top-start', 'bottom-end', 'top-end'],
+      }),
+      shift({ padding: 12 }),
       size({
-        apply({ rects, elements }) {
+        apply({ rects, elements, availableHeight }) {
           Object.assign(elements.floating.style, {
             width: `${rects.reference.width}px`,
+            maxHeight: `${Math.min(224, availableHeight - 16)}px`, // تعديل الارتفاع بناءً على المساحة المتاحة
           });
         },
       }),
@@ -101,7 +104,7 @@ const CustomSelect = ({
         </label>
       )}
 
-      {/* زر فتح القائمة (المرجع) */}
+      {/* زر فتح القائمة */}
       <button
         ref={refs.setReference}
         type="button"
@@ -129,7 +132,7 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة عبر Portal مع حماية الوميض وضبط fixed */}
+      {/* القائمة المنسدلة المرفوعة عبر Portal */}
       {isOpen &&
         createPortal(
           <div
@@ -138,13 +141,13 @@ const CustomSelect = ({
             dir={isRtl ? 'rtl' : 'ltr'}
             style={{
               position: strategy,
-              top: y ?? 0,
-              left: x ?? 0,
+              top: `${y ?? 0}px`,
+              left: `${x ?? 0}px`,
               zIndex: 999999,
               opacity: isPositioned ? 1 : 0,
               visibility: isPositioned ? 'visible' : 'hidden',
             }}
-            className={`max-h-56 overflow-hidden bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl flex flex-col ${
+            className={`overflow-hidden bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl flex flex-col ${
               isPositioned ? 'transition-opacity duration-150' : ''
             }`}
           >
