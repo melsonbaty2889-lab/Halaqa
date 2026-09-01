@@ -28,16 +28,24 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // منع سكرول الخلفية عند فتح أي مودال معاينة أو حذف
+  // تثبيت سكرول خلفية الشاشة تماماً في متصفح الموبايل لمنع تسريب التمرير
   useEffect(() => {
-    if (previewDoc || deleteDocId || isUploadModalOpen) {
+    const isModalActive = previewDoc || deleteDocId || isUploadModalOpen;
+    if (isModalActive) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [previewDoc, deleteDocId, isUploadModalOpen]);
 
   const showSuccess = (msg) => {
@@ -364,43 +372,42 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
 
       {/* Advanced Embedded Preview Modal with Zoom & Mobile PDF Support */}
       {previewDoc && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-6 bg-black/95 touch-none">
-          <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-black/95 overscroll-contain">
+          <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden shadow-2xl">
             
             {/* Header */}
-            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-appBorder-card bg-dark-card shrink-0">
-              <div className="flex items-center gap-2 overflow-hidden max-w-[50%]">
-                <FileText className="w-5 h-5 text-primary shrink-0" />
-                <h3 className="text-xs sm:text-sm font-bold text-appText-main truncate">
+            <div className="flex items-center justify-between p-3 border-b border-appBorder-card bg-dark-card shrink-0 gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <FileText className="w-4 h-4 text-primary shrink-0" />
+                <h3 className="text-xs font-bold text-appText-main truncate">
                   {previewDoc.file_name}
                 </h3>
               </div>
 
               {/* Controls */}
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                {/* Zoom Controls for Images */}
+              <div className="flex items-center gap-1 shrink-0">
                 {isImage(previewDoc.mime_type, previewDoc.file_url) && (
-                  <div className="flex items-center bg-dark-input rounded-xl p-1 border border-appBorder-input gap-1 me-2">
+                  <div className="flex items-center bg-dark-input rounded-lg p-0.5 border border-appBorder-input gap-0.5 me-1">
                     <button
                       onClick={() => setZoomScale((prev) => Math.min(prev + 0.25, 3))}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg"
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md"
                       title="تكبير"
                     >
-                      <ZoomIn className="w-4 h-4" />
+                      <ZoomIn className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => setZoomScale((prev) => Math.max(prev - 0.25, 0.5))}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg"
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md"
                       title="تصغير"
                     >
-                      <ZoomOut className="w-4 h-4" />
+                      <ZoomOut className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => setZoomScale(1)}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg"
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md"
                       title="إعادة ضبط"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
+                      <RotateCcw className="w-3 h-3" />
                     </button>
                   </div>
                 )}
@@ -409,16 +416,15 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                   href={previewDoc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors flex items-center gap-1 text-xs font-medium"
+                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span className="hidden sm:inline">فتح خارجي</span>
                 </a>
 
                 <a
                   href={previewDoc.file_url}
                   download
-                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors flex items-center gap-1 text-xs font-medium"
+                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                 >
                   <Download className="w-4 h-4" />
                 </a>
@@ -426,26 +432,25 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 <button
                   type="button"
                   onClick={() => setPreviewDoc(null)}
-                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors"
+                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {/* Content Preview Container */}
-            <div className="flex-1 bg-black/60 p-2 sm:p-4 overflow-auto flex items-center justify-center relative">
+            <div className="flex-1 bg-black/60 p-2 overflow-auto overscroll-contain flex items-center justify-center relative">
               {isImage(previewDoc.mime_type, previewDoc.file_url) ? (
-                <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
+                <div className="w-full h-full flex items-center justify-center overflow-auto p-2">
                   <img
                     src={previewDoc.file_url}
                     alt={previewDoc.file_name}
-                    style={{ transform: `scale(${zoomScale})`, transition: 'transform 0.2s ease-in-out' }}
+                    style={{ transform: `scale(${zoomScale})`, transition: 'transform 0.15s ease-in-out' }}
                     className="max-w-full max-h-full object-contain rounded-lg shadow-2xl origin-center"
                   />
                 </div>
               ) : isPdf(previewDoc.mime_type, previewDoc.file_url) ? (
-                /* استخدام Google Docs Embedded Viewer لمعاينة PDF الموبايل بنجاح */
                 <iframe
                   src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.file_url)}&embedded=true`}
                   title={previewDoc.file_name}
@@ -474,7 +479,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
 
       {/* Delete Modal */}
       {deleteDocId && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/80">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/80 overscroll-contain">
           <div className="bg-dark-card border border-appBorder-card rounded-2xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
