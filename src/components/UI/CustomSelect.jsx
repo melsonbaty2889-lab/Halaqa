@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useFloating, autoUpdate, offset, shift, size, autoPlacement } from '@floating-ui/react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
@@ -26,12 +26,11 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // إعدادات التموضع المتقدمة لمنع التداخل والتزحيف داخل المودالات
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     strategy: 'fixed',
-    transform: false, // يمنع استيعاب الإحداثيات داخل العناصر ذات الـ transform المسبق
+    transform: false,
     whileElementsMounted: autoUpdate,
     middleware: [
       offset(6),
@@ -43,34 +42,34 @@ const CustomSelect = ({
         apply({ rects, elements, availableHeight }) {
           Object.assign(elements.floating.style, {
             width: `${rects.reference.width}px`,
-            maxHeight: `${Math.min(224, availableHeight - 16)}px`, // تعديل الارتفاع بناءً على المساحة المتاحة
+            maxHeight: `${Math.min(224, availableHeight - 16)}px`,
           });
         },
       }),
     ],
   });
 
-  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event) => {
+      const refEl = elements.reference;
+      const floatEl = elements.floating;
+
       if (
-        elements.reference &&
-        !elements.reference.contains(event.target) &&
-        elements.floating &&
-        !elements.floating.contains(event.target)
+        refEl &&
+        !refEl.contains(event.target) &&
+        floatEl &&
+        !floatEl.contains(event.target)
       ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
     };
   }, [isOpen, elements]);
 
@@ -86,7 +85,6 @@ const CustomSelect = ({
   });
 
   const handleSelect = (e, optionValue) => {
-    e.preventDefault();
     e.stopPropagation();
 
     if (typeof onChange === 'function') {
@@ -104,7 +102,6 @@ const CustomSelect = ({
         </label>
       )}
 
-      {/* زر فتح القائمة */}
       <button
         ref={refs.setReference}
         type="button"
@@ -132,7 +129,6 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة المرفوعة عبر Portal */}
       {isOpen &&
         createPortal(
           <div
@@ -161,6 +157,7 @@ const CustomSelect = ({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                     className="w-full bg-[var(--surface-input)] border border-[var(--border-input)] rounded-lg ps-8 pe-3 py-1.5 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] placeholder:text-[var(--text-muted)] text-start"
                     autoFocus
                   />
