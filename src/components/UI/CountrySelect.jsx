@@ -5,22 +5,24 @@ import ReactDom from 'react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { COUNTRIES_LIST } from '@/constants/countries';
 
-export default function CountrySelect({ value, onChange, isArabic = true, placeholder }) {
+export default function CountrySelect({ value, onChange, isArabic = true, placeholder, disabled = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, openUpward: false });
   const triggerRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // تحديث موقع القائمة المنسدلة في الصفحة
+  // تحديث موقع القائمة المنسدلة بدقة
   const updateCoords = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      const openUpward = spaceBelow < 250 && rect.top > 250;
+      const spaceAbove = rect.top;
+      // فتح القائمة للأعلى فقط إذا كانت المساحة السفلية غير كافية والمساحة العلوية تسمح
+      const openUpward = spaceBelow < 220 && spaceAbove > spaceBelow;
 
       setCoords({
-        top: openUpward ? rect.top - 8 : rect.bottom + 8,
+        top: openUpward ? rect.top - 6 : rect.bottom + 6,
         left: rect.left,
         width: rect.width,
         openUpward,
@@ -29,19 +31,29 @@ export default function CountrySelect({ value, onChange, isArabic = true, placeh
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    updateCoords();
+
+    const handleScrollOrResize = (e) => {
+      // تجنب تحديث الموقع أو إغلاق القائمة إذا كان السكرول يتم داخل القائمة نفسها
+      if (dropdownRef.current && dropdownRef.current.contains(e.target)) return;
       updateCoords();
-      window.addEventListener('resize', updateCoords);
-      window.addEventListener('scroll', updateCoords, true);
-    }
+    };
+
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+
     return () => {
-      window.removeEventListener('resize', updateCoords);
-      window.removeEventListener('scroll', updateCoords, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
     };
   }, [isOpen]);
 
   // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
+    if (!isOpen) return;
+
     function handleClickOutside(event) {
       if (
         triggerRef.current &&
@@ -52,14 +64,21 @@ export default function CountrySelect({ value, onChange, isArabic = true, placeh
         setIsOpen(false);
       }
     }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const selectedCountry = COUNTRIES_LIST.find((c) => c.code === value);
 
   const filteredCountries = COUNTRIES_LIST.filter((c) => {
     const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
     return (
       c.nameAr.toLowerCase().includes(search) ||
       c.nameEn?.toLowerCase().includes(search) ||
@@ -71,13 +90,17 @@ export default function CountrySelect({ value, onChange, isArabic = true, placeh
   const defaultPlaceholder = isArabic ? 'اختر الدولة...' : 'Select Country...';
 
   return (
-    <div className="w-full">
+    <div className="w-full text-start" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* زر عرض الدولة المختارة */}
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm focus:outline-none focus:border-appBorder-hover transition-colors flex items-center justify-between gap-2"
+        disabled={disabled}
+        onClick={() => {
+          setSearchTerm('');
+          setIsOpen((prev) => !prev);
+        }}
+        className="w-full px-3 py-2.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm focus:outline-none focus:border-appBorder-hover transition-colors flex items-center justify-between gap-2 cursor-pointer disabled:opacity-50"
       >
         {selectedCountry ? (
           <span className="flex items-center gap-2 truncate">
@@ -92,28 +115,31 @@ export default function CountrySelect({ value, onChange, isArabic = true, placeh
         )}
         <ChevronDown
           className={`w-4 h-4 text-appText-sub shrink-0 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
+            isOpen ? 'rotate-180 text-primary' : ''
           }`}
         />
       </button>
 
-      {/* القائمة المنسدلة كـ Portal لحل مشكلة التداخل نهائياً */}
+      {/* القائمة المنسدلة كـ Portal */}
       {isOpen &&
         ReactDom.createPortal(
           <div
             ref={dropdownRef}
+            dir={isArabic ? 'rtl' : 'ltr'}
             style={{
               position: 'fixed',
-              top: coords.openUpward ? 'auto' : `${coords.top}px`,
-              bottom: coords.openUpward ? `${window.innerHeight - coords.top}px` : 'auto',
               left: `${coords.left}px`,
               width: `${coords.width}px`,
-              zIndex: 9999,
+              ...(coords.openUpward
+                ? { bottom: `${window.innerHeight - coords.top}px` }
+                : { top: `${coords.top}px` }),
+              zIndex: 99999,
             }}
-            className="bg-dark-card border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col animate-in fade-in zoom-in-95 duration-100"
+            /* استخدام خلفية معتمة غير شفافة واضحة لمنع تداخل الكلام خلف المودال */
+            className="bg-[#0B132B] border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col animate-in fade-in zoom-in-95 duration-100"
           >
             {/* حقل البحث الداخلي */}
-            <div className="p-2 border-b border-appBorder-card sticky top-0 bg-dark-card z-10">
+            <div className="p-2 border-b border-appBorder-card sticky top-0 bg-[#0B132B] z-10">
               <div className="relative flex items-center">
                 <Search
                   className={`w-4 h-4 absolute ${
@@ -136,7 +162,7 @@ export default function CountrySelect({ value, onChange, isArabic = true, placeh
             </div>
 
             {/* قائمة العناصر الشاملة */}
-            <div className="overflow-y-auto flex-1 custom-scrollbar p-1">
+            <div className="overflow-y-auto flex-1 custom-scrollbar p-1 space-y-0.5">
               {filteredCountries.length > 0 ? (
                 filteredCountries.map((c) => (
                   <button
@@ -149,9 +175,9 @@ export default function CountrySelect({ value, onChange, isArabic = true, placeh
                     }}
                     className={`w-full ${
                       isArabic ? 'text-right' : 'text-left'
-                    } px-2.5 py-2 text-xs rounded-lg flex items-center justify-between transition-colors ${
+                    } px-2.5 py-2 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                       value === c.code
-                        ? 'bg-primary/10 text-primary font-semibold'
+                        ? 'bg-primary/20 text-primary font-semibold'
                         : 'text-appText-main hover:bg-dark-input'
                     }`}
                   >
