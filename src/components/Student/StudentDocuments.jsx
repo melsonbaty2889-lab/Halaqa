@@ -60,18 +60,23 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const fileExt = file.name.split('.').pop();
-      const filePath = `${studentId}/${Date.now()}.${fileExt}`;
+      
+      // الهيكلة المجلدية الجديدة: documents/students/{studentId}/{timestamp}.ext
+      const filePath = `students/${studentId}/${Date.now()}.${fileExt}`;
 
+      // 1. الرفع إلى باكيت 'documents'
       const { error: uploadError } = await supabase.storage
-        .from('student_files')
+        .from('documents')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
+      // 2. الحصول على الرابط العام للملف
       const { data: { publicUrl } } = supabase.storage
-        .from('student_files')
+        .from('documents')
         .getPublicUrl(filePath);
 
+      // 3. الحفظ في جدول student_documents
       const { data, error: dbError } = await supabase
         .from('student_documents')
         .insert([{
