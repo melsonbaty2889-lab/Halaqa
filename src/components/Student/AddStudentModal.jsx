@@ -21,7 +21,7 @@ const AddStudentModal = ({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name_ar: '',
     name_en: '',
     gender: 'male',
@@ -36,14 +36,17 @@ const AddStudentModal = ({
     parent_phone: '',
     parent_whatsapp: '',
     notes_text: '',
-  });
+  };
 
+  const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showParentFields, setShowParentFields] = useState(true);
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (studentToEdit) {
       const nameObj =
         typeof studentToEdit.name === 'object' && studentToEdit.name !== null
@@ -79,34 +82,27 @@ const AddStudentModal = ({
 
       if (studentToEdit.birth_date) {
         const age = calculateAge(studentToEdit.birth_date);
-        setShowParentFields(age !== null && age < 18);
+        setShowParentFields(age !== null ? age < 18 : true);
+      } else {
+        setShowParentFields(true);
       }
     } else {
-      setFormData({
-        name_ar: '',
-        name_en: '',
-        gender: 'male',
-        birth_date: '',
-        country: '',
-        nationality: '',
-        halaqa_id: '',
-        preferred_riwayah: '',
-        current_juz: null,
-        memorization_system: '',
-        parent_name: '',
-        parent_phone: '',
-        parent_whatsapp: '',
-        notes_text: '',
-      });
+      setFormData(initialFormState);
       setShowParentFields(true);
       setIsWhatsappManuallyEdited(false);
     }
     setErrors({});
   }, [studentToEdit, isOpen]);
 
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const handleDateChange = (date) => {
     let bDate = '';
-    if (date) {
+    if (date && !isNaN(date.getTime())) {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -114,9 +110,10 @@ const AddStudentModal = ({
     }
 
     setFormData((prev) => ({ ...prev, birth_date: bDate }));
+
     if (bDate) {
       const age = calculateAge(bDate);
-      setShowParentFields(age !== null && age < 18);
+      setShowParentFields(age !== null ? age < 18 : true);
     } else {
       setShowParentFields(true);
     }
@@ -179,7 +176,7 @@ const AddStudentModal = ({
         nationality: formData.nationality || null,
         halaqa_id: formData.halaqa_id || null,
         preferred_riwayah: formData.preferred_riwayah || null,
-        current_juz: formData.current_juz || null,
+        current_juz: formData.current_juz ? Number(formData.current_juz) : null,
         memorization_system: formData.memorization_system || null,
         parent_name: showParentFields && formData.parent_name.trim() ? formData.parent_name.trim() : null,
         parent_phone: showParentFields && formData.parent_phone.trim() ? formData.parent_phone.trim() : null,
@@ -238,10 +235,9 @@ const AddStudentModal = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* Structural Container */}
       <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col shadow-2xl relative my-auto">
         
-        {/* Header - Fixed */}
+        {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-appBorder-card bg-dark-card rounded-t-2xl shrink-0 z-20">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
@@ -267,7 +263,7 @@ const AddStudentModal = ({
           </button>
         </div>
 
-        {/* Scrollable Form Body */}
+        {/* Form Body */}
         <form 
           id="add-student-form" 
           onSubmit={handleSubmit} 
@@ -329,7 +325,7 @@ const AddStudentModal = ({
                   {t('students.birth_date', 'تاريخ الميلاد')}
                 </label>
                 <CustomDatePicker
-                  selectedDate={formData.birth_date ? new Date(formData.birth_date) : null}
+                  selectedDate={parseLocalDate(formData.birth_date)}
                   onChange={handleDateChange}
                   isArabic={isRtl}
                   showAge={true}
@@ -382,8 +378,8 @@ const AddStudentModal = ({
                     value: h.id,
                     label:
                       typeof h.name === 'object' && h.name !== null
-                        ? isRtl ? (h.name.ar || h.name.en) : (h.name.en || h.name.ar)
-                        : h.name_ar || h.name,
+                        ? isRtl ? (h.name.ar || h.name.en || '') : (h.name.en || h.name.ar || '')
+                        : h.name_ar || h.name || '',
                   }))}
                 />
               </div>
@@ -411,8 +407,8 @@ const AddStudentModal = ({
                   type="number"
                   min="1"
                   max="30"
-                  value={formData.current_juz || ''}
-                  onChange={(e) => setFormData({ ...formData, current_juz: e.target.value ? parseInt(e.target.value) : null })}
+                  value={formData.current_juz ?? ''}
+                  onChange={(e) => setFormData({ ...formData, current_juz: e.target.value ? parseInt(e.target.value, 10) : null })}
                   placeholder="1 - 30"
                   className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm focus:outline-none focus:border-appBorder-hover transition-colors"
                 />
@@ -539,7 +535,7 @@ const AddStudentModal = ({
           </div>
         </form>
 
-        {/* Footer - Fixed Bottom */}
+        {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card rounded-b-2xl shrink-0 z-20">
           <button
             type="button"
