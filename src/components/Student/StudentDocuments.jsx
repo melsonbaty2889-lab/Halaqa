@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar
+  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, Loader2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
 import CustomSelect from '@/components/UI/CustomSelect';
 
-export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) => {
+export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const { t, i18n } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,12 +43,16 @@ export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) 
 
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm(t('documents.confirm_delete', 'هل أنت تأكد من حذف هذا المستند؟'))) return;
+    
+    setDeletingId(docId);
     try {
       const { error } = await supabase.from('student_documents').delete().eq('id', docId);
       if (error) throw error;
       setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
     } catch (err) {
       alert(err.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -121,8 +126,8 @@ export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) 
   return (
     <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
       {/* Header Container */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-dark-card p-4 sm:p-5 rounded-2xl border border-appBorder-card">
-        <div className="flex items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-dark-card p-4 rounded-2xl border border-appBorder-card">
+        <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={onBack}
@@ -133,10 +138,9 @@ export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) 
           )}
 
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-appText-main flex items-center gap-2 flex-wrap">
+            <h2 className="text-base font-bold text-appText-main flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary shrink-0" />
               <span>{t('documents.title', 'مستندات الطالب')}</span>
-              {studentName && <span className="text-primary font-semibold">({studentName})</span>}
             </h2>
             <p className="text-xs text-appText-sub mt-0.5">
               {t('documents.subtitle', 'إدارة الوثائق الثبوتية والملفات المرفقة')}
@@ -154,7 +158,7 @@ export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) 
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-dark-card/50 p-3 sm:p-4 rounded-xl border border-appBorder-card">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-dark-card/50 p-3 sm:p-4 rounded-xl border border-appBorder-card relative z-10">
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
           <input
@@ -166,7 +170,7 @@ export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) 
           />
         </div>
 
-        <div className="w-full sm:w-64">
+        <div className="w-full sm:w-64 relative z-20">
           <CustomSelect
             value={filterType}
             onChange={(val) => setFilterType(val)}
@@ -227,10 +231,15 @@ export const StudentDocuments = ({ studentId, studentName, academyId, onBack }) 
                 </a>
                 <button
                   type="button"
+                  disabled={deletingId === doc.id}
                   onClick={() => handleDeleteDocument(doc.id)}
-                  className="p-2 text-appText-sub hover:text-rose-400 hover:bg-dark-input rounded-lg transition-colors"
+                  className="p-2 text-appText-sub hover:text-rose-400 hover:bg-dark-input rounded-lg transition-colors disabled:opacity-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {deletingId === doc.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
