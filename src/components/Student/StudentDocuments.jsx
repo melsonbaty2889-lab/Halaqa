@@ -258,7 +258,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
 
         <button
           onClick={() => setIsUploadModalOpen(true)}
-          className="w-full sm:w-auto px-4 py-2.5 bg-primary hover:bg-primary-hover text-appText-main font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary-glow shrink-0"
+          className="w-full sm:w-auto px-4 py-2.5 bg-primary hover:bg-primary-hover text-appText-main font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary-glow shrink-0 cursor-pointer"
         >
           <Upload className="w-4 h-4" />
           <span>{t('documents.upload_btn', 'رفع مستند جديد')}</span>
@@ -389,22 +389,25 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 {isImage(previewDoc.mime_type, previewDoc.file_url) && (
                   <div className="flex items-center bg-dark-input rounded-lg p-0.5 border border-appBorder-input gap-0.5 me-1">
                     <button
+                      type="button"
                       onClick={() => setZoomScale((prev) => Math.min(prev + 0.25, 3))}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md"
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md cursor-pointer"
                       title="تكبير"
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => setZoomScale((prev) => Math.max(prev - 0.25, 0.5))}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md"
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md cursor-pointer"
                       title="تصغير"
                     >
                       <ZoomOut className="w-3.5 h-3.5" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => setZoomScale(1)}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md"
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md cursor-pointer"
                       title="إعادة ضبط"
                     >
                       <RotateCcw className="w-3 h-3" />
@@ -432,7 +435,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 <button
                   type="button"
                   onClick={() => setPreviewDoc(null)}
-                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors"
+                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -465,7 +468,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                   <a
                     href={previewDoc.file_url}
                     download
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-appText-main font-bold rounded-xl text-xs"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-appText-main font-bold rounded-xl text-xs shadow-md"
                   >
                     <Download className="w-4 h-4" />
                     <span>{t('common.download_file', 'تحميل الملف')}</span>
