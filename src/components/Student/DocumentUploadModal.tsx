@@ -2,7 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UploadCloud, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UploadCloud, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import CustomSelect from '@/components/UI/CustomSelect';
 
 const DOCUMENT_TYPES = [
   'id_card',
@@ -60,14 +61,19 @@ export const DocumentUploadModal = ({
     onClose();
   };
 
+  const typeOptions = DOCUMENT_TYPES.map((type) => ({
+    value: type,
+    label: t(`documents.types.${type}`, type.replace('_', ' '))
+  }));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div 
-        className="w-full max-w-lg bg-dark-card text-appText-main rounded-2xl shadow-2xl border border-appBorder-card overflow-hidden animate-in fade-in zoom-in-95"
+        className="w-full max-w-lg bg-dark-card text-appText-main rounded-2xl shadow-2xl border border-appBorder-card overflow-visible animate-in fade-in zoom-in-95"
         dir={i18n.dir()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-appBorder-card bg-dark-card shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-appBorder-card bg-dark-card rounded-t-2xl shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <UploadCloud className="w-5 h-5" />
@@ -79,7 +85,8 @@ export const DocumentUploadModal = ({
           <button 
             type="button"
             onClick={handleClose} 
-            className="text-appText-sub hover:text-appText-main transition-colors p-1.5 rounded-lg hover:bg-dark-input"
+            disabled={isLoading}
+            className="text-appText-sub hover:text-appText-main transition-colors p-1.5 rounded-lg hover:bg-dark-input disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -87,26 +94,21 @@ export const DocumentUploadModal = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Document Type Select */}
-          <div className="space-y-1.5">
+          {/* Document Type Select - Integrated CustomSelect */}
+          <div className="space-y-1.5 relative z-20">
             <label className="block text-xs font-medium text-appText-sub">
               {t('documents.type_label', 'نوع المستند')} <span className="text-primary">*</span>
             </label>
-            <select
+            <CustomSelect
               value={documentType}
-              onChange={(e) => setDocumentType(e.target.value)}
-              className="w-full bg-dark-input border border-appBorder-input text-appText-main text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-appBorder-hover transition-colors"
-            >
-              {DOCUMENT_TYPES.map((type) => (
-                <option key={type} value={type} className="bg-dark-card text-appText-main">
-                  {t(`documents.types.${type}`, type.replace('_', ' '))}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setDocumentType(val)}
+              options={typeOptions}
+              placeholder={t('documents.type_label', 'نوع المستند')}
+            />
           </div>
 
           {/* File Upload Zone */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 relative z-10">
             <label className="block text-xs font-medium text-appText-sub">
               {t('documents.file_label', 'الملف')} <span className="text-primary">*</span>
             </label>
@@ -114,7 +116,7 @@ export const DocumentUploadModal = ({
               onClick={() => fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                 selectedFile 
-                  ? 'border-brandEmerald-border bg-brandEmerald-bg' 
+                  ? 'border-emerald-500/50 bg-emerald-500/5' 
                   : 'border-appBorder-input hover:border-primary/50 bg-dark-input/50 hover:bg-dark-input'
               }`}
             >
@@ -128,7 +130,7 @@ export const DocumentUploadModal = ({
 
               {selectedFile ? (
                 <div className="flex items-center justify-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-brandEmerald shrink-0" />
+                  <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
                   <div className="text-start overflow-hidden">
                     <p className="text-sm font-medium text-appText-main truncate">{selectedFile.name}</p>
                     <p className="text-xs text-appText-sub">
@@ -157,7 +159,7 @@ export const DocumentUploadModal = ({
           )}
 
           {/* Notes */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 relative z-10">
             <label className="block text-xs font-medium text-appText-sub">
               {t('documents.notes_label', 'ملاحظات')}
             </label>
@@ -171,7 +173,7 @@ export const DocumentUploadModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex items-center justify-end gap-3 pt-2 relative z-10">
             <button
               type="button"
               onClick={handleClose}
@@ -183,9 +185,16 @@ export const DocumentUploadModal = ({
             <button
               type="submit"
               disabled={isLoading || !selectedFile}
-              className="px-6 py-2.5 text-sm font-bold text-appText-main bg-primary hover:bg-primary-hover rounded-xl transition-all shadow-lg shadow-primary-glow disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 text-sm font-bold text-appText-main bg-primary hover:bg-primary-hover rounded-xl transition-all shadow-lg shadow-primary-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {isLoading ? t('common.uploading', 'جاري الرفع...') : t('common.upload', 'رفع')}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{t('common.uploading', 'جاري الرفع...')}</span>
+                </>
+              ) : (
+                <span>{t('common.upload', 'رفع')}</span>
+              )}
             </button>
           </div>
         </form>
