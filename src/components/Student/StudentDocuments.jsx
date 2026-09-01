@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, Loader2, AlertTriangle, X, Download, CheckCircle2
+  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, 
+  Loader2, AlertTriangle, X, Download, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
@@ -14,10 +15,11 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const [uploading, setUploading] = useState(false);
   const [successToast, setSuccessToast] = useState('');
 
-  // حالات المعاينة الحية المدمجة (Preview Modal)
+  // حالات المعاينة الحية والتكبير
   const [previewDoc, setPreviewDoc] = useState(null);
+  const [zoomScale, setZoomScale] = useState(1);
 
-  // حالات إدارة نافذة وتأكيد الحذف
+  // حالات الحذف
   const [deleteDocId, setDeleteDocId] = useState(null);
   const [deleteDocPath, setDeleteDocPath] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -25,6 +27,18 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // منع سكرول الخلفية عند فتح أي مودال معاينة أو حذف
+  useEffect(() => {
+    if (previewDoc || deleteDocId || isUploadModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [previewDoc, deleteDocId, isUploadModalOpen]);
 
   const showSuccess = (msg) => {
     setSuccessToast(msg);
@@ -61,13 +75,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     try {
       if (deleteDocPath) {
         const decodedPath = decodeURIComponent(deleteDocPath);
-        const { error: storageError } = await supabase.storage
-          .from('documents')
-          .remove([decodedPath]);
-
-        if (storageError) {
-          console.warn('Storage delete warning:', storageError.message);
-        }
+        await supabase.storage.from('documents').remove([decodedPath]);
       }
 
       const { error: dbError } = await supabase
@@ -272,7 +280,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         </div>
       </div>
 
-      {/* Documents Grid / States */}
+      {/* Documents Grid */}
       {loading ? (
         <div className="text-center py-8 text-xs text-appText-sub">{t('common.loading', 'جاري التحميل...')}</div>
       ) : filteredDocuments.length === 0 ? (
@@ -315,7 +323,10 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setPreviewDoc(doc)}
+                  onClick={() => {
+                    setZoomScale(1);
+                    setPreviewDoc(doc);
+                  }}
                   className="p-2 text-appText-sub hover:text-primary hover:bg-dark-input rounded-lg transition-colors cursor-pointer"
                   title={t('common.view', 'عرض')}
                 >
@@ -351,29 +362,67 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         isLoading={uploading}
       />
 
-      {/* Embedded Document Preview Modal */}
+      {/* Advanced Embedded Preview Modal with Zoom & Mobile PDF Support */}
       {previewDoc && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/90">
-          <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-appBorder-card bg-dark-card">
-              <div className="flex items-center gap-2 overflow-hidden">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-6 bg-black/95 touch-none">
+          <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-appBorder-card bg-dark-card shrink-0">
+              <div className="flex items-center gap-2 overflow-hidden max-w-[50%]">
                 <FileText className="w-5 h-5 text-primary shrink-0" />
-                <h3 className="text-sm font-bold text-appText-main truncate">
+                <h3 className="text-xs sm:text-sm font-bold text-appText-main truncate">
                   {previewDoc.file_name}
                 </h3>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+
+              {/* Controls */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Zoom Controls for Images */}
+                {isImage(previewDoc.mime_type, previewDoc.file_url) && (
+                  <div className="flex items-center bg-dark-input rounded-xl p-1 border border-appBorder-input gap-1 me-2">
+                    <button
+                      onClick={() => setZoomScale((prev) => Math.min(prev + 0.25, 3))}
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg"
+                      title="تكبير"
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setZoomScale((prev) => Math.max(prev - 0.25, 0.5))}
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg"
+                      title="تصغير"
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setZoomScale(1)}
+                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg"
+                      title="إعادة ضبط"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <a
+                  href={previewDoc.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors flex items-center gap-1 text-xs font-medium"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span className="hidden sm:inline">فتح خارجي</span>
+                </a>
+
                 <a
                   href={previewDoc.file_url}
                   download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-medium"
+                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors flex items-center gap-1 text-xs font-medium"
                 >
                   <Download className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t('common.download', 'تحميل')}</span>
                 </a>
+
                 <button
                   type="button"
                   onClick={() => setPreviewDoc(null)}
@@ -384,19 +433,23 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
               </div>
             </div>
 
-            {/* Modal Body */}
-            <div className="flex-1 bg-black/40 p-2 sm:p-4 overflow-auto flex items-center justify-center">
+            {/* Content Preview Container */}
+            <div className="flex-1 bg-black/60 p-2 sm:p-4 overflow-auto flex items-center justify-center relative">
               {isImage(previewDoc.mime_type, previewDoc.file_url) ? (
-                <img
-                  src={previewDoc.file_url}
-                  alt={previewDoc.file_name}
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                />
+                <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
+                  <img
+                    src={previewDoc.file_url}
+                    alt={previewDoc.file_name}
+                    style={{ transform: `scale(${zoomScale})`, transition: 'transform 0.2s ease-in-out' }}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl origin-center"
+                  />
+                </div>
               ) : isPdf(previewDoc.mime_type, previewDoc.file_url) ? (
+                /* استخدام Google Docs Embedded Viewer لمعاينة PDF الموبايل بنجاح */
                 <iframe
-                  src={previewDoc.file_url}
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.file_url)}&embedded=true`}
                   title={previewDoc.file_name}
-                  className="w-full h-full rounded-lg border-0"
+                  className="w-full h-full rounded-lg border-0 bg-white"
                 />
               ) : (
                 <div className="text-center space-y-4 p-6">
@@ -432,7 +485,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 {t('documents.delete_title', 'حذف المستند')}
               </h3>
               <p className="text-xs text-appText-sub leading-relaxed">
-                {t('documents.delete_confirm_text', 'هل أنت متأكد من حذف هذا المستند نهائياً؟ لن تتمكن من استعادته مرة أخرى.')}
+                {t('documents.delete_confirm_text', 'هل أنت متأكد من حذف هذا المستند نهائياً؟')}
               </p>
             </div>
 
