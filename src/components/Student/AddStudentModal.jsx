@@ -234,11 +234,15 @@ const AddStudentModal = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-hidden" dir={i18n.dir()}>
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-2xl max-h-[90dvh] h-[90dvh] md:h-auto flex flex-col shadow-2xl overflow-hidden my-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" 
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
+      {/* Structural Container */}
+      <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col shadow-2xl relative my-auto">
         
-        {/* Header - ثابت */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-appBorder-card bg-dark-card shrink-0 z-10">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-appBorder-card bg-dark-card rounded-t-2xl shrink-0 z-20">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
               {studentToEdit ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
@@ -263,8 +267,12 @@ const AddStudentModal = ({
           </button>
         </div>
 
-        {/* Form Content - قابل للتمرير فقط */}
-        <form id="add-student-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 overflow-y-auto min-h-0 flex-1 custom-scrollbar">
+        {/* Scrollable Form Body */}
+        <form 
+          id="add-student-form" 
+          onSubmit={handleSubmit} 
+          className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar min-h-0"
+        >
           {/* البيانات الأساسية */}
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
@@ -331,7 +339,7 @@ const AddStudentModal = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              <div className="relative z-10">
                 <label className="block text-xs font-medium text-appText-sub mb-1.5">
                   {t('students.country', 'دولة الإقامة')}
                 </label>
@@ -342,7 +350,7 @@ const AddStudentModal = ({
                 />
               </div>
 
-              <div>
+              <div className="relative z-10">
                 <label className="block text-xs font-medium text-appText-sub mb-1.5">
                   {t('students.nationality', 'الجنسية')}
                 </label>
@@ -364,30 +372,34 @@ const AddStudentModal = ({
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <CustomSelect
-                label={t('students.select_halaqa', 'تسكين الحلقة')}
-                placeholder={t('students.ph_select_halaqa', 'اختر الحلقة...')}
-                value={formData.halaqa_id}
-                onChange={(val) => setFormData({ ...formData, halaqa_id: val })}
-                options={halaqas.map((h) => ({
-                  value: h.id,
-                  label:
-                    typeof h.name === 'object' && h.name !== null
-                      ? isRtl ? (h.name.ar || h.name.en) : (h.name.en || h.name.ar)
-                      : h.name_ar || h.name,
-                }))}
-              />
+              <div className="relative z-10">
+                <CustomSelect
+                  label={t('students.select_halaqa', 'تسكين الحلقة')}
+                  placeholder={t('students.ph_select_halaqa', 'اختر الحلقة...')}
+                  value={formData.halaqa_id}
+                  onChange={(val) => setFormData({ ...formData, halaqa_id: val })}
+                  options={halaqas.map((h) => ({
+                    value: h.id,
+                    label:
+                      typeof h.name === 'object' && h.name !== null
+                        ? isRtl ? (h.name.ar || h.name.en) : (h.name.en || h.name.ar)
+                        : h.name_ar || h.name,
+                  }))}
+                />
+              </div>
 
-              <CustomSelect
-                label={t('students.preferred_riwayah', 'الرواية المفضلة')}
-                placeholder={t('students.ph_select_riwayah', 'اختر الرواية...')}
-                value={formData.preferred_riwayah}
-                onChange={(val) => setFormData({ ...formData, preferred_riwayah: val })}
-                options={RIWAYAT_LIST.map((r) => ({
-                  value: r.id,
-                  label: isRtl ? r.nameAr : (r.nameEn || r.nameAr),
-                }))}
-              />
+              <div className="relative z-10">
+                <CustomSelect
+                  label={t('students.preferred_riwayah', 'الرواية المفضلة')}
+                  placeholder={t('students.ph_select_riwayah', 'اختر الرواية...')}
+                  value={formData.preferred_riwayah}
+                  onChange={(val) => setFormData({ ...formData, preferred_riwayah: val })}
+                  options={RIWAYAT_LIST.map((r) => ({
+                    value: r.id,
+                    label: isRtl ? r.nameAr : (r.nameEn || r.nameAr),
+                  }))}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -406,17 +418,19 @@ const AddStudentModal = ({
                 />
               </div>
 
-              <CustomSelect
-                label={t('students.memorization_system', 'نظام المراجعة/الحفظ')}
-                placeholder={t('students.ph_memorization_system', 'اختر النظام...')}
-                value={formData.memorization_system || ''}
-                onChange={(val) => setFormData({ ...formData, memorization_system: val })}
-                options={[
-                  { label: t('students.sys_juz', 'أجزاء كاملة'), value: 'juz' },
-                  { label: t('students.sys_pages', 'صفحات'), value: 'pages' },
-                  { label: t('students.sys_quarters', 'أرباع'), value: 'quarters' },
-                ]}
-              />
+              <div className="relative z-10">
+                <CustomSelect
+                  label={t('students.memorization_system', 'نظام المراجعة/الحفظ')}
+                  placeholder={t('students.ph_memorization_system', 'اختر النظام...')}
+                  value={formData.memorization_system || ''}
+                  onChange={(val) => setFormData({ ...formData, memorization_system: val })}
+                  options={[
+                    { label: t('students.sys_juz', 'أجزاء كاملة'), value: 'juz' },
+                    { label: t('students.sys_pages', 'صفحات'), value: 'pages' },
+                    { label: t('students.sys_quarters', 'أرباع'), value: 'quarters' },
+                  ]}
+                />
+              </div>
             </div>
           </div>
 
@@ -525,8 +539,8 @@ const AddStudentModal = ({
           </div>
         </form>
 
-        {/* Footer - ثابت */}
-        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card/95 backdrop-blur-md shrink-0 z-10">
+        {/* Footer - Fixed Bottom */}
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card rounded-b-2xl shrink-0 z-20">
           <button
             type="button"
             onClick={onClose}
