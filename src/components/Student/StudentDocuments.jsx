@@ -1,9 +1,7 @@
-// src/components/Student/StudentDocuments.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, Loader2, AlertTriangle
+  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, Loader2, AlertTriangle, X, Download, CheckCircle2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
@@ -13,7 +11,12 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const { t, i18n } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [uploading, setUploading] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
+
+  // حالات المعاينة الحية المدمجة (Preview Modal)
+  const [previewDoc, setPreviewDoc] = useState(null);
+
   // حالات إدارة نافذة وتأكيد الحذف
   const [deleteDocId, setDeleteDocId] = useState(null);
   const [deleteDocPath, setDeleteDocPath] = useState(null);
@@ -22,6 +25,11 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const showSuccess = (msg) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(''), 4000);
+  };
 
   const fetchDocuments = async () => {
     if (!studentId) return;
@@ -46,13 +54,11 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     fetchDocuments();
   }, [studentId]);
 
-  // دالة الحذف الكامل (تنفذ الحذف من Storage و Database)
   const handleDeleteConfirm = async () => {
     if (!deleteDocId) return;
     setIsDeleting(true);
 
     try {
-      // 1. حذف الملف من Supabase Storage لو المسار متوفر
       if (deleteDocPath) {
         const decodedPath = decodeURIComponent(deleteDocPath);
         const { error: storageError } = await supabase.storage
@@ -64,7 +70,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         }
       }
 
-      // 2. حذف السجل من جدول student_documents
       const { error: dbError } = await supabase
         .from('student_documents')
         .delete()
@@ -72,10 +77,10 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
 
       if (dbError) throw dbError;
 
-      // 3. تحديث القائمة وإغلاق النافذة
       setDocuments((prev) => prev.filter((doc) => doc.id !== deleteDocId));
       setDeleteDocId(null);
       setDeleteDocPath(null);
+      showSuccess(t('documents.delete_success', 'تم حذف المستند بنجاح'));
     } catch (err) {
       console.error('Delete Error:', err);
       alert(t('common.error', 'حدث خطأ أثناء الحذف: ') + err.message);
@@ -84,8 +89,8 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     }
   };
 
-  // دالة الرفع الذكية (تضمن استبدال المستندات الأساسية والسماح بتعدد المستندات الفرعية)
   const handleUploadDocument = async ({ file, documentType, notes }) => {
+    setUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -101,11 +106,9 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         currentAcademyId = studentData?.academy_id;
       }
 
-      // 1. تحديد ما إذا كان المستند من الأنواع الفريدة التي تتطلب نسخة واحدة محدثة فقط
       const singleInstanceTypes = ['id_card', 'passport', 'birth_certificate'];
       const isSingleInstance = singleInstanceTypes.includes(documentType);
 
-      // 2. إذا كان المستند فريداً، يتم حذف الملف القديم من الـ Storage والـ DB تلقائياً
       if (isSingleInstance) {
         const existingDoc = documents.find((doc) => doc.document_type === documentType);
         if (existingDoc) {
@@ -117,7 +120,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         }
       }
 
-      // 3. إنتاج مسار فريد للملف الجديد لمنع تداخل الأسماء
       const fileExt = file.name.split('.').pop();
       const uniqueId = crypto.randomUUID();
       const filePath = `students/${studentId}/${Date.now()}_${uniqueId}.${fileExt}`;
@@ -132,7 +134,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         .from('documents')
         .getPublicUrl(filePath);
 
-      // 4. حفظ البيانات الجديدة
       const { data, error: dbError } = await supabase
         .from('student_documents')
         .insert([{
@@ -152,7 +153,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
 
       if (dbError) throw dbError;
 
-      // 5. تحديث الواجهة فوراً
       setDocuments((prev) => {
         const filtered = isSingleInstance 
           ? prev.filter((doc) => doc.document_type !== documentType)
@@ -160,9 +160,14 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         return [data, ...filtered];
       });
 
+      setIsUploadModalOpen(false);
+      showSuccess(t('documents.upload_success', 'تم رفع المستند بنجاح!'));
+
     } catch (err) {
       console.error('Upload Error:', err);
       alert(err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -192,8 +197,26 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     { value: 'other', label: t('documents.types.other', 'أخرى') },
   ];
 
+  const isImage = (mime, url) => {
+    if (mime?.startsWith('image/')) return true;
+    return /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
+  };
+
+  const isPdf = (mime, url) => {
+    if (mime === 'application/pdf') return true;
+    return /\.pdf$/i.test(url);
+  };
+
   return (
-    <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
+    <div className="space-y-4 text-appText-main relative" dir={i18n.dir()}>
+      {/* Toast Notification */}
+      {successToast && (
+        <div className="fixed bottom-5 start-5 z-[999999] flex items-center gap-2 bg-emerald-500 text-white px-4 py-3 rounded-xl shadow-xl animate-bounce">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-bold">{successToast}</span>
+        </div>
+      )}
+
       {/* Header Container */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-dark-card p-4 rounded-2xl border border-appBorder-card">
         <div className="flex items-center gap-3">
@@ -290,15 +313,14 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
               </div>
 
               <div className="flex items-center gap-1 shrink-0">
-                <a
-                  href={doc.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-appText-sub hover:text-primary hover:bg-dark-input rounded-lg transition-colors"
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(doc)}
+                  className="p-2 text-appText-sub hover:text-primary hover:bg-dark-input rounded-lg transition-colors cursor-pointer"
                   title={t('common.view', 'عرض')}
                 >
                   <Eye className="w-4 h-4" />
-                </a>
+                </button>
                 
                 <button
                   type="button"
@@ -326,13 +348,81 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUpload={handleUploadDocument}
+        isLoading={uploading}
       />
 
-      {/* Custom Delete Modal */}
+      {/* Embedded Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/90">
+          <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-appBorder-card bg-dark-card">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <FileText className="w-5 h-5 text-primary shrink-0" />
+                <h3 className="text-sm font-bold text-appText-main truncate">
+                  {previewDoc.file_name}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={previewDoc.file_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('common.download', 'تحميل')}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-2 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 bg-black/40 p-2 sm:p-4 overflow-auto flex items-center justify-center">
+              {isImage(previewDoc.mime_type, previewDoc.file_url) ? (
+                <img
+                  src={previewDoc.file_url}
+                  alt={previewDoc.file_name}
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                />
+              ) : isPdf(previewDoc.mime_type, previewDoc.file_url) ? (
+                <iframe
+                  src={previewDoc.file_url}
+                  title={previewDoc.file_name}
+                  className="w-full h-full rounded-lg border-0"
+                />
+              ) : (
+                <div className="text-center space-y-4 p-6">
+                  <FileText className="w-16 h-16 text-appText-muted mx-auto" />
+                  <p className="text-sm text-appText-sub">
+                    {t('documents.cannot_preview', 'لا يمكن معاينة هذا النوع من الملفات مباشرة.')}
+                  </p>
+                  <a
+                    href={previewDoc.file_url}
+                    download
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-appText-main font-bold rounded-xl text-xs"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{t('common.download_file', 'تحميل الملف')}</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
       {deleteDocId && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/80">
           <div className="bg-dark-card border border-appBorder-card rounded-2xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
-            
             <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -375,7 +465,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 )}
               </button>
             </div>
-
           </div>
         </div>
       )}
