@@ -1,8 +1,6 @@
-// src/components/UI/CustomSelect.jsx
-
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react-dom';
+import { useFloating, autoUpdate, offset, flip, shift, size } from '@floating-ui/react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -28,16 +26,24 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // استبدال الحسابات اليدوية بـ Floating UI لمنع الوميض والتزحيف
+  // استخدام strategy: 'fixed' لمنع نزول/تزحيف القائمة مع سكرول المودال
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'bottom-start',
+    strategy: 'fixed',
     whileElementsMounted: autoUpdate,
     middleware: [
       offset(4),
       flip({ fallbackPlacements: ['top-start'] }),
       shift({ padding: 10 }),
+      size({
+        apply({ rects, elements }) {
+          Object.assign(elements.floating.style, {
+            width: `${rects.reference.width}px`,
+          });
+        },
+      }),
     ],
   });
 
@@ -123,7 +129,7 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة عبر Portal مع حماية الوميض */}
+      {/* القائمة المنسدلة عبر Portal مع حماية الوميض وضبط fixed */}
       {isOpen &&
         createPortal(
           <div
@@ -134,11 +140,7 @@ const CustomSelect = ({
               position: strategy,
               top: y ?? 0,
               left: x ?? 0,
-              width: elements.reference
-                ? `${elements.reference.getBoundingClientRect().width}px`
-                : 'auto',
               zIndex: 999999,
-              // تجميد الشفافية لمنع الوميض حتى تكتمل حسابات الإحداثيات
               opacity: isPositioned ? 1 : 0,
               visibility: isPositioned ? 'visible' : 'hidden',
             }}
