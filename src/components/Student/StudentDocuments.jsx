@@ -59,28 +59,40 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const handleUploadDocument = async ({ file, documentType, notes }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const fileExt = file.name.split('.').pop();
       
-      // الهيكلة المجلدية الجديدة: documents/students/{studentId}/{timestamp}.ext
+      // 1. جلب academy_id من بيانات الطالب لو مش مبعوث في الـ props
+      let currentAcademyId = academyId;
+      if (!currentAcademyId) {
+        const { data: studentData, error: studentError } = await supabase
+          .from('students')
+          .select('academy_id')
+          .eq('id', studentId)
+          .single();
+          
+        if (studentError) throw studentError;
+        currentAcademyId = studentData?.academy_id;
+      }
+
+      const fileExt = file.name.split('.').pop();
       const filePath = `students/${studentId}/${Date.now()}.${fileExt}`;
 
-      // 1. الرفع إلى باكيت 'documents'
+      // 2. الرفع للباكيت
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. الحصول على الرابط العام للملف
+      // 3. رابط الملف
       const { data: { publicUrl } } = supabase.storage
         .from('documents')
         .getPublicUrl(filePath);
 
-      // 3. الحفظ في جدول student_documents
+      // 4. الحفظ بالجدول
       const { data, error: dbError } = await supabase
         .from('student_documents')
         .insert([{
-          academy_id: academyId,
+          academy_id: currentAcademyId,
           student_id: studentId,
           file_name: file.name,
           file_url: publicUrl,
