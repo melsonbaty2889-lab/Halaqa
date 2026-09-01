@@ -1,3 +1,5 @@
+// src/components/UI/CountrySelect.jsx
+
 import React, { useState, useEffect } from 'react';
 import ReactDom from 'react-dom';
 import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react-dom';
@@ -14,8 +16,8 @@ export default function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1. إعداد الـ Floating UI للموبايل والسطح المكتب
-  const { x, y, strategy, refs, elements } = useFloating({
+  // 1. استخراج isPositioned لمنع الوميض قبل تحديد الموقع
+  const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'bottom-start',
@@ -27,7 +29,7 @@ export default function CountrySelect({
     ],
   });
 
-  // 2. إغلاق القائمة عند اللمس خارجها على الموبايل
+  // 2. إغلاق القائمة عند اللمس خارجها
   useEffect(() => {
     if (!isOpen) return;
 
@@ -68,7 +70,7 @@ export default function CountrySelect({
 
   return (
     <div className="w-full text-start" dir={isArabic ? 'rtl' : 'ltr'}>
-      {/* 3. ربط الزر بـ refs.setReference */}
+      {/* الزر الرئيسي */}
       <button
         ref={refs.setReference}
         type="button"
@@ -97,7 +99,7 @@ export default function CountrySelect({
         />
       </button>
 
-      {/* 4. ربط القائمة بـ refs.setFloating وتثبيت الأبعاد */}
+      {/* القائمة المنسدلة بدون وميض */}
       {isOpen &&
         ReactDom.createPortal(
           <div
@@ -111,8 +113,13 @@ export default function CountrySelect({
                 ? `${elements.reference.getBoundingClientRect().width}px`
                 : 'auto',
               zIndex: 99999,
+              // تجميد الشفافية والظهور لحين اكتمال عملية التموضع
+              opacity: isPositioned ? 1 : 0,
+              visibility: isPositioned ? 'visible' : 'hidden',
             }}
-            className="bg-dark-card border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col animate-in fade-in zoom-in-95 duration-100"
+            className={`bg-dark-card border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col ${
+              isPositioned ? 'transition-opacity duration-150' : ''
+            }`}
           >
             {/* حقل البحث */}
             <div className="p-2 border-b border-appBorder-card sticky top-0 bg-dark-card z-10">
