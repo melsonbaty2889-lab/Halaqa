@@ -14,10 +14,18 @@ const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType }) => 
   // اعتماد التقويم الممرر كـ prop أو المأخوذ من Context
   const activeCalendarType = calendarType || academy?.calendar_type || 'gregorian';
 
-  const studentName = formatName(student.name || student.full_name || t('students.unnamed', 'بدون اسم'));
+  const studentName = formatName(
+    student.name || student.full_name || t('unnamed_student', 'طالب بدون اسم')
+  );
+  
   const phone = student.parent_phone || student.parent_whatsapp || student.phone || '';
   const joinDate = student.created_at || student.join_date || null;
-  const halaqaName = student.halaqa_name || student.halaqas?.name || '';
+  
+  // معالجة اسم الحلقة إذا كان كائن ترجمة أو نص عادي
+  const rawHalaqa = student.halaqa_name || student.halaqas?.name;
+  const halaqaName = typeof rawHalaqa === 'object' && rawHalaqa !== null
+    ? (isRtl ? rawHalaqa.ar || rawHalaqa.en : rawHalaqa.en || rawHalaqa.ar)
+    : rawHalaqa || '';
 
   // دالة تنسيق التاريخ الديناميكية حسب إعدادات الأكاديمية
   const formatDate = (dateString) => {
@@ -94,7 +102,8 @@ const StudentItemCard = ({ student, onClick, getStatusBadge, calendarType }) => 
         <div className="flex items-center gap-2 shrink-0">
           {getStatusBadge && (
             <div className="shrink-0">
-              {getStatusBadge(student.status)}
+              {/* تمرير كائن الطالب كاملاً بدلاً من الحقل فقط */}
+              {getStatusBadge(student)}
             </div>
           )}
           <ArrowIcon className="w-4 h-4 text-appText-muted group-hover:text-primary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
