@@ -248,10 +248,15 @@
   background: #E07A00;
 }
 
-/* 🌐 إعدادات عنصر الـ Dropdown Portal المباشرة */
+/* 🌐 إعدادات عنصر الـ Dropdown Portal المباشرة وإصلاح الشفافية والتداخل */
 #portal-select-dropdown {
   box-sizing: border-box;
   touch-action: manipulation;
+  background-color: #0F172A !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  isolation: isolate;
 }
 
 /* =========================================================
