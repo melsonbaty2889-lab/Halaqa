@@ -1,7 +1,6 @@
-// src/components/UI/CountrySelect.jsx
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDom from 'react-dom';
+import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { COUNTRIES_LIST } from '@/constants/countries';
 
@@ -14,58 +13,30 @@ export default function CountrySelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, openUpward: false });
-  const triggerRef = useRef(null);
-  const dropdownRef = useRef(null);
 
-  // تحديث مكان ومواصفات القائمة بناءً على موقع الزر وحجم الشاشة
-  const updateCoords = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      // الفتح لأعلى فقط إذا كانت المساحة السفلية غير كافية
-      const openUpward = spaceBelow < 250 && spaceAbove > spaceBelow;
+  // 1. إعداد الـ Floating UI للموبايل والسطح المكتب
+  const { x, y, strategy, refs, elements } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(6),
+      flip({ fallbackPlacements: ['top-start'] }),
+      shift({ padding: 10 }),
+    ],
+  });
 
-      setCoords({
-        top: openUpward ? rect.top - 6 : rect.bottom + 6,
-        left: rect.left,
-        width: rect.width,
-        openUpward,
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    updateCoords();
-
-    const handleScrollOrResize = (e) => {
-      // منع التحديث أو الإغلاق إذا كان التمرير داخل القائمة المنسدلة نفسها
-      if (dropdownRef.current && dropdownRef.current.contains(e.target)) return;
-      updateCoords();
-    };
-
-    window.addEventListener('resize', handleScrollOrResize);
-    window.addEventListener('scroll', handleScrollOrResize, true);
-
-    return () => {
-      window.removeEventListener('resize', handleScrollOrResize);
-      window.removeEventListener('scroll', handleScrollOrResize, true);
-    };
-  }, [isOpen]);
-
-  // إغلاق القائمة عند الضغط في أي مكان خارجها
+  // 2. إغلاق القائمة عند اللمس خارجها على الموبايل
   useEffect(() => {
     if (!isOpen) return;
 
     function handleClickOutside(event) {
       if (
-        triggerRef.current &&
-        !triggerRef.current.contains(event.target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
+        elements.reference &&
+        !elements.reference.contains(event.target) &&
+        elements.floating &&
+        !elements.floating.contains(event.target)
       ) {
         setIsOpen(false);
       }
@@ -78,7 +49,7 @@ export default function CountrySelect({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, elements]);
 
   const selectedCountry = COUNTRIES_LIST.find((c) => c.code === value);
 
@@ -97,9 +68,9 @@ export default function CountrySelect({
 
   return (
     <div className="w-full text-start" dir={isArabic ? 'rtl' : 'ltr'}>
-      {/* زر حقل الاختيار */}
+      {/* 3. ربط الزر بـ refs.setReference */}
       <button
-        ref={triggerRef}
+        ref={refs.setReference}
         type="button"
         disabled={disabled}
         onClick={() => {
@@ -126,24 +97,24 @@ export default function CountrySelect({
         />
       </button>
 
-      {/* القائمة المنسدلة الدقيقة كـ Portal بألوان الهوية المعتمة */}
+      {/* 4. ربط القائمة بـ refs.setFloating وتثبيت الأبعاد */}
       {isOpen &&
         ReactDom.createPortal(
           <div
-            ref={dropdownRef}
+            ref={refs.setFloating}
             dir={isArabic ? 'rtl' : 'ltr'}
             style={{
-              position: 'fixed',
-              left: `${coords.left}px`,
-              width: `${coords.width}px`,
-              ...(coords.openUpward
-                ? { bottom: `${window.innerHeight - coords.top}px` }
-                : { top: `${coords.top}px` }),
+              position: strategy,
+              top: y ?? 0,
+              left: x ?? 0,
+              width: elements.reference
+                ? `${elements.reference.getBoundingClientRect().width}px`
+                : 'auto',
               zIndex: 99999,
             }}
-            className="bg-dark-card border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col animate-in fade-in zoom-in-95 duration-100"
+            className="bg-dark-card border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col animate-in fade-in zoom-in-95 duration-100"
           >
-            {/* حقل البحث الداخلي */}
+            {/* حقل البحث */}
             <div className="p-2 border-b border-appBorder-card sticky top-0 bg-dark-card z-10">
               <div className="relative flex items-center">
                 <Search
@@ -157,7 +128,7 @@ export default function CountrySelect({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={
-                    isArabic ? 'ابحث باسم الدولة أو كود الاتصال...' : 'Search country or code...'
+                    isArabic ? 'ابحث باسم الدولة أو الكود...' : 'Search country or code...'
                   }
                   className={`w-full ${
                     isArabic ? 'pr-9 pl-3' : 'pl-9 pr-3'
@@ -166,7 +137,7 @@ export default function CountrySelect({
               </div>
             </div>
 
-            {/* قائمة الدول */}
+            {/* قائمة العناصر */}
             <div className="overflow-y-auto flex-1 custom-scrollbar p-1 space-y-0.5 bg-dark-card">
               {filteredCountries.length > 0 ? (
                 filteredCountries.map((c) => (
@@ -183,7 +154,7 @@ export default function CountrySelect({
                     } px-2.5 py-2 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                       value === c.code
                         ? 'bg-primary/20 text-primary font-semibold'
-                        : 'text-appText-main hover:bg-dark-input'
+                        : 'text-appText-main hover:bg-dark-input active:bg-dark-input'
                     }`}
                   >
                     <span className="flex items-center gap-2 truncate">
