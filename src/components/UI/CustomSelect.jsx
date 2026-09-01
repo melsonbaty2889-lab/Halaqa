@@ -17,7 +17,6 @@ const CustomSelect = ({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
-  // نصوص افتراضية مترجمة بحسب لغة الواجهة الحالية
   const resolvedPlaceholder = placeholder || t('common.select', isRtl ? 'اختر من القائمة...' : 'Select...');
   const resolvedSearchPlaceholder = searchPlaceholder || t('common.search', isRtl ? 'بحث...' : 'Search...');
   const resolvedNoOptionsMessage = noOptionsMessage || t('common.noOptions', isRtl ? 'لا توجد خيارات متاحة' : 'No options available');
@@ -29,19 +28,18 @@ const CustomSelect = ({
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // تحديث موقع القائمة بالنسبة للـ viewport عند الفتح أو التمرير
+  // تحديث موقع القائمة بـ fixed مائل للأسفل بالنسبة للـ viewport المباشر
   const updateCoords = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setCoords({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
+        top: rect.bottom,
+        left: rect.left,
         width: rect.width
       });
     }
   };
 
-  // إغلاق القائمة عند النقر خارجها أو عند التمرير
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -55,16 +53,23 @@ const CustomSelect = ({
 
     if (isOpen) {
       updateCoords();
-      window.addEventListener('scroll', updateCoords, true);
-      window.addEventListener('resize', updateCoords);
-    }
+      // إلغاء الفتح وإغلاق القائمة فور السكرول لعدم انفصال المكون عن الزر
+      const handleScroll = (e) => {
+        const dropdown = document.getElementById('portal-select-dropdown');
+        if (dropdown && dropdown.contains(e.target)) return;
+        setIsOpen(false);
+      };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('scroll', updateCoords, true);
-      window.removeEventListener('resize', updateCoords);
-    };
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', updateCoords);
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', updateCoords);
+      };
+    }
   }, [isOpen]);
 
   const safeValue = value !== undefined && value !== null ? String(value) : '';
@@ -123,18 +128,18 @@ const CustomSelect = ({
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
-      {/* القائمة المنسدلة مع البورتال לרسمها مباشرة في الـ body */}
+      {/* القائمة المنسدلة بوضع fixed لضمان التموضع الصحيح داخل الـ Modal وصفحات النظام */}
       {isOpen && createPortal(
         <div
           id="portal-select-dropdown"
           dir={isRtl ? 'rtl' : 'ltr'}
           style={{
-            position: 'absolute',
+            position: 'fixed',
             top: `${coords.top + 4}px`,
             left: `${coords.left}px`,
             width: `${coords.width}px`,
           }}
-          className="max-h-56 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[99999] p-1 space-y-0.5 custom-scrollbar"
+          className="max-h-56 overflow-y-auto bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl z-[999999] p-1 space-y-0.5 custom-scrollbar"
         >
           {searchable && (
             <div className="sticky top-0 p-1 bg-[#0A101D] z-10 border-b border-[var(--border-card)] pb-1.5">
