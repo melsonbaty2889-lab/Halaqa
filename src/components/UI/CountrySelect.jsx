@@ -1,8 +1,10 @@
+// src/components/UI/CountrySelect.jsx
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { COUNTRIES_LIST } from '@/constants/countries';
 
-export default function CountrySelect({ value, onChange, isArabic = true }) {
+export default function CountrySelect({ value, onChange, isArabic = true, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
@@ -31,45 +33,51 @@ export default function CountrySelect({ value, onChange, isArabic = true }) {
     );
   });
 
+  const defaultPlaceholder = isArabic ? 'اختر الدولة...' : 'Select Country...';
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       {/* زر عرض الدولة المختارة */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-primary-500 transition-colors flex items-center justify-between"
+        className="w-full px-3 py-2.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm focus:outline-none focus:border-appBorder-hover transition-colors flex items-center justify-between gap-2"
       >
         {selectedCountry ? (
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 truncate">
             <span>{selectedCountry.flag}</span>
-            <span className="text-slate-200">
+            <span className="text-appText-main truncate">
               {isArabic ? selectedCountry.nameAr : selectedCountry.nameEn}
             </span>
-            <span className="text-xs text-slate-400 dir-ltr">({selectedCountry.dialCode})</span>
+            <span className="text-xs text-appText-sub dir-ltr">({selectedCountry.dialCode})</span>
           </span>
         ) : (
-          <span className="text-slate-500">{isArabic ? 'اختر الدولة...' : 'Select Country...'}</span>
+          <span className="text-appText-sub/60 truncate">{placeholder || defaultPlaceholder}</span>
         )}
         <ChevronDown
-          className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-appText-sub shrink-0 transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
         />
       </button>
 
       {/* القائمة المنسدلة مع حقل البحث */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-50 mt-1 w-full bg-dark-card border border-appBorder-card rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col animate-in fade-in zoom-in-95 duration-100">
           
           {/* حقل البحث الداخلي */}
-          <div className="p-2 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
+          <div className="p-2 border-b border-appBorder-card sticky top-0 bg-dark-card z-10">
             <div className="relative flex items-center">
-              <Search className="w-4 h-4 absolute right-3 text-slate-400 pointer-events-none" />
+              <Search className={`w-4 h-4 absolute ${isArabic ? 'right-3' : 'left-3'} text-appText-sub pointer-events-none`} />
               <input
                 type="text"
                 autoFocus
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={isArabic ? 'ابحث باسم الدولة أو كود الاتصال...' : 'Search country or code...'}
-                className="w-full pr-9 pl-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-primary-500 placeholder-slate-500"
+                className={`w-full ${
+                  isArabic ? 'pr-9 pl-3' : 'pl-9 pr-3'
+                } py-1.5 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-xs focus:outline-none focus:border-appBorder-hover placeholder:text-appText-sub/50`}
               />
             </div>
           </div>
@@ -86,22 +94,24 @@ export default function CountrySelect({ value, onChange, isArabic = true }) {
                     setIsOpen(false);
                     setSearchTerm('');
                   }}
-                  className={`w-full text-right px-2.5 py-2 text-xs rounded-lg flex items-center justify-between transition-colors ${
+                  className={`w-full ${
+                    isArabic ? 'text-right' : 'text-left'
+                  } px-2.5 py-2 text-xs rounded-lg flex items-center justify-between transition-colors ${
                     value === c.code
-                      ? 'bg-primary-500/20 text-primary-300 font-semibold'
-                      : 'text-slate-200 hover:bg-slate-800'
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-appText-main hover:bg-dark-input'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 truncate">
                     <span>{c.flag}</span>
-                    <span>{isArabic ? c.nameAr : c.nameEn}</span>
-                    <span className="text-slate-400 dir-ltr">({c.dialCode})</span>
+                    <span className="truncate">{isArabic ? c.nameAr : c.nameEn}</span>
+                    <span className="text-appText-sub dir-ltr">({c.dialCode})</span>
                   </span>
-                  {value === c.code && <Check className="w-3.5 h-3.5 text-primary-400" />}
+                  {value === c.code && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
                 </button>
               ))
             ) : (
-              <div className="p-4 text-center text-xs text-slate-500">
+              <div className="p-4 text-center text-xs text-appText-sub">
                 {isArabic ? 'لم يتم العثور على نتائج' : 'No countries found'}
               </div>
             )}
