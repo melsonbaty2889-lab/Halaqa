@@ -342,7 +342,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 {t('documents.delete_title', 'حذف المستند')}
               </h3>
               <p className="text-xs text-appText-sub leading-relaxed">
-                {t('documents.delete_confirm_text', 'هل أنت تأكد من حذف هذا المستند نهائياً؟ لن تتمكن من استعادته مرة أخرى.')}
+                {t('documents.delete_confirm_text', 'هل أنت متأكد من حذف هذا المستند نهائياً؟ لن تتمكن من استعادته مرة أخرى.')}
               </p>
             </div>
 
