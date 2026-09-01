@@ -16,6 +16,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@supabase/supabase-js": "^2.109.0",
+    "@floating-ui/react-dom": "^2.0.0",
     "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
