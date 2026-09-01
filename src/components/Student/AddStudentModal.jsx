@@ -390,9 +390,9 @@ const AddStudentModal = ({
                   placeholder={t('students.ph_select_riwayah', 'اختر الرواية...')}
                   value={formData.preferred_riwayah}
                   onChange={(val) => setFormData({ ...formData, preferred_riwayah: val })}
-                  options={RIWAYAT_LIST.map((r) => ({
+                  options={(RIWAYAT_LIST || []).map((r) => ({
                     value: r.id,
-                    label: isRtl ? r.nameAr : (r.nameEn || r.nameAr),
+                    label: isRtl ? r.nameAr || r.name : r.nameEn || r.nameAr || r.name,
                   }))}
                 />
               </div>
