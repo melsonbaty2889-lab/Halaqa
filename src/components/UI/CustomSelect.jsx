@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useFloating, autoUpdate, offset, shift, size, autoPlacement } from '@floating-ui/react-dom';
+import { useFloating, autoUpdate, offset, shift, size, flip } from '@floating-ui/react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +26,7 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // استخدام flip بدلاً من autoPlacement لضبط الالتصاق تحت/فوق الحقل مباشرة بدون قفز
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
@@ -33,16 +34,14 @@ const CustomSelect = ({
     transform: false,
     whileElementsMounted: autoUpdate,
     middleware: [
-      offset(6),
-      autoPlacement({
-        allowedPlacements: ['bottom-start', 'top-start', 'bottom-end', 'top-end'],
-      }),
-      shift({ padding: 12 }),
+      offset(4), // مسافة بسيطة ومحددة جداً بين الحقل والقائمة
+      flip({ fallbackPlacements: ['top-start', 'bottom-start'] }),
+      shift({ padding: 10 }),
       size({
         apply({ rects, elements, availableHeight }) {
           Object.assign(elements.floating.style, {
             width: `${rects.reference.width}px`,
-            maxHeight: `${Math.min(224, availableHeight - 16)}px`,
+            maxHeight: `${Math.min(220, availableHeight - 16)}px`,
           });
         },
       }),
@@ -85,6 +84,7 @@ const CustomSelect = ({
   });
 
   const handleSelect = (e, optionValue) => {
+    e.preventDefault();
     e.stopPropagation();
 
     if (typeof onChange === 'function') {
@@ -97,11 +97,12 @@ const CustomSelect = ({
   return (
     <div className="relative w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
       {label && (
-        <label className="block text-xs font-bold text-[var(--text-main)] mb-1">
+        <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
           {label}
         </label>
       )}
 
+      {/* Trigger Button */}
       <button
         ref={refs.setReference}
         type="button"
@@ -116,19 +117,20 @@ const CustomSelect = ({
           error ? 'border-rose-500' : ''
         }`}
       >
-        <span className={`truncate text-xs ${selectedOption ? 'text-[var(--text-main)] font-semibold' : 'text-[var(--text-muted)]'}`}>
+        <span className={`truncate text-xs ${selectedOption ? 'text-[#FFFFFF] font-semibold' : 'text-[#94A3B8]'}`}>
           {selectedOption ? selectedOption.label : resolvedPlaceholder}
         </span>
         <ChevronDown
           size={14}
           className={`transition-transform duration-200 shrink-0 ${
-            isOpen ? 'rotate-180 text-[var(--primary)]' : 'text-[var(--text-sub)]'
+            isOpen ? 'rotate-180 text-[#E07A00]' : 'text-[#94A3B8]'
           }`}
         />
       </button>
 
       {error && <p className="text-rose-400 text-[10px] mt-1">{error}</p>}
 
+      {/* Floating Dropdown Portal */}
       {isOpen &&
         createPortal(
           <div
@@ -143,14 +145,15 @@ const CustomSelect = ({
               opacity: isPositioned ? 1 : 0,
               visibility: isPositioned ? 'visible' : 'hidden',
             }}
-            className={`overflow-hidden bg-[#0A101D] border border-[var(--border-card)] rounded-xl shadow-2xl flex flex-col ${
+            /* bg-[#0F172A] خلفية معتمة بالكامل لمنع الشفافية والتداخل */
+            className={`overflow-hidden bg-[#0F172A] border border-[#1B2738] rounded-xl shadow-2xl flex flex-col ${
               isPositioned ? 'transition-opacity duration-150' : ''
             }`}
           >
             {searchable && (
-              <div className="p-2 border-b border-[var(--border-card)] sticky top-0 bg-[#0A101D] z-10">
+              <div className="p-2 border-b border-[#1B2738] sticky top-0 bg-[#0F172A] z-10">
                 <div className="relative flex items-center">
-                  <Search size={14} className="absolute start-3 text-[var(--text-sub)] pointer-events-none" />
+                  <Search size={14} className="absolute start-3 text-[#94A3B8] pointer-events-none" />
                   <input
                     type="text"
                     placeholder={resolvedSearchPlaceholder}
@@ -158,16 +161,16 @@ const CustomSelect = ({
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={(e) => e.stopPropagation()}
-                    className="w-full bg-[var(--surface-input)] border border-[var(--border-input)] rounded-lg ps-8 pe-3 py-1.5 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] placeholder:text-[var(--text-muted)] text-start"
+                    className="w-full bg-[#0A101D] border border-[#1B2738] rounded-lg ps-8 pe-3 py-1.5 text-xs text-[#FFFFFF] focus:outline-none focus:border-[#E07A00] placeholder:text-[#475569] text-start"
                     autoFocus
                   />
                 </div>
               </div>
             )}
 
-            <div className="overflow-y-auto flex-1 custom-scrollbar p-1 space-y-0.5">
+            <div className="overflow-y-auto flex-1 custom-scrollbar p-1 space-y-0.5 bg-[#0F172A]">
               {filteredOptions.length === 0 ? (
-                <div className="px-3 py-4 text-xs text-[var(--text-sub)] text-center">
+                <div className="px-3 py-4 text-xs text-[#94A3B8] text-center">
                   {resolvedNoOptionsMessage}
                 </div>
               ) : (
@@ -179,14 +182,15 @@ const CustomSelect = ({
                       key={optVal || idx}
                       type="button"
                       onClick={(e) => handleSelect(e, opt.value)}
-                      className={`w-full text-start px-3 py-2 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                      /* 🎨 الضبط الصريح للألوان: المختار برتقالي بكلام أبيض ناصع، والباقي أبيض وواضح جودة عالية */
+                      className={`w-full text-start px-3 py-2.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-[var(--primary)] text-white font-bold'
-                          : 'text-[var(--text-main)] hover:bg-[var(--surface-input)] active:bg-[var(--surface-input)]'
+                          ? 'bg-[#E07A00] text-[#FFFFFF] font-bold shadow-md'
+                          : 'text-[#F1F5F9] hover:bg-[#162032] hover:text-[#FFFFFF] active:bg-[#1E293B]'
                       }`}
                     >
                       <span className="truncate">{opt.label}</span>
-                      {isSelected && <Check size={14} className="shrink-0" />}
+                      {isSelected && <Check size={14} className="shrink-0 text-[#FFFFFF]" />}
                     </button>
                   );
                 })
