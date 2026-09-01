@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, Loader2
+  ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, Loader2, AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
@@ -13,7 +13,12 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const { t, i18n } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState(null);
+  
+  // حالات إدارة نافذة وتأكيد الحذف
+  const [deleteDocId, setDeleteDocId] = useState(null);
+  const [deleteDocPath, setDeleteDocPath] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,18 +46,40 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     fetchDocuments();
   }, [studentId]);
 
-  const handleDeleteDocument = async (docId) => {
-    if (!window.confirm(t('documents.confirm_delete', 'هل أنت تأكد من حذف هذا المستند؟'))) return;
-    
-    setDeletingId(docId);
+  // دالة الحذف الكامل (تنفذ الحذف من Storage و Database)
+  const handleDeleteConfirm = async () => {
+    if (!deleteDocId) return;
+    setIsDeleting(true);
+
     try {
-      const { error } = await supabase.from('student_documents').delete().eq('id', docId);
-      if (error) throw error;
-      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+      // 1. حذف الملف من Supabase Storage لو المسار متوفر
+      if (deleteDocPath) {
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove([deleteDocPath]);
+
+        if (storageError) {
+          console.warn('Storage delete warning:', storageError.message);
+        }
+      }
+
+      // 2. حذف السجل من جدول student_documents
+      const { error: dbError } = await supabase
+        .from('student_documents')
+        .delete()
+        .eq('id', deleteDocId);
+
+      if (dbError) throw dbError;
+
+      // 3. تحديث القائمة وإغلاق النافذة
+      setDocuments((prev) => prev.filter((doc) => doc.id !== deleteDocId));
+      setDeleteDocId(null);
+      setDeleteDocPath(null);
     } catch (err) {
-      alert(err.message);
+      console.error('Delete Error:', err);
+      alert(t('common.error', 'حدث خطأ أثناء الحذف: ') + err.message);
     } finally {
-      setDeletingId(null);
+      setIsDeleting(false);
     }
   };
 
@@ -60,7 +87,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // 1. جلب academy_id من بيانات الطالب لو مش مبعوث في الـ props
       let currentAcademyId = academyId;
       if (!currentAcademyId) {
         const { data: studentData, error: studentError } = await supabase
@@ -76,19 +102,16 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
       const fileExt = file.name.split('.').pop();
       const filePath = `students/${studentId}/${Date.now()}.${fileExt}`;
 
-      // 2. الرفع للباكيت
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 3. رابط الملف
       const { data: { publicUrl } } = supabase.storage
         .from('documents')
         .getPublicUrl(filePath);
 
-      // 4. الحفظ بالجدول
       const { data, error: dbError } = await supabase
         .from('student_documents')
         .insert([{
@@ -243,20 +266,26 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 text-appText-sub hover:text-primary hover:bg-dark-input rounded-lg transition-colors"
+                  title={t('common.view', 'عرض')}
                 >
                   <Eye className="w-4 h-4" />
                 </a>
+                
                 <button
                   type="button"
-                  disabled={deletingId === doc.id}
-                  onClick={() => handleDeleteDocument(doc.id)}
-                  className="p-2 text-appText-sub hover:text-rose-400 hover:bg-dark-input rounded-lg transition-colors disabled:opacity-50"
+                  onClick={() => {
+                    setDeleteDocId(doc.id);
+                    // استخراج مسار الملف داخل Storage للحذف الكامل
+                    let storagePath = null;
+                    if (doc.file_url && doc.file_url.includes('/documents/')) {
+                      storagePath = doc.file_url.split('/documents/')[1];
+                    }
+                    setDeleteDocPath(storagePath);
+                  }}
+                  className="p-2 text-appText-sub hover:text-rose-400 hover:bg-dark-input rounded-lg transition-colors cursor-pointer"
+                  title={t('common.delete', 'حذف')}
                 >
-                  {deletingId === doc.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -270,6 +299,58 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
         onClose={() => setIsUploadModalOpen(false)}
         onUpload={handleUploadDocument}
       />
+
+      {/* Custom Delete Modal */}
+      {deleteDocId && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-dark-card border border-appBorder-card rounded-2xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
+            
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-appText-main">
+                {t('documents.delete_title', 'حذف المستند')}
+              </h3>
+              <p className="text-xs text-appText-sub leading-relaxed">
+                {t('documents.delete_confirm_text', 'هل أنت تأكد من حذف هذا المستند نهائياً؟ لن تتمكن من استعادته مرة أخرى.')}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteDocId(null);
+                  setDeleteDocPath(null);
+                }}
+                className="flex-1 py-2 px-3 rounded-xl border border-appBorder-card text-xs font-semibold text-appText-sub hover:bg-dark-input transition-all cursor-pointer"
+              >
+                {t('common.cancel', 'إلغاء')}
+              </button>
+
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{t('common.delete', 'حذف')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
