@@ -1,14 +1,19 @@
 // src/components/Student/AddStudentModal.jsx
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { RIWAYAT_LIST } from '@/constants/riwayat';
-import { calculateAge } from '@/utils/dateUtils';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
 import CustomSelect from '@/components/UI/CustomSelect';
+import { useStudentForm } from '@/hooks/useStudentForm';
+
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
 
 const AddStudentModal = ({
   isOpen,
@@ -21,209 +26,21 @@ const AddStudentModal = ({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  const initialFormState = {
-    name_ar: '',
-    name_en: '',
-    gender: 'male',
-    birth_date: '',
-    country: '',
-    nationality: '',
-    halaqa_id: '',
-    preferred_riwayah: '',
-    current_juz: null,
-    memorization_system: '',
-    parent_name: '',
-    parent_phone: '',
-    parent_whatsapp: '',
-    notes_text: '',
-  };
-
-  const [formData, setFormData] = useState(initialFormState);
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showParentFields, setShowParentFields] = useState(true);
-  const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (studentToEdit) {
-      const nameObj =
-        typeof studentToEdit.name === 'object' && studentToEdit.name !== null
-          ? studentToEdit.name
-          : { ar: studentToEdit.name || studentToEdit.full_name || '', en: '' };
-
-      const notesObj =
-        typeof studentToEdit.notes === 'object' && studentToEdit.notes !== null
-          ? studentToEdit.notes
-          : { text: studentToEdit.notes || '' };
-
-      const phone = studentToEdit.parent_phone || '';
-      const whatsapp = studentToEdit.parent_whatsapp || '';
-
-      setFormData({
-        name_ar: nameObj.ar || (typeof studentToEdit.name === 'string' ? studentToEdit.name : ''),
-        name_en: nameObj.en || '',
-        gender: studentToEdit.gender || 'male',
-        birth_date: studentToEdit.birth_date || '',
-        country: studentToEdit.country || '',
-        nationality: studentToEdit.nationality || '',
-        halaqa_id: studentToEdit.halaqa_id || '',
-        preferred_riwayah: studentToEdit.preferred_riwayah || '',
-        current_juz: studentToEdit.current_juz || null,
-        memorization_system: studentToEdit.memorization_system || '',
-        parent_name: studentToEdit.parent_name || '',
-        parent_phone: phone,
-        parent_whatsapp: whatsapp,
-        notes_text: notesObj.text || '',
-      });
-
-      setIsWhatsappManuallyEdited(Boolean(whatsapp && whatsapp !== phone));
-
-      if (studentToEdit.birth_date) {
-        const age = calculateAge(studentToEdit.birth_date);
-        setShowParentFields(age !== null ? age < 18 : true);
-      } else {
-        setShowParentFields(true);
-      }
-    } else {
-      setFormData(initialFormState);
-      setShowParentFields(true);
-      setIsWhatsappManuallyEdited(false);
-    }
-    setErrors({});
-  }, [studentToEdit, isOpen]);
-
-  const parseLocalDate = (dateStr) => {
-    if (!dateStr) return null;
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  const handleDateChange = (date) => {
-    let bDate = '';
-    if (date && !isNaN(date.getTime())) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      bDate = `${year}-${month}-${day}`;
-    }
-
-    setFormData((prev) => ({ ...prev, birth_date: bDate }));
-
-    if (bDate) {
-      const age = calculateAge(bDate);
-      setShowParentFields(age !== null ? age < 18 : true);
-    } else {
-      setShowParentFields(true);
-    }
-  };
-
-  const handlePhoneChange = (e) => {
-    const val = e.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      parent_phone: val,
-      ...(!isWhatsappManuallyEdited ? { parent_whatsapp: val } : {}),
-    }));
-  };
-
-  const handleWhatsappChange = (e) => {
-    const val = e.target.value;
-    setIsWhatsappManuallyEdited(true);
-    setFormData((prev) => ({ ...prev, parent_whatsapp: val }));
-  };
-
-  const handleCopyPhoneToWhatsapp = () => {
-    setIsWhatsappManuallyEdited(false);
-    setFormData((prev) => ({
-      ...prev,
-      parent_whatsapp: prev.parent_phone,
-    }));
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name_ar.trim()) {
-      newErrors.name_ar = t('students.val_name_ar_required', 'يرجى إدخال اسم الطالب بالعربية');
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const {
+    formData,
+    setFormData,
+    errors,
+    isSubmitting,
+    showParentFields,
+    setShowParentFields,
+    handleDateChange,
+    handlePhoneChange,
+    handleWhatsappChange,
+    handleCopyPhoneToWhatsapp,
+    handleSubmit,
+  } = useStudentForm({ isOpen, studentToEdit, academyId, onSuccess, onClose, t });
 
   if (!isOpen) return null;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const nameJson = {
-        ar: formData.name_ar.trim(),
-        en: formData.name_en.trim() || formData.name_ar.trim(),
-      };
-
-      const notesJson = formData.notes_text.trim() ? { text: formData.notes_text.trim() } : null;
-
-      const payload = {
-        academy_id: academyId,
-        name: nameJson,
-        gender: formData.gender,
-        birth_date: formData.birth_date || null,
-        country: formData.country || null,
-        nationality: formData.nationality || null,
-        halaqa_id: formData.halaqa_id || null,
-        preferred_riwayah: formData.preferred_riwayah || null,
-        current_juz: formData.current_juz ? Number(formData.current_juz) : null,
-        memorization_system: formData.memorization_system || null,
-        parent_name: showParentFields && formData.parent_name.trim() ? formData.parent_name.trim() : null,
-        parent_phone: showParentFields && formData.parent_phone.trim() ? formData.parent_phone.trim() : null,
-        parent_whatsapp: showParentFields && formData.parent_whatsapp.trim() ? formData.parent_whatsapp.trim() : null,
-        notes: notesJson,
-        updated_at: new Date().toISOString(),
-      };
-
-      let resultData = null;
-
-      if (studentToEdit?.id) {
-        const { data, error } = await supabase
-          .from('students')
-          .update(payload)
-          .eq('id', studentToEdit.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        resultData = data;
-      } else {
-        const { data, error } = await supabase
-          .from('students')
-          .insert([
-            {
-              ...payload,
-              status: 'active',
-              is_archived: false,
-              created_at: new Date().toISOString(),
-            },
-          ])
-          .select()
-          .single();
-
-        if (error) throw error;
-        resultData = data;
-      }
-
-      if (onSuccess) await onSuccess(resultData);
-      onClose();
-    } catch (err) {
-      console.error('Error saving data:', err);
-      alert(`${t('common.save_error', 'حدث خطأ أثناء الحفظ:')} ${err.message || ''}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const genderOptions = [
     { label: t('common.male', 'ذكر'), value: 'male' },
@@ -269,7 +86,7 @@ const AddStudentModal = ({
           onSubmit={handleSubmit} 
           className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar min-h-0"
         >
-          {/* البيانات الأساسية */}
+          {/* 1. البيانات الأساسية */}
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-4 h-4" />
@@ -360,7 +177,7 @@ const AddStudentModal = ({
             </div>
           </div>
 
-          {/* الحلقة والتلاوة والمستوى */}
+          {/* 2. الحلقة والتلاوة والمستوى */}
           <div className="space-y-4 pt-4 border-t border-appBorder-card">
             <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" />
@@ -430,7 +247,7 @@ const AddStudentModal = ({
             </div>
           </div>
 
-          {/* بيانات ولي الأمر */}
+          {/* 3. بيانات ولي الأمر */}
           <div className="space-y-4 pt-4 border-t border-appBorder-card">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
@@ -520,7 +337,7 @@ const AddStudentModal = ({
             )}
           </div>
 
-          {/* ملاحظات */}
+          {/* 4. ملاحظات */}
           <div>
             <label className="block text-xs font-medium text-appText-sub mb-1.5">
               {t('common.notes', 'ملاحظات إضافية')}
