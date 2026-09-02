@@ -1,0 +1,49 @@
+{
+  "splash": {
+    "title": "الحلقة الذكية",
+    "subtitle": "المنصة الذكية لإدارة حلقات القرآن الكريم",
+    "loading": "جاري التحميل...",
+    "skip": "تخطي"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث...",
+    "actions": "الإجراءات",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "loading": "جاري التحميل...",
+    "no_data": "لا توجد بيانات متاحة"
+  },
+  "menu": {
+    "sections": {
+      "main_operations": "الرئيسية والعمليات",
+      "halaqas_people": "الحلقات والأفراد",
+      "curriculum_progress": "المناهج والتقييم",
+      "management_finance": "الإدارة والمالية"
+    },
+    "items": {
+      "dashboard": "لوحة التحكم",
+      "attendance": "التسميع والحضور",
+      "interactive_quran": "المصحف والتسميع الذكي",
+      "notifications_reports": "الإشعارات والتقارير",
+      "halaqas": "الحلقات والفصول",
+      "students": "إدارة الطلاب",
+      "parents": "أولياء الأمور",
+      "teachers": "الكادر التعليمي والإداري",
+      "curricula": "المناهج والعلوم الشرعية",
+      "exams": "الاختبارات والشهادات",
+      "gamification": "التحفيز والأوسمة",
+      "documents": "المستندات والملفات",
+      "finance": "الاشتراكات والمالية",
+      "audit_logs": "سجل العمليات الأمني",
+      "settings": "إعدادات المنظومة"
+    }
+  }
+}
