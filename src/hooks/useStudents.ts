@@ -1,14 +1,13 @@
 // src/hooks/useStudents.ts
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase'; 
-import { Student, StudentFilters } from '../types/student';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase'; 
+import { Student, StudentFilters } from '@/types/student';
 
 export const useStudents = (academyId: string, initialFilters?: Partial<StudentFilters>) => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // إدارة حالة الفلاتر
+  // 1. إدارة حالة الفلاتر
   const [filters, setFilters] = useState<StudentFilters>({
     searchTerm: '',
     gender: 'all',
@@ -17,7 +16,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     ...initialFilters,
   });
 
-  // حالة كلمة البحث المؤجلة لتخفيف الطلبات (Debounce)
+  // 2. حالة كلمة البحث المؤجلة لتخفيف الطلبات (Debounce)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(filters.searchTerm);
 
   useEffect(() => {
@@ -28,14 +27,20 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     return () => clearTimeout(handler);
   }, [filters.searchTerm]);
 
-  // دالة جلب البيانات المباشرة من Supabase
-  const fetchStudents = useCallback(async () => {
-    if (!academyId) return;
+  // 3. مفتاح الكاش الموحد بناءً على المتغيرات
+  const queryKey = ['students', academyId, filters.gender, filters.halaqaId, filters.isArchived, debouncedSearchTerm];
 
-    setLoading(true);
-    setError(null);
+  // 4. جلب البيانات باستخدام React Query
+  const {
+    data: students = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!academyId) return [];
 
-    try {
       let query = supabase
         .from('students')
         .select(`
@@ -50,12 +55,12 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
         .eq('academy_id', academyId)
         .eq('is_archived', filters.isArchived);
 
-      // 1. فلترة الجنس
+      // فلترة الجنس
       if (filters.gender && filters.gender !== 'all') {
         query = query.eq('gender', filters.gender);
       }
 
-      // 2. فلترة الحلقة
+      // فلترة الحلقة
       if (filters.halaqaId && filters.halaqaId !== 'all') {
         if (filters.halaqaId === 'none') {
           query = query.is('halaqa_id', null);
@@ -64,63 +69,72 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
         }
       }
 
-      // 3. البحث بالاسم أو كود الطالب أو رقم ولي الأمر
+      // البحث بالاسم أو الكود أو الهاتف
       if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
         const term = `%${debouncedSearchTerm.trim()}%`;
         query = query.or(`name.ilike.${term},student_code.ilike.${term},parent_phone.ilike.${term}`);
       }
 
-      const { data, error: fetchError } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query.order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (error) throw error;
+      return data as Student[];
+    },
+    enabled: !!academyId, // العزل: يشتغل فقط عند توفر ID الأكاديمية
+  });
 
-      setStudents(data as Student[]);
-    } catch (err: any) {
-      console.error('Error fetching students:', err);
-      setError(err.message || 'حدث خطأ أثناء جلب بيانات الطلاب');
-    } finally {
-      setLoading(false);
-    }
-  }, [academyId, filters.gender, filters.halaqaId, filters.isArchived, debouncedSearchTerm]);
-
-  useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
-
-  // دالة أرشفة أو إلغاء أرشفة طالب
-  const toggleArchiveStudent = async (studentId: string, currentStatus: boolean) => {
-    try {
-      const { error: updateError } = await supabase
+  // 5. Mutation الأرشفة مع تحديث الكاش تلقائياً
+  const archiveMutation = useMutation({
+    mutationFn: async ({ studentId, currentStatus }: { studentId: string; currentStatus: boolean }) => {
+      const { error } = await supabase
         .from('students')
         .update({ is_archived: !currentStatus, updated_at: new Date().toISOString() })
         .eq('id', studentId);
 
-      if (updateError) throw updateError;
-      
-      await fetchStudents();
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      // تفريغ كاش الطلاب لتنعكس التغييرات فوراً في جميع الشاشات
+      queryClient.invalidateQueries({ queryKey: ['students', academyId] });
+    },
+  });
+
+  // 6. Mutation الحذف مع تحديث الكاش تلقائياً
+  const deleteMutation = useMutation({
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students', academyId] });
+    },
+  });
+
+  // دالة أرشفة أو إلغاء أرشفة (تغليف للـ Mutation لتطابق واجهتك القديمة)
+  const toggleArchiveStudent = async (studentId: string, currentStatus: boolean) => {
+    try {
+      await archiveMutation.mutateAsync({ studentId, currentStatus });
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
     }
   };
 
-  // دالة حذف طالب من قاعدة البيانات
+  // دالة الحذف (تغليف للـ Mutation لتطابق واجهتك القديمة)
   const deleteStudent = async (studentId: string) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
-
-      if (deleteError) throw deleteError;
-
-      await fetchStudents();
+      await deleteMutation.mutateAsync(studentId);
       return { success: true };
     } catch (err: any) {
-      console.error('Error deleting student:', err);
       return { success: false, error: err.message || 'فشلت عملية الحذف' };
     }
   };
+
+  const error = queryError ? (queryError as Error).message : null;
 
   return {
     students,
@@ -128,7 +142,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     error,
     filters,
     setFilters,
-    refetch: fetchStudents,
+    refetch,
     toggleArchiveStudent,
     deleteStudent,
   };
