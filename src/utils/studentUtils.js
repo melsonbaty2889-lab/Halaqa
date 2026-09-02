@@ -1,9 +1,10 @@
 // src/utils/studentUtils.js
 import React from 'react';
 import { UserCheck, UserX, AlertCircle, Archive } from 'lucide-react';
+import { STUDENT_STATUS_KEYS, GENDER_KEYS, PAYMENT_PLAN_KEYS } from '@/constants/studentConstants';
 
 /**
- * 1. دالة مساعدة لتبسيط استخراج النصوص المترجمة
+ * دالة مساعدة لتبسيط استخراج النصوص المترجمة
  */
 const getText = (t, key, defaultAr, defaultEn, lang = 'ar') => {
   if (t && key) {
@@ -14,7 +15,7 @@ const getText = (t, key, defaultAr, defaultEn, lang = 'ar') => {
 };
 
 /**
- * 2. حساب عمر الطالب استناداً إلى تاريخ الميلاد
+ * 1. حساب عمر الطالب استناداً إلى تاريخ الميلاد
  */
 export const calculateAge = (dateOfBirth) => {
   if (!dateOfBirth) return null;
@@ -32,7 +33,7 @@ export const calculateAge = (dateOfBirth) => {
 };
 
 /**
- * 3. تحديد ألوان ونصوص شارة حالة الطالب
+ * 2. تحديد ألوان ونصوص شارة حالة الطالب
  */
 export const getStatusStyle = (status, t = null, lang = 'ar') => {
   switch (status) {
@@ -56,6 +57,27 @@ export const getStatusStyle = (status, t = null, lang = 'ar') => {
       };
   }
 };
+
+/**
+ * 3. خيارات القوائم المنسدلة (تستخرج من الثوابت للحفاظ على توافقية الكود القديم)
+ */
+export const getStatusOptions = (t = null, lang = 'ar') => 
+  STUDENT_STATUS_KEYS.map(item => ({
+    value: item.value,
+    label: getText(t, item.labelKey, item.defaultAr, item.defaultEn, lang)
+  }));
+
+export const getGenderOptions = (t = null, lang = 'ar') => 
+  GENDER_KEYS.map(item => ({
+    value: item.value,
+    label: getText(t, item.labelKey, item.defaultAr, item.defaultEn, lang)
+  }));
+
+export const getPaymentOptions = (t = null, lang = 'ar') => 
+  PAYMENT_PLAN_KEYS.map(item => ({
+    value: item.value,
+    label: getText(t, item.labelKey, item.defaultAr, item.defaultEn, lang)
+  }));
 
 /**
  * 4. توحيد وتصنيف حالات الطالب المعتمدة
