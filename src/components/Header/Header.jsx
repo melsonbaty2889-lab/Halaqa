@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -14,17 +14,20 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import LanguageSwitcher from './LanguageSwitcher';
+import { getMenuSections } from '@/constants/sidebarMenu';
 
 export default function Header({ 
   activeTab, 
   setActiveTab,
   sidebarOpen, 
   setSidebarOpen, 
-  isRtl
+  isRtl,
+  userRole = 'admin'
 }) {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language || 'ar';
   const isAr = currentLanguage.startsWith('ar');
+  const activeRtl = isRtl !== undefined ? isRtl : isAr;
 
   const { academy, currentAcademy } = useAcademy();
   const activeAcademy = academy || currentAcademy;
@@ -111,7 +114,20 @@ export default function Header({
 
   const rawKey = activeTab || pathname.replace(/^\//, '') || 'dashboard';
   const activeKey = rawKey.split('/')[0].trim();
-  const pageTitle = t(`nav.${activeKey}`, t(`nav.dashboard`, 'Smart Halaqa'));
+
+  // جلب مسمى الصفحة بنفس الاسم والترجمة المعرفة في السايدبار
+  const menuSections = useMemo(() => getMenuSections(activeRtl, userRole), [activeRtl, userRole]);
+  
+  const pageTitle = useMemo(() => {
+    for (const section of menuSections) {
+      const foundItem = section.items.find(item => item.id === activeKey);
+      if (foundItem) {
+        return foundItem.label;
+      }
+    }
+    // احتياطي في حال عدم وجود المفتاح في السايدبار
+    return t(`nav.${activeKey}`, t(`nav.dashboard`, 'Smart Halaqa'));
+  }, [menuSections, activeKey, t]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -122,7 +138,6 @@ export default function Header({
       await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id);
     }
     
-    // إذا كان الإشعار يحتوي على tab ينقل المستخدم إليها مباشرة
     if (notif.tab_target && setActiveTab) {
       setActiveTab(notif.tab_target);
     }
@@ -161,8 +176,6 @@ export default function Header({
     });
   };
 
-  const activeRtl = isRtl !== undefined ? isRtl : isAr;
-
   return (
     <header 
       className="sticky top-0 z-50 min-h-[56px] px-3 py-2 bg-[var(--surface-card)] backdrop-blur-md border-b border-[var(--border-card)] flex items-center justify-between gap-2 shadow-lg text-slate-100 w-full" 
@@ -196,10 +209,10 @@ export default function Header({
           <span className="font-bold text-slate-200">{selectedCurrency}</span>
         </div>
 
-        {/* قائمة اختيارات اللغة المحدثة */}
+        {/* قائمة اختيارات اللغة */}
         <LanguageSwitcher i18n={i18n} />
 
-        {/* التنبيهات الحقيقية */}
+        {/* التنبيهات */}
         <div className="relative" ref={notifRef}>
           <button 
             type="button"
