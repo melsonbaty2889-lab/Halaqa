@@ -1,49 +1,49 @@
 {
-  "students": {
-    "title": "Öğrenci Yönetimi",
-    "subtitle": "Öğrenci verilerini ve kayıtlarını yönetin",
-    "add_student": "Yeni Öğrenci Ekle",
-    "search_placeholder": "İsim, kod veya telefon ile ara...",
-    "all_genders": "Tüm Cinsiyetler",
-    "male": "Erkek",
-    "female": "Kız",
-    "all_halaqas": "Tüm Halkalar",
-    "no_halaqa": "Halkasız Öğrenciler",
-    "active": "Aktif",
-    "archived": "Arşivlenmiş",
-    "no_students": "Öğrenci bulunamadı",
-    "delete_confirm": "Bu öğrenciyi silmek istediğinizden emin misiniz?",
-    "archive_confirm": "Bu öğrenciyi arşivlemek istediğinizden emin misiniz?"
-  },
-  "documents": {
-    "title": "Öğrenci Belgeleri",
-    "subtitle": "Kimlik belgelerini ve ekli dosyaları yönetin",
-    "upload_btn": "Yeni Belge Yükle",
-    "filter_all": "Tüm Belgeler",
-    "unnamed_doc": "İsimsiz Belge",
-    "cannot_preview": "Bu dosya türü doğrudan önizlenemez.",
-    "upload_success": "Belge başarıyla yüklendi!",
-    "delete_success": "Belge başarıyla silindi",
-    "delete_title": "Belgeyi Sil",
-    "delete_confirm_text": "Bu belgeyi kalıcı olarak silmek istediğinizden emin misiniz?",
-    "types": {
-      "id_card": "Kimlik Kartı",
-      "passport": "Pasaport",
-      "birth_certificate": "Doğum Belgesi",
-      "parent_consent": "Veli İzin Belgesi",
-      "medical_report": "Sağlık Raporu",
-      "payment_receipt": "Ödeme Makbuzu",
-      "certificate": "Sertifika",
-      "other": "Diğer"
-    }
+  "splash": {
+    "title": "Akıllı Halaqa",
+    "subtitle": "Kur'an Halkaları Yönetim Platformu",
+    "loading": "Sistem yükleniyor...",
+    "skip": "Atla"
   },
   "common": {
-    "loading": "Yükleniyor...",
-    "error": "Bir hata oluştu: ",
-    "delete": "Sil",
+    "save": "Kaydet",
     "cancel": "İptal",
-    "view": "Görüntüle",
-    "download_file": "Dosyayı İndir",
-    "searchPlaceholder": "Dosyalarda ara..."
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "search": "Ara...",
+    "actions": "İşlemler",
+    "status": "Durum",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "confirm": "Onayla",
+    "back": "Geri",
+    "loading": "Yükleniyor...",
+    "no_data": "Veri bulunamadı"
+  },
+  "menu": {
+    "sections": {
+      "main_operations": "Ana Sayfa ve İşlemler",
+      "halaqas_people": "Halkalar ve Kişiler",
+      "curriculum_progress": "Müfredat ve Değerlendirme",
+      "management_finance": "Yönetim ve Finans"
+    },
+    "items": {
+      "dashboard": "Kontrol Paneli",
+      "attendance": "Ezber ve Yoklama",
+      "interactive_quran": "Etkileşimli Kur'an",
+      "notifications_reports": "Bildirimler ve Raporlar",
+      "halaqas": "Halkalar ve Sınıflar",
+      "students": "Öğrenci Yönetimi",
+      "parents": "Veliler",
+      "teachers": "Eğitim ve İdari Kadro",
+      "curricula": "Müfredat ve İslami İlimler",
+      "exams": "Sınavlar ve Sertifikalar",
+      "gamification": "Rozetler ve Ödüller",
+      "documents": "Belgeler ve Dosyalar",
+      "finance": "Abonelik ve Finans",
+      "audit_logs": "Güvenlik Günlükleri",
+      "settings": "Sistem Ayarları"
+    }
   }
 }
