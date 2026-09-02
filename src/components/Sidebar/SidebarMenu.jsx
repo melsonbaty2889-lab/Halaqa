@@ -43,7 +43,10 @@ export default function SidebarMenu({
 
               {/* عناصر القائمة الفرعية */}
               {isExpanded && (
-                <div className="flex flex-col gap-1 mt-1.5 rtl:pr-2 ltr:pl-2">
+                <div 
+                  className="flex flex-col gap-1 mt-1.5"
+                  style={{ paddingRight: isRtl ? '8px' : '0px', paddingLeft: isRtl ? '0px' : '8px' }}
+                >
                   {section.items && section.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
