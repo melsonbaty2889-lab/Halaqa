@@ -34,7 +34,8 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  const menuSections = getMenuSections(isRtl, userRole);
+  // 🟢 تعديل رئيسي: تمرير t إلى getMenuSections
+  const menuSections = getMenuSections(t, userRole);
   const [openSectionId, setOpenSectionId] = useState(null);
 
   // 🟢 دالة منيعة ومحميّة ضد خطأ Minified React error #31
@@ -45,7 +46,6 @@ export default function Sidebar({
       const extracted = isRtl ? (val.ar || val.en) : (val.en || val.ar);
       if (extracted && typeof extracted !== 'object') return String(extracted);
       
-      // في حال كان الكائن يتكون من قيم نصوص أخرى غير ar/en
       const firstVal = Object.values(val)[0];
       if (firstVal && typeof firstVal !== 'object') return String(firstVal);
       return '';
@@ -170,7 +170,6 @@ export default function Sidebar({
 
   const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
   
-  // 🟢 استخراج الاسم بأمان تام كـ String حصراً
   const rawAcademyName = getText(currentAcademy?.name);
   const currentAcademyName = typeof rawAcademyName === 'string' && rawAcademyName.trim() !== '' 
     ? rawAcademyName.trim() 
