@@ -2,14 +2,18 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-// 1. تهيئة ملفات الـ CSS واللغات من المسار الموحد
+// 1. استيراد React Query والـ Client
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/react-query';
+
+// 2. تهيئة ملفات الـ CSS واللغات من المسار الموحد
 import '@/index.css';
 import '@/locales/i18n';
 
-// 2. المكونات الرئيسية
+// 3. المكونات الرئيسية
 import App from '@/App';
 
-// 3. المزودات (مع تصحيح الترتيب الهيكلي)
+// 4. المزودات (مع تصحيح الترتيب الهيكلي)
 import { DataProvider } from '@/context/DataContext';
 import { AcademyProvider } from '@/context/AcademyContext';
 
@@ -28,16 +32,19 @@ const InitialLoader = () => (
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      {/* تقديم DataProvider لأعلى الهرم لضمان توفر بيانات المستخدم أولاً */}
-      <DataProvider>
-        <AcademyProvider>
-          <Suspense fallback={<InitialLoader />}>
-            <App />
-          </Suspense>
-        </AcademyProvider>
-      </DataProvider>
-    </BrowserRouter>
+    {/* تغليف كل حاجة بـ QueryClientProvider من برة خالص */}
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        {/* تقديم DataProvider لأعلى الهرم لضمان توفر بيانات المستخدم أولاً */}
+        <DataProvider>
+          <AcademyProvider>
+            <Suspense fallback={<InitialLoader />}>
+              <App />
+            </Suspense>
+          </AcademyProvider>
+        </DataProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   </React.StrictMode>
 );
 
