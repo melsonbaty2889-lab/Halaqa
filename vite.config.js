@@ -24,7 +24,24 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         sourcemap: true,
         // منع تخزين index.html في الـ Service Worker كاش نهائياً
-        navigateFallbackDenylist: [/^\/index\.html$/]
+        navigateFallbackDenylist: [/^\/index\.html$/],
+        runtimeCaching: [
+          {
+            // كاش استجابات Supabase للعمل بدون إنترنت
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              expiration: {
+                maxEntries: 150,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // حفظ البيانات أوفلاين لمدة أسبوع
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
@@ -68,6 +85,7 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('@tanstack/react-query')) return 'vendor-query';
             if (id.includes('lucide-react')) return 'vendor-icons';
             if (id.includes('i18next') || id.includes('react-i18next')) return 'vendor-i18n';
             return 'vendor';
