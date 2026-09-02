@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { 
-  Loader2, Clock, LogOut, Wifi, 
+  Loader2, Clock, LogOut, Wifi, WifiOff,
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock, ShieldAlert 
 } from 'lucide-react';
 
@@ -50,6 +50,119 @@ const C = {
     bgGlow: rawColors?.brandEmerald?.bgGlow || 'rgba(16, 185, 129, 0.15)',
   }
 };
+
+// 📡 مكون التنبيه بالاتصال والتحديث اللحظي لـ PWA
+function OfflineAndUpdateBanner() {
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [needRefresh, setNeedRefresh] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.onupdatefound = () => {
+          const installingWorker = registration.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setNeedRefresh(true);
+              }
+            };
+          }
+        };
+      }).catch(() => {});
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleReload = () => {
+    window.location.reload();
+  };
+
+  return (
+    <>
+      {/* 1️⃣ شريط انقطاع الإنترنت */}
+      {!isOnline && (
+        <div style={{
+          background: C.error.DEFAULT,
+          color: '#FFFFFF',
+          textAlign: 'center',
+          padding: '8px 16px',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 99999,
+          fontWeight: 'bold',
+          fontSize: '0.85rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+          direction: 'rtl',
+          fontFamily: "'Cairo', system-ui, sans-serif"
+        }}>
+          <WifiOff size={18} />
+          <span>أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)</span>
+        </div>
+      )}
+
+      {/* 2️⃣ شريط التنبيه عند توفر تحديث جديد للمنصة */}
+      {needRefresh && (
+        <div style={{
+          background: C.brandEmerald.DEFAULT,
+          color: C.dark.surface,
+          textAlign: 'center',
+          padding: '8px 16px',
+          position: 'fixed',
+          bottom: '16px',
+          right: '16px',
+          zIndex: 99999,
+          borderRadius: '12px',
+          fontWeight: 'bold',
+          fontSize: '0.85rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          direction: 'rtl',
+          fontFamily: "'Cairo', system-ui, sans-serif"
+        }}>
+          <span>يتوفر تحديث جديد للمنظومة!</span>
+          <button
+            onClick={handleReload}
+            style={{
+              background: C.dark.main,
+              color: C.brandEmerald.DEFAULT,
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.75rem'
+            }}
+          >
+            <RefreshCw size={14} />
+            تحديث الآن
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
 
 // ProtectedRoute المحسنة بالاعتماد على الصلاحية والأكاديمية الـ Slug
 const ProtectedRoute = ({ allowedRoles, children }) => {
@@ -426,24 +539,15 @@ class GlobalErrorBoundary extends Component {
 function MainContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setAuthView('update_password');
     });
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
       if (subscription) subscription.unsubscribe();
     };
   }, []);
@@ -625,11 +729,6 @@ function MainContent() {
           path="/:slug/*" 
           element={
             <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
-              {!isOnline && (
-                <div style={{ background: C.error.DEFAULT, color: '#FFF', textAlign: 'center', padding: '8px', position: 'fixed', top: 0, width: '100%', zIndex: 9999, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <Wifi size={18} /> انقطع الاتصال بالإنترنت.
-                </div>
-              )}
               <MainApp 
                 session={formattedSession} 
                 userRole={profile?.role || 'student'} 
@@ -687,6 +786,9 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
+      {/* 📡 شريط تنبيهات الشبكة والتحديثات في أعلى تطبيقك */}
+      <OfflineAndUpdateBanner />
+
       <Suspense fallback={
         <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
           <Loader2 className="animate-spin" size={32} />
