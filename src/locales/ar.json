@@ -1,4 +1,29 @@
 {
+  "menu": {
+    "sections": {
+      "main_operations": "الرئيسية والعمليات",
+      "halaqas_people": "الحلقات والأفراد",
+      "curriculum_progress": "المناهج والتقييم",
+      "management_finance": "الإدارة والمالية"
+    },
+    "items": {
+      "dashboard": "لوحة التحكم",
+      "attendance": "التسميع والحضور",
+      "interactive_quran": "المصحف والتسميع الذكي",
+      "notifications_reports": "الإشعارات والتقارير",
+      "halaqas": "الحلقات والفصول",
+      "students": "إدارة الطلاب",
+      "parents": "أولياء الأمور",
+      "teachers": "الكادر التعليمي والإداري",
+      "curricula": "المناهج والعلوم الشرعية",
+      "exams": "الاختبارات والشهادات",
+      "gamification": "التحفيز والأوسمة",
+      "documents": "المستندات والملفات",
+      "finance": "الاشتراكات والمالية",
+      "audit_logs": "سجل العمليات الأمني",
+      "settings": "إعدادات المنظومة"
+    }
+  },
   "welcome": "مرحباً بك في الحلقة الذكية",
   "welcome_back": "مرحباً بك مجدداً",
   "dashboard": "مركز التحكم والتحليلات",
