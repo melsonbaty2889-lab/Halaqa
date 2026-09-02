@@ -32,36 +32,41 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: (code) => {
-      // 🟢 إذا كانت لغة المستخدم غير مدعومة (مثل الصينية zh، اليابانية ja، الكورية ko، إلخ)
-      // يتم توجيهه تلقائياً للغة الإنجليزية en
-      if (!code || !SUPPORTED_LANGUAGES.includes(code.split('-')[0])) {
-        return ['en'];
-      }
-      return ['en'];
-    },
+    fallbackLng: 'en', // 🟢 تحديد اللغة الاحتياطية بوضوح وببساطة
     supportedLngs: SUPPORTED_LANGUAGES,
-    nonExplicitSupportedLngs: true,
+    nonExplicitSupportedLngs: true, // يضمن تحويل tr-TR إلى tr تلقائياً
+    lowerCaseLng: true,
+    load: 'languageOnly', // يقرأ tr بدلاً من البحث عن tr-TR
     react: { useSuspense: false },
     interpolation: { escapeValue: false },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage', 'navigator', 'htmlTag'],
+      lookupLocalStorage: 'i18nextLng',
       caches: ['localStorage'],
     },
   });
 
-// 🟢 تحديد اللغة الأولية وضمان اختيار 'en' للغات غير المدعومة
-const detectedLng = i18n.language ? i18n.language.split('-')[0] : 'en';
-const initialLng = SUPPORTED_LANGUAGES.includes(detectedLng) ? detectedLng : 'en';
+// 🟢 تحديد اتجاه الصفحة ولغتها في الـ DOM عند بدء التشغيل
+const getCleanLang = (lng) => {
+  if (!lng) return 'en';
+  const code = lng.split('-')[0].toLowerCase();
+  return SUPPORTED_LANGUAGES.includes(code) ? code : 'en';
+};
 
-document.documentElement.setAttribute('dir', getLanguageDirection(initialLng));
-document.documentElement.setAttribute('lang', initialLng);
+const initialLng = getCleanLang(i18n.language);
 
+if (typeof document !== 'undefined') {
+  document.documentElement.setAttribute('dir', getLanguageDirection(initialLng));
+  document.documentElement.setAttribute('lang', initialLng);
+}
+
+// 🟢 التحديث التلقائي لاتصالية الواجهة عند تغيير اللغة
 i18n.on('languageChanged', (lng) => {
-  const code = lng ? lng.split('-')[0] : 'en';
-  const validLanguage = SUPPORTED_LANGUAGES.includes(code) ? code : 'en';
-  document.documentElement.setAttribute('dir', getLanguageDirection(validLanguage));
-  document.documentElement.setAttribute('lang', validLanguage);
+  const validLanguage = getCleanLang(lng);
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('dir', getLanguageDirection(validLanguage));
+    document.documentElement.setAttribute('lang', validLanguage);
+  }
 });
 
 export default i18n;
