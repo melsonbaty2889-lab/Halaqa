@@ -10,15 +10,17 @@ import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import rawColors from '@/theme/colors.js';
 
-import SplashScreen from '@/components/UI/SplashScreen'; 
-import DevPlayground from '@/components/Dev/DevPlayground';
-import LoginPage from '@/components/Auth/LoginPage';
-import SignUpPage from '@/components/Auth/SignUpPage';
-import ForgotPassword from '@/components/Auth/ForgotPassword';
-import UpdatePassword from '@/components/Auth/UpdatePassword';
-import MainApp from '@/components/Main/MainApp';
-import CreateAcademy from '@/components/Auth/CreateAcademy';
-import CertificateVerify from '@/components/Certificates/CertificateVerify';
+// 🚀 Dynamic Imports (Lazy Loading) لتقليل حجم الـ Initial Bundle
+const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
+const DevPlayground = lazy(() => import('@/components/Dev/DevPlayground'));
+const LoginPage = lazy(() => import('@/components/Auth/LoginPage'));
+const SignUpPage = lazy(() => import('@/components/Auth/SignUpPage'));
+const ForgotPassword = lazy(() => import('@/components/Auth/ForgotPassword'));
+const UpdatePassword = lazy(() => import('@/components/Auth/UpdatePassword'));
+const MainApp = lazy(() => import('@/components/Main/MainApp'));
+const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
+const CertificateVerify = lazy(() => import('@/components/Certificates/CertificateVerify'));
+const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 // 🎨 طبقة حماية وتوافق لكائن الألوان
 const C = {
@@ -48,8 +50,6 @@ const C = {
     bgGlow: rawColors?.brandEmerald?.bgGlow || 'rgba(16, 185, 129, 0.15)',
   }
 };
-
-const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
 // ProtectedRoute المحسنة بالاعتماد على الصلاحية والأكاديمية الـ Slug
 const ProtectedRoute = ({ allowedRoles, children }) => {
@@ -583,13 +583,7 @@ function MainContent() {
   if (appState === 'SUPER_ADMIN') {
     return (
       <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
-        <Suspense fallback={
-          <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
-            <Loader2 className="animate-spin" size={32} />
-          </div>
-        }>
-          <AdminDashboard session={{ user }} onLogout={logout} />
-        </Suspense>
+        <AdminDashboard session={{ user }} onLogout={logout} />
       </ProtectedRoute>
     );
   }
@@ -673,14 +667,6 @@ export default function App() {
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const view = urlParams.get('view');
 
-  if (view === 'test') {
-    return <DevPlayground />;
-  }
-
-  if (view === 'splash') {
-    return <SplashScreen lang="ar" onFinish={() => alert('انتهى عرض الشاشة الافتتاحية')} />;
-  }
-
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -699,10 +685,6 @@ export default function App() {
     setShowSplash(false);
   };
 
-  if (showSplash) {
-    return <SplashScreen lang="ar" onFinish={handleSplashFinish} />;
-  }
-
   return (
     <GlobalErrorBoundary>
       <Suspense fallback={
@@ -710,10 +692,16 @@ export default function App() {
           <Loader2 className="animate-spin" size={32} />
         </div>
       }>
-        <Routes>
-          <Route path="/verify/:certId" element={<CertificateVerify />} />
-          <Route path="/*" element={<MainContent />} />
-        </Routes>
+        {view === 'test' ? (
+          <DevPlayground />
+        ) : view === 'splash' || showSplash ? (
+          <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
+        ) : (
+          <Routes>
+            <Route path="/verify/:certId" element={<CertificateVerify />} />
+            <Route path="/*" element={<MainContent />} />
+          </Routes>
+        )}
       </Suspense>
     </GlobalErrorBoundary>
   );
