@@ -5,16 +5,15 @@ import { useTranslation } from 'react-i18next';
 import { 
   Menu, 
   Bell, 
-  Globe, 
   UserCheck, 
   Coins, 
   CheckCheck, 
-  Trash2,
-  ExternalLink
+  Trash2
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header({ 
   activeTab, 
@@ -114,12 +113,6 @@ export default function Header({
   const activeKey = rawKey.split('/')[0].trim();
   const pageTitle = t(`nav.${activeKey}`, t(`nav.dashboard`, 'Smart Halaqa'));
 
-  const toggleLanguage = () => {
-    const nextLng = isAr ? 'en' : 'ar';
-    i18n.changeLanguage(nextLng);
-    localStorage.setItem('i18nextLng', nextLng);
-  };
-
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // تعليم إشعار فردي كمقروء والانتقال للتبويب
@@ -203,15 +196,8 @@ export default function Header({
           <span className="font-bold text-slate-200">{selectedCurrency}</span>
         </div>
 
-        {/* زر التبديل بين اللغات */}
-        <button
-          type="button"
-          onClick={toggleLanguage}
-          className="flex items-center gap-1 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-300 hover:text-white text-[11px] font-bold transition-all active:scale-95"
-        >
-          <Globe size={13} className="text-emerald-400 shrink-0" />
-          <span>{isAr ? 'EN' : 'عربي'}</span>
-        </button>
+        {/* قائمة اختيارات اللغة المحدثة */}
+        <LanguageSwitcher i18n={i18n} />
 
         {/* التنبيهات الحقيقية */}
         <div className="relative" ref={notifRef}>
