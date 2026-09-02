@@ -17,6 +17,17 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     ...initialFilters,
   });
 
+  // حالة كلمة البحث المؤجلة لتخفيف الطلبات (Debounce)
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(filters.searchTerm);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(filters.searchTerm);
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [filters.searchTerm]);
+
   // دالة جلب البيانات المباشرة من Supabase
   const fetchStudents = useCallback(async () => {
     if (!academyId) return;
@@ -39,7 +50,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
         .eq('academy_id', academyId)
         .eq('is_archived', filters.isArchived);
 
-      // 1. فلترة الجنس (البنين / البنات / الكل)
+      // 1. فلترة الجنس
       if (filters.gender && filters.gender !== 'all') {
         query = query.eq('gender', filters.gender);
       }
@@ -54,8 +65,8 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
       }
 
       // 3. البحث بالاسم أو كود الطالب أو رقم ولي الأمر
-      if (filters.searchTerm && filters.searchTerm.trim() !== '') {
-        const term = `%${filters.searchTerm.trim()}%`;
+      if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+        const term = `%${debouncedSearchTerm.trim()}%`;
         query = query.or(`name.ilike.${term},student_code.ilike.${term},parent_phone.ilike.${term}`);
       }
 
@@ -70,7 +81,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     } finally {
       setLoading(false);
     }
-  }, [academyId, filters]);
+  }, [academyId, filters.gender, filters.halaqaId, filters.isArchived, debouncedSearchTerm]);
 
   useEffect(() => {
     fetchStudents();
@@ -93,7 +104,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     }
   };
 
-  // 👈 دالة حذف طالب من قاعدة البيانات (تمت الإضافة)
+  // دالة حذف طالب من قاعدة البيانات
   const deleteStudent = async (studentId: string) => {
     try {
       const { error: deleteError } = await supabase
@@ -103,7 +114,6 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
 
       if (deleteError) throw deleteError;
 
-      // تحديث القائمة تلقائياً بعد نجاح الحذف
       await fetchStudents();
       return { success: true };
     } catch (err: any) {
@@ -120,6 +130,6 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     setFilters,
     refetch: fetchStudents,
     toggleArchiveStudent,
-    deleteStudent, // 👈 تصدير الدالة هنا
+    deleteStudent,
   };
 };
