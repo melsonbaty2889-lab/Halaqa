@@ -232,7 +232,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </button>
         </div>
 
-        {/* التعهد والشروط تصحيح السياق LTR/RTL */}
+        {/* التعهد والشروط */}
         <div className={`flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all ${
           fieldErrors?.agreeTerms ? 'bg-red-500/10 border border-red-500/30' : ''
         }`}>
@@ -266,7 +266,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </button>
       </form>
 
-      {/* شارة التشفير المصححة لغوياً */}
+      {/* شارة التشفير */}
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-[var(--text-muted,#475569)] mt-4">
         <ShieldCheck size={14} className="text-emerald-500" />
         <span>
@@ -278,7 +278,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </span>
       </div>
 
-      {/* تحويل الدخول - المصحح بدون مقلوب علامات الاستفهام */}
+      {/* تحويل الدخول */}
       <div className="mt-3 text-center text-xs text-[var(--text-sub,#94A3B8)]">
         <span>{isRtl ? 'لديك حساب بالفعل؟' : 'Already have an account?'}</span>{' '}
         <button 
