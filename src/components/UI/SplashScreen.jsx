@@ -10,24 +10,7 @@ export default function SplashScreen({ onFinish }) {
   const [selectedAyaObj, setSelectedAyaObj] = useState(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
-  // 🟢 استخراج اللغة الفعالة مع إعطاء أولوية للغة الجهاز/المتصفح المباشرة
-  const getActiveLang = () => {
-    // 1. القراءة المباشرة من لغة المتصفح والجهاز أولاً
-    const navLang = typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage) : '';
-    // 2. القراءة من i18n أو الـ LocalStorage كخيار ثانٍ
-    const i18nLang = i18n.resolvedLanguage || i18n.language || localStorage.getItem('i18nextLng') || '';
-    
-    // دمج الخيارات لتحديد الكود الأصلي (مثل tr من tr-TR)
-    const raw = i18nLang || navLang || 'en';
-    const clean = raw.split('-')[0].split('_')[0].toLowerCase();
-    
-    return ['ar', 'en', 'tr', 'ur', 'id'].includes(clean) ? clean : 'en';
-  };
-
-  const currentLang = getActiveLang();
-  const isRtl = ['ar', 'ur'].includes(currentLang);
-
-  // 1. قاموس الترجمات الشامل للغات الخمس
+  // 1. قاموس الترجمات المباشر
   const translations = {
     ar: {
       title: "الحلقة الذكية",
@@ -61,7 +44,7 @@ export default function SplashScreen({ onFinish }) {
     }
   };
 
-  // 2. الآيات المترجمة لكافة اللغات
+  // 2. الآيات المترجمة
   const quranData = [
     {
       ar: "وَفِي ذَلِكَ فَلْيَتَنَافَسِ الْمُتَنَافِسُونَ",
@@ -83,16 +66,38 @@ export default function SplashScreen({ onFinish }) {
       tr: "Sizin en hayırlınız Kur'an'ı öğrenen ve öğretendir",
       ur: "تم میں سے بہترین شخص وہ ہے جو قرآن سیکھے اور سکھائے",
       id: "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya"
-    },
-    {
-      ar: "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ",
-      en: "Indeed, this Quran guides to that which is most suitable",
-      tr: "Şüphesiz ki bu Kur'an en doğru yola iletir",
-      ur: "بیشک یہ قرآن وہ راہ دکھاتا ہے جو بالکل سیدھی ہے",
-      id: "Sungguh, Al-Qur'an ini memberi petunjuk ke jalan yang paling lurus"
     }
   ];
 
+  // 🟢 دالة استخراج اللغة المباشرة مع التحقق الصارم
+  const detectLanguage = () => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : null;
+    const nav = typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage) : null;
+    const currentI18n = i18n.resolvedLanguage || i18n.language;
+
+    const candidate = stored || currentI18n || nav || 'en';
+    const clean = candidate.split('-')[0].split('_')[0].toLowerCase();
+
+    return ['ar', 'en', 'tr', 'ur', 'id'].includes(clean) ? clean : 'en';
+  };
+
+  const [currentLang, setCurrentLang] = useState(detectLanguage());
+
+  // 🟢 الاستماع اللحظي لتغيرات i18n أو LocalStorage
+  useEffect(() => {
+    const handleLangChange = () => {
+      setCurrentLang(detectLanguage());
+    };
+
+    // تحديث الحالة عند تغير اللغة في i18n
+    i18n.on('languageChanged', handleLangChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLangChange);
+    };
+  }, [i18n]);
+
+  const isRtl = ['ar', 'ur'].includes(currentLang);
   const currentT = translations[currentLang] || translations.en;
 
   useEffect(() => {
@@ -128,7 +133,7 @@ export default function SplashScreen({ onFinish }) {
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* زر التخطي (Skip) المترجم والديناميكي */}
+      {/* زر التخطي (Skip) */}
       <button
         type="button"
         onClick={handleClose}
@@ -155,7 +160,7 @@ export default function SplashScreen({ onFinish }) {
           <SmartHalaqaProLogo size={90} />
         </div>
 
-        {/* العنوان والوصف القادمان مباشرة من القاموس المضمن */}
+        {/* العنوان والوصف بالتركية المباشرة */}
         <h1 className="text-2xl font-black text-[var(--text-main,#FFFFFF)] mb-1 tracking-tight">
           {currentT.title}
         </h1>
@@ -164,7 +169,7 @@ export default function SplashScreen({ onFinish }) {
           {currentT.subtitle}
         </p>
 
-        {/* بطاقة الآية الكريمة والترجمة المباشرة */}
+        {/* بطاقة الآية والترجمة */}
         {selectedAyaObj && (
           <div className="bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md rounded-2xl px-5 py-3.5 mb-8 w-full shadow-xl flex flex-col gap-1.5">
             <span className="text-[var(--primary,#E07A00)] text-sm font-semibold block leading-relaxed dir-rtl">
@@ -178,7 +183,7 @@ export default function SplashScreen({ onFinish }) {
           </div>
         )}
 
-        {/* شريط التحميل الموحد */}
+        {/* شريط التحميل */}
         <div className="w-60 relative">
           <div className="flex justify-between items-center text-[var(--text-sub,#94A3B8)] text-xs mb-2">
             <span className="font-medium">{currentT.loading}</span>
@@ -197,7 +202,7 @@ export default function SplashScreen({ onFinish }) {
         </div>
       </div>
 
-      {/* رقم الإصدار */}
+      {/* الإصدار */}
       <div className="absolute bottom-6 text-[10px] text-[var(--text-muted,#475569)] tracking-widest font-mono">
         SMART HALAQA • v2.5
       </div>
