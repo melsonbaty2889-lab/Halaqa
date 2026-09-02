@@ -1,32 +1,18 @@
 // src/components/Student/StudentsList.jsx
 
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  Search, Plus, Users, UserCheck, UserX, AlertCircle, 
-  FilterX, ListFilter, Archive 
+  Search, Plus, Users, FilterX, ListFilter 
 } from 'lucide-react';
 import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import CustomSelect from '@/components/UI/CustomSelect';
-import { formatName } from '@/utils/formatters';
 import { useAcademy } from '@/context/AcademyContext';
-import { supabase } from '@/lib/supabase';
-
-/**
- * دالة توحيد وتصنيف حالات الطالب المعتمدة في الواجهة مع الحفاظ على قيم قاعدة البيانات
- */
-const getStudentStatusCategory = (student) => {
-  if (student.is_archived || student.status === 'graduated') {
-    return 'archived';
-  }
-  if (student.status === 'inactive' || student.status === 'paused') {
-    return 'inactive';
-  }
-  return 'active';
-};
+import { useStudentsManager } from '@/hooks/useStudentsManager';
+import { renderStatusBadge } from '@/utils/studentUtils';
 
 const StudentsList = ({ 
   students = [], 
@@ -43,220 +29,31 @@ const StudentsList = ({
   const { academy } = useAcademy?.() || {};
   const calendarType = academySettings?.calendar_type || academy?.calendar_type || 'gregorian';
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [halaqaFilter, setHalaqaFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
-  
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null);
-
-  // حالة التحكم بنموذج التأكيد المخصص (ConfirmModal)
-  const [confirmModalState, setConfirmModalState] = useState({
-    isOpen: false,
-    student: null,
-    type: null, // 'archive' | 'unarchive' | 'delete'
-    isLoading: false,
+  // استدعاء إدارة حالات الطلاب والفلترة من الهوك المخصص
+  const manager = useStudentsManager({
+    students,
+    setStudents,
+    onDeleteStudent,
+    isRtl,
+    t,
   });
 
-  // 1. حساب إحصائيات الطلاب بأسلوب موحد
-  const stats = useMemo(() => {
-    return {
-      total: students.length,
-      active: students.filter((s) => getStudentStatusCategory(s) === 'active').length,
-      inactive: students.filter((s) => getStudentStatusCategory(s) === 'inactive').length,
-      archived: students.filter((s) => getStudentStatusCategory(s) === 'archived').length,
-    };
-  }, [students]);
+  const {
+    searchQuery, setSearchQuery,
+    statusFilter, setStatusFilter,
+    halaqaFilter, setHalaqaFilter,
+    sortBy, setSortBy,
+    selectedStudent, setSelectedStudent,
+    isAddModalOpen, setIsAddModalOpen,
+    editingStudent, setEditingStudent,
+    confirmModalState, setConfirmModalState,
+    stats, filteredStudents, resetFilters,
+    handleOpenAddModal, handleOpenEditModal,
+    handleRequestArchive, handleRequestDelete,
+    handleConfirmAction, handleModalSuccess,
+  } = manager;
 
-  // 2. الفلترة والترتيب للنتائج المعروضة
-  const filteredStudents = useMemo(() => {
-    let result = students.filter((student) => {
-      const formattedName = formatName(student.name || student.full_name || '');
-      const parentName = formatName(student.parent_name || student.guardian_name || '');
-      const studentCode = student.student_code || '';
-      
-      const query = searchQuery.toLowerCase().trim();
-
-      const matchesSearch =
-        !query ||
-        formattedName.toLowerCase().includes(query) ||
-        parentName.toLowerCase().includes(query) ||
-        studentCode.toLowerCase().includes(query) ||
-        (student.parent_phone && student.parent_phone.includes(query)) ||
-        (student.parent_whatsapp && student.parent_whatsapp.includes(query));
-
-      const category = getStudentStatusCategory(student);
-      const matchesStatus = statusFilter === 'all' || category === statusFilter;
-
-      const matchesHalaqa = halaqaFilter === 'all' || student.halaqa_id === halaqaFilter;
-
-      return matchesSearch && matchesStatus && matchesHalaqa;
-    });
-
-    return result.sort((a, b) => {
-      if (sortBy === 'newest') {
-        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-      }
-      const nameA = formatName(a.name || a.full_name || '');
-      const nameB = formatName(b.name || b.full_name || '');
-      return nameA.localeCompare(nameB, isRtl ? 'ar' : 'en');
-    });
-  }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, isRtl]);
-
-  const resetFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setHalaqaFilter('all');
-    setSortBy('name');
-  };
-
-  const getStatusBadge = (student) => {
-    const category = getStudentStatusCategory(student);
-
-    if (category === 'archived') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-          <Archive className="w-3.5 h-3.5" />
-          <span>{student.status === 'graduated' ? t('common.graduated', 'متخرج') : t('common.archived', 'مؤرشف')}</span>
-        </span>
-      );
-    }
-
-    if (category === 'active') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <UserCheck className="w-3.5 h-3.5" />
-          <span>{t('status_active', 'نشط')}</span>
-        </span>
-      );
-    }
-
-    if (category === 'inactive') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-          <UserX className="w-3.5 h-3.5" />
-          <span>{student.status === 'paused' ? t('common.paused', 'موقوف') : t('status_inactive', 'غير نشط')}</span>
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-dark-input text-appText-sub border border-appBorder-input">
-        <AlertCircle className="w-3.5 h-3.5" />
-        <span>{t('common.unspecified', 'غير محدد')}</span>
-      </span>
-    );
-  };
-
-  const handleOpenAddModal = () => {
-    setEditingStudent(null);
-    setIsAddModalOpen(true);
-  };
-
-  const handleOpenEditModal = (studentToEdit) => {
-    setEditingStudent(studentToEdit);
-    setIsAddModalOpen(true);
-  };
-
-  const handleRequestArchive = (student) => {
-    const isCurrentlyArchived = student.is_archived || student.status === 'graduated';
-    setConfirmModalState({
-      isOpen: true,
-      student,
-      type: isCurrentlyArchived ? 'unarchive' : 'archive',
-      isLoading: false,
-    });
-  };
-
-  const handleRequestDelete = (studentId) => {
-    const student = students.find((s) => s.id === studentId) || selectedStudent;
-    setConfirmModalState({
-      isOpen: true,
-      student: student || { id: studentId },
-      type: 'delete',
-      isLoading: false,
-    });
-  };
-
-  const handleConfirmAction = async () => {
-    const { student, type } = confirmModalState;
-    if (!student) return;
-
-    setConfirmModalState((prev) => ({ ...prev, isLoading: true }));
-
-    try {
-      if (type === 'archive' || type === 'unarchive') {
-        const newArchivedState = type === 'archive';
-        const { error } = await supabase
-          .from('students')
-          .update({ is_archived: newArchivedState })
-          .eq('id', student.id);
-
-        if (error) throw error;
-
-        const updatedStudent = { ...student, is_archived: newArchivedState };
-
-        if (setStudents) {
-          setStudents((prev) =>
-            prev.map((s) => (s.id === student.id ? updatedStudent : s))
-          );
-        }
-
-        if (selectedStudent && selectedStudent.id === student.id) {
-          setSelectedStudent(updatedStudent);
-        }
-      } else if (type === 'delete') {
-        if (onDeleteStudent) {
-          const res = await onDeleteStudent(student.id);
-          if (res?.success) {
-            if (setStudents) {
-              setStudents((prev) => prev.filter((s) => s.id !== student.id));
-            }
-            if (selectedStudent && selectedStudent.id === student.id) {
-              setSelectedStudent(null);
-            }
-          } else {
-            alert(t('common.delete_failed', 'فشل الحذف من قاعدة البيانات: ') + (res?.error || ''));
-          }
-        } else {
-          if (setStudents) {
-            setStudents((prev) => prev.filter((s) => s.id !== student.id));
-          }
-          if (selectedStudent && selectedStudent.id === student.id) {
-            setSelectedStudent(null);
-          }
-        }
-      }
-    } catch (err) {
-      alert(t('common.update_failed', 'فشل تنفيذ الإجراء: ') + (err?.message || ''));
-    } finally {
-      setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false });
-    }
-  };
-
-  const handleModalSuccess = (savedStudent) => {
-    if (!savedStudent) return;
-
-    if (setStudents) {
-      setStudents((prev) => {
-        const exists = prev.some((s) => s.id === savedStudent.id);
-        if (exists) {
-          return prev.map((s) => (s.id === savedStudent.id ? savedStudent : s));
-        }
-        return [savedStudent, ...prev];
-      });
-    }
-
-    if (selectedStudent && selectedStudent.id === savedStudent.id) {
-      setSelectedStudent(savedStudent);
-    }
-
-    setIsAddModalOpen(false);
-    setEditingStudent(null);
-  };
-
+  // في حالة تحديد طالب لعرض الملف الشخصي الكامل
   if (selectedStudent) {
     return (
       <>
@@ -503,7 +300,7 @@ const StudentsList = ({
               key={student.id}
               student={student}
               onClick={() => setSelectedStudent(student)}
-              getStatusBadge={() => getStatusBadge(student)}
+              getStatusBadge={() => renderStatusBadge(student, t)}
               calendarType={calendarType}
             />
           ))}
