@@ -1,0 +1,49 @@
+{
+  "splash": {
+    "title": "Smart Halaqa",
+    "subtitle": "The Smart Platform for Quranic Circles",
+    "loading": "Loading system...",
+    "skip": "Skip"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search...",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "confirm": "Confirm",
+    "back": "Back",
+    "loading": "Loading...",
+    "no_data": "No data available"
+  },
+  "menu": {
+    "sections": {
+      "main_operations": "Main & Operations",
+      "halaqas_people": "Halaqas & People",
+      "curriculum_progress": "Curriculum & Evaluation",
+      "management_finance": "Management & Finance"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "attendance": "Recitation & Attendance",
+      "interactive_quran": "Interactive Quran",
+      "notifications_reports": "Notifications & Reports",
+      "halaqas": "Halaqas & Classes",
+      "students": "Students Management",
+      "parents": "Parents",
+      "teachers": "Academic & Admin Staff",
+      "curricula": "Curriculum & Islamic Studies",
+      "exams": "Exams & Certificates",
+      "gamification": "Gamification & Badges",
+      "documents": "Documents & Files",
+      "finance": "Subscriptions & Finance",
+      "audit_logs": "Security Audit Logs",
+      "settings": "System Settings"
+    }
+  }
+}
