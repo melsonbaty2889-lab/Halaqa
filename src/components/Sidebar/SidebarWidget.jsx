@@ -1,7 +1,7 @@
 // src/components/Sidebar/SidebarWidget.jsx
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
-import { formatHijriDate } from '../../utils/dateUtils';
+import { formatHijriDate } from '@/utils/dateUtils';
 
 export default function SidebarWidget({
   academyTime,
