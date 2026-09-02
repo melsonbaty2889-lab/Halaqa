@@ -6,6 +6,9 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // 1. استيراد ملفات اللغات
 import arTranslation from '@/locales/ar.json';
 import enTranslation from '@/locales/en.json';
+import trTranslation from '@/locales/tr.json';
+import urTranslation from '@/locales/ur.json';
+import idTranslation from '@/locales/id.json';
 
 // قائمة اللغات التي تكتب من اليمين إلى اليسار (RTL)
 const RTL_LANGUAGES = ['ar', 'ur', 'fa', 'he', 'arc'];
@@ -19,7 +22,10 @@ export const getLanguageDirection = (lng) => {
 
 const resources = {
   ar: { translation: arTranslation },
-  en: { translation: enTranslation }
+  en: { translation: enTranslation },
+  tr: { translation: trTranslation },
+  ur: { translation: urTranslation },
+  id: { translation: idTranslation },
 };
 
 i18n
@@ -28,7 +34,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'ar',
-    supportedLngs: ['ar', 'en'], // أضف كود أي لغة جديدة هنا لاحقاً
+    supportedLngs: ['ar', 'en', 'tr', 'ur', 'id'], // تم إضافة اللغات الجديدة هنا
     react: { useSuspense: false },
     interpolation: { escapeValue: false },
     detection: {
