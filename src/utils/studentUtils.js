@@ -1,10 +1,9 @@
-/**
- * أدوات مساعدة خاصة ببيانات الطلاب
- * تطبيق سمارت حلقة (Smart Halaqa)
- */
+// src/utils/studentUtils.js
+import React from 'react';
+import { UserCheck, UserX, AlertCircle, Archive } from 'lucide-react';
 
 /**
- * دالة مساعدة لتبسيط استخراج النصوص المترجمة
+ * 1. دالة مساعدة لتبسيط استخراج النصوص المترجمة
  */
 const getText = (t, key, defaultAr, defaultEn, lang = 'ar') => {
   if (t && key) {
@@ -15,7 +14,7 @@ const getText = (t, key, defaultAr, defaultEn, lang = 'ar') => {
 };
 
 /**
- * 1. حساب عمر الطالب استناداً إلى تاريخ الميلاد
+ * 2. حساب عمر الطالب استناداً إلى تاريخ الميلاد
  */
 export const calculateAge = (dateOfBirth) => {
   if (!dateOfBirth) return null;
@@ -33,7 +32,7 @@ export const calculateAge = (dateOfBirth) => {
 };
 
 /**
- * 2. تحديد ألوان ونصوص شارة حالة الطالب
+ * 3. تحديد ألوان ونصوص شارة حالة الطالب
  */
 export const getStatusStyle = (status, t = null, lang = 'ar') => {
   switch (status) {
@@ -59,27 +58,51 @@ export const getStatusStyle = (status, t = null, lang = 'ar') => {
 };
 
 /**
- * 3. خيارات الحالات الموحدة للقوائم المنسدلة
+ * 4. توحيد وتصنيف حالات الطالب المعتمدة
  */
-export const getStatusOptions = (t = null, lang = 'ar') => [
-  { value: "active", label: getText(t, 'status_active', 'نشط', 'Active', lang) },
-  { value: "paused", label: getText(t, 'status_paused', 'موقوف', 'Paused', lang) },
-  { value: "inactive", label: getText(t, 'status_inactive', 'غير نشط', 'Inactive', lang) }
-];
+export const getStudentStatusCategory = (student) => {
+  if (student.is_archived || student.status === 'graduated') return 'archived';
+  if (student.status === 'inactive' || student.status === 'paused') return 'inactive';
+  return 'active';
+};
 
 /**
- * 4. خيارات الجنس الموحدة
+ * 5. رسم وسم الحالة لبطاقات الطلاب
  */
-export const getGenderOptions = (t = null, lang = 'ar') => [
-  { value: "male", label: getText(t, 'gender_male', 'ذكر', 'Male', lang) },
-  { value: "female", label: getText(t, 'gender_female', 'أنثى', 'Female', lang) }
-];
+export const renderStatusBadge = (student, t) => {
+  const category = getStudentStatusCategory(student);
 
-/**
- * 5. خيارات أنظمة الاشتراك الموحدة
- */
-export const getPaymentOptions = (t = null, lang = 'ar') => [
-  { value: "monthly", label: getText(t, 'plan_monthly', 'اشتراك شهري', 'Monthly Subscription', lang) },
-  { value: "per_hour", label: getText(t, 'plan_per_hour', 'بالساعة', 'Per Hour', lang) },
-  { value: "free", label: getText(t, 'plan_free', 'مجاني / منحة', 'Free / Scholarship', lang) }
-];
+  if (category === 'archived') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+        <Archive className="w-3.5 h-3.5" />
+        <span>{student.status === 'graduated' ? t('common.graduated', 'متخرج') : t('common.archived', 'مؤرشف')}</span>
+      </span>
+    );
+  }
+
+  if (category === 'active') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <UserCheck className="w-3.5 h-3.5" />
+        <span>{t('status_active', 'نشط')}</span>
+      </span>
+    );
+  }
+
+  if (category === 'inactive') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+        <UserX className="w-3.5 h-3.5" />
+        <span>{student.status === 'paused' ? t('common.paused', 'موقوف') : t('status_inactive', 'غير نشط')}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-dark-input text-appText-sub border border-appBorder-input">
+      <AlertCircle className="w-3.5 h-3.5" />
+      <span>{t('common.unspecified', 'غير محدد')}</span>
+    </span>
+  );
+};
