@@ -1,34 +1,41 @@
+// src/components/Student/StudentDocuments.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowRight, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, 
-  Loader2, AlertTriangle, X, Download, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, ExternalLink
+  Loader2, AlertTriangle, CheckCircle2 
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import DocumentUploadModal from './DocumentUploadModal';
+import DocumentPreviewModal from './DocumentPreviewModal';
 import CustomSelect from '@/components/UI/CustomSelect';
+import { useStudentDocuments } from '@/hooks/useStudentDocuments';
 
 export const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const { t, i18n } = useTranslation();
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [successToast, setSuccessToast] = useState('');
 
-  // حالات المعاينة الحية والتكبير
+  const {
+    documents,
+    loading,
+    uploading,
+    isDeleting,
+    successToast,
+    handleDelete,
+    handleUpload,
+  } = useStudentDocuments({ studentId, academyId, t });
+
+  // حالات المعاينة والتكبير
   const [previewDoc, setPreviewDoc] = useState(null);
   const [zoomScale, setZoomScale] = useState(1);
 
   // حالات الحذف
   const [deleteDocId, setDeleteDocId] = useState(null);
   const [deleteDocPath, setDeleteDocPath] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // تثبيت سكرول خلفية الشاشة تماماً في متصفح الموبايل لمنع تسريب التمرير
+  // تثبيت سكرول الشاشة في الموبايل عند فتح أية نافذة
   useEffect(() => {
     const isModalActive = previewDoc || deleteDocId || isUploadModalOpen;
     if (isModalActive) {
@@ -48,142 +55,18 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     }
   }, [previewDoc, deleteDocId, isUploadModalOpen]);
 
-  const showSuccess = (msg) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 4000);
-  };
-
-  const fetchDocuments = async () => {
-    if (!studentId) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('student_documents')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('uploaded_at', { ascending: false });
-
-      if (error) throw error;
-      setDocuments(data || []);
-    } catch (err) {
-      console.error('Error fetching documents:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, [studentId]);
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteDocId) return;
-    setIsDeleting(true);
-
-    try {
-      if (deleteDocPath) {
-        const decodedPath = decodeURIComponent(deleteDocPath);
-        await supabase.storage.from('documents').remove([decodedPath]);
-      }
-
-      const { error: dbError } = await supabase
-        .from('student_documents')
-        .delete()
-        .eq('id', deleteDocId);
-
-      if (dbError) throw dbError;
-
-      setDocuments((prev) => prev.filter((doc) => doc.id !== deleteDocId));
+  const confirmDelete = async () => {
+    const res = await handleDelete(deleteDocId, deleteDocPath);
+    if (res.success) {
       setDeleteDocId(null);
       setDeleteDocPath(null);
-      showSuccess(t('documents.delete_success', 'تم حذف المستند بنجاح'));
-    } catch (err) {
-      console.error('Delete Error:', err);
-      alert(t('common.error', 'حدث خطأ أثناء الحذف: ') + err.message);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
-  const handleUploadDocument = async ({ file, documentType, notes }) => {
-    setUploading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      let currentAcademyId = academyId;
-      if (!currentAcademyId) {
-        const { data: studentData, error: studentError } = await supabase
-          .from('students')
-          .select('academy_id')
-          .eq('id', studentId)
-          .single();
-          
-        if (studentError) throw studentError;
-        currentAcademyId = studentData?.academy_id;
-      }
-
-      const singleInstanceTypes = ['id_card', 'passport', 'birth_certificate'];
-      const isSingleInstance = singleInstanceTypes.includes(documentType);
-
-      if (isSingleInstance) {
-        const existingDoc = documents.find((doc) => doc.document_type === documentType);
-        if (existingDoc) {
-          if (existingDoc.file_url && existingDoc.file_url.includes('/documents/')) {
-            const oldPath = decodeURIComponent(existingDoc.file_url.split('/documents/')[1]);
-            await supabase.storage.from('documents').remove([oldPath]);
-          }
-          await supabase.from('student_documents').delete().eq('id', existingDoc.id);
-        }
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const uniqueId = crypto.randomUUID();
-      const filePath = `students/${studentId}/${Date.now()}_${uniqueId}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      const { data, error: dbError } = await supabase
-        .from('student_documents')
-        .insert([{
-          academy_id: currentAcademyId,
-          student_id: studentId,
-          file_name: file.name,
-          file_url: publicUrl,
-          file_size: file.size,
-          mime_type: file.type,
-          document_type: documentType,
-          uploaded_by: user?.id || null,
-          notes: notes || null,
-          uploaded_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (dbError) throw dbError;
-
-      setDocuments((prev) => {
-        const filtered = isSingleInstance 
-          ? prev.filter((doc) => doc.document_type !== documentType)
-          : prev;
-        return [data, ...filtered];
-      });
-
+  const onUploadSubmit = async (uploadData) => {
+    const res = await handleUpload(uploadData);
+    if (res.success) {
       setIsUploadModalOpen(false);
-      showSuccess(t('documents.upload_success', 'تم رفع المستند بنجاح!'));
-
-    } catch (err) {
-      console.error('Upload Error:', err);
-      alert(err.message);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -212,16 +95,6 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
     { value: 'certificate', label: t('documents.types.certificate', 'شهادة') },
     { value: 'other', label: t('documents.types.other', 'أخرى') },
   ];
-
-  const isImage = (mime, url) => {
-    if (mime?.startsWith('image/')) return true;
-    return /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
-  };
-
-  const isPdf = (mime, url) => {
-    if (mime === 'application/pdf') return true;
-    return /\.pdf$/i.test(url);
-  };
 
   return (
     <div className="space-y-4 text-appText-main relative" dir={i18n.dir()}>
@@ -366,119 +239,18 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
       <DocumentUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onUpload={handleUploadDocument}
+        onUpload={onUploadSubmit}
         isLoading={uploading}
       />
 
-      {/* Advanced Embedded Preview Modal with Zoom & Mobile PDF Support */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-black/95 overscroll-contain">
-          <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden shadow-2xl">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between p-3 border-b border-appBorder-card bg-dark-card shrink-0 gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <FileText className="w-4 h-4 text-primary shrink-0" />
-                <h3 className="text-xs font-bold text-appText-main truncate">
-                  {previewDoc.file_name}
-                </h3>
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center gap-1 shrink-0">
-                {isImage(previewDoc.mime_type, previewDoc.file_url) && (
-                  <div className="flex items-center bg-dark-input rounded-lg p-0.5 border border-appBorder-input gap-0.5 me-1">
-                    <button
-                      type="button"
-                      onClick={() => setZoomScale((prev) => Math.min(prev + 0.25, 3))}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md cursor-pointer"
-                      title="تكبير"
-                    >
-                      <ZoomIn className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setZoomScale((prev) => Math.max(prev - 0.25, 0.5))}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md cursor-pointer"
-                      title="تصغير"
-                    >
-                      <ZoomOut className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setZoomScale(1)}
-                      className="p-1.5 text-appText-sub hover:text-appText-main rounded-md cursor-pointer"
-                      title="إعادة ضبط"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-
-                <a
-                  href={previewDoc.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-
-                <a
-                  href={previewDoc.file_url}
-                  download
-                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
-                >
-                  <Download className="w-4 h-4" />
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setPreviewDoc(null)}
-                  className="p-1.5 text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-lg transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Content Preview Container */}
-            <div className="flex-1 bg-black/60 p-2 overflow-auto overscroll-contain flex items-center justify-center relative">
-              {isImage(previewDoc.mime_type, previewDoc.file_url) ? (
-                <div className="w-full h-full flex items-center justify-center overflow-auto p-2">
-                  <img
-                    src={previewDoc.file_url}
-                    alt={previewDoc.file_name}
-                    style={{ transform: `scale(${zoomScale})`, transition: 'transform 0.15s ease-in-out' }}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl origin-center"
-                  />
-                </div>
-              ) : isPdf(previewDoc.mime_type, previewDoc.file_url) ? (
-                <iframe
-                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.file_url)}&embedded=true`}
-                  title={previewDoc.file_name}
-                  className="w-full h-full rounded-lg border-0 bg-white"
-                />
-              ) : (
-                <div className="text-center space-y-4 p-6">
-                  <FileText className="w-16 h-16 text-appText-muted mx-auto" />
-                  <p className="text-sm text-appText-sub">
-                    {t('documents.cannot_preview', 'لا يمكن معاينة هذا النوع من الملفات مباشرة.')}
-                  </p>
-                  <a
-                    href={previewDoc.file_url}
-                    download
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-appText-main font-bold rounded-xl text-xs shadow-md"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>{t('common.download_file', 'تحميل الملف')}</span>
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Preview Modal */}
+      <DocumentPreviewModal
+        previewDoc={previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        zoomScale={zoomScale}
+        setZoomScale={setZoomScale}
+        t={t}
+      />
 
       {/* Delete Modal */}
       {deleteDocId && (
@@ -513,7 +285,7 @@ export const StudentDocuments = ({ studentId, academyId, onBack }) => {
               <button
                 type="button"
                 disabled={isDeleting}
-                onClick={handleDeleteConfirm}
+                onClick={confirmDelete}
                 className="flex-1 py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isDeleting ? (
