@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Globe, Check, ChevronDown } from 'lucide-react';
 
 const LANGUAGES = [
-  { code: 'ar', label: 'العربية', dir: 'rtl', flag: '🇪🇬' },
-  { code: 'en', label: 'English', dir: 'ltr', flag: '🇺🇸' },
-  { code: 'fr', label: 'Français', dir: 'ltr', flag: '🇫🇷' },
-  { code: 'de', label: 'Deutsch', dir: 'ltr', flag: '🇩🇪' },
+  { code: 'ar', label: 'العربية', dir: 'rtl', flag: '🇸🇦' },
+  { code: 'en', label: 'English', dir: 'ltr', flag: '🇬🇧' },
+  { code: 'tr', label: 'Türkçe', dir: 'ltr', flag: '🇹🇷' },
+  { code: 'ur', label: 'اردو', dir: 'rtl', flag: '🇵🇰' },
+  { code: 'id', label: 'Bahasa Indonesia', dir: 'ltr', flag: '🇮🇩' },
 ];
 
 export default function LanguageSwitcher({ i18n }) {
@@ -18,8 +19,6 @@ export default function LanguageSwitcher({ i18n }) {
   const handleLanguageChange = (lang) => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
       i18n.changeLanguage(lang.code);
-      document.documentElement.dir = lang.dir;
-      document.documentElement.lang = lang.code;
     }
     setIsOpen(false);
   };
@@ -55,7 +54,7 @@ export default function LanguageSwitcher({ i18n }) {
 
       {/* القائمة المنسدلة للغات */}
       {isOpen && (
-        <div className="absolute end-0 mt-1.5 w-36 bg-[#0F172A] border border-[#1B2738] rounded-xl shadow-2xl py-1 z-[999999] overflow-hidden">
+        <div className="absolute end-0 mt-1.5 w-40 bg-[#0F172A] border border-[#1B2738] rounded-xl shadow-2xl py-1 z-[999999] overflow-hidden">
           {LANGUAGES.map((lang) => {
             const isSelected = lang.code === currentLangCode;
             return (
