@@ -10,14 +10,17 @@ export default function SplashScreen({ onFinish }) {
   const [selectedAyaObj, setSelectedAyaObj] = useState(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
-  // 1. تحديد كود اللغة الأساسية المعتمدة (ar, en, tr, ur, id)
-  const rawLang = i18n.resolvedLanguage || i18n.language || 'en';
-  const currentLang = rawLang.split('-')[0].toLowerCase();
-  
-  // اللغات المكتوبة من اليمين لليسار (RTL)
+  // 🟢 استخراج واستخلاص كود اللغة الأساسي فوراً بدون مسافات أو رموز بلدان (مثلاً tr-TR تحول إلى tr)
+  const getActiveLang = () => {
+    const raw = i18n.resolvedLanguage || i18n.language || localStorage.getItem('i18nextLng') || 'en';
+    const clean = raw.split('-')[0].split('_')[0].toLowerCase();
+    return ['ar', 'en', 'tr', 'ur', 'id'].includes(clean) ? clean : 'en';
+  };
+
+  const currentLang = getActiveLang();
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
-  // 2. قاموس النصوص الشامل لكافة اللغات المدعومة
+  // 1. قاموس النصوص الشامل محلياً
   const translations = {
     ar: {
       title: "الحلقة الذكية",
@@ -51,7 +54,7 @@ export default function SplashScreen({ onFinish }) {
     }
   };
 
-  // 3. قاعدة بيانات الآيات والأحاديث المترجمة بجميع اللغات
+  // 2. الآيات المترجمة لكافة اللغات
   const quranData = [
     {
       ar: "وَفِي ذَلِكَ فَلْيَتَنَافَسِ الْمُتَنَافِسُونَ",
@@ -73,25 +76,15 @@ export default function SplashScreen({ onFinish }) {
       tr: "Sizin en hayırlınız Kur'an'ı öğrenen ve öğretendir",
       ur: "تم میں سے بہترین شخص وہ ہے جو قرآن سیکھے اور سکھائے",
       id: "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya"
-    },
-    {
-      ar: "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ",
-      en: "Indeed, this Quran guides to that which is most suitable",
-      tr: "Şüphesiz ki bu Kur'an en doğru yola iletir",
-      ur: "بیشک یہ قرآن وہ راہ دکھاتا ہے جو بالکل سیدھی ہے",
-      id: "Sungguh, Al-Qur'an ini memberi petunjuk ke jalan yang paling lurus"
     }
   ];
 
-  // جلب النصوص الخاصة باللغة الحالية أو استخدام الإنجليزية كخيار احتياطي
-  const currentT = translations[currentLang] || translations['en'];
+  const currentT = translations[currentLang] || translations.en;
 
   useEffect(() => {
-    // اختيار آية عشوائية
     const randomAya = quranData[Math.floor(Math.random() * quranData.length)];
     setSelectedAyaObj(randomAya);
 
-    // عداد التحميل الاحترافي السلس
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
@@ -106,7 +99,6 @@ export default function SplashScreen({ onFinish }) {
     return () => clearInterval(interval);
   }, [currentLang]);
 
-  // دالة الخروج بسلاسة
   const handleClose = () => {
     if (isFadingOut) return;
     setIsFadingOut(true);
@@ -122,13 +114,13 @@ export default function SplashScreen({ onFinish }) {
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* زر التخطي المترجم والتموضع الديناميكي حسب اتجاه اللغة */}
+      {/* زر التخطي */}
       <button
         type="button"
         onClick={handleClose}
         className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} z-20 px-3.5 py-1.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-full text-xs text-slate-300 font-medium transition-all duration-200 backdrop-blur-md active:scale-95`}
       >
-        {t('skip', currentT.skip)} ✕
+        {currentT.skip} ✕
       </button>
 
       {/* خلفية التوهج الزمردي */}
@@ -149,16 +141,16 @@ export default function SplashScreen({ onFinish }) {
           <SmartHalaqaProLogo size={90} />
         </div>
 
-        {/* العنوان والوصف مترجمان تلقائياً */}
+        {/* العنوان والوصف القادمان مباشرة من القاموس المحلي المحمي */}
         <h1 className="text-2xl font-black text-[var(--text-main,#FFFFFF)] mb-1 tracking-tight">
-          {t('app_name', currentT.title)}
+          {currentT.title}
         </h1>
         
         <p className="text-xs text-[var(--text-sub,#94A3B8)] mb-6 font-medium">
-          {t('app_subtitle', currentT.subtitle)}
+          {currentT.subtitle}
         </p>
 
-        {/* بطاقة النص القرآني الشريف بالخط العربي وتحته ترجمة اللغة المختارة */}
+        {/* بطاقة الآية الكريمة والترجمة التركية/الأوردية/الإندونيسية */}
         {selectedAyaObj && (
           <div className="bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md rounded-2xl px-5 py-3.5 mb-8 w-full shadow-xl flex flex-col gap-1.5">
             <span className="text-[var(--primary,#E07A00)] text-sm font-semibold block leading-relaxed dir-rtl">
@@ -172,10 +164,10 @@ export default function SplashScreen({ onFinish }) {
           </div>
         )}
 
-        {/* شريط التحميل الموحد للأرقام والرموز */}
+        {/* شريط التحميل */}
         <div className="w-60 relative">
           <div className="flex justify-between items-center text-[var(--text-sub,#94A3B8)] text-xs mb-2">
-            <span className="font-medium">{t('loading', currentT.loading)}</span>
+            <span className="font-medium">{currentT.loading}</span>
             <span className="text-emerald-400 font-mono font-bold">{toEngNums(progress)}%</span>
           </div>
 
@@ -191,7 +183,7 @@ export default function SplashScreen({ onFinish }) {
         </div>
       </div>
 
-      {/* الإصدار */}
+      {/* رقم الإصدار */}
       <div className="absolute bottom-6 text-[10px] text-[var(--text-muted,#475569)] tracking-widest font-mono">
         SMART HALAQA • v2.5
       </div>
