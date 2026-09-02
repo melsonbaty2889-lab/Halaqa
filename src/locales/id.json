@@ -1,49 +1,49 @@
 {
-  "students": {
-    "title": "Manajemen Santri",
-    "subtitle": "Kelola data dan catatan santri",
-    "add_student": "Tambah Santri Baru",
-    "search_placeholder": "Cari berdasarkan nama, kode, atau telepon...",
-    "all_genders": "Semua Jenis Kelamin",
-    "male": "Laki-laki",
-    "female": "Perempuan",
-    "all_halaqas": "Semua Halaqah",
-    "no_halaqa": "Santri Tanpa Halaqah",
-    "active": "Aktif",
-    "archived": "Diarsipkan",
-    "no_students": "Santri tidak ditemukan",
-    "delete_confirm": "Apakah Anda yakin ingin menghapus santri ini?",
-    "archive_confirm": "Apakah Anda yakin ingin mengarsipkan santri ini?"
-  },
-  "documents": {
-    "title": "Dokumen Santri",
-    "subtitle": "Kelola dokumen identitas dan berkas lampiran",
-    "upload_btn": "Unggah Dokumen Baru",
-    "filter_all": "Semua Dokumen",
-    "unnamed_doc": "Dokumen Tanpa Nama",
-    "cannot_preview": "Jenis berkas ini tidak dapat dipratinjau secara langsung.",
-    "upload_success": "Dokumen berhasil diunggah!",
-    "delete_success": "Dokumen berhasil dihapus",
-    "delete_title": "Hapus Dokumen",
-    "delete_confirm_text": "Apakah Anda yakin ingin menghapus dokumen ini secara permanen?",
-    "types": {
-      "id_card": "Kartu Identitas",
-      "passport": "Paspor",
-      "birth_certificate": "Akta Kelahiran",
-      "parent_consent": "Izin Orang Tua",
-      "medical_report": "Laporan Medis",
-      "payment_receipt": "Bukti Pembayaran",
-      "certificate": "Sertifikat",
-      "other": "Lainnya"
-    }
+  "splash": {
+    "title": "Halaqa Pintar",
+    "subtitle": "Platform Pintar untuk Halaqah Al-Qur'an",
+    "loading": "Memuat sistem...",
+    "skip": "Lewati"
   },
   "common": {
-    "loading": "Memuat...",
-    "error": "Terjadi kesalahan: ",
-    "delete": "Hapus",
+    "save": "Simpan",
     "cancel": "Batal",
-    "view": "Lihat",
-    "download_file": "Unduh Berkas",
-    "searchPlaceholder": "Cari berkas..."
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "add": "Tambah",
+    "search": "Cari...",
+    "actions": "Aksi",
+    "status": "Status",
+    "active": "Aktif",
+    "inactive": "Nonaktif",
+    "confirm": "Konfirmasi",
+    "back": "Kembali",
+    "loading": "Memuat...",
+    "no_data": "Tidak ada data tersedia"
+  },
+  "menu": {
+    "sections": {
+      "main_operations": "Utama & Operasional",
+      "halaqas_people": "Halaqah & Anggota",
+      "curriculum_progress": "Kurikulum & Penilaian",
+      "management_finance": "Manajemen & Keuangan"
+    },
+    "items": {
+      "dashboard": "Beranda",
+      "attendance": "Setoran & Presensi",
+      "interactive_quran": "Al-Qur'an Interaktif",
+      "notifications_reports": "Notifikasi & Laporan",
+      "halaqas": "Halaqah & Kelas",
+      "students": "Manajemen Santri",
+      "parents": "Wali Santri",
+      "teachers": "Staf Pengajar & Admin",
+      "curricula": "Kurikulum & Studi Islam",
+      "exams": "Ujian & Sertifikat",
+      "gamification": "Poin & Penghargaan",
+      "documents": "Dokumen & Berkas",
+      "finance": "Langganan & Keuangan",
+      "audit_logs": "Log Keamanan",
+      "settings": "Pengaturan Sistem"
+    }
   }
 }
