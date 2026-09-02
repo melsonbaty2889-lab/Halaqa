@@ -17,33 +17,33 @@ import {
   FolderOpen
 } from "lucide-react";
 
-export const getMenuSections = (isRtl, userRole = 'admin') => {
+export const getMenuSections = (t, userRole = 'admin') => {
   const sections = [
     {
       id: 'main-operations',
-      title: isRtl ? 'الرئيسية والعمليات' : 'Main & Operations',
+      title: t('menu.sections.main_operations', 'الرئيسية والعمليات'),
       items: [
         { 
           id: 'dashboard', 
-          label: isRtl ? 'لوحة التحكم' : 'Dashboard', 
+          label: t('menu.items.dashboard', 'لوحة التحكم'), 
           icon: BarChart3, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'attendance', 
-          label: isRtl ? 'التسميع والحضور' : 'Attendance & Recitation', 
+          label: t('menu.items.attendance', 'التسميع والحضور'), 
           icon: CheckCircle2, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'interactive_quran', 
-          label: isRtl ? 'المصحف والتسميع الذكي' : 'Interactive Quran & AI', 
+          label: t('menu.items.interactive_quran', 'المصحف والتسميع الذكي'), 
           icon: BookMarked, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'notifications_reports', 
-          label: isRtl ? 'الإشعارات والتقارير' : 'Notifications & Reports', 
+          label: t('menu.items.notifications_reports', 'الإشعارات والتقارير'), 
           icon: Send, 
           roles: ['admin', 'teacher', 'parent'] 
         }
@@ -51,29 +51,29 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     },
     {
       id: 'halaqas-people',
-      title: isRtl ? 'الحلقات والأفراد' : 'Halaqas & Directory',
+      title: t('menu.sections.halaqas_people', 'الحلقات والأفراد'),
       items: [
         { 
           id: 'halaqas', 
-          label: isRtl ? 'الحلقات والفصول' : 'Classes & Circles', 
+          label: t('menu.items.halaqas', 'الحلقات والفصول'), 
           icon: BookOpen, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'students', 
-          label: isRtl ? 'إدارة الطلاب' : 'Students Directory', 
+          label: t('menu.items.students', 'إدارة الطلاب'), 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'parents', 
-          label: isRtl ? 'أولياء الأمور' : 'Parents & Guardians', 
+          label: t('menu.items.parents', 'أولياء الأمور'), 
           icon: HeartHandshake, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'teachers', 
-          label: isRtl ? 'الكادر التعليمي والإداري' : 'Teachers & Staff', 
+          label: t('menu.items.teachers', 'الكادر التعليمي والإداري'), 
           icon: Users, 
           roles: ['admin'] 
         }
@@ -81,29 +81,29 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     },
     {
       id: 'curriculum-progress',
-      title: isRtl ? 'المناهج والتقييم' : 'Curricula & Progress',
+      title: t('menu.sections.curriculum_progress', 'المناهج والتقييم'),
       items: [
         { 
           id: 'curricula', 
-          label: isRtl ? 'المناهج والعلوم الشرعية' : 'Curricula & Islamic Studies', 
+          label: t('menu.items.curricula', 'المناهج والعلوم الشرعية'), 
           icon: Library, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'exams', 
-          label: isRtl ? 'الاختبارات والشهادات' : 'Exams & Certificates', 
+          label: t('menu.items.exams', 'الاختبارات والشهادات'), 
           icon: Award, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'gamification', 
-          label: isRtl ? 'التحفيز والأوسمة' : 'Badges & Streaks', 
+          label: t('menu.items.gamification', 'التحفيز والأوسمة'), 
           icon: Flame, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'documents', 
-          label: isRtl ? 'المستندات والملفات' : 'Documents & Files', 
+          label: t('menu.items.documents', 'المستندات والملفات'), 
           icon: FolderOpen, 
           roles: ['admin', 'teacher'] 
         }
@@ -111,23 +111,23 @@ export const getMenuSections = (isRtl, userRole = 'admin') => {
     },
     {
       id: 'management-finance',
-      title: isRtl ? 'الإدارة والمالية' : 'Management & Finance',
+      title: t('menu.sections.management_finance', 'الإدارة والمالية'),
       items: [
         { 
           id: 'finance', 
-          label: isRtl ? 'الاشتراكات والمالية' : 'Finance & Subscriptions', 
+          label: t('menu.items.finance', 'الاشتراكات والمالية'), 
           icon: CreditCard, 
           roles: ['admin', 'parent'] 
         },
         { 
           id: 'audit_logs', 
-          label: isRtl ? 'سجل العمليات الأمني' : 'Security Audit Logs', 
+          label: t('menu.items.audit_logs', 'سجل العمليات الأمني'), 
           icon: ShieldCheck, 
           roles: ['admin', 'super_admin'] 
         },
         { 
           id: 'settings', 
-          label: isRtl ? 'إعدادات المنظومة' : 'Platform Settings', 
+          label: t('menu.items.settings', 'إعدادات المنظومة'), 
           icon: SlidersHorizontal, 
           roles: ['admin'] 
         }
