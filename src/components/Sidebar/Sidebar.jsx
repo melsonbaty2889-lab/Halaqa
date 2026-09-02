@@ -34,11 +34,14 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  // 🟢 تعديل رئيسي: تمرير t إلى getMenuSections
-  const menuSections = getMenuSections(t, userRole);
+  // 🟢 حماية دالة الترجمة لتفادي TypeError: t is not a function
+  const safeT = typeof t === 'function' ? t : (key, fallback) => fallback || key;
+
+  // تمرير safeT آمن دائماً إلى getMenuSections
+  const menuSections = getMenuSections(safeT, userRole);
   const [openSectionId, setOpenSectionId] = useState(null);
 
-  // 🟢 دالة منيعة ومحميّة ضد خطأ Minified React error #31
+  // دالة منيعة ومحميّة ضد خطأ Minified React error #31
   const getText = (val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -429,6 +432,7 @@ export default function Sidebar({
             setSidebarOpen={setSidebarOpen}
             isRtl={isRtl}
             effectiveDaysLeft={effectiveDaysLeft}
+            t={safeT}
           />
 
           <SidebarSearch
