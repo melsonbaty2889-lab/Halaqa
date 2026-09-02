@@ -1,7 +1,7 @@
 // src/components/Sidebar/SidebarWidget.jsx
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
-import { formatHijriDate } from '@/utils/dateUtils';
+import { formatHijriDate } from '../../utils/dateUtils';
 
 export default function SidebarWidget({
   academyTime,
@@ -11,8 +11,15 @@ export default function SidebarWidget({
   isMobile,
   setSidebarOpen,
   isRtl,
-  effectiveDaysLeft
+  effectiveDaysLeft,
+  t // أضفنا t هنا كـ prop تحسباً لاستخدامها
 }) {
+  // دالة حماية للترجمة لمنع كراش t is not a function
+  const translate = (key, fallback) => {
+    if (typeof t === 'function') return t(key, fallback);
+    return fallback;
+  };
+
   const formattedHijri = formatHijriDate(new Date(), isRtl ? 'ar' : 'en');
   const formattedGregorian = new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { 
     day: 'numeric', 
