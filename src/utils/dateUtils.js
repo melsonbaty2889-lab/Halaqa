@@ -15,6 +15,14 @@ export const HIJRI_MONTHS_EN = [
   "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
 ];
 
+// دالة تحويل أي أرقام هندية/عربية إلى أرقام إنجليزية قياسية (1, 2, 3)
+export const toEngNums = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+};
+
 // جلب وتعيين إزاحة الرؤية الهجرية في المتصفح
 export const getSavedHijriOffset = () => {
   if (typeof window === 'undefined') return 0;
@@ -55,7 +63,7 @@ export const getHijriParts = (dateObj, offsetDays = getSavedHijriOffset()) => {
 };
 
 /**
- * تنسيق التاريخ الهجري عالمياً
+ * تنسيق التاريخ الهجري بأرقام إنجليزية دائماً
  */
 export const formatHijriDate = (dateObj, langOrIsArabic = 'ar', offsetDays = getSavedHijriOffset()) => {
   if (!dateObj) return '';
@@ -69,11 +77,11 @@ export const formatHijriDate = (dateObj, langOrIsArabic = 'ar', offsetDays = get
     const monthIndex = Math.max(0, Math.min(11, month - 1));
 
     if (locale.startsWith('ar')) {
-      return `${day} ${HIJRI_MONTHS_AR[monthIndex]} ${year} هـ`;
+      return toEngNums(`${day} ${HIJRI_MONTHS_AR[monthIndex]} ${year} هـ`);
     }
 
     if (locale.startsWith('en')) {
-      return `${HIJRI_MONTHS_EN[monthIndex]} ${day}, ${year} AH`;
+      return toEngNums(`${HIJRI_MONTHS_EN[monthIndex]} ${day}, ${year} AH`);
     }
 
     const formatter = new Intl.DateTimeFormat(`${locale}-u-ca-islamic-umalqura`, {
@@ -82,18 +90,18 @@ export const formatHijriDate = (dateObj, langOrIsArabic = 'ar', offsetDays = get
       year: 'numeric'
     });
 
-    return formatter.format(adjustedDate);
+    return toEngNums(formatter.format(adjustedDate));
   } catch (error) {
     const isAr = String(langOrIsArabic).startsWith('ar');
     const monthIndex = Math.max(0, Math.min(11, month - 1));
     const monthName = isAr ? HIJRI_MONTHS_AR[monthIndex] : HIJRI_MONTHS_EN[monthIndex];
 
-    return isAr ? `${day} ${monthName} ${year} هـ` : `${monthName} ${day}, ${year} AH`;
+    return toEngNums(isAr ? `${day} ${monthName} ${year} هـ` : `${monthName} ${day}, ${year} AH`);
   }
 };
 
 /**
- * تنسيق التاريخ الميلادي بأسلوب قياسي دولي
+ * تنسيق التاريخ الميلادي بأرقام إنجليزية
  */
 export const formatGregorianDate = (dateObj, locale = 'ar-EG', options = {}) => {
   if (!dateObj) return '';
@@ -107,7 +115,9 @@ export const formatGregorianDate = (dateObj, locale = 'ar-EG', options = {}) => 
     ...options
   };
 
-  return new Intl.DateTimeFormat(locale, defaultOptions).format(date);
+  // استخدام en-US لطباعة التاريخ والوقت لتفادي مشكلة انقطاع حروف (م/ص) وتداخل الأرقام
+  const formatted = new Intl.DateTimeFormat(locale, defaultOptions).format(date);
+  return toEngNums(formatted);
 };
 
 /**
