@@ -32,7 +32,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en', // 🟢 تحديد اللغة الاحتياطية بوضوح وببساطة
+    fallbackLng: ['ar', 'en'], // 🟢 تحديد اللغة الاحتياطية بوضوح وببساطة
     supportedLngs: SUPPORTED_LANGUAGES,
     nonExplicitSupportedLngs: true, // يضمن تحويل tr-TR إلى tr تلقائياً
     lowerCaseLng: true,
