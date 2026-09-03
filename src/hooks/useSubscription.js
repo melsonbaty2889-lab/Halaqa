@@ -8,11 +8,9 @@ export function useSubscription(academyId) {
 
   useEffect(() => {
     if (!academyId) {
-      setLoading(true);
+      setLoading(false);
       return;
     }
-
-    let isMounted = true;
 
     async function fetchSubscription() {
       try {
@@ -24,30 +22,31 @@ export function useSubscription(academyId) {
           .maybeSingle();
 
         if (error) throw error;
-        if (isMounted) setSubscription(data);
+        setSubscription(data);
       } catch (err) {
         console.error("🚨 Error fetching subscription:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     }
 
     fetchSubscription();
-
-    return () => {
-      isMounted = false;
-    };
   }, [academyId]);
 
+  // حالة الاشتراك النشط
   const isActive = subscription?.status === 'active' || subscription?.status === 'trial';
+  
+  // حالة طلب غير مدفوع / قيد المراجعة
   const isPending = subscription?.status === 'unpaid';
+
+  // هل الخطة منتهية الصلاحية
   const isExpired = subscription?.expires_at 
     ? new Date(subscription.expires_at) < new Date() 
     : false;
 
   return { 
     subscription, 
-    isActive: subscription ? (isActive && !isExpired) : true, 
+    isActive: isActive && !isExpired, 
     isPending, 
     isExpired,
     loading 
