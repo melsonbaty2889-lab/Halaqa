@@ -73,7 +73,7 @@ export default function SplashScreen({ onFinish }) {
   const detectLanguage = () => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : null;
     const nav = typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage) : null;
-    const currentI18n = i18n.resolvedLanguage || i18n.language;
+    const currentI18n = i18n ? (i18n.resolvedLanguage || i18n.language) : null;
 
     const candidate = stored || currentI18n || nav || 'en';
     const clean = candidate.split('-')[0].split('_')[0].toLowerCase();
@@ -83,17 +83,21 @@ export default function SplashScreen({ onFinish }) {
 
   const [currentLang, setCurrentLang] = useState(detectLanguage());
 
-  // 🟢 الاستماع اللحظي لتغيرات i18n أو LocalStorage
+  // 🟢 الاستماع اللحظي لتغيرات i18n مع الحماية الآمنة
   useEffect(() => {
     const handleLangChange = () => {
       setCurrentLang(detectLanguage());
     };
 
-    // تحديث الحالة عند تغير اللغة في i18n
-    i18n.on('languageChanged', handleLangChange);
+    // فحص أمان لضمان وجود دالة الاستماع
+    if (i18n && typeof i18n.on === 'function') {
+      i18n.on('languageChanged', handleLangChange);
+    }
 
     return () => {
-      i18n.off('languageChanged', handleLangChange);
+      if (i18n && typeof i18n.off === 'function') {
+        i18n.off('languageChanged', handleLangChange);
+      }
     };
   }, [i18n]);
 
@@ -160,7 +164,7 @@ export default function SplashScreen({ onFinish }) {
           <SmartHalaqaProLogo size={90} />
         </div>
 
-        {/* العنوان والوصف بالتركية المباشرة */}
+        {/* العنوان والوصف */}
         <h1 className="text-2xl font-black text-[var(--text-main,#FFFFFF)] mb-1 tracking-tight">
           {currentT.title}
         </h1>
