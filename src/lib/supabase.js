@@ -20,3 +20,8 @@ export const supabase = createClient(
     },
   }
 );
+
+// حماية الشاشة من الانهيار إذا نادت أي مكتبة قديمة الدالة المنسوخة .on()
+if (supabase && typeof supabase.on !== 'function') {
+  supabase.on = () => supabase;
+}
