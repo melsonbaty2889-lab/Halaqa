@@ -23,8 +23,8 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         sourcemap: true,
-        // منع تخزين index.html في الـ Service Worker كاش نهائياً
-        navigateFallbackDenylist: [/^\/index\.html$/],
+        // 🎯 توجيه كافة المسارات لـ index.html لدعم React Router أوفلاين وأونلاين
+        navigateFallback: '/index.html',
         runtimeCaching: [
           {
             // كاش استجابات Supabase للعمل بدون إنترنت
@@ -78,7 +78,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // إضافة الـ Hash في أسماء الأصول لمنع المتصفح من قراءة النسخ القديمة
         entryFileNames: `assets/[name].[hash].js`,
         chunkFileNames: `assets/[name].[hash].js`,
         assetFileNames: `assets/[name].[hash].[ext]`,
