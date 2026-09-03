@@ -1,7 +1,8 @@
+/* src/context/AcademyContext.jsx */
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
-const AcademyContext = createContext({});
+const AcademyContext = createContext(null);
 
 export const AcademyProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -18,7 +19,7 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
-  // 👈 دالة التحديث اللحظي لبيانات الأكاديمية في الواجهة
+  // دالة التحديث اللحظي لبيانات الأكاديمية في الواجهة
   const updateAcademyState = useCallback((newAcademyData) => {
     if (isMounted.current) {
       setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
@@ -39,10 +40,10 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات البروفايل من جدول profiles
+      // 1. جلب بيانات البروفايل المحددة فقط بدلاً من (*)
       const { data: profData, error: profError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, role, is_activated, full_name, email, avatar_url')
         .eq('id', currentUser.id)
         .maybeSingle();
 
@@ -80,14 +81,16 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 4. جلب الأكاديمية عبر academy_members أولاً
+      // 4. جلب الأكاديمية عبر academy_members وتحديد حقول الأكاديمية فقط
       let currentAcademy = null;
 
       const { data: memList, error: memError } = await supabase
         .from('academy_members')
         .select(`
           role,
-          academy:academies (*)
+          academy:academies (
+            id, name, slug, logo_url, is_active, blocked_reason, owner_id, created_at
+          )
         `)
         .eq('user_id', currentUser.id)
         .limit(1);
@@ -100,11 +103,11 @@ export const AcademyProvider = ({ children }) => {
         currentAcademy = memList[0]?.academy || null;
       }
 
-      // 5. خطة بديلة احتياطية (Fallback): إذا لم يُعثر على الأكاديمية في academy_members، نفحص جدول academies عن طريق owner_id
+      // 5. خطة بديلة احتياطية (Fallback): جلب الأكاديمية بحقول محدودة
       if (!currentAcademy) {
         const { data: ownedAcademy, error: ownerError } = await supabase
           .from('academies')
-          .select('*')
+          .select('id, name, slug, logo_url, is_active, blocked_reason, owner_id, created_at')
           .eq('owner_id', currentUser.id)
           .limit(1)
           .maybeSingle();
@@ -121,7 +124,6 @@ export const AcademyProvider = ({ children }) => {
             localStorage.setItem('current_academy_slug', currentAcademy.slug);
           }
 
-          // 🛑 التعديل المحدث: الاعتماد على is_active وحقل blocked_reason من جدول academies
           if (currentAcademy.is_active === false) {
             setAppState('SUSPENDED');
           } else {
@@ -220,4 +222,10 @@ export const AcademyProvider = ({ children }) => {
   );
 };
 
-export const useAcademy = () => useContext(AcademyContext);
+export const useAcademy = () => {
+  const context = useContext(AcademyContext);
+  if (!context) {
+    throw new Error('useAcademy must be used within an AcademyProvider');
+  }
+  return context;
+};
