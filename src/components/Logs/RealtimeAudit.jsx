@@ -92,7 +92,6 @@ export default function RealtimeAudit() {
     if (profile && typeof profile === 'object') {
       const name = parseName(profile.full_name) || parseName(profile.name);
 
-      // إذا كان الاسم المخزن يحتوي على "أكاديمية" قديمة أو غير محدد بشكل شخصي وكان الدور مديراً
       if (profile.role === 'admin') {
         if (academyName) return `مدير أكاديمية ${academyName}`;
         return 'مدير الأكاديمية';
@@ -100,7 +99,6 @@ export default function RealtimeAudit() {
 
       if (name && !name.includes('أكاديمية الفرقان')) return name;
 
-      // للأدوار الأخرى
       switch (profile.role) {
         case 'super_admin': return 'سوبر أدمن';
         case 'teacher': return 'معلم';
@@ -127,20 +125,13 @@ export default function RealtimeAudit() {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
+      // تبسيط الاستعلام لحماية العلاقات
       const { data, error } = await supabase
         .from('audit_logs')
         .select(`
           *,
-          academies:academy_id (
-            id,
-            name
-          ),
-          profiles:changed_by (
-            id,
-            full_name,
-            role,
-            academies:academy_id ( name )
-          )
+          academies:academy_id ( id, name ),
+          profiles:changed_by ( id, full_name, role )
         `)
         .order('created_at', { ascending: false })
         .limit(250);
@@ -163,22 +154,26 @@ export default function RealtimeAudit() {
         let userProfile = null;
         let academyData = null;
 
-        if (payload.new?.academy_id) {
-          const { data } = await supabase
-            .from('academies')
-            .select('id, name')
-            .eq('id', payload.new.academy_id)
-            .maybeSingle();
-          academyData = data;
-        }
+        try {
+          if (payload.new?.academy_id) {
+            const { data } = await supabase
+              .from('academies')
+              .select('id, name')
+              .eq('id', payload.new.academy_id)
+              .maybeSingle();
+            academyData = data;
+          }
 
-        if (payload.new?.changed_by) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, full_name, role')
-            .eq('id', payload.new.changed_by)
-            .maybeSingle();
-          userProfile = data;
+          if (payload.new?.changed_by) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, full_name, role')
+              .eq('id', payload.new.changed_by)
+              .maybeSingle();
+            userProfile = data;
+          }
+        } catch (e) {
+          console.error("Realtime fetch details failed:", e);
         }
 
         setLogs((prev) => [{ ...payload.new, profiles: userProfile, academies: academyData }, ...prev]);
