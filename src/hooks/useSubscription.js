@@ -1,6 +1,6 @@
 // src/hooks/useSubscription.js
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export function useSubscription(academyId) {
   const [subscription, setSubscription] = useState(null);
@@ -15,6 +15,7 @@ export function useSubscription(academyId) {
     async function fetchSubscription() {
       try {
         setLoading(true);
+        // جلب كل حقول الجدول الرئيسي لضمان توفر تفاصيل الاشتراك كاملاً
         const { data, error } = await supabase
           .from('saas_subscriptions')
           .select('*')
