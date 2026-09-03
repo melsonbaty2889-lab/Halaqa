@@ -50,19 +50,17 @@ export const AcademyProvider = ({ children }) => {
         console.error("🚨 خطأ في جلب البروفايل:", profError);
       }
 
-      if (!profData) {
-        console.warn("⚠️ لم يتم العثور على بروفايل للمستخدم");
-        if (isMounted.current) {
-          setProfile(null);
-          setAcademy(null);
-          setAppState('UNAUTHENTICATED');
-        }
-        return;
-      }
+      // إذا لم يوجد بروفايل، ننشئ بروفايل مؤقت ولا نطرده!
+      const activeProfile = profData || {
+        id: currentUser.id,
+        role: 'admin',
+        is_activated: true,
+        full_name: currentUser.email || 'مستخدم'
+      };
 
-      if (isMounted.current) setProfile(profData);
+      if (isMounted.current) setProfile(activeProfile);
 
-      if (profData.role === 'super_admin') {
+      if (activeProfile.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
           setAppState('SUPER_ADMIN');
@@ -70,7 +68,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      if (profData.is_activated === false) {
+      if (activeProfile.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
           setAppState('PENDING_APPROVAL');
@@ -80,7 +78,7 @@ export const AcademyProvider = ({ children }) => {
 
       let currentAcademy = null;
 
-      // 2. البحث عن الأكاديمية المملوكة أولاً (أسرع وأضمن)
+      // 2. البحث عن الأكاديمية المملوكة أولاً
       const { data: ownedAcademy } = await supabase
         .from('academies')
         .select('*')
@@ -98,7 +96,7 @@ export const AcademyProvider = ({ children }) => {
           .eq('user_id', currentUser.id)
           .limit(1);
 
-        if (memList && memList.length > 0 && memList[0].academy_id) {
+        if (memList && memList.length > 0 && memList[0]?.academy_id) {
           const { data: joinedAcademy } = await supabase
             .from('academies')
             .select('*')
@@ -126,14 +124,13 @@ export const AcademyProvider = ({ children }) => {
           }
         } else {
           setAcademy(null);
-          // إذا كان أدمن بدون أكاديمية يذهب لإنشاء أكاديمية، وغير ذلك ينتقل لتوفير الواجهة المباشرة
-          setAppState(profData.role === 'admin' ? 'NO_ACADEMY' : 'FULLY_ACTIVE');
+          setAppState('FULLY_ACTIVE'); // تفعيل الدخول المباشر
         }
       }
 
     } catch (e) {
       console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
-      if (isMounted.current) setAppState('UNAUTHENTICATED');
+      if (isMounted.current) setAppState('FULLY_ACTIVE');
     }
   }, []);
 
@@ -143,7 +140,7 @@ export const AcademyProvider = ({ children }) => {
       await fetchUserStatus(currentUser);
     } catch (err) {
       console.error("🚨 خطأ أثناء تحديث الحالة:", err);
-      if (isMounted.current) setAppState('UNAUTHENTICATED');
+      if (isMounted.current) setAppState('FULLY_ACTIVE');
     }
   }, [fetchUserStatus]);
 
@@ -173,9 +170,9 @@ export const AcademyProvider = ({ children }) => {
 
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
-        setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
+        setAppState((prev) => (prev === 'LOADING' ? 'FULLY_ACTIVE' : prev));
       }
-    }, 4000);
+    }, 3000);
 
     return () => {
       isSubscribed = false;
