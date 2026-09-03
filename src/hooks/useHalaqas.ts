@@ -6,7 +6,7 @@ export const useHalaqas = (academyId: string) => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1️⃣ جلب الحلقات مع دعم الكاش
+  // 1️⃣ جلب الحلقات بحقول محدودة مع دعم الكاش
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -19,7 +19,7 @@ export const useHalaqas = (academyId: string) => {
 
       const { data, error } = await supabase
         .from('halaqas')
-        .select('*')
+        .select('id, academy_id, name_ar, name_en, teacher_id, created_at, is_archived')
         .eq('academy_id', academyId)
         .order('created_at', { ascending: false });
 
@@ -35,7 +35,7 @@ export const useHalaqas = (academyId: string) => {
       const { data, error } = await supabase
         .from('halaqas')
         .insert([{ ...newHalaqa, academy_id: academyId }])
-        .select()
+        .select('id, academy_id, name_ar, name_en, teacher_id, created_at, is_archived')
         .single();
 
       if (error) throw error;
