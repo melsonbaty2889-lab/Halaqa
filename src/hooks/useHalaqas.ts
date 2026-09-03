@@ -1,12 +1,13 @@
+/* src/hooks/useHalaqas.ts */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export const useHalaqas = (academyId: string) => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1️⃣ جلب الحلقات بحقول محدودة مع دعم الكاش
+  // جلب كافة حقول جدول الحلقات الأساسية
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -19,7 +20,7 @@ export const useHalaqas = (academyId: string) => {
 
       const { data, error } = await supabase
         .from('halaqas')
-        .select('id, academy_id, name_ar, name_en, teacher_id, created_at, is_archived')
+        .select('*')
         .eq('academy_id', academyId)
         .order('created_at', { ascending: false });
 
@@ -29,13 +30,12 @@ export const useHalaqas = (academyId: string) => {
     enabled: !!academyId,
   });
 
-  // 2️⃣ إضافة حلقة جديدة وتحديث الكاش تلقائياً
   const addHalaqaMutation = useMutation({
     mutationFn: async (newHalaqa: any) => {
       const { data, error } = await supabase
         .from('halaqas')
         .insert([{ ...newHalaqa, academy_id: academyId }])
-        .select('id, academy_id, name_ar, name_en, teacher_id, created_at, is_archived')
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -46,7 +46,6 @@ export const useHalaqas = (academyId: string) => {
     },
   });
 
-  // 3️⃣ حذف حلقة وتحديث الكاش
   const deleteHalaqaMutation = useMutation({
     mutationFn: async (halaqaId: string) => {
       const { error } = await supabase
@@ -61,7 +60,6 @@ export const useHalaqas = (academyId: string) => {
     },
   });
 
-  // فلترة قائمة الحلقات بالبحث بالاسم
   const filteredHalaqas = halaqas.filter((h: any) => {
     const name = h.name_ar || h.name_en || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase());
