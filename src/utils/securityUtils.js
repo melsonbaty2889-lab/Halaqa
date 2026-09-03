@@ -3,7 +3,8 @@
  * تطبيق سمارت حلقة (Smart Halaqa)
  */
 
-import CryptoJS from 'crypto-js';
+import AES from 'crypto-js/aes';
+import Utf8 from 'crypto-js/enc-utf8';
 
 // جلب المفتاح السري من متغيرات البيئة مع قيمة افتراضية
 const SECRET_KEY = import.meta.env.VITE_STORAGE_SECRET_KEY || 'SmartHalaqa_SecureKey_2026!';
@@ -15,7 +16,7 @@ export const encryptAndSave = (key, data) => {
   if (!key) return;
   try {
     const stringData = typeof data === 'object' ? JSON.stringify(data) : String(data);
-    const encryptedData = CryptoJS.AES.encrypt(stringData, SECRET_KEY).toString();
+    const encryptedData = AES.encrypt(stringData, SECRET_KEY).toString();
     localStorage.setItem(key, encryptedData);
   } catch (error) {
     console.error("فشل تشفير وحفظ البيانات:", error);
@@ -31,8 +32,8 @@ export const getAndDecrypt = (key) => {
     const encryptedData = localStorage.getItem(key);
     if (!encryptedData) return null;
 
-    const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
-    const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+    const bytes = AES.decrypt(encryptedData, SECRET_KEY);
+    const decryptedText = bytes.toString(Utf8);
 
     if (!decryptedText) return null;
 
