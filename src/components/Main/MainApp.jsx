@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
+import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut, Building } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
 
 import { supabase } from '@/lib/supabase';
@@ -15,7 +15,6 @@ import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
-// 🟢 حماية استيراد ثيم الألوان للوقاية من تدمير الواجهة
 const C = colorsImport?.colors || colorsImport || {
   dark: { main: '#0f172a', card: '#1e293b', border: '#334155' },
   text: { title: '#f8fafc', body: '#cbd5e1' },
@@ -23,7 +22,6 @@ const C = colorsImport?.colors || colorsImport || {
   primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
 };
 
-// 🟢 دالة آمنة لمعالجة الكائنات المترجمة ومنع خطأ React #31
 const formatLocalizedText = (val, lang = 'ar') => {
   if (val === null || val === undefined) return '';
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -33,7 +31,6 @@ const formatLocalizedText = (val, lang = 'ar') => {
   return String(val);
 };
 
-// 🛑 مكون شاشة الحظر التفاعلية للأكاديمية
 const BlockedView = ({ academy, onLogout, isRtl = true }) => {
   const academyName = formatLocalizedText(academy?.name) || (isRtl ? "الأكاديمية" : "Academy");
   const blockReason = formatLocalizedText(
@@ -296,17 +293,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         if (academyData.country_code) setCountryCode(academyData.country_code);
       }
 
-      const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.all([
+      const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.allSettled([
         supabase.from('students').select('*').eq('academy_id', targetAcademyId),
         supabase.from('exams').select('*', { count: 'exact', head: true }).eq('academy_id', targetAcademyId),
         supabase.from('teachers').select('*').eq('academy_id', targetAcademyId),
         supabase.from('halaqas').select('*').eq('academy_id', targetAcademyId)
       ]);
 
-      setStudents(studentsRes.data || []);
-      setCompletedExamsCount(examsRes.count ?? 0);
-      setTeachers(teachersRes.data || []);
-      setHalaqas(halaqasRes.data || []);
+      setStudents(studentsRes.status === 'fulfilled' ? studentsRes.value.data || [] : []);
+      setCompletedExamsCount(examsRes.status === 'fulfilled' ? examsRes.value.count ?? 0 : 0);
+      setTeachers(teachersRes.status === 'fulfilled' ? teachersRes.value.data || [] : []);
+      setHalaqas(halaqasRes.status === 'fulfilled' ? halaqasRes.value.data || [] : []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
     } finally {
@@ -340,20 +337,28 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
-    if (!currentUserId || lastFetchedUserId.current === currentUserId) return;
+    if (!currentUserId) {
+      setLoadingData(false);
+      return;
+    }
+    if (lastFetchedUserId.current === currentUserId) return;
     lastFetchedUserId.current = currentUserId;
 
     async function loadInitialData() {
       try {
         setLoadingData(true);
         
-        const { data: staff } = await supabase
-          .from('staff')
-          .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
+        let currentAcademyId = academy?.id;
 
-        let currentAcademyId = staff?.academies?.id || staff?.academy_id;
+        if (!currentAcademyId) {
+          const { data: staff } = await supabase
+            .from('staff')
+            .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
+            .eq('user_id', currentUserId)
+            .maybeSingle();
+
+          currentAcademyId = staff?.academies?.id || staff?.academy_id;
+        }
 
         if (!currentAcademyId) {
           const { data: ownedAcademy } = await supabase
@@ -385,7 +390,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       }
     }
     loadInitialData();
-  }, [session, fetchAcademyData]);
+  }, [session, fetchAcademyData, academy?.id]);
 
   if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
     return (
