@@ -8,14 +8,15 @@ export function useSubscription(academyId) {
 
   useEffect(() => {
     if (!academyId) {
-      setLoading(false);
+      setLoading(true);
       return;
     }
+
+    let isMounted = true;
 
     async function fetchSubscription() {
       try {
         setLoading(true);
-        // جلب كل حقول الجدول الرئيسي لضمان توفر تفاصيل الاشتراك كاملاً
         const { data, error } = await supabase
           .from('saas_subscriptions')
           .select('*')
@@ -23,31 +24,30 @@ export function useSubscription(academyId) {
           .maybeSingle();
 
         if (error) throw error;
-        setSubscription(data);
+        if (isMounted) setSubscription(data);
       } catch (err) {
         console.error("🚨 Error fetching subscription:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     fetchSubscription();
+
+    return () => {
+      isMounted = false;
+    };
   }, [academyId]);
 
-  // حالة الاشتراك النشط
   const isActive = subscription?.status === 'active' || subscription?.status === 'trial';
-  
-  // حالة طلب غير مدفوع / قيد المراجعة
   const isPending = subscription?.status === 'unpaid';
-
-  // هل الخطة منتهية الصلاحية
   const isExpired = subscription?.expires_at 
     ? new Date(subscription.expires_at) < new Date() 
     : false;
 
   return { 
     subscription, 
-    isActive: isActive && !isExpired, 
+    isActive: subscription ? (isActive && !isExpired) : true, 
     isPending, 
     isExpired,
     loading 
