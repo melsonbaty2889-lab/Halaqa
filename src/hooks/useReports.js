@@ -1,5 +1,6 @@
+// src/hooks/useReports.js
 import { useState } from 'react';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase'; // تعديل المسار ليتوافق مع باقي المشروع
 
 export const useReports = () => {
   const [reportData, setReportData] = useState(null);
@@ -9,12 +10,16 @@ export const useReports = () => {
   const generateReport = async (studentId, startDate, endDate) => {
     try {
       setLoading(true);
+      setError(null);
+
+      // تطبيق المبدأ المتوازن: جلب كافة حقول جدول التقييم/الإنجاز اليومي الرئيسي
       const { data, error } = await supabase
         .from('daily_progress')
         .select('*')
         .eq('student_id', studentId)
         .gte('date', startDate)
-        .lte('date', endDate);
+        .lte('date', endDate)
+        .order('date', { ascending: true });
 
       if (error) throw error;
       setReportData(data);
