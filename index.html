@@ -18,12 +18,26 @@
     <meta name="darkreader-lock" />
     <meta name="color-scheme" content="dark" />
 
+    <!-- 2. تفريغ الـ Cache تلقائياً عند تحديث رقم الإصدار -->
+    <script>
+      (function () {
+        const CURRENT_VERSION = '1.0.2';
+        const savedVersion = localStorage.getItem('app_version');
+
+        if (savedVersion !== CURRENT_VERSION) {
+          localStorage.clear();
+          sessionStorage.clear();
+          localStorage.setItem('app_version', CURRENT_VERSION);
+        }
+      })();
+    </script>
+
     <!-- Google Fonts: Cairo & Tajawal -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
   </head>
-  <body style="background-color: #070b11; margin: 0; padding: 0;">
+  <body>
 
     <div id="root"></div>
     
