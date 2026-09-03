@@ -2,10 +2,10 @@
 import { supabase } from '@/lib/supabase';
 
 /**
- * دالة مساعدة للحصول على تاريخ اليوم بالتوقيت المحلي بصيغة YYYY-MM-DD
+ * دالة مساعدة للحصول على تاريخ اليوم بصيغة YYYY-MM-DD
  */
-const getTodayDateString = () => {
-  const d = new Date();
+export const getTodayDateString = (customDate = null) => {
+  const d = customDate ? new Date(customDate) : new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -20,10 +20,10 @@ export const fetchAttendance = async (academyId, date) => {
 
   const { data, error } = await supabase
     .from('attendance')
-    .select('*') 
+    .select('*')
     .eq('academy_id', academyId)
     .eq('date', date);
-  
+
   if (error) {
     console.error("🚨 Error fetching attendance:", error.message);
     throw error;
@@ -59,12 +59,13 @@ export const saveDailySession = async ({
   teacherId,
   attendanceStatus = 'present', // 'present', 'absent', 'late', 'excused'
   attendanceNotes,
-  hifzData,        
+  hifzData,
+  sessionDate, // إمكانية إرسال تاريخ مخصص
 }) => {
   try {
-    const today = getTodayDateString();
+    const targetDate = sessionDate ? getTodayDateString(sessionDate) : getTodayDateString();
 
-    // حفظ أو تحديث حالة الحضور والغياب لليوم
+    // حفظ أو تحديث حالة الحضور والغياب
     const { error: attendanceError } = await supabase
       .from('attendance')
       .upsert(
@@ -72,7 +73,7 @@ export const saveDailySession = async ({
           student_id: studentId,
           academy_id: academyId,
           halaqa_id: halaqaId || null,
-          date: today,
+          date: targetDate,
           status: attendanceStatus,
           notes: attendanceNotes || null,
         },
@@ -91,7 +92,7 @@ export const saveDailySession = async ({
             academy_id: academyId,
             teacher_id: teacherId || null,
             halaqa_id: halaqaId || null,
-            date: today,
+            date: targetDate,
             hifz_surah_id: hifzData.hifzSurahId || null,
             hifz_from_ayah: hifzData.hifzFromAyah || null,
             hifz_to_ayah: hifzData.hifzToAyah || null,
@@ -142,9 +143,10 @@ export const saveStudentExam = async ({
   tajweedGrade,
   finalScore,
   notes,
+  examDate,
 }) => {
   try {
-    const today = getTodayDateString();
+    const targetDate = examDate ? getTodayDateString(examDate) : getTodayDateString();
 
     const { data, error } = await supabase
       .from('exams')
@@ -164,7 +166,7 @@ export const saveStudentExam = async ({
           tajweed_grade: tajweedGrade || null,
           final_score: Number(finalScore) || 0,
           notes: notes || null,
-          date: today,
+          date: targetDate,
         },
       ])
       .select();
@@ -187,6 +189,7 @@ export const saveStudentExam = async ({
 };
 
 export const sessionService = {
+  getTodayDateString,
   fetchAttendance,
   upsertAttendance,
   saveDailySession,
