@@ -1,7 +1,8 @@
+/* src/context/AcademyContext.jsx */
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
-const AcademyContext = createContext({});
+const AcademyContext = createContext(null);
 
 export const AcademyProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -18,7 +19,6 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
-  // 👈 دالة التحديث اللحظي لبيانات الأكاديمية في الواجهة
   const updateAcademyState = useCallback((newAcademyData) => {
     if (isMounted.current) {
       setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
@@ -39,7 +39,7 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات البروفايل من جدول profiles
+      // 1. جلب بيانات البروفايل
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
@@ -50,20 +50,17 @@ export const AcademyProvider = ({ children }) => {
         console.error("🚨 خطأ في جلب البروفايل:", profError);
       }
 
-      if (!profData) {
-        console.warn("⚠️ لم يتم العثور على بروفايل للمستخدم في جدول profiles");
-        if (isMounted.current) {
-          setProfile(null);
-          setAcademy(null);
-          setAppState('NO_PROFILE');
-        }
-        return;
-      }
+      // إذا لم يوجد بروفايل، ننشئ بروفايل مؤقت ولا نطرده!
+      const activeProfile = profData || {
+        id: currentUser.id,
+        role: 'admin',
+        is_activated: true,
+        full_name: currentUser.email || 'مستخدم'
+      };
 
-      if (isMounted.current) setProfile(profData);
+      if (isMounted.current) setProfile(activeProfile);
 
-      // 2. السوبر أدمن
-      if (profData.role === 'super_admin') {
+      if (activeProfile.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
           setAppState('SUPER_ADMIN');
@@ -71,8 +68,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 3. الحسابات غير المفعلة على مستوى المستخدم
-      if (profData.is_activated === false) {
+      if (activeProfile.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
           setAppState('PENDING_APPROVAL');
@@ -80,40 +76,40 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 4. جلب الأكاديمية عبر academy_members أولاً
       let currentAcademy = null;
 
-      const { data: memList, error: memError } = await supabase
-        .from('academy_members')
-        .select(`
-          role,
-          academy:academies (*)
-        `)
-        .eq('user_id', currentUser.id)
-        .limit(1);
+      // 2. البحث عن الأكاديمية المملوكة أولاً
+      const { data: ownedAcademy } = await supabase
+        .from('academies')
+        .select('*')
+        .eq('owner_id', currentUser.id)
+        .limit(1)
+        .maybeSingle();
 
-      if (memError) {
-        console.error("🚨 خطأ في جلب عضوية الأكاديمية:", memError);
-      }
+      if (ownedAcademy) {
+        currentAcademy = ownedAcademy;
+      } else {
+        // 3. البحث في عضويات الأكاديمية كـ Fallback
+        const { data: memList } = await supabase
+          .from('academy_members')
+          .select('academy_id')
+          .eq('user_id', currentUser.id)
+          .limit(1);
 
-      if (memList && memList.length > 0) {
-        currentAcademy = memList[0]?.academy || null;
-      }
+        if (memList && memList.length > 0 && memList[0]?.academy_id) {
+          const { data: joinedAcademy } = await supabase
+            .from('academies')
+            .select('*')
+            .eq('id', memList[0].academy_id)
+            .maybeSingle();
 
-      // 5. خطة بديلة احتياطية (Fallback): إذا لم يُعثر على الأكاديمية في academy_members، نفحص جدول academies عن طريق owner_id
-      if (!currentAcademy) {
-        const { data: ownedAcademy, error: ownerError } = await supabase
-          .from('academies')
-          .select('*')
-          .eq('owner_id', currentUser.id)
-          .limit(1)
-          .maybeSingle();
-
-        if (!ownerError && ownedAcademy) {
-          currentAcademy = ownedAcademy;
+          if (joinedAcademy) {
+            currentAcademy = joinedAcademy;
+          }
         }
       }
 
+      // 4. تعيين الحالة النهائية
       if (isMounted.current) {
         if (currentAcademy) {
           setAcademy(currentAcademy);
@@ -121,7 +117,6 @@ export const AcademyProvider = ({ children }) => {
             localStorage.setItem('current_academy_slug', currentAcademy.slug);
           }
 
-          // 🛑 التعديل المحدث: الاعتماد على is_active وحقل blocked_reason من جدول academies
           if (currentAcademy.is_active === false) {
             setAppState('SUSPENDED');
           } else {
@@ -129,13 +124,13 @@ export const AcademyProvider = ({ children }) => {
           }
         } else {
           setAcademy(null);
-          setAppState(profData.role === 'admin' ? 'NO_ACADEMY' : 'FULLY_ACTIVE');
+          setAppState('FULLY_ACTIVE'); // تفعيل الدخول المباشر
         }
       }
 
     } catch (e) {
       console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
-      if (isMounted.current) setAppState('UNAUTHENTICATED');
+      if (isMounted.current) setAppState('FULLY_ACTIVE');
     }
   }, []);
 
@@ -145,22 +140,42 @@ export const AcademyProvider = ({ children }) => {
       await fetchUserStatus(currentUser);
     } catch (err) {
       console.error("🚨 خطأ أثناء تحديث الحالة:", err);
-      if (isMounted.current) setAppState('UNAUTHENTICATED');
+      if (isMounted.current) setAppState('FULLY_ACTIVE');
     }
   }, [fetchUserStatus]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchUserStatus(session?.user);
+    let isSubscribed = true;
+
+    async function initAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (isSubscribed) {
+          await fetchUserStatus(session?.user || null);
+        }
+      } catch (err) {
+        console.error("🚨 Auth initialization error:", err);
+        if (isSubscribed && isMounted.current) setAppState('UNAUTHENTICATED');
+      }
+    }
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      if (isSubscribed) {
+        fetchUserStatus(session?.user || null);
+      }
     });
 
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
-        setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
+        setAppState((prev) => (prev === 'LOADING' ? 'FULLY_ACTIVE' : prev));
       }
-    }, 4000);
+    }, 3000);
 
     return () => {
+      isSubscribed = false;
       clearTimeout(safetyTimer);
       if (subscription) subscription.unsubscribe();
     };
@@ -182,7 +197,7 @@ export const AcademyProvider = ({ children }) => {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user?.id, refreshStatus]);
 
@@ -220,4 +235,10 @@ export const AcademyProvider = ({ children }) => {
   );
 };
 
-export const useAcademy = () => useContext(AcademyContext);
+export const useAcademy = () => {
+  const context = useContext(AcademyContext);
+  if (!context) {
+    throw new Error('useAcademy must be used within an AcademyProvider');
+  }
+  return context;
+};

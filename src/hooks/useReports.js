@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../supabase';
+import { supabase } from '@/lip/supabase';
 
 export const useReports = () => {
   const [reportData, setReportData] = useState(null);

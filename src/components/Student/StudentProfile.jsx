@@ -10,6 +10,15 @@ import { formatName, formatRiwayah, formatCountry } from '@/utils/formatters';
 import { calculateAge } from '@/utils/dateUtils';
 import StudentDocuments from './StudentDocuments';
 
+// 🟢 دالة آمنة لاستخراج اسم الحلقة بناءً على اللغة
+const getHalaqaName = (h, isRtl) => {
+  if (!h) return '';
+  if (typeof h.name === 'object' && h.name !== null) {
+    return isRtl ? (h.name.ar || h.name.en || '') : (h.name.en || h.name.ar || '');
+  }
+  return h.name_ar || h.name_en || h.name || '';
+};
+
 const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDelete, onArchive }) => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
@@ -22,13 +31,17 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
   const studentName = formatName(student.name || student.full_name || '');
   const currentHalaqa = halaqas.find((h) => h.id === student.halaqa_id);
   const halaqaName = currentHalaqa
-    ? formatName(currentHalaqa.name || currentHalaqa.name_ar || '')
+    ? getHalaqaName(currentHalaqa, isRtl)
     : t('students.no_halaqa', 'غير مسكن بحلقة');
 
   const age = student.birth_date ? calculateAge(student.birth_date) : null;
   
-  // التحقق الدقيق من حالة الأرشفة (مباشرة عبر is_archived أو status)
+  // التحقق الدقيق من حالة الأرشفة
   const isArchived = Boolean(student.is_archived || student.status === 'archived' || student.status === 'graduated');
+
+  // تنظيف رقم الواتساب ورقم الهاتف
+  const rawWhatsapp = student.parent_whatsapp || student.parent_phone || '';
+  const cleanWhatsapp = rawWhatsapp.replace(/[^0-9]/g, '');
 
   const getMemorizationSystemLabel = (sys) => {
     switch (sys) {
@@ -42,6 +55,15 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
     }
   };
 
+  const getNotesText = () => {
+    if (!student.notes) return null;
+    if (typeof student.notes === 'string') return student.notes;
+    if (typeof student.notes === 'object' && student.notes.text) return student.notes.text;
+    return null;
+  };
+
+  const notesText = getNotesText();
+
   return (
     <div className="space-y-6 text-appText-main" dir={i18n.dir()}>
       {/* شريط التحكم والأزرار العلوي */}
@@ -50,7 +72,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           <button
             type="button"
             onClick={onBack}
-            className="p-2 bg-dark-input hover:bg-appBorder-input/50 text-appText-sub hover:text-appText-main rounded-xl transition-colors flex items-center gap-2 text-sm font-medium"
+            className="p-2 bg-dark-input hover:bg-appBorder-input/50 text-appText-sub hover:text-appText-main rounded-xl transition-colors flex items-center gap-2 text-sm font-medium active:scale-95"
           >
             <BackIcon className="w-5 h-5" />
             <span>{t('common.back', 'رجوع')}</span>
@@ -67,7 +89,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           <button
             type="button"
             onClick={() => onEdit && onEdit(student)}
-            className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+            className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
           >
             <Edit className="w-4 h-4" />
             <span>{t('common.edit', 'تعديل')}</span>
@@ -77,7 +99,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           <button
             type="button"
             onClick={() => onArchive && onArchive(student)}
-            className={`px-3 py-2 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-2 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
               isArchived
                 ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
                 : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border-sky-500/20'
@@ -99,7 +121,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           <button
             type="button"
             onClick={() => onDelete && onDelete(student.id)}
-            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
           >
             <Trash2 className="w-4 h-4" />
             <span>{t('common.delete', 'حذف')}</span>
@@ -246,16 +268,16 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
               <div>
                 <span className="text-appText-sub block text-xs">{t('students.parent_whatsapp', 'واتساب ولي الأمر:')}</span>
-                {(student.parent_whatsapp || student.parent_phone) ? (
+                {cleanWhatsapp ? (
                   <a
-                    href={`https://wa.me/${(student.parent_whatsapp || student.parent_phone).replace(/[^0-9]/g, '')}`}
+                    href={`https://wa.me/${cleanWhatsapp}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-emerald-400 hover:underline font-medium inline-flex items-center gap-1"
                     dir="ltr"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
-                    <span>{student.parent_whatsapp || student.parent_phone}</span>
+                    <span>{rawWhatsapp}</span>
                   </a>
                 ) : (
                   <span className="text-appText-main font-medium">{t('common.unspecified', 'غير محدد')}</span>
@@ -263,11 +285,11 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
               </div>
             </div>
 
-            {student.notes && (typeof student.notes === 'string' ? student.notes : student.notes?.text) && (
+            {notesText && (
               <div className="pt-3 border-t border-appBorder-card">
                 <span className="text-appText-sub block text-xs mb-1">{t('common.notes', 'ملاحظات:')}</span>
                 <p className="text-xs text-appText-sub bg-dark-input p-3 rounded-xl border border-appBorder-input">
-                  {typeof student.notes === 'string' ? student.notes : student.notes?.text}
+                  {notesText}
                 </p>
               </div>
             )}

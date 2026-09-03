@@ -1,6 +1,6 @@
 // src/hooks/useSubscription.js
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export function useSubscription(academyId) {
   const [subscription, setSubscription] = useState(null);

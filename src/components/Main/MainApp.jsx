@@ -6,7 +6,7 @@ import useIsMobile from '@/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
-import { colors as C } from '@/theme/colors.js';
+import colorsImport from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from '@/components/Sidebar/Sidebar';
@@ -15,7 +15,13 @@ import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
-// 🟢 دالة آمنة لمعالجة الكائنات المترجمة ومنع خطأ React #31
+const C = colorsImport?.colors || colorsImport || {
+  dark: { main: '#0f172a', card: '#1e293b', border: '#334155' },
+  text: { title: '#f8fafc', body: '#cbd5e1' },
+  error: { light: '#fca5a5', border: '#f87171' },
+  primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
+};
+
 const formatLocalizedText = (val, lang = 'ar') => {
   if (val === null || val === undefined) return '';
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -25,7 +31,6 @@ const formatLocalizedText = (val, lang = 'ar') => {
   return String(val);
 };
 
-// 🛑 مكون شاشة الحظر التفاعلية للأكاديمية
 const BlockedView = ({ academy, onLogout, isRtl = true }) => {
   const academyName = formatLocalizedText(academy?.name) || (isRtl ? "الأكاديمية" : "Academy");
   const blockReason = formatLocalizedText(
@@ -36,7 +41,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
     : "Your academy account has been suspended by administration.");
 
   const handleSupportContact = () => {
-    const supportPhone = "201000000000"; // 👈 استبدله برقم الدعم الخاص بك
+    const supportPhone = import.meta.env.VITE_SUPPORT_WHATSAPP || "201000000000";
     const msg = encodeURIComponent(`السلام عليكم، أنا مالك أكاديمية (${academyName})، تم تعليق الحساب وأود الاستفسار والتفعيل.`);
     window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
   };
@@ -84,13 +89,8 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
 const safeLazy = (importFn) => {
   return lazy(() =>
     importFn().catch((error) => {
-      const errorMsg = error?.message || error?.toString() || '';
-      if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-        console.warn("🚨 تم رصد تحديث في الملفات، جاري إعادة التحميل تلقائياً...");
-        window.location.reload();
-        return new Promise(() => {}); 
-      }
-      throw error;
+      console.error("🚨 Lazy Load Error:", error);
+      return { default: () => <div className="p-4 text-rose-400 text-center">تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.</div> };
     })
   );
 };
@@ -165,12 +165,12 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border || C.dark.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
+        <div style={{ padding: '24px', background: C?.dark?.card || '#1e293b', borderRadius: '16px', border: `1px solid ${C?.error?.border || '#f87171'}`, color: C?.error?.light || '#fca5a5', margin: '20px', direction: 'rtl' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <AlertTriangle size={22} />
-            <h3 style={{ margin: 0, color: C.error.light, fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
+            <h3 style={{ margin: 0, color: C?.error?.light || '#fca5a5', fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre style={{ background: C.dark.main, padding: '12px', borderRadius: '8px', color: C.text.body, fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
+          <pre style={{ background: C?.dark?.main || '#0f172a', padding: '12px', borderRadius: '8px', color: C?.text?.body || '#cbd5e1', fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -179,7 +179,7 @@ class ErrorBoundaryInner extends React.Component {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ padding: '10px 18px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ padding: '10px 18px', background: C?.primary?.gradient || '#d97706', color: C?.dark?.main || '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
@@ -196,7 +196,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
-  const { academy } = useAcademy();
+  let academyContext = null;
+  try {
+    academyContext = useAcademy();
+  } catch (e) {
+    console.warn("AcademyContext unavailable:", e);
+  }
+  const academy = academyContext?.academy || null;
 
   const isMobile = useIsMobile(1024);
 
@@ -233,7 +239,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
   const [academyTime, setAcademyTime] = useState("");
 
-  const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
+  const numberFormatter = useMemo(() => {
+    try {
+      return new Intl.NumberFormat(currentLang, { useGrouping: true });
+    } catch (e) {
+      return new Intl.NumberFormat('ar', { useGrouping: true });
+    }
+  }, [currentLang]);
 
   useEffect(() => {
     if (!isMobile) {
@@ -281,17 +293,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         if (academyData.country_code) setCountryCode(academyData.country_code);
       }
 
-      const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.all([
+      const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.allSettled([
         supabase.from('students').select('*').eq('academy_id', targetAcademyId),
         supabase.from('exams').select('*', { count: 'exact', head: true }).eq('academy_id', targetAcademyId),
         supabase.from('teachers').select('*').eq('academy_id', targetAcademyId),
         supabase.from('halaqas').select('*').eq('academy_id', targetAcademyId)
       ]);
 
-      setStudents(studentsRes.data || []);
-      setCompletedExamsCount(examsRes.count ?? 0);
-      setTeachers(teachersRes.data || []);
-      setHalaqas(halaqasRes.data || []);
+      setStudents(studentsRes.status === 'fulfilled' ? studentsRes.value.data || [] : []);
+      setCompletedExamsCount(examsRes.status === 'fulfilled' ? examsRes.value.count ?? 0 : 0);
+      setTeachers(teachersRes.status === 'fulfilled' ? teachersRes.value.data || [] : []);
+      setHalaqas(halaqasRes.status === 'fulfilled' ? halaqasRes.value.data || [] : []);
     } catch (error) {
       console.error("Error fetching academy data:", error);
     } finally {
@@ -305,42 +317,54 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     fetchAcademyData(newAcademyId);
   }, [academyId, fetchAcademyData]);
 
-  // 🟢 دالة حذف الطالب من Supabase وتحديث الـ State
   const handleDeleteStudent = useCallback(async (studentId) => {
-  try {
-    const { error } = await supabase
-      .from('students')
-      .delete()
-      .eq('id', studentId);
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // تحديث الواجهة فوراً
-    setStudents(prev => prev.filter(s => s.id !== studentId));
-    
-    return { success: true };
-  } catch (error) {
-    console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
-    return { success: false, error: error.message };
-  }
-}, []);
+      setStudents(prev => prev.filter(s => s.id !== studentId));
+      return { success: true };
+    } catch (error) {
+      console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
+      return { success: false, error: error.message };
+    }
+  }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingData(false);
+    }, 4000);
+
     const currentUserId = session?.user?.id;
-    if (!currentUserId || lastFetchedUserId.current === currentUserId) return;
+    if (!currentUserId) {
+      setLoadingData(false);
+      clearTimeout(timer);
+      return;
+    }
+    if (lastFetchedUserId.current === currentUserId) {
+      clearTimeout(timer);
+      return;
+    }
     lastFetchedUserId.current = currentUserId;
 
     async function loadInitialData() {
       try {
         setLoadingData(true);
-        
-        const { data: staff } = await supabase
-          .from('staff')
-          .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
-          .eq('user_id', currentUserId)
-          .maybeSingle();
+        let currentAcademyId = academy?.id;
 
-        let currentAcademyId = staff?.academies?.id || staff?.academy_id;
+        if (!currentAcademyId) {
+          const { data: staff } = await supabase
+            .from('staff')
+            .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
+            .eq('user_id', currentUserId)
+            .maybeSingle();
+
+          currentAcademyId = staff?.academies?.id || staff?.academy_id;
+        }
 
         if (!currentAcademyId) {
           const { data: ownedAcademy } = await supabase
@@ -369,12 +393,15 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       } catch (error) {
         console.error("🚨 Error loading initial data:", error);
         setLoadingData(false);
+      } finally {
+        clearTimeout(timer);
       }
     }
     loadInitialData();
-  }, [session, fetchAcademyData]);
 
-  // 🛑 اعتراض الشاشة فور رصد حالة الحظر (مستثنى منها المشرفين العموميين)
+    return () => clearTimeout(timer);
+  }, [session, fetchAcademyData, academy?.id]);
+
   if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
     return (
       <BlockedView 
@@ -563,8 +590,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         display: 'flex', 
         minHeight: '100vh', 
         width: '100%', 
-        background: C.dark.main, 
-        color: C.text.title, 
+        background: C?.dark?.main || '#0f172a', 
+        color: C?.text?.title || '#f8fafc', 
         fontFamily: "'Cairo', system-ui, sans-serif",
         position: 'relative',
         overflowX: 'hidden'
