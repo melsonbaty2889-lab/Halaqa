@@ -145,18 +145,40 @@ export const AcademyProvider = ({ children }) => {
     }
   }, [fetchUserStatus]);
 
+  // 🟢 إصلاح التحميل الأولي ومعالجة Auth بشكل دقيق
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchUserStatus(session?.user);
+    let isSubscribed = true;
+
+    async function initAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (isSubscribed) {
+          await fetchUserStatus(session?.user || null);
+        }
+      } catch (err) {
+        console.error("🚨 Auth initialization error:", err);
+        if (isSubscribed && isMounted.current) setAppState('UNAUTHENTICATED');
+      }
+    }
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // تجنب إعادة الفحص اللحظي الفارغ عند التحميل الأولي
+      if (event === 'INITIAL_SESSION') return;
+      if (isSubscribed) {
+        fetchUserStatus(session?.user || null);
+      }
     });
 
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
         setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
       }
-    }, 4000);
+    }, 5000);
 
     return () => {
+      isSubscribed = false;
       clearTimeout(safetyTimer);
       if (subscription) subscription.unsubscribe();
     };
@@ -178,7 +200,7 @@ export const AcademyProvider = ({ children }) => {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user?.id, refreshStatus]);
 
