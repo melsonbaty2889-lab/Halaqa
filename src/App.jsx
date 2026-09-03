@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { 
   Loader2, Clock, LogOut, Wifi, WifiOff,
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock, ShieldAlert 
@@ -10,7 +10,7 @@ import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import rawColors from '@/theme/colors.js';
 
-// 🚀 Dynamic Imports (Lazy Loading)
+// 🚀 Dynamic Imports (Lazy Loading) لتقليل حجم الـ Initial Bundle
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
 const DevPlayground = lazy(() => import('@/components/Dev/DevPlayground'));
 const LoginPage = lazy(() => import('@/components/Auth/LoginPage'));
@@ -90,6 +90,7 @@ function OfflineAndUpdateBanner() {
 
   return (
     <>
+      {/* 1️⃣ شريط انقطاع الإنترنت */}
       {!isOnline && (
         <div style={{
           background: C.error.DEFAULT,
@@ -116,6 +117,7 @@ function OfflineAndUpdateBanner() {
         </div>
       )}
 
+      {/* 2️⃣ شريط التنبيه عند توفر تحديث جديد للمنصة */}
       {needRefresh && (
         <div style={{
           background: C.brandEmerald.DEFAULT,
@@ -162,7 +164,7 @@ function OfflineAndUpdateBanner() {
   );
 }
 
-// ProtectedRoute المحسنة
+// ProtectedRoute المحسنة بالاعتماد على الصلاحية والأكاديمية الـ Slug
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { profile, appState, academy, logout } = useAcademy();
   const { slug } = useParams();
@@ -177,8 +179,6 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
 
   const cleanRole = profile?.role?.toLowerCase()?.trim();
   const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
-  
-  // التحقق من صحة الأكاديمية فقط إذا كان الـ slug موجوداً بالرابط
   const isCorrectAcademy = !slug || (academy && academy.slug === slug);
 
   if (!isAllowed || !isCorrectAcademy) {
@@ -224,7 +224,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return children;
 };
 
-// التعامل مع أخطاء التحميل وتفريغ الكاش القديم
+// التعامل مع أخطاء التحميل وتفريغ الكاش القديم تلقائياً
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -369,7 +369,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   );
 }
 
-// 🛡️ Error Boundary
+// 🛡️ واجهة التعامل مع الأخطاء العامة بتصميم SaaS احترافي
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
 
@@ -500,7 +500,11 @@ class GlobalErrorBoundary extends Component {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center'
+            }}>
               <button
                 onClick={this.handleReload}
                 style={{
@@ -532,26 +536,6 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-// 🎯 مكون معالجة التوجيه التلقائي للمسار الرئيسي
-function RootRedirectResolver({ academy, profile, user, setShowEarlyUpgrade }) {
-  const targetSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : '');
-  const formattedSession = user ? { user } : null;
-
-  if (targetSlug) {
-    return <Navigate to={`/${targetSlug}`} replace />;
-  }
-
-  return (
-    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
-      <MainApp 
-        session={formattedSession} 
-        userRole={profile?.role || 'student'} 
-        setShowEarlyUpgrade={setShowEarlyUpgrade}
-      />
-    </ProtectedRoute>
-  );
-}
-
 function MainContent() {
   const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
   const [authView, setAuthView] = useState('login');
@@ -574,6 +558,7 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  // 🛡️ استخراج سبب الحظر بأمان وتامين الشاشة من Minified React error #31
   const getSuspensionReason = () => {
     const reason = academy?.suspension_reason || academy?.status_reason;
     if (!reason) return 'تم إيقاف هذه الأكاديمية مؤقتاً من قبل إدارة المنصة.';
@@ -657,6 +642,7 @@ function MainContent() {
     );
   }
 
+  // 🛑 شاشة الحظر / إيقاف الأكاديمية (SUSPENDED)
   if (appState === 'SUSPENDED') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark.main, padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
@@ -735,10 +721,10 @@ function MainContent() {
 
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
+    const targetSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : '') || '';
 
     return (
       <Routes>
-        {/* المسار الفرعي مع slug الأكاديمية */}
         <Route 
           path="/:slug/*" 
           element={
@@ -757,24 +743,9 @@ function MainContent() {
             </ProtectedRoute>
           } 
         />
-
-        {/* 🎯 المسار الرئيسي المباشر مع التوجيه الذكي لحل الشاشة السوداء */}
-        <Route 
-          path="/" 
-          element={
-            <RootRedirectResolver 
-              academy={academy} 
-              profile={profile} 
-              user={user} 
-              setShowEarlyUpgrade={setShowEarlyUpgrade} 
-            />
-          } 
-        />
-
-        {/* المسار البديل لأي مسار غير معرف */}
         <Route 
           path="*" 
-          element={<Navigate to="/" replace />} 
+          element={<Navigate to={targetSlug ? `/${targetSlug}` : '/'} replace />} 
         />
       </Routes>
     );
@@ -814,27 +785,26 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
-      <GlobalErrorBoundary>
-        <OfflineAndUpdateBanner />
+    <GlobalErrorBoundary>
+      {/* 📡 شريط تنبيهات الشبكة والتحديثات في أعلى تطبيقك */}
+      <OfflineAndUpdateBanner />
 
-        <Suspense fallback={
-          <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
-            <Loader2 className="animate-spin" size={32} />
-          </div>
-        }>
-          {view === 'test' ? (
-            <DevPlayground />
-          ) : view === 'splash' || showSplash ? (
-            <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
-          ) : (
-            <Routes>
-              <Route path="/verify/:certId" element={<CertificateVerify />} />
-              <Route path="/*" element={<MainContent />} />
-            </Routes>
-          )}
-        </Suspense>
-      </GlobalErrorBoundary>
-    </BrowserRouter>
+      <Suspense fallback={
+        <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
+          <Loader2 className="animate-spin" size={32} />
+        </div>
+      }>
+        {view === 'test' ? (
+          <DevPlayground />
+        ) : view === 'splash' || showSplash ? (
+          <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
+        ) : (
+          <Routes>
+            <Route path="/verify/:certId" element={<CertificateVerify />} />
+            <Route path="/*" element={<MainContent />} />
+          </Routes>
+        )}
+      </Suspense>
+    </GlobalErrorBoundary>
   );
 }
