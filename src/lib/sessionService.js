@@ -1,5 +1,5 @@
 // src/lib/sessionService.js
-import { supabase } from './supabase';
+import { supabase } from '@/lib/supabase';
 
 /**
  * دالة مساعدة للحصول على تاريخ اليوم بالتوقيت المحلي بصيغة YYYY-MM-DD
