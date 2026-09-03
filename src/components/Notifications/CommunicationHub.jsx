@@ -166,6 +166,33 @@ export default function CommunicationHub({ academyId, academyName }) {
     }
   };
 
+  const handleSendBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastBody.trim() || !academyId) return;
+    setSendingBroadcast(true);
+    try {
+      const logEntries = selectedChannels.map(channel => ({
+        academy_id: academyId,
+        channel_used: channel,
+        status: 'sent',
+        sent_text: `${broadcastTitle}: ${broadcastBody}`,
+        created_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('notification_logs')
+        .insert(logEntries);
+
+      if (error) throw error;
+
+      setBroadcastTitle('');
+      setBroadcastBody('');
+    } catch (err) {
+      console.error('Error sending broadcast:', err);
+    } finally {
+      setSendingBroadcast(false);
+    }
+  };
+
   const toggleChannel = (chId) => {
     setSelectedChannels(prev => 
       prev.includes(chId) ? prev.filter(c => c !== chId) : [...prev, chId]
@@ -350,6 +377,7 @@ export default function CommunicationHub({ academyId, academyName }) {
 
                   <Btn
                     variant="primary"
+                    onClick={handleSendBroadcast}
                     disabled={sendingBroadcast || !broadcastTitle.trim() || !broadcastBody.trim()}
                     className="w-full py-2.5 font-bold text-xs rounded-xl flex items-center justify-center gap-2 bg-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)] shadow-[0_0_15px_rgba(224,122,0,0.3)] hover:opacity-90 disabled:opacity-50"
                   >
@@ -387,7 +415,7 @@ export default function CommunicationHub({ academyId, academyName }) {
                             key={tmpl.id}
                             type="button"
                             onClick={() => loadTemplateIntoForm(tmpl)}
-                            className={`w-full p-2.5 text-right rounded-xl border text-xs transition-all ${
+                            className={`w-full p-2.5 rounded-xl border text-xs transition-all ${isRtl ? 'text-right' : 'text-left'} ${
                               selectedTemplate?.id === tmpl.id && !isCreatingNew
                                 ? 'bg-[var(--primary,#E07A00)]/10 border-[var(--primary,#E07A00)] text-[var(--primary,#E07A00)] font-bold'
                                 : 'bg-[var(--surface-input,#0A101D)] border-[var(--border-input,#1B2738)] text-[var(--text-sub,#94A3B8)] hover:border-[var(--primary,#E07A00)]/50'
@@ -526,7 +554,7 @@ export default function CommunicationHub({ academyId, academyName }) {
               <p className="text-xs text-[var(--text-sub,#94A3B8)] text-center py-8">{isRtl ? 'لا توجد سجلات إرسال حتى الآن' : 'No notification logs found'}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-right text-xs text-[var(--text-main,#FFFFFF)]">
+                <table className={`w-full text-xs text-[var(--text-main,#FFFFFF)] ${isRtl ? 'text-right' : 'text-left'}`}>
                   <thead>
                     <tr className="border-b border-[var(--border-card,rgba(255,255,255,0.08))] text-[var(--text-sub,#94A3B8)] text-[11px]">
                       <th className="p-2.5">{isRtl ? 'القناة' : 'Channel'}</th>
