@@ -1,6 +1,6 @@
 // src/hooks/useReports.js
 import { useState } from 'react';
-import { supabase } from '../lib/supabase'; // تعديل المسار ليتوافق مع باقي المشروع
+import { supabase } from '@/lib/supabase'; // تعديل المسار ليتوافق مع باقي المشروع
 
 export const useReports = () => {
   const [reportData, setReportData] = useState(null);
