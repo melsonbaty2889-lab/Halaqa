@@ -136,8 +136,8 @@ export const AcademyProvider = ({ children }) => {
 
   const refreshStatus = useCallback(async () => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      await fetchUserStatus(currentUser);
+      const { data } = await supabase.auth.getUser();
+      await fetchUserStatus(data?.user || null);
     } catch (err) {
       console.error("🚨 خطأ أثناء تحديث الحالة:", err);
       if (isMounted.current) setAppState('FULLY_ACTIVE');
@@ -149,9 +149,9 @@ export const AcademyProvider = ({ children }) => {
 
     async function initAuth() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession();
         if (isSubscribed) {
-          await fetchUserStatus(session?.user || null);
+          await fetchUserStatus(data?.session?.user || null);
         }
       } catch (err) {
         console.error("🚨 Auth initialization error:", err);
@@ -161,12 +161,17 @@ export const AcademyProvider = ({ children }) => {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION') return;
-      if (isSubscribed) {
-        fetchUserStatus(session?.user || null);
-      }
-    });
+    // 🟢 حماية اشتراك auth
+    let authListener = null;
+    if (supabase?.auth && typeof supabase.auth.onAuthStateChange === 'function') {
+      const res = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'INITIAL_SESSION') return;
+        if (isSubscribed) {
+          fetchUserStatus(session?.user || null);
+        }
+      });
+      authListener = res?.data?.subscription || res?.subscription || null;
+    }
 
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
@@ -177,27 +182,39 @@ export const AcademyProvider = ({ children }) => {
     return () => {
       isSubscribed = false;
       clearTimeout(safetyTimer);
-      if (subscription) subscription.unsubscribe();
+      if (authListener && typeof authListener.unsubscribe === 'function') {
+        authListener.unsubscribe();
+      }
     };
   }, [fetchUserStatus]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !supabase) return;
 
-    const channel = supabase
-      .channel(`profile_changes_${user.id}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'profiles',
-        filter: `id=eq.${user.id}`
-      }, () => {
-        refreshStatus();
-      })
-      .subscribe();
+    let channel = null;
+    try {
+      channel = supabase.channel(`profile_changes_${user.id}`);
+      
+      if (channel && typeof channel.on === 'function') {
+        channel
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${user.id}`
+          }, () => {
+            refreshStatus();
+          })
+          .subscribe();
+      }
+    } catch (err) {
+      console.error("🚨 Realtime subscription error:", err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user?.id, refreshStatus]);
 
