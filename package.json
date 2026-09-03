@@ -22,7 +22,7 @@
     "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
-    "crypto-es": "^2.1.0",
+    "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.0.0",
     "i18next": "^26.3.1",
