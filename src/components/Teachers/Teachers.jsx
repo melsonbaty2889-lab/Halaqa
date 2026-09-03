@@ -55,12 +55,12 @@ export default function Teachers({
     }
   }, [academyId, onRefresh, setTeachers]);
 
-  // إيقاف الوميض بإيقاف استدعاء fetchStaff إذا كان setTeachers ممرراً بالفعل أو البيانات متوفرة
+  // جلب البيانات فقط عند الحاجة وعدم وجود بيانات ممررة
   useEffect(() => {
-    if (academyId && teachers.length === 0 && !setTeachers) {
+    if (academyId && (!teachers || teachers.length === 0) && !onRefresh) {
       fetchStaff();
     }
-  }, [academyId, teachers.length, setTeachers, fetchStaff]);
+  }, [academyId, teachers, onRefresh, fetchStaff]);
 
   const toggleStatus = async (teacherId, currentStatus) => {
     try {
@@ -82,7 +82,8 @@ export default function Teachers({
     const matchesSearch = (person.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (person.phone || '').includes(searchTerm);
     const matchesTitle = selectedTitle === 'all' || person.title === selectedTitle;
-    const matchesIjaza = selectedIjaza === 'all' || (person.ijazas && person.ijazas.includes(selectedIjaza));
+    const matchesIjaza = selectedIjaza === 'all' || 
+                         (Array.isArray(person.ijazas) && person.ijazas.includes(selectedIjaza));
 
     return matchesSearch && matchesTitle && matchesIjaza;
   });
@@ -182,7 +183,7 @@ export default function Teachers({
               key={person.id}
               person={person}
               onToggleStatus={toggleStatus}
-              onManageAvailability={(id) => setSelectedTeacherForAvailability(id)}
+              onManageAvailability={(id) => setSelectedTeacherForAvailability(prev => prev === id ? null : id)}
               t={translate}
             />
           ))}
