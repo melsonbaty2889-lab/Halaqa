@@ -1,5 +1,5 @@
 // src/components/Sidebar/Sidebar.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
@@ -34,15 +34,20 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  // 🟢 حماية دالة الترجمة لتفادي TypeError: t is not a function
-  const safeT = typeof t === 'function' ? t : (key, fallback) => fallback || key;
+  // حماية دالة الترجمة
+  const safeT = useCallback((key, fallback) => {
+    return typeof t === 'function' ? t(key, fallback) : (fallback || key);
+  }, [t]);
 
-  // تمرير safeT آمن دائماً إلى getMenuSections
-  const menuSections = getMenuSections(safeT, userRole);
+  // استخدام useMemo لمنع إعادة الحسابات غير الضرورية للقوائم
+  const menuSections = useMemo(() => {
+    return getMenuSections(safeT, userRole);
+  }, [safeT, userRole]);
+
   const [openSectionId, setOpenSectionId] = useState(null);
 
   // دالة منيعة ومحميّة ضد خطأ Minified React error #31
-  const getText = (val) => {
+  const getText = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
@@ -54,7 +59,7 @@ export default function Sidebar({
       return '';
     }
     return '';
-  };
+  }, [isRtl]);
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
@@ -91,16 +96,18 @@ export default function Sidebar({
     } else if (menuSections.length > 0) {
       setOpenSectionId(menuSections[0].id);
     }
-  }, [activeTab, isRtl, userRole]);
+  }, [activeTab, menuSections]);
 
   const toggleSection = (sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   };
 
   const currentLocale = isRtl ? 'ar' : 'en';
-  const hijri = formatHijriDate(new Date(), currentLocale);
+  const hijri = useMemo(() => formatHijriDate(new Date(), currentLocale), [currentLocale]);
 
-  const loadAcademies = async () => {
+  // جلب الأكاديميات بشكل آمن ومتزن
+  const loadAcademies = useCallback(async () => {
+    if (!supabase) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -149,30 +156,39 @@ export default function Sidebar({
     } catch (err) {
       console.error("Error loading academies:", err);
     }
-  };
+  }, [currentAcademyId, onSwitchAcademy]);
 
   useEffect(() => {
     let isMounted = true;
-    const fetchAcademies = async () => {
-      if (isMounted) await loadAcademies();
-    };
-    fetchAcademies();
+    
+    if (isMounted) loadAcademies();
 
-    const channel = supabase
-      .channel('sidebar-academy-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
-        if (isMounted) loadAcademies();
-      })
-      .subscribe();
+    let channel = null;
+    try {
+      if (typeof supabase?.channel === 'function') {
+        channel = supabase
+          .channel('sidebar-academy-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
+            if (isMounted) loadAcademies();
+          })
+          .subscribe();
+      }
+    } catch (err) {
+      console.error("Realtime subscription error:", err);
+    }
 
     return () => {
       isMounted = false;
-      supabase.removeChannel(channel);
+      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
-  }, [currentAcademyId]);
+  }, [loadAcademies]);
 
-  const currentAcademy = academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
-  
+  const currentAcademy = useMemo(() => {
+    return academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
+  }, [academiesList, currentAcademyId, academy]);
+
   const rawAcademyName = getText(currentAcademy?.name);
   const currentAcademyName = typeof rawAcademyName === 'string' && rawAcademyName.trim() !== '' 
     ? rawAcademyName.trim() 
@@ -183,7 +199,7 @@ export default function Sidebar({
 
   const academySlug = typeof currentAcademy?.slug === 'string' ? currentAcademy?.slug : (typeof academy?.slug === 'string' ? academy?.slug : '');
   
-  const calculateEffectiveDaysLeft = () => {
+  const calculateEffectiveDaysLeft = useCallback(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
     if (currentAcademy.is_active && !currentAcademy.trial_ends_at) return Infinity;
 
@@ -200,11 +216,11 @@ export default function Sidebar({
     }
 
     return trialDaysLeft ?? 0;
-  };
+  }, [currentAcademy, trialDaysLeft]);
 
   const effectiveDaysLeft = calculateEffectiveDaysLeft();
 
-  const getStatusBadge = () => {
+  const statusBadge = useMemo(() => {
     if (currentAcademy) {
       if (currentAcademy.is_active === false) {
         return {
@@ -239,11 +255,9 @@ export default function Sidebar({
       text: isRtl ? 'اشتراك نشط' : 'Active Plan',
       style: { background: C.brandEmerald.bgGlow, color: C.brandEmerald.light, border: `1px solid ${C.brandEmerald.border}` }
     };
-  };
+  }, [currentAcademy, effectiveDaysLeft, isRtl]);
 
-  const statusBadge = getStatusBadge();
-
-  const normalizeArabic = (text) => {
+  const normalizeArabic = useCallback((text) => {
     const str = getText(text);
     if (!str) return '';
     return str
@@ -252,14 +266,16 @@ export default function Sidebar({
       .replace(/ة/g, 'ه')
       .replace(/ى/g, 'ي')
       .toLowerCase();
-  };
+  }, [getText]);
 
-  const filteredMenuSections = menuSections.map(section => {
-    const filteredItems = (section.items || []).filter(item =>
-      normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
-    );
-    return { ...section, items: filteredItems };
-  }).filter(section => section.items.length > 0);
+  const filteredMenuSections = useMemo(() => {
+    return menuSections.map(section => {
+      const filteredItems = (section.items || []).filter(item =>
+        normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
+      );
+      return { ...section, items: filteredItems };
+    }).filter(section => section.items.length > 0);
+  }, [menuSections, searchQuery, normalizeArabic]);
 
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
