@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Component, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { 
   Loader2, Clock, LogOut, Wifi, WifiOff,
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock, ShieldAlert 
@@ -785,26 +785,28 @@ export default function App() {
   };
 
   return (
-    <GlobalErrorBoundary>
-      {/* 📡 شريط تنبيهات الشبكة والتحديثات في أعلى تطبيقك */}
-      <OfflineAndUpdateBanner />
+    <BrowserRouter>
+      <GlobalErrorBoundary>
+        {/* 📡 شريط تنبيهات الشبكة والتحديثات في أعلى تطبيقك */}
+        <OfflineAndUpdateBanner />
 
-      <Suspense fallback={
-        <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
-          <Loader2 className="animate-spin" size={32} />
-        </div>
-      }>
-        {view === 'test' ? (
-          <DevPlayground />
-        ) : view === 'splash' || showSplash ? (
-          <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
-        ) : (
-          <Routes>
-            <Route path="/verify/:certId" element={<CertificateVerify />} />
-            <Route path="/*" element={<MainContent />} />
-          </Routes>
-        )}
-      </Suspense>
-    </GlobalErrorBoundary>
+        <Suspense fallback={
+          <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
+            <Loader2 className="animate-spin" size={32} />
+          </div>
+        }>
+          {view === 'test' ? (
+            <DevPlayground />
+          ) : view === 'splash' || showSplash ? (
+            <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
+          ) : (
+            <Routes>
+              <Route path="/verify/:certId" element={<CertificateVerify />} />
+              <Route path="/*" element={<MainContent />} />
+            </Routes>
+          )}
+        </Suspense>
+      </GlobalErrorBoundary>
+    </BrowserRouter>
   );
 }
