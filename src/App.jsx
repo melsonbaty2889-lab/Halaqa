@@ -743,6 +743,19 @@ function MainContent() {
             </ProtectedRoute>
           } 
         />
+        {/* 🛠️ التعديل المضاف لحل الشاشة البيضاء/السوداء عند الدخول على المسار الرئيسي / */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
+              <MainApp 
+                session={formattedSession} 
+                userRole={profile?.role || 'student'} 
+                setShowEarlyUpgrade={setShowEarlyUpgrade}
+              />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="*" 
           element={<Navigate to={targetSlug ? `/${targetSlug}` : '/'} replace />} 
