@@ -1,6 +1,5 @@
-// src/hooks/useReports.js
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lip/supabase';
 
 export const useReports = () => {
   const [reportData, setReportData] = useState(null);
@@ -10,15 +9,12 @@ export const useReports = () => {
   const generateReport = async (studentId, startDate, endDate) => {
     try {
       setLoading(true);
-      setError(null);
-
       const { data, error } = await supabase
         .from('daily_progress')
         .select('*')
         .eq('student_id', studentId)
         .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true });
+        .lte('date', endDate);
 
       if (error) throw error;
       setReportData(data);
