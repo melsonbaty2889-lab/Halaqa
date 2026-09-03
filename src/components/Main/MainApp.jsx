@@ -6,7 +6,7 @@ import useIsMobile from '@/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
-import { colors as C } from '@/theme/colors.js';
+import colorsImport from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from '@/components/Sidebar/Sidebar';
@@ -14,6 +14,14 @@ import Header from '@/components/Header/Header';
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
+
+// 🟢 حماية استيراد ثيم الألوان للوقاية من تدمير الواجهة
+const C = colorsImport?.colors || colorsImport || {
+  dark: { main: '#0f172a', card: '#1e293b', border: '#334155' },
+  text: { title: '#f8fafc', body: '#cbd5e1' },
+  error: { light: '#fca5a5', border: '#f87171' },
+  primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
+};
 
 // 🟢 دالة آمنة لمعالجة الكائنات المترجمة ومنع خطأ React #31
 const formatLocalizedText = (val, lang = 'ar') => {
@@ -165,12 +173,12 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: C.dark.card, borderRadius: '16px', border: `1px solid ${C.error.border || C.dark.border}`, color: C.error.light, margin: '20px', direction: 'rtl' }}>
+        <div style={{ padding: '24px', background: C?.dark?.card || '#1e293b', borderRadius: '16px', border: `1px solid ${C?.error?.border || '#f87171'}`, color: C?.error?.light || '#fca5a5', margin: '20px', direction: 'rtl' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <AlertTriangle size={22} />
-            <h3 style={{ margin: 0, color: C.error.light, fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
+            <h3 style={{ margin: 0, color: C?.error?.light || '#fca5a5', fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre style={{ background: C.dark.main, padding: '12px', borderRadius: '8px', color: C.text.body, fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
+          <pre style={{ background: C?.dark?.main || '#0f172a', padding: '12px', borderRadius: '8px', color: C?.text?.body || '#cbd5e1', fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -179,7 +187,7 @@ class ErrorBoundaryInner extends React.Component {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ padding: '10px 18px', background: C.primary.gradient, color: C.dark.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ padding: '10px 18px', background: C?.primary?.gradient || '#d97706', color: C?.dark?.main || '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
@@ -196,7 +204,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
-  const { academy } = useAcademy();
+  const academyContext = useAcademy();
+  const academy = academyContext?.academy || null;
 
   const isMobile = useIsMobile(1024);
 
@@ -233,7 +242,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
   const [academyTime, setAcademyTime] = useState("");
 
-  // 🟢 حماية معالجة صيغ الأرقام لتفادي الأخطاء اللغوية
   const numberFormatter = useMemo(() => {
     try {
       return new Intl.NumberFormat(currentLang, { useGrouping: true });
@@ -312,7 +320,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     fetchAcademyData(newAcademyId);
   }, [academyId, fetchAcademyData]);
 
-  // 🟢 دالة حذف الطالب من Supabase وتحديث الـ State
   const handleDeleteStudent = useCallback(async (studentId) => {
     try {
       const { error } = await supabase
@@ -568,8 +575,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         display: 'flex', 
         minHeight: '100vh', 
         width: '100%', 
-        background: C.dark.main, 
-        color: C.text.title, 
+        background: C?.dark?.main || '#0f172a', 
+        color: C?.text?.title || '#f8fafc', 
         fontFamily: "'Cairo', system-ui, sans-serif",
         position: 'relative',
         overflowX: 'hidden'
