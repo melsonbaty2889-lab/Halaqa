@@ -31,7 +31,7 @@ export const DataProvider = ({ children }) => {
     }
   }, []);
 
-  // 1. جلب الحلقات النشطة وحفظها في الكاش
+  // 1. جلب الحلقات النشطة وحفظها في الكاش (مع إصلاح سينتاكس الاستعلام)
   const fetchHalaqas = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -39,20 +39,22 @@ export const DataProvider = ({ children }) => {
         .from('halaqas')
         .select('*')
         .eq('academy_id', academyId)
-        .or('is_archived.eq.false,is_archived.is.null')
+        .neq('is_archived', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       const freshData = data || [];
       setHalaqas(freshData);
-      localStorage.setItem(getCacheKey(academyId, 'halaqas'), JSON.stringify(freshData));
+      try {
+        localStorage.setItem(getCacheKey(academyId, 'halaqas'), JSON.stringify(freshData));
+      } catch (e) { /* ignore storage full */ }
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب الحلقات:", err.message);
     }
   }, []);
 
-  // 2. جلب الطلاب النشطين وحفظهم في الكاش
+  // 2. جلب الطلاب النشطين وحفظهم في الكاش (مع إصلاح سينتاكس الاستعلام)
   const fetchStudents = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -60,14 +62,16 @@ export const DataProvider = ({ children }) => {
         .from('students')
         .select('*')
         .eq('academy_id', academyId)
-        .or('is_archived.eq.false,is_archived.is.null')
+        .neq('is_archived', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       const freshData = data || [];
       setStudents(freshData);
-      localStorage.setItem(getCacheKey(academyId, 'students'), JSON.stringify(freshData));
+      try {
+        localStorage.setItem(getCacheKey(academyId, 'students'), JSON.stringify(freshData));
+      } catch (e) { /* ignore storage full */ }
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب الطلاب:", err.message);
     }
@@ -93,7 +97,9 @@ export const DataProvider = ({ children }) => {
         .filter(Boolean) || [];
 
       setTeachers(extractedTeachers);
-      localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(extractedTeachers));
+      try {
+        localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(extractedTeachers));
+      } catch (e) { /* ignore storage full */ }
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب المدرسين:", err.message);
     }
@@ -103,7 +109,7 @@ export const DataProvider = ({ children }) => {
   const refreshAllData = useCallback(async () => {
     if (!academy?.id) return;
     setLoadingData(true);
-    await Promise.all([
+    await Promise.allSettled([
       fetchHalaqas(academy.id),
       fetchStudents(academy.id),
       fetchTeachers(academy.id)
@@ -121,15 +127,15 @@ export const DataProvider = ({ children }) => {
 
       // ب) إطلاق التحديث في الخلفية من Supabase
       setLoadingData(true);
-      Promise.all([
+      Promise.allSettled([
         fetchHalaqas(academy.id),
         fetchStudents(academy.id),
         fetchTeachers(academy.id)
       ]).finally(() => {
         if (isMounted) setLoadingData(false);
       });
-    } else {
-      // تفريغ الحالة للحفاظ على خصوصية الحسابات
+    } else if (appState !== 'LOADING') {
+      // تفريغ الحالة فقط عندما تكتمل عملية معرفة الجلسة وليست أثنائها
       setHalaqas([]);
       setStudents([]);
       setTeachers([]);
