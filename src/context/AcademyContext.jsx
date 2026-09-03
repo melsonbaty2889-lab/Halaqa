@@ -19,7 +19,6 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
-  // دالة التحديث اللحظي لبيانات الأكاديمية في الواجهة
   const updateAcademyState = useCallback((newAcademyData) => {
     if (isMounted.current) {
       setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
@@ -40,10 +39,10 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات البروفايل المحددة فقط بدلاً من (*)
+      // جلب كافة حقول البروفايل لمنع أي نقص في بيانات المستخدم
       const { data: profData, error: profError } = await supabase
         .from('profiles')
-        .select('id, role, is_activated, full_name, email, avatar_url')
+        .select('*')
         .eq('id', currentUser.id)
         .maybeSingle();
 
@@ -63,7 +62,6 @@ export const AcademyProvider = ({ children }) => {
 
       if (isMounted.current) setProfile(profData);
 
-      // 2. السوبر أدمن
       if (profData.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
@@ -72,7 +70,6 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 3. الحسابات غير المفعلة على مستوى المستخدم
       if (profData.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
@@ -81,16 +78,14 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // 4. جلب الأكاديمية عبر academy_members وتحديد حقول الأكاديمية فقط
       let currentAcademy = null;
 
+      // جلب كافة حقول جدول الأكاديمية الرئيسي
       const { data: memList, error: memError } = await supabase
         .from('academy_members')
         .select(`
           role,
-          academy:academies (
-            id, name, slug, logo_url, is_active, blocked_reason, owner_id, created_at
-          )
+          academy:academies (*)
         `)
         .eq('user_id', currentUser.id)
         .limit(1);
@@ -103,11 +98,10 @@ export const AcademyProvider = ({ children }) => {
         currentAcademy = memList[0]?.academy || null;
       }
 
-      // 5. خطة بديلة احتياطية (Fallback): جلب الأكاديمية بحقول محدودة
       if (!currentAcademy) {
         const { data: ownedAcademy, error: ownerError } = await supabase
           .from('academies')
-          .select('id, name, slug, logo_url, is_active, blocked_reason, owner_id, created_at')
+          .select('*')
           .eq('owner_id', currentUser.id)
           .limit(1)
           .maybeSingle();
