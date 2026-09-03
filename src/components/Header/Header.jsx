@@ -1,4 +1,4 @@
-// src/components/Header.jsx
+// src/components/Header/Header.jsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -56,8 +56,9 @@ export default function Header({
     }
   }, [activeAcademy?.currency]);
 
-  // جلب الإشعارات من Supabase
+  // جلب الإشعارات من Supabase (بدون الاعتماد على المتغيرات المستمرة)
   const fetchNotifications = useCallback(async () => {
+    if (!supabase) return;
     setLoadingNotifs(true);
     try {
       const { data, error } = await supabase
@@ -75,23 +76,38 @@ export default function Header({
     }
   }, []);
 
-  // الاستماع للإشعارات اللحظية (Realtime)
+  // الاستماع للإشعارات اللحظية (Realtime) بآلية آمنة
   useEffect(() => {
     fetchNotifications();
 
-    const channel = supabase
-      .channel('header_realtime_notifications')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
-        (payload) => {
-          setNotifications((prev) => [payload.new, ...prev]);
+    let channel = null;
+
+    try {
+      if (typeof supabase?.channel === 'function') {
+        channel = supabase.channel('header_realtime_notifications');
+
+        if (channel && typeof channel.on === 'function') {
+          channel
+            .on(
+              'postgres_changes',
+              { event: 'INSERT', schema: 'public', table: 'notifications' },
+              (payload) => {
+                if (payload?.new) {
+                  setNotifications((prev) => [payload.new, ...prev]);
+                }
+              }
+            )
+            .subscribe();
         }
-      )
-      .subscribe();
+      }
+    } catch (err) {
+      console.error('Error setting up notifications realtime channel:', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
   }, [fetchNotifications]);
 
@@ -115,7 +131,6 @@ export default function Header({
   const rawKey = activeTab || pathname.replace(/^\//, '') || 'dashboard';
   const activeKey = rawKey.split('/')[0].trim();
 
-  // جلب مسمى الصفحة بنفس الاسم والترجمة المعرفة في السايدبار
   const menuSections = useMemo(() => getMenuSections(activeRtl, userRole), [activeRtl, userRole]);
   
   const pageTitle = useMemo(() => {
@@ -125,13 +140,13 @@ export default function Header({
         return foundItem.label;
       }
     }
-    // احتياطي في حال عدم وجود المفتاح في السايدبار
     return t(`nav.${activeKey}`, t(`nav.dashboard`, 'Smart Halaqa'));
   }, [menuSections, activeKey, t]);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = useMemo(() => {
+    return notifications.filter(n => !n.is_read).length;
+  }, [notifications]);
 
-  // تعليم إشعار فردي كمقروء والانتقال للتبويب
   const handleNotificationClick = async (notif) => {
     if (!notif.is_read) {
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
@@ -144,7 +159,6 @@ export default function Header({
     setShowNotifMenu(false);
   };
 
-  // تعليم الكل كمقروء
   const markAllAsRead = async () => {
     setNotifications(notifications.map(n => ({ ...n, is_read: true })));
     try {
@@ -157,7 +171,6 @@ export default function Header({
     }
   };
 
-  // حذف جميع الإشعارات
   const clearAll = async () => {
     setNotifications([]);
     try {
@@ -167,14 +180,14 @@ export default function Header({
     }
   };
 
-  const formatTime = (dateString) => {
+  const formatTime = useCallback((dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, [isAr]);
 
   return (
     <header 
