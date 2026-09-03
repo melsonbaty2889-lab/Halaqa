@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut, Building } from 'lucide-react';
+import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
 
 import { supabase } from '@/lib/supabase';
@@ -89,13 +89,8 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
 const safeLazy = (importFn) => {
   return lazy(() =>
     importFn().catch((error) => {
-      const errorMsg = error?.message || error?.toString() || '';
-      if (/Failed to fetch dynamically imported module|chunk load error|loading chunk/i.test(errorMsg)) {
-        console.warn("🚨 تم رصد تحديث في الملفات، جاري إعادة التحميل تلقائياً...");
-        window.location.reload();
-        return new Promise(() => {}); 
-      }
-      throw error;
+      console.error("🚨 Lazy Load Error:", error);
+      return { default: () => <div className="p-4 text-rose-400 text-center">تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.</div> };
     })
   );
 };
@@ -201,7 +196,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
-  const academyContext = useAcademy();
+  let academyContext = null;
+  try {
+    academyContext = useAcademy();
+  } catch (e) {
+    console.warn("AcademyContext unavailable:", e);
+  }
   const academy = academyContext?.academy || null;
 
   const isMobile = useIsMobile(1024);
@@ -327,7 +327,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       if (error) throw error;
 
       setStudents(prev => prev.filter(s => s.id !== studentId));
-      
       return { success: true };
     } catch (error) {
       console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
@@ -336,18 +335,25 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingData(false);
+    }, 4000);
+
     const currentUserId = session?.user?.id;
     if (!currentUserId) {
       setLoadingData(false);
+      clearTimeout(timer);
       return;
     }
-    if (lastFetchedUserId.current === currentUserId) return;
+    if (lastFetchedUserId.current === currentUserId) {
+      clearTimeout(timer);
+      return;
+    }
     lastFetchedUserId.current = currentUserId;
 
     async function loadInitialData() {
       try {
         setLoadingData(true);
-        
         let currentAcademyId = academy?.id;
 
         if (!currentAcademyId) {
@@ -387,9 +393,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       } catch (error) {
         console.error("🚨 Error loading initial data:", error);
         setLoadingData(false);
+      } finally {
+        clearTimeout(timer);
       }
     }
     loadInitialData();
+
+    return () => clearTimeout(timer);
   }, [session, fetchAcademyData, academy?.id]);
 
   if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
