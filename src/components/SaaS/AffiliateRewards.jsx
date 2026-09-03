@@ -1,8 +1,9 @@
+// src/components/SaaS/AffiliateRewards.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Copy, Check, Share2, Users, Award, 
-  Sparkles, Percent, Tag, ShieldCheck, ArrowLeft, ArrowRight
+  Sparkles, Percent, Tag, ShieldCheck
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { colors as C } from '@/theme/colors.js';
@@ -85,6 +86,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
             setReferralCode(generatedCode);
           }
 
+          // تطبيق المبدأ المتوازن: جلب كل حقول جدول الإحالات الرئيسي saas_referrals
           const { data: referrals } = await supabase
             .from('saas_referrals')
             .select('*')
@@ -347,7 +349,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
       {/* 🟢 4. EMPTY RECORDS CARD */}
       <div style={{
         background: 'rgba(15, 23, 42, 0.5)',
-        border: '1px border-slate-800',
+        border: '1px solid rgba(30, 41, 59, 0.8)',
         borderRadius: '20px',
         padding: '24px 16px',
         textAlign: 'center',
