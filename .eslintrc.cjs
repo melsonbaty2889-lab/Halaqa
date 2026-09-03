@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   env: {
     browser: true,
     es2021: true,
@@ -22,13 +22,11 @@ module.exports = {
     },
   },
   rules: {
-    // إظهار تحذيرات فقط بدلاً من إيقاف الـ Build
-    'no-unused-vars': 'warn',
+    'no-unused-vars': 'off',
     'no-console': 'off',
     'no-useless-escape': 'off',
-    'react/prop-types': 'off', // لتعطيل فحص prop-types إذا كنت لا تستخدمه
-    
-    // 🟢 تعطيل قاعدة الاقتباسات في النصوص لضمان استقرار الـ Build
+    'react/prop-types': 'off',
     'react/no-unescaped-entities': 'off',
+    'react/react-in-jsx-scope': 'off',
   },
 };
