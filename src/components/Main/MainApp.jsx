@@ -36,7 +36,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
     : "Your academy account has been suspended by administration.");
 
   const handleSupportContact = () => {
-    const supportPhone = "201000000000"; // 👈 استبدله برقم الدعم الخاص بك
+    const supportPhone = import.meta.env.VITE_SUPPORT_WHATSAPP || "201000000000";
     const msg = encodeURIComponent(`السلام عليكم، أنا مالك أكاديمية (${academyName})، تم تعليق الحساب وأود الاستفسار والتفعيل.`);
     window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
   };
@@ -233,7 +233,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
   const [academyTime, setAcademyTime] = useState("");
 
-  const numberFormatter = useMemo(() => new Intl.NumberFormat(currentLang, { useGrouping: true }), [currentLang]);
+  // 🟢 حماية معالجة صيغ الأرقام لتفادي الأخطاء اللغوية
+  const numberFormatter = useMemo(() => {
+    try {
+      return new Intl.NumberFormat(currentLang, { useGrouping: true });
+    } catch (e) {
+      return new Intl.NumberFormat('ar', { useGrouping: true });
+    }
+  }, [currentLang]);
 
   useEffect(() => {
     if (!isMobile) {
@@ -307,23 +314,22 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   // 🟢 دالة حذف الطالب من Supabase وتحديث الـ State
   const handleDeleteStudent = useCallback(async (studentId) => {
-  try {
-    const { error } = await supabase
-      .from('students')
-      .delete()
-      .eq('id', studentId);
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // تحديث الواجهة فوراً
-    setStudents(prev => prev.filter(s => s.id !== studentId));
-    
-    return { success: true };
-  } catch (error) {
-    console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
-    return { success: false, error: error.message };
-  }
-}, []);
+      setStudents(prev => prev.filter(s => s.id !== studentId));
+      
+      return { success: true };
+    } catch (error) {
+      console.error("🚨 خطأ أثناء حذف الطالب من قاعدة البيانات:", error);
+      return { success: false, error: error.message };
+    }
+  }, []);
 
   useEffect(() => {
     const currentUserId = session?.user?.id;
@@ -374,7 +380,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     loadInitialData();
   }, [session, fetchAcademyData]);
 
-  // 🛑 اعتراض الشاشة فور رصد حالة الحظر (مستثنى منها المشرفين العموميين)
   if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
     return (
       <BlockedView 
