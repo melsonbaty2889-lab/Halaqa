@@ -60,13 +60,15 @@ if (typeof document !== 'undefined') {
   document.documentElement.setAttribute('lang', initialLng);
 }
 
-// 🟢 التحديث التلقائي لاتصالية الواجهة عند تغيير اللغة
-i18n.on('languageChanged', (lng) => {
-  const validLanguage = getCleanLang(lng);
-  if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('dir', getLanguageDirection(validLanguage));
-    document.documentElement.setAttribute('lang', validLanguage);
-  }
-});
+// 🟢 التحديث التلقائي لاتصالية الواجهة عند تغيير اللغة مع فحص أمني آمن
+if (i18n && typeof i18n.on === 'function') {
+  i18n.on('languageChanged', (lng) => {
+    const validLanguage = getCleanLang(lng);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('dir', getLanguageDirection(validLanguage));
+      document.documentElement.setAttribute('lang', validLanguage);
+    }
+  });
+}
 
 export default i18n;
