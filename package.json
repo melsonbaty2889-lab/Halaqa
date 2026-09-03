@@ -8,10 +8,10 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "lint": "eslint . --ext js,jsx || true"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx || true"
   },
   "dependencies": {
     "@floating-ui/react-dom": "^2.0.0",
@@ -22,7 +22,7 @@
     "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
-    "crypto-js": "^4.2.0",
+    "crypto-es": "^2.1.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.0.0",
     "i18next": "^26.3.1",
