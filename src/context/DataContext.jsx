@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext.jsx'; 
 
-const DataContext = createContext(null);
+const DataContext = createContext({});
 
 // مفاتيح التخزين المحلي للـ Caching
 const getCacheKey = (academyId, key) => `halaqa_cache_${academyId}_${key}`;
@@ -31,7 +31,7 @@ export const DataProvider = ({ children }) => {
     }
   }, []);
 
-  // 1. جلب الحلقات النشطة وحفظها في الكاش (مع إصلاح سينتاكس الاستعلام)
+  // 1. جلب الحلقات النشطة وحفظها في الكاش
   const fetchHalaqas = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -39,22 +39,20 @@ export const DataProvider = ({ children }) => {
         .from('halaqas')
         .select('*')
         .eq('academy_id', academyId)
-        .neq('is_archived', true)
+        .or('is_archived.eq.false,is_archived.is.null')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       const freshData = data || [];
       setHalaqas(freshData);
-      try {
-        localStorage.setItem(getCacheKey(academyId, 'halaqas'), JSON.stringify(freshData));
-      } catch (e) { /* ignore storage full */ }
+      localStorage.setItem(getCacheKey(academyId, 'halaqas'), JSON.stringify(freshData));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب الحلقات:", err.message);
     }
   }, []);
 
-  // 2. جلب الطلاب النشطين وحفظهم في الكاش (مع إصلاح سينتاكس الاستعلام)
+  // 2. جلب الطلاب النشطين وحفظهم في الكاش
   const fetchStudents = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
@@ -62,16 +60,14 @@ export const DataProvider = ({ children }) => {
         .from('students')
         .select('*')
         .eq('academy_id', academyId)
-        .neq('is_archived', true)
+        .or('is_archived.eq.false,is_archived.is.null')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       const freshData = data || [];
       setStudents(freshData);
-      try {
-        localStorage.setItem(getCacheKey(academyId, 'students'), JSON.stringify(freshData));
-      } catch (e) { /* ignore storage full */ }
+      localStorage.setItem(getCacheKey(academyId, 'students'), JSON.stringify(freshData));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب الطلاب:", err.message);
     }
@@ -97,9 +93,7 @@ export const DataProvider = ({ children }) => {
         .filter(Boolean) || [];
 
       setTeachers(extractedTeachers);
-      try {
-        localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(extractedTeachers));
-      } catch (e) { /* ignore storage full */ }
+      localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(extractedTeachers));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب المدرسين:", err.message);
     }
@@ -109,7 +103,7 @@ export const DataProvider = ({ children }) => {
   const refreshAllData = useCallback(async () => {
     if (!academy?.id) return;
     setLoadingData(true);
-    await Promise.allSettled([
+    await Promise.all([
       fetchHalaqas(academy.id),
       fetchStudents(academy.id),
       fetchTeachers(academy.id)
@@ -127,15 +121,15 @@ export const DataProvider = ({ children }) => {
 
       // ب) إطلاق التحديث في الخلفية من Supabase
       setLoadingData(true);
-      Promise.allSettled([
+      Promise.all([
         fetchHalaqas(academy.id),
         fetchStudents(academy.id),
         fetchTeachers(academy.id)
       ]).finally(() => {
         if (isMounted) setLoadingData(false);
       });
-    } else if (appState !== 'LOADING') {
-      // تفريغ الحالة فقط عندما تكتمل عملية معرفة الجلسة وليست أثنائها
+    } else {
+      // تفريغ البيانات والـ Cache للحفاظ على خصوصية الحسابات
       setHalaqas([]);
       setStudents([]);
       setTeachers([]);
@@ -163,10 +157,4 @@ export const DataProvider = ({ children }) => {
   );
 };
 
-export const useData = () => {
-  const context = useContext(DataContext);
-  if (!context) {
-    throw new Error('useData must be used within a DataProvider');
-  }
-  return context;
-};
+export const useData = () => useContext(DataContext);
