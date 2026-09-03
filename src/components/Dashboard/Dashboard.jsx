@@ -117,7 +117,7 @@ export default function Dashboard({
       setLastSyncTime(new Date().toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error("Error loading dashboard data:", err);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }, [userRole, academyId, currentLang, selectedAdminAcademy]);
