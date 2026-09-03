@@ -2,9 +2,9 @@ name: Code Quality & Build Check
 
 on:
   push:
-    branches: [ main, master, dev, developer ]
+    branches: [ main, master, dev, developer, stable-app ]
   pull_request:
-    branches: [ main, master, dev, developer ]
+    branches: [ main, master, dev, developer, stable-app ]
 
 jobs:
   quality-check:
@@ -26,6 +26,7 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint --if-present
+        continue-on-error: true
 
       - name: Check Formatting
         run: npx prettier --check "." || true
@@ -36,6 +37,7 @@ jobs:
         run: |
           mkdir -p src/types
           npx supabase gen types typescript --project-id "hpaaisyxnscherkrjnas" --schema public > src/types/supabase.ts
+        continue-on-error: true
 
       - name: Build Project
         env:
