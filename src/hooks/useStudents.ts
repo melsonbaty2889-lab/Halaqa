@@ -44,7 +44,16 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
       let query = supabase
         .from('students')
         .select(`
-          *,
+          id,
+          academy_id,
+          name,
+          student_code,
+          gender,
+          halaqa_id,
+          parent_phone,
+          is_archived,
+          created_at,
+          updated_at,
           halaqas (
             id,
             name_ar,
@@ -114,7 +123,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     },
   });
 
-  // دالة أرشفة أو إلغاء أرشفة (تغليف للـ Mutation لتطابق واجهتك القديمة)
+  // دالة أرشفة أو إلغاء أرشفة
   const toggleArchiveStudent = async (studentId: string, currentStatus: boolean) => {
     try {
       await archiveMutation.mutateAsync({ studentId, currentStatus });
@@ -124,7 +133,7 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     }
   };
 
-  // دالة الحذف (تغليف للـ Mutation لتطابق واجهتك القديمة)
+  // دالة الحذف
   const deleteStudent = async (studentId: string) => {
     try {
       await deleteMutation.mutateAsync(studentId);
