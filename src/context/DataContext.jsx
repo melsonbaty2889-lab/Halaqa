@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext.jsx'; 
 
-const DataContext = createContext({});
+const DataContext = createContext(null);
 
 // مفاتيح التخزين المحلي للـ Caching
 const getCacheKey = (academyId, key) => `halaqa_cache_${academyId}_${key}`;
@@ -129,7 +129,7 @@ export const DataProvider = ({ children }) => {
         if (isMounted) setLoadingData(false);
       });
     } else {
-      // تفريغ البيانات والـ Cache للحفاظ على خصوصية الحسابات
+      // تفريغ الحالة للحفاظ على خصوصية الحسابات
       setHalaqas([]);
       setStudents([]);
       setTeachers([]);
@@ -157,4 +157,10 @@ export const DataProvider = ({ children }) => {
   );
 };
 
-export const useData = () => useContext(DataContext);
+export const useData = () => {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useData must be used within a DataProvider');
+  }
+  return context;
+};
