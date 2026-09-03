@@ -71,7 +71,7 @@ export default function Dashboard({
   // 🟢 استماع مباشر للحدث للضمان المطلق لفتح الأكاديمية
   useEffect(() => {
     const handleAcademySelect = (event) => {
-      if (event.detail) {
+      if (event?.detail) {
         setSelectedAdminAcademy(event.detail);
       }
     };
@@ -117,14 +117,14 @@ export default function Dashboard({
       setLastSyncTime(new Date().toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error("Error loading dashboard data:", err);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   }, [userRole, academyId, currentLang, selectedAdminAcademy]);
 
   useEffect(() => {
     fetchDashboardData(true);
-    if (!academyId) return;
+    if (!academyId || !supabase) return;
 
     const filterCondition = `academy_id=eq.${academyId}`;
     let debounceTimer = null;
@@ -136,18 +136,31 @@ export default function Dashboard({
       }, 300);
     };
 
-    const channel = supabase
-      .channel(`dashboard-realtime-${academyId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: filterCondition }, handleRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress', filter: filterCondition }, handleRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: filterCondition }, handleRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas', filter: filterCondition }, handleRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_streaks', filter: filterCondition }, handleRealtimeChange)
-      .subscribe();
+    let channel = null;
+
+    try {
+      if (typeof supabase.channel === 'function') {
+        channel = supabase.channel(`dashboard-realtime-${academyId}`);
+        
+        if (channel && typeof channel.on === 'function') {
+          channel
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: filterCondition }, handleRealtimeChange)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress', filter: filterCondition }, handleRealtimeChange)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: filterCondition }, handleRealtimeChange)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas', filter: filterCondition }, handleRealtimeChange)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'student_streaks', filter: filterCondition }, handleRealtimeChange)
+            .subscribe();
+        }
+      }
+    } catch (err) {
+      console.error("Error in dashboard realtime setup:", err);
+    }
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      supabase.removeChannel(channel);
+      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
   }, [fetchDashboardData, academyId]);
 
@@ -170,7 +183,7 @@ export default function Dashboard({
         <AdminDashboard 
           isRtl={isRtl} 
           academyName={String(displayName || '')} 
-          onLogout={() => supabase.auth.signOut()} 
+          onLogout={() => supabase?.auth?.signOut?.()} 
           onSelectAcademy={(academy) => {
             setSelectedAdminAcademy(academy);
           }}
