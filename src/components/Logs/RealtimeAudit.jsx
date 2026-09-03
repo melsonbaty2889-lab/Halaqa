@@ -53,7 +53,6 @@ export default function RealtimeAudit() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // دالة مساعدة تضمن إرجاع نص صافي دائماً
   const safeTranslate = (key, fallback = '') => {
     if (!t || typeof t !== 'function') return String(fallback || key || '');
     const res = t(key, { defaultValue: fallback || key });
@@ -63,7 +62,6 @@ export default function RealtimeAudit() {
     return String(res || fallback || key || '');
   };
 
-  // دالة مساعدة لاستخراج الاسم من الـ JSON أو النصوص
   const parseName = (rawName) => {
     if (!rawName) return null;
     if (typeof rawName === 'object') {
@@ -82,7 +80,6 @@ export default function RealtimeAudit() {
     return null;
   };
 
-  // دالة استخراج اسم المشرف الديناميكية
   const getProfileName = (log) => {
     if (!log) return safeTranslate('logs.systemUser', 'النظام الآلي');
     
@@ -125,7 +122,6 @@ export default function RealtimeAudit() {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-      // تبسيط الاستعلام لحماية العلاقات
       const { data, error } = await supabase
         .from('audit_logs')
         .select(`
@@ -148,41 +144,46 @@ export default function RealtimeAudit() {
   useEffect(() => {
     fetchAuditLogs();
 
+    // تصحيح إنشاء القناة والبث المباشر المضمون مع Supabase v2
     const channel = supabase
       .channel('realtime_audit_changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, async (payload) => {
-        let userProfile = null;
-        let academyData = null;
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'audit_logs' },
+        async (payload) => {
+          let userProfile = null;
+          let academyData = null;
 
-        try {
-          if (payload.new?.academy_id) {
-            const { data } = await supabase
-              .from('academies')
-              .select('id, name')
-              .eq('id', payload.new.academy_id)
-              .maybeSingle();
-            academyData = data;
+          try {
+            if (payload.new?.academy_id) {
+              const { data } = await supabase
+                .from('academies')
+                .select('id, name')
+                .eq('id', payload.new.academy_id)
+                .maybeSingle();
+              academyData = data;
+            }
+
+            if (payload.new?.changed_by) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, full_name, role')
+                .eq('id', payload.new.changed_by)
+                .maybeSingle();
+              userProfile = data;
+            }
+          } catch (e) {
+            console.error("Realtime fetch details failed:", e);
           }
 
-          if (payload.new?.changed_by) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id, full_name, role')
-              .eq('id', payload.new.changed_by)
-              .maybeSingle();
-            userProfile = data;
-          }
-        } catch (e) {
-          console.error("Realtime fetch details failed:", e);
+          setLogs((prev) => [{ ...payload.new, profiles: userProfile, academies: academyData }, ...prev]);
+          showToast(`${safeTranslate('logs.realtime', 'مباشر')}: ${safeTranslate('logs.title', 'سجل العمليات')}`, 'info');
         }
-
-        setLogs((prev) => [{ ...payload.new, profiles: userProfile, academies: academyData }, ...prev]);
-        showToast(`${safeTranslate('logs.realtime', 'مباشر')}: ${safeTranslate('logs.title', 'سجل العمليات')}`, 'info');
-      })
+      )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
