@@ -135,7 +135,8 @@ export default function RealtimeAudit() {
       if (error) throw error;
       setLogs(data || []);
     } catch (err) {
-      showToast(err.message, 'error');
+      console.error("Fetch audit logs error:", err);
+      showToast(err.message || 'حدث خطأ أثناء جلب البيانات', 'error');
     } finally {
       setLoading(false);
     }
@@ -144,39 +145,16 @@ export default function RealtimeAudit() {
   useEffect(() => {
     fetchAuditLogs();
 
-    // تصحيح إنشاء القناة والبث المباشر المضمون مع Supabase v2
+    // إعداد البث المباشر المباشر والآمن بدون استعلامات معلقة داخل الـ listener
     const channel = supabase
       .channel('realtime_audit_changes')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'audit_logs' },
-        async (payload) => {
-          let userProfile = null;
-          let academyData = null;
+        (payload) => {
+          if (!payload?.new) return;
 
-          try {
-            if (payload.new?.academy_id) {
-              const { data } = await supabase
-                .from('academies')
-                .select('id, name')
-                .eq('id', payload.new.academy_id)
-                .maybeSingle();
-              academyData = data;
-            }
-
-            if (payload.new?.changed_by) {
-              const { data } = await supabase
-                .from('profiles')
-                .select('id, full_name, role')
-                .eq('id', payload.new.changed_by)
-                .maybeSingle();
-              userProfile = data;
-            }
-          } catch (e) {
-            console.error("Realtime fetch details failed:", e);
-          }
-
-          setLogs((prev) => [{ ...payload.new, profiles: userProfile, academies: academyData }, ...prev]);
+          setLogs((prev) => [payload.new, ...prev]);
           showToast(`${safeTranslate('logs.realtime', 'مباشر')}: ${safeTranslate('logs.title', 'سجل العمليات')}`, 'info');
         }
       )
