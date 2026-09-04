@@ -10,7 +10,6 @@ import DataBackupTab from './DataBackupTab';
 
 // دالة ذكية لتوليد الـ Slug تدعم الاسم الإنجليزي أو تنشئ رابطاً نظيفاً للمستخدم العربي
 const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
-  // 1. إذا أدخل المستخدم Slug مخصص بيده، ننظفه ونعتمده
   if (rawSlug && !rawSlug.startsWith('academy-')) {
     const cleanedCustom = rawSlug
       .toLowerCase()
@@ -21,7 +20,6 @@ const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
     if (cleanedCustom) return cleanedCustom;
   }
 
-  // 2. إذا كان الاسم الإنجليزي موجوداً، نولّد منه الـ Slug
   if (enName && enName.trim() !== '') {
     const cleanedEn = enName
       .toLowerCase()
@@ -32,7 +30,6 @@ const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
     if (cleanedEn) return cleanedEn;
   }
 
-  // 3. للمستخدم العربي: إذا لم يتوفر اسم إنجليزي أو slug مخصص، ننشئ رابطاً نظيفاً يعتمد على المعرف
   const shortId = currentId ? currentId.slice(0, 8) : Math.random().toString(36).substring(2, 8);
   return `academy-${shortId}`;
 };
@@ -44,6 +41,7 @@ export default function Settings({
   currentTimezone,
   currentCountryCode,
   onCurrencyChange,
+  onTimezoneChange, // 👈 استقبال خاصية التحديث اللحظي للمنطقة الزمنية
   onAcademyUpdate
 }) {
   const { t, i18n } = useTranslation();
@@ -163,7 +161,7 @@ export default function Settings({
     loadAcademySettings();
   }, [academyId]);
 
-  // تحديث الحقول العامة
+  // تحديث الحقول العامة وإخطار المكون الأب بالتغيير الفوري
   const updateField = (field, value) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
@@ -178,6 +176,11 @@ export default function Settings({
     if (field === 'currency' && typeof onCurrencyChange === 'function') {
       onCurrencyChange(value);
     }
+
+    // 👈 تحديث المنطقة الزمنية لحظياً عند اختيار قيمة جديدة
+    if (field === 'timezone' && typeof onTimezoneChange === 'function') {
+      onTimezoneChange(value);
+    }
   };
 
   // تحديث الاسم مع توليد ذكي للـ Slug
@@ -185,7 +188,6 @@ export default function Settings({
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
       
-      // ننشئ الـ slug تلقائياً فقط إذا كان الـ slug الحالي فارغاً أو معرفاً افتراضياً
       let newSlug = prev.slug;
       if (!prev.slug || prev.slug.startsWith('academy-')) {
         newSlug = generateSmartSlug(updatedName.en, updatedName.ar, '', academyId);
@@ -317,7 +319,6 @@ export default function Settings({
     try {
       setSaving(true);
 
-      // تنظيف وتوليد الـ slug النهائي الذكي
       const cleanSlug = generateSmartSlug(enName, arName, formData.slug, academyId);
 
       const updatePayload = {
@@ -379,6 +380,10 @@ export default function Settings({
   };
 
   const handleDiscardChanges = () => {
+    // 👈 إعادة الوقت للمنطقة الزمنية الأصلية عند الضغط على إلغاء/تراجع
+    if (initialData.timezone && typeof onTimezoneChange === 'function') {
+      onTimezoneChange(initialData.timezone);
+    }
     setFormData(initialData);
     isDirtyRef.current = false;
     setIsDirty(false);
