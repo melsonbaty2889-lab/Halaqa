@@ -1,0 +1,35 @@
+{
+  "common": {
+    "dashboard": "Tableau de bord",
+    "students": "Étudiants",
+    "halaqas": "Halaqas",
+    "upgrade": "Mettre à niveau",
+    "searchPlaceholder": "Recherche rapide...",
+    "logout": "Déconnexion",
+    "loggingOut": "Déconnexion en cours...",
+    "cloudSynced": "Synchronisation Cloud",
+    "more": "Plus",
+    "active": "Actif",
+    "pending": "En attente",
+    "expired": "Expiré"
+  },
+  "status": {
+    "lifetime": "Compte À Vie ∞",
+    "active": "Abonnement Actif",
+    "trial": "Période d'essai",
+    "expired": "Abonnement Expiré",
+    "pending": "En attente d'activation"
+  },
+  "sidebar": {
+    "title": "Principal & Opérations",
+    "footer": "Pied de page",
+    "cloudSyncTooltip": "Connexion Cloud sécurisée"
+  },
+  "nav": {
+    "recitationAndAttendance": "Récitation & Présence",
+    "smartQuran": "Coran Interactif",
+    "notifications": "Notifications & Rapports",
+    "halaqatAndMembers": "Halaqat & Membres",
+    "curriculumAndAssessment": "Programme & Évaluation"
+  }
+}
