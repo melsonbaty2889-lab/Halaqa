@@ -1,21 +1,44 @@
+// src/components/Sidebar/SidebarFooter.jsx
 import React from 'react';
 import { Cloud, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { colors as C } from '@/theme/colors';
 
 export default function SidebarFooter({ isRtl }) {
+  const handleLogout = async () => {
+    try {
+      if (supabase?.auth?.signOut) {
+        await supabase.auth.signOut();
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
-    <div className="p-3 border-t border-slate-800/80 bg-slate-950/60 shrink-0">
-      <div className="flex items-center gap-1.5 mb-2 text-xs text-slate-400">
-        <Cloud size={14} className="text-emerald-400 shrink-0" />
-        <span className="text-[11px] font-medium">{isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}</span>
+    <div className="w-full flex flex-col gap-2" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* حالة الربط السحابي */}
+      <div className="flex items-center justify-center gap-1.5 text-xs">
+        <Cloud size={13} style={{ color: C.emerald?.light || '#34D399' }} className="shrink-0" />
+        <span className="text-[11px] font-medium" style={{ color: C.text?.muted || '#94A3B8' }}>
+          {isRtl ? 'ربط سحابي متزامن' : 'Cloud Synchronized'}
+        </span>
       </div>
 
+      {/* زر تسجيل الخروج */}
       <button
         type="button"
-        onClick={() => supabase.auth.signOut()}
-        className="w-full flex items-center justify-center gap-2 p-2 bg-red-950/30 hover:bg-red-900/40 border border-red-800/50 rounded-lg text-red-400 hover:text-red-300 font-bold text-xs cursor-pointer transition-all duration-150"
+        onClick={handleLogout}
+        className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-bold text-xs cursor-pointer transition-all duration-150 active:scale-95"
+        style={{
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          color: C.error?.DEFAULT || '#EF4444',
+          borderColor: 'rgba(239, 68, 68, 0.25)',
+          borderWidth: '1px',
+          borderStyle: 'solid'
+        }}
       >
-        <LogOut size={16} className="shrink-0" />
+        <LogOut size={15} className="shrink-0" />
         <span>{isRtl ? 'إنهاء الجلسة وتأكيد الخروج' : 'Logout'}</span>
       </button>
     </div>
