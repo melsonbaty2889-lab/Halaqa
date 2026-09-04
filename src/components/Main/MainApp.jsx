@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
 import colorsImport from '@/theme/colors.js';
+import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from '@/components/Sidebar/Sidebar';
 import BottomNav from '@/components/Sidebar/BottomNav';
@@ -572,6 +573,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
+  const skeletonLoader = (
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <Skeleton width="220px" height="32px" borderRadius="8px" />
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+      <Skeleton width="100%" height="240px" borderRadius="16px" />
+    </div>
+  );
+
   return (
     <div 
       style={{ 
@@ -636,9 +649,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           boxSizing: 'border-box' 
         }}>
           <ErrorBoundaryInner key={activeTab}>
-            <Suspense fallback={null}>
-              {/* عرض الداشبورد فوراً دون انتظار loadingData */}
-              {renderActiveTabContent()}
+            <Suspense fallback={skeletonLoader}>
+              {loadingData ? skeletonLoader : renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
         </main>
