@@ -2,6 +2,7 @@
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
 import { formatHijriDate, toEngNums } from '../../utils/dateUtils';
+import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
   academyTime,
@@ -22,7 +23,7 @@ export default function SidebarWidget({
   // جلب التاريخ الهجري
   let formattedHijri = formatHijriDate(new Date(), isRtl ? 'ar' : 'en');
   
-  // 🟢 اختصار اسم الشهر في اللغة الإنجليزية لمنع الانقطاع النهائي
+  // اختصار اسم الشهر في اللغة الإنجليزية لمنع الانقطاع النهائي
   if (!isRtl && formattedHijri) {
     formattedHijri = formattedHijri
       .replace("Rabi' al-Awwal", "Rabi I")
@@ -47,20 +48,27 @@ export default function SidebarWidget({
   const isLifetime = effectiveDaysLeft === Infinity;
 
   return (
-    <div className="bg-[var(--surface-card,rgba(15,23,42,0.85))] backdrop-blur-md p-2 rounded-xl mb-3 border border-[var(--border-card,rgba(255,255,255,0.08))] flex items-center justify-between gap-1.5 shadow-sm">
-      
+    <div 
+      className="p-2 rounded-xl mb-3 flex items-center justify-between gap-1.5 shadow-sm backdrop-blur-md"
+      style={{
+        backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
+        borderColor: C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)',
+        borderWidth: '1px',
+        borderStyle: 'solid'
+      }}
+    >
       {/* الوقت */}
-      <div className="flex items-center gap-1 text-emerald-400 text-[11px] font-bold font-mono shrink-0 dir-ltr">
-        <Clock size={13} className="text-emerald-400 shrink-0" />
+      <div className="flex items-center gap-1 text-[11px] font-bold font-mono shrink-0 dir-ltr" style={{ color: C.emerald?.light || '#34D399' }}>
+        <Clock size={13} className="shrink-0" style={{ color: C.emerald?.light || '#34D399' }} />
         <span>{formattedTime}</span>
       </div>
 
-      {/* التواريخ - إزالة truncate والسماح بالنصوص بالتكيّف */}
+      {/* التواريخ */}
       <div className="flex flex-col items-center justify-center min-w-0 flex-1 px-1">
-        <span className="text-[11px] text-emerald-300 font-semibold leading-tight whitespace-nowrap">
+        <span className="text-[11px] font-semibold leading-tight whitespace-nowrap" style={{ color: C.emerald?.light || '#34D399' }}>
           {formattedGregorian}
         </span>
-        <span className="text-[9.5px] text-slate-400 font-medium leading-tight whitespace-nowrap">
+        <span className="text-[9.5px] font-medium leading-tight whitespace-nowrap" style={{ color: C.text?.muted || '#94A3B8' }}>
           {formattedHijri}
         </span>
       </div>
