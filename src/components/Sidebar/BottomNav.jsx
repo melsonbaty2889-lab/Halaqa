@@ -1,102 +1,77 @@
-// src/components/Sidebar/BottomNav.jsx
 import React from 'react';
-import { LayoutDashboard, Users, BookOpen, Sparkles, Menu } from 'lucide-react';
-import { colors as C } from '@/theme/colors';
-import useIsMobile from '@/hooks/useIsMobile';
+import { NavLink } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Users, 
+  BookOpen, 
+  Sparkles, 
+  Menu 
+} from 'lucide-react';
 
-export default function BottomNav({
-  activeTab,
-  setActiveTab,
-  setSidebarOpen,
-  isRtl = true
-}) {
-  const isMobile = useIsMobile(1024);
+const BottomNav = ({ userPlan }) => {
+  // التحقق مما إذا كان الحساب دائماً أو مميزاً
+  const isLifetimeOrPro = userPlan === 'lifetime' || userPlan === 'pro' || userPlan === 'دائم';
 
-  if (!isMobile) return null;
-
+  // قائمة أزرار الشريط السفلي
   const navItems = [
-    { id: 'dashboard', label: isRtl ? 'الرئيسية' : 'Home', icon: LayoutDashboard },
-    { id: 'students', label: isRtl ? 'الطلاب' : 'Students', icon: Users },
-    { id: 'halaqas', label: isRtl ? 'الحلقات' : 'Halaqas', icon: BookOpen },
-    { id: 'upgrade', label: isRtl ? 'الترقية' : 'Upgrade', icon: Sparkles, isHighlight: true },
+    { 
+      id: 'home',
+      label: 'الرئيسية', 
+      icon: LayoutDashboard, 
+      path: '/dashboard' 
+    },
+    { 
+      id: 'students',
+      label: 'الطلاب', 
+      icon: Users, 
+      path: '/students' 
+    },
+    { 
+      id: 'halaqat',
+      label: 'الحلقات', 
+      icon: BookOpen, 
+      path: '/halaqat' 
+    },
+    // يظهر زر الترقية فقط إذا لم يكن الحساب دائماً أو ترقية
+    ...(!isLifetimeOrPro ? [{ 
+      id: 'upgrade',
+      label: 'الترقية', 
+      icon: Sparkles, 
+      path: '/upgrade' 
+    }] : []),
+    { 
+      id: 'more',
+      label: 'المزيد', 
+      icon: Menu, 
+      path: '/more' 
+    },
   ];
 
   return (
-    <div
-      dir={isRtl ? 'rtl' : 'ltr'}
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '60px',
-        backgroundColor: C.dark?.surfaceCard || '#0f172a',
-        borderTop: `1px solid ${C.dark?.border || 'rgba(255,255,255,0.1)'}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        zIndex: 990,
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.4)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)'
-      }}
-    >
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = activeTab === item.id;
-
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setActiveTab(item.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2px',
-              padding: '6px 8px',
-              color: isActive
-                ? (item.isHighlight ? '#f59e0b' : (C.primary?.DEFAULT || '#E07A00'))
-                : (C.text?.muted || '#94A3B8'),
-              cursor: 'pointer',
-              flex: 1
-            }}
-          >
-            <Icon size={19} strokeWidth={isActive ? 2.3 : 1.8} />
-            <span style={{ fontSize: '0.65rem', fontWeight: isActive ? '700' : '500' }}>
-              {item.label}
-            </span>
-          </button>
-        );
-      })}
-
-      <button
-        type="button"
-        onClick={() => setSidebarOpen(true)}
-        style={{
-          background: 'none',
-          border: 'none',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '2px',
-          padding: '6px 8px',
-          color: C.text?.muted || '#94A3B8',
-          cursor: 'pointer',
-          flex: 1
-        }}
-      >
-        <Menu size={19} />
-        <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>
-          {isRtl ? 'المزيد' : 'More'}
-        </span>
-      </button>
-    </div>
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0f172a] border-t border-slate-800 px-2 py-2">
+      <div className="flex items-center justify-around max-w-md mx-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center w-full py-1 text-xs transition-colors duration-200 ${
+                  isActive
+                    ? 'text-amber-500 font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`
+              }
+            >
+              <Icon className="w-5 h-5 mb-1" />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </div>
+    </nav>
   );
-}
+};
+
+export default BottomNav;
