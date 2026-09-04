@@ -8,14 +8,14 @@ export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl }) {
     <div style={{
       position: 'relative',
       marginBottom: '10px',
-      background: C.dark.card,
+      background: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
       borderRadius: '8px',
-      border: `1px solid ${C.dark.border}`,
+      border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
       display: 'flex',
       alignItems: 'center',
       padding: '0 10px'
     }}>
-      <Search size={14} style={{ color: C.text.placeholder, flexShrink: 0 }} />
+      <Search size={14} style={{ color: C.text?.muted || '#94A3B8', flexShrink: 0 }} />
       <input 
         type="text"
         placeholder={isRtl ? 'بحث سريع...' : 'Quick search...'}
@@ -31,7 +31,7 @@ export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl }) {
           background: 'transparent',
           border: 'none',
           outline: 'none',
-          color: C.text.title,
+          color: C.text?.title || '#FFFFFF',
           fontSize: '0.78rem',
           direction: isRtl ? 'rtl' : 'ltr'
         }}
@@ -43,7 +43,7 @@ export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl }) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: C.text.placeholder,
+            color: C.text?.muted || '#94A3B8',
             cursor: 'pointer',
             padding: '2px',
             display: 'flex',
