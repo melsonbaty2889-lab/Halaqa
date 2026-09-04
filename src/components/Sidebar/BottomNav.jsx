@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, Users, BookOpen, Sparkles, Menu } from 'lucide-react';
 import { colors as C } from '@/theme/colors';
+import useIsMobile from '@/hooks/useIsMobile';
 
 export default function BottomNav({
   activeTab,
@@ -8,6 +9,11 @@ export default function BottomNav({
   setSidebarOpen,
   isRtl = true
 }) {
+  const isMobile = useIsMobile(1024);
+
+  // إخفاء الشريط نهائياً إذا لم تكن الشاشة موبايل
+  if (!isMobile) return null;
+
   const navItems = [
     { id: 'dashboard', label: isRtl ? 'الرئيسية' : 'Home', icon: LayoutDashboard },
     { id: 'students', label: isRtl ? 'الطلاب' : 'Students', icon: Users },
@@ -34,7 +40,6 @@ export default function BottomNav({
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)'
       }}
-      className="md:hidden"
     >
       {navItems.map((item) => {
         const Icon = item.icon;
