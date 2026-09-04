@@ -222,7 +222,7 @@ export default function Sidebar({
       if (currentAcademy.is_active === false) {
         return {
           text: isRtl ? 'قيد التفعيل' : 'Pending',
-          style: { background: C.error.bg, color: C.error.light, border: `1px solid ${C.error.border}` }
+          style: { background: 'rgba(239, 68, 68, 0.15)', color: C.error?.DEFAULT || '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }
         };
       }
       if (effectiveDaysLeft === Infinity) {
@@ -234,23 +234,23 @@ export default function Sidebar({
       if (effectiveDaysLeft > 14) {
         return {
           text: isRtl ? 'اشتراك نشط' : 'Active Plan',
-          style: { background: C.brandEmerald.bgGlow, color: C.brandEmerald.light, border: `1px solid ${C.brandEmerald.border}` }
+          style: { background: 'rgba(16, 185, 129, 0.15)', color: C.emerald?.light || '#34D399', border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}` }
         };
       }
       if (effectiveDaysLeft > 0) {
         return {
           text: isRtl ? 'فترة تجريبية' : 'Free Trial',
-          style: { background: 'rgba(245, 158, 11, 0.15)', color: C.primary.light, border: '1px solid rgba(245, 158, 11, 0.3)' }
+          style: { background: 'rgba(217, 119, 6, 0.15)', color: C.amber?.DEFAULT || '#D97706', border: '1px solid rgba(217, 119, 6, 0.3)' }
         };
       }
       return {
         text: isRtl ? 'منتهي الصلاحية' : 'Expired',
-        style: { background: C.error.bg, color: C.error.light, border: `1px solid ${C.error.border}` }
+        style: { background: 'rgba(239, 68, 68, 0.15)', color: C.error?.DEFAULT || '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }
       };
     }
     return {
       text: isRtl ? 'اشتراك نشط' : 'Active Plan',
-      style: { background: C.brandEmerald.bgGlow, color: C.brandEmerald.light, border: `1px solid ${C.brandEmerald.border}` }
+      style: { background: 'rgba(16, 185, 129, 0.15)', color: C.emerald?.light || '#34D399', border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}` }
     };
   }, [currentAcademy, effectiveDaysLeft, isRtl]);
 
@@ -282,11 +282,11 @@ export default function Sidebar({
     ...(isRtl ? { right: 0, left: 'auto' } : { left: 0, right: 'auto' }),
     width: isMobile ? '82vw' : '280px',
     maxWidth: '320px',
-    backgroundColor: C.dark.surfaceCard || '#0f172a',
+    backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderLeft: isRtl ? `1px solid ${C.dark.border}` : 'none',
-    borderRight: isRtl ? 'none' : `1px solid ${C.dark.border}`,
+    borderLeft: isRtl ? `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}` : 'none',
+    borderRight: isRtl ? 'none' : `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -318,10 +318,10 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* Header الرئيسي - مدمج ومنظم دون تكرار */}
+        {/* Header الرئيسي */}
         <div style={{ 
           padding: '12px 14px',
-          borderBottom: `1px solid ${C.dark.border}`,
+          borderBottom: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -350,9 +350,9 @@ export default function Sidebar({
               onClick={() => setSidebarOpen(false)}
               style={{ 
                 background: 'rgba(255,255,255,0.05)', 
-                border: `1px solid ${C.dark.border}`, 
+                border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`, 
                 borderRadius: '8px',
-                color: C.text.muted, 
+                color: C.text?.muted || '#94A3B8', 
                 cursor: 'pointer', 
                 padding: '6px',
                 display: 'flex',
@@ -412,9 +412,9 @@ export default function Sidebar({
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
-          borderTop: `1px solid ${C.dark.border}`,
+          borderTop: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
           flexShrink: 0,
-          backgroundColor: C.dark.surfaceCard || '#0f172a'
+          backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)'
         }}>
           <SidebarFooter isRtl={isRtl} />
         </div>
