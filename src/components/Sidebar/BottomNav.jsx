@@ -1,3 +1,4 @@
+// src/components/Sidebar/BottomNav.jsx
 import React from 'react';
 import { LayoutDashboard, Users, BookOpen, Sparkles, Menu } from 'lucide-react';
 import { colors as C } from '@/theme/colors';
@@ -11,7 +12,6 @@ export default function BottomNav({
 }) {
   const isMobile = useIsMobile(1024);
 
-  // إخفاء الشريط نهائياً إذا لم تكن الشاشة موبايل
   if (!isMobile) return null;
 
   const navItems = [
@@ -23,6 +23,7 @@ export default function BottomNav({
 
   return (
     <div
+      dir={isRtl ? 'rtl' : 'ltr'}
       style={{
         position: 'fixed',
         bottom: 0,
