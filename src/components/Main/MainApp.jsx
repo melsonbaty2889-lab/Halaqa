@@ -22,6 +22,48 @@ const C = colorsImport?.colors || colorsImport || {
   primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
 };
 
+// مكون الخلفية الخضراء بالنجوم الجمالية
+const EmeraldStarryBackground = () => {
+  const stars = useMemo(() => {
+    return Array.from({ length: 35 }).map((_, i) => ({
+      id: i,
+      size: Math.random() * 3 + 1,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      opacity: Math.random() * 0.7 + 0.3,
+      duration: `${Math.random() * 3 + 2}s`,
+      delay: `${Math.random() * 2}s`
+    }));
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+      {/* التوهج الأخضر الزمردي العلوي */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-[120px]" />
+      <div className="absolute top-1/3 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-[140px]" />
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-teal-600/10 rounded-full blur-[130px]" />
+
+      {/* النجوم المتلألئة */}
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="absolute rounded-full bg-emerald-300 animate-pulse"
+          style={{
+            width: `${star.size}px`,
+            height: `${star.size}px`,
+            top: star.top,
+            left: star.left,
+            opacity: star.opacity,
+            animationDuration: star.duration,
+            animationDelay: star.delay,
+            boxShadow: `0 0 ${star.size * 2}px rgba(52, 211, 153, 0.8)`
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const formatLocalizedText = (val, lang = 'ar') => {
   if (val === null || val === undefined) return '';
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -47,7 +89,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-md w-full bg-slate-900 border border-rose-500/30 rounded-2xl p-6 text-center shadow-2xl space-y-5">
         <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500">
           <AlertOctagon size={36} />
@@ -116,13 +158,13 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit">
+      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit backdrop-blur-md">
         <button
           type="button"
           onClick={() => setActiveSubTab('communications')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
-              ? 'bg-amber-600 text-white shadow-lg' 
+              ? 'bg-emerald-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -134,7 +176,7 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           onClick={() => setActiveSubTab('reports')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
-              ? 'bg-amber-600 text-white shadow-lg' 
+              ? 'bg-emerald-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -247,14 +289,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, [currentLang]);
 
-  // إغلاق القائمة عند التغيير للحاسوب
   useEffect(() => {
     if (!isMobile) {
       setSidebarOpen(false);
     }
   }, [isMobile]);
 
-  // إغلاق القائمة عند تغيير التبويب في الشاشات الصغيرة
   const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
     if (isMobile) {
@@ -589,7 +629,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       }} 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* خلفية معتمة للموبايل عند فتح القائمة Sidebar Backdrop */}
+      {/* خلفية النجوم الخضراء الجمالية */}
+      <EmeraldStarryBackground />
+
+      {/* خلفية معتمة للموبايل عند فتح القائمة */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -644,7 +687,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           className="flex-1 w-full box-border overflow-y-auto"
           style={{ 
             padding: isMobile ? '12px' : '24px', 
-            paddingBottom: isMobile ? '80px' : '24px' // مساحة كافية لتجنب تداخل BottomNav
+            paddingBottom: isMobile ? '80px' : '24px'
           }}
         >
           <ErrorBoundaryInner key={activeTab}>
@@ -655,7 +698,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         </main>
       </div>
 
-      {/* الشريط السفلي للتنقل المباشر للموبايل */}
+      {/* الشريط السفلي للموبايل */}
       <BottomNav 
         activeTab={activeTab} 
         setActiveTab={handleTabChange} 
