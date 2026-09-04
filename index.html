@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="notranslate" translate="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>الحلقة الذكية | Smart Halaqa</title>
     <meta name="description" content="منظومة إدارة حلقات وأكاديميات القرآن الكريم" />
+
+    <!-- 1. إجبار المتصفح والـ CDN على عدم تخزين الهيكل الأساسي مؤقتاً (HTTP Cache Control) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- 2. منع ميزات الترجمة والتحويل التلقائي في Chrome التي تسبب تشوه العناصر -->
+    <meta name="google" content="notranslate" />
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -14,20 +22,39 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="الحلقة الذكية" />
 
-    <!-- 1. منع إضافات المتصفح من تعديل الألوان تلقائياً -->
+    <!-- منع تعديل الألوان التلقائي (Dark Mode Extensions / Force Dark) -->
     <meta name="darkreader-lock" />
     <meta name="color-scheme" content="dark" />
 
-    <!-- 2. تفريغ الـ Cache تلقائياً عند تحديث رقم الإصدار -->
+    <!-- 3. تفريغ الـ Cache والـ Service Workers المسجلة قديمة تلقائياً -->
     <script>
       (function () {
-        const CURRENT_VERSION = '1.0.2';
+        const CURRENT_VERSION = '1.0.3'; // قم بترقية رقم الإصدار عند كل نشر جديد
         const savedVersion = localStorage.getItem('app_version');
 
         if (savedVersion !== CURRENT_VERSION) {
+          // مسح ذاكرة التخزين المحلية
           localStorage.clear();
           sessionStorage.clear();
           localStorage.setItem('app_version', CURRENT_VERSION);
+
+          // إلغاء تسجيل أي Service Worker قديم يحفظ ملفات JS مخزنة
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+              for (let registration of registrations) {
+                registration.unregister();
+              }
+            });
+          }
+
+          // تفريغ الـ Cache Storage الخاص بـ PWA إن وجد
+          if ('caches' in window) {
+            caches.keys().then(function (names) {
+              for (let name of names) {
+                caches.delete(name);
+              }
+            });
+          }
         }
       })();
     </script>
@@ -37,7 +64,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
   </head>
-  <body>
+  <body class="bg-[#070B11] text-slate-100 antialiased overflow-x-hidden">
 
     <div id="root"></div>
     
