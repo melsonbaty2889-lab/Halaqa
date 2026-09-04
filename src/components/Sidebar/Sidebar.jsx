@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { X } from "lucide-react";
 import { colors as C } from '@/theme/colors';
 
@@ -197,8 +196,6 @@ export default function Sidebar({
   const rawLogo = currentAcademy?.logo_url || academy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
-  const academySlug = typeof currentAcademy?.slug === 'string' ? currentAcademy?.slug : (typeof academy?.slug === 'string' ? academy?.slug : '');
-  
   const calculateEffectiveDaysLeft = useCallback(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
     if (currentAcademy.is_active && !currentAcademy.trial_ends_at) return Infinity;
@@ -321,102 +318,55 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
+        {/* Header الرئيسي - مدمج ومنظم دون تكرار */}
         <div style={{ 
-          padding: '14px 14px 10px 14px',
+          padding: '12px 14px',
           borderBottom: `1px solid ${C.dark.border}`,
-          flexShrink: 0
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            gap: '8px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-              {academyLogo ? (
-                <img 
-                  src={academyLogo} 
-                  alt={currentAcademyName} 
-                  loading="eager"
-                  decoding="sync"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    objectFit: 'cover',
-                    border: `1px solid ${C.dark.border}`,
-                    flexShrink: 0
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <SmartHalaqaProLogo size={36} />
-                </div>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <h2 style={{ 
-                  margin: 0, 
-                  fontSize: '0.92rem', 
-                  fontWeight: '700', 
-                  color: C.text.title, 
-                  lineHeight: '1.2',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {currentAcademyName}
-                </h2>
-                <span style={{ 
-                  fontSize: '0.65rem', 
-                  color: C.text.muted, 
-                  fontWeight: '500',
-                  direction: 'ltr',
-                  textAlign: isRtl ? 'right' : 'left',
-                  fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {academySlug ? `/${academySlug}` : (isRtl ? 'إدارة المقارئ والأكاديميات' : 'Quranic Academy Platform')}
-                </span>
-              </div>
-            </div>
-
-            {isMobile && (
-              <button 
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                style={{ 
-                  background: 'rgba(255,255,255,0.06)', 
-                  border: `1px solid ${C.dark.border}`, 
-                  borderRadius: '8px',
-                  color: C.text.muted, 
-                  cursor: 'pointer', 
-                  padding: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                <X size={18} />
-              </button>
-            )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <AcademySelector
+              academiesList={academiesList}
+              currentAcademyId={currentAcademyId}
+              currentAcademyName={currentAcademyName}
+              academyLogo={academyLogo}
+              dropdownOpen={dropdownOpen}
+              setDropdownOpen={setDropdownOpen}
+              dropdownRef={dropdownRef}
+              statusBadge={statusBadge}
+              onSwitchAcademy={onSwitchAcademy}
+              getText={getText}
+              isRtl={isRtl}
+            />
           </div>
+
+          {isMobile && (
+            <button 
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              style={{ 
+                background: 'rgba(255,255,255,0.05)', 
+                border: `1px solid ${C.dark.border}`, 
+                borderRadius: '8px',
+                color: C.text.muted, 
+                cursor: 'pointer', 
+                padding: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
+        {/* جسم القائمة الجانبية */}
         <div 
           style={{ 
             padding: '12px', 
@@ -426,19 +376,6 @@ export default function Sidebar({
             overscrollBehaviorY: 'contain'
           }}
         >
-          <AcademySelector
-            academiesList={academiesList}
-            currentAcademyId={currentAcademyId}
-            currentAcademyName={currentAcademyName}
-            dropdownOpen={dropdownOpen}
-            setDropdownOpen={setDropdownOpen}
-            dropdownRef={dropdownRef}
-            statusBadge={statusBadge}
-            onSwitchAcademy={onSwitchAcademy}
-            getText={getText}
-            isRtl={isRtl}
-          />
-
           <SidebarWidget
             academyTime={academyTime}
             hijri={hijri}
@@ -471,6 +408,7 @@ export default function Sidebar({
           />
         </div>
 
+        {/* ذيل القائمة */}
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
