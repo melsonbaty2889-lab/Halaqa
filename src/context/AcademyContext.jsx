@@ -255,7 +255,16 @@ export const AcademyProvider = ({ children }) => {
 export const useAcademy = () => {
   const context = useContext(AcademyContext);
   if (!context) {
-    throw new Error('useAcademy must be used within an AcademyProvider');
+    // إرجاع قيم افتراضية بدلاً من كسر التطبيق بالـ Error
+    return {
+      user: null,
+      profile: null,
+      academy: null,
+      appState: 'LOADING',
+      updateAcademyState: () => {},
+      logout: async () => {},
+      refreshStatus: async () => {}
+    };
   }
   return context;
 };
