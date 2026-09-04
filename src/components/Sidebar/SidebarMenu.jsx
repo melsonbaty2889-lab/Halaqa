@@ -23,7 +23,6 @@ export default function SidebarMenu({
 
           return (
             <div key={section.id} className="mb-1 w-full">
-              {/* رأس القسم الرئيسي */}
               <button
                 type="button"
                 onClick={() => toggleSection && toggleSection(section.id)}
@@ -43,7 +42,6 @@ export default function SidebarMenu({
                 )}
               </button>
 
-              {/* عناصر القائمة الفرعية */}
               {isExpanded && (
                 <div 
                   className="flex flex-col gap-1 mt-1.5"
@@ -90,8 +88,6 @@ export default function SidebarMenu({
                             }`}
                           />
                         )}
-                        
-                        {/* استخدام leading-relaxed مع py-0.5 لمنع قطع الحروف العربية نهائياً */}
                         <span className="text-[13px] leading-relaxed py-0.5 inline-block truncate">
                           {getText(item.label)}
                         </span>
