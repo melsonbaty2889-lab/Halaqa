@@ -8,7 +8,6 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSynced, setIsSynced] = useState(true);
 
-  // دالة ترجمة آمنة تدعم القيم الافتراضية
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       const translated = t(key);
@@ -17,7 +16,6 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
     return fallback;
   }, [t]);
 
-  // التعامل مع تسجيل الخروج
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
     
@@ -42,9 +40,8 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
       dir={isRtl ? 'rtl' : 'ltr'}
       aria-label={safeT('sidebar.footer', isRtl ? 'ذيل القائمة الجانبية' : 'Sidebar Footer')}
     >
-      {/* مؤشر حالة التزامن السحابي */}
       <div 
-        className="flex items-center justify-center gap-2 py-1 px-2.5 rounded-lg bg-slate-800/40 border border-white/5 transition-all duration-300"
+        className="flex items-center justify-center gap-2 py-1.5 px-2.5 rounded-lg bg-slate-800/40 border border-white/5 transition-all duration-300"
         title={safeT('sidebar.cloudSyncTooltip', isRtl ? 'اتصال سحابي آمن ومباشر' : 'Secure real-time cloud sync')}
       >
         <div className="relative flex items-center justify-center">
@@ -69,7 +66,6 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
         </span>
       </div>
 
-      {/* زر تسجيل الخروج */}
       <button
         type="button"
         onClick={handleLogout}
@@ -99,10 +95,10 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
           />
         )}
 
-        <span className="leading-relaxed py-0.5 inline-block select-none">
+        <span className="leading-relaxed py-0.5 inline-block select-none truncate">
           {isLoggingOut 
-            ? safeT('common.loggingOut', isRtl ? 'جاري إنهاء الجلسة...' : 'Logging out...') 
-            : safeT('common.logoutConfirm', isRtl ? 'إنهاء الجلسة وتأكيد الخروج' : 'Logout')}
+            ? safeT('common.loggingOut', isRtl ? 'جاري الخروج...' : 'Logging out...') 
+            : safeT('common.logout', isRtl ? 'تسجيل الخروج' : 'Logout')}
         </span>
       </button>
     </footer>
