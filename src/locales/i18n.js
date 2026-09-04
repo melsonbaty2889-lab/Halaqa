@@ -34,11 +34,11 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: ['ar', 'en'], // 🟢 تحديد اللغة الاحتياطية بوضوح وببساطة
+    fallbackLng: ['ar', 'en'],
     supportedLngs: SUPPORTED_LANGUAGES,
-    nonExplicitSupportedLngs: true, // يضمن تحويل tr-TR إلى tr تلقائياً
+    nonExplicitSupportedLngs: true,
     lowerCaseLng: true,
-    load: 'languageOnly', // يقرأ tr بدلاً من البحث عن tr-TR
+    load: 'languageOnly',
     react: { useSuspense: false },
     interpolation: { escapeValue: false },
     detection: {
@@ -48,7 +48,6 @@ i18n
     },
   });
 
-// 🟢 تحديد اتجاه الصفحة ولغتها في الـ DOM عند بدء التشغيل
 const getCleanLang = (lng) => {
   if (!lng) return 'ar';
   const code = lng.split('-')[0].toLowerCase();
@@ -62,7 +61,6 @@ if (typeof document !== 'undefined') {
   document.documentElement.setAttribute('lang', initialLng);
 }
 
-// 🟢 التحديث التلقائي لاتصالية الواجهة عند تغيير اللغة مع فحص أمني آمن
 if (i18n && typeof i18n.on === 'function') {
   i18n.on('languageChanged', (lng) => {
     const validLanguage = getCleanLang(lng);
