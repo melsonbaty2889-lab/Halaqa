@@ -786,9 +786,6 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
-      {/* 📡 شريط تنبيهات الشبكة والتحديثات في أعلى تطبيقك */}
-      <OfflineAndUpdateBanner />
-
       <Suspense fallback={
         <div style={{ background: C.dark.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary.DEFAULT }}>
           <Loader2 className="animate-spin" size={32} />
@@ -799,10 +796,14 @@ export default function App() {
         ) : view === 'splash' || showSplash ? (
           <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
         ) : (
-          <Routes>
-            <Route path="/verify/:certId" element={<CertificateVerify />} />
-            <Route path="/*" element={<MainContent />} />
-          </Routes>
+          <>
+            {/* نقل شريط التنبيهات هنا لضمان عمله داخل سياق الأكاديمية بحرية */}
+            <OfflineAndUpdateBanner />
+            <Routes>
+              <Route path="/verify/:certId" element={<CertificateVerify />} />
+              <Route path="/*" element={<MainContent />} />
+            </Routes>
+          </>
         )}
       </Suspense>
     </GlobalErrorBoundary>
