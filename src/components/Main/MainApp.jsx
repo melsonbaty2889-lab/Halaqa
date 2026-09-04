@@ -247,8 +247,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, [currentLang]);
 
+  // إغلاق القائمة عند التغيير للحاسوب
   useEffect(() => {
     if (!isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
+
+  // إغلاق القائمة عند تغيير التبويب في الشاشات الصغيرة
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab);
+    if (isMobile) {
       setSidebarOpen(false);
     }
   }, [isMobile]);
@@ -449,12 +458,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
+        return <Dashboard session={session} setActiveTab={handleTabChange} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
       case 'interactive_quran':
         return <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
       case 'subscriptions':
       case 'upgrade':
-        return <SubscriptionPage session={session} academyId={academyId} onBack={() => setActiveTab('dashboard')} />;
+        return <SubscriptionPage session={session} academyId={academyId} onBack={() => handleTabChange('dashboard')} />;
       case 'referrals':
       case 'affiliate-rewards':
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
@@ -513,7 +522,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isMobile={isMobile} 
             onNavigateToAttendance={(halaqaId) => {
               setSelectedHalaqaId(halaqaId);
-              setActiveTab('attendance');
+              handleTabChange('attendance');
             }}
           />
         );
@@ -568,30 +577,33 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         );
       default:
-        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
+        return <Dashboard session={session} setActiveTab={handleTabChange} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
     }
   };
 
   return (
     <div 
+      className="relative flex min-h-screen w-full bg-slate-950 text-slate-100 overflow-x-hidden"
       style={{ 
-        display: 'flex', 
-        minHeight: '100vh', 
-        width: '100%', 
-        background: C?.dark?.main || '#0f172a', 
-        color: C?.text?.title || '#f8fafc', 
-        fontFamily: "'Cairo', system-ui, sans-serif",
-        position: 'relative',
-        overflowX: 'hidden'
+        fontFamily: "'Cairo', system-ui, sans-serif"
       }} 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
+      {/* خلفية معتمة للموبايل عند فتح القائمة Sidebar Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 transition-opacity duration-300"
+        />
+      )}
+
+      {/* Sidebar القائمة الجانبية */}
       <Sidebar 
         currentAcademyId={academyId}
         academy={academy}
         onSwitchAcademy={handleSwitchAcademy}
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={handleTabChange} 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
         isMobile={isMobile} 
@@ -607,7 +619,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh', width: '100%' }}>
+      {/* المحتوى الرئيسي وهيدر التطبيق */}
+      <div className="flex flex-col flex-1 min-w-0 min-h-screen w-full relative z-10 overflow-x-hidden">
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
@@ -620,34 +633,32 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           countryCode={countryCode} 
           i18n={i18n} 
           activeTab={activeTab} 
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           userData={{
             name: session?.user?.user_metadata?.full_name || session?.user?.email || "",
             avatar: session?.user?.user_metadata?.avatar_url || ""
           }}
         />
 
-        <main style={{ 
-          padding: isMobile ? '12px' : '24px', 
-          paddingBottom: isMobile ? '70px' : '24px', 
-          flex: 1, 
-          overflowY: 'auto', 
-          width: '100%', 
-          boxSizing: 'border-box' 
-        }}>
+        <main 
+          className="flex-1 w-full box-border overflow-y-auto"
+          style={{ 
+            padding: isMobile ? '12px' : '24px', 
+            paddingBottom: isMobile ? '80px' : '24px' // مساحة كافية لتجنب تداخل BottomNav
+          }}
+        >
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={null}>
-              {/* عرض الداشبورد فوراً دون انتظار loadingData */}
               {renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
         </main>
       </div>
 
-      {/* الشريط السفلي للموبايل */}
+      {/* الشريط السفلي للتنقل المباشر للموبايل */}
       <BottomNav 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={handleTabChange} 
         setSidebarOpen={setSidebarOpen} 
         isRtl={isRtl} 
       />
