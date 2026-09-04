@@ -33,19 +33,16 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  // حماية دالة الترجمة
   const safeT = useCallback((key, fallback) => {
     return typeof t === 'function' ? t(key, fallback) : (fallback || key);
   }, [t]);
 
-  // استخدام useMemo لمنع إعادة الحسابات غير الضرورية للقوائم
   const menuSections = useMemo(() => {
     return getMenuSections(safeT, userRole);
   }, [safeT, userRole]);
 
   const [openSectionId, setOpenSectionId] = useState(null);
 
-  // دالة منيعة ومحميّة ضد خطأ Minified React error #31
   const getText = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -104,7 +101,6 @@ export default function Sidebar({
   const currentLocale = isRtl ? 'ar' : 'en';
   const hijri = useMemo(() => formatHijriDate(new Date(), currentLocale), [currentLocale]);
 
-  // جلب الأكاديميات بشكل آمن ومتزن
   const loadAcademies = useCallback(async () => {
     if (!supabase) return;
     try {
@@ -159,7 +155,6 @@ export default function Sidebar({
 
   useEffect(() => {
     let isMounted = true;
-    
     if (isMounted) loadAcademies();
 
     let channel = null;
@@ -221,38 +216,38 @@ export default function Sidebar({
     if (currentAcademy) {
       if (currentAcademy.is_active === false) {
         return {
-          text: isRtl ? 'قيد التفعيل' : 'Pending',
+          text: safeT('status.pending', isRtl ? 'قيد التفعيل' : 'Pending'),
           style: { background: 'rgba(239, 68, 68, 0.15)', color: C.error?.DEFAULT || '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }
         };
       }
       if (effectiveDaysLeft === Infinity) {
         return {
-          text: isRtl ? 'حساب دائم ∞' : 'Lifetime ∞',
+          text: safeT('status.lifetime', isRtl ? 'حساب دائم ∞' : 'Lifetime ∞'),
           style: { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.35)' }
         };
       }
       if (effectiveDaysLeft > 14) {
         return {
-          text: isRtl ? 'اشتراك نشط' : 'Active Plan',
+          text: safeT('status.active', isRtl ? 'اشتراك نشط' : 'Active Plan'),
           style: { background: 'rgba(16, 185, 129, 0.15)', color: C.emerald?.light || '#34D399', border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}` }
         };
       }
       if (effectiveDaysLeft > 0) {
         return {
-          text: isRtl ? 'فترة تجريبية' : 'Free Trial',
+          text: safeT('status.trial', isRtl ? 'فترة تجريبية' : 'Free Trial'),
           style: { background: 'rgba(217, 119, 6, 0.15)', color: C.amber?.DEFAULT || '#D97706', border: '1px solid rgba(217, 119, 6, 0.3)' }
         };
       }
       return {
-        text: isRtl ? 'منتهي الصلاحية' : 'Expired',
+        text: safeT('status.expired', isRtl ? 'منتهي الصلاحية' : 'Expired'),
         style: { background: 'rgba(239, 68, 68, 0.15)', color: C.error?.DEFAULT || '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }
       };
     }
     return {
-      text: isRtl ? 'اشتراك نشط' : 'Active Plan',
+      text: safeT('status.active', isRtl ? 'اشتراك نشط' : 'Active Plan'),
       style: { background: 'rgba(16, 185, 129, 0.15)', color: C.emerald?.light || '#34D399', border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}` }
     };
-  }, [currentAcademy, effectiveDaysLeft, isRtl]);
+  }, [currentAcademy, effectiveDaysLeft, isRtl, safeT]);
 
   const normalizeArabic = useCallback((text) => {
     const str = getText(text);
@@ -280,8 +275,8 @@ export default function Sidebar({
     bottom: 0,
     height: '100dvh',
     ...(isRtl ? { right: 0, left: 'auto' } : { left: 0, right: 'auto' }),
-    width: isMobile ? '82vw' : '280px',
-    maxWidth: '320px',
+    width: isMobile ? '100%' : '280px',
+    maxWidth: isMobile ? '100vw' : '280px',
     backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
@@ -318,7 +313,6 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
-        {/* Header الرئيسي */}
         <div style={{ 
           padding: '12px 14px',
           borderBottom: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
@@ -366,7 +360,6 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* جسم القائمة الجانبية */}
         <div 
           style={{ 
             padding: '12px', 
@@ -392,6 +385,7 @@ export default function Sidebar({
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             isRtl={isRtl}
+            t={safeT}
           />
 
           <SidebarMenu
@@ -408,7 +402,6 @@ export default function Sidebar({
           />
         </div>
 
-        {/* ذيل القائمة */}
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
@@ -416,7 +409,7 @@ export default function Sidebar({
           flexShrink: 0,
           backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)'
         }}>
-          <SidebarFooter isRtl={isRtl} />
+          <SidebarFooter isRtl={isRtl} t={safeT} />
         </div>
       </aside>
     </>
