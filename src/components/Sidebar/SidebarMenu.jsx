@@ -16,7 +16,7 @@ export default function SidebarMenu({
   isRtl
 }) {
   return (
-    <nav className="flex flex-col gap-1.5 w-full flex-1">
+    <nav className="flex flex-col gap-1.5 w-full flex-1" dir={isRtl ? 'rtl' : 'ltr'}>
       {filteredMenuSections && filteredMenuSections.length > 0 ? (
         filteredMenuSections.map((section) => {
           const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
@@ -33,7 +33,7 @@ export default function SidebarMenu({
                     : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 }`}
               >
-                <span className="tracking-wide">{getText(section.title)}</span>
+                <span className="tracking-wide text-start">{getText(section.title)}</span>
                 {isExpanded ? (
                   <ChevronUp size={15} className="text-emerald-400 shrink-0" />
                 ) : (
@@ -45,26 +45,32 @@ export default function SidebarMenu({
               {isExpanded && (
                 <div 
                   className="flex flex-col gap-1 mt-1.5"
-                  style={{ paddingRight: isRtl ? '8px' : '0px', paddingLeft: isRtl ? '0px' : '8px' }}
+                  style={{
+                    paddingRight: isRtl ? '8px' : '0px',
+                    paddingLeft: isRtl ? '0px' : '8px'
+                  }}
                 >
                   {section.items && section.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
+                    
                     return (
                       <button
                         key={item.id}
                         type="button"
                         onClick={() => {
                           setActiveTab(item.id);
-                          if (isMobile) setSidebarOpen(false);
+                          if (isMobile && typeof setSidebarOpen === 'function') {
+                            setSidebarOpen(false);
+                          }
                         }}
                         style={
                           isActive
                             ? {
-                                background: 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+                                background: `linear-gradient(135deg, ${C.amber?.DEFAULT || '#D97706'} 0%, #B45309 100%)`,
                                 color: '#FFFFFF',
-                                boxShadow: '0 4px 15px rgba(224, 122, 0, 0.35)',
-                                border: '1px solid rgba(255, 255, 255, 0.15)'
+                                boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
                               }
                             : {}
                         }
@@ -82,7 +88,7 @@ export default function SidebarMenu({
                             }`}
                           />
                         )}
-                        <span className="text-[13px] leading-none">{getText(item.label)}</span>
+                        <span className="text-[13px] leading-none truncate">{getText(item.label)}</span>
                       </button>
                     );
                   })}
