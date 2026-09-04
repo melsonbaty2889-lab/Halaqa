@@ -32,10 +32,8 @@ const InitialLoader = () => (
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* تغليف كل حاجة بـ QueryClientProvider من برة خالص */}
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {/* تقديم DataProvider لأعلى الهرم لضمان توفر بيانات المستخدم أولاً */}
         <DataProvider>
           <AcademyProvider>
             <Suspense fallback={<InitialLoader />}>
