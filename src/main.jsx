@@ -34,13 +34,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <DataProvider>
-          <AcademyProvider>
+        <AcademyProvider>
+          <DataProvider>
             <Suspense fallback={<InitialLoader />}>
               <App />
             </Suspense>
-          </AcademyProvider>
-        </DataProvider>
+          </DataProvider>
+        </AcademyProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>
