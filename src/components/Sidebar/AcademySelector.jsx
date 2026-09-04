@@ -1,3 +1,4 @@
+// src/components/Sidebar/AcademySelector.jsx
 import React from 'react';
 import { ChevronDown, Check, Building2 } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
@@ -18,7 +19,6 @@ export default function AcademySelector({
 }) {
   return (
     <div ref={dropdownRef} className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* الكارت الرئيسي الموحد */}
       <button
         type="button"
         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -31,9 +31,7 @@ export default function AcademySelector({
           boxShadow: dropdownOpen ? '0 0 12px rgba(16, 185, 129, 0.15)' : 'none'
         }}
       >
-        {/* الجزء الأيمن (الشعار + الاسم والحالة) */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* حاوية الشعار */}
           <div 
             className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:scale-105"
             style={{
@@ -59,7 +57,6 @@ export default function AcademySelector({
             )}
           </div>
 
-          {/* الاسم وشارة الحالة */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
             <h2 
               className="text-xs font-bold truncate leading-none transition-colors"
@@ -83,9 +80,8 @@ export default function AcademySelector({
           </div>
         </div>
 
-        {/* الجزء الأيسر (أيقونة السهم) */}
         <div 
-          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ml-1"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isRtl ? 'mr-1' : 'ml-1'}`}
           style={{
             backgroundColor: dropdownOpen ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
           }}
@@ -98,7 +94,6 @@ export default function AcademySelector({
         </div>
       </button>
 
-      {/* القائمة المنسدلة للتبديل بين الأكاديميات */}
       {dropdownOpen && (
         <div 
           className="absolute top-full left-0 right-0 mt-2 p-1.5 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"
@@ -157,7 +152,7 @@ export default function AcademySelector({
                   </div>
 
                   {isSelected && (
-                    <Check size={14} className="shrink-0 ml-1" style={{ color: C.emerald?.light || '#34D399' }} />
+                    <Check size={14} className={`shrink-0 ${isRtl ? 'mr-1' : 'ml-1'}`} style={{ color: C.emerald?.light || '#34D399' }} />
                   )}
                 </button>
               );
