@@ -10,6 +10,7 @@ import colorsImport from '@/theme/colors.js';
 import { Skeleton, CardSkeleton } from '@/components/UI/Skeleton';
 
 import Sidebar from '@/components/Sidebar/Sidebar';
+import BottomNav from '@/components/Sidebar/BottomNav';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
@@ -639,7 +640,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           }}
         />
 
-        <main style={{ padding: isMobile ? '12px' : '24px', flex: 1, overflowY: 'auto', width: '100%', boxSizing: 'border-box' }}>
+        <main style={{ 
+          padding: isMobile ? '12px' : '24px', 
+          paddingBottom: isMobile ? '70px' : '24px', 
+          flex: 1, 
+          overflowY: 'auto', 
+          width: '100%', 
+          boxSizing: 'border-box' 
+        }}>
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={skeletonLoader}>
               {loadingData ? skeletonLoader : renderActiveTabContent()}
@@ -647,6 +655,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           </ErrorBoundaryInner>
         </main>
       </div>
+
+      {/* الشريط السفلي للموبايل */}
+      <BottomNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        setSidebarOpen={setSidebarOpen} 
+        isRtl={isRtl} 
+      />
     </div>
   );
 }
