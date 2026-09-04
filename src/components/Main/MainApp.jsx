@@ -22,48 +22,6 @@ const C = colorsImport?.colors || colorsImport || {
   primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
 };
 
-// مكون الخلفية الخضراء بالنجوم الجمالية
-const EmeraldStarryBackground = () => {
-  const stars = useMemo(() => {
-    return Array.from({ length: 35 }).map((_, i) => ({
-      id: i,
-      size: Math.random() * 3 + 1,
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      opacity: Math.random() * 0.7 + 0.3,
-      duration: `${Math.random() * 3 + 2}s`,
-      delay: `${Math.random() * 2}s`
-    }));
-  }, []);
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-      {/* التوهج الأخضر الزمردي العلوي */}
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-[120px]" />
-      <div className="absolute top-1/3 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-[140px]" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-teal-600/10 rounded-full blur-[130px]" />
-
-      {/* النجوم المتلألئة */}
-      {stars.map((star) => (
-        <div
-          key={star.id}
-          className="absolute rounded-full bg-emerald-300 animate-pulse"
-          style={{
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            top: star.top,
-            left: star.left,
-            opacity: star.opacity,
-            animationDuration: star.duration,
-            animationDelay: star.delay,
-            boxShadow: `0 0 ${star.size * 2}px rgba(52, 211, 153, 0.8)`
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 const formatLocalizedText = (val, lang = 'ar') => {
   if (val === null || val === undefined) return '';
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -89,7 +47,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-md w-full bg-slate-900 border border-rose-500/30 rounded-2xl p-6 text-center shadow-2xl space-y-5">
         <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500">
           <AlertOctagon size={36} />
@@ -158,13 +116,13 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit backdrop-blur-md">
+      <div className="flex gap-2 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50 w-fit">
         <button
           type="button"
           onClick={() => setActiveSubTab('communications')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
-              ? 'bg-emerald-600 text-white shadow-lg' 
+              ? 'bg-amber-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -176,7 +134,7 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           onClick={() => setActiveSubTab('reports')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
-              ? 'bg-emerald-600 text-white shadow-lg' 
+              ? 'bg-amber-600 text-white shadow-lg' 
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -291,13 +249,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   useEffect(() => {
     if (!isMobile) {
-      setSidebarOpen(false);
-    }
-  }, [isMobile]);
-
-  const handleTabChange = useCallback((tab) => {
-    setActiveTab(tab);
-    if (isMobile) {
       setSidebarOpen(false);
     }
   }, [isMobile]);
@@ -498,12 +449,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard session={session} setActiveTab={handleTabChange} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
+        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
       case 'interactive_quran':
         return <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
       case 'subscriptions':
       case 'upgrade':
-        return <SubscriptionPage session={session} academyId={academyId} onBack={() => handleTabChange('dashboard')} />;
+        return <SubscriptionPage session={session} academyId={academyId} onBack={() => setActiveTab('dashboard')} />;
       case 'referrals':
       case 'affiliate-rewards':
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
@@ -562,7 +513,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isMobile={isMobile} 
             onNavigateToAttendance={(halaqaId) => {
               setSelectedHalaqaId(halaqaId);
-              handleTabChange('attendance');
+              setActiveTab('attendance');
             }}
           />
         );
@@ -617,36 +568,30 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         );
       default:
-        return <Dashboard session={session} setActiveTab={handleTabChange} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
+        return <Dashboard session={session} setActiveTab={setActiveTab} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />;
     }
   };
 
   return (
     <div 
-      className="relative flex min-h-screen w-full bg-slate-950 text-slate-100 overflow-x-hidden"
       style={{ 
-        fontFamily: "'Cairo', system-ui, sans-serif"
+        display: 'flex', 
+        minHeight: '100vh', 
+        width: '100%', 
+        background: C?.dark?.main || '#0f172a', 
+        color: C?.text?.title || '#f8fafc', 
+        fontFamily: "'Cairo', system-ui, sans-serif",
+        position: 'relative',
+        overflowX: 'hidden'
       }} 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* خلفية النجوم الخضراء الجمالية */}
-      <EmeraldStarryBackground />
-
-      {/* خلفية معتمة للموبايل عند فتح القائمة */}
-      {isMobile && sidebarOpen && (
-        <div 
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 transition-opacity duration-300"
-        />
-      )}
-
-      {/* Sidebar القائمة الجانبية */}
       <Sidebar 
         currentAcademyId={academyId}
         academy={academy}
         onSwitchAcademy={handleSwitchAcademy}
         activeTab={activeTab} 
-        setActiveTab={handleTabChange} 
+        setActiveTab={setActiveTab} 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
         isMobile={isMobile} 
@@ -662,8 +607,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      {/* المحتوى الرئيسي وهيدر التطبيق */}
-      <div className="flex flex-col flex-1 min-w-0 min-h-screen w-full relative z-10 overflow-x-hidden">
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: '100vh', width: '100%' }}>
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
@@ -676,22 +620,24 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           countryCode={countryCode} 
           i18n={i18n} 
           activeTab={activeTab} 
-          setActiveTab={handleTabChange}
+          setActiveTab={setActiveTab}
           userData={{
             name: session?.user?.user_metadata?.full_name || session?.user?.email || "",
             avatar: session?.user?.user_metadata?.avatar_url || ""
           }}
         />
 
-        <main 
-          className="flex-1 w-full box-border overflow-y-auto"
-          style={{ 
-            padding: isMobile ? '12px' : '24px', 
-            paddingBottom: isMobile ? '80px' : '24px'
-          }}
-        >
+        <main style={{ 
+          padding: isMobile ? '12px' : '24px', 
+          paddingBottom: isMobile ? '70px' : '24px', 
+          flex: 1, 
+          overflowY: 'auto', 
+          width: '100%', 
+          boxSizing: 'border-box' 
+        }}>
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={null}>
+              {/* عرض الداشبورد فوراً دون انتظار loadingData */}
               {renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
@@ -701,7 +647,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       {/* الشريط السفلي للموبايل */}
       <BottomNav 
         activeTab={activeTab} 
-        setActiveTab={handleTabChange} 
+        setActiveTab={setActiveTab} 
         setSidebarOpen={setSidebarOpen} 
         isRtl={isRtl} 
       />
