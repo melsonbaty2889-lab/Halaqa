@@ -1,20 +1,14 @@
+/* src/components/Header/LanguageSwitcher.jsx */
 import React, { useState, useRef, useEffect } from 'react';
 import { Globe, Check, ChevronDown } from 'lucide-react';
-
-const LANGUAGES = [
-  { code: 'ar', label: 'العربية', dir: 'rtl', flag: '🇸🇦' },
-  { code: 'en', label: 'English', dir: 'ltr', flag: '🇬🇧' },
-  { code: 'tr', label: 'Türkçe', dir: 'ltr', flag: '🇹🇷' },
-  { code: 'ur', label: 'اردو', dir: 'rtl', flag: '🇵🇰' },
-  { code: 'id', label: 'Bahasa Indonesia', dir: 'ltr', flag: '🇮🇩' },
-];
+import { SUPPORTED_LANGUAGES } from '@/constants/languages';
 
 export default function LanguageSwitcher({ i18n }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const currentLangCode = i18n?.language || 'ar';
-  const currentLang = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[0];
+  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
+  const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === currentLangCode) || SUPPORTED_LANGUAGES[0];
 
   const handleLanguageChange = (lang) => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
@@ -54,8 +48,8 @@ export default function LanguageSwitcher({ i18n }) {
 
       {/* القائمة المنسدلة للغات */}
       {isOpen && (
-        <div className="absolute end-0 mt-1.5 w-40 bg-[#0F172A] border border-[#1B2738] rounded-xl shadow-2xl py-1 z-[999999] overflow-hidden">
-          {LANGUAGES.map((lang) => {
+        <div className="absolute end-0 mt-1.5 w-44 bg-[#0F172A] border border-[#1B2738] rounded-xl shadow-2xl py-1 z-[999999] overflow-hidden">
+          {SUPPORTED_LANGUAGES.map((lang) => {
             const isSelected = lang.code === currentLangCode;
             return (
               <button
@@ -70,7 +64,7 @@ export default function LanguageSwitcher({ i18n }) {
               >
                 <div className="flex items-center gap-2">
                   <span>{lang.flag}</span>
-                  <span>{lang.label}</span>
+                  <span>{lang.nativeName}</span>
                 </div>
                 {isSelected && <Check size={14} className="text-white shrink-0" />}
               </button>
