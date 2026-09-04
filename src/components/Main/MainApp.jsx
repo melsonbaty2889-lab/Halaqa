@@ -22,19 +22,13 @@ const C = colorsImport?.colors || colorsImport || {
   primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
 };
 
-// خلفية المشروع الأصلية (تدرج الزمرد مع الوهج والتغطية الهندسية)
 const OriginalEmeraldBackground = () => {
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-      {/* التدرج الأساسي المتكيف */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-emerald-950/40 to-slate-950" />
-
-      {/* الوهج الزمردي والأمبير العلوي الأصلي */}
       <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[140px]" />
       <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[130px]" />
       <div className="absolute -bottom-[20%] right-[15%] w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[160px]" />
-
-      {/* شبكة النقاط والتأثير الهندسي الخفيف للمشروع */}
       <div 
         className="absolute inset-0 opacity-[0.15]" 
         style={{
@@ -284,21 +278,33 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, [isMobile]);
 
-  useEffect(() => {
-    const updateTime = () => {
-      try {
-        const formatter = new Intl.DateTimeFormat(currentLang, {
-          timeZone: timezone || 'UTC', hour: '2-digit', minute: '2-digit', hour12: true
-        });
-        setAcademyTime(formatter.format(new Date()));
-      } catch (e) {
-        setAcademyTime(new Date().toLocaleTimeString());
-      }
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
+  // تحديث وقت الأكاديمية لحظياً فور تغير timezone أو اللغة
+  const updateAcademyTime = useCallback(() => {
+    try {
+      const formatter = new Intl.DateTimeFormat(currentLang, {
+        timeZone: timezone || 'UTC', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true
+      });
+      setAcademyTime(formatter.format(new Date()));
+    } catch (e) {
+      setAcademyTime(new Date().toLocaleTimeString());
+    }
   }, [timezone, currentLang]);
+
+  useEffect(() => {
+    updateAcademyTime();
+    const interval = setInterval(updateAcademyTime, 10000); // تحديث دوري كل 10 ثوانٍ
+    return () => clearInterval(interval);
+  }, [updateAcademyTime]);
+
+  // دالة لتحديث المنطقة الزمنية فوراً من شاشة الإعدادات
+  const handleTimezoneUpdate = useCallback((newTimezone) => {
+    if (newTimezone) {
+      setTimezone(newTimezone);
+    }
+  }, []);
 
   const fetchAcademyData = useCallback(async (targetAcademyId) => {
     if (!targetAcademyId) {
@@ -596,6 +602,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             currentTimezone={timezone} 
             currentCountryCode={countryCode} 
             onCurrencyChange={handleCurrencyUpdate}
+            onTimezoneChange={handleTimezoneUpdate} // خاصية التحديث اللحظي للمنطقة الزمنية
           />
         );
       default:
@@ -611,10 +618,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       }} 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* خلفية المشروع الزمردية الأصلية (الخاصة بالشاشة الافتتاحية وصفحات الدخول) */}
       <OriginalEmeraldBackground />
 
-      {/* خلفية معتمة للموبايل عند فتح القائمة */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
@@ -622,7 +627,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         />
       )}
 
-      {/* Sidebar القائمة الجانبية */}
       <Sidebar 
         currentAcademyId={academyId}
         academy={academy}
@@ -644,7 +648,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
 
-      {/* المحتوى الرئيسي وهيدر التطبيق */}
       <div className="flex flex-col flex-1 min-w-0 min-h-screen w-full relative z-10 overflow-x-hidden">
         <Header 
           sidebarOpen={sidebarOpen} 
@@ -680,7 +683,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         </main>
       </div>
 
-      {/* الشريط السفلي للموبايل */}
       <BottomNav 
         activeTab={activeTab} 
         setActiveTab={handleTabChange} 
