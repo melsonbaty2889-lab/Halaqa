@@ -122,7 +122,7 @@ export default function AcademySelector({
       {/* القائمة المنسدلة لاختيار الأكاديميات */}
       {dropdownOpen && hasMultipleAcademies && (
         <div 
-          className="absolute top-full left-0 right-0 mt-2 p-1.5 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"
+          className="absolute top-full inset-x-0 mt-2 p-1.5 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"
           style={{
             backgroundColor: C.dark?.surface || '#0A0F1C',
             borderColor: C.dark?.cardBorder || 'rgba(255, 255, 255, 0.12)',
@@ -179,7 +179,7 @@ export default function AcademySelector({
                   </div>
 
                   {isSelected && (
-                    <Check size={14} className={`shrink-0 ${isRtl ? 'mr-1' : 'ml-1'}`} style={{ color: C.emerald?.light || '#34D399' }} />
+                    <Check size={14} className="shrink-0 ms-1" style={{ color: C.emerald?.light || '#34D399' }} />
                   )}
                 </button>
               );
