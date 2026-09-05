@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Clock, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { formatHijriDate, formatGregorianDate, formatTimeString, toArNums } from '@/utils/dateUtils';
+import { formatHijriDate, formatGregorianDate, formatTimeString } from '@/utils/dateUtils';
 import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
@@ -36,7 +36,7 @@ export default function SidebarWidget({
   }, [currentLang]);
 
   const formattedTime = useMemo(() => {
-    if (academyTime) return toArNums(academyTime);
+    if (academyTime) return academyTime;
     return formatTimeString(new Date(), currentLang);
   }, [academyTime, currentLang]);
 
@@ -44,7 +44,7 @@ export default function SidebarWidget({
 
   return (
     <div 
-      className="p-2 rounded-xl mb-3 flex items-center justify-between gap-1.5 shadow-sm backdrop-blur-md"
+      className="p-2.5 rounded-xl mb-3 flex items-center justify-between gap-2 shadow-sm backdrop-blur-md"
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{
         backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
@@ -53,11 +53,13 @@ export default function SidebarWidget({
         borderStyle: 'solid'
       }}
     >
-      <div className="flex items-center gap-1 text-[11px] font-bold font-mono shrink-0 ltr:flex-row rtl:flex-row-reverse" style={{ color: C.emerald?.light || '#34D399' }}>
+      {/* التوقيت */}
+      <div className="flex items-center gap-1 text-[11px] font-bold font-mono shrink-0" style={{ color: C.emerald?.light || '#34D399' }}>
         <Clock size={13} className="shrink-0" style={{ color: C.emerald?.light || '#34D399' }} />
-        <span>{formattedTime}</span>
+        <span dir="ltr">{formattedTime}</span>
       </div>
 
+      {/* التاريخ الميلادي والهجري */}
       <div className="flex flex-col items-center justify-center min-w-0 flex-1 px-1 text-center">
         <span className="text-[11px] font-semibold leading-tight whitespace-nowrap" style={{ color: C.emerald?.light || '#34D399' }}>
           {formattedGregorian}
@@ -67,6 +69,7 @@ export default function SidebarWidget({
         </span>
       </div>
 
+      {/* زر الترقية */}
       {!isLifetime && (
         <button
           type="button"
