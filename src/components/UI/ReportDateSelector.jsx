@@ -7,8 +7,9 @@ import {
   getHijriParts, 
   formatHijriDate, 
   getSavedHijriOffset, 
-  setSavedHijriOffset 
-} from '../../utils/dateUtils';
+  setSavedHijriOffset,
+  toArNums 
+} from '@/utils/dateUtils';
 
 export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const { i18n } = useTranslation();
@@ -80,7 +81,8 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
       const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.en;
       const monthName = monthsList[month] || monthsList[0];
       const suffix = isRtl ? 'هـ' : 'AH';
-      return `${monthName} ${year} ${suffix}`;
+      const yearFormatted = isRtl ? toArNums(year) : year;
+      return `${monthName} ${yearFormatted} ${suffix}`;
     }
     return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
   }, [viewDate, useHijri, cleanLang, isRtl, currentLang, hijriOffset]);
@@ -110,7 +112,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '12px', fontWeight: '600', padding: 0 }}
         >
           <CalendarIcon size={14} />
-          <span style={{ color: '#f8fafc' }}>{selectedDate}</span>
+          <span style={{ color: '#f8fafc' }}>{isRtl ? toArNums(selectedDate) : selectedDate}</span>
         </button>
 
         <span style={{ color: '#475569' }}>|</span>
@@ -169,7 +171,8 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
               const isSelected = dateStr === selectedDate;
               
               const dayObj = new Date(currentYear, currentMonth, dayNum);
-              const displayNum = useHijri ? getHijriParts(dayObj, hijriOffset).day : dayNum;
+              const rawDisplayNum = useHijri ? getHijriParts(dayObj, hijriOffset).day : dayNum;
+              const displayNum = isRtl ? toArNums(rawDisplayNum) : rawDisplayNum;
 
               return (
                 <button
@@ -215,7 +218,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
                       cursor: 'pointer'
                     }}
                   >
-                    {offset > 0 ? `+${offset}` : offset}
+                    {offset > 0 ? (isRtl ? `+${toArNums(offset)}` : `+${offset}`) : (isRtl ? toArNums(offset) : offset)}
                   </button>
                 ))}
               </div>
