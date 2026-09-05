@@ -6,7 +6,6 @@ on:
       - stable-app
   workflow_dispatch:
 
-# إعطاء صلاحيات الكتابة للـ Workflow لتتمكن من رفع التغييرات
 permissions:
   contents: write
 
@@ -24,15 +23,17 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install --include=dev --legacy-peer-deps
+
+      - name: Ensure Locales Directory Exists
+        run: mkdir -p src/locales
 
       - name: Run i18n Extraction
-        run: npm run extract-i18n
+        run: npx i18next-parser
 
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore(i18n): auto-extract translation keys"
           branch: ${{ github.ref_name }}
-          # منع الفشل في حالة عدم وجود تغييرات جديدة لاستخراجها
-          skip_dirty_check: false
+          file_pattern: 'src/locales/*.json'
