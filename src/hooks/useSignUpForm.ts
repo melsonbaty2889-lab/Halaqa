@@ -1,18 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { handleAuthError } from '@/utils/errorHandler';
 import { signUpSchema, validateFormData } from '@/schemas/auth';
 
-export function useSignUpForm(onSignUpSuccess) {
+// ── Types & Interfaces ──────────────────────────────────────────
+
+export interface SignUpStatus {
+  type: 'success' | 'error' | null;
+  msg: string;
+}
+
+export type OnSignUpSuccessCallback = (data: AuthResponse['data']) => void;
+
+export type UserRole = 'student' | 'teacher' | 'parent' | 'academy_admin' | string;
+
+// ── Main Hook ───────────────────────────────────────────────────
+
+export function useSignUpForm(onSignUpSuccess?: OnSignUpSuccessCallback) {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
 
   const isRtl = i18n?.language === 'ar';
 
   // 1. القراءة المباشرة من Local Storage مع معالجة حذرة
-  const [fullName, setFullName] = useState(() => {
+  const [fullName, setFullName] = useState<string>(() => {
     try {
       return localStorage.getItem('signup_draft_name') || '';
     } catch {
@@ -20,7 +34,7 @@ export function useSignUpForm(onSignUpSuccess) {
     }
   });
 
-  const [email, setEmail] = useState(() => {
+  const [email, setEmail] = useState<string>(() => {
     try {
       return localStorage.getItem('signup_draft_email') || '';
     } catch {
@@ -28,18 +42,18 @@ export function useSignUpForm(onSignUpSuccess) {
     }
   });
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('student');
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [role, setRole] = useState<UserRole>('student');
+  const [agreeTerms, setAgreeTerms] = useState<boolean>(false);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [capsLockOn, setCapsLockOn] = useState<boolean>(false);
 
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [status, setStatus] = useState({ type: null, msg: '' });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean | string>>({});
+  const [status, setStatus] = useState<SignUpStatus>({ type: null, msg: '' });
 
   // 2. تحديث الحفظ التلقائي فور تغيير القيم
   useEffect(() => {
@@ -50,7 +64,7 @@ export function useSignUpForm(onSignUpSuccess) {
         localStorage.removeItem('signup_draft_name');
       }
     } catch (e) {
-      console.error(e);
+      console.error('Error saving name draft:', e);
     }
   }, [fullName]);
 
@@ -62,7 +76,7 @@ export function useSignUpForm(onSignUpSuccess) {
         localStorage.removeItem('signup_draft_email');
       }
     } catch (e) {
-      console.error(e);
+      console.error('Error saving email draft:', e);
     }
   }, [email]);
 
@@ -73,22 +87,26 @@ export function useSignUpForm(onSignUpSuccess) {
     }
   };
 
-  const handleKeyUp = (e) => {
+  const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.getModifierState) {
       setCapsLockOn(e.getModifierState('CapsLock'));
     }
   };
 
-  const trackFailedAttempt = async (email, fullName, reason) => {
+  const trackFailedAttempt = async (
+    failedEmail: string,
+    failedName: string,
+    reason: string
+  ) => {
     try {
-      if (!email) return;
-      // يمكنك ربطه بشرط الـ Webhook الخاص بك مستقبلاً
+      if (!failedEmail) return;
+      // تسجيل محاولات التسجيل الفاشلة للتحليل والمتابعة
     } catch (e) {
-      console.error('Failed to log lead:', e);
+      console.error('Failed to log lead attempt:', e);
     }
   };
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
     setFieldErrors({});
@@ -97,9 +115,9 @@ export function useSignUpForm(onSignUpSuccess) {
       setFieldErrors({ agreeTerms: true });
       setStatus({
         type: 'error',
-        msg: isRtl 
-          ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
-          : 'Please agree to the terms and privacy policy to continue.'
+        msg: isRtl
+          ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.'
+          : 'Please agree to the terms and privacy policy to continue.',
       });
       return;
     }
@@ -110,25 +128,27 @@ export function useSignUpForm(onSignUpSuccess) {
       password: password.trim(),
       confirmPassword: confirmPassword.trim(),
       role,
-      agreeTerms
+      agreeTerms,
     };
 
     const validationResult = validateFormData(formData, signUpSchema);
 
     if (!validationResult.valid) {
-      setFieldErrors(validationResult.errors);
-      
+      setFieldErrors(validationResult.errors || {});
+
       if (validationResult.errors?.agreeTerms) {
         setStatus({
           type: 'error',
-          msg: isRtl 
-            ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.' 
-            : 'Please agree to the terms and privacy policy to continue.'
+          msg: isRtl
+            ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.'
+            : 'Please agree to the terms and privacy policy to continue.',
         });
       } else {
         setStatus({
           type: 'error',
-          msg: isRtl ? 'يرجى التأكد من صحة البيانات المدخلة أعلاه.' : 'Please correct the highlighted errors above.'
+          msg: isRtl
+            ? 'يرجى التأكد من صحة البيانات المدخلة أعلاه.'
+            : 'Please correct the highlighted errors above.',
         });
       }
       return;
@@ -145,8 +165,8 @@ export function useSignUpForm(onSignUpSuccess) {
             full_name: validationResult.data.fullName,
             role: validationResult.data.role,
           },
-          emailRedirectTo: `${window.location.origin}?lang=${i18n?.language || 'ar'}`
-        }
+          emailRedirectTo: `${window.location.origin}?lang=${i18n?.language || 'ar'}`,
+        },
       });
 
       if (authError) throw authError;
@@ -157,23 +177,23 @@ export function useSignUpForm(onSignUpSuccess) {
 
       setStatus({
         type: 'success',
-        msg: isRtl 
-          ? '✅ تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني لتأكيد الحساب.' 
-          : '✅ Account created! Please check your email to activate.'
+        msg: isRtl
+          ? '✅ تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني لتأكيد الحساب.'
+          : '✅ Account created! Please check your email to activate.',
       });
 
       if (onSignUpSuccess) {
         onSignUpSuccess(authData);
       }
-
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Sign Up Error:', err);
-      trackFailedAttempt(formData.email, formData.fullName, err.message);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      trackFailedAttempt(formData.email, formData.fullName, errorMessage);
 
       const userFriendlyMsg = handleAuthError(err, isRtl);
       setStatus({
         type: 'error',
-        msg: userFriendlyMsg
+        msg: userFriendlyMsg,
       });
     } finally {
       setLoading(false);
