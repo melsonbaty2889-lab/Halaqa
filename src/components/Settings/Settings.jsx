@@ -8,7 +8,7 @@ import ContactRegionalTab from './ContactRegionalTab';
 import QuranicPoliciesTab from './QuranicPoliciesTab';
 import DataBackupTab from './DataBackupTab';
 
-// دالة ذكية لتوليد الـ Slug تدعم الاسم الإنجليزي أو تنشئ رابطاً نظيفاً للمستخدم العربي
+// دالة ذكية لتوليد الـ Slug
 const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
   if (rawSlug && !rawSlug.startsWith('academy-')) {
     const cleanedCustom = rawSlug
@@ -47,7 +47,10 @@ export default function Settings({
   const { t, i18n } = useTranslation();
   const { updateAcademyState } = useAcademy();
 
-  const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
+  // دعم لغات الـ RTL: العربية (ar) والأردو (ur)
+  const currentLang = i18n.language || 'ar';
+  const rtlLanguages = ['ar', 'ur'];
+  const isRtl = rtlLanguages.some(lang => currentLang.startsWith(lang));
 
   const [activeStep, setActiveStep] = useState('general');
   const [toastMessage, setToastMessage] = useState(null);
@@ -161,7 +164,7 @@ export default function Settings({
     loadAcademySettings();
   }, [academyId]);
 
-  // تحديث الحقول العامة وإخطار المكون الأب بالتغيير الفوري
+  // تحديث الحقول
   const updateField = (field, value) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
@@ -182,7 +185,7 @@ export default function Settings({
     }
   };
 
-  // تحديث الاسم مع توليد ذكي للـ Slug
+  // تحديث الاسم
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
@@ -253,10 +256,10 @@ export default function Settings({
         onAcademyUpdate({ id: academyId, logo_url: newLogoUrl });
       }
 
-      showToast(t('settings.logoUploadSuccess', 'تم تحديث الشعار بنجاح!'), 'success');
+      showToast(t('settings.logoUploadSuccess'), 'success');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      showToast(t('settings.logoUploadError', 'حدث خطأ أثناء رفع الشعار'), 'error');
+      showToast(t('settings.logoUploadError'), 'error');
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -291,10 +294,10 @@ export default function Settings({
 
       if (fileInputRef.current) fileInputRef.current.value = '';
 
-      showToast(t('settings.logoRemoveSuccess', 'تم إزالة الشعار بنجاح!'), 'success');
+      showToast(t('settings.logoRemoveSuccess'), 'success');
     } catch (error) {
       console.error('Error removing logo:', error);
-      showToast(t('settings.logoRemoveError', 'حدث خطأ أثناء إزالة الشعار'), 'error');
+      showToast(t('settings.logoRemoveError'), 'error');
     }
   };
 
@@ -307,8 +310,7 @@ export default function Settings({
     const enName = formData.name?.en?.trim();
 
     if (!arName && !enName) {
-      const errorMessage = t('settings.nameRequiredAr', 'يرجى إدخال اسم الأكاديمية');
-      showToast(errorMessage, 'error');
+      showToast(t('settings.nameRequired'), 'error');
       return;
     }
 
@@ -350,7 +352,7 @@ export default function Settings({
       isDirtyRef.current = false;
       setIsDirty(false);
 
-      showToast(t('settings.saveSuccess', 'تم حفظ التغييرات بنجاح!'), 'success');
+      showToast(t('settings.saveSuccess'), 'success');
 
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({ ...updatePayload, id: academyId });
@@ -361,10 +363,7 @@ export default function Settings({
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      showToast(
-        t('settings.saveError', 'حدث خطأ أثناء الحفظ (قد يكون الرابط المُستخدَم مستخدماً من أكاديمية أخرى)'),
-        'error'
-      );
+      showToast(t('settings.saveError'), 'error');
     } finally {
       setSaving(false);
     }
@@ -379,23 +378,23 @@ export default function Settings({
     setIsDirty(false);
   };
 
-  // ✅ تصحيح مصفوفة التبويبات لاستخدام دالة t() المباشرة
+  // التبويبات بالترجمة المباشرة
   const steps = [
     {
       id: 'general',
-      label: t('settings.generalStep', '1. Basic & Regional'),
+      label: t('settings.generalStep'),
       icon: Building
     },
     {
       id: 'system',
-      label: t('settings.systemStep', '2. Policies & Backup'),
+      label: t('settings.systemStep'),
       icon: ShieldCheck
     },
   ];
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* شريط التبويبات العلوي */}
+      {/* شريط التبويبات */}
       <div className="flex border-b border-[var(--border-card)] gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -419,7 +418,7 @@ export default function Settings({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 !overflow-visible">
-        {/* التنبيهات الفورية */}
+        {/* التنبيهات */}
         {toastMessage && (
           <div className={`p-4 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-md animate-in fade-in slide-in-from-top-2 ${
             toastMessage.type === 'success'
@@ -440,7 +439,7 @@ export default function Settings({
           </div>
         )}
 
-        {/* محتوى التبويب الأول */}
+        {/* التبويب الأول */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'general' ? 'block' : 'hidden'}`}>
           <IdentityTab
             formData={formData}
@@ -454,7 +453,7 @@ export default function Settings({
           <ContactRegionalTab formData={formData} updateField={updateField} />
         </div>
 
-        {/* محتوى التبويب الثاني */}
+        {/* التبويب الثاني */}
         <div className={`space-y-6 !overflow-visible ${activeStep === 'system' ? 'block' : 'hidden'}`}>
           <QuranicPoliciesTab formData={formData} updateField={updateField} />
           <DataBackupTab
@@ -465,7 +464,7 @@ export default function Settings({
           />
         </div>
 
-        {/* شريط الإجراءات الثابت */}
+        {/* شريط الإجراءات */}
         <div className="flex flex-row items-center justify-between gap-3 pt-5 border-t border-[var(--border-card)] w-full">
           <button
             type="submit"
@@ -475,7 +474,7 @@ export default function Settings({
             }`}
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ التغييرات')}</span>
+            <span>{saving ? t('common.saving') : t('common.save')}</span>
           </button>
 
           <div className="min-h-[38px] flex items-center">
@@ -486,7 +485,7 @@ export default function Settings({
                 className="btn-secondary text-xs px-4 py-2.5 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl font-medium transition-all animate-in fade-in"
               >
                 <RotateCcw size={14} />
-                <span>{t('common.discard', 'تراجع')}</span>
+                <span>{t('common.discard')}</span>
               </button>
             )}
           </div>
