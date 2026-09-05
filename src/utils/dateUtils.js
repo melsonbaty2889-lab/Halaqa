@@ -23,6 +23,53 @@ export const toArNums = (str) => {
 };
 
 /**
+ * إدارة فارق الأيام في التقويم الهجري (LocalStorage)
+ */
+export const getSavedHijriOffset = () => {
+  try {
+    const saved = localStorage.getItem('hijri_offset');
+    return saved !== null ? parseInt(saved, 10) : 0;
+  } catch (e) {
+    return 0;
+  }
+};
+
+export const setSavedHijriOffset = (offset) => {
+  try {
+    localStorage.setItem('hijri_offset', String(offset));
+  } catch (e) {
+    console.error('Failed to save hijri offset:', e);
+  }
+};
+
+/**
+ * استخراج أجزاء التاريخ الهجري (اليوم، الشهر، السنة)
+ */
+export const getHijriParts = (dateObj = new Date(), offset = 0) => {
+  try {
+    const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
+    if (offset !== 0) {
+      date.setDate(date.getDate() + offset);
+    }
+
+    const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-uma', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    });
+
+    const parts = formatter.formatToParts(date);
+    return {
+      day: parseInt(parts.find(p => p.type === 'day')?.value || '1', 10),
+      month: parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1,
+      year: parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10)
+    };
+  } catch (e) {
+    return { day: 1, month: 0, year: 1448 };
+  }
+};
+
+/**
  * حساب العمر بناءً على تاريخ الميلاد
  */
 export const calculateAge = (birthDate) => {
@@ -63,23 +110,12 @@ export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
 /**
  * تنسيق التاريخ الهجري بحسب اللغة
  */
-export const formatHijriDate = (dateObj = new Date(), lang = 'en') => {
+export const formatHijriDate = (dateObj = new Date(), lang = 'en', offset = getSavedHijriOffset()) => {
   try {
-    const date = dateObj instanceof Date ? dateObj : new Date();
-    
-    const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-uma', {
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric'
-    });
-    
-    const parts = formatter.formatToParts(date);
-    const day = parts.find(p => p.type === 'day')?.value || '1';
-    const monthIndex = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
-    const year = parts.find(p => p.type === 'year')?.value || '1448';
+    const { day, month, year } = getHijriParts(dateObj, offset);
 
     const currentLang = HIJRI_MONTHS[lang] ? lang : 'en';
-    const monthName = HIJRI_MONTHS[currentLang][monthIndex] || HIJRI_MONTHS.en[monthIndex];
+    const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.en[month];
 
     const isArOrUr = ['ar', 'ur'].includes(currentLang);
     const suffix = isArOrUr ? 'هـ' : 'AH';
