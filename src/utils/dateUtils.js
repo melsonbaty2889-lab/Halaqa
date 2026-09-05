@@ -1,200 +1,114 @@
 // src/utils/dateUtils.js
 
-/**
- * مكتبة معالجة وتنسيق التواريخ الهجرية والميلادية عالمياً
- * تطبيق سمارت حلقة (Smart Halaqa)
- */
-
-// قاموس الشهور الهجرية الشامل للغات الست المعتمدة
+// 1. قاموس الشهور الهجرية للغات الستة
 export const HIJRI_MONTHS = {
-  ar: ["محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"],
-  en: ["Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"],
-  fr: ["Mouharram", "Safar", "Rabi' al-Awwal", "Rabi' ath-Thani", "Djoumada al-Oula", "Djoumada ath-Thania", "Rajab", "Cha'bane", "Ramadan", "Chawwal", "Dhou al-Qi'dah", "Dhou al-Hijja"],
-  tr: ["Muharrem", "Sefer", "Rebiülevvel", "Rebiülahir", "Cemaziyelevvel", "Cemaziyelahir", "Recep", "Şaban", "Ramazan", "Şevval", "Zilkade", "Zilhicce"],
-  id: ["Muharram", "Safar", "Rabi'ul Awwal", "Rabi'ul Akhir", "Jumadil Awwal", "Jumadil Akhir", "Rajab", "Sya'ban", "Ramadhan", "Syawwal", "Dzulqa'dah", "Dzulhijjah"],
-  ur: ["محرم", "صفر", "ربيع الأول", "ربيع الثاني", "جمادى الأولى", "جمادى الثانية", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"]
+  ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
+  en: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿdah', 'Dhū al-Ḥijjah'],
+  fr: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramadan', 'Shawwāl', 'Dhū al-Qiʿdah', 'Dhū al-Ḥijjah'],
+  tr: ['Muharrem', 'Sefer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir', 'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'],
+  ur: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الثانية', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
+  id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Sya\'ban', 'Ramadhan', 'Syawal', 'Dzulqa'dah', 'Dzulhijjah']
 };
 
-// للحفاظ على التوافق الكامل مع أي استيراد قديم في مكونات المشروع
-export const HIJRI_MONTHS_AR = HIJRI_MONTHS.ar;
-export const HIJRI_MONTHS_EN = HIJRI_MONTHS.en;
-
-// الرموز المخصصة لـ (هـ / AH) لكل لغة لضمان الاتساق
-export const HIJRI_SUFFIX = {
-  ar: "هـ",
-  en: "AH",
-  fr: "AH",
-  tr: "H",
-  id: "H",
-  ur: "ھ"
-};
-
-// تحويل أي أرقام هندية/عربية إلى أرقام إنجليزية قياسية (1, 2, 3)
+// تحويل الأرقام الهندية/العربية لأرقام إنجليزية standard
 export const toEngNums = (str) => {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  if (!str) return '';
+  return String(str).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 };
 
-// استخراج رمز اللغة الأساسي وتطبيقه بأمان
-const normalizeLang = (lang) => {
-  if (!lang) return 'ar';
-  if (typeof lang === 'boolean') return lang ? 'ar' : 'en';
-  const cleanLang = String(lang).toLowerCase().split('-')[0].trim();
-  return HIJRI_MONTHS[cleanLang] ? cleanLang : 'en';
-};
-
-// جلب وتعيين إزاحة الرؤية الهجرية من LocalStorage
-export const getSavedHijriOffset = () => {
-  if (typeof window === 'undefined') return 0;
-  const saved = localStorage.getItem('app_hijri_offset');
-  return saved !== null ? parseInt(saved, 10) : 0;
-};
-
-export const setSavedHijriOffset = (offset) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('app_hijri_offset', offset.toString());
-  }
+// تحويل الأرقام الإنجليزية لأرقام عربية (للأردو والعربي)
+export const toArNums = (str) => {
+  if (!str) return '';
+  return String(str).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 };
 
 /**
- * استخراج أجزاء التاريخ الهجري بدقة بناءً على تقويم أم القرى
+ * تنسيق الوقت بشكل موحد ونظيف (12 ساعة AM/PM أو م)
  */
-export const getHijriParts = (dateObj, offsetDays = getSavedHijriOffset()) => {
-  try {
-    const adjustedDate = new Date(dateObj || Date.now());
-    adjustedDate.setDate(adjustedDate.getDate() + offsetDays);
+export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
+  const date = dateObj instanceof Date ? dateObj : new Date();
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const isArOrUr = ['ar', 'ur'].includes(lang);
+  
+  const ampm = hours >= 12 ? (isArOrUr ? 'م' : 'PM') : (isArOrUr ? 'ص' : 'AM');
+  hours = hours % 12;
+  hours = hours ? hours : 12; // الساعة 0 تبقى 12
+  
+  const formattedHours = hours.toString().padStart(2, '0');
+  const timeStr = `${formattedHours}:${minutes} ${ampm}`;
+  
+  return isArOrUr ? toArNums(timeStr) : timeStr;
+};
 
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+/**
+ * تنسيق التاريخ الهجري بحسب اللغة
+ */
+export const formatHijriDate = (dateObj = new Date(), lang = 'en') => {
+  try {
+    const date = dateObj instanceof Date ? dateObj : new Date();
+    
+    // استخدام Intl لحساب التاريخ الهجري دقيقاً
+    const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-uma', {
       day: 'numeric',
       month: 'numeric',
       year: 'numeric'
     });
+    
+    const parts = formatter.formatToParts(date);
+    const day = parts.find(p => p.type === 'day')?.value || '1';
+    const monthIndex = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
+    const year = parts.find(p => p.type === 'year')?.value || '1448';
 
-    const parts = formatter.formatToParts(adjustedDate);
+    // اختيار اللغة المناسبة (fallback لـ en)
+    const currentLang = HIJRI_MONTHS[lang] ? lang : 'en';
+    const monthName = HIJRI_MONTHS[currentLang][monthIndex] || HIJRI_MONTHS.en[monthIndex];
 
-    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
-    const year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
+    const isArOrUr = ['ar', 'ur'].includes(currentLang);
+    const suffix = isArOrUr ? 'هـ' : 'AH';
 
-    return { day, month, year, adjustedDate };
+    if (isArOrUr) {
+      return `${toArNums(day)} ${monthName} ${toArNums(year)} ${suffix}`;
+    }
+
+    return `${monthName} ${day}, ${year} ${suffix}`;
   } catch (e) {
-    return { day: 1, month: 1, year: 1448, adjustedDate: new Date(dateObj || Date.now()) };
+    console.error('Hijri formatting error:', e);
+    return '';
   }
 };
 
 /**
- * تنسيق التاريخ الهجري بدقة لجميع اللغات (تقبل كود اللغة كـ String أو Boolean للتوافق القديم)
+ * تنسيق التاريخ الميلادي بحسب اللغة
  */
-export const formatHijriDate = (dateObj, langOrIsArabic = 'ar', offsetDays = getSavedHijriOffset()) => {
-  if (!dateObj) return '';
-  const { day, month, year } = getHijriParts(dateObj, offsetDays);
-  const lang = normalizeLang(langOrIsArabic);
-  const monthIndex = Math.max(0, Math.min(11, month - 1));
-  
-  const monthName = HIJRI_MONTHS[lang][monthIndex];
-  const suffix = HIJRI_SUFFIX[lang] || 'AH';
-
-  // تنسيق اللغات التي تبدأ من اليمين (RTL)
-  if (lang === 'ar' || lang === 'ur') {
-    return toEngNums(`${day} ${monthName} ${year} ${suffix}`);
-  }
-
-  // تنسيق اللغات التي تبدأ من اليسار (LTR)
-  return toEngNums(`${monthName} ${day}, ${year} ${suffix}`);
-};
-
-/**
- * تنسيق التاريخ الميلادي وضمان الأرقام وتفادي رموز النظام التشويشية
- */
-export const formatGregorianDate = (dateObj, locale = 'ar', options = {}) => {
-  if (!dateObj) return '';
-  const date = new Date(dateObj);
-  if (isNaN(date.getTime())) return '';
-
-  const lang = normalizeLang(locale);
-
-  const defaultOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    ...options
-  };
-
+export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
   try {
-    const formatted = new Intl.DateTimeFormat(lang, defaultOptions).format(date);
-    return toEngNums(formatted);
-  } catch (error) {
-    const formatted = new Intl.DateTimeFormat('en-US', defaultOptions).format(date);
-    return toEngNums(formatted);
-  }
-};
+    const date = dateObj instanceof Date ? dateObj : new Date();
+    
+    // إعدادات الـ Locale لكل لغة
+    const localeMap = {
+      ar: 'ar-EG',
+      en: 'en-US',
+      fr: 'fr-FR',
+      tr: 'tr-TR',
+      ur: 'ur-PK',
+      id: 'id-ID'
+    };
 
-/**
- * تنسيق الوقت بصيغة قياسية ثابتة (12 ساعة) دون الاعتماد على حروف النظام المشوهة
- */
-export const formatTimeString = (dateObj) => {
-  if (!dateObj) return '';
-  const date = new Date(dateObj);
-  if (isNaN(date.getTime())) return '';
+    const targetLocale = localeMap[lang] || 'en-US';
 
-  let hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  
-  hours = hours % 12;
-  hours = hours ? hours : 12;
+    const formatted = new Intl.DateTimeFormat(targetLocale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }).format(date);
 
-  return `${hours}:${minutes} ${ampm}`;
-};
+    if (['ar', 'ur'].includes(lang)) {
+      return toArNums(formatted);
+    }
 
-/**
- * عرض التاريخين الهجري والميلادي معاً للتقارير
- */
-export const formatDualDate = (dateObj, lang = 'ar') => {
-  const hijri = formatHijriDate(dateObj, lang);
-  const gregorian = formatGregorianDate(dateObj, lang);
-  return `${hijri} (${gregorian})`;
-};
-
-/**
- * حساب العمر بالسنوات
- */
-export const calculateAge = (birthDate) => {
-  if (!birthDate) return null;
-  const today = new Date();
-  const birth = new Date(birthDate);
-  if (isNaN(birth.getTime())) return null;
-
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age >= 0 ? age : 0;
-};
-
-/**
- * تحويل تاريخ هجري إلى ميلادي
- */
-export const hijriToGregorian = (hYear, hMonth, hDay) => {
-  try {
-    const julianDay = Math.floor((11 * hYear + 3) / 30) + 354 * hYear + 30 * hMonth - Math.floor((hMonth - 1) / 2) + hDay + 1948440 - 385;
-    const l = julianDay + 68569;
-    const n = Math.floor((4 * l) / 146097);
-    const l2 = l - Math.floor((146097 * n + 3) / 4);
-    const i = Math.floor((4000 * (l2 + 1)) / 1461001);
-    const l3 = l2 - Math.floor((1461 * i) / 4) + 31;
-    const j = Math.floor((80 * l3) / 2447);
-    const day = l3 - Math.floor((2447 * j) / 80);
-    const l4 = Math.floor(j / 11);
-    const month = j + 2 - 12 * l4;
-    const year = 100 * (n - 49) + i + l4;
-
-    return new Date(year, month - 1, day);
-  } catch (error) {
-    return new Date();
+    return formatted;
+  } catch (e) {
+    return dateObj.toLocaleDateString();
   }
 };
