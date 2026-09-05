@@ -1,4 +1,4 @@
-src/utils/dateUtils.js
+// src/utils/dateUtils.js
 
 /**
  * مكتبة معالجة وتنسيق التواريخ الهجرية والميلادية عالمياً
@@ -15,7 +15,11 @@ export const HIJRI_MONTHS = {
   ur: ["محرم", "صفر", "ربيع الأول", "ربيع الثاني", "جمادى الأولى", "جمادى الثانية", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"]
 };
 
-// الرموز المخصصة لـ (هـ / AH) لكل لغة لعدم الاعتماد على ترجمة النظام
+// للحفاظ على التوافق الكامل مع أي استيراد قديم في مكونات المشروع
+export const HIJRI_MONTHS_AR = HIJRI_MONTHS.ar;
+export const HIJRI_MONTHS_EN = HIJRI_MONTHS.en;
+
+// الرموز المخصصة لـ (هـ / AH) لكل لغة لضمان الاتساق
 export const HIJRI_SUFFIX = {
   ar: "هـ",
   en: "AH",
@@ -33,7 +37,7 @@ export const toEngNums = (str) => {
     .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 };
 
-// استخراج رمز اللغة الأساسي (مثال: 'en-US' تحول إلى 'en')
+// استخراج رمز اللغة الأساسي وتطبيقه بأمان
 const normalizeLang = (lang) => {
   if (!lang) return 'ar';
   if (typeof lang === 'boolean') return lang ? 'ar' : 'en';
@@ -41,6 +45,7 @@ const normalizeLang = (lang) => {
   return HIJRI_MONTHS[cleanLang] ? cleanLang : 'en';
 };
 
+// جلب وتعيين إزاحة الرؤية الهجرية من LocalStorage
 export const getSavedHijriOffset = () => {
   if (typeof window === 'undefined') return 0;
   const saved = localStorage.getItem('app_hijri_offset');
@@ -80,16 +85,16 @@ export const getHijriParts = (dateObj, offsetDays = getSavedHijriOffset()) => {
 };
 
 /**
- * تنسيق التاريخ الهجري بدقة لجميع اللغات دون أخطاء ترميز
+ * تنسيق التاريخ الهجري بدقة لجميع اللغات (تقبل كود اللغة كـ String أو Boolean للتوافق القديم)
  */
-export const formatHijriDate = (dateObj, langCode = 'ar', offsetDays = getSavedHijriOffset()) => {
+export const formatHijriDate = (dateObj, langOrIsArabic = 'ar', offsetDays = getSavedHijriOffset()) => {
   if (!dateObj) return '';
   const { day, month, year } = getHijriParts(dateObj, offsetDays);
-  const lang = normalizeLang(langCode);
+  const lang = normalizeLang(langOrIsArabic);
   const monthIndex = Math.max(0, Math.min(11, month - 1));
   
   const monthName = HIJRI_MONTHS[lang][monthIndex];
-  const suffix = HIJRI_SUFFIX[lang];
+  const suffix = HIJRI_SUFFIX[lang] || 'AH';
 
   // تنسيق اللغات التي تبدأ من اليمين (RTL)
   if (lang === 'ar' || lang === 'ur') {
@@ -101,7 +106,7 @@ export const formatHijriDate = (dateObj, langCode = 'ar', offsetDays = getSavedH
 };
 
 /**
- * تنسيق التاريخ الميلادي ومنع ظهوررموز الغموض (مثل ÖÖ)
+ * تنسيق التاريخ الميلادي وضمان الأرقام وتفادي رموز النظام التشويشية
  */
 export const formatGregorianDate = (dateObj, locale = 'ar', options = {}) => {
   if (!dateObj) return '';
@@ -127,7 +132,7 @@ export const formatGregorianDate = (dateObj, locale = 'ar', options = {}) => {
 };
 
 /**
- * تنسيق عرض الوقت بصيغة 12 ساعة ثابتة (AM/PM) بدون رموز لغوية مشوهة
+ * تنسيق الوقت بصيغة قياسية ثابتة (12 ساعة) دون الاعتماد على حروف النظام المشوهة
  */
 export const formatTimeString = (dateObj) => {
   if (!dateObj) return '';
@@ -139,7 +144,7 @@ export const formatTimeString = (dateObj) => {
   const ampm = hours >= 12 ? 'PM' : 'AM';
   
   hours = hours % 12;
-  hours = hours ? hours : 12; // الساعة 0 تصبح 12
+  hours = hours ? hours : 12;
 
   return `${hours}:${minutes} ${ampm}`;
 };
@@ -153,6 +158,9 @@ export const formatDualDate = (dateObj, lang = 'ar') => {
   return `${hijri} (${gregorian})`;
 };
 
+/**
+ * حساب العمر بالسنوات
+ */
 export const calculateAge = (birthDate) => {
   if (!birthDate) return null;
   const today = new Date();
@@ -168,6 +176,9 @@ export const calculateAge = (birthDate) => {
   return age >= 0 ? age : 0;
 };
 
+/**
+ * تحويل تاريخ هجري إلى ميلادي
+ */
 export const hijriToGregorian = (hYear, hMonth, hDay) => {
   try {
     const julianDay = Math.floor((11 * hYear + 3) / 30) + 354 * hYear + 30 * hMonth - Math.floor((hMonth - 1) / 2) + hDay + 1948440 - 385;
