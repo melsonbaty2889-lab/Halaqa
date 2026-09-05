@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Building2, Plus } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { colors as C } from '@/theme/colors';
@@ -14,9 +15,24 @@ export default function AcademySelector({
   statusBadge,
   onSwitchAcademy,
   onOpenCreateAcademy,
-  getText,
-  isRtl
+  getText
 }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
+
+  // دالة مساعدة معتمدة لفك ترجمة النصوص الديناميكية أو الثابتة
+  const resolveText = (textObj) => {
+    if (typeof getText === 'function') {
+      const res = getText(textObj);
+      if (res) return res;
+    }
+    if (typeof textObj === 'string') return textObj;
+    if (textObj && typeof textObj === 'object') {
+      return textObj[i18n.language] || textObj.ar || textObj.en || '';
+    }
+    return '';
+  };
+
   // التحقق مما إذا كان للمستخدم أكثر من أكاديمية
   const hasMultipleAcademies = academiesList.length > 1;
 
@@ -52,7 +68,7 @@ export default function AcademySelector({
             {academyLogo ? (
               <img
                 src={academyLogo}
-                alt={currentAcademyName}
+                alt={currentAcademyName || ''}
                 loading="eager"
                 decoding="sync"
                 onError={(e) => {
@@ -85,18 +101,20 @@ export default function AcademySelector({
               )}
             </div>
 
-            <div>
-              <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium leading-none tracking-wide"
-                style={statusBadge?.style || {
-                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                  color: C.emerald?.light || '#34D399',
-                  border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}`
-                }}
-              >
-                {getText(statusBadge?.text)}
-              </span>
-            </div>
+            {statusBadge && (
+              <div>
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium leading-none tracking-wide"
+                  style={statusBadge?.style || {
+                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    color: C.emerald?.light || '#34D399',
+                    border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}`
+                  }}
+                >
+                  {resolveText(statusBadge?.text)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </button>
@@ -117,7 +135,7 @@ export default function AcademySelector({
           <div className="max-h-56 overflow-y-auto space-y-1 custom-scrollbar">
             {academiesList.map((acc) => {
               const isSelected = acc.id === currentAcademyId;
-              const accName = getText(acc.name);
+              const accName = resolveText(acc.name);
               const accLogo = acc.logo_url;
 
               return (
@@ -181,7 +199,7 @@ export default function AcademySelector({
                 style={{ color: C.emerald?.light || '#34D399' }}
               >
                 <Plus size={14} />
-                <span>إنشاء أكاديمية جديدة</span>
+                <span>{t('sidebar.createNewAcademy', 'إنشاء أكاديمية جديدة')}</span>
               </button>
             </div>
           )}
