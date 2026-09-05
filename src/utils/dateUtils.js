@@ -37,7 +37,7 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * استخراج أجزاء التاريخ الهجري بشكل دقيق وتجنب إرجاع السنة الميلادية
+ * استخراج أجزاء التاريخ الهجري بدقة وبدون تداخل مع التقويم الميلادي
  */
 export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset()) => {
   try {
@@ -46,99 +46,45 @@ export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset
       date.setDate(date.getDate() + offset);
     }
 
-    // استخدام التقويم الهجري الخاص بأم القرى
-    const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+    const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-uma', {
       day: 'numeric',
       month: 'numeric',
       year: 'numeric'
     });
 
-    const formatted = formatter.format(date); // مثال: "23/02/1448"
-    const cleaned = toEngNums(formatted).replace(/[^\d/]/g, '');
-    const parts = cleaned.split('/');
+    const parts = formatter.formatToParts(date);
+    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
+    let year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
 
-    let day = parseInt(parts[0], 10);
-    let month = parseInt(parts[1], 10) - 1;
-    let year = parseInt(parts[2], 10);
-
-    // لو الترتيب جاء بشكل يوم/شهر/سنة أو سنة/شهر/يوم
-    if (parts[0] && parts[0].length === 4) {
-      year = parseInt(parts[0], 10);
-      month = parseInt(parts[1], 10) - 1;
-      day = parseInt(parts[2], 10);
+    // صمام أمان: لو رجع المتصفح السنة ميلادية بطريق الخطأ، يتم تحويلها للتقريبي الهجري
+    if (year > 1600) {
+      year = Math.floor((year - 622) * (33 / 32));
     }
 
-    // صمام أمان: لو السنة رجعت ميلادية (أكبر من 1600)
-    if (isNaN(year) || year > 1600) {
-      const gYear = date.getFullYear();
-      year = Math.floor((gYear - 622) * (33 / 32));
-    }
-
-    return { 
-      day: isNaN(day) ? 1 : day, 
-      month: (isNaN(month) || month < 0 || month > 11) ? 0 : month, 
-      year 
-    };
+    return { day, month, year };
   } catch (e) {
     return { day: 1, month: 0, year: 1448 };
   }
 };
 
-export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getSavedHijriOffset()) => {
-  try {
-    const { day, month, year } = getHijriParts(dateObj, offset);
+export const calculateAge = (birthDate) => {
+  if (!birthDate) return null;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  if (isNaN(birth.getTime())) return null;
 
-    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
-    const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
-    const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.ar[month];
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
 
-    const isArOrUr = ['ar', 'ur'].includes(currentLang);
-    const suffix = isArOrUr ? 'هـ' : 'AH';
-
-    if (isArOrUr) {
-      return `${toArNums(day)} ${monthName} ${toArNums(year)} ${suffix}`;
-    }
-
-    return `${day} ${monthName} ${year} ${suffix}`;
-  } catch (e) {
-    console.error('Hijri formatting error:', e);
-    return '';
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
   }
+
+  return age < 0 ? 0 : age;
 };
 
-export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
-  try {
-    const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
-    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
-    
-    const localeMap = {
-      ar: 'ar-EG',
-      en: 'en-US',
-      fr: 'fr-FR',
-      tr: 'tr-TR',
-      ur: 'ur-PK',
-      id: 'id-ID'
-    };
-
-    const targetLocale = localeMap[cleanLang] || 'ar-EG';
-
-    const formatted = new Intl.DateTimeFormat(targetLocale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
-
-    if (['ar', 'ur'].includes(cleanLang)) {
-      return toArNums(formatted);
-    }
-
-    return formatted;
-  } catch (e) {
-    return dateObj.toLocaleDateString();
-  }
-};
-
-export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
+export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
   const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -152,4 +98,58 @@ export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
   const timeStr = `${formattedHours}:${minutes} ${ampm}`;
   
   return isArOrUr ? toArNums(timeStr) : timeStr;
+};
+
+export const formatHijriDate = (dateObj = new Date(), lang = 'en', offset = getSavedHijriOffset()) => {
+  try {
+    const { day, month, year } = getHijriParts(dateObj, offset);
+
+    const cleanLang = (lang || 'en').toLowerCase().split('-')[0];
+    const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'en';
+    const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.en[month];
+
+    const isArOrUr = ['ar', 'ur'].includes(currentLang);
+    const suffix = isArOrUr ? 'هـ' : 'AH';
+
+    if (isArOrUr) {
+      return `${toArNums(day)} ${monthName} ${toArNums(year)} ${suffix}`;
+    }
+
+    return `${monthName} ${day}, ${year} ${suffix}`;
+  } catch (e) {
+    console.error('Hijri formatting error:', e);
+    return '';
+  }
+};
+
+export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
+  try {
+    const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
+    const cleanLang = (lang || 'en').toLowerCase().split('-')[0];
+    
+    const localeMap = {
+      ar: 'ar-EG',
+      en: 'en-US',
+      fr: 'fr-FR',
+      tr: 'tr-TR',
+      ur: 'ur-PK',
+      id: 'id-ID'
+    };
+
+    const targetLocale = localeMap[cleanLang] || 'en-US';
+
+    const formatted = new Intl.DateTimeFormat(targetLocale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }).format(date);
+
+    if (['ar', 'ur'].includes(cleanLang)) {
+      return toArNums(formatted);
+    }
+
+    return formatted;
+  } catch (e) {
+    return dateObj.toLocaleDateString();
+  }
 };
