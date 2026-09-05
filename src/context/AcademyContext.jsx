@@ -8,6 +8,7 @@ export const AcademyProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [academy, setAcademy] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const [appState, setAppState] = useState('LOADING');
 
   const isMounted = useRef(true);
@@ -31,6 +32,7 @@ export const AcademyProvider = ({ children }) => {
         setUser(null);
         setProfile(null);
         setAcademy(null);
+        setUserRole(null);
         setAppState('UNAUTHENTICATED');
       }
       return;
@@ -50,7 +52,6 @@ export const AcademyProvider = ({ children }) => {
         console.error("🚨 خطأ في جلب البروفايل:", profError);
       }
 
-      // إذا لم يوجد بروفايل، ننشئ بروفايل مؤقت ولا نطرده!
       const activeProfile = profData || {
         id: currentUser.id,
         role: 'admin',
@@ -58,8 +59,12 @@ export const AcademyProvider = ({ children }) => {
         full_name: currentUser.email || 'مستخدم'
       };
 
-      if (isMounted.current) setProfile(activeProfile);
+      if (isMounted.current) {
+        setProfile(activeProfile);
+        setUserRole(activeProfile.role || 'admin');
+      }
 
+      // حسابات Super Admin
       if (activeProfile.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
@@ -68,6 +73,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
+      // حسابات غير مفعلة
       if (activeProfile.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
@@ -77,6 +83,7 @@ export const AcademyProvider = ({ children }) => {
       }
 
       let currentAcademy = null;
+      let detectedRole = activeProfile.role || 'admin';
 
       // 2. البحث عن الأكاديمية المملوكة أولاً
       const { data: ownedAcademy } = await supabase
@@ -88,11 +95,12 @@ export const AcademyProvider = ({ children }) => {
 
       if (ownedAcademy) {
         currentAcademy = ownedAcademy;
+        detectedRole = 'admin';
       } else {
-        // 3. البحث في عضويات الأكاديمية كـ Fallback
+        // 3. البحث في عضويات الأكاديمية كـ Fallback مع استرجاع الدور المخصص
         const { data: memList } = await supabase
           .from('academy_members')
-          .select('academy_id')
+          .select('academy_id, role')
           .eq('user_id', currentUser.id)
           .limit(1);
 
@@ -105,12 +113,17 @@ export const AcademyProvider = ({ children }) => {
 
           if (joinedAcademy) {
             currentAcademy = joinedAcademy;
+            if (memList[0].role) {
+              detectedRole = memList[0].role;
+            }
           }
         }
       }
 
-      // 4. تعيين الحالة النهائية
+      // 4. تعيين الحالة النهائية مع تثبيت الدور
       if (isMounted.current) {
+        setUserRole(detectedRole);
+        
         if (currentAcademy) {
           setAcademy(currentAcademy);
           if (currentAcademy.slug) {
@@ -123,8 +136,13 @@ export const AcademyProvider = ({ children }) => {
             setAppState('FULLY_ACTIVE');
           }
         } else {
-          setAcademy(null);
-          setAppState('FULLY_ACTIVE'); // تفعيل الدخول المباشر
+          // في حال عدم وجود أكاديمية، ننشئ كائن مؤقت لتفادي حظر الشاشات
+          setAcademy({
+            id: 'default',
+            name: 'الأكاديمية الافتراضية',
+            is_active: true
+          });
+          setAppState('FULLY_ACTIVE');
         }
       }
 
@@ -161,7 +179,6 @@ export const AcademyProvider = ({ children }) => {
 
     initAuth();
 
-    // 🟢 حماية اشتراك auth
     let authListener = null;
     if (supabase?.auth && typeof supabase.auth.onAuthStateChange === 'function') {
       const res = supabase.auth.onAuthStateChange((event, session) => {
@@ -221,14 +238,14 @@ export const AcademyProvider = ({ children }) => {
   const logout = async () => {
     try {
       if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('block_splash');
-        localStorage.removeItem('app_splash_seen_v4');
+        sessionStorage.clear();
         localStorage.removeItem('current_academy_slug');
       }
       if (isMounted.current) {
         setAcademy(null);
         setUser(null);
         setProfile(null);
+        setUserRole(null);
         setAppState('UNAUTHENTICATED');
       }
       await supabase.auth.signOut();
@@ -242,6 +259,7 @@ export const AcademyProvider = ({ children }) => {
       user,
       profile,
       academy,
+      userRole,
       appState,
       updateAcademyState,
       logout,
@@ -255,11 +273,11 @@ export const AcademyProvider = ({ children }) => {
 export const useAcademy = () => {
   const context = useContext(AcademyContext);
   if (!context) {
-    // إرجاع قيم افتراضية بدلاً من كسر التطبيق بالـ Error
     return {
       user: null,
       profile: null,
       academy: null,
+      userRole: null,
       appState: 'LOADING',
       updateAcademyState: () => {},
       logout: async () => {},
