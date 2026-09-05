@@ -37,7 +37,7 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * استخراج أجزاء التاريخ الهجري بدقة وبدون تداخل مع التقويم الميلادي
+ * حساب أجزاء التاريخ الهجري بدقة وبدون تداخل مع التقويم الميلادي
  */
 export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset()) => {
   try {
@@ -46,23 +46,36 @@ export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset
       date.setDate(date.getDate() + offset);
     }
 
-    const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-uma', {
+    const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
       day: 'numeric',
       month: 'numeric',
       year: 'numeric'
     });
 
-    const parts = formatter.formatToParts(date);
-    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
-    let year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
+    const formatted = formatter.format(date);
+    const cleaned = toEngNums(formatted).replace(/[^\d/]/g, '');
+    const parts = cleaned.split('/');
 
-    // صمام أمان: لو رجع المتصفح السنة ميلادية بطريق الخطأ، يتم تحويلها للتقريبي الهجري
-    if (year > 1600) {
-      year = Math.floor((year - 622) * (33 / 32));
+    let day = parseInt(parts[0], 10);
+    let month = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+
+    if (parts[0] && parts[0].length === 4) {
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1;
+      day = parseInt(parts[2], 10);
     }
 
-    return { day, month, year };
+    if (isNaN(year) || year > 1600) {
+      const gYear = date.getFullYear();
+      year = Math.floor((gYear - 622) * (33 / 32));
+    }
+
+    return { 
+      day: isNaN(day) ? 1 : day, 
+      month: (isNaN(month) || month < 0 || month > 11) ? 0 : month, 
+      year 
+    };
   } catch (e) {
     return { day: 1, month: 0, year: 1448 };
   }
@@ -84,7 +97,7 @@ export const calculateAge = (birthDate) => {
   return age < 0 ? 0 : age;
 };
 
-export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
+export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
   const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -100,13 +113,13 @@ export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
   return isArOrUr ? toArNums(timeStr) : timeStr;
 };
 
-export const formatHijriDate = (dateObj = new Date(), lang = 'en', offset = getSavedHijriOffset()) => {
+export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getSavedHijriOffset()) => {
   try {
     const { day, month, year } = getHijriParts(dateObj, offset);
 
-    const cleanLang = (lang || 'en').toLowerCase().split('-')[0];
-    const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'en';
-    const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.en[month];
+    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+    const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
+    const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.ar[month];
 
     const isArOrUr = ['ar', 'ur'].includes(currentLang);
     const suffix = isArOrUr ? 'هـ' : 'AH';
@@ -115,17 +128,17 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'en', offset = getS
       return `${toArNums(day)} ${monthName} ${toArNums(year)} ${suffix}`;
     }
 
-    return `${monthName} ${day}, ${year} ${suffix}`;
+    return `${day} ${monthName} ${year} ${suffix}`;
   } catch (e) {
     console.error('Hijri formatting error:', e);
     return '';
   }
 };
 
-export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
+export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
   try {
     const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
-    const cleanLang = (lang || 'en').toLowerCase().split('-')[0];
+    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
     
     const localeMap = {
       ar: 'ar-EG',
@@ -136,11 +149,11 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
       id: 'id-ID'
     };
 
-    const targetLocale = localeMap[cleanLang] || 'en-US';
+    const targetLocale = localeMap[cleanLang] || 'ar-EG';
 
     const formatted = new Intl.DateTimeFormat(targetLocale, {
       day: 'numeric',
-      month: 'short',
+      month: 'long',
       year: 'numeric'
     }).format(date);
 
