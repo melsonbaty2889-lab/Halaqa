@@ -10,9 +10,8 @@ import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import rawColors from '@/theme/colors.js';
 
-// 🚀 Dynamic Imports (Lazy Loading) لتقليل حجم الـ Initial Bundle
+// 🚀 Dynamic Imports (Lazy Loading) للمكونات الأساسية فقط
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
-const DevPlayground = lazy(() => import('@/components/Dev/DevPlayground'));
 const LoginPage = lazy(() => import('@/components/Auth/LoginPage'));
 const SignUpPage = lazy(() => import('@/components/Auth/SignUpPage'));
 const ForgotPassword = lazy(() => import('@/components/Auth/ForgotPassword'));
@@ -21,6 +20,14 @@ const MainApp = lazy(() => import('@/components/Main/MainApp'));
 const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
 const CertificateVerify = lazy(() => import('@/components/Certificates/CertificateVerify'));
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
+
+// 🧪 تحميل بيئة التطوير فقط عند الحاجة الشديدة لتوفير المساحة
+const DevPlayground = lazy(() => {
+  if (process.env.NODE_ENV === 'development' || typeof window !== 'undefined' && window.location.search.includes('view=test')) {
+    return import('@/components/Dev/DevPlayground');
+  }
+  return Promise.resolve({ default: () => null });
+});
 
 // 🎨 طبقة حماية وتوافق لكائن الألوان
 const C = {
