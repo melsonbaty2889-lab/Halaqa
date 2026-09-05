@@ -3,8 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { 
-  HIJRI_MONTHS_AR, 
-  HIJRI_MONTHS_EN, 
+  HIJRI_MONTHS, 
   getHijriParts, 
   formatHijriDate, 
   getSavedHijriOffset, 
@@ -12,9 +11,12 @@ import {
 } from '../../utils/dateUtils';
 
 export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const currentLang = i18n.language || 'ar';
-  const isRtl = currentLang.startsWith('ar');
+  
+  // فحص اتجاه اللغة للغات RTL (العربية والأوردو)
+  const cleanLang = currentLang.toLowerCase().split('-')[0];
+  const isRtl = ['ar', 'ur'].includes(cleanLang);
 
   const [useHijri, setUseHijri] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -52,7 +54,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     if (!selectedDate) return '';
     try {
       if (useHijri) {
-        return formatHijriDate(dateObj, isRtl, hijriOffset);
+        return formatHijriDate(dateObj, currentLang, hijriOffset);
       }
       return new Intl.DateTimeFormat(currentLang, {
         weekday: 'short',
@@ -63,7 +65,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     } catch (e) {
       return selectedDate;
     }
-  }, [selectedDate, currentLang, isRtl, useHijri, dateObj, hijriOffset]);
+  }, [selectedDate, currentLang, useHijri, dateObj, hijriOffset]);
 
   const handlePrevMonth = () => {
     setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -76,11 +78,13 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const headerTitle = useMemo(() => {
     if (useHijri) {
       const { month, year } = getHijriParts(viewDate, hijriOffset);
-      const monthName = isRtl ? HIJRI_MONTHS_AR[month - 1] : HIJRI_MONTHS_EN[month - 1];
-      return isRtl ? `${monthName} ${year} هـ` : `${monthName} ${year} AH`;
+      const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.en;
+      const monthName = monthsList[month - 1];
+      const suffix = isRtl ? 'هـ' : 'AH';
+      return `${monthName} ${year} ${suffix}`;
     }
     return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
-  }, [viewDate, useHijri, isRtl, currentLang, hijriOffset]);
+  }, [viewDate, useHijri, cleanLang, isRtl, currentLang, hijriOffset]);
 
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
