@@ -17,33 +17,34 @@ export default function SidebarWidget({
   t
 }) {
   const { i18n } = useTranslation();
-  const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
+  
+  // استخراج أول حرفين فقط لضمان التوافق مع مفاتيح اللغات (ar, en, fr, tr, ur, id)
+  const currentLang = useMemo(() => {
+    const rawLang = i18n.language || (isRtl ? 'ar' : 'en');
+    return rawLang.split('-')[0].toLowerCase();
+  }, [i18n.language, isRtl]);
 
   const translate = (key, fallback) => {
     if (typeof t === 'function') return t(key, fallback);
     return fallback;
   };
 
-  // تنسيق التاريخ الهجري بناءً على اللغة الحالية المعتمدة في التطبيق
+  // تنسيق التاريخ الهجري
   const formattedHijri = useMemo(() => {
     if (hijri && typeof hijri === 'string') return hijri;
     return formatHijriDate(new Date(), currentLang);
   }, [hijri, currentLang]);
 
-  // تنسيق التاريخ الميلادي بأمان وبدون رموز تشويش
+  // تنسيق التاريخ الميلادي
   const formattedGregorian = useMemo(() => {
-    return formatGregorianDate(new Date(), currentLang, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatGregorianDate(new Date(), currentLang);
   }, [currentLang]);
 
-  // تنسيق الوقت لمنع ظهور رموز مثل (ÖÖ) والاعتماد على أرقام وصيغة نظيفة
+  // تنسيق الوقت مع تمرير اللغة الحالية وتحديث المراقبة
   const formattedTime = useMemo(() => {
     if (academyTime) return toEngNums(academyTime);
-    return formatTimeString(new Date());
-  }, [academyTime]);
+    return formatTimeString(new Date(), currentLang);
+  }, [academyTime, currentLang]);
 
   const isLifetime = effectiveDaysLeft === Infinity;
 
