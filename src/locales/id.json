@@ -233,6 +233,7 @@
   "settings.logoRemoveSuccess": "Logo berhasil dihapus",
   "settings.logoUploadError": "Gagal mengunggah logo",
   "settings.logoUploadSuccess": "Logo berhasil diunggah",
+  "settings.nameRequired": "",
   "settings.nameRequiredAr": "Silakan masukkan nama akademi",
   "settings.nameRequiredEn": "Please enter the academy name",
   "settings.officialEmail": "Email Resmi",
