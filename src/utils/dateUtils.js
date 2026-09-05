@@ -6,7 +6,7 @@ export const HIJRI_MONTHS = {
   fr: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramadan', 'Shawwāl', 'Dhū al-Qiʿdah', 'Dhū al-Ḥijjah'],
   tr: ['Muharrem', 'Sefer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir', 'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'],
   ur: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الثانية', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
-  id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
+  id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
 };
 
 export const toEngNums = (str) => {
@@ -81,46 +81,45 @@ export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset
   }
 };
 
-export const calculateAge = (birthDate) => {
-  if (!birthDate) return null;
-  const today = new Date();
-  const birth = new Date(birthDate);
-  if (isNaN(birth.getTime())) return null;
-
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-
-  return age < 0 ? 0 : age;
-};
-
+/**
+ * تنسيق الوقت محلياً حسب لغة التطبيق وبدون خلط أرقام
+ */
 export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
-  const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
-  let hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const isArOrUr = ['ar', 'ur'].includes(lang);
-  
-  const ampm = hours >= 12 ? (isArOrUr ? 'م' : 'PM') : (isArOrUr ? 'ص' : 'AM');
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  
-  const formattedHours = hours.toString().padStart(2, '0');
-  const timeStr = `${formattedHours}:${minutes} ${ampm}`;
-  
-  return isArOrUr ? toArNums(timeStr) : timeStr;
+  try {
+    const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
+    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+
+    const localeMap = {
+      ar: 'ar-EG',
+      en: 'en-US',
+      fr: 'fr-FR',
+      tr: 'tr-TR',
+      ur: 'ur-PK',
+      id: 'id-ID'
+    };
+
+    const targetLocale = localeMap[cleanLang] || 'en-US';
+
+    return new Intl.DateTimeFormat(targetLocale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(date);
+  } catch (e) {
+    return dateObj.toLocaleTimeString();
+  }
 };
 
+/**
+ * تنسيق التاريخ الهجري عالمياً باحترافية
+ */
 export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getSavedHijriOffset()) => {
   try {
     const { day, month, year } = getHijriParts(dateObj, offset);
-
     const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
     const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
+    
     const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.ar[month];
-
     const isArOrUr = ['ar', 'ur'].includes(currentLang);
     const suffix = isArOrUr ? 'هـ' : 'AH';
 
@@ -135,6 +134,9 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getS
   }
 };
 
+/**
+ * تنسيق التاريخ الميلادي محلياً حسب لغة الواجهة
+ */
 export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
   try {
     const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
@@ -149,7 +151,7 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
       id: 'id-ID'
     };
 
-    const targetLocale = localeMap[cleanLang] || 'ar-EG';
+    const targetLocale = localeMap[cleanLang] || 'en-US';
 
     const formatted = new Intl.DateTimeFormat(targetLocale, {
       day: 'numeric',
