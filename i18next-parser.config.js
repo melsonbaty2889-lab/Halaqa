@@ -15,7 +15,7 @@ module.exports = {
   },
 
   // مسار حفظ وتحديث ملفات الـ JSON لكل لغة
-  output: 'src/locales/$LOCALE/$NAMESPACE.json',
+  output: 'src/locales/$LOCALE.json',
 
   // المسارات التي سيتم مسحها داخل المشروع
   input: [
