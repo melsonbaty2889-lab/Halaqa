@@ -1,107 +1,91 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { Halaqa, HalaqaFilters } from '@/types/halaqa';
 
-// ── Types & Interfaces ──────────────────────────────────────────
-
-export interface Halaqa {
-  id: string;
-  academy_id: string;
-  name_ar?: string;
-  name_en?: string;
-  teacher_id?: string | null;
-  description?: string;
-  gender_restriction?: 'males_only' | 'females_only' | 'mixed' | 'all';
-  max_capacity?: number;
-  status?: 'active' | 'inactive' | 'archived';
-  created_at?: string;
-  updated_at?: string;
-  teacher?: {
-    id: string;
-    full_name?: string;
-  };
+export interface UseHalaqasOptions {
+  academyId: string;
+  initialFilters?: Partial<HalaqaFilters>;
+  enabled?: boolean;
 }
 
-export type CreateHalaqaInput = Omit<Halaqa, 'id' | 'created_at' | 'updated_at'>;
-export type UpdateHalaqaInput = Partial<CreateHalaqaInput> & { id: string };
-
-// ── Main Hook ───────────────────────────────────────────────────
-
-export const useHalaqas = (academyId?: string | null) => {
+export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHalaqasOptions) => {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const isValidAcademy = Boolean(
-    academyId && 
-    academyId !== 'undefined' && 
-    typeof academyId === 'string' && 
-    academyId.trim() !== ''
-  );
+  const [filters, setFilters] = useState<HalaqaFilters>({
+    searchTerm: '',
+    status: 'all',
+    target_audience: 'all',
+    teaching_type: 'all',
+    is_archived: false,
+    ...initialFilters,
+  });
 
-  // 1️⃣ جلب الحلقات مع دعم الكاش
+  const queryKey = ['halaqas', academyId, filters];
+
+  // 1. جلب بيانات الحلقات
   const {
     data: halaqas = [],
     isLoading: loading,
     error: queryError,
     refetch,
-  } = useQuery<Halaqa[]>({
-    queryKey: ['halaqas', academyId],
-    queryFn: async () => {
-      if (!isValidAcademy) return [];
+  } = useQuery({
+    queryKey,
+    queryFn: async (): Promise<Halaqa[]> => {
+      if (!academyId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('halaqas')
-        .select('*')
-        .eq('academy_id', academyId!)
-        .order('created_at', { ascending: false });
+        .select(`
+          *,
+          teachers (
+            id,
+            name,
+            email
+          ),
+          curricula (
+            id,
+            title
+          )
+        `)
+        .eq('academy_id', academyId)
+        .eq('is_archived', filters.is_archived);
+
+      if (filters.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+
+      if (filters.target_audience && filters.target_audience !== 'all') {
+        query = query.eq('target_audience', filters.target_audience);
+      }
+
+      if (filters.teaching_type && filters.teaching_type !== 'all') {
+        query = query.eq('teaching_type', filters.teaching_type);
+      }
+
+      // البحث الديناميكي كـ text داخل name الـ JSONB + الكود
+      if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+        const term = `%${filters.searchTerm.trim()}%`;
+        query = query.or(`name.cast.text.ilike.${term},code.ilike.${term}`);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Halaqa[];
+      return (data as Halaqa[]) || [];
     },
-    enabled: isValidAcademy,
+    enabled: !!academyId && enabled,
   });
 
-  // 2️⃣ إضافة حلقة جديدة
-  const addHalaqaMutation = useMutation({
-    mutationFn: async (newHalaqa: CreateHalaqaInput) => {
-      const { data, error } = await supabase
-        .from('halaqas')
-        .insert([{ ...newHalaqa, academy_id: academyId }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
-    },
-  });
-
-  // 3️⃣ تعديل حلقة موجودة
-  const updateHalaqaMutation = useMutation({
-    mutationFn: async ({ id, ...updateData }: UpdateHalaqaInput) => {
-      const { data, error } = await supabase
-        .from('halaqas')
-        .update({ ...updateData, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
-    },
-  });
-
-  // 4️⃣ حذف حلقة
-  const deleteHalaqaMutation = useMutation({
-    mutationFn: async (halaqaId: string) => {
+  // 2. Mutation للأرشفة
+  const archiveMutation = useMutation({
+    mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
         .from('halaqas')
-        .delete()
+        .update({
+          is_archived: !currentArchived,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', halaqaId);
 
       if (error) throw error;
@@ -111,52 +95,27 @@ export const useHalaqas = (academyId?: string | null) => {
     },
   });
 
-  // فلترة قائمة الحلقات بالبحث بالاسم العربي أو الإنجليزي
-  const filteredHalaqas = halaqas.filter((h) => {
-    const name = h.name_ar || h.name_en || '';
-    return name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
-  const addHalaqa = async (data: CreateHalaqaInput) => {
-    try {
-      const result = await addHalaqaMutation.mutateAsync(data);
-      return { success: true, data: result };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'حدث خطأ أثناء إدراج الحلقة' };
-    }
-  };
-
-  const updateHalaqa = async (data: UpdateHalaqaInput) => {
-    try {
-      const result = await updateHalaqaMutation.mutateAsync(data);
-      return { success: true, data: result };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'حدث خطأ أثناء تعديل الحلقة' };
-    }
-  };
-
-  const deleteHalaqa = async (id: string) => {
-    try {
-      await deleteHalaqaMutation.mutateAsync(id);
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'حدث خطأ أثناء حذف الحلقة' };
-    }
-  };
+  const toggleArchiveHalaqa = useCallback(
+    async (halaqaId: string, currentArchived: boolean) => {
+      try {
+        await archiveMutation.mutateAsync({ halaqaId, currentArchived });
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'فشلت عملية الأرشفة' };
+      }
+    },
+    [archiveMutation]
+  );
 
   return {
-    halaqas: filteredHalaqas,
-    rawHalaqas: halaqas,
+    halaqas,
     loading,
     error: queryError ? (queryError as Error).message : null,
-    searchTerm,
-    setSearchTerm,
+    filters,
+    setFilters,
     refetch,
-    addHalaqa,
-    updateHalaqa,
-    deleteHalaqa,
-    isAdding: addHalaqaMutation.isPending,
-    isUpdating: updateHalaqaMutation.isPending,
-    isDeleting: deleteHalaqaMutation.isPending,
+    toggleArchiveHalaqa,
   };
 };
+
+export default useHalaqas;
