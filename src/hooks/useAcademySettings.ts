@@ -1,7 +1,43 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export const INITIAL_ACADEMY_FORM = {
+// ── Types & Interfaces ──────────────────────────────────────────
+
+export interface AcademyFormData {
+  name_ar: string;
+  name_en: string;
+  slug: string;
+  logo_url: string;
+  tagline: string;
+  description: string;
+  brand_color: string;
+  
+  contact_email: string;
+  contact_phone: string;
+  website: string;
+  country_code: string;
+  
+  currency: string;
+  timezone: string;
+  language_code: string;
+  calendar_type: string;
+  weekend_days: string[];
+  
+  learning_type: string;
+  default_qiraat: string;
+  teaching_methodology: string;
+  
+  allow_self_registration: boolean;
+  require_approval: boolean;
+  max_students_per_group: number;
+}
+
+export interface ToastState {
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+export const INITIAL_ACADEMY_FORM: AcademyFormData = {
   name_ar: '',
   name_en: '',
   slug: '',
@@ -27,21 +63,28 @@ export const INITIAL_ACADEMY_FORM = {
   
   allow_self_registration: true,
   require_approval: true,
-  max_students_per_group: 25
+  max_students_per_group: 25,
 };
 
-export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus = null, onCurrencyChange = null) {
-  const [formData, setFormData] = useState(INITIAL_ACADEMY_FORM);
-  const [initialData, setInitialData] = useState(INITIAL_ACADEMY_FORM);
-  const [rawAcademyData, setRawAcademyData] = useState(null);
-  
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [toast, setToast] = useState(null);
+// ── Main Hook ───────────────────────────────────────────────────
 
-  const fileInputRef = useRef(null);
-  const importInputRef = useRef(null);
+export function useAcademySettings(
+  currentAcademyId?: string | null,
+  isRtl: boolean = true,
+  refreshStatus?: (() => Promise<void> | void) | null,
+  onCurrencyChange?: ((currency: string) => void) | null
+) {
+  const [formData, setFormData] = useState<AcademyFormData>(INITIAL_ACADEMY_FORM);
+  const [initialData, setInitialData] = useState<AcademyFormData>(INITIAL_ACADEMY_FORM);
+  const [rawAcademyData, setRawAcademyData] = useState<any>(null);
+  
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const isValidAcademyId = Boolean(
     currentAcademyId && 
@@ -52,7 +95,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
 
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
 
-  const showToast = (message, type = 'success') => {
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
@@ -68,7 +111,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
       const { data, error } = await supabase
         .from('academies')
         .select('*')
-        .eq('id', currentAcademyId)
+        .eq('id', currentAcademyId!)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
@@ -86,7 +129,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
           enName = data.name;
         }
 
-        const fetched = {
+        const fetched: AcademyFormData = {
           name_ar: arName,
           name_en: enName,
           slug: data.slug || '',
@@ -118,8 +161,11 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
         setFormData(fetched);
         setInitialData(fetched);
       }
-    } catch (err) {
-      showToast(isRtl ? 'حدث خطأ أثناء جلب البيانات: ' + err.message : 'Error fetching data: ' + err.message, 'error');
+    } catch (err: any) {
+      showToast(
+        isRtl ? `حدث خطأ أثناء جلب البيانات: ${err.message}` : `Error fetching data: ${err.message}`,
+        'error'
+      );
     } finally {
       setLoading(false);
     }
@@ -129,25 +175,33 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     fetchAcademySettings();
   }, [currentAcademyId, isRtl]);
 
-  const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const updateField = (field: keyof AcademyFormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleNameChange = (lang, value) => {
-    const generatedSlug = value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
-    setFormData(prev => ({
+  const handleNameChange = (lang: 'ar' | 'en', value: string) => {
+    const generatedSlug = value
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '');
+
+    setFormData((prev) => ({
       ...prev,
       [`name_${lang}`]: value,
-      slug: (prev.slug === '' || prev.slug === initialData.slug) ? generatedSlug : prev.slug
+      slug: prev.slug === '' || prev.slug === initialData.slug ? generatedSlug : prev.slug,
     }));
   };
 
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (!isValidAcademyId) {
-      showToast(isRtl ? 'تعذر رفع الشعار: معرّف الأكاديمية غير صالح' : 'Cannot upload logo: Invalid Academy ID', 'error');
+      showToast(
+        isRtl ? 'تعذر رفع الشعار: معرّف الأكاديمية غير صالح' : 'Cannot upload logo: Invalid Academy ID',
+        'error'
+      );
       return;
     }
 
@@ -177,19 +231,19 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
 
       if (!publicUrl) throw new Error(isRtl ? 'تعذر الحصول على رابط الصورة العام' : 'Failed to get public image URL');
 
-      setFormData(prev => ({ ...prev, logo_url: publicUrl }));
+      setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
 
       const { error: dbError } = await supabase
         .from('academies')
         .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
-        .eq('id', currentAcademyId);
+        .eq('id', currentAcademyId!);
 
       if (dbError) throw new Error(`[Database] ${dbError.message}`);
 
       if (refreshStatus) await refreshStatus();
 
       showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
-    } catch (err) {
+    } catch (err: any) {
       showToast((isRtl ? 'فشل رفع الشعار: ' : 'Logo upload failed: ') + err.message, 'error');
     } finally {
       setUploadingLogo(false);
@@ -197,28 +251,34 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
   };
 
   const handleRemoveLogo = async () => {
-    setFormData(prev => ({ ...prev, logo_url: '' }));
+    setFormData((prev) => ({ ...prev, logo_url: '' }));
     if (isValidAcademyId) {
       await supabase
         .from('academies')
         .update({ logo_url: '', updated_at: new Date().toISOString() })
-        .eq('id', currentAcademyId);
+        .eq('id', currentAcademyId!);
 
       if (refreshStatus) await refreshStatus();
     }
     showToast(isRtl ? 'تم حذف الشعار بنجاح' : 'Logo removed successfully');
   };
 
-  const handleSave = async (e) => {
+  const handleSave = async (e?: FormEvent) => {
     if (e) e.preventDefault();
 
     if (!isValidAcademyId) {
-      showToast(isRtl ? 'تعذّر الحفظ: لم يتم التعرف على معرّف الأكاديمية' : 'Save failed: Invalid Academy ID', 'error');
+      showToast(
+        isRtl ? 'تعذّر الحفظ: لم يتم التعرف على معرّف الأكاديمية' : 'Save failed: Invalid Academy ID',
+        'error'
+      );
       return;
     }
 
     if (!formData.name_ar.trim() && !formData.name_en.trim()) {
-      showToast(isRtl ? 'يرجى إدخال اسم الأكاديمية على الأقل بلغتك الأساسية' : 'Please enter academy name', 'error');
+      showToast(
+        isRtl ? 'يرجى إدخال اسم الأكاديمية على الأقل بلغتك الأساسية' : 'Please enter academy name',
+        'error'
+      );
       return;
     }
 
@@ -227,7 +287,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
 
       const namePayload = {
         ar: formData.name_ar.trim() || formData.name_en.trim(),
-        en: formData.name_en.trim() || formData.name_ar.trim()
+        en: formData.name_en.trim() || formData.name_ar.trim(),
       };
 
       let formattedSlug = formData.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -262,14 +322,13 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
         require_approval: formData.require_approval,
         max_students_per_group: Number(formData.max_students_per_group) || 25,
         
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('academies')
         .update(updatePayload)
-        .eq('id', currentAcademyId)
-        .select();
+        .eq('id', currentAcademyId!);
 
       if (error) throw error;
 
@@ -282,7 +341,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
       if (onCurrencyChange) onCurrencyChange(formData.currency);
 
       showToast(isRtl ? 'تم حفظ كافة الإعدادات بنجاح' : 'Settings saved successfully');
-    } catch (err) {
+    } catch (err: any) {
       showToast((isRtl ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + err.message, 'error');
     } finally {
       setSaving(false);
@@ -296,6 +355,7 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
   return {
     formData,
     setFormData,
+    rawAcademyData,
     loading,
     saving,
     uploadingLogo,
@@ -310,6 +370,6 @@ export function useAcademySettings(currentAcademyId, isRtl = true, refreshStatus
     handleSave,
     handleDiscardChanges,
     showToast,
-    fetchAcademySettings
+    fetchAcademySettings,
   };
 }
