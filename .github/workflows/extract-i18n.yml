@@ -3,8 +3,12 @@ name: Extract i18n Translations
 on:
   push:
     branches:
-      - stable-app # أو اسم الفرع الرئيسي لديك
-  workflow_dispatch: # يتيح لك تشغيل الأمر بضغطة زر يدويًا من الموبايل
+      - stable-app
+  workflow_dispatch:
+
+# إعطاء صلاحيات الكتابة للـ Workflow لتتمكن من رفع التغييرات
+permissions:
+  contents: write
 
 jobs:
   extract-and-commit:
@@ -30,3 +34,5 @@ jobs:
         with:
           commit_message: "chore(i18n): auto-extract translation keys"
           branch: ${{ github.ref_name }}
+          # منع الفشل في حالة عدم وجود تغييرات جديدة لاستخراجها
+          skip_dirty_check: false
