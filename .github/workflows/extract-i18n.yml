@@ -1,0 +1,32 @@
+name: Extract i18n Translations
+
+on:
+  push:
+    branches:
+      - stable-app # أو اسم الفرع الرئيسي لديك
+  workflow_dispatch: # يتيح لك تشغيل الأمر بضغطة زر يدويًا من الموبايل
+
+jobs:
+  extract-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run i18n Extraction
+        run: npm run extract-i18n
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(i18n): auto-extract translation keys"
+          branch: ${{ github.ref_name }}
