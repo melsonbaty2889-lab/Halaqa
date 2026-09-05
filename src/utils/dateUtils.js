@@ -1,6 +1,5 @@
 // src/utils/dateUtils.js
 
-// 1. قاموس الشهور الهجرية للغات الستة
 export const HIJRI_MONTHS = {
   ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
   en: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿdah', 'Dhū al-Ḥijjah'],
@@ -10,21 +9,16 @@ export const HIJRI_MONTHS = {
   id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
 };
 
-// تحويل الأرقام الهندية/العربية لأرقام إنجليزية standard
 export const toEngNums = (str) => {
   if (!str) return '';
   return String(str).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 };
 
-// تحويل الأرقام الإنجليزية لأرقام عربية (للأردو والعربي)
 export const toArNums = (str) => {
   if (!str) return '';
   return String(str).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 };
 
-/**
- * إدارة فارق الأيام في التقويم الهجري (LocalStorage)
- */
 export const getSavedHijriOffset = () => {
   try {
     const saved = localStorage.getItem('hijri_offset');
@@ -43,9 +37,9 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * استخراج أجزاء التاريخ الهجري (اليوم، الشهر، السنة)
+ * استخراج أجزاء التاريخ الهجري بدقة وبدون تداخل مع التقويم الميلادي
  */
-export const getHijriParts = (dateObj = new Date(), offset = 0) => {
+export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset()) => {
   try {
     const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
     if (offset !== 0) {
@@ -59,19 +53,21 @@ export const getHijriParts = (dateObj = new Date(), offset = 0) => {
     });
 
     const parts = formatter.formatToParts(date);
-    return {
-      day: parseInt(parts.find(p => p.type === 'day')?.value || '1', 10),
-      month: parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1,
-      year: parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10)
-    };
+    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
+    let year = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
+
+    // صمام أمان: لو رجع المتصفح السنة ميلادية بطريق الخطأ، يتم تحويلها للتقريبي الهجري
+    if (year > 1600) {
+      year = Math.floor((year - 622) * (33 / 32));
+    }
+
+    return { day, month, year };
   } catch (e) {
     return { day: 1, month: 0, year: 1448 };
   }
 };
 
-/**
- * حساب العمر بناءً على تاريخ الميلاد
- */
 export const calculateAge = (birthDate) => {
   if (!birthDate) return null;
   const today = new Date();
@@ -88,11 +84,8 @@ export const calculateAge = (birthDate) => {
   return age < 0 ? 0 : age;
 };
 
-/**
- * تنسيق الوقت بشكل موحد ونظيف
- */
 export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
-  const date = dateObj instanceof Date ? dateObj : new Date();
+  const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
   const isArOrUr = ['ar', 'ur'].includes(lang);
@@ -107,14 +100,12 @@ export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
   return isArOrUr ? toArNums(timeStr) : timeStr;
 };
 
-/**
- * تنسيق التاريخ الهجري بحسب اللغة
- */
 export const formatHijriDate = (dateObj = new Date(), lang = 'en', offset = getSavedHijriOffset()) => {
   try {
     const { day, month, year } = getHijriParts(dateObj, offset);
 
-    const currentLang = HIJRI_MONTHS[lang] ? lang : 'en';
+    const cleanLang = (lang || 'en').toLowerCase().split('-')[0];
+    const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'en';
     const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.en[month];
 
     const isArOrUr = ['ar', 'ur'].includes(currentLang);
@@ -131,12 +122,10 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'en', offset = getS
   }
 };
 
-/**
- * تنسيق التاريخ الميلادي بحسب اللغة
- */
 export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
   try {
-    const date = dateObj instanceof Date ? dateObj : new Date();
+    const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
+    const cleanLang = (lang || 'en').toLowerCase().split('-')[0];
     
     const localeMap = {
       ar: 'ar-EG',
@@ -147,7 +136,7 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
       id: 'id-ID'
     };
 
-    const targetLocale = localeMap[lang] || 'en-US';
+    const targetLocale = localeMap[cleanLang] || 'en-US';
 
     const formatted = new Intl.DateTimeFormat(targetLocale, {
       day: 'numeric',
@@ -155,7 +144,7 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
       year: 'numeric'
     }).format(date);
 
-    if (['ar', 'ur'].includes(lang)) {
+    if (['ar', 'ur'].includes(cleanLang)) {
       return toArNums(formatted);
     }
 
