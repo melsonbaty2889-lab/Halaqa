@@ -2,8 +2,8 @@
 
 export const HIJRI_MONTHS = {
   ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
-  en: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿdah', 'Dhū al-Ḥijjah'],
-  fr: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramadan', 'Shawwāl', 'Dhū al-Qiʿdah', 'Dhū al-Ḥijjah'],
+  en: ['Muharram', 'Safar', 'Rabi I', 'Rabi II', 'Jumada I', 'Jumada II', 'Rajab', "Sha'ban", 'Ramadan', 'Shawwal', "Dhul-Qi'dah", 'Dhul-Hijjah'],
+  fr: ['Mouharram', 'Safar', 'Rabi I', 'Rabi II', 'Joumada I', 'Joumada II', 'Rajab', "Cha'bane", 'Ramadan', 'Chawwal', "Dhou al-Qi'da", 'Dhou al-Hijja'],
   tr: ['Muharrem', 'Sefer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir', 'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'],
   ur: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الثانية', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
   id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
@@ -11,12 +11,19 @@ export const HIJRI_MONTHS = {
 
 export const toEngNums = (str) => {
   if (!str) return '';
-  return String(str).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  return String(str)
+    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 };
 
 export const toArNums = (str) => {
   if (!str) return '';
   return String(str).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+};
+
+export const toUrNums = (str) => {
+  if (!str) return '';
+  return String(str).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
 };
 
 export const getSavedHijriOffset = () => {
@@ -99,18 +106,48 @@ export const calculateAge = (birthDate) => {
 
 export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
   const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+
+  // الفرنسية تعتمد نظام 24 ساعة
+  if (cleanLang === 'fr') {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  // التركية تعتمد ÖS / ÖÖ
+  if (cleanLang === 'tr') {
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const period = hours >= 12 ? 'ÖS' : 'ÖÖ';
+    hours = hours % 12 || 12;
+    return `${period} ${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
-  const isArOrUr = ['ar', 'ur'].includes(lang);
   
-  const ampm = hours >= 12 ? (isArOrUr ? 'م' : 'PM') : (isArOrUr ? 'ص' : 'AM');
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  
+  // العربية
+  if (cleanLang === 'ar') {
+    const ampm = hours >= 12 ? 'م' : 'ص';
+    hours = hours % 12 || 12;
+    const formattedHours = hours.toString().padStart(2, '0');
+    return toArNums(`${formattedHours}:${minutes} ${ampm}`);
+  }
+
+  // الأوردو (أرقام أوردو شرقية)
+  if (cleanLang === 'ur') {
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const formattedHours = hours.toString().padStart(2, '0');
+    return `${toUrNums(formattedHours)}:${toUrNums(minutes)} ${ampm}`;
+  }
+
+  // الإنجليزية والإندونيسية
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
   const formattedHours = hours.toString().padStart(2, '0');
-  const timeStr = `${formattedHours}:${minutes} ${ampm}`;
-  
-  return isArOrUr ? toArNums(timeStr) : timeStr;
+  return `${formattedHours}:${minutes} ${ampm}`;
 };
 
 export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getSavedHijriOffset()) => {
@@ -121,14 +158,15 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getS
     const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
     const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.ar[month];
 
-    const isArOrUr = ['ar', 'ur'].includes(currentLang);
-    const suffix = isArOrUr ? 'هـ' : 'AH';
-
-    if (isArOrUr) {
-      return `${toArNums(day)} ${monthName} ${toArNums(year)} ${suffix}`;
+    if (currentLang === 'ar') {
+      return `${toArNums(day)} ${monthName} ${toArNums(year)} هـ`;
     }
 
-    return `${day} ${monthName} ${year} ${suffix}`;
+    if (currentLang === 'ur') {
+      return `${toUrNums(day)} ${monthName} ${toUrNums(year)} ء`;
+    }
+
+    return `${day} ${monthName} ${year} AH`;
   } catch (e) {
     console.error('Hijri formatting error:', e);
     return '';
@@ -149,7 +187,7 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
       id: 'id-ID'
     };
 
-    const targetLocale = localeMap[cleanLang] || 'ar-EG';
+    const targetLocale = localeMap[cleanLang] || 'en-US';
 
     const formatted = new Intl.DateTimeFormat(targetLocale, {
       day: 'numeric',
@@ -157,8 +195,12 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
       year: 'numeric'
     }).format(date);
 
-    if (['ar', 'ur'].includes(cleanLang)) {
+    if (cleanLang === 'ar') {
       return toArNums(formatted);
+    }
+
+    if (cleanLang === 'ur') {
+      return toUrNums(formatted);
     }
 
     return formatted;
