@@ -7,7 +7,6 @@ import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
   academyTime,
-  hijri,
   setActiveTab,
   setShowEarlyUpgrade,
   isMobile,
@@ -18,7 +17,6 @@ export default function SidebarWidget({
 }) {
   const { i18n } = useTranslation();
   
-  // استخراج أول حرفين فقط لضمان التوافق مع مفاتيح اللغات (ar, en, fr, tr, ur, id)
   const currentLang = useMemo(() => {
     const rawLang = i18n.language || (isRtl ? 'ar' : 'en');
     return rawLang.split('-')[0].toLowerCase();
@@ -29,18 +27,14 @@ export default function SidebarWidget({
     return fallback;
   };
 
-  // تنسيق التاريخ الهجري
   const formattedHijri = useMemo(() => {
-    if (hijri && typeof hijri === 'string') return hijri;
     return formatHijriDate(new Date(), currentLang);
-  }, [hijri, currentLang]);
+  }, [currentLang]);
 
-  // تنسيق التاريخ الميلادي
   const formattedGregorian = useMemo(() => {
     return formatGregorianDate(new Date(), currentLang);
   }, [currentLang]);
 
-  // تنسيق الوقت مع تمرير اللغة الحالية وتحديث المراقبة
   const formattedTime = useMemo(() => {
     if (academyTime) return toEngNums(academyTime);
     return formatTimeString(new Date(), currentLang);
