@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   // اللغة الافتراضية
   defaultNamespace: 'translation',
 
