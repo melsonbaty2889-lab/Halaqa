@@ -11,10 +11,9 @@ import {
 } from '../../utils/dateUtils';
 
 export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   
-  // فحص اتجاه اللغة للغات RTL (العربية والأوردو)
   const cleanLang = currentLang.toLowerCase().split('-')[0];
   const isRtl = ['ar', 'ur'].includes(cleanLang);
 
@@ -79,7 +78,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     if (useHijri) {
       const { month, year } = getHijriParts(viewDate, hijriOffset);
       const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.en;
-      const monthName = monthsList[month - 1];
+      const monthName = monthsList[month] || monthsList[0];
       const suffix = isRtl ? 'هـ' : 'AH';
       return `${monthName} ${year} ${suffix}`;
     }
@@ -194,7 +193,6 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
             })}
           </div>
 
-          {/* شريط ضبط الرؤية الشرعية عند تغير رؤية الهلال */}
           {useHijri && (
             <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
