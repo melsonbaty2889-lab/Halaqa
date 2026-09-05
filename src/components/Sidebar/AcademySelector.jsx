@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, Check, Building2 } from 'lucide-react';
+import { ChevronDown, Check, Building2, Plus } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { colors as C } from '@/theme/colors';
 
@@ -13,15 +13,23 @@ export default function AcademySelector({
   dropdownRef,
   statusBadge,
   onSwitchAcademy,
+  onOpenCreateAcademy,
   getText,
   isRtl
 }) {
+  // التحقق مما إذا كان للمستخدم أكثر من أكاديمية
+  const hasMultipleAcademies = academiesList.length > 1;
+
   return (
     <div ref={dropdownRef} className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* زر تحديد/عرض الأكاديمية الحالية */}
       <button
         type="button"
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="w-full flex items-center justify-between p-2 rounded-xl backdrop-blur-md transition-all duration-200 cursor-pointer select-none group focus:outline-none"
+        disabled={!hasMultipleAcademies}
+        onClick={() => hasMultipleAcademies && setDropdownOpen(!dropdownOpen)}
+        className={`w-full flex items-center justify-between p-2 rounded-xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
+          hasMultipleAcademies ? 'cursor-pointer' : 'cursor-default'
+        }`}
         style={{
           backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
           borderColor: dropdownOpen ? (C.emerald?.light || '#34D399') : (C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'),
@@ -31,7 +39,7 @@ export default function AcademySelector({
         }}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          {/* الشعار */}
+          {/* شعار الأكاديمية */}
           <div 
             className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:scale-105"
             style={{
@@ -57,7 +65,7 @@ export default function AcademySelector({
             )}
           </div>
 
-          {/* تفاصيل الاسم والسهم والشارة */}
+          {/* اسم الأكاديمية والسهم وشارة الحالة */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
             <div className="flex items-center gap-1.5 min-w-0">
               <h2 
@@ -67,12 +75,14 @@ export default function AcademySelector({
                 {currentAcademyName}
               </h2>
 
-              {/* أداة السهم بجانب الاسم مباشرة لتوفير المساحة */}
-              <ChevronDown
-                size={14}
-                className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-                style={{ color: dropdownOpen ? (C.emerald?.light || '#34D399') : (C.text?.muted || '#94A3B8') }}
-              />
+              {/* يُعرض السهم فقط إذا كان هناك أكثر من أكاديمية */}
+              {hasMultipleAcademies && (
+                <ChevronDown
+                  size={14}
+                  className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                  style={{ color: dropdownOpen ? (C.emerald?.light || '#34D399') : (C.text?.muted || '#94A3B8') }}
+                />
+              )}
             </div>
 
             <div>
@@ -91,8 +101,8 @@ export default function AcademySelector({
         </div>
       </button>
 
-      {/* قائمة الخيارات المنسدلة */}
-      {dropdownOpen && (
+      {/* القائمة المنسدلة لاختيار الأكاديميات */}
+      {dropdownOpen && hasMultipleAcademies && (
         <div 
           className="absolute top-full left-0 right-0 mt-2 p-1.5 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"
           style={{
@@ -103,6 +113,7 @@ export default function AcademySelector({
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)'
           }}
         >
+          {/* قائمة الأكاديميات */}
           <div className="max-h-56 overflow-y-auto space-y-1 custom-scrollbar">
             {academiesList.map((acc) => {
               const isSelected = acc.id === currentAcademyId;
@@ -156,6 +167,24 @@ export default function AcademySelector({
               );
             })}
           </div>
+
+          {/* خيار إضافة أكاديمية جديدة */}
+          {onOpenCreateAcademy && (
+            <div className="pt-1 mt-1 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  onOpenCreateAcademy();
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-emerald-500/10 cursor-pointer"
+                style={{ color: C.emerald?.light || '#34D399' }}
+              >
+                <Plus size={14} />
+                <span>إنشاء أكاديمية جديدة</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
