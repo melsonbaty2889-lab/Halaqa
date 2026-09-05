@@ -1,10 +1,17 @@
-// src/hooks/useStudents.ts
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase'; 
+import { supabase } from '@/lib/supabase';
 import { Student, StudentFilters } from '@/types/student';
 
-export const useStudents = (academyId: string, initialFilters?: Partial<StudentFilters>) => {
+export interface OperationResponse {
+  success: boolean;
+  error?: string;
+}
+
+export const useStudents = (
+  academyId: string,
+  initialFilters?: Partial<StudentFilters>
+) => {
   const queryClient = useQueryClient();
 
   // 1. إدارة حالة الفلاتر
@@ -17,7 +24,9 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
   });
 
   // 2. حالة كلمة البحث المؤجلة لتخفيف الطلبات (Debounce)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(filters.searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(
+    filters.searchTerm
+  );
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -28,7 +37,14 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
   }, [filters.searchTerm]);
 
   // 3. مفتاح الكاش الموحد بناءً على المتغيرات
-  const queryKey = ['students', academyId, filters.gender, filters.halaqaId, filters.isArchived, debouncedSearchTerm];
+  const queryKey = [
+    'students',
+    academyId,
+    filters.gender,
+    filters.halaqaId,
+    filters.isArchived,
+    debouncedSearchTerm,
+  ];
 
   // 4. جلب البيانات باستخدام React Query
   const {
@@ -38,12 +54,13 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     refetch,
   } = useQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async (): Promise<Student[]> => {
       if (!academyId) return [];
 
       let query = supabase
         .from('students')
-        .select(`
+        .select(
+          `
           *,
           halaqas (
             id,
@@ -51,7 +68,8 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
             name_en,
             target_audience
           )
-        `)
+        `
+        )
         .eq('academy_id', academyId)
         .eq('is_archived', filters.isArchived);
 
@@ -72,29 +90,42 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
       // البحث بالاسم أو الكود أو الهاتف
       if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
         const term = `%${debouncedSearchTerm.trim()}%`;
-        query = query.or(`name.ilike.${term},student_code.ilike.${term},parent_phone.ilike.${term}`);
+        // تدعم البحث في الاسم كـ JSON (ar/en) أو كـ string عادي
+        query = query.or(
+          `name->>ar.ilike.${term},name->>en.ilike.${term},student_code.ilike.${term},parent_phone.ilike.${term}`
+        );
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query.order('created_at', {
+        ascending: false,
+      });
 
       if (error) throw error;
-      return data as Student[];
+      return (data as Student[]) || [];
     },
-    enabled: !!academyId, // العزل: يشتغل فقط عند توفر ID الأكاديمية
+    enabled: !!academyId, // يشتغل فقط عند توفر ID الأكاديمية
   });
 
   // 5. Mutation الأرشفة مع تحديث الكاش تلقائياً
   const archiveMutation = useMutation({
-    mutationFn: async ({ studentId, currentStatus }: { studentId: string; currentStatus: boolean }) => {
+    mutationFn: async ({
+      studentId,
+      currentStatus,
+    }: {
+      studentId: string;
+      currentStatus: boolean;
+    }) => {
       const { error } = await supabase
         .from('students')
-        .update({ is_archived: !currentStatus, updated_at: new Date().toISOString() })
+        .update({
+          is_archived: !currentStatus,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', studentId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      // تفريغ كاش الطلاب لتنعكس التغييرات فوراً في جميع الشاشات
       queryClient.invalidateQueries({ queryKey: ['students', academyId] });
     },
   });
@@ -114,23 +145,28 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     },
   });
 
-  // دالة أرشفة أو إلغاء أرشفة (تغليف للـ Mutation لتطابق واجهتك القديمة)
-  const toggleArchiveStudent = async (studentId: string, currentStatus: boolean) => {
+  // دالة أرشفة أو إلغاء أرشفة
+  const toggleArchiveStudent = async (
+    studentId: string,
+    currentStatus: boolean
+  ): Promise<OperationResponse> => {
     try {
       await archiveMutation.mutateAsync({ studentId, currentStatus });
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: false, error: err?.message || 'فشلت عملية الأرشفة' };
     }
   };
 
-  // دالة الحذف (تغليف للـ Mutation لتطابق واجهتك القديمة)
-  const deleteStudent = async (studentId: string) => {
+  // دالة الحذف
+  const deleteStudent = async (
+    studentId: string
+  ): Promise<OperationResponse> => {
     try {
       await deleteMutation.mutateAsync(studentId);
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'فشلت عملية الحذف' };
+      return { success: false, error: err?.message || 'فشلت عملية الحذف' };
     }
   };
 
@@ -147,3 +183,5 @@ export const useStudents = (academyId: string, initialFilters?: Partial<StudentF
     deleteStudent,
   };
 };
+
+export default useStudents;
