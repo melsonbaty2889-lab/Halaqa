@@ -7,7 +7,7 @@ export const HIJRI_MONTHS = {
   fr: ['Muḥarram', 'Ṣafar', "Rabīʿ I", "Rabīʿ II", 'Jumādá I', 'Jumādá II', 'Rajab', 'Shaʿbān', 'Ramadan', 'Shawwāl', 'Dhū al-Qiʿdah', 'Dhū al-Ḥijjah'],
   tr: ['Muharrem', 'Sefer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir', 'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'],
   ur: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الثانية', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
-  id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Sya\'ban', 'Ramadhan', 'Syawal', 'Dzulqa'dah', 'Dzulhijjah']
+  id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
 };
 
 // تحويل الأرقام الهندية/العربية لأرقام إنجليزية standard
@@ -23,7 +23,7 @@ export const toArNums = (str) => {
 };
 
 /**
- * تنسيق الوقت بشكل موحد ونظيف (12 ساعة AM/PM أو م)
+ * تنسيق الوقت بشكل موحد ونظيف
  */
 export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
   const date = dateObj instanceof Date ? dateObj : new Date();
@@ -33,7 +33,7 @@ export const formatTimeString = (dateObj = new Date(), lang = 'en') => {
   
   const ampm = hours >= 12 ? (isArOrUr ? 'م' : 'PM') : (isArOrUr ? 'ص' : 'AM');
   hours = hours % 12;
-  hours = hours ? hours : 12; // الساعة 0 تبقى 12
+  hours = hours ? hours : 12;
   
   const formattedHours = hours.toString().padStart(2, '0');
   const timeStr = `${formattedHours}:${minutes} ${ampm}`;
@@ -48,7 +48,6 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'en') => {
   try {
     const date = dateObj instanceof Date ? dateObj : new Date();
     
-    // استخدام Intl لحساب التاريخ الهجري دقيقاً
     const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-uma', {
       day: 'numeric',
       month: 'numeric',
@@ -60,7 +59,6 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'en') => {
     const monthIndex = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10) - 1;
     const year = parts.find(p => p.type === 'year')?.value || '1448';
 
-    // اختيار اللغة المناسبة (fallback لـ en)
     const currentLang = HIJRI_MONTHS[lang] ? lang : 'en';
     const monthName = HIJRI_MONTHS[currentLang][monthIndex] || HIJRI_MONTHS.en[monthIndex];
 
@@ -85,7 +83,6 @@ export const formatGregorianDate = (dateObj = new Date(), lang = 'en') => {
   try {
     const date = dateObj instanceof Date ? dateObj : new Date();
     
-    // إعدادات الـ Locale لكل لغة
     const localeMap = {
       ar: 'ar-EG',
       en: 'en-US',
