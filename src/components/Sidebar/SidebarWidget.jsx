@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Clock, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { formatHijriDate, formatGregorianDate, formatTimeString } from '@/utils/dateUtils';
+import { formatHijriDate, formatGregorianDate, formatTimeString, toArNums, toUrNums } from '@/utils/dateUtils';
 import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
@@ -27,24 +27,30 @@ export default function SidebarWidget({
     return fallback;
   };
 
-  const formattedHijri = useMemo(() => {
-    return formatHijriDate(new Date(), currentLang);
-  }, [currentLang]);
+  // معالجة كافة التواريخ والوقت بتزامن موحد مع اللغة
+  const { formattedTime, formattedGregorian, formattedHijri } = useMemo(() => {
+    let timeStr = '';
+    
+    if (academyTime) {
+      if (currentLang === 'ar') timeStr = toArNums(academyTime);
+      else if (currentLang === 'ur') timeStr = toUrNums(academyTime);
+      else timeStr = academyTime;
+    } else {
+      timeStr = formatTimeString(new Date(), currentLang);
+    }
 
-  const formattedGregorian = useMemo(() => {
-    return formatGregorianDate(new Date(), currentLang);
-  }, [currentLang]);
-
-  const formattedTime = useMemo(() => {
-    if (academyTime) return academyTime;
-    return formatTimeString(new Date(), currentLang);
+    return {
+      formattedTime: timeStr,
+      formattedGregorian: formatGregorianDate(new Date(), currentLang),
+      formattedHijri: formatHijriDate(new Date(), currentLang)
+    };
   }, [academyTime, currentLang]);
 
   const isLifetime = effectiveDaysLeft === Infinity;
 
   return (
     <div 
-      className="p-2.5 rounded-xl mb-3 flex items-center justify-between gap-2 shadow-sm backdrop-blur-md"
+      className="p-2.5 rounded-xl mb-3 flex items-center justify-between gap-2 shadow-sm backdrop-blur-md select-none"
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{
         backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
@@ -54,9 +60,12 @@ export default function SidebarWidget({
       }}
     >
       {/* التوقيت */}
-      <div className="flex items-center gap-1 text-[11px] font-bold font-mono shrink-0" style={{ color: C.emerald?.light || '#34D399' }}>
+      <div 
+        className="flex items-center gap-1 text-[11px] font-bold font-mono shrink-0" 
+        style={{ color: C.emerald?.light || '#34D399' }}
+      >
         <Clock size={13} className="shrink-0" style={{ color: C.emerald?.light || '#34D399' }} />
-        <span dir="ltr">{formattedTime}</span>
+        <span dir="auto">{formattedTime}</span>
       </div>
 
       {/* التاريخ الميلادي والهجري */}
@@ -64,7 +73,7 @@ export default function SidebarWidget({
         <span className="text-[11px] font-semibold leading-tight whitespace-nowrap" style={{ color: C.emerald?.light || '#34D399' }}>
           {formattedGregorian}
         </span>
-        <span className="text-[9.5px] font-medium leading-tight whitespace-nowrap" style={{ color: C.text?.muted || '#94A3B8' }}>
+        <span className="text-[9.5px] font-medium leading-tight whitespace-nowrap opacity-90" style={{ color: C.text?.muted || '#94A3B8' }}>
           {formattedHijri}
         </span>
       </div>
