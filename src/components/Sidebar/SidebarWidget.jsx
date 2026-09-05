@@ -1,7 +1,7 @@
 // src/components/Sidebar/SidebarWidget.jsx
 import React from 'react';
 import { Clock, Zap } from 'lucide-react';
-import { formatHijriDate, toEngNums } from '../../utils/dateUtils';
+import { formatHijriDate, toEngNums } from '@/utils/dateUtils';
 import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
