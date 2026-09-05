@@ -1,4 +1,3 @@
-// src/components/Sidebar/AcademySelector.jsx
 import React from 'react';
 import { ChevronDown, Check, Building2 } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
@@ -22,7 +21,7 @@ export default function AcademySelector({
       <button
         type="button"
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="w-full flex items-center justify-between p-2.5 rounded-xl backdrop-blur-md transition-all duration-200 cursor-pointer select-none group focus:outline-none"
+        className="w-full flex items-center justify-between p-2 rounded-xl backdrop-blur-md transition-all duration-200 cursor-pointer select-none group focus:outline-none"
         style={{
           backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
           borderColor: dropdownOpen ? (C.emerald?.light || '#34D399') : (C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'),
@@ -31,9 +30,10 @@ export default function AcademySelector({
           boxShadow: dropdownOpen ? '0 0 12px rgba(16, 185, 129, 0.15)' : 'none'
         }}
       >
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {/* الشعار */}
           <div 
-            className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:scale-105"
+            className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:scale-105"
             style={{
               backgroundColor: C.dark?.surface || '#0A0F1C',
               borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -53,21 +53,31 @@ export default function AcademySelector({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <SmartHalaqaProLogo size={22} />
+              <SmartHalaqaProLogo size={20} />
             )}
           </div>
 
+          {/* تفاصيل الاسم والسهم والشارة */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
-            <h2 
-              className="text-xs font-bold truncate leading-none transition-colors"
-              style={{ color: C.text?.title || '#FFFFFF' }}
-            >
-              {currentAcademyName}
-            </h2>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h2 
+                className="text-xs font-bold truncate leading-none transition-colors"
+                style={{ color: C.text?.title || '#FFFFFF' }}
+              >
+                {currentAcademyName}
+              </h2>
+
+              {/* أداة السهم بجانب الاسم مباشرة لتوفير المساحة */}
+              <ChevronDown
+                size={14}
+                className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                style={{ color: dropdownOpen ? (C.emerald?.light || '#34D399') : (C.text?.muted || '#94A3B8') }}
+              />
+            </div>
 
             <div>
               <span
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-medium leading-none tracking-wide"
+                className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium leading-none tracking-wide"
                 style={statusBadge?.style || {
                   backgroundColor: 'rgba(16, 185, 129, 0.12)',
                   color: C.emerald?.light || '#34D399',
@@ -79,21 +89,9 @@ export default function AcademySelector({
             </div>
           </div>
         </div>
-
-        <div 
-          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isRtl ? 'mr-1' : 'ml-1'}`}
-          style={{
-            backgroundColor: dropdownOpen ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-          }}
-        >
-          <ChevronDown
-            size={14}
-            className={`transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-            style={{ color: dropdownOpen ? (C.emerald?.light || '#34D399') : (C.text?.muted || '#94A3B8') }}
-          />
-        </div>
       </button>
 
+      {/* قائمة الخيارات المنسدلة */}
       {dropdownOpen && (
         <div 
           className="absolute top-full left-0 right-0 mt-2 p-1.5 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"
