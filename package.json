@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx || true"
+    "extract-i18n": "i18next-parser"
   },
   "dependencies": {
     "@floating-ui/react-dom": "^2.0.0",
