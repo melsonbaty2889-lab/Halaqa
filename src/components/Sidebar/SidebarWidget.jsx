@@ -1,7 +1,8 @@
 // src/components/Sidebar/SidebarWidget.jsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Clock, Zap } from 'lucide-react';
-import { formatHijriDate, toEngNums } from '@/utils/dateUtils';
+import { useTranslation } from 'react-i18next';
+import { formatHijriDate, formatGregorianDate, formatTimeString, toEngNums } from '@/utils/dateUtils';
 import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
@@ -15,30 +16,35 @@ export default function SidebarWidget({
   effectiveDaysLeft,
   t
 }) {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
+
   const translate = (key, fallback) => {
     if (typeof t === 'function') return t(key, fallback);
     return fallback;
   };
 
-  let formattedHijri = formatHijriDate(new Date(), isRtl ? 'ar' : 'en');
-  
-  if (!isRtl && formattedHijri) {
-    formattedHijri = formattedHijri
-      .replace("Rabi' al-Awwal", "Rabi I")
-      .replace("Rabi' al-Thani", "Rabi II")
-      .replace("Jumada al-Awwal", "Jumada I")
-      .replace("Jumada al-Thani", "Jumada II")
-      .replace("Dhu al-Qi'dah", "Dhu al-Q")
-      .replace("Dhu al-Hijjah", "Dhu al-H");
-  }
+  // تنسيق التاريخ الهجري بناءً على اللغة الحالية المعتمدة في التطبيق
+  const formattedHijri = useMemo(() => {
+    if (hijri && typeof hijri === 'string') return hijri;
+    return formatHijriDate(new Date(), currentLang);
+  }, [hijri, currentLang]);
 
-  const rawGregorian = new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { 
-    day: 'numeric', 
-    month: 'short', 
-    year: 'numeric' 
-  });
-  const formattedGregorian = toEngNums(rawGregorian);
-  const formattedTime = toEngNums(academyTime || '12:25 PM');
+  // تنسيق التاريخ الميلادي بأمان وبدون رموز تشويش
+  const formattedGregorian = useMemo(() => {
+    return formatGregorianDate(new Date(), currentLang, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  }, [currentLang]);
+
+  // تنسيق الوقت لمنع ظهور رموز مثل (ÖÖ) والاعتماد على أرقام وصيغة نظيفة
+  const formattedTime = useMemo(() => {
+    if (academyTime) return toEngNums(academyTime);
+    return formatTimeString(new Date());
+  }, [academyTime]);
+
   const isLifetime = effectiveDaysLeft === Infinity;
 
   return (
