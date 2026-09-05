@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 
 const BottomNav = ({ userPlan }) => {
-  // التحقق مما إذا كان الحساب دائماً أو مميزاً
-  const isLifetimeOrPro = userPlan === 'lifetime' || userPlan === 'pro' || userPlan === 'دائم';
+  // التحقق مما إذا كان الحساب في الفترة التجريبية فقط
+  const isTrial = userPlan === 'trial' || userPlan === 'تجريبي';
 
   // قائمة أزرار الشريط السفلي
   const navItems = [
@@ -32,8 +32,8 @@ const BottomNav = ({ userPlan }) => {
       icon: BookOpen, 
       path: '/halaqat' 
     },
-    // يظهر زر الترقية فقط إذا لم يكن الحساب دائماً أو ترقية
-    ...(!isLifetimeOrPro ? [{ 
+    // يظهر زر الترقية فقط إذا كان الحساب في الفترة التجريبية
+    ...(isTrial ? [{ 
       id: 'upgrade',
       label: 'الترقية', 
       icon: Sparkles, 
@@ -48,7 +48,8 @@ const BottomNav = ({ userPlan }) => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0f172a] border-t border-slate-800 px-2 py-2">
+    // مخفي في الشاشات الكبيرة (md:hidden) لمنع التداخل مع القائمة الجانبية
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0f172a] border-t border-slate-800 px-2 py-2">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
