@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Clock, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { formatHijriDate, formatGregorianDate, formatTimeString, toArNums } from '@/utils/dateUtils';
+import { formatHijriDate, formatGregorianDate, formatTimeString, toEngNums } from '@/utils/dateUtils';
 import { colors as C } from '@/theme/colors';
 
 export default function SidebarWidget({
@@ -36,7 +36,7 @@ export default function SidebarWidget({
   }, [currentLang]);
 
   const formattedTime = useMemo(() => {
-    if (academyTime) return toArNums(academyTime);
+    if (academyTime) return toEngNums(academyTime);
     return formatTimeString(new Date(), currentLang);
   }, [academyTime, currentLang]);
 
@@ -58,7 +58,7 @@ export default function SidebarWidget({
         <span>{formattedTime}</span>
       </div>
 
-      <div className="flex flex-col items-center justify-center min-w-0 flex-1 px-1 text-center">
+      <div className="flex flex-col items-center justify-center min-w-0 flex-1 px-1">
         <span className="text-[11px] font-semibold leading-tight whitespace-nowrap" style={{ color: C.emerald?.light || '#34D399' }}>
           {formattedGregorian}
         </span>
