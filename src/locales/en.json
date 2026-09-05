@@ -244,6 +244,7 @@
   "settings.timezone": "",
   "settings.website": "",
   "settings.weekendDays": "",
+  "sidebar.createNewAcademy": "إنشاء أكاديمية جديدة",
   "splash": {
     "loading": "Loading system...",
     "skip": "Skip",
