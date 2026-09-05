@@ -41,7 +41,7 @@ export default function Settings({
   currentTimezone,
   currentCountryCode,
   onCurrencyChange,
-  onTimezoneChange, // 👈 استقبال خاصية التحديث اللحظي للمنطقة الزمنية
+  onTimezoneChange,
   onAcademyUpdate
 }) {
   const { t, i18n } = useTranslation();
@@ -177,7 +177,6 @@ export default function Settings({
       onCurrencyChange(value);
     }
 
-    // 👈 تحديث المنطقة الزمنية لحظياً عند اختيار قيمة جديدة
     if (field === 'timezone' && typeof onTimezoneChange === 'function') {
       onTimezoneChange(value);
     }
@@ -254,10 +253,10 @@ export default function Settings({
         onAcademyUpdate({ id: academyId, logo_url: newLogoUrl });
       }
 
-      showToast(t('settings.logoUploadSuccess', isRtl ? 'تم تحديث الشعار بنجاح!' : 'Logo updated successfully!'), 'success');
+      showToast(t('settings.logoUploadSuccess', 'تم تحديث الشعار بنجاح!'), 'success');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      showToast(t('settings.logoUploadError', isRtl ? 'حدث خطأ أثناء رفع الشعار' : 'Error uploading logo'), 'error');
+      showToast(t('settings.logoUploadError', 'حدث خطأ أثناء رفع الشعار'), 'error');
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -292,10 +291,10 @@ export default function Settings({
 
       if (fileInputRef.current) fileInputRef.current.value = '';
 
-      showToast(t('settings.logoRemoveSuccess', isRtl ? 'تم إزالة الشعار بنجاح!' : 'Logo removed successfully!'), 'success');
+      showToast(t('settings.logoRemoveSuccess', 'تم إزالة الشعار بنجاح!'), 'success');
     } catch (error) {
       console.error('Error removing logo:', error);
-      showToast(t('settings.logoRemoveError', isRtl ? 'حدث خطأ أثناء إزالة الشعار' : 'Error removing logo'), 'error');
+      showToast(t('settings.logoRemoveError', 'حدث خطأ أثناء إزالة الشعار'), 'error');
     }
   };
 
@@ -308,10 +307,7 @@ export default function Settings({
     const enName = formData.name?.en?.trim();
 
     if (!arName && !enName) {
-      const errorMessage = isRtl
-        ? t('settings.nameRequiredAr', 'يرجى إدخال اسم الأكاديمية')
-        : t('settings.nameRequiredEn', 'Please enter the academy name');
-
+      const errorMessage = t('settings.nameRequiredAr', 'يرجى إدخال اسم الأكاديمية');
       showToast(errorMessage, 'error');
       return;
     }
@@ -354,7 +350,7 @@ export default function Settings({
       isDirtyRef.current = false;
       setIsDirty(false);
 
-      showToast(t('settings.saveSuccess', isRtl ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!'), 'success');
+      showToast(t('settings.saveSuccess', 'تم حفظ التغييرات بنجاح!'), 'success');
 
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({ ...updatePayload, id: academyId });
@@ -366,12 +362,7 @@ export default function Settings({
     } catch (error) {
       console.error('Error saving settings:', error);
       showToast(
-        t(
-          'settings.saveError',
-          isRtl 
-            ? 'حدث خطأ أثناء الحفظ (قد يكون الرابط المُستخدَم مستخدماً من أكاديمية أخرى)' 
-            : 'Error saving settings (slug might already be taken)'
-        ),
+        t('settings.saveError', 'حدث خطأ أثناء الحفظ (قد يكون الرابط المُستخدَم مستخدماً من أكاديمية أخرى)'),
         'error'
       );
     } finally {
@@ -380,7 +371,6 @@ export default function Settings({
   };
 
   const handleDiscardChanges = () => {
-    // 👈 إعادة الوقت للمنطقة الزمنية الأصلية عند الضغط على إلغاء/تراجع
     if (initialData.timezone && typeof onTimezoneChange === 'function') {
       onTimezoneChange(initialData.timezone);
     }
@@ -389,19 +379,16 @@ export default function Settings({
     setIsDirty(false);
   };
 
+  // ✅ تصحيح مصفوفة التبويبات لاستخدام دالة t() المباشرة
   const steps = [
     {
       id: 'general',
-      label: isRtl
-        ? t('settings.generalStep', '1. الأساسية والإقليمية')
-        : t('settings.generalStep', '1. Basic & Regional'),
+      label: t('settings.generalStep', '1. Basic & Regional'),
       icon: Building
     },
     {
       id: 'system',
-      label: isRtl
-        ? t('settings.systemStep', '2. السياسات والنسخ الاحتياطي')
-        : t('settings.systemStep', '2. Policies & Backup'),
+      label: t('settings.systemStep', '2. Policies & Backup'),
       icon: ShieldCheck
     },
   ];
@@ -488,7 +475,7 @@ export default function Settings({
             }`}
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            <span>{saving ? t('common.saving', isRtl ? 'جاري الحفظ...' : 'Saving...') : t('common.save', isRtl ? 'حفظ التغييرات' : 'Save Changes')}</span>
+            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ التغييرات')}</span>
           </button>
 
           <div className="min-h-[38px] flex items-center">
@@ -499,7 +486,7 @@ export default function Settings({
                 className="btn-secondary text-xs px-4 py-2.5 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl font-medium transition-all animate-in fade-in"
               >
                 <RotateCcw size={14} />
-                <span>{t('common.discard', isRtl ? 'تراجع' : 'Discard')}</span>
+                <span>{t('common.discard', 'تراجع')}</span>
               </button>
             )}
           </div>
