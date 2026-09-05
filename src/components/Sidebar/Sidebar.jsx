@@ -1,5 +1,6 @@
 // src/components/Sidebar/Sidebar.jsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { getMenuSections } from '@/constants/sidebarMenu';
@@ -28,6 +29,9 @@ export default function Sidebar({
   academyTime,
   userRole = 'admin'
 }) {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
+
   const [academiesList, setAcademiesList] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,8 +102,8 @@ export default function Sidebar({
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   };
 
-  const currentLocale = isRtl ? 'ar' : 'en';
-  const hijri = useMemo(() => formatHijriDate(new Date(), currentLocale), [currentLocale]);
+  // دعم كامل لجميع اللغات الست في التاريخ الهجري
+  const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
   const loadAcademies = useCallback(async () => {
     if (!supabase) return;
