@@ -5,13 +5,38 @@ export default {
   // اللغات المعتمدة في المشروع
   locales: ['ar', 'en', 'fr', 'tr', 'ur', 'id'],
 
-  // محلي ومحلل الأكواد لملفات React و Vite
+  // محلي ومحلل الأكواد لملفات React و Vite مع دعم safeT
   lexers: {
-    js: ['JsxLexer'],
-    jsx: ['JsxLexer'],
-    ts: ['JsxLexer'],
-    tsx: ['JsxLexer'],
-    default: ['JsxLexer'],
+    js: [
+      {
+        lexer: 'JsxLexer',
+        functions: ['t', 'i18n.t', 'getText', 'safeT'],
+      },
+    ],
+    jsx: [
+      {
+        lexer: 'JsxLexer',
+        functions: ['t', 'i18n.t', 'getText', 'safeT'],
+      },
+    ],
+    ts: [
+      {
+        lexer: 'JsxLexer',
+        functions: ['t', 'i18n.t', 'getText', 'safeT'],
+      },
+    ],
+    tsx: [
+      {
+        lexer: 'JsxLexer',
+        functions: ['t', 'i18n.t', 'getText', 'safeT'],
+      },
+    ],
+    default: [
+      {
+        lexer: 'JsxLexer',
+        functions: ['t', 'i18n.t', 'getText', 'safeT'],
+      },
+    ],
   },
 
   // مسار حفظ وتحديث ملفات الـ JSON لكل لغة
@@ -33,8 +58,8 @@ export default {
   keySeparator: false,
   namespaceSeparator: false,
 
-  // التعرف على الدوال المستخدمة في المشروع لاستخراج النصوص منها
-  functions: ['getText', 't', 'i18n.t'],
+  // القائمة العامة للدوال المستهدفة
+  functions: ['getText', 't', 'i18n.t', 'safeT'],
 
   // تنسيق ملف الـ JSON الناتج
   indentation: 2,
