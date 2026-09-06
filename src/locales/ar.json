@@ -5,15 +5,44 @@
   "addHalaqa": "إنشاء حلقة جديدة",
   "archive": "أرشفة",
   "assignTeacher": "تعيين المعلم المسؤول",
+  "btnSave": "اعتماد الحلقة وتأكيد الجدولة",
+  "close": "إغلاق",
+  "endTime": "وقت الانتهاء",
+  "errRequired": "يرجى إدخال اسم الحلقة وتعيين المعلم المسؤول",
+  "goToAttendance": "الانضمام للجلسة المباشرة",
+  "halaqasManager": "منصة إدارة الحلقات القرآنية والأكاديمية",
+  "halaqaSub": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
+  "loading": "جاري تحميل البيانات...",
+  "nameAr": "اسم الحلقة (بالعربية)",
+  "nameEn": "اسم الحلقة (بالإنجليزية)",
+  "no_search_results": "لم يتم العثور على نتائج تطابق بحثك.",
+  "noData": "لا توجد جلسات تعليمية مسجلة طابق بحثك حالياً",
+  "search_placeholder": "ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...",
+  "searchPh": "ابحث باسم الحلقة أو اسم المعلم المكلف...",
+  "selectTeacher": "-- اختر المعلم المعتمد --",
+  "startTime": "وقت البدء",
+  "status_active": "نشط",
+  "status_inactive": "غير نشط",
+  "students_management_title": "شؤون الطلاب والمسار التعليمي",
+  "timezone": "المنطقة الزمنية النظامية",
+  "total_students": "إجمالي الطلاب",
+  "track": "المسار التعليمي",
+  "trackHifz": "مسار الحفظ والتجويد المكثف",
+  "trackIjazah": "مسار الإجازات بالسند المتصل",
+  "trackTilawah": "مسار التلاوة وتصحيح الأداء",
+  "unassigned": "بانتظار تعيين معتمد",
+  "unnamed_student": "طالب بدون اسم",
+  "viewActive": "الحلقات النشطة",
+  "viewArchived": "الأرشيف",
   "backup": {
-    "description": "backup.description",
-    "exportBtn": "backup.exportBtn",
-    "exportError": "backup.exportError",
-    "exportSuccess": "backup.exportSuccess",
-    "importBtn": "backup.importBtn",
-    "importError": "backup.importError",
-    "importSuccess": "backup.importSuccess",
-    "title": "backup.title"
+    "description": "إدارة النسخ الاحتياطية واستعادة بيانات المنظومة",
+    "exportBtn": "تصدير النسخة الاحتياطية",
+    "exportError": "حدث خطأ أثناء تصدير البيانات",
+    "exportSuccess": "تم تصدير النسخة الاحتياطية بنجاح",
+    "importBtn": "استيراد نسخة احتياطية",
+    "importError": "حدث خطأ أثناء استعادة البيانات",
+    "importSuccess": "تمت استعادة البيانات بنجاح",
+    "title": "النسخ الاحتياطي"
   },
   "bottomNav": {
     "halaqat": "الحلقات",
@@ -22,15 +51,13 @@
     "students": "الطلاب",
     "upgrade": "الترقية"
   },
-  "btnSave": "اعتماد الحلقة وتأكيد الجدولة",
   "calendar": {
-    "gregorian": "calendar.gregorian",
-    "hijri": "calendar.hijri"
+    "gregorian": "ميلادي",
+    "hijri": "هجري"
   },
-  "close": "إغلاق",
   "common": {
     "active": "نشط",
-    "add": "common.add",
+    "add": "إضافة",
     "archive": "أرشفة",
     "archived": "مؤرشف",
     "back": "رجوع",
@@ -41,7 +68,7 @@
     "confirm_message": "هل أنت تأكد من الاستمرار في هذا الإجراء؟",
     "delete": "حذف",
     "disabled": "معطل",
-    "discard": "common.discard",
+    "discard": "تجاهل",
     "download_file": "تحميل الملف",
     "edit": "تعديل",
     "enabled": "مفعل",
@@ -52,20 +79,20 @@
     "loggingOut": "جاري تسجيل الخروج...",
     "logout": "تسجيل الخروج",
     "male": "ذكر",
-    "noOptions": "common.noOptions",
-    "noResults": "common.noResults",
+    "noOptions": "لا توجد خيارات متاحة",
+    "noResults": "لا توجد نتائج",
     "notes": "ملاحظات:",
-    "optional": "common.optional",
+    "optional": "اختياري",
     "paused": "موقوف",
     "remove": "إلغاء",
     "reset_filters": "إلغاء الفلاتر",
     "same_as_phone": "نفس الهاتف",
-    "save": "common.save",
+    "save": "حفظ",
     "save_changes": "حفظ التعديلات",
     "saving": "جاري الحفظ...",
-    "search": "common.search",
+    "search": "بحث",
     "searchPlaceholder": "بحث في الملفات...",
-    "select": "common.select",
+    "select": "اختر...",
     "unarchive": "إلغاء الأرشفة",
     "unspecified": "غير محدد",
     "upload": "رفع",
@@ -74,13 +101,13 @@
     "years_old": "سنة"
   },
   "days": {
-    "friday": "days.friday",
-    "monday": "days.monday",
-    "saturday": "days.saturday",
-    "sunday": "days.sunday",
-    "thursday": "days.thursday",
-    "tuesday": "days.tuesday",
-    "wednesday": "days.wednesday"
+    "friday": "الجمعة",
+    "monday": "الإثنين",
+    "saturday": "السبت",
+    "sunday": "الأحد",
+    "thursday": "الخميس",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء"
   },
   "documents": {
     "cannot_preview": "لا يمكن معاينة هذا النوع من الملفات مباشرة.",
@@ -97,6 +124,9 @@
     "subtitle": "إدارة الوثائق الثبوتية والملفات المرفقة",
     "title": "مستندات الطالب",
     "type_label": "نوع المستند",
+    "unnamed_doc": "مستند بدون اسم",
+    "upload_btn": "رفع مستند جديد",
+    "upload_title": "رفع ملف جديد",
     "types": {
       "birth_certificate": "شهادة الميلاد",
       "certificate": "شهادة",
@@ -106,50 +136,41 @@
       "parent_consent": "موافقة ولي الأمر",
       "passport": "جواز السفر",
       "payment_receipt": "إيصال دفع"
-    },
-    "unnamed_doc": "مستند بدون اسم",
-    "upload_btn": "رفع مستند جديد",
-    "upload_title": "رفع ملف جديد"
+    }
   },
-  "endTime": "وقت الانتهاء",
-  "errRequired": "يرجى إدخال اسم الحلقة وتعيين المعلم المسؤول",
   "gamification": {
-    "chartSubtitle": "gamification.chartSubtitle",
-    "chartTitle": "gamification.chartTitle",
+    "title": "التحفيز والأوسمة",
+    "subtitle": "نظام النقاط والمنافسات الأسبوعية",
+    "chartTitle": "إحصائيات الإنجاز",
+    "chartSubtitle": "متابعة تقدم الطلاب الأسبوعي",
     "defaultQuest": "التزام الحضور والتسميع الأسبوعي",
-    "leaderboardUpdating": "gamification.leaderboardUpdating",
-    "pages": "gamification.pages",
-    "peakDay": "gamification.peakDay",
-    "subtitle": "gamification.subtitle",
+    "leaderboardUpdating": "جاري تحديث لوحة الصدارة...",
+    "pages": "صفحات",
+    "peakDay": "أعلى يوم إنجاز",
+    "totalWeekly": "إجمالي الإنجاز الأسبوعي",
     "tabs": {
-      "badges": "gamification.tabs.badges",
-      "leaderboard": "gamification.tabs.leaderboard",
-      "streaks": "gamification.tabs.streaks"
-    },
-    "title": "gamification.title",
-    "totalWeekly": "gamification.totalWeekly"
+      "badges": "الأوسمة",
+      "leaderboard": "لوحة الصدارة",
+      "streaks": "سلسلة الإلتزام"
+    }
   },
-  "goToAttendance": "الانضمام للجلسة المباشرة",
-  "halaqasManager": "منصة إدارة الحلقات القرآنية والأكاديمية",
-  "halaqaSub": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
   "header": {
-    "admin": "header.admin"
+    "admin": "المشرف العام"
   },
   "identity": {
-    "description": "identity.description",
-    "descriptionPlaceholder": "identity.descriptionPlaceholder",
-    "logoLabel": "identity.logoLabel",
+    "description": "وصف الأكاديمية",
+    "descriptionPlaceholder": "اكتب وصفاً مختصراً عن الأكاديمية...",
+    "logoLabel": "شعار الأكاديمية",
     "nameAr": "اسم الأكاديمية (بالعربية)",
     "nameArPlaceholder": "اكتب اسم الأكاديمية بالعربية...",
     "nameArSecondary": "Academy Name (Arabic)",
     "nameEn": "اسم الأكاديمية (بالإنجليزية)",
     "nameEnPlaceholder": "Enter academy name in English...",
     "nameEnPrimary": "Academy Name (English)",
-    "slugHint": "identity.slugHint",
-    "slugLabel": "identity.slugLabel",
-    "uploadBtn": "identity.uploadBtn"
+    "slugHint": "الرابط المخصص للأكاديمية",
+    "slugLabel": "المعرّف الفريد (Slug)",
+    "uploadBtn": "رفع الشعار"
   },
-  "loading": "جاري تحميل البيانات...",
   "menu": {
     "items": {
       "attendance": "التسميع والحضور",
@@ -175,107 +196,100 @@
       "management_finance": "الإدارة والمالية"
     }
   },
-  "nameAr": "اسم الحلقة (بالعربية)",
-  "nameEn": "اسم الحلقة (بالإنجليزية)",
   "nav": {
     "dashboard": "Smart Halaqa"
   },
-  "no_search_results": "لم يتم العثور على نتائج تطابق بحثك.",
-  "noData": "لا توجد جلسات تعليمية مسجلة طابق بحثك حالياً",
   "notifications": {
-    "title": "notifications.title"
+    "title": "الإشعارات"
   },
   "quranic": {
-    "allowSelfReg": "quranic.allowSelfReg",
-    "hybrid": "quranic.hybrid",
-    "madrasa": "quranic.madrasa",
-    "madrasaEastern": "quranic.madrasaEastern",
-    "madrasaMaghrebi": "quranic.madrasaMaghrebi",
-    "maxStudents": "quranic.maxStudents",
-    "mode": "quranic.mode",
-    "online": "quranic.online",
-    "onsite": "quranic.onsite",
-    "requireApproval": "quranic.requireApproval",
-    "riwaya": "quranic.riwaya",
-    "selectRiwaya": "quranic.selectRiwaya",
-    "title": "quranic.title"
+    "title": "الإعدادات القرآنية",
+    "allowSelfReg": "السماح بالتسجيل الذاتي",
+    "hybrid": "مدمج (حضوري وعن بعد)",
+    "madrasa": "المدرسة القرآنية",
+    "madrasaEastern": "المدرسة الشرقية",
+    "madrasaMaghrebi": "المدرسة المغاربية",
+    "maxStudents": "الحد الأقصى للطلاب",
+    "mode": "نمط الدراسة",
+    "online": "عن بُعد",
+    "onsite": "حضوري",
+    "requireApproval": "تطلب موافقة الإدارة",
+    "riwaya": "الرواية المقررة",
+    "selectRiwaya": "اختر الرواية..."
   },
   "reports": {
-    "assessment_test": "reports.assessment_test",
+    "title": "التقارير المباشرة",
+    "assessment_test": "اختبار تقييمي",
+    "copied_success": "تم نسخ التقرير بنجاح",
+    "edit_template": "تعديل قالب التقرير",
+    "loading": "جاري تحميل التقارير...",
+    "no_data": "لا توجد بيانات تقارير متاحة",
+    "no_notes": "لا توجد ملاحظات مدونة",
+    "no_recitation": "لم يتم التسميع اليوم",
+    "not_specified": "غير محدد",
+    "phone_updated": "تم تحديث رقم الهاتف بنجاح",
+    "search_placeholder": "بحث في التقارير...",
+    "template_preview": "معاينة قالب الرسالة",
     "card": {
-      "add_phone": "reports.card.add_phone",
-      "copy": "reports.card.copy",
-      "grade": "reports.card.grade",
-      "memorization": "reports.card.memorization",
-      "no_phone": "reports.card.no_phone",
-      "resend": "reports.card.resend",
-      "reset_sent": "reports.card.reset_sent",
-      "review": "reports.card.review",
-      "send_whatsapp": "reports.card.send_whatsapp",
-      "sent": "reports.card.sent"
+      "add_phone": "إضافة رقم هاتف",
+      "copy": "نسخ التقرير",
+      "grade": "التقييم العام",
+      "memorization": "مستوى الحفظ",
+      "no_phone": "لا يوجد رقم هاتف مسجل",
+      "resend": "إعادة الإرسال",
+      "reset_sent": "إعادة ضبط حالة الإرسال",
+      "review": "مستوى المراجعة",
+      "send_whatsapp": "إرسال عبر الواتساب",
+      "sent": "تم الإرسال"
     },
-    "copied_success": "reports.copied_success",
-    "edit_template": "reports.edit_template",
     "grades": {
-      "excellent": "reports.grades.excellent",
-      "needs_focus": "reports.grades.needs_focus",
-      "needs_improvement": "reports.grades.needs_improvement",
-      "very_good": "reports.grades.very_good"
+      "excellent": "ممتاز",
+      "needs_focus": "يحتاج تركيز",
+      "needs_improvement": "يحتاج تحسين",
+      "very_good": "جيد جداً"
     },
-    "loading": "reports.loading",
     "metrics": {
-      "completion": "reports.metrics.completion",
-      "remaining": "reports.metrics.remaining",
-      "send_next": "reports.metrics.send_next",
-      "total": "reports.metrics.total",
-      "unsent": "reports.metrics.unsent"
+      "completion": "نسبة الإنجاز",
+      "remaining": "المتبقي",
+      "send_next": "التالي للإرسال",
+      "total": "الإجمالي",
+      "unsent": "لم يُرسل بعد"
     },
-    "no_data": "reports.no_data",
-    "no_notes": "reports.no_notes",
-    "no_recitation": "reports.no_recitation",
-    "not_specified": "reports.not_specified",
-    "phone_updated": "reports.phone_updated",
     "placeholders": {
-      "student_name": "reports.placeholders.student_name"
+      "student_name": "اسم الطالب..."
     },
-    "search_placeholder": "reports.search_placeholder",
     "status": {
-      "absent": "reports.status.absent",
-      "excused": "reports.status.excused",
-      "late": "reports.status.late",
-      "present": "reports.status.present"
+      "absent": "غائب",
+      "excused": "معذور",
+      "late": "متأخر",
+      "present": "حاضر"
     },
     "tabs": {
-      "absent": "reports.tabs.absent",
-      "all": "reports.tabs.all",
-      "present": "reports.tabs.present",
-      "unsent": "reports.tabs.unsent"
-    },
-    "template_preview": "reports.template_preview",
-    "title": "reports.title"
+      "absent": "الغائبون",
+      "all": "الجميع",
+      "present": "الحاضرون",
+      "unsent": "غير المرسل"
+    }
   },
-  "search_placeholder": "ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...",
-  "searchPh": "ابحث باسم الحلقة أو اسم المعلم المكلف...",
-  "selectTeacher": "-- اختر المعلم المعتمد --",
   "settings": {
-    "advancedRegional": "settings.advancedRegional",
-    "calendarType": "settings.calendarType",
-    "country": "settings.country",
-    "currency": "settings.currency",
-    "generalStep": "settings.generalStep",
-    "logoRemoveError": "settings.logoRemoveError",
-    "logoRemoveSuccess": "settings.logoRemoveSuccess",
-    "logoUploadError": "settings.logoUploadError",
-    "logoUploadSuccess": "settings.logoUploadSuccess",
-    "nameRequired": "settings.nameRequired",
-    "officialEmail": "settings.officialEmail",
-    "phoneWhatsapp": "settings.phoneWhatsapp",
-    "saveError": "settings.saveError",
-    "saveSuccess": "settings.saveSuccess",
-    "systemStep": "settings.systemStep",
-    "timezone": "settings.timezone",
-    "website": "settings.website",
-    "weekendDays": "settings.weekendDays"
+    "advancedRegional": "الإعدادات الإقليمية المتقدمة",
+    "calendarType": "نوع التقويم",
+    "country": "الدولة",
+    "currency": "العملة",
+    "generalStep": "البيانات العامة",
+    "logoRemoveError": "حدث خطأ أثناء إزالة الشعار",
+    "logoRemoveSuccess": "تم إزالة الشعار بنجاح",
+    "logoUploadError": "حدث خطأ أثناء رفع الشعار",
+    "logoUploadSuccess": "تم رفع الشعار بنجاح",
+    "nameRequired": "اسم الأكاديمية مطلوب",
+    "officialEmail": "البريد الإلكتروني الرسمي",
+    "phoneWhatsapp": "رقم الواتساب للتواصل",
+    "saveError": "حدث خطأ أثناء حفظ الإعدادات",
+    "saveSuccess": "تم حفظ الإعدادات بنجاح",
+    "systemStep": "إعدادات النظام",
+    "timezone": "المنطقة الزمنية",
+    "website": "الموقع الإلكتروني",
+    "weekendDays": "أيام العطلة الأسبوعية"
   },
   "sidebar": {
     "cloudSynced": "متزامن مع السحابة",
@@ -284,7 +298,6 @@
     "footer": "حقوق المنظومة محفوظة",
     "unnamedAcademy": "أكاديمية بدون اسم"
   },
-  "startTime": "وقت البدء",
   "status": {
     "active": "اشتراك نشط",
     "expired": "منتهي الصلاحية",
@@ -292,8 +305,6 @@
     "pending": "قيد التفعيل",
     "trial": "فترة تجريبية"
   },
-  "status_active": "نشط",
-  "status_inactive": "غير نشط",
   "students": {
     "academic_info": "البيانات الأكاديمية",
     "add_btn": "إضافة الطالب",
@@ -363,37 +374,27 @@
     "unarchive": "إلغاء الأرشفة",
     "unarchive_title": "إلغاء أرشفة الطالب"
   },
-  "students_management_title": "شؤون الطلاب والمسار التعليمي",
-  "timezone": "المنطقة الزمنية النظامية",
+  "teachers": {
+    "title": "إدارة الكادر التعليمي",
+    "schedule_management": "إدارة المواعيد",
+    "ijazat_experiences": "الإجازات والخبرات",
+    "search_placeholder": "البحث بالاسم أو رقم الهاتف...",
+    "volunteer_reward": "تطوع / احتساب",
+    "disable_account": "تعطيل الحساب",
+    "enable_account": "تفعيل الحساب",
+    "all_ijazat": "كل الإجازات",
+    "all_roles": "كل المسميات",
+    "academy_manager": "مدير أكاديمية",
+    "educational_supervisor": "مشرف تعليمي",
+    "teacher_reciter": "معلّم / مقرئ"
+  },
   "timezones": {
-    "berlin": "timezones.berlin",
-    "cairo": "timezones.cairo",
-    "dubai": "timezones.dubai",
-    "jakarta": "timezones.jakarta",
-    "ny": "timezones.ny",
-    "riyadh": "timezones.riyadh",
-    "utc": "timezones.utc"
-  },
-  "total_students": "إجمالي الطلاب",
-  "track": "المسار التعليمي",
-  "trackHifz": "مسار الحفظ والتجويد المكثف",
-  "trackIjazah": "مسار الإجازات بالسند المتصل",
-  "trackTilawah": "مسار التلاوة وتصحيح الأداء",
-  "unassigned": "بانتظار تعيين معتمد",
-  "unnamed_student": "طالب بدون اسم",
-  "viewActive": "الحلقات النشطة",
-  "viewArchived": "الأرشيف",
-  "إدارة المواعيد": "إدارة المواعيد",
-  "الإجازات والخبرات": "الإجازات والخبرات",
-  "البحث بالاسم أو رقم الهاتف": {
-    "": "البحث بالاسم أو رقم الهاتف..."
-  },
-  "تطوع / احتساب": "تطوع / احتساب",
-  "تعطيل الحساب": "تعطيل الحساب",
-  "تفعيل الحساب": "تفعيل الحساب",
-  "كل الإجازات": "كل الإجازات",
-  "كل المسميات": "كل المسميات",
-  "مدير أكاديمية": "مدير أكاديمية",
-  "مشرف تعليمي": "مشرف تعليمي",
-  "معلّم / مقرئ": "معلّم / مقرئ"
+    "berlin": "برلين (UTC+1)",
+    "cairo": "القاهرة (UTC+2)",
+    "dubai": "دبي (UTC+4)",
+    "jakarta": "جاكرتا (UTC+7)",
+    "ny": "نيويورك (UTC-5)",
+    "riyadh": "الرياض (UTC+3)",
+    "utc": "التوقيت العالمي (UTC)"
+  }
 }
