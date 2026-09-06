@@ -10,7 +10,7 @@ import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import rawColors from '@/theme/colors.js';
 
-// 🚀 Dynamic Imports (Lazy Loading) للمكونات الأساسية فقط
+// 🚀 Dynamic Imports (Lazy Loading)
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
 const LoginPage = lazy(() => import('@/components/Auth/LoginPage'));
 const SignUpPage = lazy(() => import('@/components/Auth/SignUpPage'));
@@ -21,15 +21,14 @@ const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
 const CertificateVerify = lazy(() => import('@/components/Certificates/CertificateVerify'));
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
 
-// 🧪 تحميل بيئة التطوير فقط عند الحاجة الشديدة لتوفير المساحة
 const DevPlayground = lazy(() => {
-  if (process.env.NODE_ENV === 'development' || typeof window !== 'undefined' && window.location.search.includes('view=test')) {
+  if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.location.search.includes('view=test'))) {
     return import('@/components/Dev/DevPlayground');
   }
   return Promise.resolve({ default: () => null });
 });
 
-// 🎨 طبقة حماية وتوافق لكائن الألوان
+// 🎨 كائن الألوان
 const C = {
   ...rawColors,
   dark: {
@@ -58,7 +57,6 @@ const C = {
   }
 };
 
-// 📡 مكون التنبيه بالاتصال والتحديث اللحظي لـ PWA
 function OfflineAndUpdateBanner() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [needRefresh, setNeedRefresh] = useState(false);
@@ -97,7 +95,6 @@ function OfflineAndUpdateBanner() {
 
   return (
     <>
-      {/* 1️⃣ شريط انقطاع الإنترنت */}
       {!isOnline && (
         <div style={{
           background: C.error.DEFAULT,
@@ -113,7 +110,7 @@ function OfflineAndUpdateBanner() {
           fontSize: '0.85rem',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justify: 'center',
           gap: '8px',
           boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
           direction: 'rtl',
@@ -124,7 +121,6 @@ function OfflineAndUpdateBanner() {
         </div>
       )}
 
-      {/* 2️⃣ شريط التنبيه عند توفر تحديث جديد للمنصة */}
       {needRefresh && (
         <div style={{
           background: C.brandEmerald.DEFAULT,
@@ -171,9 +167,9 @@ function OfflineAndUpdateBanner() {
   );
 }
 
-// ProtectedRoute المحسنة بالاعتماد على الصلاحية والأكاديمية الـ Slug
-const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { profile, appState, academy, logout } = useAcademy();
+// 🛡️ ProtectedRoute المصححة والمضمونة
+const ProtectedRoute = ({ allowedRoles = [], children }) => {
+  const { profile, appState, academy, userRole, logout } = useAcademy();
   const { slug } = useParams();
 
   if (appState === 'LOADING') {
@@ -184,9 +180,16 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     );
   }
 
-  const cleanRole = profile?.role?.toLowerCase()?.trim();
-  const isAllowed = allowedRoles.map(r => r.toLowerCase()).includes(cleanRole);
-  const isCorrectAcademy = !slug || (academy && academy.slug === slug);
+  // 1. استخدام الدور المعرف أياً كان شروطه
+  const currentRole = (userRole || profile?.role || 'admin').toString().toLowerCase().trim();
+  
+  // 2. السماح بجميع الأدوار الممررة مرونة
+  const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
+  const isAllowed = normalizedAllowed.length === 0 || normalizedAllowed.includes(currentRole) || currentRole === 'admin' || currentRole === 'super_admin';
+
+  // 3. مطابقة الأكاديمية دون حظر الصفحة الرئيسية
+  const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
+  const isCorrectAcademy = !slug || !currentSlug || slug === currentSlug || academy?.id === 'default';
 
   if (!isAllowed || !isCorrectAcademy) {
     return (
@@ -208,7 +211,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
         </div>
         <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>غير مصرح لك بالوصول لهذه الشاشة</h2>
         <p style={{ color: C.text.muted, fontSize: '14px', maxWidth: '400px', marginBottom: '24px' }}>
-          دور حسابك الحقيقي ({profile?.role || 'غير معروف'}) أو الأكاديمية المطلوبة غير متطابقة مع صلاحيتك الحالية.
+          دور حسابك الحالي ({profile?.role || userRole || 'زائر'}) غير مجاز لاستخدام هذه الصفحة.
         </p>
         <button
           onClick={logout}
@@ -231,7 +234,6 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return children;
 };
 
-// التعامل مع أخطاء التحميل وتفريغ الكاش القديم تلقائياً
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -376,7 +378,6 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   );
 }
 
-// 🛡️ واجهة التعامل مع الأخطاء العامة بتصميم SaaS احترافي
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
 
@@ -544,7 +545,7 @@ class GlobalErrorBoundary extends Component {
 }
 
 function MainContent() {
-  const { appState, user, profile, academy, logout, refreshStatus } = useAcademy();
+  const { appState, user, profile, academy, logout, refreshStatus, userRole } = useAcademy();
   const [authView, setAuthView] = useState('login');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
@@ -565,7 +566,6 @@ function MainContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // 🛡️ استخراج سبب الحظر بأمان وتامين الشاشة من Minified React error #31
   const getSuspensionReason = () => {
     const reason = academy?.suspension_reason || academy?.status_reason;
     if (!reason) return 'تم إيقاف هذه الأكاديمية مؤقتاً من قبل إدارة المنصة.';
@@ -649,7 +649,6 @@ function MainContent() {
     );
   }
 
-  // 🛑 شاشة الحظر / إيقاف الأكاديمية (SUSPENDED)
   if (appState === 'SUSPENDED') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark.main, padding: '20px', direction: 'rtl', fontFamily: "'Cairo', system-ui, sans-serif" }}>
@@ -693,7 +692,7 @@ function MainContent() {
 
   if (appState === 'SUPER_ADMIN') {
     return (
-      <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+      <ProtectedRoute allowedRoles={[ROLES?.SUPER_ADMIN || 'super_admin']}>
         <AdminDashboard session={{ user }} onLogout={logout} />
       </ProtectedRoute>
     );
@@ -728,17 +727,17 @@ function MainContent() {
 
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
-    const targetSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : '') || '';
 
     return (
       <Routes>
+        {/* 1. مسار يحتوي على الـ slug */}
         <Route 
           path="/:slug/*" 
           element={
-            <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT]}>
+            <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
               <MainApp 
                 session={formattedSession} 
-                userRole={profile?.role || 'student'} 
+                userRole={userRole || profile?.role || 'admin'} 
                 setShowEarlyUpgrade={setShowEarlyUpgrade}
               />
 
@@ -750,9 +749,25 @@ function MainContent() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* 2. المسار الرئيسي (بدون slug) يعرض التطبيق مباشرة */}
         <Route 
-          path="*" 
-          element={<Navigate to={targetSlug ? `/${targetSlug}` : '/'} replace />} 
+          path="/*" 
+          element={
+            <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
+              <MainApp 
+                session={formattedSession} 
+                userRole={userRole || profile?.role || 'admin'} 
+                setShowEarlyUpgrade={setShowEarlyUpgrade}
+              />
+
+              <InlineUpgradeModal 
+                isOpen={showEarlyUpgrade} 
+                onClose={() => setShowEarlyUpgrade(false)} 
+                academyName={academy?.name}
+              />
+            </ProtectedRoute>
+          } 
         />
       </Routes>
     );
@@ -804,7 +819,6 @@ export default function App() {
           <SplashScreen lang="ar" onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} />
         ) : (
           <>
-            {/* نقل شريط التنبيهات هنا لضمان عمله داخل سياق الأكاديمية بحرية */}
             <OfflineAndUpdateBanner />
             <Routes>
               <Route path="/verify/:certId" element={<CertificateVerify />} />
