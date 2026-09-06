@@ -10,7 +10,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
 
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
-      const translated = t(key);
+      const translated = t(key, { defaultValue: fallback });
       if (translated && translated !== key) return translated;
     }
     return fallback || key;
