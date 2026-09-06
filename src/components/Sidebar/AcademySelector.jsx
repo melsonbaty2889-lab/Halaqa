@@ -36,12 +36,13 @@ export default function AcademySelector({
 
   return (
     <div ref={dropdownRef} className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* كارت الأكاديمية الرئيسي */}
       <button
         type="button"
         disabled={!hasMultipleAcademies}
         onClick={() => hasMultipleAcademies && setDropdownOpen(!dropdownOpen)}
         aria-label={currentAcademyName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
-        className={`w-full flex items-center justify-between p-3 min-h-[64px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
+        className={`w-full flex items-center justify-between p-3 min-h-[60px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
           hasMultipleAcademies ? 'cursor-pointer' : 'cursor-default'
         }`}
         style={{
@@ -52,13 +53,13 @@ export default function AcademySelector({
           boxShadow: dropdownOpen ? C.shadows?.emeraldGlow : 'none'
         }}
       >
-        <div className="flex items-center gap-3.5 min-w-0 flex-1">
-          {/* اللوجو بمقاس واضع وبارز w-12 h-12 */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* حاوية اللوجو - منظمة ومحددة المقاس */}
           <div 
-            className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center overflow-hidden shadow-md transition-transform duration-200 group-hover:scale-105"
+            className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-1 transition-transform duration-200 group-hover:scale-105"
             style={{
               backgroundColor: C.dark?.surface,
-              borderColor: C.emerald?.light || C.dark?.cardBorder,
+              borderColor: C.dark?.cardBorder,
               borderWidth: '1px',
               borderStyle: 'solid'
             }}
@@ -72,36 +73,26 @@ export default function AcademySelector({
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain rounded-lg"
               />
             ) : (
-              <SmartHalaqaProLogo size={28} />
+              <SmartHalaqaProLogo size={24} />
             )}
           </div>
 
-          {/* النصوص اسم الأكاديمية والشارة */}
+          {/* نصوص الأكاديمية والبيانات */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <h2 
-                className="text-base font-bold truncate leading-snug transition-colors"
-                style={{ color: C.text?.title }}
-              >
-                {currentAcademyName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
-              </h2>
-
-              {hasMultipleAcademies && (
-                <ChevronDown
-                  size={16}
-                  className={`shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-                  style={{ color: dropdownOpen ? C.emerald?.light : C.text?.muted }}
-                />
-              )}
-            </div>
+            <h2 
+              className="text-sm font-bold truncate leading-tight transition-colors"
+              style={{ color: C.text?.title }}
+            >
+              {currentAcademyName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
+            </h2>
 
             {statusBadge && (
               <div className="flex items-center">
                 <span
-                  className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold leading-tight tracking-wide"
+                  className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold leading-none tracking-wide"
                   style={statusBadge?.style || {
                     backgroundColor: C.badge?.activeBg,
                     color: C.emerald?.light,
@@ -114,6 +105,15 @@ export default function AcademySelector({
             )}
           </div>
         </div>
+
+        {/* سهم القائمة المنسدلة على الطرف الآخر */}
+        {hasMultipleAcademies && (
+          <ChevronDown
+            size={18}
+            className={`shrink-0 ms-2 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+            style={{ color: dropdownOpen ? C.emerald?.light : C.text?.muted }}
+          />
+        )}
       </button>
 
       {/* القائمة المنسدلة */}
@@ -142,7 +142,7 @@ export default function AcademySelector({
                     if (onSwitchAcademy) onSwitchAcademy(acc.id);
                     setDropdownOpen(false);
                   }}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 group"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs cursor-pointer transition-all duration-150 group"
                   style={{
                     backgroundColor: isSelected ? C.badge?.activeBg : 'transparent',
                     color: isSelected ? C.emerald?.light : C.text?.body
@@ -150,7 +150,7 @@ export default function AcademySelector({
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <div 
-                      className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center overflow-hidden"
+                      className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center overflow-hidden p-0.5"
                       style={{
                         backgroundColor: C.dark?.bg,
                         borderColor: C.dark?.cardBorder,
@@ -159,7 +159,7 @@ export default function AcademySelector({
                       }}
                     >
                       {accLogo ? (
-                        <img src={accLogo} alt={accName} className="w-full h-full object-cover" />
+                        <img src={accLogo} alt={accName} className="w-full h-full object-contain rounded" />
                       ) : (
                         <Building2 size={14} style={{ color: C.emerald?.light }} />
                       )}
