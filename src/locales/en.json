@@ -278,6 +278,7 @@
     "weekendDays": ""
   },
   "sidebar": {
+    "academyLogo": "شعار الأكاديمية",
     "cloudSynced": "Synced with cloud",
     "cloudSyncTooltip": "All data is synchronized and saved to the cloud",
     "createNewAcademy": "Create New Academy",

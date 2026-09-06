@@ -278,6 +278,7 @@
     "weekendDays": ""
   },
   "sidebar": {
+    "academyLogo": "شعار الأكاديمية",
     "cloudSynced": "کلاؤڈ کے ساتھ ہم آہنگ",
     "cloudSyncTooltip": "تمام ڈیٹا ہم آہنگ ہے اور کلاؤڈ میں محفوظ ہے",
     "createNewAcademy": "نئی اکیڈمی بنائیں",

@@ -278,6 +278,7 @@
     "weekendDays": "أيام العطلة الأسبوعية"
   },
   "sidebar": {
+    "academyLogo": "شعار الأكاديمية",
     "cloudSynced": "متزامن مع السحابة",
     "cloudSyncTooltip": "جميع البيانات متزامنة ومحفوظة سحابياً",
     "createNewAcademy": "إنشاء أكاديمية جديدة",

@@ -278,6 +278,7 @@
     "weekendDays": ""
   },
   "sidebar": {
+    "academyLogo": "شعار الأكاديمية",
     "cloudSynced": "Tersinkronisasi dengan cloud",
     "cloudSyncTooltip": "Semua data tersinkronisasi dan tersimpan di cloud",
     "createNewAcademy": "Buat Akademi Baru",
