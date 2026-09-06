@@ -278,11 +278,11 @@
     "weekendDays": ""
   },
   "sidebar": {
-  "cloudSynced": "Bulut ile senkronize edildi",
-  "cloudSyncTooltip": "Tüm veriler senkronize edilir ve buluta kaydedilir",
-  "createNewAcademy": "Yeni Akademi Oluştur",
-  "footer": "Tüm hakları saklıdır",
-  "unnamedAcademy": "Isimsiz Akademi"
+    "cloudSynced": "Bulut ile senkronize edildi",
+    "cloudSyncTooltip": "Tüm veriler senkronize edilir ve buluta kaydedilir",
+    "createNewAcademy": "Yeni Akademi Oluştur",
+    "footer": "Tüm hakları saklıdır",
+    "unnamedAcademy": "Isimsiz Akademi"
   },
   "startTime": "وقت البدء",
   "status": {
