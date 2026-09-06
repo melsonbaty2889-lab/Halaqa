@@ -278,11 +278,11 @@
     "weekendDays": ""
   },
   "sidebar": {
-    "cloudSynced": "متزامن مع السحابة",
-    "cloudSyncTooltip": "جميع البيانات متزامنة ومحفوظة سحابياً",
-    "createNewAcademy": "إنشاء أكاديمية جديدة",
-    "footer": "حقوق المنظومة محفوظة",
-    "unnamedAcademy": "أكاديمية بدون اسم"
+  "cloudSynced": "Synchronisé avec le cloud",
+  "cloudSyncTooltip": "Toutes les données sont synchronisées et sauvegardées sur le cloud",
+  "createNewAcademy": "Créer une nouvelle académie",
+  "footer": "Tous droits réservés",
+  "unnamedAcademy": "Académie sans nom"
   },
   "startTime": "وقت البدء",
   "status": {
