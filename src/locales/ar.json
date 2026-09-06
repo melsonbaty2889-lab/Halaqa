@@ -372,6 +372,11 @@
   "students_management_title": "شؤون الطلاب والمسار التعليمي",
   "subscription": {
     "backToDashboard": "العودة إلى مركز التحكم والتحليلات",
+    "currencies": {
+      "egp": "EGP",
+      "sar": "SAR",
+      "usd": "USD"
+    },
     "currentPlan": "رخصتك المحددة حالياً",
     "errors": {
       "clientNotInitialized": "لم يتم تهيئة الاتصال بالسحابة بشكل صحيح",
@@ -398,7 +403,13 @@
       "yearlyDesc": "للمؤسسات والمقارئ المتكاملة",
       "yearlyTitle": "الكفاءة المستدامة (ترخيص سنوي)"
     },
-    "selectPlan": "اختيار هذه الخطة"
+    "regions": {
+      "egypt": "جمهورية مصر العربية",
+      "gcc": "دول مجلس التعاون الخليجي",
+      "global": "النطاق الدولي وباقي دول العالم"
+    },
+    "selectPlan": "اختيار هذه الخطة",
+    "selectRegionNotice": "حدد النطاق الجغرافي لتفعيل بروتوكولات الدفع المتوافقة مع منطقتك:"
   },
   "teachers": {
     "academy_manager": "مدير أكاديمية",
