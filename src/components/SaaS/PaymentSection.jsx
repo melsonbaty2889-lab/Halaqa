@@ -1,7 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Check, Upload, ShieldCheck, CreditCard, Smartphone, Building2, Banknote, Globe } from 'lucide-react';
+import { Copy, Check, Upload, ShieldCheck, CreditCard, Building2 } from 'lucide-react';
 import { colors } from '@/theme';
+
+// شعارات رسمية مصممة بصيغة SVG ناعمة وسريعة التحميل
+const PaymentLogo = ({ type }) => {
+  switch (type) {
+    case 'instapay':
+      return (
+        <svg className="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="8" fill="#7B2CBF" />
+          <path d="M12 12H17V28H12V12ZM23 12H28V28H23V12Z" fill="white" />
+          <circle cx="20" cy="20" r="3" fill="#00F5D4" />
+        </svg>
+      );
+    case 'vodafone':
+      return (
+        <svg className="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="8" fill="#E60000" />
+          <path d="M20 10C14.477 10 10 14.477 10 20C10 25.523 14.477 30 20 30C25.523 30 30 25.523 30 20C30 14.477 25.523 10 20 10ZM20 25C17.239 25 15 22.761 15 20C15 17.239 17.239 15 20 15C22.761 15 25 17.239 25 20C25 22.761 22.761 25 20 25Z" fill="white" />
+        </svg>
+      );
+    case 'fawry':
+      return (
+        <svg className="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="8" fill="#FFD100" />
+          <path d="M10 14H30V18H10V14ZM10 22H24V26H10V22Z" fill="#003399" />
+        </svg>
+      );
+    case 'mada':
+      return (
+        <svg className="w-8 h-5" viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="50" height="30" rx="6" fill="#00A859" />
+          <path d="M10 10L18 20L26 10" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="36" cy="15" r="4" fill="#0071CE" />
+        </svg>
+      );
+    case 'apple_pay':
+      return (
+        <svg className="w-8 h-5" viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="50" height="30" rx="6" fill="#000000" />
+          <path d="M18 11.5C18.8 10.5 19.3 9.2 19.1 8C18 8.1 16.7 8.8 15.9 9.7C15.2 10.5 14.7 11.8 14.9 13C16.1 13.1 17.3 12.3 18 11.5ZM18.9 13.3C17.2 13.2 15.8 14.2 14.9 14.2C14 14.2 12.8 13.3 11.4 13.4C9.6 13.4 7.9 14.4 7 16C5.1 19.3 6.5 24.1 8.3 26.7C9.2 28 10.2 29.4 11.6 29.3C13 29.2 13.5 28.4 15.1 28.4C16.7 28.4 17.2 29.3 18.6 29.3C20 29.3 20.9 28 21.8 26.7C22.8 25.2 23.2 23.8 23.3 23.7C23.2 23.6 20.6 22.6 20.6 19.6C20.6 17.1 22.6 15.9 22.7 15.8C21.5 14.1 19.7 13.4 18.9 13.3Z" fill="white" />
+        </svg>
+      );
+    case 'stc_pay':
+      return (
+        <svg className="w-8 h-5" viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="50" height="30" rx="6" fill="#4F008C" />
+          <path d="M12 12H20V15H15V17H20V20H12V12Z" fill="#FF375F" />
+          <path d="M24 12H32V15H28V20H24V12Z" fill="white" />
+        </svg>
+      );
+    case 'paypal':
+      return (
+        <svg className="w-8 h-5" viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="50" height="30" rx="6" fill="#003087" />
+          <path d="M18 9H24C26.2 9 27.5 10.1 27.2 12.2C26.8 14.8 24.8 16 22.8 16H20.5L19.5 22H16.5L18 9Z" fill="#0079C1" />
+          <path d="M21 11H27C29.2 11 30.5 12.1 30.2 14.2C29.8 16.8 27.8 18 25.8 18H23.5L22.5 24H19.5L21 11Z" fill="#00457C" opacity="0.6" />
+        </svg>
+      );
+    case 'crypto':
+      return (
+        <svg className="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="18" fill="#26A17B" />
+          <path d="M22.5 17.5V15H27V12H13V15H17.5V17.5C13.8 17.8 11 18.7 11 19.8C11 21 13.8 21.9 17.5 22.2V27H22.5V22.2C26.2 21.9 29 21 29 19.8C29 18.7 26.2 17.8 22.5 17.5ZM20 21C16.1 21 14 20.3 14 19.8C14 19.3 16.1 18.6 20 18.6C23.9 18.6 26 19.3 26 19.8C26 20.3 23.9 21 20 21Z" fill="white" />
+        </svg>
+      );
+    default:
+      return <CreditCard size={20} className="text-slate-300" />;
+  }
+};
 
 export default function PaymentSection({ 
   region, 
@@ -16,7 +84,6 @@ export default function PaymentSection({
   const [copied, setCopied] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
 
-  // استخراج القيم من ثيم الألوان الموحد
   const cardBg = colors?.dark?.card || '#0F172A';
   const borderColor = colors?.dark?.border || '#1E293B';
   const primaryGold = colors?.accent?.gold || '#F59E0B';
@@ -26,24 +93,23 @@ export default function PaymentSection({
   const textSubtle = colors?.dark?.textSubtle || '#64748B';
   const successGreen = '#10B981';
 
-  // قوائم وسائط الدفع موحدة الأيقونات والترجمة
   const paymentMethods = {
     egypt: [
-      { id: 'instapay', name: t('subscription.payment.instapay', 'InstaPay (تحويل بنكي فوري)'), isManual: true, number: 'username@instapay', icon: <Banknote size={18} style={{ color: successGreen }} /> },
-      { id: 'vodafone', name: t('subscription.payment.vodafone', 'فودافون كاش والمحافظ الذكية'), isManual: true, number: '01012345678', icon: <Smartphone size={18} style={{ color: primaryGold }} /> },
-      { id: 'fawry', name: t('subscription.payment.fawry', 'فوري Pay (كود الدفع السريع)'), isManual: true, number: '987654321', icon: <Building2 size={18} style={{ color: primaryAmber }} /> },
-      { id: 'card_eg', name: t('subscription.payment.cardEg', 'بطاقات الفيزا وميزة البنكية'), isManual: false, icon: <CreditCard size={18} style={{ color: textMuted }} /> },
+      { id: 'instapay', name: t('subscription.payment.instapay', 'InstaPay (تحويل بنكي فوري)'), isManual: true, number: 'username@instapay', logoType: 'instapay' },
+      { id: 'vodafone', name: t('subscription.payment.vodafone', 'فودافون كاش والمحافظ الذكية'), isManual: true, number: '01012345678', logoType: 'vodafone' },
+      { id: 'fawry', name: t('subscription.payment.fawry', 'فوري Pay (كود الدفع السريع)'), isManual: true, number: '987654321', logoType: 'fawry' },
+      { id: 'card_eg', name: t('subscription.payment.cardEg', 'بطاقات الفيزا وميزة البنكية'), isManual: false, logoType: 'card' },
     ],
     gcc: [
-      { id: 'apple_pay', name: 'Apple Pay', isManual: false, icon: <Smartphone size={18} style={{ color: textPrimary }} />, badge: t('subscription.payment.fastest', 'الأسرع') },
-      { id: 'mada', name: t('subscription.payment.mada', 'بطاقات مدى (Mada)'), isManual: false, icon: <CreditCard size={18} style={{ color: successGreen }} /> },
-      { id: 'stc_pay', name: t('subscription.payment.stcPay', 'STC Pay / المحافظ الخليجية'), isManual: false, icon: <Smartphone size={18} style={{ color: primaryGold }} /> },
-      { id: 'iban', name: t('subscription.payment.iban', 'تحويل بنكي مباشر (IBAN)'), isManual: true, number: 'SA8200000012345678901234', icon: <Building2 size={18} style={{ color: textMuted }} /> },
+      { id: 'apple_pay', name: 'Apple Pay', isManual: false, logoType: 'apple_pay', badgeText: t('subscription.payment.fastest', 'الأسرع') },
+      { id: 'mada', name: t('subscription.payment.mada', 'بطاقات مدى (Mada)'), isManual: false, logoType: 'mada' },
+      { id: 'stc_pay', name: t('subscription.payment.stcPay', 'STC Pay / المحافظ الخليجية'), isManual: false, logoType: 'stc_pay' },
+      { id: 'iban', name: t('subscription.payment.iban', 'تحويل بنكي مباشر (IBAN)'), isManual: true, number: 'SA8200000012345678901234', logoType: 'card' },
     ],
     global: [
-      { id: 'card_global', name: t('subscription.payment.cardGlobal', 'بطاقات ائتمان دولية Visa / MasterCard'), isManual: false, icon: <CreditCard size={18} style={{ color: successGreen }} /> },
-      { id: 'paypal', name: 'PayPal', isManual: false, icon: <Globe size={18} style={{ color: primaryGold }} /> },
-      { id: 'crypto', name: 'USDT (TRC20 Wallet)', isManual: true, number: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq', icon: <Banknote size={18} style={{ color: primaryAmber }} /> },
+      { id: 'card_global', name: t('subscription.payment.cardGlobal', 'بطاقات ائتمان دولية Visa / MasterCard'), isManual: false, logoType: 'card' },
+      { id: 'paypal', name: 'PayPal', isManual: false, logoType: 'paypal' },
+      { id: 'crypto', name: 'USDT (TRC20 Wallet)', isManual: true, number: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq', logoType: 'crypto' },
     ]
   };
 
@@ -94,11 +160,8 @@ export default function PaymentSection({
               }`}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div 
-                  style={{ backgroundColor: cardBg, borderColor: borderColor }}
-                  className="p-2 rounded-lg border shrink-0 flex items-center justify-center"
-                >
-                  {item.icon}
+                <div className="shrink-0 flex items-center justify-center">
+                  <PaymentLogo type={item.logoType} />
                 </div>
                 <span style={{ color: textPrimary }} className="font-semibold text-xs leading-snug break-words">
                   {item.name}
@@ -106,7 +169,7 @@ export default function PaymentSection({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                {item.badge && (
+                {item.badgeText && (
                   <span 
                     style={{ 
                       backgroundColor: `${primaryAmber}33`, 
@@ -115,7 +178,7 @@ export default function PaymentSection({
                     }}
                     className="text-[10px] px-2.5 py-0.5 rounded-full font-bold border"
                   >
-                    {item.badge}
+                    {item.badgeText}
                   </span>
                 )}
                 <div 
@@ -205,7 +268,6 @@ export default function PaymentSection({
         </div>
       )}
 
-      {/* تنبيه التفعيل التلقائي */}
       <div 
         style={{
           backgroundColor: `${successGreen}14`,
