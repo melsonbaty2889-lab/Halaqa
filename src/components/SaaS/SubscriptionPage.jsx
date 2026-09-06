@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import RegionSelector from './components/RegionSelector';
 import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
 import { colors, UI } from '@/theme';
-import { ArrowLeft, Globe } from 'lucide-react';
+import { ArrowLeft, Globe, Loader2 } from 'lucide-react';
+import { 
+  SUBSCRIPTION_PLANS, 
+  validateCoupon, 
+  calculateFinalPrice 
+} from '@/constants/subscriptionData';
 
 export default function SubscriptionPage({ isRTL = true, onBack }) {
+  const { t, i18n } = useTranslation();
+
   const [region, setRegion] = useState('egypt');
   const [selectedPlan, setSelectedPlan] = useState('yearly'); // السنوي افتراضي
   const [promoCode, setPromoCode] = useState('');
@@ -17,77 +25,81 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // الأسعار الأصلية الكاملة بالجمهوريات والعملات
-  const pricingData = {
-    egypt: { currency: 'جنيه مصري', monthly: 150, yearly: 1500, lifetime: 3500 },
-    gcc: { currency: 'ريال سعودي', monthly: 95, yearly: 750, lifetime: 1800 },
-    global: { currency: 'دولار', monthly: 25, yearly: 200, lifetime: 500 }
-  };
+  // جلب ألوان الثيم آمنة مع دعم الأوضاع الداكنة
+  const themeColors = useMemo(() => {
+    return colors || {
+      dark: { card: '#0F172A', border: '#1E293B', text: '#F8FAFC', textMuted: '#CBD5E1' },
+      accent: { primary: '#0F766E', gold: '#F59E0B' }
+    };
+  }, []);
 
-  const currentPricing = pricingData[region] || pricingData.egypt;
+  // جلب الأسعار والعملة ديناميكياً من ملف الثوابت الموحد
+  const currentRegionData = useMemo(() => {
+    return SUBSCRIPTION_PLANS[region] || SUBSCRIPTION_PLANS.egypt;
+  }, [region]);
 
-  // الخطط الثلاث كاملة الأصلية
-  const plans = [
-    {
-      id: 'monthly',
-      title: isRTL ? 'الوصول المرن (اشتراك شهري)' : 'Flexible Monthly Plan',
-      description: isRTL ? 'مثالي للمراكز والحلقات الناشئة' : 'Ideal for small academies',
-      periodText: isRTL ? 'شهرياً' : 'month',
-      basePrice: currentPricing.monthly,
-      features: [
-        isRTL ? 'تفعيل فوري لكامل النظام' : 'Instant full access',
-        isRTL ? 'إدارة الطلاب والدورات' : 'Student & Course Management',
-        isRTL ? 'دعم فني قياسي' : 'Standard Support'
-      ]
-    },
-    {
-      id: 'yearly',
-      title: isRTL ? 'الكفاءة المستدامة (ترخيص سنوي)' : 'Sustainable Yearly Plan',
-      badge: isRTL ? 'توفير شهرين مجاناً 🔥' : '2 Months Free 🔥',
-      badgeBg: 'bg-[#10B981]',
-      description: isRTL ? 'للمؤسسات والمقارئ المتكاملة' : 'For full academies',
-      periodText: isRTL ? 'سنوياً' : 'year',
-      basePrice: currentPricing.yearly,
-      features: [
-        isRTL ? 'كل مميزات الاشتراك الشهري' : 'All Monthly Plan features',
-        isRTL ? 'توفير قيمة شهرين كاملين' : 'Save 2 full months value',
-        isRTL ? 'أولوية في الدعم الفني' : 'Priority Technical Support'
-      ]
-    },
-    {
-      id: 'lifetime',
-      title: isRTL ? 'الترخيص الأبدي للمؤسسين (مدى الحياة)' : 'Lifetime Founder License',
-      badge: isRTL ? 'فرصة حصرية للمؤسسين ⚡' : 'Exclusive Founder Offer ⚡',
-      badgeBg: 'bg-[#EF4444]',
-      description: isRTL ? 'ادفع مرة واحدة واحصل على الوصول الدائم' : 'Pay once, access forever',
-      periodText: isRTL ? 'مدى الحياة' : 'lifetime',
-      basePrice: currentPricing.lifetime,
-      features: [
-        isRTL ? 'ترخيص دائم بدون أي رسوم تجديد' : 'Permanent license with no renewal fees',
-        isRTL ? 'جميع التحديثات المستقبلية مجاناً' : 'All future updates included for free',
-        isRTL ? 'دعم VIP خاص وحصري' : 'Exclusive VIP Support'
-      ]
-    }
-  ];
+  const currencyLabel = useMemo(() => {
+    return t(currentRegionData.currencyKey, currentRegionData.defaultCurrency);
+  }, [t, currentRegionData]);
 
-  const handleApplyPromo = () => {
+  // تجهيز خطتي (الشهري والسنوي) فقط بدون خطة مدى الحياة
+  const plans = useMemo(() => {
+    const monthlyPrice = currentRegionData.plans.monthly.price;
+    const yearlyPrice = currentRegionData.plans.yearly.price;
+
+    return [
+      {
+        id: 'monthly',
+        title: t('subscription.plans.monthlyTitle', 'الوصول المرن (اشتراك شهري)'),
+        description: t('subscription.plans.monthlyDesc', 'مثالي للمراكز والحلقات الناشئة'),
+        periodText: t('subscription.periods.monthly', 'شهرياً'),
+        basePrice: monthlyPrice,
+        features: [
+          t('subscription.features.instantAccess', 'تفعيل فوري لكامل النظام'),
+          t('subscription.features.management', 'إدارة الطلاب والدورات والحلقات'),
+          t('subscription.features.standardSupport', 'دعم فني قياسي ومستمر')
+        ]
+      },
+      {
+        id: 'yearly',
+        title: t('subscription.plans.yearlyTitle', 'الكفاءة المستدامة (ترخيص سنوي)'),
+        badge: isRTL 
+          ? (currentRegionData.plans.yearly.badgeAr || 'توفير شهرين مجاناً 🔥')
+          : (currentRegionData.plans.yearly.badgeEn || 'Save 2 Months 🔥'),
+        badgeBg: 'bg-[#10B981]',
+        description: t('subscription.plans.yearlyDesc', 'للمؤسسات والمقارئ المتكاملة'),
+        periodText: t('subscription.periods.yearly', 'سنوياً'),
+        basePrice: yearlyPrice,
+        features: [
+          t('subscription.features.allMonthly', 'كل مميزات الاشتراك الشهري'),
+          t('subscription.features.saveMonths', 'توفير قيمة شهرين كاملين'),
+          t('subscription.features.prioritySupport', 'أولوية في الدعم الفني والتحديثات')
+        ]
+      }
+    ];
+  }, [currentRegionData, isRTL, t]);
+
+  // تطبيق كود الخصم باستخدام دالة validateCoupon
+  const handleApplyPromo = useCallback(() => {
     setPromoError('');
-    if (promoCode.trim() === 'S20' || promoCode.trim() === 'HALAQA20') {
-      setAppliedDiscount(20);
-    } else if (promoCode.trim() === 'PROMO50') {
-      setAppliedDiscount(50);
+    const couponResult = validateCoupon(promoCode);
+
+    if (couponResult.valid) {
+      setAppliedDiscount(couponResult.discountPercent);
     } else {
       setAppliedDiscount(0);
-      setPromoError(isRTL ? 'كود الخصم غير صحيح أو منتهي الصلاحية' : 'Invalid promo code');
+      setPromoError(t('subscription.errors.invalidPromo', 'كود الخصم غير صحيح أو منتهي الصلاحية'));
     }
-  };
+  }, [promoCode, t]);
 
-  const handleSubmitSubscription = async (methodId, isManual, receiptFile) => {
+  // إرسال طلب الاشتراك والتأكيد
+  const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
     setLoading(true);
     try {
       let receiptUrl = null;
 
-      if (receiptFile) {
+      // رفع صورة الإشعار أو الإيصال بكتلة محامية بـ Supabase
+      if (receiptFile && supabase?.storage) {
         const fileExt = receiptFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
@@ -100,25 +112,36 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
         }
       }
 
-      await supabase.from('subscriptions').insert([
-        {
-          plan_type: selectedPlan,
-          region: region,
-          payment_method: methodId,
-          transaction_ref: txId,
-          receipt_url: receiptUrl,
-          discount_percentage: appliedDiscount,
-          status: 'pending'
-        }
-      ]);
+      if (supabase?.from) {
+        const { error: insertError } = await supabase.from('subscriptions').insert([
+          {
+            plan_type: selectedPlan,
+            region: region,
+            payment_method: methodId,
+            transaction_ref: txId,
+            receipt_url: receiptUrl,
+            discount_percentage: appliedDiscount,
+            status: 'pending',
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+        if (insertError) throw insertError;
+      }
 
       setIsSubmitted(true);
     } catch (err) {
-      console.error(err);
+      console.error('🚨 Error submitting subscription:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPlan, region, txId, appliedDiscount]);
+
+  // تبديل لغة الواجهة
+  const toggleLanguage = useCallback(() => {
+    const nextLang = i18n.language === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(nextLang);
+  }, [i18n]);
 
   return (
     <div 
@@ -132,31 +155,34 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
     >
       <div className="max-w-4xl mx-auto">
         
-        {/* أزرار العودة واللغة بالأعلى (مطابقة للصورة الأصلية) */}
+        {/* أزرار العودة واللغة بالأعلى */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#1E293B]">
           <button 
             onClick={onBack} 
-            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 rounded-xl text-xs font-bold text-[#CBD5E1] transition-all"
+            aria-label={t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}
+            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#CBD5E1] transition-all"
           >
-            <ArrowLeft size={16} />
-            <span>{isRTL ? 'العودة إلى مركز التحكم والتحليلات' : 'Back to Dashboard'}</span>
+            <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
+            <span>{t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}</span>
           </button>
 
-          <button className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] px-4 py-2.5 rounded-xl text-xs font-bold text-[#F59E0B]">
+          <button 
+            onClick={toggleLanguage}
+            aria-label={t('common.switchLanguage', 'تغيير اللغة')}
+            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#F59E0B]"
+          >
             <Globe size={16} />
-            <span>English</span>
+            <span>{i18n.language === 'en' ? 'العربية' : 'English'}</span>
           </button>
         </div>
 
-        {/* الهيدر الأصلي بكلماته النصية بالكامل */}
+        {/* الهيدر الرئيسي */}
         <div className="flex flex-col items-center text-center mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#F59E0B] mb-3 leading-tight">
-            {isRTL ? 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية' : 'Get License - Smart Halaqa Platform'}
+            {t('subscription.headerTitle', 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية')}
           </h1>
           <p className="text-[#CBD5E1] text-xs sm:text-sm max-w-xl leading-relaxed">
-            {isRTL 
-              ? 'اختر خطة الاستثمار الأكاديمي الأنسب لك، وانضم إلى كبرى الأكاديميات والمراكز التعليمية حول العالم.' 
-              : 'Choose the best academic investment plan for your institution.'}
+            {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لك، وانضم إلى كبرى الأكاديميات والمراكز التعليمية حول العالم.')}
           </p>
         </div>
 
@@ -177,10 +203,10 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
           isRTL={isRTL}
         />
 
-        {/* كروت الخطط الثلاث كاملة (شهري / سنوي / مدى الحياة) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {/* كروت الخطط (شهري / سنوي) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {plans.map((p) => {
-            const finalPrice = Math.round(p.basePrice * (1 - appliedDiscount / 100));
+            const finalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
             return (
               <PlanCard 
                 key={p.id}
@@ -188,7 +214,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
                 isSelected={selectedPlan === p.id}
                 onSelect={() => setSelectedPlan(p.id)}
                 finalPrice={finalPrice}
-                currency={currentPricing.currency}
+                currency={currencyLabel}
                 isRTL={isRTL}
               />
             );
