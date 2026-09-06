@@ -491,6 +491,7 @@
     "footer": "حقوق المنظومة محفوظة",
     "unnamedAcademy": "أكاديمية بدون اسم"
   },
+  "startTime": "وقت البدء",
   "status": {
     "active": "اشتراك نشط",
     "expired": "منتهي الصلاحية",
@@ -498,7 +499,9 @@
     "pending": "قيد التفعيل",
     "trial": "فترة تجريبية"
   },
- "students": {
+  "status_active": "نشط",
+  "status_inactive": "غير نشط",
+  "students": {
     "academic_info": "البيانات الأكاديمية",
     "add_btn": "إضافة الطالب",
     "add_title": "إضافة طالب جديد",
