@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Copy, Check, Upload, ShieldCheck, CreditCard, X } from 'lucide-react';
 import { colors } from '@/theme';
@@ -88,9 +88,10 @@ export default function PaymentSection({
   onSubmit, 
   isRTL 
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
+  const fileInputRef = useRef(null);
 
   // الألوان والأنماط الثابتة
   const cardBg = colors?.dark?.card || '#0F172A';
@@ -102,7 +103,7 @@ export default function PaymentSection({
   const textSubtle = colors?.dark?.textSubtle || '#64748B';
   const successGreen = '#10B981';
 
-  // بناء وسائل الدفع باستخدام useMemo لتفادي إعادة الحسابات
+  // بناء وسائل الدفع مع الاستماع لتغيير اللغة
   const paymentMethods = useMemo(() => ({
     egypt: [
       { id: 'instapay', name: t('subscription.payment.instapay', 'InstaPay (تحويل بنكي فوري)'), isManual: true, number: 'username@instapay', logoType: 'instapay' },
@@ -121,16 +122,26 @@ export default function PaymentSection({
       { id: 'paypal', name: 'PayPal', isManual: false, logoType: 'paypal' },
       { id: 'crypto', name: 'USDT (TRC20 Wallet)', isManual: true, number: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq', logoType: 'crypto' },
     ]
-  }), [t]);
+  }), [t, i18n.language]);
 
   const activeMethods = paymentMethods[region] || paymentMethods.egypt;
   const [selectedMethod, setSelectedMethod] = useState(activeMethods[0]?.id || 'instapay');
+
+  // مسح الملف وإعادة ضبط مدخل الملفات
+  const handleRemoveFile = (e) => {
+    e.stopPropagation();
+    setReceiptFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // تحديث الوسيلة الافتراضية عند تغيير الإقليم
   useEffect(() => {
     if (activeMethods.length > 0) {
       setSelectedMethod(activeMethods[0].id);
       setReceiptFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, [region, activeMethods]);
 
@@ -263,18 +274,19 @@ export default function PaymentSection({
               {t('subscription.attachReceipt', 'إرفاق صورة إشعار التحويل:')}
             </label>
             
-            <div className="relative">
+            <div className="relative flex items-center">
               <label 
                 style={{ backgroundColor: cardBg, borderColor: 'rgba(34, 49, 71, 0.8)' }}
-                className="flex items-center justify-center p-3 min-h-[44px] rounded-lg border border-dashed hover:border-amber-600 cursor-pointer text-xs font-semibold text-center transition-colors gap-2"
+                className="w-full flex items-center justify-center p-3 min-h-[44px] rounded-lg border border-dashed hover:border-amber-600 cursor-pointer text-xs font-semibold text-center transition-colors gap-2 pr-8 pl-8"
               >
                 <Upload size={16} style={{ color: primaryAmber }} />
-                <span className={`truncate max-w-[200px] ${receiptFile ? 'font-bold' : ''}`} style={{ color: receiptFile ? successGreen : textMuted }}>
+                <span className={`truncate max-w-[180px] ${receiptFile ? 'font-bold' : ''}`} style={{ color: receiptFile ? successGreen : textMuted }}>
                   {receiptFile 
                     ? receiptFile.name 
                     : t('subscription.selectReceiptFile', 'اختر ملف الإشعار أو التقط صورة')}
                 </span>
                 <input 
+                  ref={fileInputRef}
                   type="file" 
                   accept="image/*" 
                   onChange={(e) => setReceiptFile(e.target.files[0] || null)} 
@@ -282,12 +294,12 @@ export default function PaymentSection({
                 />
               </label>
 
-              {/* زر لإزالة الملف في حالة رغبة المستخدم في الإلغاء */}
+              {/* زر إزالة الملف بدعم RTL و LTR */}
               {receiptFile && (
                 <button
                   type="button"
-                  onClick={() => setReceiptFile(null)}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors"
+                  onClick={handleRemoveFile}
+                  className={`absolute ${isRTL ? 'left-2' : 'right-2'} p-1 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors z-10`}
                   title={t('common.remove', 'إزالة')}
                 >
                   <X size={14} />
