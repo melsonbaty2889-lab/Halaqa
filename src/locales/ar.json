@@ -491,12 +491,6 @@
     "footer": "حقوق المنظومة محفوظة",
     "unnamedAcademy": "أكاديمية بدون اسم"
   },
-  "sidebar.cloudSynced": "",
-  "sidebar.cloudSyncTooltip": "",
-  "sidebar.createNewAcademy": "إنشاء أكاديمية جديدة",
-  "sidebar.footer": "",
-  "sidebar.unnamedAcademy": "أكاديمية بدون اسم",
-  "startTime": "وقت البدء",
   "status": {
     "active": "اشتراك نشط",
     "expired": "منتهي الصلاحية",
@@ -504,14 +498,7 @@
     "pending": "قيد التفعيل",
     "trial": "فترة تجريبية"
   },
-  "status_active": "نشط",
-  "status_inactive": "غير نشط",
-  "status.active": "اشتراك نشط",
-  "status.expired": "منتهي الصلاحية",
-  "status.lifetime": "حساب دائم ∞",
-  "status.pending": "قيد التفعيل",
-  "status.trial": "فترة تجريبية",
-  "students": {
+ "students": {
     "academic_info": "البيانات الأكاديمية",
     "add_btn": "إضافة الطالب",
     "add_title": "إضافة طالب جديد",
