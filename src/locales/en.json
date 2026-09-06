@@ -279,6 +279,10 @@
   },
   "sidebar": {
     "academyLogo": "شعار الأكاديمية",
+    "badgeActiveUntil": "نشط • ينتهي {{date}}",
+    "badgeExpired": "باقة منتهية",
+    "badgeExpiringSoon": "ينتهي خلال {{days}} أيام",
+    "badgeLifetime": "خطة مدى الحياة ∞",
     "cloudSynced": "Synced with cloud",
     "cloudSyncTooltip": "All data is synchronized and saved to the cloud",
     "createNewAcademy": "Create New Academy",
