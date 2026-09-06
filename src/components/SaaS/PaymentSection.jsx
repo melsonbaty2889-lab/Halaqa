@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Check, Upload, ShieldCheck, CreditCard, Building2 } from 'lucide-react';
+import { Copy, Check, Upload, ShieldCheck, CreditCard, X } from 'lucide-react';
 import { colors } from '@/theme';
 
-// شعارات رسمية مصممة بصيغة SVG ناعمة وسريعة التحميل
-const PaymentLogo = ({ type }) => {
+// ==========================================
+// 1. مكون شعارات وسائل الدفع (Memoized)
+// ==========================================
+const PaymentLogo = memo(({ type }) => {
   switch (type) {
     case 'instapay':
       return (
@@ -66,13 +68,19 @@ const PaymentLogo = ({ type }) => {
           <path d="M22.5 17.5V15H27V12H13V15H17.5V17.5C13.8 17.8 11 18.7 11 19.8C11 21 13.8 21.9 17.5 22.2V27H22.5V22.2C26.2 21.9 29 21 29 19.8C29 18.7 26.2 17.8 22.5 17.5ZM20 21C16.1 21 14 20.3 14 19.8C14 19.3 16.1 18.6 20 18.6C23.9 18.6 26 19.3 26 19.8C26 20.3 23.9 21 20 21Z" fill="white" />
         </svg>
       );
+    case 'card':
     default:
-      return <CreditCard size={20} className="text-slate-300" />;
+      return <CreditCard size={22} className="text-slate-300" />;
   }
-};
+});
 
+PaymentLogo.displayName = 'PaymentLogo';
+
+// ==========================================
+// 2. المكون الرئيسي قسم الدفع
+// ==========================================
 export default function PaymentSection({ 
-  region, 
+  region = 'egypt', 
   txId, 
   setTxId, 
   isSubmitted, 
@@ -84,6 +92,7 @@ export default function PaymentSection({
   const [copied, setCopied] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
 
+  // الألوان والأنماط الثابتة
   const cardBg = colors?.dark?.card || '#0F172A';
   const borderColor = colors?.dark?.border || '#1E293B';
   const primaryGold = colors?.accent?.gold || '#F59E0B';
@@ -93,7 +102,8 @@ export default function PaymentSection({
   const textSubtle = colors?.dark?.textSubtle || '#64748B';
   const successGreen = '#10B981';
 
-  const paymentMethods = {
+  // بناء وسائل الدفع باستخدام useMemo لتفادي إعادة الحسابات
+  const paymentMethods = useMemo(() => ({
     egypt: [
       { id: 'instapay', name: t('subscription.payment.instapay', 'InstaPay (تحويل بنكي فوري)'), isManual: true, number: 'username@instapay', logoType: 'instapay' },
       { id: 'vodafone', name: t('subscription.payment.vodafone', 'فودافون كاش والمحافظ الذكية'), isManual: true, number: '01012345678', logoType: 'vodafone' },
@@ -111,19 +121,21 @@ export default function PaymentSection({
       { id: 'paypal', name: 'PayPal', isManual: false, logoType: 'paypal' },
       { id: 'crypto', name: 'USDT (TRC20 Wallet)', isManual: true, number: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq', logoType: 'crypto' },
     ]
-  };
+  }), [t]);
 
   const activeMethods = paymentMethods[region] || paymentMethods.egypt;
   const [selectedMethod, setSelectedMethod] = useState(activeMethods[0]?.id || 'instapay');
 
+  // تحديث الوسيلة الافتراضية عند تغيير الإقليم
   useEffect(() => {
     if (activeMethods.length > 0) {
       setSelectedMethod(activeMethods[0].id);
       setReceiptFile(null);
     }
-  }, [region]);
+  }, [region, activeMethods]);
 
   const handleCopy = (text) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -134,7 +146,7 @@ export default function PaymentSection({
   return (
     <div 
       style={{ backgroundColor: cardBg, borderColor: borderColor }}
-      className="border rounded-2xl p-6 max-w-lg mx-auto shadow-2xl"
+      className="border rounded-2xl p-6 max-w-lg mx-auto shadow-2xl transition-all"
     >
       <h4 
         style={{ color: primaryGold, borderColor: borderColor }}
@@ -143,6 +155,7 @@ export default function PaymentSection({
         {t('subscription.selectPaymentMethod', 'اختر وسيلة الدفع المناسبة:')}
       </h4>
 
+      {/* قائمة وسائل الدفع المتاحة */}
       <div className="flex flex-col gap-2.5">
         {activeMethods.map((item) => {
           const isSelected = selectedMethod === item.id;
@@ -196,10 +209,11 @@ export default function PaymentSection({
         })}
       </div>
 
-      {currentMethodObj.isManual && (
+      {/* تفاصيل الدفع اليدوي */}
+      {currentMethodObj?.isManual && (
         <div 
           style={{ backgroundColor: 'rgba(9, 15, 22, 0.8)', borderColor: 'rgba(34, 49, 71, 0.8)' }}
-          className="mt-4 border rounded-xl p-4"
+          className="mt-4 border rounded-xl p-4 transition-all"
         >
           <p style={{ color: textMuted }} className="text-xs font-semibold mb-2.5">
             {t('subscription.transferNotice', 'يرجى تحويل المبلغ إلى الحساب التالي:')}
@@ -227,6 +241,7 @@ export default function PaymentSection({
             </button>
           </div>
 
+          {/* مدخل رقم المعاملة */}
           <div className="mt-3">
             <input 
               type="text" 
@@ -242,32 +257,48 @@ export default function PaymentSection({
             />
           </div>
 
+          {/* رفع إشعار التحويل */}
           <div className="mt-3">
             <label style={{ color: textMuted }} className="block text-[11px] font-semibold mb-1.5">
               {t('subscription.attachReceipt', 'إرفاق صورة إشعار التحويل:')}
             </label>
             
-            <label 
-              style={{ backgroundColor: cardBg, borderColor: 'rgba(34, 49, 71, 0.8)' }}
-              className="flex items-center justify-center p-3 min-h-[44px] rounded-lg border border-dashed hover:border-amber-600 cursor-pointer text-xs font-semibold text-center transition-colors gap-2"
-            >
-              <Upload size={16} style={{ color: primaryAmber }} />
-              <span className={receiptFile ? 'font-bold' : ''} style={{ color: receiptFile ? successGreen : textMuted }}>
-                {receiptFile 
-                  ? receiptFile.name 
-                  : t('subscription.selectReceiptFile', 'اختر ملف الإشعار أو التقط صورة')}
-              </span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={(e) => setReceiptFile(e.target.files[0])} 
-                className="hidden" 
-              />
-            </label>
+            <div className="relative">
+              <label 
+                style={{ backgroundColor: cardBg, borderColor: 'rgba(34, 49, 71, 0.8)' }}
+                className="flex items-center justify-center p-3 min-h-[44px] rounded-lg border border-dashed hover:border-amber-600 cursor-pointer text-xs font-semibold text-center transition-colors gap-2"
+              >
+                <Upload size={16} style={{ color: primaryAmber }} />
+                <span className={`truncate max-w-[200px] ${receiptFile ? 'font-bold' : ''}`} style={{ color: receiptFile ? successGreen : textMuted }}>
+                  {receiptFile 
+                    ? receiptFile.name 
+                    : t('subscription.selectReceiptFile', 'اختر ملف الإشعار أو التقط صورة')}
+                </span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => setReceiptFile(e.target.files[0] || null)} 
+                  className="hidden" 
+                />
+              </label>
+
+              {/* زر لإزالة الملف في حالة رغبة المستخدم في الإلغاء */}
+              {receiptFile && (
+                <button
+                  type="button"
+                  onClick={() => setReceiptFile(null)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors"
+                  title={t('common.remove', 'إزالة')}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
+      {/* تنبيه الأمان */}
       <div 
         style={{
           backgroundColor: `${successGreen}14`,
@@ -279,6 +310,7 @@ export default function PaymentSection({
         {t('subscription.secureNotice', 'دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.')}
       </div>
 
+      {/* زر التأكيد أو التنبيه بالاستلام */}
       {isSubmitted ? (
         <div 
           style={{
@@ -299,7 +331,7 @@ export default function PaymentSection({
             backgroundColor: primaryAmber,
             color: '#FFFFFF'
           }}
-          className="w-full mt-4 py-3.5 min-h-[44px] rounded-xl text-sm font-black transition-all hover:opacity-90 disabled:opacity-50"
+          className="w-full mt-4 py-3.5 min-h-[44px] rounded-xl text-sm font-black transition-all hover:opacity-90 disabled:opacity-50 cursor-pointer"
         >
           {loading 
             ? t('common.processing', 'جاري المعالجة...') 
@@ -307,7 +339,8 @@ export default function PaymentSection({
         </button>
       )}
 
-      <div style={{ color: textSubtle }} className="flex items-center justify-between text-[10px] mt-4 px-2">
+      {/* Footer الصغير */}
+      <div style={{ color: textSubtle }} className="flex items-center justify-between text-[10px] mt-4 px-2 select-none">
         <span>Instant Activation</span>
         <span>•</span>
         <span>256-Bit SSL Encrypted</span>
