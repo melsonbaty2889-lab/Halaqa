@@ -367,6 +367,7 @@
   "students_management_title": "شؤون الطلاب والمسار التعليمي",
   "subscription": {
     "backToDashboard": "العودة إلى مركز التحكم والتحليلات",
+    "currentPlan": "رخصتك المحددة حالياً",
     "errors": {
       "clientNotInitialized": "لم يتم تهيئة الاتصال بالسحابة بشكل صحيح",
       "fetchFailed": "فشل جلب بيانات الاشتراك",
@@ -391,7 +392,8 @@
       "monthlyTitle": "الوصول المرن (اشتراك شهري)",
       "yearlyDesc": "للمؤسسات والمقارئ المتكاملة",
       "yearlyTitle": "الكفاءة المستدامة (ترخيص سنوي)"
-    }
+    },
+    "selectPlan": "اختيار هذه الخطة"
   },
   "timezone": "المنطقة الزمنية النظامية",
   "timezones": {
