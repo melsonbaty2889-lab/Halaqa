@@ -20,7 +20,6 @@ export default function AcademySelector({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  // دالة مساعدة لفك ترجمة النصوص الديناميكية
   const resolveText = (textObj) => {
     if (typeof getText === 'function') {
       const res = getText(textObj);
@@ -37,13 +36,12 @@ export default function AcademySelector({
 
   return (
     <div ref={dropdownRef} className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* زر تحديد الأكاديمية الحالية - تم تكبير Padding والارتفاع الأدنى للمس */}
       <button
         type="button"
         disabled={!hasMultipleAcademies}
         onClick={() => hasMultipleAcademies && setDropdownOpen(!dropdownOpen)}
         aria-label={currentAcademyName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
-        className={`w-full flex items-center justify-between p-3 min-h-[52px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
+        className={`w-full flex items-center justify-between p-3 min-h-[64px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
           hasMultipleAcademies ? 'cursor-pointer' : 'cursor-default'
         }`}
         style={{
@@ -54,13 +52,13 @@ export default function AcademySelector({
           boxShadow: dropdownOpen ? C.shadows?.emeraldGlow : 'none'
         }}
       >
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* تكبير حاوية اللوجو من w-9/h-9 إلى w-12/h-12 */}
+        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+          {/* اللوجو بمقاس واضع وبارز w-12 h-12 */}
           <div 
-            className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:scale-105 shadow-sm"
+            className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center overflow-hidden shadow-md transition-transform duration-200 group-hover:scale-105"
             style={{
               backgroundColor: C.dark?.surface,
-              borderColor: C.dark?.cardBorder,
+              borderColor: C.emerald?.light || C.dark?.cardBorder,
               borderWidth: '1px',
               borderStyle: 'solid'
             }}
@@ -81,14 +79,14 @@ export default function AcademySelector({
             )}
           </div>
 
-          {/* تفاصيل الاسم ونوع الاشتراك مع زيادة الحجم والوضوح */}
+          {/* النصوص اسم الأكاديمية والشارة */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
               <h2 
-                className="text-sm font-bold truncate leading-snug tracking-wide transition-colors"
+                className="text-base font-bold truncate leading-snug transition-colors"
                 style={{ color: C.text?.title }}
               >
-                {currentAcademyName}
+                {currentAcademyName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
               </h2>
 
               {hasMultipleAcademies && (
@@ -101,9 +99,9 @@ export default function AcademySelector({
             </div>
 
             {statusBadge && (
-              <div>
+              <div className="flex items-center">
                 <span
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold leading-none tracking-wide"
+                  className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold leading-tight tracking-wide"
                   style={statusBadge?.style || {
                     backgroundColor: C.badge?.activeBg,
                     color: C.emerald?.light,
@@ -180,7 +178,6 @@ export default function AcademySelector({
             })}
           </div>
 
-          {/* خيار إنشاء أكاديمية جديدة */}
           {onOpenCreateAcademy && (
             <div className="pt-1 mt-1 border-t" style={{ borderColor: C.dark?.cardBorder }}>
               <button
