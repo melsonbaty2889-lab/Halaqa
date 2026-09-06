@@ -278,11 +278,11 @@
     "weekendDays": ""
   },
   "sidebar": {
-  "cloudSynced": "Tersinkronisasi dengan cloud",
-  "cloudSyncTooltip": "Semua data tersinkronisasi dan tersimpan di cloud",
-  "createNewAcademy": "Buat Akademi Baru",
-  "footer": "Hak cipta dilindungi",
-  "unnamedAcademy": "Akademi Tanpa Nama"
+    "cloudSynced": "Tersinkronisasi dengan cloud",
+    "cloudSyncTooltip": "Semua data tersinkronisasi dan tersimpan di cloud",
+    "createNewAcademy": "Buat Akademi Baru",
+    "footer": "Hak cipta dilindungi",
+    "unnamedAcademy": "Akademi Tanpa Nama"
   },
   "startTime": "وقت البدء",
   "status": {
