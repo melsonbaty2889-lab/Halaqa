@@ -1,7 +1,7 @@
 // src/constants/subscriptionData.js
 
 /**
- * 1. البيانات الأساسية للباقات والأسعار لكل منطقة
+ * 1. البيانات الأساسية للباقات والأسعار لكل منطقة (محدثة حسب النموذج المستدام)
  */
 export const SUBSCRIPTION_PLANS = {
   egypt: {
@@ -9,9 +9,8 @@ export const SUBSCRIPTION_PLANS = {
     currencyKey: 'subscription.currencyEg',
     defaultCurrency: 'ج.م',
     plans: {
-      monthly: { price: 150, periodDays: 30 },
-      yearly: { price: 1500, periodDays: 365, badgeAr: 'توفير شهرين مجاناً 🔥', badgeEn: 'Save 2 Months 🔥' },
-      lifetime: { price: 3500, periodDays: 36500, badgeAr: 'فرصة حصرية للمؤسسين ⚡', badgeEn: 'Founders Deal ⚡' }
+      monthly: { price: 195, periodDays: 30 },
+      yearly: { price: 1800, periodDays: 365, badgeAr: 'توفير شهرين مجاناً 🔥', badgeEn: 'Save 2 Months 🔥' }
     }
   },
   gcc: {
@@ -19,9 +18,8 @@ export const SUBSCRIPTION_PLANS = {
     currencyKey: 'subscription.currencyGcc',
     defaultCurrency: 'ر.س',
     plans: {
-      monthly: { price: 50, periodDays: 30 },
-      yearly: { price: 500, periodDays: 365, badgeAr: 'توفير شهرين مجاناً 🔥', badgeEn: 'Save 2 Months 🔥' },
-      lifetime: { price: 1200, periodDays: 36500, badgeAr: 'فرصة حصرية للمؤسسين ⚡', badgeEn: 'Founders Deal ⚡' }
+      monthly: { price: 75, periodDays: 30 },
+      yearly: { price: 750, periodDays: 365, badgeAr: 'توفير شهرين مجاناً 🔥', badgeEn: 'Save 2 Months 🔥' }
     }
   },
   global: {
@@ -30,8 +28,7 @@ export const SUBSCRIPTION_PLANS = {
     defaultCurrency: '$',
     plans: {
       monthly: { price: 15, periodDays: 30 },
-      yearly: { price: 150, periodDays: 365, badgeAr: 'توفير شهرين مجاناً 🔥', badgeEn: 'Save 2 Months 🔥' },
-      lifetime: { price: 300, periodDays: 36500, badgeAr: 'فرصة حصرية للمؤسسين ⚡', badgeEn: 'Founders Deal ⚡' }
+      yearly: { price: 140, periodDays: 365, badgeAr: 'توفير شهرين مجاناً 🔥', badgeEn: 'Save 2 Months 🔥' }
     }
   }
 };
@@ -49,20 +46,25 @@ export const COUPON_CODES = {
  * 3. دالة التعرف التلقائي على دولة/منطقة المستخدم مع معالجة الأخطاء
  */
 export const detectUserRegion = (userLoc = '', currentLang = 'ar') => {
-  const locUpper = String(userLoc || '').toUpperCase();
-  const gccCodes = ['SA', 'KW', 'AE', 'QA', 'BH', 'OM'];
+  try {
+    const locUpper = String(userLoc || '').toUpperCase();
+    const gccCodes = ['SA', 'KW', 'AE', 'QA', 'BH', 'OM'];
 
-  if (gccCodes.some(code => locUpper.includes(code))) {
-    return 'gcc';
-  }
-  if (locUpper.includes('EG')) {
+    if (gccCodes.some(code => locUpper.includes(code))) {
+      return 'gcc';
+    }
+    if (locUpper.includes('EG')) {
+      return 'egypt';
+    }
+    return currentLang === 'en' ? 'global' : 'egypt';
+  } catch (err) {
+    console.error('Error detecting user region:', err);
     return 'egypt';
   }
-  return currentLang === 'en' ? 'global' : 'egypt';
 };
 
 /**
- * 4. دالة جلب كائن الأسعار المتوافق مع مكونات الواجهة
+ * 4. دالة جلب كائن الأسعار المتوافق مع مكونات الواجهة (مؤمنة بدون lifetime)
  */
 export const getPrices = (t = (key) => key) => {
   const result = {};
@@ -71,7 +73,6 @@ export const getPrices = (t = (key) => key) => {
     result[region] = {
       monthly: regData.plans.monthly.price,
       yearly: regData.plans.yearly.price,
-      lifetime: regData.plans.lifetime.price,
       curr: t(regData.currencyKey) || regData.defaultCurrency
     };
   });
