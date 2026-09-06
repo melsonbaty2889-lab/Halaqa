@@ -8,12 +8,12 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSynced] = useState(true);
 
-  const safeT = useCallback((key) => {
+  const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       const translated = t(key);
       if (translated && translated !== key) return translated;
     }
-    return key;
+    return fallback || key;
   }, [t]);
 
   const handleLogout = useCallback(async () => {
@@ -38,7 +38,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
     <footer 
       className="w-full flex flex-col gap-2.5 pt-1" 
       dir={isRtl ? 'rtl' : 'ltr'}
-      aria-label={safeT('sidebar.footer')}
+      aria-label={safeT('sidebar.footer', 'حقوق المنظومة محفوظة')}
     >
       <div 
         className="flex items-center justify-center gap-2 py-1.5 px-2.5 rounded-lg border transition-all duration-300"
@@ -46,7 +46,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
           backgroundColor: C.card?.bg,
           borderColor: C.border?.subtle
         }}
-        title={safeT('sidebar.cloudSyncTooltip')}
+        title={safeT('sidebar.cloudSyncTooltip', 'جميع البيانات متزامنة ومحفوظة سحابياً')}
       >
         <div className="relative flex items-center justify-center">
           {isSynced ? (
@@ -72,7 +72,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
           className="text-[11px] font-medium tracking-wide leading-relaxed py-0.5 select-none"
           style={{ color: C.text?.muted }}
         >
-          {safeT('sidebar.cloudSynced')}
+          {safeT('sidebar.cloudSynced', 'متزامن مع السحابة')}
         </span>
       </div>
 
@@ -80,7 +80,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
         type="button"
         onClick={handleLogout}
         disabled={isLoggingOut}
-        aria-label={safeT('common.logout')}
+        aria-label={safeT('common.logout', 'تسجيل الخروج')}
         className={`group w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 border`}
         style={{
           backgroundColor: isLoggingOut ? C.error?.light : C.error?.subtle,
@@ -100,7 +100,9 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
         )}
 
         <span className="leading-relaxed py-0.5 inline-block select-none truncate">
-          {isLoggingOut ? safeT('common.loggingOut') : safeT('common.logout')}
+          {isLoggingOut 
+            ? safeT('common.loggingOut', 'جاري تسجيل الخروج...') 
+            : safeT('common.logout', 'تسجيل الخروج')}
         </span>
       </button>
     </footer>
