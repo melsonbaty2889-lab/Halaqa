@@ -42,8 +42,12 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
+  // دالة الترجمة الآمنة المتوافقة مع i18next-parser
   const safeT = useCallback((key, fallback) => {
-    return typeof t === 'function' ? t(key, fallback) : (fallback || key);
+    if (typeof t === 'function') {
+      return t(key, { defaultValue: fallback || key });
+    }
+    return fallback || key;
   }, [t]);
 
   const menuSections = useMemo(() => {
