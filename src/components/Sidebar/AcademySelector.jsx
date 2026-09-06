@@ -6,21 +6,25 @@ import { colors as C } from '@/theme/colors';
 
 export default function AcademySelector({
   academiesList = [],
+  currentAcademy, // يمكن تمرير كائن الأكاديمية بالكامل من Supabase
   currentAcademyId,
   currentAcademyName,
   academyLogo,
+  trialEndsAt, // تاريخ انتهاء الاشتراك/التجربة من السحابة
   dropdownOpen,
   setDropdownOpen,
   dropdownRef,
-  subscriptionType = 'lifetime', // 'lifetime' | 'active' | 'expiring_soon' | 'expired'
-  expiryDate, // مثال: '2026-10-12' أو عدد الأيام المتبقية
-  daysLeft,
   onSwitchAcademy,
   onOpenCreateAcademy,
   getText
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
+
+  // استخراج البيانات في حال تمرير كائن الأكاديمية مباشرة
+  const activeName = currentAcademyName || (currentAcademy?.name ? (typeof currentAcademy.name === 'object' ? currentAcademy.name[i18n.language] || currentAcademy.name.ar : currentAcademy.name) : '');
+  const activeLogo = academyLogo || currentAcademy?.logo_url;
+  const activeTrialExpiry = trialEndsAt || currentAcademy?.trial_ends_at;
 
   const resolveText = (textObj) => {
     if (typeof getText === 'function') {
@@ -36,46 +40,69 @@ export default function AcademySelector({
 
   const hasMultipleAcademies = academiesList.length > 1;
 
-  // تحديد مظهر ونشاط الشارة بناءً على حالة الاشتراك
+  // حساب حالة الاشتراك تلقائياً
+  const getSubStatus = () => {
+    if (!activeTrialExpiry) return { type: 'lifetime' };
+
+    const now = new Date();
+    const expiry = new Date(activeTrialExpiry);
+    const diffTime = expiry - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return { type: 'expired' };
+    } else if (diffDays <= 7) {
+      return { type: 'expiring_soon', daysLeft: diffDays };
+    } else {
+      const formattedDate = expiry.toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', {
+        day: 'numeric',
+        month: 'short'
+      });
+      return { type: 'active', expiryDate: formattedDate };
+    }
+  };
+
+  const subStatus = getSubStatus();
+
   const renderSubscriptionBadge = () => {
-    if (subscriptionType === 'lifetime') {
+    if (subStatus.type === 'lifetime') {
       return (
         <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
           style={{
             backgroundColor: C.badge?.activeBg || 'rgba(16, 185, 129, 0.1)',
             color: C.emerald?.light,
             border: `1px solid ${C.brandEmerald?.border || C.emerald?.light}`
           }}
         >
-          <Sparkles size={11} className="shrink-0" />
+          <Sparkles size={10} className="shrink-0" />
           <span>{t('sidebar.badgeLifetime', 'خطة مدى الحياة ∞')}</span>
         </span>
       );
     }
 
-    if (subscriptionType === 'expiring_soon') {
+    if (subStatus.type === 'expiring_soon') {
       return (
         <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
           style={{
             backgroundColor: C.warning?.bg || 'rgba(245, 158, 11, 0.1)',
             color: C.warning?.text || C.amber?.light,
             border: `1px solid ${C.warning?.border || C.amber?.light}`
           }}
         >
-          <AlertTriangle size={11} className="shrink-0" />
+          <AlertTriangle size={10} className="shrink-0" />
           <span>
-            {t('sidebar.badgeExpiringSoon', 'ينتهي خلال {{days}} أيام', { days: daysLeft || 3 })}
+            {t('sidebar.badgeExpiringSoon', 'ينتهي خلال {{days}} أيام', { days: subStatus.daysLeft })}
           </span>
         </span>
       );
     }
 
-    if (subscriptionType === 'expired') {
+    if (subStatus.type === 'expired') {
       return (
         <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
           style={{
             backgroundColor: C.error?.bg || 'rgba(239, 68, 68, 0.1)',
             color: C.error?.text || C.rose?.light,
@@ -87,19 +114,18 @@ export default function AcademySelector({
       );
     }
 
-    // افتراضي: نشط ومحدد بتاريخ
     return (
       <span
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide"
         style={{
           backgroundColor: C.badge?.activeBg || 'rgba(16, 185, 129, 0.1)',
-          color: C.text?.body,
-          border: `1px solid ${C.dark?.cardBorder}`
+          color: C.emerald?.light,
+          border: `1px solid ${C.brandEmerald?.border || C.emerald?.light}`
         }}
       >
-        <Clock size={11} className="shrink-0" style={{ color: C.emerald?.light }} />
+        <Clock size={10} className="shrink-0" />
         <span>
-          {t('sidebar.badgeActiveUntil', 'نشط • ينتهي {{date}}', { date: expiryDate || '' })}
+          {t('sidebar.badgeActiveUntil', 'تجربة • تنتهي {{date}}', { date: subStatus.expiryDate })}
         </span>
       </span>
     );
@@ -107,13 +133,12 @@ export default function AcademySelector({
 
   return (
     <div ref={dropdownRef} className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* كارت الأكاديمية الرئيسي */}
       <button
         type="button"
         disabled={!hasMultipleAcademies}
         onClick={() => hasMultipleAcademies && setDropdownOpen(!dropdownOpen)}
-        aria-label={currentAcademyName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
-        className={`w-full flex items-center justify-between p-3 min-h-[64px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
+        aria-label={activeName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
+        className={`w-full flex items-center justify-between p-3 min-h-[62px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
           hasMultipleAcademies ? 'cursor-pointer' : 'cursor-default'
         }`}
         style={{
@@ -124,22 +149,21 @@ export default function AcademySelector({
           boxShadow: dropdownOpen ? C.shadows?.emeraldGlow : 'none'
         }}
       >
-        <div className="flex items-center gap-3.5 min-w-0 flex-1">
-          {/* إطار اللوجو الأنيق */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* إطار الشعار */}
           <div 
-            className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-1 transition-all duration-200 group-hover:scale-105"
+            className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-0.5 transition-all duration-200 group-hover:scale-105"
             style={{
               backgroundColor: C.dark?.surface,
               borderColor: C.dark?.cardBorder,
               borderWidth: '1px',
-              borderStyle: 'solid',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+              borderStyle: 'solid'
             }}
           >
-            {academyLogo ? (
+            {activeLogo ? (
               <img
-                src={academyLogo}
-                alt={currentAcademyName || ''}
+                src={activeLogo}
+                alt={activeName || ''}
                 loading="eager"
                 decoding="sync"
                 onError={(e) => {
@@ -148,17 +172,17 @@ export default function AcademySelector({
                 className="w-full h-full object-contain rounded-lg"
               />
             ) : (
-              <SmartHalaqaProLogo size={26} />
+              <SmartHalaqaProLogo size={24} />
             )}
           </div>
 
-          {/* تفاصيل الاسم والحالة */}
-          <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1.5">
+          {/* تفاصيل الاسم والحالة الديناميكية */}
+          <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
             <h2 
-              className="text-base font-bold truncate leading-tight transition-colors"
+              className="text-sm font-bold truncate leading-tight transition-colors"
               style={{ color: C.text?.title }}
             >
-              {currentAcademyName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
+              {activeName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
             </h2>
 
             <div className="flex items-center">
@@ -167,7 +191,6 @@ export default function AcademySelector({
           </div>
         </div>
 
-        {/* سهم التبديل */}
         {hasMultipleAcademies && (
           <ChevronDown
             size={18}
@@ -177,7 +200,7 @@ export default function AcademySelector({
         )}
       </button>
 
-      {/* القائمة المنسدلة للتبديل بين الأكاديميات */}
+      {/* القائمة المنسدلة */}
       {dropdownOpen && hasMultipleAcademies && (
         <div 
           className="absolute top-full inset-x-0 mt-2 p-1.5 rounded-xl backdrop-blur-2xl z-50 overflow-hidden"
