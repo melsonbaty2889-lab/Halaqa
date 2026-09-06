@@ -1,5 +1,6 @@
 // src/components/Sidebar/Sidebar.jsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatHijriDate } from '@/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
@@ -29,8 +30,12 @@ export default function Sidebar({
   academyTime,
   userRole = 'admin'
 }) {
+  const navigate = useNavigate();
+  const { slug } = useParams();
+
   const { i18n } = useTranslation();
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
+  const currentDir = i18n.dir ? i18n.dir(currentLang) : (isRtl ? 'rtl' : 'ltr');
 
   const [academiesList, setAcademiesList] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -63,6 +68,9 @@ export default function Sidebar({
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
+    if (slug) {
+      navigate(`/${slug}/${tabId}`);
+    }
     if (isMobile && typeof setSidebarOpen === 'function') {
       setSidebarOpen(false);
     }
@@ -102,7 +110,6 @@ export default function Sidebar({
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   };
 
-  // دعم كامل لجميع اللغات الست في التاريخ الهجري
   const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
   const loadAcademies = useCallback(async () => {
@@ -190,7 +197,7 @@ export default function Sidebar({
   const rawAcademyName = getText(currentAcademy?.name);
   const currentAcademyName = typeof rawAcademyName === 'string' && rawAcademyName.trim() !== '' 
     ? rawAcademyName.trim() 
-    : (isRtl ? 'أكاديمية بدون اسم' : 'Unnamed Academy');
+    : safeT('sidebar.unnamedAcademy', 'أكاديمية بدون اسم');
 
   const rawLogo = currentAcademy?.logo_url || academy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
@@ -220,38 +227,38 @@ export default function Sidebar({
     if (currentAcademy) {
       if (currentAcademy.is_active === false) {
         return {
-          text: safeT('status.pending', isRtl ? 'قيد التفعيل' : 'Pending'),
-          style: { background: 'rgba(239, 68, 68, 0.15)', color: C.error?.DEFAULT || '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }
+          text: safeT('status.pending', 'قيد التفعيل'),
+          style: { background: C.status?.pendingBg, color: C.status?.pendingText, border: `1px solid ${C.status?.pendingBorder}` }
         };
       }
       if (effectiveDaysLeft === Infinity) {
         return {
-          text: safeT('status.lifetime', isRtl ? 'حساب دائم ∞' : 'Lifetime ∞'),
-          style: { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.35)' }
+          text: safeT('status.lifetime', 'حساب دائم ∞'),
+          style: { background: C.status?.lifetimeBg, color: C.status?.lifetimeText, border: `1px solid ${C.status?.lifetimeBorder}` }
         };
       }
       if (effectiveDaysLeft > 14) {
         return {
-          text: safeT('status.active', isRtl ? 'اشتراك نشط' : 'Active Plan'),
-          style: { background: 'rgba(16, 185, 129, 0.15)', color: C.emerald?.light || '#34D399', border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}` }
+          text: safeT('status.active', 'اشتراك نشط'),
+          style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
         };
       }
       if (effectiveDaysLeft > 0) {
         return {
-          text: safeT('status.trial', isRtl ? 'فترة تجريبية' : 'Free Trial'),
-          style: { background: 'rgba(217, 119, 6, 0.15)', color: C.amber?.DEFAULT || '#D97706', border: '1px solid rgba(217, 119, 6, 0.3)' }
+          text: safeT('status.trial', 'فترة تجريبية'),
+          style: { background: C.status?.trialBg, color: C.status?.trialText, border: `1px solid ${C.status?.trialBorder}` }
         };
       }
       return {
-        text: safeT('status.expired', isRtl ? 'منتهي الصلاحية' : 'Expired'),
-        style: { background: 'rgba(239, 68, 68, 0.15)', color: C.error?.DEFAULT || '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }
+        text: safeT('status.expired', 'منتهي الصلاحية'),
+        style: { background: C.status?.expiredBg, color: C.status?.expiredText, border: `1px solid ${C.status?.expiredBorder}` }
       };
     }
     return {
-      text: safeT('status.active', isRtl ? 'اشتراك نشط' : 'Active Plan'),
-      style: { background: 'rgba(16, 185, 129, 0.15)', color: C.emerald?.light || '#34D399', border: `1px solid ${C.brandEmerald?.border || '#0D5C4D'}` }
+      text: safeT('status.active', 'اشتراك نشط'),
+      style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
     };
-  }, [currentAcademy, effectiveDaysLeft, isRtl, safeT]);
+  }, [currentAcademy, effectiveDaysLeft, safeT]);
 
   const normalizeArabic = useCallback((text) => {
     const str = getText(text);
@@ -278,14 +285,13 @@ export default function Sidebar({
     top: 0,
     bottom: 0,
     height: '100dvh',
-    ...(isRtl ? { right: 0, left: 'auto' } : { left: 0, right: 'auto' }),
+    insetInlineStart: 0,
     width: isMobile ? '100%' : '280px',
     maxWidth: isMobile ? '100vw' : '280px',
-    backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: C.dark?.card,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderLeft: isRtl ? `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}` : 'none',
-    borderRight: isRtl ? 'none' : `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+    borderInlineEnd: `1px solid ${C.dark?.cardBorder}`,
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -295,7 +301,7 @@ export default function Sidebar({
           : (isRtl ? 'translateX(100%)' : 'translateX(-100%)'))
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-    boxShadow: isMobile && sidebarOpen ? (isRtl ? '-10px 0 30px rgba(0,0,0,0.5)' : '10px 0 30px rgba(0,0,0,0.5)') : 'none',
+    boxShadow: isMobile && sidebarOpen ? C.shadows?.sidebarOverlay : 'none',
     boxSizing: 'border-box'
   };
 
@@ -308,7 +314,7 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backgroundColor: C.dark?.overlay,
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
             zIndex: 999
@@ -316,10 +322,10 @@ export default function Sidebar({
         />
       )}
 
-      <aside style={sidebarStyles} dir={isRtl ? 'rtl' : 'ltr'}>
+      <aside style={sidebarStyles} dir={currentDir}>
         <div style={{ 
           padding: '12px 14px',
-          borderBottom: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+          borderBottom: `1px solid ${C.dark?.cardBorder}`,
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -347,10 +353,10 @@ export default function Sidebar({
               type="button"
               onClick={() => setSidebarOpen(false)}
               style={{ 
-                background: 'rgba(255,255,255,0.05)', 
-                border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`, 
+                background: C.button?.glassBg, 
+                border: `1px solid ${C.dark?.cardBorder}`, 
                 borderRadius: '8px',
-                color: C.text?.muted || '#94A3B8', 
+                color: C.text?.muted, 
                 cursor: 'pointer', 
                 padding: '6px',
                 display: 'flex',
@@ -409,9 +415,9 @@ export default function Sidebar({
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
-          borderTop: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+          borderTop: `1px solid ${C.dark?.cardBorder}`,
           flexShrink: 0,
-          backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)'
+          backgroundColor: C.dark?.card
         }}>
           <SidebarFooter isRtl={isRtl} t={safeT} />
         </div>
