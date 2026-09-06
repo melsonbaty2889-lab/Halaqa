@@ -365,6 +365,12 @@
     "unarchive_title": "إلغاء أرشفة الطالب"
   },
   "students_management_title": "شؤون الطلاب والمسار التعليمي",
+  "subscription": {
+    "errors": {
+      "clientNotInitialized": "لم يتم تهيئة الاتصال بالسحابة بشكل صحيح",
+      "fetchFailed": "فشل جلب بيانات الاشتراك"
+    }
+  },
   "timezone": "المنطقة الزمنية النظامية",
   "timezones": {
     "berlin": "",
