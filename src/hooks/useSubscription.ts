@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
@@ -45,6 +46,7 @@ export interface UseSubscriptionReturn {
 // ── Main Hook ───────────────────────────────────────────────────
 
 export function useSubscription(academyId?: string | null): UseSubscriptionReturn {
+  const { t } = useTranslation();
   const [subscription, setSubscription] = useState<SaasSubscription | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,11 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       setLoading(true);
       setError(null);
 
+      // التحقق الآمن من وجود كائن Supabase وقدرته على الاستعلام
+      if (!supabase?.from) {
+        throw new Error(t('subscription.errors.clientNotInitialized', 'لم يتم تهيئة الاتصال بالسحابة بشكل صحيح'));
+      }
+
       const { data, error: apiError } = await supabase
         .from('saas_subscriptions')
         .select('*')
@@ -70,50 +77,56 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       setSubscription(data as SaasSubscription | null);
     } catch (err: any) {
       console.error('🚨 Error fetching subscription:', err);
-      setError(err.message || 'فشل جلب بيانات الاشتراك');
+      const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
+      setError(err?.message || fallbackMsg);
     } finally {
       setLoading(false);
     }
-  }, [academyId]);
+  }, [academyId, t]);
 
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
 
-  // حساب الحالات الزمانية والتنظيمية
-  const now = new Date();
+  // حساب الحالات الزمانية والتنظيمية باستخدام useMemo لتحسين الأداء
+  const computedState = useMemo(() => {
+    const now = new Date();
 
-  // فحص ما إذا كانت الفترة التجريبية سارية
-  const isTrial = Boolean(
-    subscription?.status === 'trial' ||
-    (subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > now)
-  );
+    const isTrial = Boolean(
+      subscription?.status === 'trial' ||
+      (subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > now)
+    );
 
-  // هل الخطة منتهية الصلاحية
-  const isExpired = subscription?.expires_at
-    ? new Date(subscription.expires_at) < now
-    : false;
+    const isExpired = subscription?.expires_at
+      ? new Date(subscription.expires_at) < now
+      : false;
 
-  // حالة الاشتراك النشط (شاملة التجريبية غير المنتهية)
-  const isActive = Boolean(
-    (subscription?.status === 'active' || subscription?.status === 'trial') && !isExpired
-  );
+    const isActive = Boolean(
+      (subscription?.status === 'active' || subscription?.status === 'trial') && !isExpired
+    );
 
-  // حالة طلب غير مدفوع / قيد المراجعة
-  const isPending = subscription?.status === 'unpaid' || subscription?.status === 'past_due';
+    const isPending = subscription?.status === 'unpaid' || subscription?.status === 'past_due';
 
-  // حساب الأيام المتبقية حتى الانتهاء
-  const daysRemaining = subscription?.expires_at
-    ? Math.max(0, Math.ceil((new Date(subscription.expires_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-    : 0;
+    const daysRemaining = subscription?.expires_at
+      ? Math.max(0, Math.ceil((new Date(subscription.expires_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      : 0;
+
+    return {
+      isTrial,
+      isExpired,
+      isActive,
+      isPending,
+      daysRemaining
+    };
+  }, [subscription]);
 
   return {
     subscription,
-    isActive,
-    isPending,
-    isExpired,
-    isTrial,
-    daysRemaining,
+    isActive: computedState.isActive,
+    isPending: computedState.isPending,
+    isExpired: computedState.isExpired,
+    isTrial: computedState.isTrial,
+    daysRemaining: computedState.daysRemaining,
     loading,
     error,
     refetch: fetchSubscription,
