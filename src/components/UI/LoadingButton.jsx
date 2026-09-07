@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { C } from '@/theme/colors';
+import C from '@/theme/colors';
 
 export default function LoadingButton({ 
   children, 
@@ -18,31 +18,36 @@ export default function LoadingButton({
 }) {
   const isDisabled = isLoading || disabled;
 
-  // الأحجام الموحدة مع مراعاة معايير الهواتف المحمولة
+  // الأحجام الموحدة مع الالتزام التام بمعيار 44px كحد أدنى للهواتف المحمولة
   const sizeStyles = {
-    sm: { padding: '0.5rem 1rem', minHeight: '38px', fontSize: '0.875rem' },
+    sm: { padding: '0.5rem 1rem', minHeight: '44px', fontSize: '0.875rem' },
     md: { padding: '0.75rem 1.5rem', minHeight: '44px', fontSize: '0.95rem' },
     lg: { padding: '0.875rem 2rem', minHeight: '52px', fontSize: '1.05rem' }
   };
 
-  // الأنماط البصرية المستخرجة حصرياً من كائن الألوان C
+  // الأنماط البصرية المستخرجة حصرياً من كائن الألوان C مع حماية متكاملة
   const variants = {
     primary: { 
-      background: C.amber?.DEFAULT || C.primary?.DEFAULT, 
-      color: C.dark?.bg 
+      backgroundColor: C.amber?.DEFAULT || C.primary?.DEFAULT || '#F59E0B', 
+      color: C.dark?.bg || '#0F172A',
+      border: 'none'
     },
     emerald: { 
-      background: C.emerald?.DEFAULT, 
-      color: C.dark?.bg 
+      backgroundColor: C.emerald?.DEFAULT || C.success?.DEFAULT || '#10B981', 
+      color: C.dark?.bg || '#0F172A',
+      border: 'none'
     },
     danger: { 
-      background: C.error?.DEFAULT, 
-      color: C.text?.title 
+      backgroundColor: C.error?.DEFAULT || '#EF4444', 
+      color: C.text?.title || '#FFFFFF',
+      border: 'none'
     },
     outline: { 
-      background: 'transparent', 
-      border: `1px solid ${C.inputs?.border}`, 
-      color: C.text?.body 
+      backgroundColor: 'transparent', 
+      borderColor: C.dark?.borderInput || C.inputs?.border || '#374151',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      color: C.text?.title || C.text?.body || '#F9FAFB'
     }
   };
 
@@ -64,6 +69,9 @@ export default function LoadingButton({
     ...style
   };
 
+  // إعداد aria-label تلقائياً في حال عدم إرساله صراحةً
+  const computedAriaLabel = ariaLabel || (typeof children === 'string' ? children : undefined);
+
   return (
     <button 
       type={type}
@@ -71,8 +79,8 @@ export default function LoadingButton({
       disabled={isDisabled} 
       aria-busy={isLoading}
       aria-disabled={isDisabled}
-      aria-label={ariaLabel}
-      className={`transition-all duration-200 ease-in-out select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 active:scale-[0.98] ${className}`}
+      aria-label={computedAriaLabel}
+      className={`transition-all duration-200 ease-in-out select-none focus:outline-none focus-visible:ring-2 active:scale-[0.98] ${className}`}
       style={baseStyle}
       {...restProps}
     >
