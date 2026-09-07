@@ -1,5 +1,6 @@
-/* src/components/UI/EmptyState.jsx */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import C from '@/theme/colors';
 
 export default function EmptyState({ 
   title, 
@@ -7,81 +8,70 @@ export default function EmptyState({
   icon: Icon, 
   actionText, 
   onAction,
+  actionIcon: ActionIcon,
   isRtl: isRtlProp
 }) {
-  // استخدام الخاصية الممررة أو اكتشاف اللغة من المتصفح تلقائياً
+  const { t, i18n } = useTranslation();
+
+  // تحديد الاتجاه بناءً على اللغة الحالية للـ i18n أو الخصائص الممررة
   const isRtl = isRtlProp !== undefined 
     ? isRtlProp 
-    : (typeof window !== 'undefined' && (document.dir === 'rtl' || navigator.language?.startsWith('ar')));
+    : (i18n?.dir ? i18n.dir() === 'rtl' : (document.dir === 'rtl' || i18n?.language?.startsWith('ar')));
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
-      background: '#111827',
-      borderRadius: '12px',
-      border: '1px dashed #374151',
-      textAlign: 'center',
-      maxWidth: '480px',
-      margin: '20px auto',
-      boxSizing: 'border-box',
-      direction: isRtl ? 'rtl' : 'ltr'
-    }}>
+    <div 
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed text-center max-w-md mx-auto my-5 transition-all"
+      style={{
+        backgroundColor: C.dark?.surfaceInput || C.dark?.surface || '#111827',
+        borderColor: C.dark?.borderInput || C.inputs?.border || '#374151',
+      }}
+    >
       {/* الأيقونة */}
-      {Icon ? (
-        <div style={{ color: '#9CA3AF', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {React.isValidElement(Icon) ? Icon : <Icon size={48} />}
-        </div>
-      ) : (
-        <div style={{ fontSize: '40px', marginBottom: '16px' }}>📂</div>
-      )}
+      <div 
+        className="mb-4 flex items-center justify-center rounded-full p-3.5"
+        style={{ 
+          color: C.text?.muted || '#9CA3AF',
+          backgroundColor: `${C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8'}12`
+        }}
+      >
+        {Icon ? (
+          React.isValidElement(Icon) ? Icon : <Icon size={40} style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
+        ) : (
+          <span className="text-4xl select-none">📂</span>
+        )}
+      </div>
 
-      {/* العنوان الرئيسي */}
-      <h3 style={{
-        color: '#F9FAFB',
-        fontSize: '1.2rem',
-        fontWeight: '600',
-        margin: '0 0 8px 0',
-        fontFamily: "'Cairo', sans-serif"
-      }}>
-        {title || (isRtl ? 'لا توجد بيانات متاحة' : 'No Data Available')}
+      {/* العنوان الرئيسي - يقرأ من اللغات الست تلقائياً */}
+      <h3 
+        className="text-base sm:text-lg font-bold mb-1.5"
+        style={{ color: C.text?.title || '#F9FAFB' }}
+      >
+        {title || t('common.noData', 'لا توجد بيانات متاحة')}
       </h3>
 
-      {/* الوصف */}
-      <p style={{
-        color: '#9CA3AF',
-        fontSize: '0.9rem',
-        lineHeight: '1.5',
-        margin: '0 0 20px 0',
-        fontFamily: "'Cairo', sans-serif"
-      }}>
-        {description || (isRtl ? 'لم يتم إضافة أي عناصر في هذا القسم بعد.' : 'No items have been added to this section yet.')}
+      {/* الوصف - يقرأ من اللغات الست تلقائياً */}
+      <p 
+        className="text-xs sm:text-sm leading-relaxed mb-5 max-w-sm"
+        style={{ color: C.text?.sub || C.text?.muted || '#9CA3AF' }}
+      >
+        {description || t('common.noDataDesc', 'لم يتم إضافة أي عناصر في هذا القسم بعد.')}
       </p>
 
       {/* زر الإجراء */}
       {actionText && onAction && (
         <button
+          type="button"
           onClick={onAction}
+          aria-label={actionText}
+          className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md hover:opacity-90 active:scale-95 min-h-[44px]"
           style={{
-            padding: '10px 20px',
-            background: '#38BDF8',
-            color: '#0F172A',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontFamily: "'Cairo', sans-serif",
-            transition: 'background 0.2s ease',
-            boxShadow: '0 4px 6px -1px rgba(56, 189, 248, 0.2)'
+            backgroundColor: C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8',
+            color: C.dark?.bg || '#0F172A',
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = '#7DD3FC'}
-          onMouseOut={(e) => e.currentTarget.style.background = '#38BDF8'}
         >
-          {actionText}
+          {ActionIcon && <ActionIcon size={16} />}
+          <span>{actionText}</span>
         </button>
       )}
     </div>
