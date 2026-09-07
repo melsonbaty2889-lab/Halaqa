@@ -2,19 +2,20 @@ import React, { useState, useEffect, forwardRef, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import C, { C as C_named, g } from "@/theme/colors";
 
-// استخراج آمن لكائن الألوان والقيم البديلة
+// اعتماد كلي ومباشر على كائن الألوان C و g الخاص بالهوية
 const Theme = C || C_named || {};
-const getPrimary = () => Theme.amber?.DEFAULT || Theme.primary?.DEFAULT || Theme.primary || '#F59E0B';
-const getSurface = () => Theme.dark?.surface || Theme.surface || '#0F172A';
-const getCardBg = () => Theme.dark?.card || Theme.card || Theme.dark?.surface || '#1E293B';
-const getBorder = () => Theme.dark?.borderInput || Theme.dark?.border || Theme.border || 'rgba(255, 255, 255, 0.08)';
-const getTextTitle = () => Theme.text?.title || Theme.text || '#F8FAFC';
-const getTextSub = () => Theme.text?.sub || Theme.textSub || '#94A3B8';
-const getDanger = () => Theme.rose?.DEFAULT || Theme.danger || '#EF4444';
-const getSuccess = () => Theme.emerald?.DEFAULT || Theme.success || '#10B981';
 
-// عنصر تحكم داخلي بديل للسبينر (Spinner)
-const Spinner = ({ color = "currentColor", size = 16 }) => (
+const getPrimary = () => Theme.primary || Theme.amber?.DEFAULT;
+const getSurface = () => Theme.surface || Theme.dark?.surface;
+const getCardBg = () => Theme.card || Theme.dark?.card || getSurface();
+const getBorder = () => Theme.border || Theme.dark?.borderInput || Theme.dark?.border;
+const getTextTitle = () => Theme.text?.title || Theme.text;
+const getTextSub = () => Theme.text?.sub || Theme.textSub;
+const getDanger = () => Theme.danger || Theme.rose?.DEFAULT;
+const getSuccess = () => Theme.success || Theme.emerald?.DEFAULT;
+
+// مؤشر التحميل الداخلي باستعارة لون العناصر الحالية
+const Spinner = ({ size = 16 }) => (
   <svg 
     style={{ animation: "ui-spin 0.8s linear infinite", display: "inline-block" }} 
     width={size} 
@@ -24,8 +25,8 @@ const Spinner = ({ color = "currentColor", size = 16 }) => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <style>{`@keyframes ui-spin { 100% { transform: rotate(360deg); } }`}</style>
-    <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="3" strokeDasharray="31.4 31.4" opacity="0.25" />
-    <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="3" strokeDasharray="15.7 31.4" strokeLinecap="round" />
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" opacity="0.25" />
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="15.7 31.4" strokeLinecap="round" />
   </svg>
 );
 
@@ -80,18 +81,19 @@ const Btn = forwardRef(({
   const dangerColor = getDanger();
   const successColor = getSuccess();
   const textTitle = getTextTitle();
+  const borderCol = getBorder();
 
   const styles = {
-    primary: { background: g?.gold || g?.emerald || primaryColor, color: "#ffffff", fontWeight: "bold" },
+    primary: { background: g?.gold || g?.emerald || primaryColor, color: Theme.white || textTitle, fontWeight: "bold" },
     secondary: { background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}30` },
-    ghost: { background: "rgba(255,255,255,0.04)", color: textTitle, border: "1px solid rgba(255,255,255,0.08)" },
+    ghost: { background: Theme.ghostBg || `${borderCol}20`, color: textTitle, border: `1px solid ${borderCol}` },
     danger: { background: `${dangerColor}15`, color: dangerColor, border: `1px solid ${dangerColor}30` },
-    success: { background: successColor, color: "#ffffff", fontWeight: "bold" },
-    failed: { background: dangerColor, color: "#ffffff", fontWeight: "bold" }
+    success: { background: successColor, color: Theme.white || textTitle, fontWeight: "bold" },
+    failed: { background: dangerColor, color: Theme.white || textTitle, fontWeight: "bold" }
   };
 
   const isDisabled = disabled || loading;
-  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" } : {};
+  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", translateY: "-1px" } : {};
 
   return (
     <button
@@ -123,7 +125,7 @@ const Btn = forwardRef(({
       }}
       {...props}
     >
-      {loading ? <Spinner color="currentColor" size={18} /> : startIcon}
+      {loading ? <Spinner size={18} /> : startIcon}
       {children}
       {!loading && endIcon}
     </button>
@@ -131,7 +133,7 @@ const Btn = forwardRef(({
 });
 Btn.displayName = 'Btn';
 
-// 3. الكارد الموحد (Card & Compound Subcomponents)
+// 3. الكارد الموحد (Card & Subcomponents)
 const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
   <div 
     ref={ref}
@@ -143,7 +145,7 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
       padding: 20, 
       width: "100%", 
       boxSizing: "border-box", 
-      boxShadow: Theme.shadow || "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+      boxShadow: Theme.shadow,
       color: getTextTitle(),
       ...style 
     }}
@@ -179,7 +181,7 @@ Card.Header = CardHeader;
 Card.Body = CardBody;
 Card.Footer = CardFooter;
 
-// 4. حقل الإدخال الذكي (Input & Textarea مع دعم الأيقونات ورسائل الخطأ)
+// 4. حقل الإدخال الذكي (Input)
 const Input = forwardRef(({ 
   label, 
   value, 
@@ -288,7 +290,7 @@ const Input = forwardRef(({
 });
 Input.displayName = 'Input';
 
-// 5. قائمة الاختيارات المخصصة مع React Portal
+// 5. قائمة الاختيارات الذكية (Select)
 const Select = forwardRef(({ label, value, onChange, options = [], className = "", style = {}, id: customId, ...props }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
@@ -387,7 +389,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
               zIndex: 9999,
               maxHeight: 220,
               overflowY: "auto",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+              boxShadow: Theme.shadow,
               backdropFilter: "blur(12px)"
             }}
           >
@@ -428,7 +430,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
 });
 Select.displayName = 'Select';
 
-// 6. النافذة المنبثقة المحسّنة (Modal عبر React Portal)
+// 6. النافذة المنبثقة (Modal)
 const Modal = ({ open, onClose, title, children, className = "", style = {} }) => {
   const titleId = useId();
 
@@ -446,7 +448,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16 }} 
+      style={{ position: "fixed", inset: 0, background: Theme.overlayBg || `${getSurface()}E6`, backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16 }} 
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div 
@@ -461,7 +463,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
           maxHeight: "85vh", 
           overflowY: "auto", 
           boxSizing: "border-box", 
-          boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+          boxShadow: Theme.shadow,
           textAlign: "start",
           color: getTextTitle(),
           ...style 
@@ -514,7 +516,7 @@ const PageHeader = forwardRef(({ title, sub, action, className = "", style = {} 
 ));
 PageHeader.displayName = 'PageHeader';
 
-// 8. مكونات الجداول المتكاملة (Table, THead, TBody, TR, TH, TD)
+// 8. عناصر الجداول (Table, THead, TBody, TR, TH, TD)
 const Table = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
   <div style={{ width: "100%", overflowX: "auto" }}>
     <table ref={ref} className={`ui-table ${className}`} style={{ width: "100%", borderCollapse: "collapse", ...style }} {...props}>
@@ -567,7 +569,7 @@ const TD = forwardRef(({ children, style = {}, className = "", ...props }, ref) 
     style={{ 
       padding: "14px 12px", 
       fontSize: "0.85rem", 
-      borderBottom: "1px solid rgba(255,255,255,0.04)", 
+      borderBottom: `1px solid ${getBorder()}`, 
       color: getTextTitle(), 
       whiteSpace: "nowrap", 
       textAlign: "start", 
