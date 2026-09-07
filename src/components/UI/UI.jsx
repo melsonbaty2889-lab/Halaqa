@@ -1,21 +1,21 @@
-import React, { useState, useEffect, forwardRef, useId, useRef } from 'react';
+import React, { useState, useEffect, forwardRef, useId, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import C, { C as C_named, g } from "@/theme/colors";
 
-// اعتماد كلي ومباشر على كائن الألوان C و g الخاص بالهوية
+// استخراج الهوية وثيم الألوان المعياري
 const Theme = C || C_named || {};
 
-const getPrimary = () => Theme.primary || Theme.amber?.DEFAULT;
-const getSurface = () => Theme.surface || Theme.dark?.surface;
-const getCardBg = () => Theme.card || Theme.dark?.card || getSurface();
+const getPrimary = () => Theme.primary?.DEFAULT || Theme.primary || Theme.amber?.DEFAULT;
+const getSurface = () => Theme.dark?.surface || Theme.surface;
+const getCardBg = () => Theme.dark?.card || Theme.card || getSurface();
 const getBorder = () => Theme.border || Theme.dark?.borderInput || Theme.dark?.border;
 const getTextTitle = () => Theme.text?.title || Theme.text;
 const getTextSub = () => Theme.text?.sub || Theme.textSub;
-const getDanger = () => Theme.danger || Theme.rose?.DEFAULT;
-const getSuccess = () => Theme.success || Theme.emerald?.DEFAULT;
+const getDanger = () => Theme.rose?.DEFAULT || Theme.danger;
+const getSuccess = () => Theme.emerald?.DEFAULT || Theme.success;
 
-// مؤشر التحميل الداخلي باستعارة لون العناصر الحالية
-const Spinner = ({ size = 16 }) => (
+// مؤشر التحميل القياسي الداخلي
+const Spinner = ({ size = 18 }) => (
   <svg 
     style={{ animation: "ui-spin 0.8s linear infinite", display: "inline-block" }} 
     width={size} 
@@ -23,6 +23,7 @@ const Spinner = ({ size = 16 }) => (
     viewBox="0 0 24 24" 
     fill="none" 
     xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
   >
     <style>{`@keyframes ui-spin { 100% { transform: rotate(360deg); } }`}</style>
     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" opacity="0.25" />
@@ -41,10 +42,11 @@ const Badge = forwardRef(({ children, color, className = "", style = {}, ...prop
       style={{ 
         display: "inline-flex", 
         alignItems: "center", 
-        gap: 4, 
+        gap: 6, 
         padding: "4px 12px", 
+        minHeight: "28px",
         borderRadius: 20, 
-        fontSize: "0.72rem", 
+        fontSize: "0.75rem", 
         fontWeight: 700, 
         background: `${badgeColor}1A`, 
         color: badgeColor, 
@@ -61,7 +63,7 @@ const Badge = forwardRef(({ children, color, className = "", style = {}, ...prop
 });
 Badge.displayName = 'Badge';
 
-// 2. الزر الاحترافي (Btn)
+// 2. الزر الاحترافي (Btn / Button)
 const Btn = forwardRef(({ 
   children, 
   onClick, 
@@ -73,6 +75,7 @@ const Btn = forwardRef(({
   endIcon = null,
   type = "button", 
   className = "", 
+  "aria-label": ariaLabel,
   ...props 
 }, ref) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -93,7 +96,7 @@ const Btn = forwardRef(({
   };
 
   const isDisabled = disabled || loading;
-  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", translateY: "-1px" } : {};
+  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", transform: "translateY(-1px)" } : {};
 
   return (
     <button
@@ -101,6 +104,8 @@ const Btn = forwardRef(({
       type={type}
       onClick={onClick}
       disabled={isDisabled}
+      aria-disabled={isDisabled}
+      aria-label={ariaLabel}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`ui-button ${className}`}
@@ -108,17 +113,18 @@ const Btn = forwardRef(({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 6,
-        padding: "10px 16px",
-        minHeight: "44px",
+        gap: 8,
+        padding: "10px 18px",
+        minHeight: "44px", // التزام بقاعدة Mobile-First لمساحات اللمس
         borderRadius: 10,
         border: "none",
         cursor: isDisabled ? "not-allowed" : "pointer",
         fontFamily: "inherit",
-        fontSize: "0.85rem",
+        fontSize: "0.875rem",
         fontWeight: 600,
         opacity: isDisabled ? 0.5 : 1,
         transition: "all 0.2s ease-in-out",
+        boxSizing: "border-box",
         ...styles[variant],
         ...hoverStyle,
         ...style
@@ -147,6 +153,7 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
       boxSizing: "border-box", 
       boxShadow: Theme.shadow,
       color: getTextTitle(),
+      textAlign: "start", // استخدام خصائص المحاذاة المنطقية
       ...style 
     }}
     {...props}
@@ -157,21 +164,21 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
 Card.displayName = 'Card';
 
 const CardHeader = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
-  <div ref={ref} className={`ui-card-header ${className}`} style={{ borderBottom: `1px solid ${getBorder()}`, paddingBottom: 12, marginBottom: 16, ...style }} {...props}>
+  <div ref={ref} className={`ui-card-header ${className}`} style={{ borderBottom: `1px solid ${getBorder()}`, paddingBottom: 12, marginBottom: 16, textAlign: "start", ...style }} {...props}>
     {children}
   </div>
 ));
 CardHeader.displayName = 'Card.Header';
 
 const CardBody = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
-  <div ref={ref} className={`ui-card-body ${className}`} style={style} {...props}>
+  <div ref={ref} className={`ui-card-body ${className}`} style={{ textAlign: "start", ...style }} {...props}>
     {children}
   </div>
 ));
 CardBody.displayName = 'Card.Body';
 
 const CardFooter = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
-  <div ref={ref} className={`ui-card-footer ${className}`} style={{ borderTop: `1px solid ${getBorder()}`, paddingTop: 12, marginTop: 16, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, ...style }} {...props}>
+  <div ref={ref} className={`ui-card-footer ${className}`} style={{ borderTop: `1px solid ${getBorder()}`, paddingTop: 12, marginTop: 16, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, ...style }} {...props}>
     {children}
   </div>
 ));
@@ -210,13 +217,13 @@ const Input = forwardRef(({
     background: getSurface(), 
     border: isFocused ? `1px solid ${errorText ? getDanger() : primaryColor}` : `1px solid ${borderCol}`, 
     borderRadius: 10, 
-    padding: startIcon || endIcon ? "10px 12px" : "12px 14px", 
-    paddingLeft: startIcon ? "38px" : "14px",
-    paddingRight: endIcon ? "38px" : "14px",
+    padding: "10px 14px",
+    paddingLeft: startIcon ? "40px" : "14px",
+    paddingRight: endIcon ? "40px" : "14px",
     minHeight: as === "textarea" ? "auto" : "44px",
     color: getTextTitle(), 
     fontFamily: "inherit", 
-    fontSize: "0.85rem", 
+    fontSize: "0.875rem", 
     outline: "none", 
     boxSizing: "border-box",
     textAlign: "start",
@@ -253,8 +260,9 @@ const Input = forwardRef(({
             onFocus={() => setIsFocused(true)} 
             onBlur={() => setIsFocused(false)} 
             placeholder={placeholder} 
+            aria-invalid={!!errorText}
             className={`ui-textarea ${className}`} 
-            style={{ ...baseStyle, resize: "vertical", minHeight: 80 }} 
+            style={{ ...baseStyle, resize: "vertical", minHeight: 90 }} 
             {...props} 
           />
         ) : (
@@ -267,6 +275,7 @@ const Input = forwardRef(({
             onFocus={() => setIsFocused(true)} 
             onBlur={() => setIsFocused(false)} 
             placeholder={placeholder} 
+            aria-invalid={!!errorText}
             className={`ui-input ${className}`} 
             style={baseStyle} 
             {...props} 
@@ -281,7 +290,7 @@ const Input = forwardRef(({
       </div>
 
       {(errorText || helperText) && (
-        <span style={{ fontSize: "0.75rem", marginTop: 4, display: "block", textAlign: "start", color: errorText ? getDanger() : getTextSub() }}>
+        <span role={errorText ? "alert" : undefined} style={{ fontSize: "0.75rem", marginTop: 4, display: "block", textAlign: "start", color: errorText ? getDanger() : getTextSub() }}>
           {errorText || helperText}
         </span>
       )}
@@ -290,7 +299,7 @@ const Input = forwardRef(({
 });
 Input.displayName = 'Input';
 
-// 5. قائمة الاختيارات الذكية (Select)
+// 5. قائمة الاختيارات المخصصة (Select عبر React Portal)
 const Select = forwardRef(({ label, value, onChange, options = [], className = "", style = {}, id: customId, ...props }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
@@ -303,7 +312,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
   const borderCol = getBorder();
   const textTitle = getTextTitle();
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (!isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setCoords({
@@ -312,8 +321,8 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         width: rect.width
       });
     }
-    setIsOpen(!isOpen);
-  };
+    setIsOpen(prev => !prev);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -354,7 +363,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           padding: "12px 14px",
           color: textTitle,
           fontFamily: "inherit",
-          fontSize: "0.85rem",
+          fontSize: "0.875rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -375,6 +384,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={() => setIsOpen(false)} />
           <ul
             role="listbox"
+            aria-activedescendant={value}
             style={{
               position: "fixed",
               top: coords.top,
@@ -396,6 +406,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
             {options.map(o => (
               <li
                 key={o.value}
+                id={o.value}
                 role="option"
                 aria-selected={value === o.value}
                 onClick={() => {
@@ -405,7 +416,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
                 style={{
                   padding: "10px 14px",
                   minHeight: "44px",
-                  fontSize: "0.85rem",
+                  fontSize: "0.875rem",
                   color: value === o.value ? primaryColor : textTitle,
                   background: value === o.value ? `${primaryColor}1A` : "transparent",
                   cursor: "pointer",
@@ -430,7 +441,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
 });
 Select.displayName = 'Select';
 
-// 6. النافذة المنبثقة (Modal)
+// 6. النافذة المنبثقة (Modal عبر React Portal)
 const Modal = ({ open, onClose, title, children, className = "", style = {} }) => {
   const titleId = useId();
 
@@ -474,7 +485,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
           <button 
             type="button"
             onClick={onClose} 
-            aria-label="إغلاق"
+            aria-label="إغلاق النافذة"
             style={{ 
               background: "none", 
               border: "none", 
@@ -509,14 +520,14 @@ const PageHeader = forwardRef(({ title, sub, action, className = "", style = {} 
   >
     <div style={{ textAlign: "start" }}>
       <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: getPrimary(), margin: 0 }}>{title}</h2>
-      {sub && <p style={{ fontSize: "0.82rem", color: getTextSub(), marginTop: 4, margin: 0 }}>{sub}</p>}
+      {sub && <p style={{ fontSize: "0.85rem", color: getTextSub(), marginTop: 4, margin: 0 }}>{sub}</p>}
     </div>
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>{action}</div>
   </div>
 ));
 PageHeader.displayName = 'PageHeader';
 
-// 8. عناصر الجداول (Table, THead, TBody, TR, TH, TD)
+// 8. مكونات الجداول (Table, THead, TBody, TR, TH, TD)
 const Table = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
   <div style={{ width: "100%", overflowX: "auto" }}>
     <table ref={ref} className={`ui-table ${className}`} style={{ width: "100%", borderCollapse: "collapse", ...style }} {...props}>
@@ -568,7 +579,7 @@ const TD = forwardRef(({ children, style = {}, className = "", ...props }, ref) 
     className={`ui-td ${className}`}
     style={{ 
       padding: "14px 12px", 
-      fontSize: "0.85rem", 
+      fontSize: "0.875rem", 
       borderBottom: `1px solid ${getBorder()}`, 
       color: getTextTitle(), 
       whiteSpace: "nowrap", 
