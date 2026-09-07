@@ -27,7 +27,10 @@
   "archive": "أرشفة",
   "assignTeacher": "تعيين المعلم المسؤول",
   "auth": {
-    "containerLabel": "حاوية تسجيل الدخول"
+    "containerLabel": "حاوية تسجيل الدخول",
+    "forgot_password_title": "استعادة كلمة المرور | الحلقة الذكية",
+    "rate_limit": "تجاوزت حد إرسال الرسائل المسموح به. انتظر دقيقة ثم حاول مجدداً.",
+    "user_not_found": "البريد الإلكتروني غير مسجل لدينا."
   },
   "backup": {
     "description": "description",
@@ -212,6 +215,7 @@
   "endTime": "وقت الانتهاء",
   "errors": {
     "generic": "حدث خطأ أثناء الإنشاء",
+    "server_error": "خطأ الخادم",
     "slug_taken": "رابط الأكاديمية مستخدم بالفعل",
     "upload_failed": "فشل رفع الشعار، يرجى المحاولة لاحقاً"
   },
