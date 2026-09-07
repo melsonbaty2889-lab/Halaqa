@@ -44,6 +44,7 @@
     "confirm": "تصدیق کریں",
     "confirm_action": "کارروائی کی تصدیق کریں",
     "confirm_message": "کیا آپ واقعی اس کارروائی کو جاری رکھنا چاہتے ہیں؟",
+    "custom": "مخصص",
     "delete": "حذف کریں",
     "disabled": "غیر فعال",
     "discard": "مسترد کریں",
@@ -57,11 +58,13 @@
     "loggingOut": "لاگ آؤٹ ہو رہا ہے...",
     "logout": "لاگ آؤٹ",
     "male": "مرد",
+    "next": "التالي",
     "noOptions": "کوئی آپشن دستیاب نہیں",
     "noResults": "کوئی نتائج نہیں ملے",
     "notes": "نوٹس:",
     "optional": "اختیاری",
     "paused": "معطل",
+    "previous": "السابق",
     "remove": "ختم کریں",
     "reset_filters": "فلٹرز ری سیٹ کریں",
     "same_as_phone": "فون نمبر والا ہی",
@@ -78,6 +81,43 @@
     "uploading": "اپ لوڈ ہو رہا ہے...",
     "view": "دیکھیں",
     "years_old": "سال"
+  },
+  "countries": {
+    "custom": "دولة أخرى..."
+  },
+  "createAcademy": {
+    "academyNameLabel": "اسم الأكاديمية",
+    "completeSetup": "إنهاء التأسيس",
+    "countryDomain": "النطاق الجغرافي",
+    "defaultQiraat": "رواية القراءة الاعتيادية",
+    "enterCountryPlaceholder": "ادخل اسم الدولة",
+    "enterLanguagePlaceholder": "ادخل اسم اللغة",
+    "genericError": "حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.",
+    "hideAdvanced": "إخفاء الإعدادات الإضافية",
+    "hybrid": "مختلط",
+    "identityHeader": "المعلومات التعريفية",
+    "imageTooLarge": "حجم الصورة يجب ألا يتجاوز 2 ميجابايت.",
+    "invalidImage": "يُرجى اختيار ملف صورة صالح.",
+    "learningTypeLabel": "نموذج تقديم التعليم",
+    "logoAlt": "شعار الأكاديمية",
+    "methodologyStandard": "منهجية المتابعة والتحفيظ",
+    "online": "عن بُعد",
+    "onsite": "حضوري",
+    "operationalLanguage": "اللغة التشغيلية",
+    "preparingDashboard": "جاري تجهيز لوحة التحكم الخاصة بك...",
+    "selectCountry": "اختر الدولة",
+    "selectLanguage": "اختر اللغة",
+    "showAdvanced": "إعدادات الرواية والمنهجية والشعار",
+    "slugLabel": "المعرف الفريد (Slug)",
+    "slugTaken": "رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.",
+    "step1Name": "بيانات الهوية",
+    "step2Name": "التكيف والإنشاء",
+    "subtitle": "إدخال البيانات الأساسية والخيارات التشغيلية",
+    "successTitle": "تم تأسيس الأكاديمية بنجاح!",
+    "title": "تأسيس الأكاديمية",
+    "uploadError": "فشل رفع الشعار، يُرجى المحاولة مرة أخرى.",
+    "uploadLogo": "تحميل الشعار",
+    "weekendConfig": "أيام العطلة الأسبوعية"
   },
   "days": {
     "friday": "جمعہ",
@@ -155,6 +195,14 @@
     "slugLabel": "اکیڈمی کا URL لنک",
     "uploadBtn": "لوگو اپ لوڈ کریں"
   },
+  "languages": {
+    "ar": "العربية (Arabic)",
+    "custom": "لغة أخرى...",
+    "en": "English",
+    "fr": "Français",
+    "tr": "Türkçe",
+    "ur": "اردو (Urdu)"
+  },
   "loading": "ڈیٹا لوڈ ہو رہا ہے...",
   "menu": {
     "items": {
@@ -181,6 +229,11 @@
       "management_finance": "انتظامیہ اور مالیات"
     }
   },
+  "methodology": {
+    "maghrebi": "النظام المغاربي (اللوح والرسم والراتب)",
+    "mashreqi": "النظام المشرقي (حفظ ومراجعة صغرى وكبرى)",
+    "repetitive": "نظام التكرار والتلقين"
+  },
   "nameAr": "حلقہ کا نام (عربی میں)",
   "nameEn": "حلقہ کا نام (انگریزی میں)",
   "nav": {
@@ -190,6 +243,12 @@
   "noData": "فلحال آپ کی تلاش سے مطابقت رکھنے والا کوئی تعلیمی سیشن درج نہیں ہے",
   "notifications": {
     "title": "اطلاعات اور تنبیہات"
+  },
+  "qiraat": {
+    "aldoori": "الدوري عن أبي عمرو",
+    "hafs": "حفص عن عاصم",
+    "qalon": "قالون عن نافع",
+    "warsh": "ورش عن نافع"
   },
   "quranic": {
     "allowSelfReg": "طالب علم کی خود رجسٹریشن کی اجازت دیں",

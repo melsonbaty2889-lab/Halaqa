@@ -44,6 +44,7 @@
     "confirm": "Confirm",
     "confirm_action": "Confirm Action",
     "confirm_message": "Are you sure you want to proceed with this action?",
+    "custom": "مخصص",
     "delete": "Delete",
     "disabled": "Disabled",
     "discard": "Discard",
@@ -57,11 +58,13 @@
     "loggingOut": "Logging out...",
     "logout": "Logout",
     "male": "Male",
+    "next": "التالي",
     "noOptions": "No options available",
     "noResults": "No results found",
     "notes": "Notes:",
     "optional": "Optional",
     "paused": "Paused",
+    "previous": "السابق",
     "remove": "Remove",
     "reset_filters": "Reset Filters",
     "same_as_phone": "Same as Phone",
@@ -78,6 +81,43 @@
     "uploading": "Uploading...",
     "view": "View",
     "years_old": "years old"
+  },
+  "countries": {
+    "custom": "دولة أخرى..."
+  },
+  "createAcademy": {
+    "academyNameLabel": "اسم الأكاديمية",
+    "completeSetup": "إنهاء التأسيس",
+    "countryDomain": "النطاق الجغرافي",
+    "defaultQiraat": "رواية القراءة الاعتيادية",
+    "enterCountryPlaceholder": "ادخل اسم الدولة",
+    "enterLanguagePlaceholder": "ادخل اسم اللغة",
+    "genericError": "حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.",
+    "hideAdvanced": "إخفاء الإعدادات الإضافية",
+    "hybrid": "مختلط",
+    "identityHeader": "المعلومات التعريفية",
+    "imageTooLarge": "حجم الصورة يجب ألا يتجاوز 2 ميجابايت.",
+    "invalidImage": "يُرجى اختيار ملف صورة صالح.",
+    "learningTypeLabel": "نموذج تقديم التعليم",
+    "logoAlt": "شعار الأكاديمية",
+    "methodologyStandard": "منهجية المتابعة والتحفيظ",
+    "online": "عن بُعد",
+    "onsite": "حضوري",
+    "operationalLanguage": "اللغة التشغيلية",
+    "preparingDashboard": "جاري تجهيز لوحة التحكم الخاصة بك...",
+    "selectCountry": "اختر الدولة",
+    "selectLanguage": "اختر اللغة",
+    "showAdvanced": "إعدادات الرواية والمنهجية والشعار",
+    "slugLabel": "المعرف الفريد (Slug)",
+    "slugTaken": "رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.",
+    "step1Name": "بيانات الهوية",
+    "step2Name": "التكيف والإنشاء",
+    "subtitle": "إدخال البيانات الأساسية والخيارات التشغيلية",
+    "successTitle": "تم تأسيس الأكاديمية بنجاح!",
+    "title": "تأسيس الأكاديمية",
+    "uploadError": "فشل رفع الشعار، يُرجى المحاولة مرة أخرى.",
+    "uploadLogo": "تحميل الشعار",
+    "weekendConfig": "أيام العطلة الأسبوعية"
   },
   "days": {
     "friday": "Friday",
@@ -155,6 +195,14 @@
     "slugLabel": "Academy URL Slug",
     "uploadBtn": "Upload Logo"
   },
+  "languages": {
+    "ar": "العربية (Arabic)",
+    "custom": "لغة أخرى...",
+    "en": "English",
+    "fr": "Français",
+    "tr": "Türkçe",
+    "ur": "اردو (Urdu)"
+  },
   "loading": "Loading data...",
   "menu": {
     "items": {
@@ -181,6 +229,11 @@
       "management_finance": "Management & Finance"
     }
   },
+  "methodology": {
+    "maghrebi": "النظام المغاربي (اللوح والرسم والراتب)",
+    "mashreqi": "النظام المشرقي (حفظ ومراجعة صغرى وكبرى)",
+    "repetitive": "نظام التكرار والتلقين"
+  },
   "nameAr": "Halaqa Name (Arabic)",
   "nameEn": "Halaqa Name (English)",
   "nav": {
@@ -190,6 +243,12 @@
   "noData": "No educational sessions recorded matching your search currently",
   "notifications": {
     "title": "Notifications & Alerts"
+  },
+  "qiraat": {
+    "aldoori": "الدوري عن أبي عمرو",
+    "hafs": "حفص عن عاصم",
+    "qalon": "قالون عن نافع",
+    "warsh": "ورش عن نافع"
   },
   "quranic": {
     "allowSelfReg": "Allow Student Self-Registration",

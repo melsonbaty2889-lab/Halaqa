@@ -44,6 +44,7 @@
     "confirm": "Onayla",
     "confirm_action": "Eylemi Onayla",
     "confirm_message": "Bu işleme devam etmek istediğinizden emin misiniz?",
+    "custom": "مخصص",
     "delete": "Sil",
     "disabled": "Devre Dışı",
     "discard": "Vazgeç",
@@ -57,11 +58,13 @@
     "loggingOut": "Çıkış yapılıyor...",
     "logout": "Çıkış Yap",
     "male": "Erkek",
+    "next": "التالي",
     "noOptions": "Seçenek bulunamadı",
     "noResults": "Sonuç bulunamadı",
     "notes": "Notlar:",
     "optional": "İsteğe Bağlı",
     "paused": "Duraklatıldı",
+    "previous": "السابق",
     "remove": "Kaldır",
     "reset_filters": "Filtreleri Sıfırla",
     "same_as_phone": "Telefon ile aynı",
@@ -78,6 +81,43 @@
     "uploading": "Yükleniyor...",
     "view": "Görüntüle",
     "years_old": "yaşında"
+  },
+  "countries": {
+    "custom": "دولة أخرى..."
+  },
+  "createAcademy": {
+    "academyNameLabel": "اسم الأكاديمية",
+    "completeSetup": "إنهاء التأسيس",
+    "countryDomain": "النطاق الجغرافي",
+    "defaultQiraat": "رواية القراءة الاعتيادية",
+    "enterCountryPlaceholder": "ادخل اسم الدولة",
+    "enterLanguagePlaceholder": "ادخل اسم اللغة",
+    "genericError": "حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.",
+    "hideAdvanced": "إخفاء الإعدادات الإضافية",
+    "hybrid": "مختلط",
+    "identityHeader": "المعلومات التعريفية",
+    "imageTooLarge": "حجم الصورة يجب ألا يتجاوز 2 ميجابايت.",
+    "invalidImage": "يُرجى اختيار ملف صورة صالح.",
+    "learningTypeLabel": "نموذج تقديم التعليم",
+    "logoAlt": "شعار الأكاديمية",
+    "methodologyStandard": "منهجية المتابعة والتحفيظ",
+    "online": "عن بُعد",
+    "onsite": "حضوري",
+    "operationalLanguage": "اللغة التشغيلية",
+    "preparingDashboard": "جاري تجهيز لوحة التحكم الخاصة بك...",
+    "selectCountry": "اختر الدولة",
+    "selectLanguage": "اختر اللغة",
+    "showAdvanced": "إعدادات الرواية والمنهجية والشعار",
+    "slugLabel": "المعرف الفريد (Slug)",
+    "slugTaken": "رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.",
+    "step1Name": "بيانات الهوية",
+    "step2Name": "التكيف والإنشاء",
+    "subtitle": "إدخال البيانات الأساسية والخيارات التشغيلية",
+    "successTitle": "تم تأسيس الأكاديمية بنجاح!",
+    "title": "تأسيس الأكاديمية",
+    "uploadError": "فشل رفع الشعار، يُرجى المحاولة مرة أخرى.",
+    "uploadLogo": "تحميل الشعار",
+    "weekendConfig": "أيام العطلة الأسبوعية"
   },
   "days": {
     "friday": "Cuma",
@@ -155,6 +195,14 @@
     "slugLabel": "Akademi URL Bağlantısı",
     "uploadBtn": "Logo Yükle"
   },
+  "languages": {
+    "ar": "العربية (Arabic)",
+    "custom": "لغة أخرى...",
+    "en": "English",
+    "fr": "Français",
+    "tr": "Türkçe",
+    "ur": "اردو (Urdu)"
+  },
   "loading": "Veriler yükleniyor...",
   "menu": {
     "items": {
@@ -181,6 +229,11 @@
       "management_finance": "Yönetim ve Finans"
     }
   },
+  "methodology": {
+    "maghrebi": "النظام المغاربي (اللوح والرسم والراتب)",
+    "mashreqi": "النظام المشرقي (حفظ ومراجعة صغرى وكبرى)",
+    "repetitive": "نظام التكرار والتلقين"
+  },
   "nameAr": "Halka Adı (Arapça)",
   "nameEn": "Halka Adı (İngilizce)",
   "nav": {
@@ -190,6 +243,12 @@
   "noData": "Aramanızla eşleşen kayıtlı eğitim oturumu bulunamadı",
   "notifications": {
     "title": "Bildirimler ve Uyarılar"
+  },
+  "qiraat": {
+    "aldoori": "الدوري عن أبي عمرو",
+    "hafs": "حفص عن عاصم",
+    "qalon": "قالون عن نافع",
+    "warsh": "ورش عن نافع"
   },
   "quranic": {
     "allowSelfReg": "Öğrenci Öz Kaydına İzin Ver",
