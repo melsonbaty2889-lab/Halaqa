@@ -1,79 +1,116 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import C from '@/theme/colors';
 
-export function TermsModal({ isOpen, onClose, contentType, isRtl }) {
+export function TermsModal({ 
+  isOpen, 
+  onClose, 
+  contentType = 'terms', 
+  isRtl: isRtlProp 
+}) {
+  const { t, i18n } = useTranslation();
+
   if (!isOpen) return null;
+
+  const isRtl = isRtlProp !== undefined 
+    ? isRtlProp 
+    : (i18n?.dir ? i18n.dir() === 'rtl' : true);
 
   const isTerms = contentType === 'terms';
 
+  // استخراج ألوان الثيم الديناميكية من C
+  const surfaceBg = C.dark?.card || C.dark?.surface || '#0F172A';
+  const borderCol = C.dark?.borderInput || C.dark?.border || '#1E293B';
+  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#F59E0B';
+  const titleColor = C.text?.title || '#FFFFFF';
+  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-xl bg-slate-900 p-6 shadow-2xl border border-slate-800 text-slate-200 max-h-[80vh] flex flex-col">
-        
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="terms-modal-title"
+    >
+      <div 
+        dir={isRtl ? 'rtl' : 'ltr'}
+        className="relative w-full max-w-lg rounded-xl p-6 shadow-2xl border max-h-[80vh] flex flex-col transition-all"
+        style={{
+          backgroundColor: surfaceBg,
+          borderColor: borderCol,
+          color: titleColor
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-          <h3 className="text-lg font-semibold text-amber-500">
+        <div 
+          className="flex items-center justify-between border-b pb-3 mb-4"
+          style={{ borderColor: borderCol }}
+        >
+          <h3 
+            id="terms-modal-title"
+            className="text-lg font-semibold"
+            style={{ color: primaryColor }}
+          >
             {isTerms 
-              ? (isRtl ? 'الشروط والأحكام' : 'Terms & Conditions')
-              : (isRtl ? 'سياسة الخصوصية' : 'Privacy Policy')
+              ? t('termsModal.termsTitle', 'الشروط والأحكام')
+              : t('termsModal.privacyTitle', 'سياسة الخصوصية')
             }
           </h3>
           <button 
+            type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
+            aria-label={t('termsModal.close', 'إغلاق')}
+            className="rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95"
+            style={{ color: subColor }}
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto space-y-3 text-sm text-slate-300 leading-relaxed pr-2">
+        <div 
+          className="overflow-y-auto space-y-3 text-sm leading-relaxed pe-2 text-start"
+          style={{ color: subColor }}
+        >
           {isTerms ? (
-            isRtl ? (
-              <>
-                <p>مرحباً بك في منصة الحلقة الذكية. باستخدامك للمنصة، فإنك توافق على الالتزام بالشروط التالية:</p>
-                <p>1. التعهد بصحة البيانات المدخلة عند إنشاء الحساب.</p>
-                <p>2. الحفاظ على سرية معلومات الحساب وكلمة المرور.</p>
-                <p>3. احترام حقوق الملكية الفكرية للمحتوى التعليمي والمناهج المرفوعة.</p>
-              </>
-            ) : (
-              <>
-                <p>Welcome to Smart Halaqa. By using our platform, you agree to the following terms:</p>
-                <p>1. Provide accurate information during registration.</p>
-                <p>2. Maintain the security of your account credentials.</p>
-                <p>3. Respect all intellectual property rights of educational materials.</p>
-              </>
-            )
+            <>
+              <p>{t('termsModal.termsWelcome', 'مرحباً بك في منصة الحلقة الذكية. باستخدامك للمنصة، فإنك توافق على الالتزام بالشروط التالية:')}</p>
+              <p>{t('termsModal.termsRule1', '1. التعهد بصحة البيانات المدخلة عند إنشاء الحساب.')}</p>
+              <p>{t('termsModal.termsRule2', '2. الحفاظ على سرية معلومات الحساب وكلمة المرور.')}</p>
+              <p>{t('termsModal.termsRule3', '3. احترام حقوق الملكية الفكرية للمحتوى التعليمي والمناهج المرفوعة.')}</p>
+            </>
           ) : (
-            isRtl ? (
-              <>
-                <p>نحن نلتزم بحماية خصوصيتك وبياناتك الشخصية وفقاً لأعلى معايير الأمان:</p>
-                <p>1. يتم تشفير جميع البيانات باستخدام معايير SSL لحمايتها.</p>
-                <p>2. لا نقوم بمشاركة أو بيع بياناتك الشخصية لأي طرف ثالث لأغراض إعلانية.</p>
-                <p>3. نستخدم بريدك الإلكتروني للتواصل والتنبيهات المتعلقة بحسابك فقط.</p>
-              </>
-            ) : (
-              <>
-                <p>We are committed to protecting your personal data and privacy:</p>
-                <p>1. All data is encrypted using standard SSL encryption.</p>
-                <p>2. We do not sell or share your personal data with third parties.</p>
-                <p>3. Email addresses are used strictly for account updates and authentication.</p>
-              </>
-            )
+            <>
+              <p>{t('termsModal.privacyWelcome', 'نحن نلتزم بحماية خصوصيتك وبياناتك الشخصية وفقاً لأعلى معايير الأمان:')}</p>
+              <p>{t('termsModal.privacyRule1', '1. يتم تشفير جميع البيانات باستخدام معايير SSL لحمايتها.')}</p>
+              <p>{t('termsModal.privacyRule2', '2. لا نقوم بمشاركة أو بيع بياناتك الشخصية لأي طرف ثالث لأغراض إعلانية.')}</p>
+              <p>{t('termsModal.privacyRule3', '3. نستخدم بريدك الإلكتروني للتواصل والتنبيهات المتعلقة بحسابك فقط.')}</p>
+            </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-800 pt-3 mt-4 text-left rtl:text-right">
+        <div 
+          className="border-t pt-3 mt-4 flex justify-end"
+          style={{ borderColor: borderCol }}
+        >
           <button
+            type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium transition-colors"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-95 min-h-[44px] cursor-pointer flex items-center justify-center"
+            style={{
+              backgroundColor: primaryColor,
+              color: '#FFFFFF'
+            }}
           >
-            {isRtl ? 'إغلاق' : 'Close'}
+            {t('termsModal.close', 'إغلاق')}
           </button>
         </div>
 
       </div>
     </div>
   );
-            }
+}
+
+export default TermsModal;
