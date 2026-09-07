@@ -59,6 +59,8 @@
     "logout": "Keluar",
     "male": "Laki-laki",
     "next": "التالي",
+    "noData": "لا توجد بيانات متاحة",
+    "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "Tidak ada pilihan",
     "noResults": "Hasil tidak ditemukan",
     "notes": "Catatan:",

@@ -59,6 +59,8 @@
     "logout": "Çıkış Yap",
     "male": "Erkek",
     "next": "التالي",
+    "noData": "لا توجد بيانات متاحة",
+    "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "Seçenek bulunamadı",
     "noResults": "Sonuç bulunamadı",
     "notes": "Notlar:",
