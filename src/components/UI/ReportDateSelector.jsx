@@ -1,7 +1,7 @@
-// src/components/UI/ReportDateSelector.jsx
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import C from '@/theme/colors';
 import { 
   HIJRI_MONTHS, 
   getHijriParts, 
@@ -12,11 +12,11 @@ import {
 } from '@/utils/dateUtils';
 
 export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   
   const cleanLang = currentLang.toLowerCase().split('-')[0];
-  const isRtl = ['ar', 'ur'].includes(cleanLang);
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
 
   const [useHijri, setUseHijri] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -103,65 +103,103 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
     return days;
   }, [currentLang]);
 
+  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8';
+  const surfaceBg = C.dark?.surface || '#1E293B';
+  const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
+  const mainBg = C.dark?.bg || '#0F172A';
+  const titleColor = C.text?.title || '#F8FAFC';
+  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
+
   return (
-    <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block', direction: isRtl ? 'rtl' : 'ltr' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '6px 10px', whiteSpace: 'nowrap' }}>
+    <div ref={dropdownRef} className="relative inline-block" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div 
+        className="flex items-center gap-2 rounded-xl border px-3 py-1.5 whitespace-nowrap min-h-[44px]"
+        style={{
+          backgroundColor: surfaceBg,
+          borderColor: borderCol
+        }}
+      >
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '12px', fontWeight: '600', padding: 0 }}
+          aria-label={t('reports.selectDate', 'اختر التاريخ')}
+          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer text-xs font-semibold p-0"
+          style={{ color: primaryColor }}
         >
-          <CalendarIcon size={14} />
-          <span style={{ color: '#f8fafc' }}>{isRtl ? toArNums(selectedDate) : selectedDate}</span>
+          <CalendarIcon size={16} />
+          <span style={{ color: titleColor }}>
+            {isRtl ? toArNums(selectedDate) : selectedDate}
+          </span>
         </button>
 
-        <span style={{ color: '#475569' }}>|</span>
+        <span style={{ color: C.text?.muted || '#475569' }}>|</span>
 
-        <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>
+        <span className="text-xs font-bold" style={{ color: primaryColor }}>
           {formattedDisplayDate}
         </span>
 
         <button
           type="button"
           onClick={() => setUseHijri(!useHijri)}
+          aria-label={t('reports.toggleCalendarType', 'تبديل التقويم')}
+          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold cursor-pointer border transition-all"
           style={{
-            background: useHijri ? 'rgba(56, 189, 248, 0.2)' : '#0f172a',
-            color: useHijri ? '#38bdf8' : '#94a3b8',
-            border: `1px solid ${useHijri ? '#38bdf8' : '#334155'}`,
-            borderRadius: '6px',
-            padding: '3px 8px',
-            fontSize: '10px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
+            backgroundColor: useHijri ? `${primaryColor}20` : mainBg,
+            color: useHijri ? primaryColor : subColor,
+            borderColor: useHijri ? primaryColor : borderCol
           }}
         >
-          <Globe size={11} />
-          {useHijri ? (isRtl ? 'هجري' : 'Hijri') : (isRtl ? 'ميلادي' : 'Gregorian')}
+          <Globe size={12} />
+          <span>
+            {useHijri 
+              ? t('common.hijri', isRtl ? 'هجري' : 'Hijri') 
+              : t('common.gregorian', isRtl ? 'ميلادي' : 'Gregorian')}
+          </span>
         </button>
       </div>
 
       {isOpen && (
-        <div style={{ position: 'absolute', top: '110%', right: isRtl ? 0 : 'auto', left: isRtl ? 'auto' : 0, zIndex: 999, background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '12px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)', width: '270px', direction: isRtl ? 'rtl' : 'ltr' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <button type="button" onClick={handlePrevMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
-              {isRtl ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        <div 
+          className="absolute top-[110%] z-50 rounded-2xl p-3 border shadow-2xl w-64 transition-all"
+          style={{
+            backgroundColor: mainBg,
+            borderColor: borderCol,
+            [isRtl ? 'right' : 'left']: 0
+          }}
+        >
+          <div className="flex justify-between items-center mb-2.5">
+            <button 
+              type="button" 
+              onClick={handlePrevMonth} 
+              aria-label={t('common.prevMonth', 'الشهر السابق')}
+              className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+              style={{ backgroundColor: surfaceBg, borderColor: borderCol, color: titleColor }}
+            >
+              {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
-            <span style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>{headerTitle}</span>
-            <button type="button" onClick={handleNextMonth} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '6px', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
-              {isRtl ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+            <span className="text-xs font-bold" style={{ color: titleColor }}>
+              {headerTitle}
+            </span>
+            <button 
+              type="button" 
+              onClick={handleNextMonth} 
+              aria-label={t('common.nextMonth', 'الشهر التالي')}
+              className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+              style={{ backgroundColor: surfaceBg, borderColor: borderCol, color: titleColor }}
+            >
+              {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center', marginBottom: '6px' }}>
+          <div className="grid grid-cols-7 gap-0.5 text-center mb-1.5">
             {weekDays.map((d, i) => (
-              <span key={i} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>{d}</span>
+              <span key={i} className="text-[10px] font-semibold" style={{ color: subColor }}>
+                {d}
+              </span>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+          <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: firstDayOfWeek }).map((_, i) => (
               <div key={`empty-${i}`} />
             ))}
@@ -179,15 +217,11 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
                   key={dayNum}
                   type="button"
                   onClick={() => { setSelectedDate(dateStr); setIsOpen(false); }}
+                  className="py-1.5 text-xs rounded-md border-0 cursor-pointer transition-all font-semibold"
                   style={{
-                    background: isSelected ? '#38bdf8' : '#1e293b',
-                    color: isSelected ? '#0f172a' : '#f8fafc',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 0',
-                    fontSize: '11px',
-                    fontWeight: isSelected ? '800' : '500',
-                    cursor: 'pointer'
+                    backgroundColor: isSelected ? primaryColor : surfaceBg,
+                    color: isSelected ? mainBg : titleColor,
+                    fontWeight: isSelected ? '800' : '500'
                   }}
                 >
                   {displayNum}
@@ -197,25 +231,23 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           </div>
 
           {useHijri && (
-            <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Settings2 size={11} /> {isRtl ? 'تعديل الرؤية:' : 'Sight Adjustment:'}
+            <div 
+              className="mt-2.5 pt-2 border-t flex items-center justify-between"
+              style={{ borderColor: surfaceBg }}
+            >
+              <span className="text-[10px] flex items-center gap-1 font-medium" style={{ color: subColor }}>
+                <Settings2 size={12} /> {t('reports.sightAdjustment', isRtl ? 'تعديل الرؤية:' : 'Sight Adjustment:')}
               </span>
-              <div style={{ display: 'flex', gap: '4px' }}>
+              <div className="flex gap-1">
                 {[-1, 0, 1].map((offset) => (
                   <button
                     key={offset}
                     type="button"
                     onClick={() => handleOffsetChange(offset)}
+                    className="px-1.5 py-0.5 text-[10px] rounded border-0 cursor-pointer font-bold"
                     style={{
-                      background: hijriOffset === offset ? '#38bdf8' : '#1e293b',
-                      color: hijriOffset === offset ? '#0f172a' : '#94a3b8',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '2px 6px',
-                      fontSize: '10px',
-                      fontWeight: '700',
-                      cursor: 'pointer'
+                      backgroundColor: hijriOffset === offset ? primaryColor : surfaceBg,
+                      color: hijriOffset === offset ? mainBg : subColor
                     }}
                   >
                     {offset > 0 ? (isRtl ? `+${toArNums(offset)}` : `+${offset}`) : (isRtl ? toArNums(offset) : offset)}
@@ -228,9 +260,14 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            style={{ width: '100%', marginTop: '10px', background: '#334155', border: 'none', color: '#f8fafc', borderRadius: '6px', padding: '5px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
+            aria-label={t('common.close', 'إغلاق')}
+            className="w-full mt-2.5 py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all min-h-[36px]"
+            style={{
+              backgroundColor: borderCol,
+              color: titleColor
+            }}
           >
-            {isRtl ? 'إغلاق' : 'Close'}
+            {t('common.close', isRtl ? 'إغلاق' : 'Close')}
           </button>
         </div>
       )}
