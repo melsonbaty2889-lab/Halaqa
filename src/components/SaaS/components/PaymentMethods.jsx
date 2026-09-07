@@ -1,13 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { 
-  CreditCard, Smartphone, ShieldCheck, Copy, 
-  Check, ArrowRight, ExternalLink, HelpCircle 
-} from 'lucide-react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { ShieldCheck, Copy, Check, ArrowRight } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
 import rawColors from '@/theme/colors.js';
 import { getText } from '@/utils/textUtils';
 
-// 🎨 كائن الألوان الموحد - بدون قيم صلبة بداخل المكون
+// 🎨 كائن الألوان الموحد v2.5
 const C = {
   ...rawColors,
   dark: {
@@ -39,66 +36,160 @@ const C = {
   }
 };
 
-// 💳 قائمة بوابات الدفع المستخرجة من مجلد /public/logos/
-const PAYMENT_GATEWAYS = [
-  {
-    id: 'instapay',
-    nameKey: 'payment.instapay',
-    defaultName: 'أنستا باي',
-    logo: '/logos/instapay.svg',
-    type: 'instant',
-    accountNumber: '01012345678',
-    accountName: 'الحلقة الذكية - Smart Halaqa',
-    badgeKey: 'payment.badge_fast',
-    defaultBadge: 'الأسرع بمصر ⚡'
-  },
-  {
-    id: 'vodafone',
-    nameKey: 'payment.vodafone',
-    defaultName: 'فودافون كاش',
-    logo: '/logos/vodafone.png',
-    type: 'wallet',
-    accountNumber: '01000000000',
-    accountName: 'محفظة فودافون كاش'
-  },
-  {
-    id: 'fawry',
-    nameKey: 'payment.fawry',
-    defaultName: 'فوري',
-    logo: '/logos/fawry.svg',
-    type: 'kiosk',
-    code: '99887766',
-    accountName: 'رقم الخدمة الموحد'
-  },
-  {
-    id: 'cards',
-    nameKey: 'payment.cards',
-    defaultName: 'بطاقة ائتمان / ميزة',
-    logos: ['/logos/visa.svg', '/logos/mastercard.svg', '/logos/meeza.svg'],
-    type: 'card'
-  },
-  {
-    id: 'stc',
-    nameKey: 'payment.stc',
-    defaultName: 'مدى / STC Pay',
-    logos: ['/logos/mada.svg', '/logos/stc_pay.svg'],
-    type: 'gulf',
-    accountNumber: 'SA9880000000000000000000'
-  },
-  {
-    id: 'usdt',
-    nameKey: 'payment.usdt',
-    defaultName: 'عملات رقمية (TRC20)',
-    logo: '/logos/usdt.svg',
-    type: 'crypto',
-    accountNumber: 'T9x...H8kL9sWq2zM'
-  }
-];
+// 💳 مصادر وسائل الدفع مقسمة حسب الإقليم الجغرافي
+const REGIONAL_PAYMENT_GATEWAYS = {
+  egypt: [
+    {
+      id: 'instapay',
+      nameKey: 'payment.instapay',
+      defaultName: 'أنستا باي (InstaPay)',
+      logo: '/logos/instapay.svg',
+      type: 'instant',
+      accountNumber: 'username@instapay',
+      accountName: 'الحلقة الذكية - Smart Halaqa',
+      badgeKey: 'payment.badge_fast',
+      defaultBadge: 'الأسرع بمصر ⚡'
+    },
+    {
+      id: 'vodafone',
+      nameKey: 'payment.vodafone',
+      defaultName: 'فودافون كاش والمحافظ الذكية',
+      logo: '/logos/vodafone.png',
+      type: 'wallet',
+      accountNumber: '01012345678',
+      accountName: 'محفظة فودافون كاش'
+    },
+    {
+      id: 'fawry',
+      nameKey: 'payment.fawry',
+      defaultName: 'فوري Pay',
+      logo: '/logos/fawry.svg',
+      type: 'kiosk',
+      accountNumber: '987654321',
+      accountName: 'رقم الخدمة الموحد'
+    },
+    {
+      id: 'cards_eg',
+      nameKey: 'payment.cards_eg',
+      defaultName: 'بطاقات الفيزا وميزة البنكية',
+      logos: ['/logos/visa.svg', '/logos/mastercard.svg', '/logos/meeza.svg'],
+      type: 'card'
+    }
+  ],
+  gcc: [
+    {
+      id: 'apple_pay',
+      nameKey: 'payment.apple_pay',
+      defaultName: 'Apple Pay',
+      logo: '/logos/applepay.svg',
+      type: 'instant',
+      badgeKey: 'payment.badge_fastest',
+      defaultBadge: 'الأسرع ⚡'
+    },
+    {
+      id: 'mada',
+      nameKey: 'payment.mada',
+      defaultName: 'بطاقات مدى (Mada)',
+      logo: '/logos/mada.svg',
+      type: 'card'
+    },
+    {
+      id: 'stc',
+      nameKey: 'payment.stc',
+      defaultName: 'STC Pay / المحافظ الخليجية',
+      logo: '/logos/stc_pay.svg',
+      type: 'wallet'
+    },
+    {
+      id: 'iban_gcc',
+      nameKey: 'payment.iban',
+      defaultName: 'تحويل بنكي مباشر (IBAN)',
+      logo: '/logos/bank.svg',
+      type: 'bank',
+      accountNumber: 'SA8200000012345678901234',
+      accountName: 'الحلقة الذكية الخليج'
+    }
+  ],
+  global: [
+    {
+      id: 'card_global',
+      nameKey: 'payment.card_global',
+      defaultName: 'بطاقات ائتمان دولية (Visa / MasterCard)',
+      logos: ['/logos/visa.svg', '/logos/mastercard.svg'],
+      type: 'card'
+    },
+    {
+      id: 'paypal',
+      nameKey: 'payment.paypal',
+      defaultName: 'PayPal',
+      logo: '/logos/paypal.svg',
+      type: 'instant'
+    },
+    {
+      id: 'usdt',
+      nameKey: 'payment.usdt',
+      defaultName: 'عملات رقمية (USDT TRC20)',
+      logo: '/logos/usdt.svg',
+      type: 'crypto',
+      accountNumber: 'TYD4xK11s89PzL283kxXmQ2719s82xXzLq',
+      accountName: 'محفظة TRC20'
+    }
+  ]
+};
 
-export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) {
+// 🌐 دالة الاكتشاف التلقائي للإقليم الجغرافي للعميل
+const detectDefaultRegion = () => {
+  try {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (timeZone.includes('Cairo') || timeZone.includes('Africa/Cairo')) {
+      return 'egypt';
+    }
+    if (
+      timeZone.includes('Riyadh') || timeZone.includes('Dubai') ||
+      timeZone.includes('Kuwait') || timeZone.includes('Qatar') ||
+      timeZone.includes('Bahrain') || timeZone.includes('Muscat')
+    ) {
+      return 'gcc';
+    }
+    return 'global';
+  } catch (e) {
+    return 'global';
+  }
+};
+
+export default function PaymentMethods({ region: externalRegion, onSelectPayment }) {
   const { t } = useAcademy();
-  const [selectedGateway, setSelectedGateway] = useState('instapay');
+
+  // 1. تحديد الإقليم (الأولوية للممرر من الأب، وفي حال عدم وجوده يتم الاكتشاف تلقائياً)
+  const activeRegion = useMemo(() => {
+    return externalRegion || detectDefaultRegion();
+  }, [externalRegion]);
+
+  // 2. جلب طرق الدفع المناسبة للإقليم المباشر
+  const availableGateways = useMemo(() => {
+    return REGIONAL_PAYMENT_GATEWAYS[activeRegion] || REGIONAL_PAYMENT_GATEWAYS.global;
+  }, [activeRegion]);
+
+  const [selectedGatewayId, setSelectedGatewayId] = useState(availableGateways[0]?.id);
   const [copiedId, setCopiedId] = useState(null);
+
+  // 3. تحديث الخيار المحدد تلقائياً عند تغير الإقليم
+  useEffect(() => {
+    if (availableGateways.length > 0) {
+      const defaultGateway = availableGateways[0];
+      setSelectedGatewayId(defaultGateway.id);
+      onSelectPayment?.(defaultGateway);
+    }
+  }, [activeRegion, availableGateways, onSelectPayment]);
+
+  const activeGateway = useMemo(() => {
+    return availableGateways.find(g => g.id === selectedGatewayId) || availableGateways[0];
+  }, [availableGateways, selectedGatewayId]);
+
+  const handleSelectGateway = (gateway) => {
+    setSelectedGatewayId(gateway.id);
+    onSelectPayment?.(gateway);
+  };
 
   const handleCopy = useCallback((text, id) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -107,10 +198,6 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
       setTimeout(() => setCopiedId(null), 2000);
     }
   }, []);
-
-  const activeGateway = useMemo(() => {
-    return PAYMENT_GATEWAYS.find(g => g.id === selectedGateway) || PAYMENT_GATEWAYS[0];
-  }, [selectedGateway]);
 
   return (
     <div style={{
@@ -134,21 +221,21 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
         </p>
       </div>
 
-      {/* 💳 شبكة وسائل الدفع */}
+      {/* 💳 شبكة وسائل الدفع الخاصة بالإقليم */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
         gap: '12px',
         marginBlockEnd: '24px'
       }}>
-        {PAYMENT_GATEWAYS.map((gateway) => {
-          const isSelected = selectedGateway === gateway.id;
+        {availableGateways.map((gateway) => {
+          const isSelected = selectedGatewayId === gateway.id;
           const gatewayTitle = getText(t, gateway.nameKey, gateway.defaultName);
 
           return (
             <button
               key={gateway.id}
-              onClick={() => setSelectedGateway(gateway.id)}
+              onClick={() => handleSelectGateway(gateway)}
               aria-label={gatewayTitle}
               title={gatewayTitle}
               style={{
@@ -183,7 +270,7 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
                 </span>
               )}
 
-              {/* الشعارات المجمعة أو الشعار الفردي */}
+              {/* الشعار */}
               {gateway.logos ? (
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                   {gateway.logos.map((logoPath, idx) => (
@@ -197,7 +284,8 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
               <span style={{ 
                 fontSize: '0.75rem', 
                 fontWeight: isSelected ? 'bold' : 'normal',
-                color: isSelected ? C.amber?.DEFAULT : C.text?.body 
+                color: isSelected ? C.amber?.DEFAULT : C.text?.body,
+                textAlign: 'center'
               }}>
                 {gatewayTitle}
               </span>
@@ -206,7 +294,7 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
         })}
       </div>
 
-      {/* 📝 تفاصيل الخيار المحدد */}
+      {/* 📝 تفاصيل التحويل في حال كان خياراً يدوياً */}
       {activeGateway && (
         <div style={{
           background: C.dark?.surface,
@@ -225,7 +313,7 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
           {activeGateway.accountNumber && (
             <div style={{
               display: 'flex',
-              justify: 'space-between',
+              justifyContent: 'space-between',
               alignItems: 'center',
               background: C.inputs?.bg,
               paddingBlock: '10px',
@@ -238,6 +326,7 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
                 {activeGateway.accountNumber}
               </span>
               <button
+                type="button"
                 onClick={() => handleCopy(activeGateway.accountNumber, 'num')}
                 aria-label={getText(t, 'common.copy', 'نسخ')}
                 title={getText(t, 'common.copy', 'نسخ')}
@@ -270,6 +359,7 @@ export default function PaymentMethods({ onSelectPayment, selectedAmount = 0 }) 
 
       {/* 🚀 زر التأكيد والمتابعة */}
       <button
+        type="button"
         onClick={() => onSelectPayment && onSelectPayment(activeGateway)}
         aria-label={getText(t, 'payment.confirm_btn', 'متابعة عملية الدفع')}
         title={getText(t, 'payment.confirm_btn', 'متابعة عملية الدفع')}
