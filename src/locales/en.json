@@ -387,6 +387,12 @@
     "footer": "All rights reserved",
     "unnamedAcademy": "Unnamed Academy"
   },
+  "splash": {
+    "loading": "جاري التحميل...",
+    "skip": "تخطي",
+    "subtitle": "المنصة الذكية لإدارة حلقات القرآن الكريم",
+    "title": "الحلقة الذكية"
+  },
   "startTime": "Start Time",
   "status": {
     "active": "Active Subscription",

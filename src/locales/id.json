@@ -387,6 +387,12 @@
     "footer": "Hak cipta dilindungi undang-undang",
     "unnamedAcademy": "Akademi Tanpa Nama"
   },
+  "splash": {
+    "loading": "جاري التحميل...",
+    "skip": "تخطي",
+    "subtitle": "المنصة الذكية لإدارة حلقات القرآن الكريم",
+    "title": "الحلقة الذكية"
+  },
   "startTime": "Waktu Mulai",
   "status": {
     "active": "Langganan Aktif",

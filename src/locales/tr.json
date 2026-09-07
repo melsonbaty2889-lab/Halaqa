@@ -387,6 +387,12 @@
     "footer": "Tüm hakları saklıdır",
     "unnamedAcademy": "İsimsiz Akademi"
   },
+  "splash": {
+    "loading": "جاري التحميل...",
+    "skip": "تخطي",
+    "subtitle": "المنصة الذكية لإدارة حلقات القرآن الكريم",
+    "title": "الحلقة الذكية"
+  },
   "startTime": "Başlangıç Saati",
   "status": {
     "active": "Aktif Abonelik",
