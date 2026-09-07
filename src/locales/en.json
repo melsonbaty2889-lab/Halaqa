@@ -41,6 +41,7 @@
     "back": "Back",
     "cancel": "Cancel",
     "change": "Change",
+    "close": "إغلاق",
     "confirm": "Confirm",
     "confirm_action": "Confirm Action",
     "confirm_message": "Are you sure you want to proceed with this action?",
@@ -53,12 +54,15 @@
     "enabled": "Enabled",
     "female": "Female",
     "graduated": "Graduated",
+    "gregorian": "",
+    "hijri": "",
     "inactive": "Inactive",
     "loading": "Loading...",
     "loggingOut": "Logging out...",
     "logout": "Logout",
     "male": "Male",
     "next": "التالي",
+    "nextMonth": "الشهر التالي",
     "noData": "لا توجد بيانات متاحة",
     "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "No options available",
@@ -67,6 +71,7 @@
     "optional": "Optional",
     "paused": "Paused",
     "previous": "السابق",
+    "prevMonth": "الشهر السابق",
     "remove": "Remove",
     "reset_filters": "Reset Filters",
     "same_as_phone": "Same as Phone",
@@ -306,6 +311,8 @@
       "student_name": "Student Name"
     },
     "search_placeholder": "Search student name or phone...",
+    "selectDate": "اختر التاريخ",
+    "sightAdjustment": "",
     "status": {
       "absent": "Absent",
       "excused": "Excused",
@@ -319,7 +326,8 @@
       "unsent": "Unsent"
     },
     "template_preview": "Template Preview",
-    "title": "Recitation Reports"
+    "title": "Recitation Reports",
+    "toggleCalendarType": "تبديل التقويم"
   },
   "search_placeholder": "Search student by name, phone, or current Surah...",
   "searchPh": "Search by Halaqa name or assigned teacher name...",

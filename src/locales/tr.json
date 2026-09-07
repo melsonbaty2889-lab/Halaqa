@@ -41,6 +41,7 @@
     "back": "Geri",
     "cancel": "İptal",
     "change": "Değiştir",
+    "close": "إغلاق",
     "confirm": "Onayla",
     "confirm_action": "Eylemi Onayla",
     "confirm_message": "Bu işleme devam etmek istediğinizden emin misiniz?",
@@ -53,12 +54,15 @@
     "enabled": "Etkin",
     "female": "Kadın",
     "graduated": "Mezun",
+    "gregorian": "",
+    "hijri": "",
     "inactive": "Pasif",
     "loading": "Yükleniyor...",
     "loggingOut": "Çıkış yapılıyor...",
     "logout": "Çıkış Yap",
     "male": "Erkek",
     "next": "التالي",
+    "nextMonth": "الشهر التالي",
     "noData": "لا توجد بيانات متاحة",
     "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "Seçenek bulunamadı",
@@ -67,6 +71,7 @@
     "optional": "İsteğe Bağlı",
     "paused": "Duraklatıldı",
     "previous": "السابق",
+    "prevMonth": "الشهر السابق",
     "remove": "Kaldır",
     "reset_filters": "Filtreleri Sıfırla",
     "same_as_phone": "Telefon ile aynı",
@@ -306,6 +311,8 @@
       "student_name": "Öğrenci Adı"
     },
     "search_placeholder": "Öğrenci adı veya telefon ile ara...",
+    "selectDate": "اختر التاريخ",
+    "sightAdjustment": "",
     "status": {
       "absent": "Yok",
       "excused": "Mazeretli",
@@ -319,7 +326,8 @@
       "unsent": "Gönderilmeyenler"
     },
     "template_preview": "Şablon Önizleme",
-    "title": "Ezber Okuma Raporları"
+    "title": "Ezber Okuma Raporları",
+    "toggleCalendarType": "تبديل التقويم"
   },
   "search_placeholder": "İsim, telefon veya mevcut sure ile öğrenci ara...",
   "searchPh": "Halka adı veya görevli öğretmen adı ile ara...",

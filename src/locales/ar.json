@@ -41,6 +41,7 @@
     "back": "رجوع",
     "cancel": "إلغاء",
     "change": "تغيير",
+    "close": "close",
     "confirm": "تأكيد",
     "confirm_action": "تأكيد الإجراء",
     "confirm_message": "هل أنت تأكد من الاستمرار في هذا الإجراء؟",
@@ -53,12 +54,15 @@
     "enabled": "مفعل",
     "female": "أنثى",
     "graduated": "متخرج",
+    "gregorian": "gregorian",
+    "hijri": "hijri",
     "inactive": "غير نشط",
     "loading": "جاري التحميل...",
     "loggingOut": "جاري تسجيل الخروج...",
     "logout": "تسجيل الخروج",
     "male": "ذكر",
     "next": "التالي",
+    "nextMonth": "الشهر التالي",
     "noData": "لا توجد بيانات متاحة",
     "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "noOptions",
@@ -67,6 +71,7 @@
     "optional": "optional",
     "paused": "موقوف",
     "previous": "السابق",
+    "prevMonth": "الشهر السابق",
     "remove": "إلغاء",
     "reset_filters": "إلغاء الفلاتر",
     "same_as_phone": "نفس الهاتف",
@@ -306,6 +311,8 @@
       "student_name": "student_name"
     },
     "search_placeholder": "search_placeholder",
+    "selectDate": "اختر التاريخ",
+    "sightAdjustment": "sightAdjustment",
     "status": {
       "absent": "absent",
       "excused": "excused",
@@ -319,7 +326,8 @@
       "unsent": "unsent"
     },
     "template_preview": "template_preview",
-    "title": "title"
+    "title": "title",
+    "toggleCalendarType": "تبديل التقويم"
   },
   "search_placeholder": "ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...",
   "searchPh": "ابحث باسم الحلقة أو اسم المعلم المكلف...",

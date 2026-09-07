@@ -41,6 +41,7 @@
     "back": "Retour",
     "cancel": "Annuler",
     "change": "Changer",
+    "close": "إغلاق",
     "confirm": "Confirmer",
     "confirm_action": "Confirmer l'action",
     "confirm_message": "Êtes-vous sûr de vouloir poursuivre cette action ?",
@@ -53,12 +54,15 @@
     "enabled": "Activé",
     "female": "Féminin",
     "graduated": "Diplômé",
+    "gregorian": "",
+    "hijri": "",
     "inactive": "Inactif",
     "loading": "Chargement...",
     "loggingOut": "Déconnexion en cours...",
     "logout": "Se déconnecter",
     "male": "Masculin",
     "next": "التالي",
+    "nextMonth": "الشهر التالي",
     "noData": "لا توجد بيانات متاحة",
     "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "Aucune option disponible",
@@ -67,6 +71,7 @@
     "optional": "Optionnel",
     "paused": "En pause",
     "previous": "السابق",
+    "prevMonth": "الشهر السابق",
     "remove": "Supprimer",
     "reset_filters": "Réinitialiser les filtres",
     "same_as_phone": "Identique au téléphone",
@@ -306,6 +311,8 @@
       "student_name": "Nom de l'étudiant"
     },
     "search_placeholder": "Rechercher par nom ou téléphone...",
+    "selectDate": "اختر التاريخ",
+    "sightAdjustment": "",
     "status": {
       "absent": "Absent",
       "excused": "Excusé",
@@ -319,7 +326,8 @@
       "unsent": "Non envoyés"
     },
     "template_preview": "Aperçu du modèle",
-    "title": "Rapports de récitation"
+    "title": "Rapports de récitation",
+    "toggleCalendarType": "تبديل التقويم"
   },
   "search_placeholder": "Rechercher par nom, téléphone ou Sourate actuelle...",
   "searchPh": "Rechercher par nom de Halaqa ou enseignant...",

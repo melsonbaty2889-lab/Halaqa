@@ -41,6 +41,7 @@
     "back": "Kembali",
     "cancel": "Batal",
     "change": "Ubah",
+    "close": "إغلاق",
     "confirm": "Konfirmasi",
     "confirm_action": "Konfirmasi Tindakan",
     "confirm_message": "Apakah Anda yakin ingin melanjutkan tindakan ini?",
@@ -53,12 +54,15 @@
     "enabled": "Aktif",
     "female": "Perempuan",
     "graduated": "Lulus",
+    "gregorian": "",
+    "hijri": "",
     "inactive": "Tidak Aktif",
     "loading": "Memuat...",
     "loggingOut": "Keluar...",
     "logout": "Keluar",
     "male": "Laki-laki",
     "next": "التالي",
+    "nextMonth": "الشهر التالي",
     "noData": "لا توجد بيانات متاحة",
     "noDataDesc": "لم يتم إضافة أي عناصر في هذا القسم بعد.",
     "noOptions": "Tidak ada pilihan",
@@ -67,6 +71,7 @@
     "optional": "Opsional",
     "paused": "Ditolak / Ditunda",
     "previous": "السابق",
+    "prevMonth": "الشهر السابق",
     "remove": "Hapus",
     "reset_filters": "Atur Ulang Filter",
     "same_as_phone": "Sama dengan No. HP",
@@ -306,6 +311,8 @@
       "student_name": "Nama Santri"
     },
     "search_placeholder": "Cari berdasarkan nama santri atau no. HP...",
+    "selectDate": "اختر التاريخ",
+    "sightAdjustment": "",
     "status": {
       "absent": "Alpha / Absen",
       "excused": "Izin",
@@ -319,7 +326,8 @@
       "unsent": "Belum Terkirim"
     },
     "template_preview": "Pratinjau Templat",
-    "title": "Laporan Setoran Hafalan"
+    "title": "Laporan Setoran Hafalan",
+    "toggleCalendarType": "تبديل التقويم"
   },
   "search_placeholder": "Cari santri berdasarkan nama, no. HP, atau surah saat ini...",
   "searchPh": "Cari berdasarkan nama halaqah atau pengajar...",
