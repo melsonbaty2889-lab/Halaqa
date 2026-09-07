@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import rawColors from '@/theme/colors.js';
-import { getText } from '@/utils/textUtils'; // Helper الموحد للترجمة
+import { getText } from '@/utils/textUtils';
 
 // 🚀 Dynamic Imports (Lazy Loading)
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
@@ -29,32 +29,55 @@ const DevPlayground = lazy(() => {
   return Promise.resolve({ default: () => null });
 });
 
-// 🎨 كائن الألوان الديناميكي المحمي
+// 🎨 كائن الألوان الديناميكي المطور وفقاً لنظام الألوان v2.5
 const C = {
   ...rawColors,
   dark: {
-    main: rawColors?.dark?.main || rawColors?.card,
-    card: rawColors?.dark?.card || rawColors?.card,
-    border: rawColors?.dark?.border || rawColors?.borderCard,
-    surface: rawColors?.dark?.surface || rawColors?.input,
+    main: rawColors?.dark?.bg || '#070B11',
+    card: rawColors?.dark?.card || 'rgba(15, 23, 42, 0.85)',
+    border: rawColors?.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)',
+    surface: rawColors?.dark?.surface || '#0A0F1C',
   },
   primary: {
-    DEFAULT: typeof rawColors?.primary === 'string' ? rawColors.primary : rawColors?.primary?.DEFAULT,
-    gradient: rawColors?.primary?.gradient,
-  },
-  text: {
-    title: rawColors?.text?.title || rawColors?.text,
-    body: rawColors?.text?.body || rawColors?.textSub,
-    muted: rawColors?.text?.muted || rawColors?.textMuted,
-  },
-  error: {
-    DEFAULT: rawColors?.error?.DEFAULT || rawColors?.danger,
-    bgGlow: rawColors?.error?.bgGlow,
-    light: rawColors?.error?.light,
+    DEFAULT: rawColors?.amber?.DEFAULT || rawColors?.primary?.DEFAULT || '#D97706',
+    hover: rawColors?.primary?.hover || '#B45309',
+    gradient: rawColors?.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
   },
   brandEmerald: {
-    DEFAULT: rawColors?.brandEmerald?.DEFAULT,
-    bgGlow: rawColors?.brandEmerald?.bgGlow,
+    DEFAULT: rawColors?.emerald?.DEFAULT || rawColors?.brandEmerald?.DEFAULT || '#10B981',
+    dark: rawColors?.emerald?.dark || '#059669',
+    light: rawColors?.emerald?.light || '#34D399',
+    bgGlow: rawColors?.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)',
+    logoGlow: rawColors?.emerald?.logoGlow || 'rgba(16, 185, 129, 0.35)',
+    bg: rawColors?.brandEmerald?.bg || '#09332C',
+    border: rawColors?.brandEmerald?.border || '#0D5C4D',
+  },
+  text: {
+    title: rawColors?.text?.title || '#FFFFFF',
+    subtitle: rawColors?.text?.subtitle || '#D97706',
+    body: rawColors?.text?.body || '#E2E8F0',
+    muted: rawColors?.text?.muted || '#94A3B8',
+    placeholder: rawColors?.text?.placeholder || '#64748B',
+  },
+  inputs: {
+    bg: rawColors?.inputs?.bg || 'rgba(10, 15, 28, 0.8)',
+    border: rawColors?.inputs?.border || 'rgba(255, 255, 255, 0.12)',
+    borderFocus: rawColors?.inputs?.borderFocus || '#D97706',
+    icon: rawColors?.inputs?.icon || '#64748B',
+  },
+  gradients: {
+    starsBg: rawColors?.gradients?.starsBg || `
+      radial-gradient(circle at 50% 28%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+      radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px)
+    `,
+    primaryBtn: rawColors?.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+    logoBox: rawColors?.gradients?.logoBox || 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+    progressBar: rawColors?.gradients?.progressBar || 'linear-gradient(90deg, #10B981 0%, #F59E0B 100%)',
+  },
+  error: {
+    DEFAULT: rawColors?.error?.DEFAULT || '#EF4444',
+    bgGlow: 'rgba(239, 68, 68, 0.15)',
+    light: '#FCA5A5',
   }
 };
 
@@ -221,7 +244,7 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
             padding: '10px 20px',
             minHeight: '44px',
             background: C.primary?.gradient,
-            color: C.dark?.main,
+            color: C.text?.title,
             border: 'none',
             borderRadius: '8px',
             fontWeight: 'bold',
@@ -309,7 +332,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             height: '50px',
             borderRadius: '50%',
             background: C.brandEmerald?.bgGlow,
-            color: C.primary?.DEFAULT,
+            color: C.brandEmerald?.DEFAULT,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -361,7 +384,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
               padding: '12px',
               minHeight: '44px',
               background: C.primary?.gradient,
-              color: C.dark?.main,
+              color: C.text?.title,
               border: 'none',
               borderRadius: '8px',
               fontWeight: 'bold',
@@ -510,7 +533,7 @@ class GlobalErrorBoundary extends Component {
                 padding: '12px 20px',
                 minHeight: '44px',
                 background: C.primary?.gradient,
-                color: C.dark?.main,
+                color: C.text?.title,
                 border: 'none',
                 borderRadius: '12px',
                 fontWeight: '700',
@@ -633,7 +656,7 @@ function MainContent() {
               disabled={isRefreshing}
               aria-label={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
               title={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
-              style={{ padding: '10px 20px', minHeight: '44px', background: C.primary?.gradient, color: C.dark?.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', minHeight: '44px', background: C.primary?.gradient, color: C.text?.title, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
               {isRefreshing ? getText(t, 'common.checking', 'جاري الفحص...') : getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
@@ -679,7 +702,7 @@ function MainContent() {
               disabled={isRefreshing}
               aria-label={getText(t, 'common.refresh', 'إعادة التحديث')}
               title={getText(t, 'common.refresh', 'إعادة التحديث')}
-              style={{ padding: '10px 20px', minHeight: '44px', background: C.primary?.gradient, color: C.dark?.main, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', minHeight: '44px', background: C.primary?.gradient, color: C.text?.title, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
               {isRefreshing ? getText(t, 'common.checking', 'جاري التحقق...') : getText(t, 'common.refresh', 'إعادة التحديث')}
@@ -787,7 +810,7 @@ function MainContent() {
         onClick={logout} 
         aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
         title={getText(t, 'common.logout', 'تسجيل الخروج')}
-        style={{ background: C.primary?.gradient, color: C.dark?.main, padding: '10px 25px', minHeight: '44px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+        style={{ background: C.primary?.gradient, color: C.text?.title, padding: '10px 25px', minHeight: '44px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
       >
         {getText(t, 'common.logout', 'تسجيل الخروج')}
       </button>
