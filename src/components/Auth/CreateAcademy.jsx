@@ -1,147 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import SelectModal from './SelectModal';
 
-import { CURRENCIES } from '../../constants/currencies';
-import { COUNTRIES } from '../../constants/countries';
+// استيراد الألوان والثوابت المعتمدة
+import C from '@/constants/colors';
+import { COUNTRIES } from '@/constants/countries';
+import { CURRENCIES } from '@/constants/currencies';
+import { getRiwayatOptions } from '@/constants/riwayat';
 
 import { 
   Building2, 
   Check, 
-  ChevronRight, 
-  ChevronDown, 
   Link as LinkIcon, 
   Loader2, 
   AlertCircle, 
   Upload, 
   CheckCircle2, 
-  BookOpen, 
-  Laptop, 
-  Users, 
-  Sliders
+  ChevronDown 
 } from 'lucide-react';
 
-export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true, currentLanguage = 'ar' }) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [modalType, setModalType] = useState(null);
+export default function CreateAcademy({ onLogout, onSubmitAcademy }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [modalType, setModalType] = useState(null);
 
-  // حالات التحقق
+  // حالات التحقق والسحابة
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [isSlugAvailable, setIsSlugAvailable] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  // إدخال مخصص للدولة واللغة
-  const [isCustomCountry, setIsCustomCountry] = useState(false);
-  const [customCountryName, setCustomCountryName] = useState('');
-  const [isCustomLanguage, setIsCustomLanguage] = useState(false);
-  const [customLanguageName, setCustomLanguageName] = useState('');
-
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-
-  // النموذج
+  // نموذج البيانات الأساسية فقط (خالي تماماً من البيانات التجريبية)
   const [formData, setFormData] = useState({
-    name: '',
+    name_ar: '',
+    name_en: '',
     slug: '',
-    learning_type: 'online',
-    country_code: 'SA',
+    description: '',
+    official_email: '',
+    phone_whatsapp: '',
+    country: 'SA',
     currency: 'SAR',
-    calendar_type: 'hijri',
-    timezone: 'Asia/Riyadh',
-    language_code: currentLanguage || 'ar',
-    default_qiraat: 'hafs',
-    teaching_methodology: 'mashreqi',
-    weekend_days: ['friday', 'saturday'],
-    contact_email: '',
-    contact_phone: '',
+    mode: 'online',
+    riwaya: 'hafs_an_asem',
+    madrasa: 'mashreqi',
     logo_url: ''
   });
 
-  const LEARNING_TYPES = [
-    { id: 'online', label: isRtl ? 'عن بُعد' : 'Online', icon: Laptop },
-    { id: 'onsite', label: isRtl ? 'حضوري' : 'On-Site', icon: Building2 },
-    { id: 'hybrid', label: isRtl ? 'مختلط' : 'Hybrid', icon: Users },
+  // الخيارات الأساسية
+  const LEARNING_MODES = [
+    { value: 'online', label: t('settings.online', 'عن بُعد') },
+    { value: 'onsite', label: t('settings.onsite', 'حضوري') },
+    { value: 'hybrid', label: t('settings.hybrid', 'مختلط') },
   ];
 
-  const DAYS_OF_WEEK = [
-    { id: 'sunday', label: isRtl ? 'الأحد' : 'Sunday' },
-    { id: 'monday', label: isRtl ? 'الإثنين' : 'Monday' },
-    { id: 'tuesday', label: isRtl ? 'الثلاثاء' : 'Tuesday' },
-    { id: 'wednesday', label: isRtl ? 'الأربعاء' : 'Wednesday' },
-    { id: 'thursday', label: isRtl ? 'الخميس' : 'Thursday' },
-    { id: 'friday', label: isRtl ? 'الجمعة' : 'Friday' },
-    { id: 'saturday', label: isRtl ? 'السبت' : 'Saturday' },
+  const MADRASA_OPTIONS = [
+    { value: 'mashreqi', label: t('settings.mashreqi', 'النظام المشرقي') },
+    { value: 'maghrebi', label: t('settings.maghrebi', 'النظام المغاربي') },
   ];
 
-  const QIRAAT_OPTIONS = [
-    { value: 'hafs', label: isRtl ? 'حفص عن عاصم' : 'Hafs an Asim' },
-    { value: 'warsh', label: isRtl ? 'ورش عن نافع' : 'Warsh an Nafi' },
-    { value: 'qalon', label: isRtl ? 'قالون عن نافع' : 'Qalon an Nafi' },
-    { value: 'aldoori', label: isRtl ? 'الدوري عن أبي عمرو' : 'Al-Doori an Abi Amr' },
-  ];
+  const riwayaOptions = getRiwayatOptions(t, i18n.language);
 
-  const METHODOLOGY_OPTIONS = [
-    { value: 'mashreqi', label: isRtl ? 'النظام المشرقي (حفظ ومراجعة صغرى وكبرى)' : 'Mashreqi Methodology' },
-    { value: 'maghrebi', label: isRtl ? 'النظام المغاربي (اللوح والرسم والراتب)' : 'Maghrebi Methodology' },
-    { value: 'repetitive', label: isRtl ? 'نظام التكرار والتلقين' : 'Repetitive Methodology' },
-  ];
+  const countryOptions = (COUNTRIES || []).map((c) => ({
+    value: c.code,
+    label: isRtl ? (c.nameAr || c.name) : c.name,
+  }));
 
-  const BASE_LANGUAGES = [
-    { value: 'ar', label: 'العربية (Arabic)' },
-    { value: 'en', label: 'English' },
-    { value: 'fr', label: 'Français' },
-    { value: 'tr', label: 'Türkçe' },
-    { value: 'ur', label: 'اردو (Urdu)' },
-    { value: 'custom', label: isRtl ? 'لغة أخرى...' : 'Other Language...' }
-  ];
+  const currencyOptions = (CURRENCIES || []).map((c) => ({
+    value: c.code,
+    label: `${c.code} - ${isRtl ? (c.nameAr || c.name) : c.name}`,
+  }));
 
-  const countryOptions = [
-    ...(COUNTRIES || []).map((c) => ({
-      value: c.code,
-      label: c.nameAr || c.name,
-      subLabel: c.timezone,
-    })),
-    { value: 'CUSTOM', label: isRtl ? 'دولة أخرى...' : 'Other Country...' }
-  ];
-
-  const handleCountrySelect = (countryCode) => {
-    if (countryCode === 'CUSTOM') {
-      setIsCustomCountry(true);
-      setFormData((prev) => ({ ...prev, country_code: 'CUSTOM' }));
-      return;
-    }
-
-    setIsCustomCountry(false);
-    const country = (COUNTRIES || []).find((c) => c.code === countryCode);
-    if (!country) return;
-
-    let updatedQiraat = 'hafs';
-    let updatedMethodology = 'mashreqi';
-
-    if (['MA', 'DZ', 'MR'].includes(countryCode)) {
-      updatedQiraat = 'warsh';
-      updatedMethodology = 'maghrebi';
-    } else if (['LY', 'TN'].includes(countryCode)) {
-      updatedQiraat = 'qalon';
-    } else if (['SD', 'SO'].includes(countryCode)) {
-      updatedQiraat = 'aldoori';
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      country_code: countryCode,
-      currency: country.currency || prev.currency,
-      timezone: country.timezone || prev.timezone,
-      default_qiraat: updatedQiraat,
-      teaching_methodology: updatedMethodology
-    }));
-  };
-
-  // فحص توفر الـ slug في قاعدة البيانات بأمان
+  // التحقق التلقائي من الـ Slug
   useEffect(() => {
     const cleanSlug = formData.slug.trim().toLowerCase();
     if (!cleanSlug || cleanSlug.length < 2) {
@@ -155,11 +90,10 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
         const { data, error } = await supabase.rpc('check_slug_availability', {
           p_slug: cleanSlug
         });
-
         if (error) throw error;
-        setIsSlugAvailable(data);
+        setIsSlugAvailable(Boolean(data));
       } catch (err) {
-        console.error('Slug check error:', err);
+        console.error('Slug validation error:', err);
         setIsSlugAvailable(null);
       } finally {
         setIsCheckingSlug(false);
@@ -179,42 +113,14 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
 
     setFormData((prev) => ({
       ...prev,
-      name: nameVal,
+      name_ar: nameVal,
       slug: prev.slug === '' || prev.slug === generatedSlug ? generatedSlug : prev.slug
     }));
   };
 
-  const handleSlugChange = (e) => {
-    const sanitized = e.target.value
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-
-    setFormData((prev) => ({ ...prev, slug: sanitized }));
-  };
-
-  const toggleWeekendDay = (dayId) => {
-    setFormData((prev) => {
-      const exists = prev.weekend_days.includes(dayId);
-      const updated = exists
-        ? prev.weekend_days.filter((d) => d !== dayId)
-        : [...prev.weekend_days, dayId];
-      return { ...prev, weekend_days: updated };
-    });
-  };
-
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleLogoUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setErrorMsg(isRtl ? 'يُرجى اختيار ملف صورة صالح.' : 'Please select a valid image file.');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg(isRtl ? 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت.' : 'Image size must not exceed 2MB.');
-      return;
-    }
 
     setUploadingLogo(true);
     setErrorMsg('');
@@ -236,14 +142,12 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
 
       setFormData((prev) => ({ ...prev, logo_url: publicUrlData.publicUrl }));
     } catch (err) {
-      console.error('Logo upload error:', err);
-      setErrorMsg(isRtl ? 'فشل رفع الشعار، يُرجى المحاولة مرة أخرى.' : 'Failed to upload logo.');
+      console.error('Logo upload failed:', err);
+      setErrorMsg(t('errors.upload_failed', 'فشل رفع الشعار، يرجى المحاولة لاحقاً'));
     } finally {
       setUploadingLogo(false);
     }
-  };
-
-  const isStep1Valid = formData.name.trim().length >= 2 && formData.slug.trim().length >= 2 && isSlugAvailable === true;
+  }, [t]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -253,24 +157,20 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
     setErrorMsg('');
 
     try {
-      const finalCountry = isCustomCountry ? 'OTHER' : formData.country_code;
-      const finalReading = formData.default_qiraat === 'OTHER' ? 'hafs' : formData.default_qiraat;
-      const finalMethodology = formData.teaching_methodology === 'OTHER' ? 'mashreqi' : formData.teaching_methodology;
-
       const { data, error } = await supabase.rpc('create_academy_with_owner', {
-        p_name: formData.name.trim(),
+        p_name: formData.name_ar.trim(),
         p_slug: formData.slug.trim().toLowerCase(),
-        p_country_code: finalCountry,
-        p_custom_country_name: isCustomCountry ? customCountryName.trim() : null,
-        p_default_qiraat: finalReading,
-        p_teaching_methodology: finalMethodology,
+        p_country_code: formData.country,
+        p_learning_type: formData.mode,
+        p_currency: formData.currency,
+        p_default_qiraat: formData.riwaya,
+        p_teaching_methodology: formData.madrasa,
         p_logo_url: formData.logo_url || null,
       });
 
       if (error) throw error;
 
       setIsSuccess(true);
-
       setTimeout(async () => {
         if (onSubmitAcademy) {
           await onSubmitAcademy(data);
@@ -278,11 +178,11 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
       }, 1200);
 
     } catch (error) {
-      console.error('Error creating academy:', error);
+      console.error('Create academy error:', error);
       setErrorMsg(
         error.message?.includes('duplicate key') || error.code === '23505'
-          ? (isRtl ? 'رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.' : 'Academy URL is already taken.')
-          : (error.message || (isRtl ? 'حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.' : 'Failed to create academy. Please try again.'))
+          ? t('errors.slug_taken', 'رابط الأكاديمية مستخدم بالفعل')
+          : (error.message || t('errors.generic', 'حدث خطأ أثناء الإنشاء'))
       );
       setIsSubmitting(false);
     }
@@ -291,15 +191,22 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
   if (isSuccess) {
     return (
       <AuthLayout>
-        <div className="flex flex-col items-center justify-center py-10 text-center animate-fadeIn">
-          <div className="w-14 h-14 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/10">
-            <CheckCircle2 size={32} />
+        <div className="flex flex-col items-center justify-center py-8 text-center animate-fadeIn">
+          <div 
+            className="w-12 h-12 rounded-full flex items-center justify-center mb-3 border shadow-lg"
+            style={{ 
+              backgroundColor: C.success?.bg || 'rgba(16, 185, 129, 0.1)', 
+              borderColor: C.success?.border || 'rgba(16, 185, 129, 0.3)',
+              color: C.success?.text || '#10B981'
+            }}
+          >
+            <CheckCircle2 size={28} />
           </div>
           <h2 className="text-base font-bold text-white mb-1">
-            {isRtl ? 'تم تأسيس الأكاديمية بنجاح!' : 'Academy Established Successfully!'}
+            {t('academy.created_success', 'تم إنشاء الأكاديمية بنجاح!')}
           </h2>
           <p className="text-xs text-slate-400">
-            {isRtl ? 'جاري تجهيز لوحة التحكم الخاصة بك...' : 'Preparing your dashboard...'}
+            {t('common.preparing_dashboard', 'جاري تجهيز النظام...')}
           </p>
         </div>
       </AuthLayout>
@@ -308,321 +215,320 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true,
 
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center mb-4">
-        <div className="mb-1">
-          <SmartHalaqaProLogo size={44} />
+      {/* الهيدر الموحد لصفحات المصادقة والتأسيس */}
+      <div className="flex flex-col items-center mb-5 text-center">
+        <div className="mb-2">
+          <SmartHalaqaProLogo size={42} />
         </div>
-        <h1 className="text-[var(--text-main,#FFFFFF)] text-lg font-bold mt-1 mb-0.5 text-center">
-          {isRtl ? 'تأسيس الأكاديمية' : 'Establish Academy'}
+        <h1 className="text-white text-lg font-bold">
+          {t('academy.create_title', 'إنشاء أكاديمية جديدة')}
         </h1>
-        <p className="text-[var(--text-sub,#94A3B8)] text-xs text-center m-0">
-          {isRtl ? 'إدخال البيانات الأساسية والخيارات التشغيلية' : 'Enter basic and operational configurations'}
+        <p className="text-slate-400 text-xs mt-0.5">
+          {t('academy.create_subtitle', 'أدخل البيانات الأساسية للبدء')}
         </p>
       </div>
 
-      <div className="flex items-center justify-center gap-2 mb-4 bg-[var(--surface-input,#0A101D)] p-2 rounded-xl border border-[var(--border-input,#1B2738)]">
-        {[1, 2].map((step) => (
-          <div key={step} className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-              currentStep === step
-                ? 'bg-[var(--primary,#E07A00)] text-slate-950'
-                : currentStep > step
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-slate-800 text-slate-400'
-            }`}>
-              {currentStep > step ? <Check size={12} /> : step}
-            </div>
-            <span className="text-[11px] font-semibold text-slate-300">
-              {step === 1 ? (isRtl ? 'بيانات الهوية' : 'Identity') : (isRtl ? 'التكيف والإنشاء' : 'Configurations')}
-            </span>
-            {step < 2 && <div className="w-8 h-0.5 bg-slate-800 mx-1" />}
-          </div>
-        ))}
-      </div>
-
       {errorMsg && (
-        <div className="mb-4 p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-2 text-rose-400 text-xs">
+        <div 
+          className="mb-4 p-2.5 rounded-xl flex items-center gap-2 text-xs border"
+          style={{ 
+            backgroundColor: C.danger?.bg || 'rgba(244, 63, 94, 0.1)',
+            borderColor: C.danger?.border || 'rgba(244, 63, 94, 0.3)',
+            color: C.danger?.text || '#F43F5E'
+          }}
+        >
           <AlertCircle size={15} className="shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        {currentStep === 1 && (
-          <div className="space-y-3.5">
-            <div className="flex items-center gap-2 pb-1.5 border-b border-[var(--border-input,#1B2738)]">
-              <Building2 size={16} className="text-[var(--primary,#E07A00)]" />
-              <h2 className="font-bold text-xs text-[var(--text-main,#FFFFFF)]">
-                {isRtl ? 'المعلومات التعريفية' : 'Basic Identifiers'}
-              </h2>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)]">
-                {isRtl ? 'اسم الأكاديمية' : 'Academy Title'}
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={handleNameChange}
-                className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs outline-none"
-                required
-                autoFocus
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        
+        {/* رفع الشعار */}
+        <div 
+          className="flex items-center gap-3 p-2 rounded-xl border"
+          style={{ 
+            backgroundColor: C.dark?.surface || '#0A101D', 
+            borderColor: C.dark?.border || '#1B2738' 
+          }}
+        >
+          <div className="w-12 h-12 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+            {formData.logo_url ? (
+              <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
+            ) : (
+              <Building2 size={20} className="text-slate-500" />
+            )}
+          </div>
+          <div className="flex-1">
+            <span className="text-[11px] text-slate-300 block mb-1 font-medium">
+              {t('academy.logo_label', 'شعار الأكاديمية')}
+            </span>
+            <label className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold text-slate-200 rounded-lg border border-slate-700 transition">
+              {uploadingLogo ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+              <span>{t('academy.upload_logo', 'تحميل الشعار')}</span>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleLogoUpload} 
+                className="hidden" 
+                aria-label={t('academy.upload_logo', 'تحميل الشعار')} 
               />
-            </div>
+            </label>
+          </div>
+        </div>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)] flex items-center gap-1">
-                <LinkIcon size={12} className="text-[var(--primary,#E07A00)]" />
-                <span>{isRtl ? 'المعرف الفريد (Slug)' : 'Unique Identifier (Slug)'}</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={handleSlugChange}
-                  className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs dir-ltr outline-none pr-8"
-                  required
-                />
-                <div className="absolute top-2.5 left-2.5 flex items-center">
-                  {isCheckingSlug ? (
-                    <Loader2 size={14} className="animate-spin text-amber-400" />
-                  ) : isSlugAvailable === true ? (
-                    <CheckCircle2 size={14} className="text-emerald-400" />
-                  ) : isSlugAvailable === false ? (
-                    <AlertCircle size={14} className="text-rose-400" />
-                  ) : null}
-                </div>
-              </div>
+        {/* الاسم بالعربية والإنجليزية */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">
+              {t('academy.name_ar', 'اسم الأكاديمية (بالعربية)')} *
+            </label>
+            <input
+              type="text"
+              value={formData.name_ar}
+              onChange={handleNameChange}
+              placeholder={t('academy.name_ar_placeholder', 'أدخل اسم الأكاديمية')}
+              className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+              required
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">
+              {t('academy.name_en', 'اسم الأكاديمية (بالإنجليزية)')}
+            </label>
+            <input
+              type="text"
+              value={formData.name_en}
+              onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+              placeholder={t('academy.name_en_placeholder', 'Enter academy name')}
+              className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500 dir-ltr"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+            />
+          </div>
+        </div>
+
+        {/* الـ Slug */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
+            <LinkIcon size={12} style={{ color: C.primary?.DEFAULT || '#E07A00' }} />
+            <span>{t('academy.slug', 'معرف الرابط (Slug)')} *</span>
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+              placeholder="academy-name"
+              className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500 dir-ltr pe-8"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+              required
+            />
+            <div className="absolute top-2.5 end-2.5 flex items-center">
+              {isCheckingSlug ? (
+                <Loader2 size={14} className="animate-spin text-amber-400" />
+              ) : isSlugAvailable === true ? (
+                <CheckCircle2 size={14} className="text-emerald-400" />
+              ) : isSlugAvailable === false ? (
+                <AlertCircle size={14} className="text-rose-400" />
+              ) : null}
             </div>
           </div>
-        )}
+        </div>
 
-        {currentStep === 2 && (
-          <div className="space-y-3.5">
-            <div className="space-y-1">
-              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)]">
-                {isRtl ? 'نموذج تقديم التعليم' : 'Learning Delivery Model'}
-              </label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {LEARNING_TYPES.map((type) => {
-                  const Icon = type.icon;
-                  const isSelected = formData.learning_type === type.id;
-                  return (
-                    <button
-                      type="button"
-                      key={type.id}
-                      onClick={() => setFormData({ ...formData, learning_type: type.id })}
-                      className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center ${
-                        isSelected
-                          ? 'bg-[var(--primary,#E07A00)]/10 border-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)]'
-                          : 'bg-[var(--surface-input,#0A101D)] border-[var(--border-input,#1B2738)] text-slate-400'
-                      }`}
-                    >
-                      <Icon size={16} className={isSelected ? 'text-[var(--primary,#E07A00)]' : 'text-slate-400'} />
-                      <span className="text-[11px] font-bold mt-1">{type.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+        {/* الوصف المختصر */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-300">
+            {t('academy.description', 'الوصف المختصر')}
+          </label>
+          <input
+            type="text"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder={t('academy.description_placeholder', 'نبذة مختصرة عن الأكاديمية...')}
+            className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500"
+            style={{ 
+              backgroundColor: C.dark?.surface || '#0A101D', 
+              borderColor: C.dark?.border || '#1B2738' 
+            }}
+          />
+        </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'النطاق الجغرافي' : 'Country Domain'}</label>
-                <button
-                  type="button"
-                  onClick={() => setModalType('country')}
-                  className="w-full flex items-center justify-between px-2.5 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)]"
-                >
-                  <span className="truncate">{isCustomCountry ? (customCountryName || (isRtl ? 'مخصص' : 'Custom')) : formData.country_code}</span>
-                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
-                </button>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'اللغة التشغيلية' : 'Operational Language'}</label>
-                <button
-                  type="button"
-                  onClick={() => setModalType('language')}
-                  className="w-full flex items-center justify-between px-2.5 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)]"
-                >
-                  <span className="truncate">{isCustomLanguage ? (customLanguageName || (isRtl ? 'مخصص' : 'Custom')) : formData.language_code}</span>
-                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
-                </button>
-              </div>
-            </div>
-
-            {isCustomCountry && (
-              <input
-                type="text"
-                placeholder={isRtl ? 'ادخل اسم الدولة' : 'Enter Country Name'}
-                value={customCountryName}
-                onChange={(e) => setCustomCountryName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-[var(--surface-input,#0A101D)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--primary,#E07A00)]/50 outline-none"
-                required
-              />
-            )}
-
-            {isCustomLanguage && (
-              <input
-                type="text"
-                placeholder={isRtl ? 'ادخل اسم اللغة' : 'Enter Language Name'}
-                value={customLanguageName}
-                onChange={(e) => setCustomLanguageName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-[var(--surface-input,#0A101D)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--primary,#E07A00)]/50 outline-none"
-                required
-              />
-            )}
-
-            <div className="space-y-1">
-              <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'أيام العطلة الأسبوعية' : 'Weekend Configuration'}</label>
-              <div className="flex flex-wrap gap-1">
-                {DAYS_OF_WEEK.map((day) => {
-                  const isSelected = formData.weekend_days.includes(day.id);
-                  return (
-                    <button
-                      type="button"
-                      key={day.id}
-                      onClick={() => toggleWeekendDay(day.id)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-medium border transition ${
-                        isSelected
-                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                          : 'bg-slate-800/50 text-slate-400 border-slate-700/50'
-                      }`}
-                    >
-                      {day.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--primary,#E07A00)] hover:underline"
-              >
-                <Sliders size={13} />
-                <span>{showAdvancedSettings ? (isRtl ? 'إخفاء الإعدادات الإضافية' : 'Hide Advanced Settings') : (isRtl ? 'إعدادات الرواية والمنهجية والشعار' : 'Configure Qiraat & Methodology')}</span>
-              </button>
-
-              {showAdvancedSettings && (
-                <div className="mt-2.5 p-3 bg-[var(--surface-input,#0A101D)] rounded-xl border border-[var(--border-input,#1B2738)] space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-[var(--text-sub,#94A3B8)] flex items-center gap-1">
-                      <BookOpen size={11} className="text-[var(--primary,#E07A00)]" />
-                      <span>{isRtl ? 'رواية القراءة الاعتيادية' : 'Default Qiraat'}</span>
-                    </label>
-                    <select
-                      value={formData.default_qiraat}
-                      onChange={(e) => setFormData({ ...formData, default_qiraat: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 text-[var(--text-main,#FFFFFF)] rounded-lg border border-slate-800 text-xs outline-none"
-                    >
-                      {QIRAAT_OPTIONS.map((q) => <option key={q.value} value={q.value}>{q.label}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'منهجية المتابعة والتحفيظ' : 'Methodology Standard'}</label>
-                    <select
-                      value={formData.teaching_methodology}
-                      onChange={(e) => setFormData({ ...formData, teaching_methodology: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 text-[var(--text-main,#FFFFFF)] rounded-lg border border-slate-800 text-xs outline-none"
-                    >
-                      {METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-3 pt-1">
-                    <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
-                      {formData.logo_url ? (
-                        <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
-                      ) : (
-                        <Upload size={16} className="text-slate-400" />
-                      )}
-                    </div>
-                    <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-medium text-slate-200 rounded-lg border border-slate-700">
-                      {uploadingLogo ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
-                      <span>{isRtl ? 'تحميل الشعار' : 'Upload Logo'}</span>
-                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* البريد الإلكتروني والواتساب */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">
+              {t('academy.official_email', 'البريد الرسمي')}
+            </label>
+            <input
+              type="email"
+              value={formData.official_email}
+              onChange={(e) => setFormData({ ...formData, official_email: e.target.value })}
+              placeholder="info@academy.com"
+              className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500 dir-ltr"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+            />
           </div>
-        )}
 
-        <div className="flex items-center gap-2 mt-4 pt-2">
-          {currentStep > 1 && (
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">
+              {t('academy.phone_whatsapp', 'هاتف الواتساب')}
+            </label>
+            <input
+              type="tel"
+              value={formData.phone_whatsapp}
+              onChange={(e) => setFormData({ ...formData, phone_whatsapp: e.target.value })}
+              placeholder="+201000000000"
+              className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500 dir-ltr"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+            />
+          </div>
+        </div>
+
+        {/* الدولة والعملة */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">{t('settings.country', 'الدولة')}</label>
             <button
               type="button"
-              onClick={() => setCurrentStep(1)}
-              className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1 border border-slate-700"
+              onClick={() => setModalType('country')}
+              className="w-full flex items-center justify-between px-3 py-2 border rounded-xl text-xs text-white"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
             >
-              <ChevronRight size={14} />
-              <span>{isRtl ? 'السابق' : 'Previous'}</span>
+              <span className="truncate">{formData.country}</span>
+              <ChevronDown size={14} className="text-slate-400 shrink-0" />
             </button>
-          )}
+          </div>
 
-          {currentStep === 1 ? (
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">{t('settings.currency', 'العملة')}</label>
             <button
               type="button"
-              onClick={() => setCurrentStep(2)}
-              disabled={!isStep1Valid}
-              className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 ${
-                !isStep1Valid
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-[#E67E00] to-[#D97706] text-slate-950 cursor-pointer'
-              }`}
+              onClick={() => setModalType('currency')}
+              className="w-full flex items-center justify-between px-3 py-2 border rounded-xl text-xs text-white"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
             >
-              <span>{isRtl ? 'التالي' : 'Next'}</span>
+              <span className="truncate">{formData.currency}</span>
+              <ChevronDown size={14} className="text-slate-400 shrink-0" />
             </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-[1.5] py-2.5 px-3 bg-gradient-to-r from-[#E67E00] to-[#D97706] text-slate-950 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md disabled:opacity-50 cursor-pointer"
+          </div>
+        </div>
+
+        {/* نوع التعليم، الرواية، والمدرسة */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">{t('settings.mode', 'نموذج التعليم')}</label>
+            <select
+              value={formData.mode}
+              onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
+              className="w-full px-2.5 py-2 text-white text-xs rounded-xl border outline-none"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
             >
-              {isSubmitting ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <>
-                  <Check size={15} />
-                  <span>{isRtl ? 'إنهاء التأسيس' : 'Complete Setup'}</span>
-                </>
-              )}
-            </button>
-          )}
+              {LEARNING_MODES.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">{t('settings.riwaya', 'الرواية')}</label>
+            <select
+              value={formData.riwaya}
+              onChange={(e) => setFormData({ ...formData, riwaya: e.target.value })}
+              className="w-full px-2.5 py-2 text-white text-xs rounded-xl border outline-none"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+            >
+              {riwayaOptions.map((r) => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-300">{t('settings.madrasa', 'المدرسة')}</label>
+            <select
+              value={formData.madrasa}
+              onChange={(e) => setFormData({ ...formData, madrasa: e.target.value })}
+              className="w-full px-2.5 py-2 text-white text-xs rounded-xl border outline-none"
+              style={{ 
+                backgroundColor: C.dark?.surface || '#0A101D', 
+                borderColor: C.dark?.border || '#1B2738' 
+              }}
+            >
+              {MADRASA_OPTIONS.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* زر التأسيس الموحد */}
+        <div className="pt-3">
+          <button
+            type="submit"
+            disabled={isSubmitting || isSlugAvailable === false}
+            className="w-full py-2.5 px-4 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer min-h-[44px] text-slate-950"
+            style={{ 
+              backgroundColor: C.primary?.DEFAULT || '#E07A00'
+            }}
+          >
+            {isSubmitting ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <>
+                <Check size={16} />
+                <span>{t('academy.establish_button', 'تأسيس الأكاديمية')}</span>
+              </>
+            )}
+          </button>
         </div>
       </form>
 
+      {/* مودال اختيار الدولة والعملة */}
       <SelectModal
         isOpen={modalType === 'country'}
         onClose={() => setModalType(null)}
-        title={isRtl ? 'اختر الدولة' : 'Select Country'}
+        title={t('settings.select_country', 'اختر الدولة')}
         options={countryOptions}
-        selectedValue={formData.country_code}
-        onSelect={handleCountrySelect}
+        selectedValue={formData.country}
+        onSelect={(val) => setFormData((prev) => ({ ...prev, country: val }))}
       />
 
       <SelectModal
-        isOpen={modalType === 'language'}
+        isOpen={modalType === 'currency'}
         onClose={() => setModalType(null)}
-        title={isRtl ? 'اختر اللغة' : 'Select Language'}
-        options={BASE_LANGUAGES}
-        selectedValue={formData.language_code}
-        onSelect={(val) => {
-          if (val === 'custom') {
-            setIsCustomLanguage(true);
-            setFormData((prev) => ({ ...prev, language_code: 'custom' }));
-          } else {
-            setIsCustomLanguage(false);
-            setFormData((prev) => ({ ...prev, language_code: val }));
-          }
-        }}
+        title={t('settings.select_currency', 'اختر العملة')}
+        options={currencyOptions}
+        selectedValue={formData.currency}
+        onSelect={(val) => setFormData((prev) => ({ ...prev, currency: val }))}
       />
     </AuthLayout>
   );
