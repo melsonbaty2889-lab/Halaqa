@@ -1,8 +1,7 @@
-// src/components/UI/ConfirmModal.jsx
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Archive, ArchiveRestore, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, Trash2, X, Loader2 } from 'lucide-react';
+import C from '@/theme/colors';
 
 const ConfirmModal = ({
   isOpen,
@@ -19,27 +18,48 @@ const ConfirmModal = ({
 
   if (!isOpen) return null;
 
+  const currentLang = i18n.language || 'ar';
+  const cleanLang = currentLang.toLowerCase().split('-')[0];
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
+
+  // استخراج الألوان القياسية من كائن C
+  const mainBg = C.dark?.bg || '#0F172A';
+  const surfaceBg = C.dark?.surface || '#1E293B';
+  const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
+  const titleColor = C.text?.title || '#F8FAFC';
+  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
+
+  const errorColor = C.error?.DEFAULT || '#EF4444';
+  const successColor = C.emerald?.DEFAULT || C.success?.DEFAULT || '#10B981';
+  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8';
+
   // تحديد الأيقونة والألوان حسب نوع الإجراء
   const getVariantStyles = () => {
     switch (variant) {
       case 'danger':
         return {
-          icon: <Trash2 className="w-6 h-6 text-rose-400" />,
-          bgIcon: 'bg-rose-500/10 border-rose-500/20',
-          btnConfirm: 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/30'
+          icon: <Trash2 size={24} style={{ color: errorColor }} />,
+          bgIcon: `${errorColor}1A`,
+          borderIcon: `${errorColor}33`,
+          btnBg: errorColor,
+          btnText: titleColor
         };
       case 'info':
         return {
-          icon: <ArchiveRestore className="w-6 h-6 text-emerald-400" />,
-          bgIcon: 'bg-emerald-500/10 border-emerald-500/20',
-          btnConfirm: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30'
+          icon: <ArchiveRestore size={24} style={{ color: successColor }} />,
+          bgIcon: `${successColor}1A`,
+          borderIcon: `${successColor}33`,
+          btnBg: successColor,
+          btnText: mainBg
         };
       case 'warning':
       default:
         return {
-          icon: <Archive className="w-6 h-6 text-sky-400" />,
-          bgIcon: 'bg-sky-500/10 border-sky-500/20',
-          btnConfirm: 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-900/30'
+          icon: <Archive size={24} style={{ color: primaryColor }} />,
+          bgIcon: `${primaryColor}1A`,
+          borderIcon: `${primaryColor}33`,
+          btnBg: primaryColor,
+          btnText: mainBg
         };
     }
   };
@@ -47,28 +67,49 @@ const ConfirmModal = ({
   const styles = getVariantStyles();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn" dir={i18n.dir()}>
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 relative">
-        
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-all"
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
+      <div 
+        className="border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 relative transition-all"
+        style={{
+          backgroundColor: surfaceBg,
+          borderColor: borderCol
+        }}
+      >
         {/* زر الإغلاق العلوي */}
         <button
+          type="button"
           onClick={onClose}
           disabled={isLoading}
-          className="absolute top-4 left-4 sm:left-auto sm:right-4 p-1.5 text-appText-sub hover:text-appText-main rounded-xl hover:bg-dark-input transition-colors"
+          aria-label={t('common.close', 'إغلاق')}
+          className="absolute top-4 p-2 rounded-xl cursor-pointer border-0 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+          style={{
+            [isRtl ? 'left' : 'right']: '1rem',
+            backgroundColor: 'transparent',
+            color: subColor
+          }}
         >
-          <X className="w-5 h-5" />
+          <X size={20} />
         </button>
 
         {/* رأس التنبيه والأيقونة */}
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-2xl border ${styles.bgIcon} flex-shrink-0`}>
+          <div 
+            className="p-3 rounded-2xl border shrink-0 flex items-center justify-center"
+            style={{
+              backgroundColor: styles.bgIcon,
+              borderColor: styles.borderIcon
+            }}
+          >
             {styles.icon}
           </div>
-          <div>
-            <h3 className="text-base font-bold text-appText-main">
+          <div className="flex-1 pe-6">
+            <h3 className="text-base font-bold" style={{ color: titleColor }}>
               {title || t('common.confirm_action', 'تأكيد الإجراء')}
             </h3>
-            <p className="text-xs text-appText-sub mt-1">
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: subColor }}>
               {message || t('common.confirm_message', 'هل أنت تأكد من الاستمرار في هذا الإجراء؟')}
             </p>
           </div>
@@ -80,7 +121,11 @@ const ConfirmModal = ({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 py-2.5 px-4 bg-dark-input hover:bg-appBorder-input/50 text-appText-sub hover:text-appText-main rounded-xl text-xs font-bold transition-colors"
+            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all border-0 cursor-pointer min-h-[44px] flex items-center justify-center"
+            style={{
+              backgroundColor: borderCol,
+              color: titleColor
+            }}
           >
             {cancelText || t('common.cancel', 'إلغاء')}
           </button>
@@ -89,10 +134,16 @@ const ConfirmModal = ({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${styles.btnConfirm}`}
+            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all border-0 shadow-lg flex items-center justify-center gap-2 min-h-[44px]"
+            style={{
+              backgroundColor: styles.btnBg,
+              color: styles.btnText,
+              opacity: isLoading ? 0.7 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer'
+            }}
           >
             {isLoading ? (
-              <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin shrink-0" aria-hidden="true" />
             ) : (
               confirmText || t('common.confirm', 'تأكيد')
             )}
