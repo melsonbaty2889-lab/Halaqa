@@ -16,6 +16,7 @@
     "title": "Sauvegarde et Restauration"
   },
   "bottomNav": {
+    "accessibilityLabel": "شريط التنقل السفلي",
     "halaqat": "Halaqas",
     "home": "Accueil",
     "more": "Plus",

@@ -16,6 +16,7 @@
     "title": "ڈیٹا بیک اپ اور بحالی"
   },
   "bottomNav": {
+    "accessibilityLabel": "شريط التنقل السفلي",
     "halaqat": "حلقے",
     "home": "ہوم",
     "more": "مزید",

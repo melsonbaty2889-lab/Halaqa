@@ -16,6 +16,7 @@
     "title": "title"
   },
   "bottomNav": {
+    "accessibilityLabel": "شريط التنقل السفلي",
     "halaqat": "الحلقات",
     "home": "الرئيسية",
     "more": "المزيد",

@@ -16,6 +16,7 @@
     "title": "Data Backup & Restore"
   },
   "bottomNav": {
+    "accessibilityLabel": "شريط التنقل السفلي",
     "halaqat": "Halaqas",
     "home": "Home",
     "more": "More",

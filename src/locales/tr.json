@@ -16,6 +16,7 @@
     "title": "Veri Yedekleme ve Geri Yükleme"
   },
   "bottomNav": {
+    "accessibilityLabel": "شريط التنقل السفلي",
     "halaqat": "Halkalar",
     "home": "Ana Sayfa",
     "more": "Daha Fazla",

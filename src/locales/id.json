@@ -16,6 +16,7 @@
     "title": "Pencadangan & Pemulihan Data"
   },
   "bottomNav": {
+    "accessibilityLabel": "شريط التنقل السفلي",
     "halaqat": "Halaqah",
     "home": "Beranda",
     "more": "Lainnya",
