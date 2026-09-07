@@ -24,12 +24,26 @@
   "activeSession": "Active Session",
   "add_new_student": "Add New Student",
   "addHalaqa": "Create New Halaqa",
+  "app": {
+    "name": "الحلقة الذكية",
+    "tagline": "منصة إدارة المقارئ والأكاديميات"
+  },
   "archive": "Archive",
   "assignTeacher": "Assign Responsible Teacher",
   "auth": {
+    "back_to_login": "العودة لتسجيل الدخول",
+    "check_inbox_title": "تحقق من صندوق البريد",
     "containerLabel": "حاوية تسجيل الدخول",
+    "email_placeholder": "البريد الإلكتروني",
     "forgot_password_title": "استعادة كلمة المرور | الحلقة الذكية",
     "rate_limit": "تجاوزت حد إرسال الرسائل المسموح به. انتظر دقيقة ثم حاول مجدداً.",
+    "resend_cooldown": "",
+    "resend_link": "إعادة إرسال الرابط",
+    "reset_link_sent_to": "تم إرسال رابط إعادة تعيين كلمة المرور إلى:",
+    "reset_password_desc": "أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة التعيين",
+    "reset_password_heading": "استعادة كلمة المرور",
+    "send_reset_link": "إرسال رابط الحماية",
+    "ssl_secured": "بياناتك مشفرة ومحمية وفق معايير 256-bit",
     "user_not_found": "البريد الإلكتروني غير مسجل لدينا."
   },
   "backup": {
@@ -114,6 +128,7 @@
     "search": "Search",
     "searchPlaceholder": "Search files...",
     "select": "Select",
+    "switch_language": "تغيير اللغة",
     "switchLanguage": "Switch Language",
     "unarchive": "Unarchive",
     "unspecified": "Unspecified",
