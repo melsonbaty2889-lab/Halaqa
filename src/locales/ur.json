@@ -139,6 +139,16 @@
     "uploadLogo": "تحميل الشعار",
     "weekendConfig": "أيام العطلة الأسبوعية"
   },
+  "datePicker": {
+    "ageFormat": "العمر: {{age}} سنة",
+    "correspondingGregorian": "الموافق ميلادياً:",
+    "correspondingHijri": "الموافق هجرياً:",
+    "pleaseSelectYear": "يرجى اختيار السنة",
+    "selectYear": "اختر السنة...",
+    "switchCalendar": "تبديل نوع التقويم",
+    "switchToGregorian": "التحويل للتقويم الميلادي",
+    "switchToHijri": "التحويل للتقويم الهجري"
+  },
   "days": {
     "friday": "جمعہ",
     "monday": "پیر",
