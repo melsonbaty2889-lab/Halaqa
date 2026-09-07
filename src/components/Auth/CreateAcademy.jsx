@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import SelectModal from './SelectModal';
 
-// استيراد الألوان والثوابت من المجلدات الصحيحة
+// 1. نظام الألوان والثيم الموحد
 import C from '@/theme/colors';
+
+// 2. الثوابت والهوكات
 import { COUNTRIES } from '@/constants/countries';
 import { getRiwayatOptions } from '@/constants/riwayat';
 
@@ -34,7 +36,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [modalType, setModalType] = useState(null);
 
-  // البيانات مع القيم الافتراضية الذكية
+  // البيانات مع القيم الافتراضية
   const [formData, setFormData] = useState({
     name_ar: '',
     slug: '',
@@ -45,21 +47,25 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     madrasa: 'mashreqi',
   });
 
-  const LEARNING_MODES = [
+  const LEARNING_MODES = useMemo(() => [
     { value: 'online', label: t('settings.online', 'عن بُعد') },
     { value: 'onsite', label: t('settings.onsite', 'حضوري') },
     { value: 'hybrid', label: t('settings.hybrid', 'مختلط') },
-  ];
+  ], [t]);
 
-  const countryOptions = (COUNTRIES || []).map((c) => ({
-    value: c.code,
-    label: isRtl ? (c.nameAr || c.name) : c.name,
-  }));
+  const countryOptions = useMemo(() => 
+    (COUNTRIES || []).map((c) => ({
+      value: c.code,
+      label: isRtl ? (c.nameAr || c.name) : c.name,
+    })), [isRtl]
+  );
 
-  const riwayaOptions = getRiwayatOptions(t, i18n.language);
+  const riwayaOptions = useMemo(() => 
+    getRiwayatOptions(t, i18n.language), [t, i18n.language]
+  );
 
   // توليد الـ Slug تلقائياً مع كتابة الاسم
-  const handleNameChange = (e) => {
+  const handleNameChange = useCallback((e) => {
     const nameVal = e.target.value;
     const generatedSlug = nameVal
       .trim()
@@ -72,16 +78,16 @@ export default function CreateAcademy({ onSubmitAcademy }) {
       name_ar: nameVal,
       slug: generatedSlug,
     }));
-  };
+  }, []);
 
-  const handleNextStep = (e) => {
+  const handleNextStep = useCallback((e) => {
     e.preventDefault();
     if (!formData.name_ar.trim()) return;
     setErrorMsg('');
     setStep(2);
-  };
+  }, [formData.name_ar]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     if (e) e.preventDefault();
     if (isSubmitting || !formData.name_ar.trim()) return;
 
@@ -118,10 +124,12 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           ? t('errors.slug_taken', 'اسم الأكاديمية مستخدم بالفعل، يرجى كتابة اسم آخر')
           : (error.message || t('errors.generic', 'حدث خطأ أثناء الإنشاء'))
       );
+    } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [formData, isSubmitting, onSubmitAcademy, t]);
 
+  // حالة النجاح
   if (isSuccess) {
     return (
       <AuthLayout>
@@ -136,10 +144,16 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           >
             <CheckCircle2 size={28} />
           </div>
-          <h2 className="text-base font-bold text-white mb-1">
+          <h2 
+            className="text-base font-bold mb-1"
+            style={{ color: C?.text?.primary || '#FFFFFF' }}
+          >
             {t('academy.created_success', 'تم إنشاء الأكاديمية بنجاح!')}
           </h2>
-          <p className="text-xs text-slate-400">
+          <p 
+            className="text-xs"
+            style={{ color: C?.text?.secondary || '#94A3B8' }}
+          >
             {t('common.preparing_dashboard', 'جاري تجهيز لوحة التحكم...')}
           </p>
         </div>
@@ -154,31 +168,44 @@ export default function CreateAcademy({ onSubmitAcademy }) {
         <div className="mb-2">
           <SmartHalaqaProLogo size={40} />
         </div>
-        <h1 className="text-white text-base font-bold">
+        <h1 
+          className="text-base font-bold"
+          style={{ color: C?.text?.primary || '#FFFFFF' }}
+        >
           {t('academy.create_title', 'إنشاء أكاديمية جديدة')}
         </h1>
 
         {/* شريط تقدم الخطوات */}
         <div className="flex items-center gap-2 mt-3">
           <div 
-            className={`h-1.5 rounded-full transition-all duration-300 ${step === 1 ? 'w-8 bg-amber-500' : 'w-3 bg-slate-700'}`} 
+            className="h-1.5 rounded-full transition-all duration-300"
+            style={{ 
+              width: step === 1 ? '2rem' : '0.75rem', 
+              backgroundColor: step === 1 ? (C?.primary?.DEFAULT || '#E07A00') : (C?.dark?.border || '#1B2738') 
+            }} 
           />
           <div 
-            className={`h-1.5 rounded-full transition-all duration-300 ${step === 2 ? 'w-8 bg-amber-500' : 'w-3 bg-slate-700'}`} 
+            className="h-1.5 rounded-full transition-all duration-300"
+            style={{ 
+              width: step === 2 ? '2rem' : '0.75rem', 
+              backgroundColor: step === 2 ? (C?.primary?.DEFAULT || '#E07A00') : (C?.dark?.border || '#1B2738') 
+            }} 
           />
         </div>
       </div>
 
+      {/* تنبيه الأخطاء */}
       {errorMsg && (
         <div 
-          className="mb-4 p-2.5 rounded-xl flex items-center gap-2 text-xs border"
+          className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs border"
+          role="alert"
           style={{ 
             backgroundColor: C?.danger?.bg || 'rgba(244, 63, 94, 0.1)',
             borderColor: C?.danger?.border || 'rgba(244, 63, 94, 0.3)',
             color: C?.danger?.text || '#F43F5E'
           }}
         >
-          <AlertCircle size={15} className="shrink-0" />
+          <AlertCircle size={16} className="shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -187,7 +214,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
       {step === 1 && (
         <form onSubmit={handleNextStep} className="space-y-4 animate-fadeIn">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+            <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: C?.text?.primary || '#FFFFFF' }}>
               <Building2 size={14} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
               <span>{t('academy.name_ar', 'اسم الأكاديمية')} *</span>
             </label>
@@ -196,11 +223,13 @@ export default function CreateAcademy({ onSubmitAcademy }) {
               value={formData.name_ar}
               onChange={handleNameChange}
               placeholder={t('academy.name_placeholder_example', 'أدخل اسم الأكاديمية')}
-              className="w-full px-3.5 py-2.5 text-white text-xs rounded-xl border outline-none transition focus:border-amber-500"
+              className="w-full px-3.5 min-h-[44px] text-xs rounded-xl border outline-none transition focus:border-amber-500"
               style={{ 
                 backgroundColor: C?.dark?.surface || '#0A101D', 
-                borderColor: C?.dark?.border || '#1B2738' 
+                borderColor: C?.dark?.border || '#1B2738',
+                color: C?.text?.primary || '#FFFFFF'
               }}
+              aria-label={t('academy.name_ar', 'اسم الأكاديمية')}
               required
               autoFocus
             />
@@ -210,8 +239,13 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             <button
               type="submit"
               disabled={!formData.name_ar.trim()}
-              className="w-full py-2.5 px-4 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer text-slate-950"
-              style={{ backgroundColor: C?.primary?.DEFAULT || '#E07A00' }}
+              title={t('common.next', 'المتابعة')}
+              aria-label={t('common.next', 'المتابعة')}
+              className="w-full min-h-[44px] py-2.5 px-4 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              style={{ 
+                backgroundColor: C?.primary?.DEFAULT || '#E07A00',
+                color: C?.primary?.text || '#000000'
+              }}
             >
               <span>{t('common.next', 'المتابعة')}</span>
               {isRtl ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
@@ -226,65 +260,75 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           
           {/* الدولة */}
           <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
-              <Globe size={12} className="text-amber-400" />
+            <label className="text-[11px] font-medium flex items-center gap-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+              <Globe size={12} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
               <span>{t('settings.country', 'الدولة المقترحة')}</span>
             </label>
             <button
               type="button"
               onClick={() => setModalType('country')}
-              className="w-full flex items-center justify-between px-3 py-2 border rounded-xl text-xs text-white"
+              title={t('settings.select_country', 'اختر الدولة')}
+              aria-label={t('settings.select_country', 'اختر الدولة')}
+              className="w-full min-h-[44px] flex items-center justify-between px-3 py-2 border rounded-xl text-xs transition"
               style={{ 
                 backgroundColor: C?.dark?.surface || '#0A101D', 
-                borderColor: C?.dark?.border || '#1B2738' 
+                borderColor: C?.dark?.border || '#1B2738',
+                color: C?.text?.primary || '#FFFFFF'
               }}
             >
               <span className="truncate">
                 {countryOptions.find((c) => c.value === formData.country)?.label || formData.country}
               </span>
-              <ChevronDown size={14} className="text-slate-400 shrink-0" />
+              <ChevronDown size={14} className="shrink-0" style={{ color: C?.text?.secondary || '#94A3B8' }} />
             </button>
           </div>
 
           {/* الرواية */}
           <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
-              <BookOpen size={12} className="text-amber-400" />
+            <label className="text-[11px] font-medium flex items-center gap-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+              <BookOpen size={12} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
               <span>{t('settings.riwaya', 'الرواية الرئيسية')}</span>
             </label>
             <button
               type="button"
               onClick={() => setModalType('riwaya')}
-              className="w-full flex items-center justify-between px-3 py-2 border rounded-xl text-xs text-white"
+              title={t('settings.select_riwaya', 'اختر الرواية')}
+              aria-label={t('settings.select_riwaya', 'اختر الرواية')}
+              className="w-full min-h-[44px] flex items-center justify-between px-3 py-2 border rounded-xl text-xs transition"
               style={{ 
                 backgroundColor: C?.dark?.surface || '#0A101D', 
-                borderColor: C?.dark?.border || '#1B2738' 
+                borderColor: C?.dark?.border || '#1B2738',
+                color: C?.text?.primary || '#FFFFFF'
               }}
             >
               <span className="truncate">
                 {riwayaOptions.find((r) => r.value === formData.riwaya)?.label}
               </span>
-              <ChevronDown size={14} className="text-slate-400 shrink-0" />
+              <ChevronDown size={14} className="shrink-0" style={{ color: C?.text?.secondary || '#94A3B8' }} />
             </button>
           </div>
 
           {/* نمط التعليم */}
           <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
-              <Sliders size={12} className="text-amber-400" />
+            <label className="text-[11px] font-medium flex items-center gap-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+              <Sliders size={12} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
               <span>{t('settings.mode', 'نموذج التعليم')}</span>
             </label>
             <select
               value={formData.mode}
-              onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
-              className="w-full px-3 py-2 text-white text-xs rounded-xl border outline-none"
+              onChange={(e) => setFormData((prev) => ({ ...prev, mode: e.target.value }))}
+              aria-label={t('settings.mode', 'نموذج التعليم')}
+              className="w-full min-h-[44px] px-3 py-2 text-xs rounded-xl border outline-none transition"
               style={{ 
                 backgroundColor: C?.dark?.surface || '#0A101D', 
-                borderColor: C?.dark?.border || '#1B2738' 
+                borderColor: C?.dark?.border || '#1B2738',
+                color: C?.text?.primary || '#FFFFFF'
               }}
             >
               {LEARNING_MODES.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
+                <option key={m.value} value={m.value} style={{ backgroundColor: C?.dark?.surface || '#0A101D' }}>
+                  {m.label}
+                </option>
               ))}
             </select>
           </div>
@@ -295,17 +339,29 @@ export default function CreateAcademy({ onSubmitAcademy }) {
               type="button"
               onClick={() => setStep(1)}
               disabled={isSubmitting}
-              className="py-2.5 px-3 font-semibold text-xs text-slate-300 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition"
+              title={t('common.back', 'الرجوع')}
+              aria-label={t('common.back', 'الرجوع')}
+              className="min-h-[44px] py-2.5 px-3.5 font-semibold text-xs rounded-xl border transition flex items-center justify-center disabled:opacity-50"
+              style={{ 
+                backgroundColor: C?.dark?.surface || '#0A101D', 
+                borderColor: C?.dark?.border || '#1B2738',
+                color: C?.text?.secondary || '#94A3B8'
+              }}
             >
-              {isRtl ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
+              {isRtl ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
             </button>
 
             <button
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer text-slate-950"
-              style={{ backgroundColor: C?.primary?.DEFAULT || '#E07A00' }}
+              title={t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
+              aria-label={t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
+              className="flex-1 min-h-[44px] py-2.5 px-4 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              style={{ 
+                backgroundColor: C?.primary?.DEFAULT || '#E07A00',
+                color: C?.primary?.text || '#000000'
+              }}
             >
               {isSubmitting ? (
                 <Loader2 size={16} className="animate-spin" />
