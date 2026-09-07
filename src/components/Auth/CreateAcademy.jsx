@@ -1,74 +1,22 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import C from '@/theme/colors';
+import { useCreateAcademy } from '@/hooks/useCreateAcademy';
 
 import { Building2, Check, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function CreateAcademy({ onSubmitAcademy }) {
-  const { t, i18n } = useTranslation();
-
-  const [academyName, setAcademyName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (isSubmitting || !academyName.trim()) return;
-
-    setIsSubmitting(true);
-    setErrorMsg('');
-
-    try {
-      // 1. توليد Slug مخفي وتلقائي من الاسم مع ضمان عدم التكرار
-      const cleanSlug = academyName
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '');
-
-      const generatedSlug = cleanSlug 
-        ? `${cleanSlug}-${Date.now().toString().slice(-4)}`
-        : `academy-${Date.now().toString().slice(-6)}`;
-
-      // 2. تحديد اسم حقل اللغة الحالية (ar, en, fr, tr, ur, id)
-      const currentLang = i18n.language || 'ar';
-      const nameKey = `name_${currentLang}`;
-
-      // 3. استدعاء الدالة السحابية مع التمرير الآمن
-      const { data, error } = await supabase.rpc('create_academy_with_owner', {
-        p_name: academyName.trim(),            // الاسم العام المباشر
-        [nameKey]: academyName.trim(),         // اسم الأكاديمية حسب لغة المستخدم
-        p_slug: generatedSlug,                 // الـ Slug المخفي المولّد تلقائياً
-        p_country_code: 'SA',                  // القيمة الافتراضية
-        p_currency: 'SAR',                     // القيمة الافتراضية
-        p_learning_type: 'online',
-        p_default_qiraat: 'hafs_an_asem',
-        p_teaching_methodology: 'mashreqi',
-        p_logo_url: null,
-      });
-
-      if (error) throw error;
-
-      setIsSuccess(true);
-      setTimeout(async () => {
-        if (onSubmitAcademy) await onSubmitAcademy(data);
-      }, 1000);
-
-    } catch (error) {
-      console.error('Create academy error:', error);
-      setErrorMsg(
-        error.message?.includes('duplicate key') || error.code === '23505'
-          ? t('errors.slug_taken', 'اسم الأكاديمية مستخدم بالفعل، يرجى كتابة اسم آخر')
-          : (error.message || t('errors.generic', 'حدث خطأ أثناء الإنشاء'))
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [academyName, isSubmitting, i18n.language, onSubmitAcademy, t]);
+  const { t } = useTranslation();
+  const {
+    academyName,
+    setAcademyName,
+    isSubmitting,
+    isSuccess,
+    errorMsg,
+    handleSubmit
+  } = useCreateAcademy(onSubmitAcademy);
 
   if (isSuccess) {
     return (
