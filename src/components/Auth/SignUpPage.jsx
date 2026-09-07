@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
-import { useLanguage } from '@/i18n/LanguageContext';
-import { safeT, getText } from '@/i18n/i18nUtils';
 import C from '@/theme/colors';
 import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
@@ -19,8 +18,13 @@ import {
   Loader2 
 } from 'lucide-react';
 
+const safeT = (t, key, fallback) => {
+  const translated = t(key);
+  return translated && translated !== key ? translated : fallback;
+};
+
 export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
-  const { t, currentLang } = useLanguage();
+  const { t } = useTranslation();
   
   const {
     isRtl,
@@ -97,12 +101,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       aria-label={safeT(t, 'common.switchLanguage', 'تغيير اللغة')}
       className="border py-1.5 ps-3 pe-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg transition-all min-h-[44px]"
       style={{
-        backgroundColor: C.dark?.surfaceInput,
-        borderColor: C.dark?.borderInput,
-        color: C.text?.sub,
+        backgroundColor: C.dark?.surfaceInput || C.dark?.surface,
+        borderColor: C.dark?.borderInput || C.inputs?.border,
+        color: C.text?.sub || C.text?.body,
       }}
     >
-      <Globe size={14} style={{ color: C.primary?.DEFAULT }} />
+      <Globe size={14} style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
       <span>{isRtl ? 'English' : 'العربية'}</span>
     </button>
   );
@@ -123,7 +127,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </h1>
           <p 
             className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase m-0"
-            style={{ color: C.primary?.DEFAULT }}
+            style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
           >
             {safeT(t, 'auth.platformSubtitle', 'منصة إدارة المقارئ والأكاديميات')}
           </p>
@@ -137,7 +141,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </h2>
         <p 
           className="text-xs text-center mb-4 leading-relaxed"
-          style={{ color: C.text?.sub }}
+          style={{ color: C.text?.sub || C.text?.muted }}
         >
           {safeT(t, 'auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
         </p>
@@ -150,13 +154,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           aria-label={safeT(t, 'auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}
           className="w-full py-2.5 ps-4 pe-4 border rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4 transition-all disabled:opacity-50 min-h-[44px]"
           style={{
-            backgroundColor: C.dark?.surfaceInput,
-            borderColor: C.dark?.borderInput,
-            color: C.text?.main,
+            backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
+            borderColor: C.dark?.borderInput || C.inputs?.border,
+            color: C.text?.title,
           }}
         >
           {googleLoading ? (
-            <Loader2 size={16} className="animate-spin" style={{ color: C.primary?.DEFAULT }} />
+            <Loader2 size={16} className="animate-spin" style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
           ) : (
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -170,7 +174,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
         {/* فاصل */}
         <div className="relative flex items-center justify-center mb-4">
-          <div className="border-t w-full" style={{ borderColor: C.dark?.borderInput }}></div>
+          <div className="border-t w-full" style={{ borderColor: C.dark?.borderInput || C.inputs?.border }}></div>
           <span 
             className="ps-3 pe-3 text-[11px] absolute font-medium"
             style={{ backgroundColor: C.dark?.bg, color: C.text?.muted }}
@@ -189,7 +193,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               className="absolute pointer-events-none transition-colors inset-y-auto"
               style={{
                 [isRtl ? 'right' : 'left']: '0.875rem',
-                color: fullName ? C.primary?.DEFAULT : C.text?.muted
+                color: fullName ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
               }} 
             />
             <input 
@@ -203,9 +207,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               style={{
                 paddingRight: isRtl ? '2.75rem' : '1rem',
                 paddingLeft: isRtl ? '1rem' : '2.75rem',
-                borderColor: C.dark?.borderInput,
-                backgroundColor: C.dark?.surfaceInput,
-                color: C.text?.main,
+                borderColor: C.dark?.borderInput || C.inputs?.border,
+                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
           </div>
@@ -217,7 +221,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               className="absolute pointer-events-none transition-colors inset-y-auto"
               style={{
                 [isRtl ? 'right' : 'left']: '0.875rem',
-                color: email ? C.primary?.DEFAULT : C.text?.muted
+                color: email ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
               }} 
             />
             <input 
@@ -231,9 +235,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               style={{
                 paddingRight: isRtl ? '2.75rem' : '1rem',
                 paddingLeft: isRtl ? '1rem' : '2.75rem',
-                borderColor: C.dark?.borderInput,
-                backgroundColor: C.dark?.surfaceInput,
-                color: C.text?.main,
+                borderColor: C.dark?.borderInput || C.inputs?.border,
+                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
           </div>
@@ -245,7 +249,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               className="absolute pointer-events-none transition-colors inset-y-auto"
               style={{
                 [isRtl ? 'right' : 'left']: '0.875rem',
-                color: password ? C.primary?.DEFAULT : C.text?.muted
+                color: password ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
               }} 
             />
             <input 
@@ -260,9 +264,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               style={{
                 paddingRight: '2.75rem',
                 paddingLeft: '2.75rem',
-                borderColor: C.dark?.borderInput,
-                backgroundColor: C.dark?.surfaceInput,
-                color: C.text?.main,
+                borderColor: C.dark?.borderInput || C.inputs?.border,
+                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
             <button
@@ -286,7 +290,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               className="absolute pointer-events-none transition-colors inset-y-auto"
               style={{
                 [isRtl ? 'right' : 'left']: '0.875rem',
-                color: confirmPassword ? C.primary?.DEFAULT : C.text?.muted
+                color: confirmPassword ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
               }} 
             />
             <input 
@@ -300,9 +304,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               style={{
                 paddingRight: '2.75rem',
                 paddingLeft: '2.75rem',
-                borderColor: C.dark?.borderInput,
-                backgroundColor: C.dark?.surfaceInput,
-                color: C.text?.main,
+                borderColor: C.dark?.borderInput || C.inputs?.border,
+                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
             <button
@@ -335,22 +339,22 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               aria-label={safeT(t, 'auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
               className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px]" 
               style={{
-                borderColor: C.dark?.borderInput,
-                backgroundColor: C.dark?.surfaceInput,
-                accentColor: C.primary?.DEFAULT,
+                borderColor: C.dark?.borderInput || C.inputs?.border,
+                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
+                accentColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
               }}
             />
             <label 
               htmlFor="agreeTerms" 
               className="text-[11px] cursor-pointer leading-tight select-none pt-0.5"
-              style={{ color: C.text?.sub }}
+              style={{ color: C.text?.sub || C.text?.body }}
             >
               {safeT(t, 'auth.iAgreeTo', 'أوافق على')}{' '}
               <button 
                 type="button" 
                 onClick={() => openTermsModal('terms')} 
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C.primary?.DEFAULT }}
+                style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
               >
                 {safeT(t, 'auth.termsAndConditions', 'الشروط والأحكام')}
               </button>{' '}
@@ -359,7 +363,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 type="button" 
                 onClick={() => openTermsModal('privacy')} 
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C.primary?.DEFAULT }}
+                style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
               >
                 {safeT(t, 'auth.privacyPolicy', 'سياسة الخصوصية')}
               </button>
@@ -388,7 +392,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             aria-label={safeT(t, 'auth.createNewAccount', 'إنشاء حساب جديد')}
             className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px]"
             style={{
-              backgroundColor: C.primary?.DEFAULT,
+              backgroundColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
               color: C.dark?.bg || '#000000',
             }}
           >
@@ -414,14 +418,14 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         {/* تحويل الدخول */}
         <div 
           className="mt-3 text-center text-xs"
-          style={{ color: C.text?.sub }}
+          style={{ color: C.text?.sub || C.text?.body }}
         >
           <span>{safeT(t, 'auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>{' '}
           <button 
             type="button"
             onClick={onSwitchToLogin} 
             className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 ms-1 min-h-[44px] px-1"
-            style={{ color: C.primary?.DEFAULT }}
+            style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
           >
             {safeT(t, 'auth.signIn', 'تسجيل الدخول')}
           </button>
