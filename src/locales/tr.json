@@ -5,6 +5,9 @@
   "addHalaqa": "Yeni Halka Oluştur",
   "archive": "Arşivle",
   "assignTeacher": "Sorumlu Öğretmeni Ata",
+  "auth": {
+    "containerLabel": "حاوية تسجيل الدخول"
+  },
   "backup": {
     "description": "Sistem verilerini yönetin ve güvenli şekilde yedekleyin",
     "exportBtn": "Verileri Dışa Aktar",
@@ -32,6 +35,7 @@
   "common": {
     "active": "Aktif",
     "add": "Ekle",
+    "appName": "SMART HALAQA",
     "archive": "Arşivle",
     "archived": "Arşivlendi",
     "back": "Geri",

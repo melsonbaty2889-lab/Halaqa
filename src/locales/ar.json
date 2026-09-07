@@ -5,6 +5,9 @@
   "addHalaqa": "إنشاء حلقة جديدة",
   "archive": "أرشفة",
   "assignTeacher": "تعيين المعلم المسؤول",
+  "auth": {
+    "containerLabel": "حاوية تسجيل الدخول"
+  },
   "backup": {
     "description": "description",
     "exportBtn": "exportBtn",
@@ -32,6 +35,7 @@
   "common": {
     "active": "نشط",
     "add": "add",
+    "appName": "SMART HALAQA",
     "archive": "أرشفة",
     "archived": "مؤرشف",
     "back": "رجوع",

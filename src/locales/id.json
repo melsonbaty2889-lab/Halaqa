@@ -5,6 +5,9 @@
   "addHalaqa": "Buat Halaqah Baru",
   "archive": "Arsipkan",
   "assignTeacher": "Tugaskan Pengajar",
+  "auth": {
+    "containerLabel": "حاوية تسجيل الدخول"
+  },
   "backup": {
     "description": "Kelola dan cadangkan data sistem secara aman",
     "exportBtn": "Ekspor Data",
@@ -32,6 +35,7 @@
   "common": {
     "active": "Aktif",
     "add": "Tambah",
+    "appName": "SMART HALAQA",
     "archive": "Arsipkan",
     "archived": "Diarsipkan",
     "back": "Kembali",

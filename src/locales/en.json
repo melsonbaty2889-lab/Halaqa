@@ -5,6 +5,9 @@
   "addHalaqa": "Create New Halaqa",
   "archive": "Archive",
   "assignTeacher": "Assign Responsible Teacher",
+  "auth": {
+    "containerLabel": "حاوية تسجيل الدخول"
+  },
   "backup": {
     "description": "Manage and securely back up system data",
     "exportBtn": "Export Data",
@@ -32,6 +35,7 @@
   "common": {
     "active": "Active",
     "add": "Add",
+    "appName": "SMART HALAQA",
     "archive": "Archive",
     "archived": "Archived",
     "back": "Back",

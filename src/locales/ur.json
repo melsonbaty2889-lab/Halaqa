@@ -5,6 +5,9 @@
   "addHalaqa": "نیا حلقہ بنائیں",
   "archive": "آرکائیو کریں",
   "assignTeacher": "ذیلی معلم کا تعین کریں",
+  "auth": {
+    "containerLabel": "حاوية تسجيل الدخول"
+  },
   "backup": {
     "description": "سسٹم کے ڈیٹا کو محفوظ طریقے سے آرکائیو اور بیک اپ کریں",
     "exportBtn": "ڈیٹا ایکسپورٹ کریں",
@@ -32,6 +35,7 @@
   "common": {
     "active": "فعال",
     "add": "شامل کریں",
+    "appName": "SMART HALAQA",
     "archive": "آرکائیو کریں",
     "archived": "آرکائیو شدہ",
     "back": "واپس",
