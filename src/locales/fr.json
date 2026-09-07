@@ -514,6 +514,19 @@
     "selectPlan": "Choisir ce plan",
     "selectRegionNotice": "Sélectionnez votre région géographique pour activer les modes de paiement compatibles :"
   },
+  "termsModal": {
+    "close": "إغلاق",
+    "privacyRule1": "1. يتم تشفير جميع البيانات باستخدام معايير SSL لحمايتها.",
+    "privacyRule2": "2. لا نقوم بمشاركة أو بيع بياناتك الشخصية لأي طرف ثالث لأغراض إعلانية.",
+    "privacyRule3": "3. نستخدم بريدك الإلكتروني للتواصل والتنبيهات المتعلقة بحسابك فقط.",
+    "privacyTitle": "سياسة الخصوصية",
+    "privacyWelcome": "نحن نلتزم بحماية خصوصيتك وبياناتك الشخصية وفقاً لأعلى معايير الأمان:",
+    "termsRule1": "1. التعهد بصحة البيانات المدخلة عند إنشاء الحساب.",
+    "termsRule2": "2. الحفاظ على سرية معلومات الحساب وكلمة المرور.",
+    "termsRule3": "3. احترام حقوق الملكية الفكرية للمحتوى التعليمي والمناهج المرفوعة.",
+    "termsTitle": "الشروط والأحكام",
+    "termsWelcome": "مرحباً بك في منصة الحلقة الذكية. باستخدامك للمنصة، فإنك توافق على الالتزام بالشروط التالية:"
+  },
   "timezone": "Fuseau horaire du système",
   "timezones": {
     "berlin": "Europe / Berlin (GMT+1)",
