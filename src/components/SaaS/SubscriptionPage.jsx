@@ -5,18 +5,39 @@ import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
-import { colors, UI } from '@/theme';
-import { ArrowLeft, Globe, Loader2 } from 'lucide-react';
+import { colors } from '@/theme';
+import { ArrowLeft, Globe } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
   validateCoupon, 
   calculateFinalPrice 
 } from '@/constants/subscriptionData';
 
+// 🌐 دالة الاكتشاف التلقائي لإقليم العميل بناءً على المنطقة الزمنية للمتصفح
+const detectUserRegion = () => {
+  try {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (timeZone.includes('Cairo') || timeZone.includes('Africa/Cairo')) {
+      return 'egypt';
+    } 
+    if (
+      timeZone.includes('Riyadh') || timeZone.includes('Dubai') || 
+      timeZone.includes('Kuwait') || timeZone.includes('Qatar') || 
+      timeZone.includes('Bahrain') || timeZone.includes('Muscat')
+    ) {
+      return 'gcc';
+    }
+    return 'global'; // الافتراضي للدول الدولية (أوروبا، أمريكا، باقي آسيا)
+  } catch (e) {
+    return 'global';
+  }
+};
+
 export default function SubscriptionPage({ isRTL = true, onBack }) {
   const { t, i18n } = useTranslation();
 
-  const [region, setRegion] = useState('egypt');
+  // 🌍 ضبط الإقليم الافتراضي ديناميكياً بدلاً من القيمة الصلبة 'egypt'
+  const [region, setRegion] = useState(() => detectUserRegion());
   const [selectedPlan, setSelectedPlan] = useState('yearly'); // السنوي افتراضي
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
@@ -42,7 +63,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
     return t(currentRegionData.currencyKey, currentRegionData.defaultCurrency);
   }, [t, currentRegionData]);
 
-  // تجهيز خطتي (الشهري والسنوي) فقط بدون خطة مدى الحياة
+  // تجهيز خطتي (الشهري والسنوي) فقط
   const plans = useMemo(() => {
     const monthlyPrice = currentRegionData.plans.monthly.price;
     const yearlyPrice = currentRegionData.plans.yearly.price;
@@ -160,7 +181,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
           <button 
             onClick={onBack} 
             aria-label={t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}
-            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#CBD5E1] transition-all"
+            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#CBD5E1] transition-all cursor-pointer"
           >
             <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
             <span>{t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}</span>
@@ -169,7 +190,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
           <button 
             onClick={toggleLanguage}
             aria-label={t('common.switchLanguage', 'تغيير اللغة')}
-            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#F59E0B]"
+            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#F59E0B] transition-all cursor-pointer"
           >
             <Globe size={16} />
             <span>{i18n.language === 'en' ? 'العربية' : 'English'}</span>
