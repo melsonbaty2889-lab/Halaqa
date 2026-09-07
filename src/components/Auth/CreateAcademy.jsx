@@ -1,14 +1,11 @@
-// src/components/Auth/CreateAcademy.jsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import SelectModal from './SelectModal';
 
-import { CURRENCIES } from '@/constants/currencies';
-import { COUNTRIES } from '@/constants/countries';
-import { colors as C } from '@/theme/colors';
+import { CURRENCIES } from '../../constants/currencies';
+import { COUNTRIES } from '../../constants/countries';
 
 import { 
   Building2, 
@@ -26,18 +23,7 @@ import {
   Sliders
 } from 'lucide-react';
 
-export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLanguage = 'ar' }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
-
-  // دالة الترجمة الآمنة المعتمدة بالدليل
-  const safeT = useCallback((key, fallback) => {
-    if (typeof t === 'function') {
-      return t(key, { defaultValue: fallback || key });
-    }
-    return fallback || key;
-  }, [t]);
-
+export default function CreateAcademy({ onLogout, onSubmitAcademy, isRtl = true, currentLanguage = 'ar' }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [modalType, setModalType] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,54 +61,54 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
     logo_url: ''
   });
 
-  const LEARNING_TYPES = useMemo(() => [
-    { id: 'online', label: safeT('createAcademy.online', 'عن بُعد'), icon: Laptop },
-    { id: 'onsite', label: safeT('createAcademy.onsite', 'حضوري'), icon: Building2 },
-    { id: 'hybrid', label: safeT('createAcademy.hybrid', 'مختلط'), icon: Users },
-  ], [safeT]);
+  const LEARNING_TYPES = [
+    { id: 'online', label: isRtl ? 'عن بُعد' : 'Online', icon: Laptop },
+    { id: 'onsite', label: isRtl ? 'حضوري' : 'On-Site', icon: Building2 },
+    { id: 'hybrid', label: isRtl ? 'مختلط' : 'Hybrid', icon: Users },
+  ];
 
-  const DAYS_OF_WEEK = useMemo(() => [
-    { id: 'sunday', label: safeT('days.sunday', 'الأحد') },
-    { id: 'monday', label: safeT('days.monday', 'الإثنين') },
-    { id: 'tuesday', label: safeT('days.tuesday', 'الثلاثاء') },
-    { id: 'wednesday', label: safeT('days.wednesday', 'الأربعاء') },
-    { id: 'thursday', label: safeT('days.thursday', 'الخميس') },
-    { id: 'friday', label: safeT('days.friday', 'الجمعة') },
-    { id: 'saturday', label: safeT('days.saturday', 'السبت') },
-  ], [safeT]);
+  const DAYS_OF_WEEK = [
+    { id: 'sunday', label: isRtl ? 'الأحد' : 'Sunday' },
+    { id: 'monday', label: isRtl ? 'الإثنين' : 'Monday' },
+    { id: 'tuesday', label: isRtl ? 'الثلاثاء' : 'Tuesday' },
+    { id: 'wednesday', label: isRtl ? 'الأربعاء' : 'Wednesday' },
+    { id: 'thursday', label: isRtl ? 'الخميس' : 'Thursday' },
+    { id: 'friday', label: isRtl ? 'الجمعة' : 'Friday' },
+    { id: 'saturday', label: isRtl ? 'السبت' : 'Saturday' },
+  ];
 
-  const QIRAAT_OPTIONS = useMemo(() => [
-    { value: 'hafs', label: safeT('qiraat.hafs', 'حفص عن عاصم') },
-    { value: 'warsh', label: safeT('qiraat.warsh', 'ورش عن نافع') },
-    { value: 'qalon', label: safeT('qiraat.qalon', 'قالون عن نافع') },
-    { value: 'aldoori', label: safeT('qiraat.aldoori', 'الدوري عن أبي عمرو') },
-  ], [safeT]);
+  const QIRAAT_OPTIONS = [
+    { value: 'hafs', label: isRtl ? 'حفص عن عاصم' : 'Hafs an Asim' },
+    { value: 'warsh', label: isRtl ? 'ورش عن نافع' : 'Warsh an Nafi' },
+    { value: 'qalon', label: isRtl ? 'قالون عن نافع' : 'Qalon an Nafi' },
+    { value: 'aldoori', label: isRtl ? 'الدوري عن أبي عمرو' : 'Al-Doori an Abi Amr' },
+  ];
 
-  const METHODOLOGY_OPTIONS = useMemo(() => [
-    { value: 'mashreqi', label: safeT('methodology.mashreqi', 'النظام المشرقي (حفظ ومراجعة صغرى وكبرى)') },
-    { value: 'maghrebi', label: safeT('methodology.maghrebi', 'النظام المغاربي (اللوح والرسم والراتب)') },
-    { value: 'repetitive', label: safeT('methodology.repetitive', 'نظام التكرار والتلقين') },
-  ], [safeT]);
+  const METHODOLOGY_OPTIONS = [
+    { value: 'mashreqi', label: isRtl ? 'النظام المشرقي (حفظ ومراجعة صغرى وكبرى)' : 'Mashreqi Methodology' },
+    { value: 'maghrebi', label: isRtl ? 'النظام المغاربي (اللوح والرسم والراتب)' : 'Maghrebi Methodology' },
+    { value: 'repetitive', label: isRtl ? 'نظام التكرار والتلقين' : 'Repetitive Methodology' },
+  ];
 
-  const BASE_LANGUAGES = useMemo(() => [
-    { value: 'ar', label: safeT('languages.ar', 'العربية (Arabic)') },
-    { value: 'en', label: safeT('languages.en', 'English') },
-    { value: 'fr', label: safeT('languages.fr', 'Français') },
-    { value: 'tr', label: safeT('languages.tr', 'Türkçe') },
-    { value: 'ur', label: safeT('languages.ur', 'اردو (Urdu)') },
-    { value: 'custom', label: safeT('languages.custom', 'لغة أخرى...') }
-  ], [safeT]);
+  const BASE_LANGUAGES = [
+    { value: 'ar', label: 'العربية (Arabic)' },
+    { value: 'en', label: 'English' },
+    { value: 'fr', label: 'Français' },
+    { value: 'tr', label: 'Türkçe' },
+    { value: 'ur', label: 'اردو (Urdu)' },
+    { value: 'custom', label: isRtl ? 'لغة أخرى...' : 'Other Language...' }
+  ];
 
-  const countryOptions = useMemo(() => [
+  const countryOptions = [
     ...(COUNTRIES || []).map((c) => ({
       value: c.code,
       label: c.nameAr || c.name,
       subLabel: c.timezone,
     })),
-    { value: 'CUSTOM', label: safeT('countries.custom', 'دولة أخرى...') }
-  ], [safeT]);
+    { value: 'CUSTOM', label: isRtl ? 'دولة أخرى...' : 'Other Country...' }
+  ];
 
-  const handleCountrySelect = useCallback((countryCode) => {
+  const handleCountrySelect = (countryCode) => {
     if (countryCode === 'CUSTOM') {
       setIsCustomCountry(true);
       setFormData((prev) => ({ ...prev, country_code: 'CUSTOM' }));
@@ -153,7 +139,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
       default_qiraat: updatedQiraat,
       teaching_methodology: updatedMethodology
     }));
-  }, []);
+  };
 
   // فحص توفر الـ slug في قاعدة البيانات بأمان
   useEffect(() => {
@@ -166,7 +152,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
     const timer = setTimeout(async () => {
       setIsCheckingSlug(true);
       try {
-        if (!supabase?.rpc) throw new Error('Supabase RPC is not available');
         const { data, error } = await supabase.rpc('check_slug_availability', {
           p_slug: cleanSlug
         });
@@ -184,7 +169,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
     return () => clearTimeout(timer);
   }, [formData.slug]);
 
-  const handleNameChange = useCallback((e) => {
+  const handleNameChange = (e) => {
     const nameVal = e.target.value;
     const generatedSlug = nameVal
       .trim()
@@ -197,18 +182,18 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
       name: nameVal,
       slug: prev.slug === '' || prev.slug === generatedSlug ? generatedSlug : prev.slug
     }));
-  }, []);
+  };
 
-  const handleSlugChange = useCallback((e) => {
+  const handleSlugChange = (e) => {
     const sanitized = e.target.value
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
 
     setFormData((prev) => ({ ...prev, slug: sanitized }));
-  }, []);
+  };
 
-  const toggleWeekendDay = useCallback((dayId) => {
+  const toggleWeekendDay = (dayId) => {
     setFormData((prev) => {
       const exists = prev.weekend_days.includes(dayId);
       const updated = exists
@@ -216,18 +201,18 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
         : [...prev.weekend_days, dayId];
       return { ...prev, weekend_days: updated };
     });
-  }, []);
+  };
 
-  const handleLogoUpload = useCallback(async (e) => {
-    const file = e.target.files?.[0];
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setErrorMsg(safeT('createAcademy.invalidImage', 'يُرجى اختيار ملف صورة صالح.'));
+      setErrorMsg(isRtl ? 'يُرجى اختيار ملف صورة صالح.' : 'Please select a valid image file.');
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg(safeT('createAcademy.imageTooLarge', 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت.'));
+      setErrorMsg(isRtl ? 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت.' : 'Image size must not exceed 2MB.');
       return;
     }
 
@@ -235,7 +220,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
     setErrorMsg('');
 
     try {
-      if (!supabase?.storage) throw new Error('Supabase storage unavailable');
       const fileExt = file.name.split('.').pop();
       const fileName = `logo_${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
@@ -253,15 +237,15 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
       setFormData((prev) => ({ ...prev, logo_url: publicUrlData.publicUrl }));
     } catch (err) {
       console.error('Logo upload error:', err);
-      setErrorMsg(safeT('createAcademy.uploadError', 'فشل رفع الشعار، يُرجى المحاولة مرة أخرى.'));
+      setErrorMsg(isRtl ? 'فشل رفع الشعار، يُرجى المحاولة مرة أخرى.' : 'Failed to upload logo.');
     } finally {
       setUploadingLogo(false);
     }
-  }, [safeT]);
+  };
 
   const isStep1Valid = formData.name.trim().length >= 2 && formData.slug.trim().length >= 2 && isSlugAvailable === true;
 
-  const handleSubmit = useCallback(async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
 
@@ -269,7 +253,6 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
     setErrorMsg('');
 
     try {
-      if (!supabase?.rpc) throw new Error('Supabase client error');
       const finalCountry = isCustomCountry ? 'OTHER' : formData.country_code;
       const finalReading = formData.default_qiraat === 'OTHER' ? 'hafs' : formData.default_qiraat;
       const finalMethodology = formData.teaching_methodology === 'OTHER' ? 'mashreqi' : formData.teaching_methodology;
@@ -298,34 +281,25 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
       console.error('Error creating academy:', error);
       setErrorMsg(
         error.message?.includes('duplicate key') || error.code === '23505'
-          ? safeT('createAcademy.slugTaken', 'رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.')
-          : (error.message || safeT('createAcademy.genericError', 'حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.'))
+          ? (isRtl ? 'رابط الأكاديمية مستخدم بالفعل، اختر رابطاً آخر.' : 'Academy URL is already taken.')
+          : (error.message || (isRtl ? 'حدث خطأ أثناء إنشاء الأكاديمية، يُرجى المحاولة لاحقاً.' : 'Failed to create academy. Please try again.'))
       );
       setIsSubmitting(false);
     }
-  }, [isSubmitting, isCustomCountry, formData, customCountryName, onSubmitAcademy, safeT]);
+  };
 
   if (isSuccess) {
     return (
       <AuthLayout>
         <div className="flex flex-col items-center justify-center py-10 text-center animate-fadeIn">
-          <div 
-            className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
-            style={{
-              backgroundColor: C.emerald?.light || 'rgba(16, 185, 129, 0.2)',
-              borderColor: C.emerald?.DEFAULT || 'rgba(16, 185, 129, 0.4)',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              color: C.emerald?.DEFAULT || '#10b981'
-            }}
-          >
+          <div className="w-14 h-14 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/10">
             <CheckCircle2 size={32} />
           </div>
-          <h2 className="text-base font-bold mb-1" style={{ color: C.text?.main }}>
-            {safeT('createAcademy.successTitle', 'تم تأسيس الأكاديمية بنجاح!')}
+          <h2 className="text-base font-bold text-white mb-1">
+            {isRtl ? 'تم تأسيس الأكاديمية بنجاح!' : 'Academy Established Successfully!'}
           </h2>
-          <p className="text-xs" style={{ color: C.text?.muted }}>
-            {safeT('createAcademy.preparingDashboard', 'جاري تجهيز لوحة التحكم الخاصة بك...')}
+          <p className="text-xs text-slate-400">
+            {isRtl ? 'جاري تجهيز لوحة التحكم الخاصة بك...' : 'Preparing your dashboard...'}
           </p>
         </div>
       </AuthLayout>
@@ -334,138 +308,89 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
 
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center mb-4" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="flex flex-col items-center mb-4">
         <div className="mb-1">
           <SmartHalaqaProLogo size={44} />
         </div>
-        <h1 className="text-lg font-bold mt-1 mb-0.5 text-center" style={{ color: C.text?.main }}>
-          {safeT('createAcademy.title', 'تأسيس الأكاديمية')}
+        <h1 className="text-[var(--text-main,#FFFFFF)] text-lg font-bold mt-1 mb-0.5 text-center">
+          {isRtl ? 'تأسيس الأكاديمية' : 'Establish Academy'}
         </h1>
-        <p className="text-xs text-center m-0" style={{ color: C.text?.sub }}>
-          {safeT('createAcademy.subtitle', 'إدخال البيانات الأساسية والخيارات التشغيلية')}
+        <p className="text-[var(--text-sub,#94A3B8)] text-xs text-center m-0">
+          {isRtl ? 'إدخال البيانات الأساسية والخيارات التشغيلية' : 'Enter basic and operational configurations'}
         </p>
       </div>
 
-      <div 
-        className="flex items-center justify-center gap-2 mb-4 p-2 rounded-xl"
-        dir={isRtl ? 'rtl' : 'ltr'}
-        style={{
-          backgroundColor: C.dark?.surfaceInput,
-          borderColor: C.dark?.borderInput,
-          borderWidth: '1px',
-          borderStyle: 'solid'
-        }}
-      >
+      <div className="flex items-center justify-center gap-2 mb-4 bg-[var(--surface-input,#0A101D)] p-2 rounded-xl border border-[var(--border-input,#1B2738)]">
         {[1, 2].map((step) => (
           <div key={step} className="flex items-center gap-2">
-            <div 
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
-              style={{
-                backgroundColor: currentStep === step 
-                  ? (C.amber?.DEFAULT || C.primary?.DEFAULT)
-                  : currentStep > step 
-                  ? (C.emerald?.light || 'rgba(16, 185, 129, 0.2)')
-                  : C.dark?.surfaceCard,
-                color: currentStep === step ? C.dark?.bg : currentStep > step ? (C.emerald?.DEFAULT || '#10b981') : C.text?.muted,
-                borderColor: currentStep > step ? (C.emerald?.DEFAULT || '#10b981') : 'transparent',
-                borderWidth: currentStep > step ? '1px' : '0px'
-              }}
-            >
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+              currentStep === step
+                ? 'bg-[var(--primary,#E07A00)] text-slate-950'
+                : currentStep > step
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-slate-800 text-slate-400'
+            }`}>
               {currentStep > step ? <Check size={12} /> : step}
             </div>
-            <span className="text-[11px] font-semibold" style={{ color: C.text?.main }}>
-              {step === 1 ? safeT('createAcademy.step1Name', 'بيانات الهوية') : safeT('createAcademy.step2Name', 'التكيف والإنشاء')}
+            <span className="text-[11px] font-semibold text-slate-300">
+              {step === 1 ? (isRtl ? 'بيانات الهوية' : 'Identity') : (isRtl ? 'التكيف والإنشاء' : 'Configurations')}
             </span>
-            {step < 2 && <div className="w-8 h-0.5 mx-1" style={{ backgroundColor: C.dark?.borderInput }} />}
+            {step < 2 && <div className="w-8 h-0.5 bg-slate-800 mx-1" />}
           </div>
         ))}
       </div>
 
       {errorMsg && (
-        <div 
-          className="mb-4 p-2.5 rounded-xl flex items-center gap-2 text-xs"
-          dir={isRtl ? 'rtl' : 'ltr'}
-          style={{
-            backgroundColor: C.error?.light || 'rgba(239, 68, 68, 0.1)',
-            borderColor: C.error?.DEFAULT || 'rgba(239, 68, 68, 0.3)',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            color: C.error?.DEFAULT || '#f87171'
-          }}
-        >
+        <div className="mb-4 p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-2 text-rose-400 text-xs">
           <AlertCircle size={15} className="shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} dir={isRtl ? 'rtl' : 'ltr'}>
+      <form onSubmit={handleSubmit}>
         {currentStep === 1 && (
           <div className="space-y-3.5">
-            <div 
-              className="flex items-center gap-2 pb-1.5"
-              style={{
-                borderBottomWidth: '1px',
-                borderBottomStyle: 'solid',
-                borderBottomColor: C.dark?.borderInput
-              }}
-            >
-              <Building2 size={16} style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
-              <h2 className="font-bold text-xs" style={{ color: C.text?.main }}>
-                {safeT('createAcademy.identityHeader', 'المعلومات التعريفية')}
+            <div className="flex items-center gap-2 pb-1.5 border-b border-[var(--border-input,#1B2738)]">
+              <Building2 size={16} className="text-[var(--primary,#E07A00)]" />
+              <h2 className="font-bold text-xs text-[var(--text-main,#FFFFFF)]">
+                {isRtl ? 'المعلومات التعريفية' : 'Basic Identifiers'}
               </h2>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium block" style={{ color: C.text?.sub }}>
-                {safeT('createAcademy.academyNameLabel', 'اسم الأكاديمية')}
+              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)]">
+                {isRtl ? 'اسم الأكاديمية' : 'Academy Title'}
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={handleNameChange}
-                aria-label={safeT('createAcademy.academyNameLabel', 'اسم الأكاديمية')}
-                className="w-full px-3 py-2 rounded-xl text-xs outline-none transition-colors duration-200"
-                style={{
-                  backgroundColor: C.dark?.surfaceInput,
-                  color: C.text?.main,
-                  borderColor: C.dark?.borderInput,
-                  borderWidth: '1px',
-                  borderStyle: 'solid'
-                }}
+                className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs outline-none"
                 required
                 autoFocus
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium flex items-center gap-1" style={{ color: C.text?.sub }}>
-                <LinkIcon size={12} style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
-                <span>{safeT('createAcademy.slugLabel', 'المعرف الفريد (Slug)')}</span>
+              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)] flex items-center gap-1">
+                <LinkIcon size={12} className="text-[var(--primary,#E07A00)]" />
+                <span>{isRtl ? 'المعرف الفريد (Slug)' : 'Unique Identifier (Slug)'}</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={handleSlugChange}
-                  aria-label={safeT('createAcademy.slugLabel', 'المعرف الفريد (Slug)')}
-                  className="w-full px-3 py-2 pe-8 rounded-xl text-xs outline-none transition-colors duration-200"
-                  dir="ltr"
-                  style={{
-                    backgroundColor: C.dark?.surfaceInput,
-                    color: C.text?.main,
-                    borderColor: C.dark?.borderInput,
-                    borderWidth: '1px',
-                    borderStyle: 'solid'
-                  }}
+                  className="w-full px-3 py-2 bg-[var(--surface-input,#0A101D)] text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--border-input,#1B2738)] focus:border-[var(--primary,#E07A00)] text-xs dir-ltr outline-none pr-8"
                   required
                 />
-                <div className="absolute top-2.5 inset-inline-end-2.5 flex items-center pointer-events-none">
+                <div className="absolute top-2.5 left-2.5 flex items-center">
                   {isCheckingSlug ? (
-                    <Loader2 size={14} className="animate-spin" style={{ color: C.amber?.DEFAULT }} />
+                    <Loader2 size={14} className="animate-spin text-amber-400" />
                   ) : isSlugAvailable === true ? (
-                    <CheckCircle2 size={14} style={{ color: C.emerald?.DEFAULT }} />
+                    <CheckCircle2 size={14} className="text-emerald-400" />
                   ) : isSlugAvailable === false ? (
-                    <AlertCircle size={14} style={{ color: C.error?.DEFAULT }} />
+                    <AlertCircle size={14} className="text-rose-400" />
                   ) : null}
                 </div>
               </div>
@@ -476,8 +401,8 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
         {currentStep === 2 && (
           <div className="space-y-3.5">
             <div className="space-y-1">
-              <label className="text-[11px] font-medium block" style={{ color: C.text?.sub }}>
-                {safeT('createAcademy.learningTypeLabel', 'نموذج تقديم التعليم')}
+              <label className="text-[11px] font-medium text-[var(--text-sub,#94A3B8)]">
+                {isRtl ? 'نموذج تقديم التعليم' : 'Learning Delivery Model'}
               </label>
               <div className="grid grid-cols-3 gap-1.5">
                 {LEARNING_TYPES.map((type) => {
@@ -488,18 +413,14 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
                       type="button"
                       key={type.id}
                       onClick={() => setFormData({ ...formData, learning_type: type.id })}
-                      aria-label={type.label}
-                      className="p-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 min-h-[44px]"
-                      style={{
-                        backgroundColor: isSelected ? (C.amber?.light || 'rgba(217, 119, 6, 0.1)') : C.dark?.surfaceInput,
-                        borderColor: isSelected ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.dark?.borderInput,
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        color: isSelected ? C.text?.main : C.text?.muted
-                      }}
+                      className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center ${
+                        isSelected
+                          ? 'bg-[var(--primary,#E07A00)]/10 border-[var(--primary,#E07A00)] text-[var(--text-main,#FFFFFF)]'
+                          : 'bg-[var(--surface-input,#0A101D)] border-[var(--border-input,#1B2738)] text-slate-400'
+                      }`}
                     >
-                      <Icon size={16} style={{ color: isSelected ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted }} />
-                      <span className="text-[11px] font-bold mt-1 truncate">{type.label}</span>
+                      <Icon size={16} className={isSelected ? 'text-[var(--primary,#E07A00)]' : 'text-slate-400'} />
+                      <span className="text-[11px] font-bold mt-1">{type.label}</span>
                     </button>
                   );
                 })}
@@ -508,50 +429,26 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] block" style={{ color: C.text?.sub }}>
-                  {safeT('createAcademy.countryDomain', 'النطاق الجغرافي')}
-                </label>
+                <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'النطاق الجغرافي' : 'Country Domain'}</label>
                 <button
                   type="button"
                   onClick={() => setModalType('country')}
-                  aria-label={safeT('createAcademy.countryDomain', 'النطاق الجغرافي')}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs min-h-[44px]"
-                  style={{
-                    backgroundColor: C.dark?.surfaceInput,
-                    borderColor: C.dark?.borderInput,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    color: C.text?.main
-                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)]"
                 >
-                  <span className="truncate">
-                    {isCustomCountry ? (customCountryName || safeT('common.custom', 'مخصص')) : formData.country_code}
-                  </span>
-                  <ChevronDown size={14} className="shrink-0" style={{ color: C.text?.muted }} />
+                  <span className="truncate">{isCustomCountry ? (customCountryName || (isRtl ? 'مخصص' : 'Custom')) : formData.country_code}</span>
+                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
                 </button>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] block" style={{ color: C.text?.sub }}>
-                  {safeT('createAcademy.operationalLanguage', 'اللغة التشغيلية')}
-                </label>
+                <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'اللغة التشغيلية' : 'Operational Language'}</label>
                 <button
                   type="button"
                   onClick={() => setModalType('language')}
-                  aria-label={safeT('createAcademy.operationalLanguage', 'اللغة التشغيلية')}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs min-h-[44px]"
-                  style={{
-                    backgroundColor: C.dark?.surfaceInput,
-                    borderColor: C.dark?.borderInput,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    color: C.text?.main
-                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-2 bg-[var(--surface-input,#0A101D)] border border-[var(--border-input,#1B2738)] rounded-xl text-xs text-[var(--text-main,#FFFFFF)]"
                 >
-                  <span className="truncate">
-                    {isCustomLanguage ? (customLanguageName || safeT('common.custom', 'مخصص')) : formData.language_code}
-                  </span>
-                  <ChevronDown size={14} className="shrink-0" style={{ color: C.text?.muted }} />
+                  <span className="truncate">{isCustomLanguage ? (customLanguageName || (isRtl ? 'مخصص' : 'Custom')) : formData.language_code}</span>
+                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
                 </button>
               </div>
             </div>
@@ -559,18 +456,10 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
             {isCustomCountry && (
               <input
                 type="text"
-                placeholder={safeT('createAcademy.enterCountryPlaceholder', 'ادخل اسم الدولة')}
+                placeholder={isRtl ? 'ادخل اسم الدولة' : 'Enter Country Name'}
                 value={customCountryName}
                 onChange={(e) => setCustomCountryName(e.target.value)}
-                aria-label={safeT('createAcademy.enterCountryPlaceholder', 'ادخل اسم الدولة')}
-                className="w-full px-3 py-1.5 text-xs rounded-xl outline-none"
-                style={{
-                  backgroundColor: C.dark?.surfaceInput,
-                  color: C.text?.main,
-                  borderColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
-                  borderWidth: '1px',
-                  borderStyle: 'solid'
-                }}
+                className="w-full px-3 py-1.5 bg-[var(--surface-input,#0A101D)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--primary,#E07A00)]/50 outline-none"
                 required
               />
             )}
@@ -578,26 +467,16 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
             {isCustomLanguage && (
               <input
                 type="text"
-                placeholder={safeT('createAcademy.enterLanguagePlaceholder', 'ادخل اسم اللغة')}
+                placeholder={isRtl ? 'ادخل اسم اللغة' : 'Enter Language Name'}
                 value={customLanguageName}
                 onChange={(e) => setCustomLanguageName(e.target.value)}
-                aria-label={safeT('createAcademy.enterLanguagePlaceholder', 'ادخل اسم اللغة')}
-                className="w-full px-3 py-1.5 text-xs rounded-xl outline-none"
-                style={{
-                  backgroundColor: C.dark?.surfaceInput,
-                  color: C.text?.main,
-                  borderColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
-                  borderWidth: '1px',
-                  borderStyle: 'solid'
-                }}
+                className="w-full px-3 py-1.5 bg-[var(--surface-input,#0A101D)] text-xs text-[var(--text-main,#FFFFFF)] rounded-xl border border-[var(--primary,#E07A00)]/50 outline-none"
                 required
               />
             )}
 
             <div className="space-y-1">
-              <label className="text-[10px] block" style={{ color: C.text?.sub }}>
-                {safeT('createAcademy.weekendConfig', 'أيام العطلة الأسبوعية')}
-              </label>
+              <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'أيام العطلة الأسبوعية' : 'Weekend Configuration'}</label>
               <div className="flex flex-wrap gap-1">
                 {DAYS_OF_WEEK.map((day) => {
                   const isSelected = formData.weekend_days.includes(day.id);
@@ -606,15 +485,11 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
                       type="button"
                       key={day.id}
                       onClick={() => toggleWeekendDay(day.id)}
-                      aria-label={day.label}
-                      className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition min-h-[36px]"
-                      style={{
-                        backgroundColor: isSelected ? (C.amber?.light || 'rgba(217, 119, 6, 0.2)') : C.dark?.surfaceCard,
-                        borderColor: isSelected ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.dark?.borderInput,
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        color: isSelected ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
-                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-medium border transition ${
+                        isSelected
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                          : 'bg-slate-800/50 text-slate-400 border-slate-700/50'
+                      }`}
                     >
                       {day.label}
                     </button>
@@ -627,100 +502,50 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
               <button
                 type="button"
                 onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                className="flex items-center gap-1.5 text-[11px] font-bold cursor-pointer hover:underline border-0 bg-transparent"
-                style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
+                className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--primary,#E07A00)] hover:underline"
               >
                 <Sliders size={13} />
-                <span>
-                  {showAdvancedSettings 
-                    ? safeT('createAcademy.hideAdvanced', 'إخفاء الإعدادات الإضافية') 
-                    : safeT('createAcademy.showAdvanced', 'إعدادات الرواية والمنهجية والشعار')}
-                </span>
+                <span>{showAdvancedSettings ? (isRtl ? 'إخفاء الإعدادات الإضافية' : 'Hide Advanced Settings') : (isRtl ? 'إعدادات الرواية والمنهجية والشعار' : 'Configure Qiraat & Methodology')}</span>
               </button>
 
               {showAdvancedSettings && (
-                <div 
-                  className="mt-2.5 p-3 rounded-xl space-y-3"
-                  style={{
-                    backgroundColor: C.dark?.surfaceInput,
-                    borderColor: C.dark?.borderInput,
-                    borderWidth: '1px',
-                    borderStyle: 'solid'
-                  }}
-                >
+                <div className="mt-2.5 p-3 bg-[var(--surface-input,#0A101D)] rounded-xl border border-[var(--border-input,#1B2738)] space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] flex items-center gap-1" style={{ color: C.text?.sub }}>
-                      <BookOpen size={11} style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
-                      <span>{safeT('createAcademy.defaultQiraat', 'رواية القراءة الاعتيادية')}</span>
+                    <label className="text-[10px] text-[var(--text-sub,#94A3B8)] flex items-center gap-1">
+                      <BookOpen size={11} className="text-[var(--primary,#E07A00)]" />
+                      <span>{isRtl ? 'رواية القراءة الاعتيادية' : 'Default Qiraat'}</span>
                     </label>
                     <select
                       value={formData.default_qiraat}
                       onChange={(e) => setFormData({ ...formData, default_qiraat: e.target.value })}
-                      aria-label={safeT('createAcademy.defaultQiraat', 'رواية القراءة الاعتيادية')}
-                      className="w-full px-2.5 py-1.5 rounded-lg text-xs outline-none"
-                      style={{
-                        backgroundColor: C.dark?.bg,
-                        color: C.text?.main,
-                        borderColor: C.dark?.borderInput,
-                        borderWidth: '1px',
-                        borderStyle: 'solid'
-                      }}
+                      className="w-full px-2.5 py-1.5 bg-slate-900 text-[var(--text-main,#FFFFFF)] rounded-lg border border-slate-800 text-xs outline-none"
                     >
-                      {QIRAAT_OPTIONS.map((q) => (
-                        <option key={q.value} value={q.value}>{q.label}</option>
-                      ))}
+                      {QIRAAT_OPTIONS.map((q) => <option key={q.value} value={q.value}>{q.label}</option>)}
                     </select>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] block" style={{ color: C.text?.sub }}>
-                      {safeT('createAcademy.methodologyStandard', 'منهجية المتابعة والتحفيظ')}
-                    </label>
+                    <label className="text-[10px] text-[var(--text-sub,#94A3B8)]">{isRtl ? 'منهجية المتابعة والتحفيظ' : 'Methodology Standard'}</label>
                     <select
                       value={formData.teaching_methodology}
                       onChange={(e) => setFormData({ ...formData, teaching_methodology: e.target.value })}
-                      aria-label={safeT('createAcademy.methodologyStandard', 'منهجية المتابعة والتحفيظ')}
-                      className="w-full px-2.5 py-1.5 rounded-lg text-xs outline-none"
-                      style={{
-                        backgroundColor: C.dark?.bg,
-                        color: C.text?.main,
-                        borderColor: C.dark?.borderInput,
-                        borderWidth: '1px',
-                        borderStyle: 'solid'
-                      }}
+                      className="w-full px-2.5 py-1.5 bg-slate-900 text-[var(--text-main,#FFFFFF)] rounded-lg border border-slate-800 text-xs outline-none"
                     >
-                      {METHODOLOGY_OPTIONS.map((m) => (
-                        <option key={m.value} value={m.value}>{m.label}</option>
-                      ))}
+                      {METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                     </select>
                   </div>
 
                   <div className="flex items-center gap-3 pt-1">
-                    <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
-                      style={{
-                        backgroundColor: C.dark?.surfaceCard,
-                        borderColor: C.dark?.borderInput,
-                        borderWidth: '1px',
-                        borderStyle: 'solid'
-                      }}
-                    >
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
                       {formData.logo_url ? (
-                        <img src={formData.logo_url} alt={safeT('createAcademy.logoAlt', 'شعار الأكاديمية')} className="w-full h-full object-cover" />
+                        <img src={formData.logo_url} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
-                        <Upload size={16} style={{ color: C.text?.muted }} />
+                        <Upload size={16} className="text-slate-400" />
                       )}
                     </div>
-                    <label 
-                      className="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 text-[10px] font-medium rounded-lg border transition-colors min-h-[36px]"
-                      style={{
-                        backgroundColor: C.dark?.surfaceCard,
-                        color: C.text?.main,
-                        borderColor: C.dark?.borderInput
-                      }}
-                    >
+                    <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-medium text-slate-200 rounded-lg border border-slate-700">
                       {uploadingLogo ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
-                      <span>{safeT('createAcademy.uploadLogo', 'تحميل الشعار')}</span>
+                      <span>{isRtl ? 'تحميل الشعار' : 'Upload Logo'}</span>
                       <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                     </label>
                   </div>
@@ -735,18 +560,10 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              aria-label={safeT('common.previous', 'السابق')}
-              className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 cursor-pointer transition min-h-[44px]"
-              style={{
-                backgroundColor: C.dark?.surfaceCard,
-                color: C.text?.main,
-                borderColor: C.dark?.borderInput,
-                borderWidth: '1px',
-                borderStyle: 'solid'
-              }}
+              className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1 border border-slate-700"
             >
-              <ChevronRight size={14} className={isRtl ? '' : 'rotate-180'} />
-              <span>{safeT('common.previous', 'السابق')}</span>
+              <ChevronRight size={14} />
+              <span>{isRtl ? 'السابق' : 'Previous'}</span>
             </button>
           )}
 
@@ -755,35 +572,26 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
               type="button"
               onClick={() => setCurrentStep(2)}
               disabled={!isStep1Valid}
-              aria-label={safeT('common.next', 'التالي')}
-              className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 transition min-h-[44px]"
-              style={{
-                backgroundColor: !isStep1Valid ? C.dark?.surfaceCard : (C.amber?.DEFAULT || C.primary?.DEFAULT),
-                color: !isStep1Valid ? C.text?.muted : C.dark?.bg,
-                cursor: !isStep1Valid ? 'not-allowed' : 'pointer'
-              }}
+              className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 ${
+                !isStep1Valid
+                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-[#E67E00] to-[#D97706] text-slate-950 cursor-pointer'
+              }`}
             >
-              <span>{safeT('common.next', 'التالي')}</span>
+              <span>{isRtl ? 'التالي' : 'Next'}</span>
             </button>
           ) : (
             <button
               type="submit"
               disabled={isSubmitting}
-              aria-label={safeT('createAcademy.completeSetup', 'إنهاء التأسيس')}
-              className="flex-[1.5] py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md transition min-h-[44px]"
-              style={{
-                backgroundColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
-                color: C.dark?.bg,
-                opacity: isSubmitting ? 0.6 : 1,
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
+              className="flex-[1.5] py-2.5 px-3 bg-gradient-to-r from-[#E67E00] to-[#D97706] text-slate-950 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <Loader2 size={15} className="animate-spin" />
               ) : (
                 <>
                   <Check size={15} />
-                  <span>{safeT('createAcademy.completeSetup', 'إنهاء التأسيس')}</span>
+                  <span>{isRtl ? 'إنهاء التأسيس' : 'Complete Setup'}</span>
                 </>
               )}
             </button>
@@ -794,7 +602,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
       <SelectModal
         isOpen={modalType === 'country'}
         onClose={() => setModalType(null)}
-        title={safeT('createAcademy.selectCountry', 'اختر الدولة')}
+        title={isRtl ? 'اختر الدولة' : 'Select Country'}
         options={countryOptions}
         selectedValue={formData.country_code}
         onSelect={handleCountrySelect}
@@ -803,7 +611,7 @@ export default function CreateAcademy({ onLogout, onSubmitAcademy, currentLangua
       <SelectModal
         isOpen={modalType === 'language'}
         onClose={() => setModalType(null)}
-        title={safeT('createAcademy.selectLanguage', 'اختر اللغة')}
+        title={isRtl ? 'اختر اللغة' : 'Select Language'}
         options={BASE_LANGUAGES}
         selectedValue={formData.language_code}
         onSelect={(val) => {
