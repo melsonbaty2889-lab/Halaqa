@@ -1,22 +1,43 @@
-import React from 'react';
+// src/components/Auth/AuthLayout.jsx
+import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { colors as C } from '@/theme/colors';
 
 export const AuthLayout = ({ children, langBtn }) => {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
+
+  // دالة الترجمة الآمنة المعتمدة بالدليل
+  const safeT = useCallback((key, fallback) => {
+    if (typeof t === 'function') {
+      return t(key, { defaultValue: fallback || key });
+    }
+    return fallback || key;
+  }, [t]);
+
   return (
-    <div className="min-h-screen w-full bg-[var(--bg-dark,#070B11)] text-[var(--text-main,#FFFFFF)] flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden font-cairo">
-      
+    <div 
+      className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden font-cairo"
+      dir={isRtl ? 'rtl' : 'ltr'}
+      style={{
+        backgroundColor: C.dark?.bg,
+        color: C.text?.main
+      }}
+    >
       {/* خلفية النجوم والتوهج الزمردي العلوي */}
       <div 
         className="fixed inset-0 pointer-events-none z-0"
+        aria-hidden="true"
         style={{
           backgroundImage: `
-            radial-gradient(circle at 50% 0%, var(--emerald-radial-glow, rgba(16, 185, 129, 0.14)) 0%, transparent 60%),
-            radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 0)
+            radial-gradient(circle at 50% 0%, ${C.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)'} 0%, transparent 60%),
+            radial-gradient(${C.dark?.starDot || 'rgba(255, 255, 255, 0.15)'} 1.2px, transparent 0)
           `,
           backgroundSize: '100% 100%, 24px 24px'
         }}
       />
 
-      {/* زر اللغة أعلي الكارت مباشرة بمحاذاة منسقة تمنع التداخل */}
+      {/* زر اللغة أعلى الكارت بمحاذاة منسقة تمنع التداخل */}
       {langBtn && (
         <div className="w-full max-w-sm sm:max-w-md flex justify-end mb-2 relative z-20">
           {langBtn}
@@ -24,14 +45,29 @@ export const AuthLayout = ({ children, langBtn }) => {
       )}
 
       {/* الحاوية المركزية للنماذج */}
-      <div className="w-full max-w-sm sm:max-w-md bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] backdrop-blur-md rounded-2xl p-5 sm:p-8 shadow-2xl relative z-10">
+      <main 
+        role="main"
+        aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
+        className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10"
+        style={{
+          backgroundColor: C.dark?.card,
+          borderColor: C.dark?.cardBorder,
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          boxShadow: C.shadows?.xl
+        }}
+      >
         {children}
-      </div>
+      </main>
 
       {/* رقم الإصدار أسفل الصفحة */}
-      <div className="mt-3 text-[10px] sm:text-[11px] text-[var(--text-muted,#475569)] tracking-wider font-mono z-10">
-        SMART HALAQA • v2.5
-      </div>
+      <footer 
+        role="contentinfo"
+        className="mt-3 text-[10px] sm:text-[11px] tracking-wider font-mono z-10"
+        style={{ color: C.text?.muted }}
+      >
+        {safeT('common.appName', 'SMART HALAQA')} • v2.5
+      </footer>
     </div>
   );
 };
