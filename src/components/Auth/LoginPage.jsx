@@ -10,7 +10,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 export default function LoginPage({ onNavigate, onSuccess }) {
   const { t, i18n } = useTranslation();
 
-  // ربط المتغيرات الحقيقية المصدّرة من هوك useLoginForm.ts
+  // ربط القيم مع هوك useLoginForm المعتمد
   const {
     isRtl,
     email,
@@ -25,14 +25,21 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     handleEmailLogin,
   } = useLoginForm(onSuccess);
 
-  // حالة محلية للتحقق المخصص (Custom Validation) لمنع تجميد الموبايل
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
-    document.title = `${t('auth.login', 'تسجيل الدخول')} | ${t('common.appName', 'الحلقة الذكية')}`;
+    document.title = `${t('auth.login', 'تسجيل الدخول')} | ${t('common.appName', 'Smart Halaqa')}`;
   }, [i18n.language, t]);
 
-  // دالة معالجة الإرسال المخصصة
+  // دالة معالجة أزرار التنقل بمرونة ومنع تعارض الإرسال
+  const handleNavigation = (e, targetPage) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof onNavigate === 'function') {
+      onNavigate(targetPage);
+    }
+  };
+
   const handleSubmitForm = (e) => {
     e.preventDefault();
     setLocalError('');
@@ -47,18 +54,16 @@ export default function LoginPage({ onNavigate, onSuccess }) {
       return;
     }
 
-    // استدعاء الدالة الحقيقية من الهوك
     handleEmailLogin(e);
   };
 
-  // تجميع الأخطاء للعرض
   const activeError = localError || status.msg || fieldErrors.email || fieldErrors.password;
 
   return (
     <AuthLayout langBtn={<LanguageSwitcher />}>
       <div className="w-full flex flex-col justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
-          {/* الشعار وعنوان المنصة */}
+          {/* الشعار وعنوان المنصة بنفس لغة الواجهة */}
           <div className="flex flex-col items-center mb-5 text-center">
             <div className="mb-2 drop-shadow-md">
               <SmartHalaqaProLogo size={52} />
@@ -67,7 +72,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               className="text-2xl font-extrabold tracking-tight mt-1 mb-0.5 font-sans"
               style={{ color: C?.text?.primary || '#FFFFFF' }}
             >
-              {t('common.appName', 'الحلقة الذكية')}
+              {t('common.appName', 'Smart Halaqa')}
             </h1>
             <p
               className="text-[11px] font-bold tracking-wider uppercase m-0"
@@ -90,7 +95,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             {t('auth.loginDesc', 'يرجى إدخال بيانات حسابك للمتابعة')}
           </p>
 
-          {/* عرض رسائل الخطأ المترجمة والمخصصة */}
+          {/* عرض رسائل الخطأ والتنبيهات */}
           {activeError && (
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border animate-fadeIn"
@@ -111,7 +116,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </div>
           )}
 
-          {/* نموذج تسجيل الدخول مع noValidate لمنع تجميد متصفح الموبايل */}
+          {/* نموذج تسجيل الدخول */}
           <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             {/* البريد الإلكتروني */}
             <div className="relative flex items-center">
@@ -203,12 +208,12 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               </button>
             </div>
 
-            {/* نسيت كلمة المرور */}
+            {/* زر نسيت كلمة المرور - مفّعل وممنوع من submit */}
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => onNavigate && onNavigate('forgot-password')}
-                className="text-xs hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
+                onClick={(e) => handleNavigation(e, 'forgot-password')}
+                className="text-xs hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
                 style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
               >
                 {t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
@@ -235,7 +240,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </button>
           </form>
 
-          {/* التبديل لإنشاء حساب جديد */}
+          {/* زر إنشاء حساب جديد - مفّعل وممنوع من submit */}
           <div
             className="text-center mt-5 text-xs flex items-center justify-center gap-1"
             style={{ color: C?.text?.secondary || '#94A3B8' }}
@@ -243,7 +248,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <span>{t('auth.noAccount', 'ليس لديك حساب؟')}</span>
             <button
               type="button"
-              onClick={() => onNavigate && onNavigate('signup')}
+              onClick={(e) => handleNavigation(e, 'signup')}
               className="font-bold hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
               style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
             >
@@ -252,9 +257,9 @@ export default function LoginPage({ onNavigate, onSuccess }) {
           </div>
         </div>
 
-        {/* إظهار رقم الإصدار v2.5 بشكل ثابت ومستمر بالأسفل */}
-        <div className="text-center pt-6 pb-2 text-[10px] tracking-widest uppercase opacity-60" style={{ color: C?.text?.secondary || '#94A3B8' }}>
-          SMART HALAQA • v2.5
+        {/* إظهار اسم المنصة بلغة المستخدم الحالية في أسفل الشاشة */}
+        <div className="text-center pt-6 pb-2 text-[10px] tracking-widest uppercase opacity-60 font-mono" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+          {t('common.appName', 'Smart Halaqa')} • v2.5
         </div>
       </div>
     </AuthLayout>
