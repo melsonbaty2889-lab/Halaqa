@@ -1,204 +1,132 @@
-import { useState, useEffect, FormEvent, KeyboardEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, KeyboardEvent, FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { handleAuthError } from '@/utils/errorHandler';
-import { signUpSchema, validateFormData } from '@/schemas/auth';
 
-// ── Types & Interfaces ──────────────────────────────────────────
+export interface FieldErrors {
+  fullName?: boolean;
+  email?: boolean;
+  password?: boolean;
+  confirmPassword?: boolean;
+  agreeTerms?: boolean;
+}
 
-export interface SignUpStatus {
+export interface StatusState {
   type: 'success' | 'error' | null;
   msg: string;
 }
 
-export type OnSignUpSuccessCallback = (data: AuthResponse['data']) => void;
+export const useSignUpForm = (onSignUpSuccess?: () => void) => {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
 
-export type UserRole = 'student' | 'teacher' | 'parent' | 'academy_admin' | string;
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
-// ── Main Hook ───────────────────────────────────────────────────
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-export function useSignUpForm(onSignUpSuccess?: OnSignUpSuccessCallback) {
-  const { i18n } = useTranslation();
-  const navigate = useNavigate();
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
 
-  const isRtl = i18n?.language === 'ar';
+  const toggleLanguage = useCallback(() => {
+    const nextLang = i18n.language === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(nextLang);
+  }, [i18n]);
 
-  // 1. القراءة المباشرة من Local Storage مع معالجة حذرة
-  const [fullName, setFullName] = useState<string>(() => {
-    try {
-      return localStorage.getItem('signup_draft_name') || '';
-    } catch {
-      return '';
+  // تحديث حالة الشروط وإزالة تنبيه الخطأ بمجرد الموافقة
+  const handleAgreeTermsChange = useCallback((checked: boolean) => {
+    setAgreeTerms(checked);
+    if (checked) {
+      setFieldErrors((prev) => ({ ...prev, agreeTerms: false }));
+      setStatus((prev) => (prev.msg?.includes('الشروط') || prev.msg?.includes('Terms') ? { type: null, msg: '' } : prev));
     }
-  });
+  }, []);
 
-  const [email, setEmail] = useState<string>(() => {
-    try {
-      return localStorage.getItem('signup_draft_email') || '';
-    } catch {
-      return '';
-    }
-  });
+  const validateForm = useCallback(() => {
+    const errors: FieldErrors = {};
 
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [role, setRole] = useState<UserRole>('student');
-  const [agreeTerms, setAgreeTerms] = useState<boolean>(false);
+    if (!fullName.trim()) errors.fullName = true;
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) errors.email = true;
+    if (!password || password.length < 6) errors.password = true;
+    if (password !== confirmPassword) errors.confirmPassword = true;
+    if (!agreeTerms) errors.agreeTerms = true;
 
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [capsLockOn, setCapsLockOn] = useState<boolean>(false);
+    setFieldErrors(errors);
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean | string>>({});
-  const [status, setStatus] = useState<SignUpStatus>({ type: null, msg: '' });
-
-  // 2. تحديث الحفظ التلقائي فور تغيير القيم
-  useEffect(() => {
-    try {
-      if (fullName) {
-        localStorage.setItem('signup_draft_name', fullName);
-      } else {
-        localStorage.removeItem('signup_draft_name');
-      }
-    } catch (e) {
-      console.error('Error saving name draft:', e);
-    }
-  }, [fullName]);
-
-  useEffect(() => {
-    try {
-      if (email) {
-        localStorage.setItem('signup_draft_email', email);
-      } else {
-        localStorage.removeItem('signup_draft_email');
-      }
-    } catch (e) {
-      console.error('Error saving email draft:', e);
-    }
-  }, [email]);
-
-  const toggleLanguage = () => {
-    const nextLang = isRtl ? 'en' : 'ar';
-    if (i18n?.changeLanguage) {
-      i18n.changeLanguage(nextLang);
-    }
-  };
-
-  const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState) {
-      setCapsLockOn(e.getModifierState('CapsLock'));
-    }
-  };
-
-  const trackFailedAttempt = async (
-    failedEmail: string,
-    failedName: string,
-    reason: string
-  ) => {
-    try {
-      if (!failedEmail) return;
-      // تسجيل محاولات التسجيل الفاشلة للتحليل والمتابعة
-    } catch (e) {
-      console.error('Failed to log lead attempt:', e);
-    }
-  };
-
-  const handleSignUp = async (e: FormEvent) => {
-    e.preventDefault();
-    setStatus({ type: null, msg: '' });
-    setFieldErrors({});
-
-    if (!agreeTerms) {
-      setFieldErrors({ agreeTerms: true });
+    if (errors.agreeTerms && Object.keys(errors).length === 1) {
       setStatus({
         type: 'error',
-        msg: isRtl
-          ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.'
-          : 'Please agree to the terms and privacy policy to continue.',
+        msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
       });
-      return;
+      return false;
     }
 
-    const formData = {
-      fullName: fullName.trim(),
-      email: email.trim(),
-      password: password.trim(),
-      confirmPassword: confirmPassword.trim(),
-      role,
-      agreeTerms,
-    };
-
-    const validationResult = validateFormData(formData, signUpSchema);
-
-    if (!validationResult.valid) {
-      setFieldErrors(validationResult.errors || {});
-
-      if (validationResult.errors?.agreeTerms) {
-        setStatus({
-          type: 'error',
-          msg: isRtl
-            ? 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة.'
-            : 'Please agree to the terms and privacy policy to continue.',
-        });
-      } else {
-        setStatus({
-          type: 'error',
-          msg: isRtl
-            ? 'يرجى التأكد من صحة البيانات المدخلة أعلاه.'
-            : 'Please correct the highlighted errors above.',
-        });
-      }
-      return;
+    if (Object.keys(errors).length > 0) {
+      setStatus({
+        type: 'error',
+        msg: t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.'),
+      });
+      return false;
     }
 
-    setLoading(true);
+    return true;
+  }, [fullName, email, password, confirmPassword, agreeTerms, t]);
 
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: validationResult.data.email,
-        password: validationResult.data.password,
-        options: {
-          data: {
-            full_name: validationResult.data.fullName,
-            role: validationResult.data.role,
+  const handleSignUp = useCallback(
+    async (e?: FormEvent) => {
+      if (e) e.preventDefault();
+      setStatus({ type: null, msg: '' });
+
+      if (!validateForm()) return;
+
+      try {
+        setLoading(true);
+
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              full_name: fullName.trim(),
+            },
           },
-          emailRedirectTo: `${window.location.origin}?lang=${i18n?.language || 'ar'}`,
-        },
-      });
+        });
 
-      if (authError) throw authError;
+        if (error) throw error;
 
-      // مسح المسودة فور نجاح عملية التسجيل
-      localStorage.removeItem('signup_draft_name');
-      localStorage.removeItem('signup_draft_email');
+        setStatus({
+          type: 'success',
+          msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
+        });
 
-      setStatus({
-        type: 'success',
-        msg: isRtl
-          ? '✅ تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني لتأكيد الحساب.'
-          : '✅ Account created! Please check your email to activate.',
-      });
-
-      if (onSignUpSuccess) {
-        onSignUpSuccess(authData);
+        if (onSignUpSuccess) {
+          onSignUpSuccess();
+        }
+      } catch (err: any) {
+        console.error('Sign Up Error:', err);
+        setStatus({
+          type: 'error',
+          msg: err?.message || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
+        });
+      } finally {
+        setLoading(false);
       }
-    } catch (err: unknown) {
-      console.error('Sign Up Error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      trackFailedAttempt(formData.email, formData.fullName, errorMessage);
+    },
+    [email, password, fullName, validateForm, onSignUpSuccess, t]
+  );
 
-      const userFriendlyMsg = handleAuthError(err, isRtl);
-      setStatus({
-        type: 'error',
-        msg: userFriendlyMsg,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleSignUp();
+      }
+    },
+    [handleSignUp]
+  );
 
   return {
     isRtl,
@@ -210,16 +138,13 @@ export function useSignUpForm(onSignUpSuccess?: OnSignUpSuccessCallback) {
     setPassword,
     confirmPassword,
     setConfirmPassword,
-    role,
-    setRole,
     agreeTerms,
-    setAgreeTerms,
+    setAgreeTerms: handleAgreeTermsChange,
     showPassword,
     setShowPassword,
     showConfirmPassword,
     setShowConfirmPassword,
     loading,
-    capsLockOn,
     fieldErrors,
     setFieldErrors,
     status,
@@ -228,4 +153,4 @@ export function useSignUpForm(onSignUpSuccess?: OnSignUpSuccessCallback) {
     handleKeyUp,
     handleSignUp,
   };
-}
+};
