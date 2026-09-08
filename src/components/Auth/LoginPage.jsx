@@ -10,7 +10,6 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 export default function LoginPage({ onNavigate, onSuccess }) {
   const { t, i18n } = useTranslation();
 
-  // استدعاء كافة وظائف الدخول من الهوك المعتمد
   const {
     isRtl,
     email,
@@ -28,13 +27,11 @@ export default function LoginPage({ onNavigate, onSuccess }) {
 
   const [localError, setLocalError] = useState('');
 
-  // ضبط الاسم الافتراضي بناءً على كود اللغة الحالية
   const currentLang = i18n?.language || 'ar';
-  const defaultAppName = currentLang.startsWith('ar') ? 'الحلقة الذكية' : 'Smart Halaqa';
 
   useEffect(() => {
-    document.title = `${t('auth.login', 'تسجيل الدخول')} | ${t('common.appName', defaultAppName)}`;
-  }, [currentLang, t, defaultAppName]);
+    document.title = `${t('auth.login')} | ${t('common.appName')}`;
+  }, [currentLang, t]);
 
   const handleNavigation = (e, targetPage) => {
     e.preventDefault();
@@ -49,12 +46,12 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     setLocalError('');
 
     if (!email.trim()) {
-      setLocalError(t('auth.emailRequired', isRtl ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email address'));
+      setLocalError(t('auth.emailRequired'));
       return;
     }
 
     if (!password.trim()) {
-      setLocalError(t('auth.passwordRequired', isRtl ? 'يرجى إدخال كلمة المرور' : 'Please enter your password'));
+      setLocalError(t('auth.passwordRequired'));
       return;
     }
 
@@ -67,7 +64,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     <AuthLayout langBtn={<LanguageSwitcher />}>
       <div className="w-full flex flex-col justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
-          {/* الشعار وعنوان المنصة مترجم ديناميكياً */}
+          {/* الشعار واسم المنصة */}
           <div className="flex flex-col items-center mb-5 text-center">
             <div className="mb-2 drop-shadow-md">
               <SmartHalaqaProLogo size={52} />
@@ -76,13 +73,13 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               className="text-2xl font-extrabold tracking-tight mt-1 mb-0.5 font-sans"
               style={{ color: C?.text?.primary || '#FFFFFF' }}
             >
-              {t('common.appName', defaultAppName)}
+              {t('common.appName')}
             </h1>
             <p
               className="text-[11px] font-bold tracking-wider uppercase m-0"
               style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
             >
-              {t('auth.platformSubtitle', isRtl ? 'منصة إدارة المقارئ والأكاديميات' : 'Management Platform for Maqaris & Academies')}
+              {t('auth.platformSubtitle')}
             </p>
           </div>
 
@@ -90,13 +87,13 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             className="text-lg text-center mb-1 font-semibold"
             style={{ color: C?.text?.primary || '#FFFFFF' }}
           >
-            {t('auth.loginTitle', isRtl ? 'مرحباً بك مجدداً' : 'Welcome Back')}
+            {t('auth.loginTitle')}
           </h2>
           <p
             className="text-xs text-center mb-5 leading-relaxed"
             style={{ color: C?.text?.secondary || '#94A3B8' }}
           >
-            {t('auth.loginDesc', isRtl ? 'يرجى إدخال بيانات حسابك للمتابعة' : 'Please enter your credentials to continue')}
+            {t('auth.loginDesc')}
           </p>
 
           {/* التنبيهات والأخطاء */}
@@ -143,8 +140,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                   if (localError) setLocalError('');
                   setEmail(e.target.value);
                 }}
-                placeholder={t('auth.emailPlaceholder', isRtl ? 'البريد الإلكتروني' : 'Email Address')}
-                aria-label={t('auth.emailPlaceholder', isRtl ? 'البريد الإلكتروني' : 'Email Address')}
+                placeholder={t('auth.emailPlaceholder')}
+                aria-label={t('auth.emailPlaceholder')}
                 dir="ltr"
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
                   isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
@@ -178,8 +175,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                   if (localError) setLocalError('');
                   setPassword(e.target.value);
                 }}
-                placeholder={t('auth.passwordPlaceholder', isRtl ? 'كلمة المرور' : 'Password')}
-                aria-label={t('auth.passwordPlaceholder', isRtl ? 'كلمة المرور' : 'Password')}
+                placeholder={t('auth.passwordPlaceholder')}
+                aria-label={t('auth.passwordPlaceholder')}
                 dir="ltr"
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
                   isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
@@ -210,11 +207,11 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 className="text-xs hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
                 style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
               >
-                {t('auth.forgotPassword', isRtl ? 'نسيت كلمة المرور؟' : 'Forgot Password?')}
+                {t('auth.forgotPassword')}
               </button>
             </div>
 
-            {/* زر تسجيل الدخول الرئيسي */}
+            {/* زر تسجيل الدخول */}
             <button
               type="submit"
               disabled={loading}
@@ -227,7 +224,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
-                <span>{t('auth.login', isRtl ? 'تسجيل الدخول' : 'Sign In')}</span>
+                <span>{t('auth.login')}</span>
               )}
             </button>
           </form>
@@ -242,11 +239,11 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 color: C?.text?.secondary || '#94A3B8',
               }}
             >
-              {t('auth.or', isRtl ? 'أو' : 'OR')}
+              {t('auth.or')}
             </span>
           </div>
 
-          {/* زر Google المربوط بالهوك بعبارة مترجمة صحيحة */}
+          {/* زر Google */}
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -273,12 +270,10 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               />
               <path
                 fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>
-              {isRtl ? 'متابعة باستخدام Google' : t('auth.loginWithGoogle', 'Continue with Google')}
-            </span>
+            <span>{t('auth.loginWithGoogle')}</span>
           </button>
 
           {/* إنشاء حساب جديد */}
@@ -286,14 +281,14 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             className="text-center mt-5 text-xs flex items-center justify-center gap-1 relative z-20"
             style={{ color: C?.text?.secondary || '#94A3B8' }}
           >
-            <span>{t('auth.noAccount', isRtl ? 'ليس لديك حساب؟' : "Don't have an account?")}</span>
+            <span>{t('auth.noAccount')}</span>
             <button
               type="button"
               onClick={(e) => handleNavigation(e, 'signup')}
               className="font-bold hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
               style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
             >
-              {t('auth.createNewAccount', isRtl ? 'إنشاء حساب جديد' : 'Create New Account')}
+              {t('auth.createNewAccount')}
             </button>
           </div>
         </div>
