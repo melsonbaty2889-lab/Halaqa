@@ -20,9 +20,9 @@ export default function LanguageSwitcher() {
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === currentLangCode) || SUPPORTED_LANGUAGES[0];
 
-  const handleLanguageChange = (lang) => {
+  const handleLanguageChange = async (lang) => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
-      i18n.changeLanguage(lang.code);
+      await i18n.changeLanguage(lang.code);
       document.documentElement.dir = lang.dir;
       document.documentElement.lang = lang.code;
     }
@@ -44,8 +44,8 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        title={t('common.switchLanguage', 'تغيير اللغة')}
-        aria-label={t('common.switchLanguage', 'تغيير اللغة')}
+        title={t('common.switchLanguage')}
+        aria-label={t('common.switchLanguage')}
         aria-expanded={isOpen}
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer min-h-[44px]"
         style={{
