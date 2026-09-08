@@ -5,7 +5,7 @@ import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import AppBrand from '@/components/UI/AppBrand';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
-import C from '@/theme/colors';
+import { C } from '@/theme/colors';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage({ onNavigate, onSuccess }) {
@@ -27,6 +27,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
+  const [focusedInput, setFocusedInput] = useState(null);
   const currentLang = i18n?.language || 'ar';
 
   useEffect(() => {
@@ -64,9 +65,9 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     <AuthLayout langBtn={<LanguageSwitcher />}>
       <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
-          {/* الهيدر: اللوجو والعنوان مع مسافات مريحة */}
-          <div className="flex flex-col items-center mb-6 text-center">
-            <div className="mb-3 drop-shadow-md">
+          {/* الهيدر: اللوجو واسم المنصة */}
+          <div className="flex flex-col items-center mb-5 text-center">
+            <div className="mb-2 drop-shadow-md">
               <SmartHalaqaProLogo size={48} />
             </div>
             
@@ -77,35 +78,35 @@ export default function LoginPage({ onNavigate, onSuccess }) {
           </div>
 
           {/* نصوص الترحيب */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-5">
             <h2
-              className="text-lg font-bold mb-1.5 tracking-wide"
-              style={{ color: C?.text?.primary || '#FFFFFF' }}
+              className="text-lg font-bold mb-1 tracking-wide"
+              style={{ color: C.text.title }}
             >
               {t('auth.loginTitle')}
             </h2>
             <p
               className="text-xs leading-relaxed max-w-xs mx-auto"
-              style={{ color: C?.text?.secondary || '#94A3B8' }}
+              style={{ color: C.text.muted }}
             >
               {t('auth.loginDesc')}
             </p>
           </div>
 
-          {/* الأخطاء */}
+          {/* تنبيهات الأخطاء */}
           {activeError && (
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border animate-fadeIn"
               style={{
                 backgroundColor: status.type === 'success' 
-                  ? (C?.success?.bg || 'rgba(16, 185, 129, 0.1)') 
-                  : (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)'),
+                  ? 'rgba(16, 185, 129, 0.1)' 
+                  : 'rgba(239, 68, 68, 0.1)',
                 color: status.type === 'success' 
-                  ? (C?.success?.text || '#10B981') 
-                  : (C?.danger?.text || '#F43F5E'),
+                  ? C.emerald.DEFAULT 
+                  : C.error.DEFAULT,
                 borderColor: status.type === 'success' 
-                  ? (C?.success?.border || 'rgba(16, 185, 129, 0.3)') 
-                  : (C?.danger?.border || 'rgba(244, 63, 94, 0.3)'),
+                  ? 'rgba(16, 185, 129, 0.3)' 
+                  : 'rgba(239, 68, 68, 0.3)',
               }}
             >
               <AlertCircle size={16} className="shrink-0" />
@@ -113,8 +114,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </div>
           )}
 
-          {/* الفورم */}
-          <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-4">
+          {/* نموذج الدخول */}
+          <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             {/* البريد الإلكتروني */}
             <div className="relative flex items-center">
               <Mail
@@ -123,15 +124,17 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
-                  color: email
-                    ? C?.primary?.DEFAULT || '#E07A00'
-                    : C?.text?.secondary || '#94A3B8',
+                  color: focusedInput === 'email' || email
+                    ? C.amber.DEFAULT
+                    : C.inputs.icon,
                 }}
               />
               <input
                 type="email"
                 name="email"
                 value={email}
+                onFocus={() => setFocusedInput('email')}
+                onBlur={() => setFocusedInput(null)}
                 onChange={(e) => {
                   if (localError) setLocalError('');
                   setEmail(e.target.value);
@@ -139,13 +142,16 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 placeholder={t('auth.emailPlaceholder')}
                 aria-label={t('auth.emailPlaceholder')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                className={`w-full py-2.5 rounded-xl text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
                   isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
                 }`}
                 style={{
-                  borderColor: C?.dark?.border || '#1B2738',
-                  backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                  color: C?.text?.primary || '#FFFFFF',
+                  backgroundColor: C.inputs.bg,
+                  color: C.text.body,
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: focusedInput === 'email' ? C.amber.borderFocus : C.inputs.border,
+                  boxShadow: focusedInput === 'email' ? `0 0 0 3px ${C.amber.glowFocus}` : 'none',
                 }}
               />
             </div>
@@ -158,15 +164,17 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
-                  color: password
-                    ? C?.primary?.DEFAULT || '#E07A00'
-                    : C?.text?.secondary || '#94A3B8',
+                  color: focusedInput === 'password' || password
+                    ? C.amber.DEFAULT
+                    : C.inputs.icon,
                 }}
               />
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={password}
+                onFocus={() => setFocusedInput('password')}
+                onBlur={() => setFocusedInput(null)}
                 onChange={(e) => {
                   if (localError) setLocalError('');
                   setPassword(e.target.value);
@@ -174,13 +182,16 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 placeholder={t('auth.passwordPlaceholder')}
                 aria-label={t('auth.passwordPlaceholder')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                className={`w-full py-2.5 rounded-xl text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
                   isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
                 }`}
                 style={{
-                  borderColor: C?.dark?.border || '#1B2738',
-                  backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                  color: C?.text?.primary || '#FFFFFF',
+                  backgroundColor: C.inputs.bg,
+                  color: C.text.body,
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: focusedInput === 'password' ? C.amber.borderFocus : C.inputs.border,
+                  boxShadow: focusedInput === 'password' ? `0 0 0 3px ${C.amber.glowFocus}` : 'none',
                 }}
               />
               <button
@@ -189,32 +200,33 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-30 ${
                   isRtl ? 'left-1' : 'right-1'
                 }`}
-                style={{ color: C?.text?.secondary || '#94A3B8' }}
+                style={{ color: C.text.muted }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
 
-            {/* نسيت كلمة المرور - مع إصلاح الضغط وزيادة الوضوح */}
+            {/* نسيت كلمة المرور */}
             <div className="flex justify-end">
               <button
                 type="button"
                 onClick={(e) => handleNavigation(e, 'forgot-password')}
                 className="text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium relative z-30"
-                style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+                style={{ color: C.amber.DEFAULT }}
               >
                 {t('auth.forgotPassword')}
               </button>
             </div>
 
-            {/* زر تسجيل الدخول */}
+            {/* زر تسجيل الدخول الرئيسي */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] relative z-30"
+              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] relative z-30 hover:opacity-95 active:scale-[0.99]"
               style={{
-                backgroundColor: C?.primary?.DEFAULT || '#E07A00',
-                color: C?.primary?.text || '#000000',
+                background: C.gradients.primaryBtn,
+                color: '#FFFFFF',
+                boxShadow: `0 4px 14px ${C.amber.buttonGlow}`,
               }}
             >
               {loading ? (
@@ -226,13 +238,13 @@ export default function LoginPage({ onNavigate, onSuccess }) {
           </form>
 
           {/* الفاصل */}
-          <div className="relative my-5 flex items-center justify-center">
-            <div className="border-t w-full" style={{ borderColor: C?.dark?.border || '#1B2738' }} />
+          <div className="relative my-4 flex items-center justify-center">
+            <div className="border-t w-full" style={{ borderColor: C.dark.cardBorder }} />
             <span
               className="absolute px-3 text-[10px] uppercase font-mono rounded-full"
               style={{
-                backgroundColor: C?.dark?.card || '#0F172A',
-                color: C?.text?.secondary || '#94A3B8',
+                backgroundColor: C.dark.surface,
+                color: C.text.muted,
               }}
             >
               {t('auth.or')}
@@ -244,11 +256,11 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-2.5 font-semibold text-xs rounded-xl border transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] relative z-30 disabled:opacity-60 hover:bg-white/5"
+            className="w-full py-2.5 font-semibold text-xs rounded-xl border transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] relative z-30 disabled:opacity-60 hover:bg-white/5 active:scale-[0.99]"
             style={{
-              borderColor: C?.dark?.border || '#1B2738',
-              backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-              color: C?.text?.primary || '#FFFFFF',
+              borderColor: C.inputs.border,
+              backgroundColor: C.inputs.bg,
+              color: C.text.body,
             }}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -272,17 +284,17 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <span>{t('auth.loginWithGoogle')}</span>
           </button>
 
-          {/* إنشاء حساب جديد - مع رفع طبقة z-index للضمان */}
+          {/* إنشاء حساب جديد */}
           <div
-            className="text-center mt-6 text-xs flex items-center justify-center gap-1.5 relative z-30"
-            style={{ color: C?.text?.secondary || '#94A3B8' }}
+            className="text-center mt-5 text-xs flex items-center justify-center gap-1.5 relative z-30"
+            style={{ color: C.text.muted }}
           >
             <span>{t('auth.noAccount')}</span>
             <button
               type="button"
               onClick={(e) => handleNavigation(e, 'signup')}
               className="font-bold hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1"
-              style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+              style={{ color: C.amber.DEFAULT }}
             >
               {t('auth.createNewAccount')}
             </button>
