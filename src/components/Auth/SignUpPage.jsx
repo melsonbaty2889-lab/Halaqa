@@ -6,21 +6,21 @@ import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { TermsModal } from '@/components/UI/TermsModal';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  Globe, 
-  ShieldCheck, 
-  Loader2 
+import {
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Globe,
+  ShieldCheck,
+  Loader2,
 } from 'lucide-react';
 
 export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const { t, i18n } = useTranslation();
-  
+
   const {
     isRtl,
     fullName,
@@ -39,6 +39,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowConfirmPassword,
     loading,
     fieldErrors,
+    setFieldErrors,
     status,
     setStatus,
     toggleLanguage,
@@ -52,9 +53,10 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   const handleGoogleSignUp = useCallback(async () => {
     if (!agreeTerms) {
+      setFieldErrors((prev) => ({ ...prev, agreeTerms: true }));
       setStatus({
         type: 'error',
-        msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.')
+        msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
       });
       return;
     }
@@ -74,12 +76,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       console.error('Google Auth Error:', err);
       setStatus({
         type: 'error',
-        msg: t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google')
+        msg: t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
       });
     } finally {
       setGoogleLoading(false);
     }
-  }, [agreeTerms, setStatus, t]);
+  }, [agreeTerms, setFieldErrors, setStatus, t]);
 
   const openTermsModal = useCallback((type) => {
     setModalType(type);
@@ -116,13 +118,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="mb-1 drop-shadow-md">
             <SmartHalaqaProLogo size={44} />
           </div>
-          <h1 
+          <h1
             className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1 mb-0.5"
             style={{ color: C?.text?.primary || '#FFFFFF' }}
           >
             {t('auth.joinSmartHalaqa', 'انضم إلى الحلقة الذكية')}
           </h1>
-          <p 
+          <p
             className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase m-0"
             style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
           >
@@ -130,13 +132,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </p>
         </div>
 
-        <h2 
+        <h2
           className="text-base sm:text-lg text-center mb-1 font-semibold"
           style={{ color: C?.text?.primary || '#FFFFFF' }}
         >
           {t('auth.createNewAccount', 'إنشاء حساب جديد')}
         </h2>
-        <p 
+        <p
           className="text-xs text-center mb-4 leading-relaxed"
           style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
@@ -173,11 +175,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         {/* فاصل */}
         <div className="relative flex items-center justify-center mb-4">
           <div className="border-t w-full" style={{ borderColor: C?.dark?.border || '#1B2738' }}></div>
-          <span 
+          <span
             className="px-3 text-[11px] absolute font-medium"
-            style={{ 
-              backgroundColor: C?.dark?.bg || '#060B13', 
-              color: C?.text?.secondary || '#94A3B8' 
+            style={{
+              backgroundColor: C?.dark?.bg || '#060B13',
+              color: C?.text?.secondary || '#94A3B8',
             }}
           >
             {t('auth.orViaEmail', 'أو عبر البريد')}
@@ -186,19 +188,18 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
         {/* نموذج إنشاء الحساب */}
         <form onSubmit={handleSignUp} className="flex flex-col gap-3">
-          
           {/* الاسم الكامل */}
           <div className="relative flex items-center">
-            <User 
-              size={18} 
+            <User
+              size={18}
               className={`absolute pointer-events-none transition-colors inset-y-auto ${
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: fullName ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
-              }} 
+                color: fullName ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+              }}
             />
-            <input 
+            <input
               type="text"
               value={fullName || ''}
               onChange={(e) => setFullName(e.target.value)}
@@ -209,7 +210,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
               }`}
               style={{
-                borderColor: C?.dark?.border || '#1B2738',
+                borderColor: fieldErrors?.fullName ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
                 color: C?.text?.primary || '#FFFFFF',
               }}
@@ -218,16 +219,16 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
           {/* البريد الإلكتروني */}
           <div className="relative flex items-center">
-            <Mail 
-              size={18} 
+            <Mail
+              size={18}
               className={`absolute pointer-events-none transition-colors inset-y-auto ${
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: email ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
-              }} 
+                color: email ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+              }}
             />
-            <input 
+            <input
               type="email"
               value={email || ''}
               onChange={(e) => setEmail(e.target.value)}
@@ -238,7 +239,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
               }`}
               style={{
-                borderColor: C?.dark?.border || '#1B2738',
+                borderColor: fieldErrors?.email ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
                 color: C?.text?.primary || '#FFFFFF',
               }}
@@ -247,16 +248,16 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
           {/* كلمة المرور */}
           <div className="relative flex items-center">
-            <Lock 
-              size={18} 
+            <Lock
+              size={18}
               className={`absolute pointer-events-none transition-colors inset-y-auto ${
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: password ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
-              }} 
+                color: password ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+              }}
             />
-            <input 
+            <input
               type={showPassword ? 'text' : 'password'}
               value={password || ''}
               onKeyUp={handleKeyUp}
@@ -264,9 +265,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
               aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
               required
-              className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className="w-full py-2.5 ps-11 pe-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
               style={{
-                borderColor: C?.dark?.border || '#1B2738',
+                borderColor: fieldErrors?.password ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
                 color: C?.text?.primary || '#FFFFFF',
               }}
@@ -289,25 +290,25 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
           {/* تأكيد كلمة المرور */}
           <div className="relative flex items-center">
-            <Lock 
-              size={18} 
+            <Lock
+              size={18}
               className={`absolute pointer-events-none transition-colors inset-y-auto ${
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: confirmPassword ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
-              }} 
+                color: confirmPassword ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+              }}
             />
-            <input 
+            <input
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword || ''}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
               aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
               required
-              className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className="w-full py-2.5 ps-11 pe-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
               style={{
-                borderColor: C?.dark?.border || '#1B2738',
+                borderColor: fieldErrors?.confirmPassword ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
                 color: C?.text?.primary || '#FFFFFF',
               }}
@@ -328,36 +329,36 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             </button>
           </div>
 
-          {/* التعهد والشروط */}
-          <div 
+          {/* التعهد بالشروط */}
+          <div
             className="flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all border"
             style={{
               borderColor: fieldErrors?.agreeTerms ? (C?.danger?.text || '#F43F5E') : 'transparent',
               backgroundColor: fieldErrors?.agreeTerms ? (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)') : 'transparent',
             }}
           >
-            <input 
-              type="checkbox" 
-              id="agreeTerms" 
-              checked={Boolean(agreeTerms)} 
-              onChange={(e) => setAgreeTerms(e.target.checked)} 
+            <input
+              type="checkbox"
+              id="agreeTerms"
+              checked={Boolean(agreeTerms)}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
               aria-label={t('auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
-              className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px]" 
+              className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px]"
               style={{
                 borderColor: C?.dark?.border || '#1B2738',
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
                 accentColor: C?.primary?.DEFAULT || '#E07A00',
               }}
             />
-            <label 
-              htmlFor="agreeTerms" 
+            <label
+              htmlFor="agreeTerms"
               className="text-[11px] cursor-pointer leading-tight select-none pt-0.5"
               style={{ color: C?.text?.secondary || '#94A3B8' }}
             >
               {t('auth.iAgreeTo', 'أوافق على')}{' '}
-              <button 
-                type="button" 
-                onClick={() => openTermsModal('terms')} 
+              <button
+                type="button"
+                onClick={() => openTermsModal('terms')}
                 title={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 aria-label={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
@@ -366,9 +367,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 {t('auth.termsAndConditions', 'الشروط والأحكام')}
               </button>{' '}
               {t('common.and', 'و')}{' '}
-              <button 
-                type="button" 
-                onClick={() => openTermsModal('privacy')} 
+              <button
+                type="button"
+                onClick={() => openTermsModal('privacy')}
                 title={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 aria-label={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
@@ -381,18 +382,21 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
           {/* التنبيهات والأخطاء */}
           {status?.msg && (
-            <div 
+            <div
               className="p-3 rounded-xl my-1 text-xs leading-relaxed flex items-center gap-2 border"
               style={{
-                backgroundColor: status.type === 'success' 
-                  ? (C?.emerald?.bg || 'rgba(16, 185, 129, 0.1)') 
-                  : (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)'),
-                color: status.type === 'success' 
-                  ? (C?.emerald?.text || '#10B981') 
-                  : (C?.danger?.text || '#F43F5E'),
-                borderColor: status.type === 'success' 
-                  ? (C?.emerald?.border || 'rgba(16, 185, 129, 0.3)') 
-                  : (C?.danger?.border || 'rgba(244, 63, 94, 0.3)'),
+                backgroundColor:
+                  status.type === 'success'
+                    ? C?.emerald?.bg || 'rgba(16, 185, 129, 0.1)'
+                    : C?.danger?.bg || 'rgba(244, 63, 94, 0.1)',
+                color:
+                  status.type === 'success'
+                    ? C?.emerald?.text || '#10B981'
+                    : C?.danger?.text || '#F43F5E',
+                borderColor:
+                  status.type === 'success'
+                    ? C?.emerald?.border || 'rgba(16, 185, 129, 0.3)'
+                    : C?.danger?.border || 'rgba(244, 63, 94, 0.3)',
               }}
             >
               <AlertCircle size={16} className="shrink-0" />
@@ -401,8 +405,8 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           )}
 
           {/* زر إنشاء الحساب */}
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             title={t('auth.createNewAccount', 'إنشاء حساب جديد')}
             aria-label={t('auth.createNewAccount', 'إنشاء حساب جديد')}
@@ -421,25 +425,23 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </form>
 
         {/* شارة التشفير */}
-        <div 
+        <div
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4"
           style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
           <ShieldCheck size={14} style={{ color: C?.emerald?.text || '#10B981' }} />
-          <span>
-            {t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
-          </span>
+          <span>{t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}</span>
         </div>
 
         {/* تحويل الدخول */}
-        <div 
+        <div
           className="mt-3 text-center text-xs"
           style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
           <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>{' '}
-          <button 
+          <button
             type="button"
-            onClick={onSwitchToLogin} 
+            onClick={onSwitchToLogin}
             title={t('auth.signIn', 'تسجيل الدخول')}
             aria-label={t('auth.signIn', 'تسجيل الدخول')}
             className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 ms-1 min-h-[44px] px-1"
