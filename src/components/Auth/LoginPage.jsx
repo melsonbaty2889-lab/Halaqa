@@ -194,7 +194,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-20 ${
-                  isRtl ? 'left-1' : 'right-1'
+                  isRtl ? 'left-2.5' : 'right-2.5'
                 }`}
                 style={{ color: C?.text?.secondary || '#94A3B8' }}
               >
@@ -246,7 +246,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </span>
           </div>
 
-          {/* زر Google المربوط بالهوك */}
+          {/* زر Google المربوط بالهوك بعبارة مترجمة صحيحة */}
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -276,7 +276,9 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>{t('auth.loginWithGoogle', isRtl ? 'متابعة باستخدام Google' : 'Continue with Google')}</span>
+            <span>
+              {isRtl ? 'متابعة باستخدام Google' : t('auth.loginWithGoogle', 'Continue with Google')}
+            </span>
           </button>
 
           {/* إنشاء حساب جديد */}
