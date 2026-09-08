@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
+import AppBrand from '@/components/UI/AppBrand';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import C from '@/theme/colors';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
@@ -30,7 +31,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
   const currentLang = i18n?.language || 'ar';
 
   useEffect(() => {
-    document.title = `${t('auth.login')} | ${t('common.appName')}`;
+    document.title = `${t('auth.login')} | ${t('app.name', t('common.appName', 'الحلقة الذكية'))}`;
   }, [currentLang, t]);
 
   const handleNavigation = (e, targetPage) => {
@@ -64,23 +65,16 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     <AuthLayout langBtn={<LanguageSwitcher />}>
       <div className="w-full flex flex-col justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
-          {/* الشعار واسم المنصة */}
+          {/* الشعار واسم المنصة الموحد */}
           <div className="flex flex-col items-center mb-5 text-center">
             <div className="mb-2 drop-shadow-md">
               <SmartHalaqaProLogo size={52} />
             </div>
-            <h1
-              className="text-2xl font-extrabold tracking-tight mt-1 mb-0.5 font-sans"
-              style={{ color: C?.text?.primary || '#FFFFFF' }}
-            >
-              {t('common.appName')}
-            </h1>
-            <p
-              className="text-[11px] font-bold tracking-wider uppercase m-0"
-              style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
-            >
-              {t('auth.platformSubtitle')}
-            </p>
+            
+            <AppBrand 
+              showTagline={true} 
+              className="flex-col items-center text-center" 
+            />
           </div>
 
           <h2
