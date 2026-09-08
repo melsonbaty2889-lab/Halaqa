@@ -54,6 +54,7 @@
     "reset_password_desc": "أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة التعيين",
     "reset_password_heading": "استعادة كلمة المرور",
     "send_reset_link": "إرسال رابط الحماية",
+    "session_error": "عفواً، لم نتمكن من التحقق من الجلسة",
     "show_password": "إظهار كلمة المرور",
     "ssl_secured": "بياناتك مشفرة ومحمية وفق معايير 256-bit",
     "user_not_found": "البريد الإلكتروني غير مسجل لدينا."
@@ -103,6 +104,7 @@
     "confirm": "Confirm",
     "confirm_action": "Confirm Action",
     "confirm_message": "Are you sure you want to proceed with this action?",
+    "continue_next_step": "متابعة إلى الخطوة التالية",
     "custom": "مخصص",
     "delete": "Delete",
     "disabled": "Disabled",
@@ -413,6 +415,19 @@
     "template_preview": "Template Preview",
     "title": "Recitation Reports",
     "toggleCalendarType": "تبديل التقويم"
+  },
+  "roles": {
+    "admin_desc": "لإدارة المؤسسة القرآنية بالكامل والمعلمين والحلقات",
+    "admin_title": "مشرف / مدير كيان قرآني",
+    "parent_desc": "لمتابعة إنجاز الأبناء ومواظبتهم في الحلقات القرآنية",
+    "parent_title": "ولي أمر / راعٍ",
+    "select_header": "كيف تود استخدام المنصة؟",
+    "select_subheader": "حدد صفة استخدامك لنقوم بتخصيص الواجهة المناسبة لك",
+    "student_desc": "للانضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس",
+    "student_title": "طالب / قارئ",
+    "teacher_desc": "لإدارة الحلقات القرآنية ورصد المتابعة وتقييم مستوى الإتقان",
+    "teacher_title": "معلم / محفظ",
+    "update_error": "حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى"
   },
   "search_placeholder": "Search student by name, phone, or current Surah...",
   "searchPh": "Search by Halaqa name or assigned teacher name...",
