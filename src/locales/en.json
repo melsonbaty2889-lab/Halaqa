@@ -149,6 +149,7 @@
     "upload": "Upload",
     "uploading": "Uploading...",
     "verifying": "جاري التحقق...",
+    "verifying_permissions": "جاري التحقق من الصلاحيات...",
     "view": "View",
     "years_old": "years old"
   },
