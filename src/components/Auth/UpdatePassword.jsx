@@ -38,8 +38,8 @@ export default function UpdatePassword({ onSuccess }) {
   const isRtl = i18n?.language === 'ar';
 
   useEffect(() => {
-  document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${t('common.appName', 'الحلقة الذكية')}`;
-}, [i18n.language, t]);
+    document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${t('common.appName', 'الحلقة الذكية')}`;
+  }, [i18n.language, t]);
 
   const toggleLanguage = () => {
     const nextLang = isRtl ? 'en' : 'ar';
@@ -122,7 +122,7 @@ export default function UpdatePassword({ onSuccess }) {
             className="text-2xl font-extrabold tracking-tight mt-1 mb-0.5"
             style={{ color: C?.text?.primary || '#FFFFFF' }}
           >
-            {t('auth.joinSmartHalaqa', 'الحلقة الذكية')}
+            {t('common.appName', 'الحلقة الذكية')}
           </h1>
           <p 
             className="text-[11px] font-bold tracking-wider uppercase m-0"
