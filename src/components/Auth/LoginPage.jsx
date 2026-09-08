@@ -10,7 +10,6 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 export default function LoginPage({ onNavigate, onSuccess }) {
   const { t, i18n } = useTranslation();
 
-  // 1. الربط مع الـ Custom Hook المعتمد
   const {
     formData,
     handleChange,
@@ -23,13 +22,12 @@ export default function LoginPage({ onNavigate, onSuccess }) {
 
   const isRtl = i18n?.language === 'ar' || i18n?.language === 'ur';
 
-  // 2. تحديث عنوان الصفحة ديناميكياً بحسب اللغة
   useEffect(() => {
     document.title = `${t('auth.login', 'تسجيل الدخول')} | ${t('common.appName', 'الحلقة الذكية')}`;
   }, [i18n.language, t]);
 
   return (
-    <AuthLayout langBtn={<LanguageSwitcher i18n={i18n} />}>
+    <AuthLayout langBtn={<LanguageSwitcher />}>
       <div className="w-full">
         {/* الشعار وعنوان المنصة */}
         <div className="flex flex-col items-center mb-5 text-center">
@@ -63,7 +61,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
           {t('auth.loginDesc', 'يرجى إدخال بيانات حسابك للمتابعة')}
         </p>
 
-        {/* عرض رسائل الخطأ إن وجدت */}
+        {/* عرض رسائل الخطأ */}
         {errorMsg && (
           <div
             className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border"
@@ -80,7 +78,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
 
         {/* نموذج تسجيل الدخول */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-          {/* حقل البريد الإلكتروني */}
+          {/* البريد الإلكتروني */}
           <div className="relative flex items-center">
             <Mail
               size={18}
@@ -102,7 +100,9 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
               required
               dir="ltr"
-              className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+              }`}
               style={{
                 borderColor: C?.dark?.border || '#1B2738',
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
@@ -111,7 +111,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             />
           </div>
 
-          {/* حقل كلمة المرور */}
+          {/* كلمة المرور */}
           <div className="relative flex items-center">
             <Lock
               size={18}
@@ -133,7 +133,9 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
               required
               dir="ltr"
-              className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+              }`}
               style={{
                 borderColor: C?.dark?.border || '#1B2738',
                 backgroundColor: C?.dark?.surfaceInput || '#0A101D',
@@ -162,19 +164,19 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </button>
           </div>
 
-          {/* رابط نسيت كلمة المرور */}
+          {/* نسيت كلمة المرور */}
           <div className="flex justify-end">
             <button
               type="button"
               onClick={() => onNavigate && onNavigate('forgot-password')}
-              className="text-xs hover:underline cursor-pointer"
+              className="text-xs hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
               style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
             >
               {t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
             </button>
           </div>
 
-          {/* زر تسجيل الدخول */}
+          {/* زر الدخول */}
           <button
             type="submit"
             disabled={loading}
@@ -194,16 +196,16 @@ export default function LoginPage({ onNavigate, onSuccess }) {
           </button>
         </form>
 
-        {/* التحويل لشاشة إنشاء حساب */}
+        {/* التبديل لإنشاء حساب جديد */}
         <div
-          className="text-center mt-5 text-xs"
+          className="text-center mt-5 text-xs flex items-center justify-center gap-1"
           style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
-          <span>{t('auth.noAccount', 'ليس لديك حساب؟')} </span>
+          <span>{t('auth.noAccount', 'ليس لديك حساب؟')}</span>
           <button
             type="button"
             onClick={() => onNavigate && onNavigate('signup')}
-            className="font-bold hover:underline cursor-pointer"
+            className="font-bold hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
             style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
           >
             {t('auth.createNewAccount', 'إنشاء حساب جديد')}
