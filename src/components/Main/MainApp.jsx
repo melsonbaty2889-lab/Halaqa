@@ -215,6 +215,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const currentLang = i18n?.language || 'ar';
   const lastFetchedUserId = useRef(null);
 
+  // استدعاء Hook متابعة الاتصال والتحديثات
+  const { isOffline, updateAvailable, handleReload } = useNetworkAndUpdateStatus();
+
   let academyContext = null;
   try {
     academyContext = useAcademy();
@@ -279,7 +282,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, [isMobile]);
 
-  // تحديث وقت الأكاديمية لحظياً فور تغير timezone أو اللغة
   const updateAcademyTime = useCallback(() => {
     try {
       const formatter = new Intl.DateTimeFormat(currentLang, {
@@ -296,11 +298,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   useEffect(() => {
     updateAcademyTime();
-    const interval = setInterval(updateAcademyTime, 10000); // تحديث دوري كل 10 ثوانٍ
+    const interval = setInterval(updateAcademyTime, 10000);
     return () => clearInterval(interval);
   }, [updateAcademyTime]);
 
-  // دالة لتحديث المنطقة الزمنية فوراً من شاشة الإعدادات
   const handleTimezoneUpdate = useCallback((newTimezone) => {
     if (newTimezone) {
       setTimezone(newTimezone);
@@ -603,7 +604,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             currentTimezone={timezone} 
             currentCountryCode={countryCode} 
             onCurrencyChange={handleCurrencyUpdate}
-            onTimezoneChange={handleTimezoneUpdate} // خاصية التحديث اللحظي للمنطقة الزمنية
+            onTimezoneChange={handleTimezoneUpdate}
           />
         );
       default:
@@ -650,6 +651,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       />
 
       <div className="flex flex-col flex-1 min-w-0 min-h-screen w-full relative z-10 overflow-x-hidden">
+        {/* شريط حالة الاتصال والتحديثات */}
+        <OfflineAndUpdateBanner 
+          isOffline={isOffline} 
+          updateAvailable={updateAvailable} 
+          onReload={handleReload} 
+        />
+
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
