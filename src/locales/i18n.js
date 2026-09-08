@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// 1. استيراد ملفات اللغات
+// استيراد ملفات اللغات
 import arTranslation from '@/locales/ar.json';
 import enTranslation from '@/locales/en.json';
 import frTranslation from '@/locales/fr.json';
