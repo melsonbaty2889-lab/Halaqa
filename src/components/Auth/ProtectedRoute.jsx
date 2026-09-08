@@ -1,18 +1,33 @@
 import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
+import C from '@/theme/colors';
 
 export default function ProtectedRoute({ children }) {
   const { academy, appState } = useAcademy();
   const { slug } = useParams();
+  const { t } = useTranslation();
 
   // 1. حالة التحميل أثناء فحص Supabase والجلسة
   if (appState === 'LOADING') {
     return (
-      <div className="min-h-screen bg-[#070C14] flex flex-col items-center justify-center text-white">
-        <Loader2 size={32} className="animate-spin text-[var(--primary,#E07A00)] mb-2" />
-        <p className="text-xs text-slate-400">جاري التحقق من الصلاحيات...</p>
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center"
+        style={{ backgroundColor: C?.dark?.bg || '#070C14' }}
+      >
+        <Loader2 
+          size={32} 
+          className="animate-spin mb-2" 
+          style={{ color: C?.primary?.DEFAULT || '#E07A00' }} 
+        />
+        <p 
+          className="text-xs font-medium"
+          style={{ color: C?.text?.secondary || '#94A3B8' }}
+        >
+          {t('common.verifying_permissions', 'جاري التحقق من الصلاحيات...')}
+        </p>
       </div>
     );
   }
