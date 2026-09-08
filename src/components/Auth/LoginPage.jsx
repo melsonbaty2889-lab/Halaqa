@@ -116,8 +116,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 placeholder={t('auth.emailPlaceholder')}
                 aria-label={t('auth.emailPlaceholder')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl text-xs font-sans text-start min-h-[44px] bg-dark-input text-appText-main border border-appBorder-input outline-none transition-all placeholder:text-appText-muted focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                  isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+                className={`app-input text-start font-sans min-h-[44px] ${
+                  isRtl ? '!pr-11 !pl-4' : '!pl-11 !pr-4'
                 }`}
               />
             </div>
@@ -141,8 +141,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 placeholder={t('auth.passwordPlaceholder')}
                 aria-label={t('auth.passwordPlaceholder')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl text-xs font-sans text-start min-h-[44px] bg-dark-input text-appText-main border border-appBorder-input outline-none transition-all placeholder:text-appText-muted focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                  isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+                className={`app-input text-start font-sans min-h-[44px] ${
+                  isRtl ? '!pr-11 !pl-11' : '!pl-11 !pr-11'
                 }`}
               />
               <button
@@ -161,7 +161,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               <button
                 type="button"
                 onClick={(e) => handleNavigation(e, 'forgot-password')}
-                className="text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium text-primary hover:text-primary-hover"
+                className="link-primary text-xs cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium"
               >
                 {t('auth.forgotPassword')}
               </button>
@@ -171,7 +171,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/25 active:scale-[0.99]"
+              className="btn-primary min-h-[44px] mt-1 active:scale-[0.99] disabled:opacity-60"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -194,7 +194,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-2.5 font-semibold text-xs rounded-xl border border-appBorder-input bg-dark-google text-appText-main transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] disabled:opacity-60 hover:border-appBorder-hover active:scale-[0.99]"
+            className="btn-secondary min-h-[44px] active:scale-[0.99] disabled:opacity-60"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -223,7 +223,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <button
               type="button"
               onClick={(e) => handleNavigation(e, 'signup')}
-              className="font-bold hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 text-primary hover:text-primary-hover"
+              className="link-primary font-bold cursor-pointer min-h-[32px] inline-flex items-center px-1"
             >
               {t('auth.createNewAccount')}
             </button>
