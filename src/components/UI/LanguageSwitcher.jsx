@@ -1,4 +1,4 @@
-/* src/components/Header/LanguageSwitcher.jsx */
+/* src/components/UI/LanguageSwitcher.jsx */
 import React, { useState, useRef, useEffect } from 'react';
 import { Globe, Check, ChevronDown } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '@/constants/languages';
