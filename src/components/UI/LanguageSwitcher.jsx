@@ -1,22 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Globe, Check, ChevronDown } from 'lucide-react';
-import { SUPPORTED_LANGUAGES } from '@/constants/languages';
 import C from '@/theme/colors';
 
-export default function LanguageSwitcher({ i18n }) {
+const SUPPORTED_LANGUAGES = [
+  { code: 'ar', nativeName: 'العربية', flag: '🇸🇦', dir: 'rtl' },
+  { code: 'en', nativeName: 'English', flag: '🇬🇧', dir: 'ltr' },
+  { code: 'fr', nativeName: 'Français', flag: '🇫🇷', dir: 'ltr' },
+  { code: 'tr', nativeName: 'Türkçe', flag: '🇹🇷', dir: 'ltr' },
+  { code: 'ur', nativeName: 'أردو', flag: '🇵🇰', dir: 'rtl' },
+  { code: 'id', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', dir: 'ltr' },
+];
+
+export default function LanguageSwitcher() {
+  const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
-  const currentLang = SUPPORTED_LANGUAGES?.find((l) => l.code === currentLangCode) || SUPPORTED_LANGUAGES?.[0] || {
-    code: 'ar',
-    nativeName: 'العربية',
-    flag: '🇸🇦',
-  };
+  const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === currentLangCode) || SUPPORTED_LANGUAGES[0];
 
   const handleLanguageChange = (lang) => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
       i18n.changeLanguage(lang.code);
+      document.documentElement.dir = lang.dir;
+      document.documentElement.lang = lang.code;
     }
     setIsOpen(false);
   };
@@ -33,12 +41,11 @@ export default function LanguageSwitcher({ i18n }) {
 
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
-      {/* زر فتح القائمة */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        title="تغيير اللغة"
-        aria-label="تغيير اللغة"
+        title={t('common.switchLanguage', 'تغيير اللغة')}
+        aria-label={t('common.switchLanguage', 'تغيير اللغة')}
         aria-expanded={isOpen}
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer min-h-[44px]"
         style={{
@@ -56,7 +63,6 @@ export default function LanguageSwitcher({ i18n }) {
         />
       </button>
 
-      {/* القائمة المنسدلة للغات */}
       {isOpen && (
         <div
           className="absolute end-0 mt-2 w-44 rounded-xl border shadow-2xl py-1 z-[999999] overflow-hidden"
@@ -65,7 +71,7 @@ export default function LanguageSwitcher({ i18n }) {
             borderColor: C?.dark?.border || '#1B2738',
           }}
         >
-          {SUPPORTED_LANGUAGES?.map((lang) => {
+          {SUPPORTED_LANGUAGES.map((lang) => {
             const isSelected = lang.code === currentLangCode;
             return (
               <button
