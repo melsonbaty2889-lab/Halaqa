@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspens
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
-import OfflineAndUpdateBanner from '@/components/UI/OfflineAndUpdateBanner';
+import useNetworkAndUpdateStatus from '@/hooks/useNetworkAndUpdateStatus';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
