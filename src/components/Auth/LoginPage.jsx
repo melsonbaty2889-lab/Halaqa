@@ -10,49 +10,53 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 export default function LoginPage({ onNavigate, onSuccess }) {
   const { t, i18n } = useTranslation();
 
+  // ربط المتغيرات الحقيقية المصدّرة من هوك useLoginForm.ts
   const {
-    formData,
-    handleChange,
+    isRtl,
+    email,
+    setEmail,
+    password,
+    setPassword,
     showPassword,
     setShowPassword,
     loading,
-    errorMsg,
-    setErrorMsg,
-    handleSubmit,
+    fieldErrors,
+    status,
+    handleEmailLogin,
   } = useLoginForm(onSuccess);
 
-  const isRtl = i18n?.language === 'ar' || i18n?.language === 'ur';
-
-  // حالة محلية للتحقق المخصص لمنع مشكلة الموبايل و HTML Validation
+  // حالة محلية للتحقق المخصص (Custom Validation) لمنع تجميد الموبايل
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
     document.title = `${t('auth.login', 'تسجيل الدخول')} | ${t('common.appName', 'الحلقة الذكية')}`;
   }, [i18n.language, t]);
 
-  // دالة معالجة الإرسال مع Custom Validation
-  const handleCustomSubmit = (e) => {
+  // دالة معالجة الإرسال المخصصة
+  const handleSubmitForm = (e) => {
     e.preventDefault();
     setLocalError('');
 
-    if (!formData?.email?.trim()) {
+    if (!email.trim()) {
       setLocalError(t('auth.emailRequired', isRtl ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email address'));
       return;
     }
 
-    if (!formData?.password) {
+    if (!password.trim()) {
       setLocalError(t('auth.passwordRequired', isRtl ? 'يرجى إدخال كلمة المرور' : 'Please enter your password'));
       return;
     }
 
-    handleSubmit(e);
+    // استدعاء الدالة الحقيقية من الهوك
+    handleEmailLogin(e);
   };
 
-  const activeError = localError || errorMsg;
+  // تجميع الأخطاء للعرض
+  const activeError = localError || status.msg || fieldErrors.email || fieldErrors.password;
 
   return (
     <AuthLayout langBtn={<LanguageSwitcher />}>
-      <div className="w-full flex flex-col min-h-[calc(100vh-80px)] justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="w-full flex flex-col justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
           {/* الشعار وعنوان المنصة */}
           <div className="flex flex-col items-center mb-5 text-center">
@@ -91,9 +95,15 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border animate-fadeIn"
               style={{
-                backgroundColor: C?.danger?.bg || 'rgba(244, 63, 94, 0.1)',
-                color: C?.danger?.text || '#F43F5E',
-                borderColor: C?.danger?.border || 'rgba(244, 63, 94, 0.3)',
+                backgroundColor: status.type === 'success' 
+                  ? (C?.success?.bg || 'rgba(16, 185, 129, 0.1)') 
+                  : (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)'),
+                color: status.type === 'success' 
+                  ? (C?.success?.text || '#10B981') 
+                  : (C?.danger?.text || '#F43F5E'),
+                borderColor: status.type === 'success' 
+                  ? (C?.success?.border || 'rgba(16, 185, 129, 0.3)') 
+                  : (C?.danger?.border || 'rgba(244, 63, 94, 0.3)'),
               }}
             >
               <AlertCircle size={16} className="shrink-0" />
@@ -101,8 +111,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </div>
           )}
 
-          {/* نموذج تسجيل الدخول مع تعطيل noValidate لمنع تجميد الموبايل */}
-          <form onSubmit={handleCustomSubmit} noValidate className="flex flex-col gap-3.5">
+          {/* نموذج تسجيل الدخول مع noValidate لمنع تجميد متصفح الموبايل */}
+          <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             {/* البريد الإلكتروني */}
             <div className="relative flex items-center">
               <Mail
@@ -111,7 +121,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
-                  color: formData?.email
+                  color: email
                     ? C?.primary?.DEFAULT || '#E07A00'
                     : C?.text?.secondary || '#94A3B8',
                 }}
@@ -119,10 +129,10 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               <input
                 type="email"
                 name="email"
-                value={formData?.email || ''}
+                value={email}
                 onChange={(e) => {
                   if (localError) setLocalError('');
-                  handleChange(e);
+                  setEmail(e.target.value);
                 }}
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
@@ -146,7 +156,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
-                  color: formData?.password
+                  color: password
                     ? C?.primary?.DEFAULT || '#E07A00'
                     : C?.text?.secondary || '#94A3B8',
                 }}
@@ -154,10 +164,10 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
-                value={formData?.password || ''}
+                value={password}
                 onChange={(e) => {
                   if (localError) setLocalError('');
-                  handleChange(e);
+                  setPassword(e.target.value);
                 }}
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
@@ -184,7 +194,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                     ? t('auth.hidePassword', 'إخفاء كلمة المرور')
                     : t('auth.showPassword', 'إظهار كلمة المرور')
                 }
-                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10 ${
                   isRtl ? 'left-1' : 'right-1'
                 }`}
                 style={{ color: C?.text?.secondary || '#94A3B8' }}
