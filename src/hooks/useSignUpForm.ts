@@ -1,6 +1,10 @@
-import { useState, useCallback, KeyboardEvent, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent, KeyboardEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { handleAuthError } from '@/utils/errorHandler';
+import { signUpSchema, validateFormData } from '@/schemas/auth';
 
 export interface FieldErrors {
   fullName?: boolean;
@@ -16,6 +20,7 @@ export interface StatusState {
 }
 
 export const useSignUpForm = (onSignUpSuccess?: () => void) => {
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
 
@@ -37,7 +42,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     i18n.changeLanguage(nextLang);
   }, [i18n]);
 
-  // تحديث حالة الشروط وإزالة تنبيه الخطأ بمجرد الموافقة
   const handleAgreeTermsChange = useCallback((checked: boolean) => {
     setAgreeTerms(checked);
     if (checked) {
@@ -47,32 +51,44 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   }, []);
 
   const validateForm = useCallback(() => {
-    const errors: FieldErrors = {};
+    const formData = {
+      fullName,
+      email,
+      password,
+      confirmPassword,
+      agreeTerms,
+    };
 
-    if (!fullName.trim()) errors.fullName = true;
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) errors.email = true;
-    if (!password || password.length < 6) errors.password = true;
-    if (password !== confirmPassword) errors.confirmPassword = true;
-    if (!agreeTerms) errors.agreeTerms = true;
+    // التحقق عبر Zod / signUpSchema
+    const validation = validateFormData(signUpSchema, formData);
 
-    setFieldErrors(errors);
+    if (!validation.success) {
+      const errors: FieldErrors = {};
+      
+      if (!fullName.trim()) errors.fullName = true;
+      if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) errors.email = true;
+      if (!password || password.length < 6) errors.password = true;
+      if (password !== confirmPassword) errors.confirmPassword = true;
+      if (!agreeTerms) errors.agreeTerms = true;
 
-    if (errors.agreeTerms && Object.keys(errors).length === 1) {
+      setFieldErrors(errors);
+
+      if (errors.agreeTerms && Object.keys(errors).length === 1) {
+        setStatus({
+          type: 'error',
+          msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
+        });
+        return false;
+      }
+
       setStatus({
         type: 'error',
-        msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
+        msg: validation.error || t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.'),
       });
       return false;
     }
 
-    if (Object.keys(errors).length > 0) {
-      setStatus({
-        type: 'error',
-        msg: t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.'),
-      });
-      return false;
-    }
-
+    setFieldErrors({});
     return true;
   }, [fullName, email, password, confirmPassword, agreeTerms, t]);
 
@@ -86,7 +102,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       try {
         setLoading(true);
 
-        const { data, error } = await supabase.auth.signUp({
+        const response: AuthResponse = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -96,7 +112,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
           },
         });
 
-        if (error) throw error;
+        if (response.error) throw response.error;
 
         setStatus({
           type: 'success',
@@ -108,9 +124,10 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         }
       } catch (err: any) {
         console.error('Sign Up Error:', err);
+        const translatedError = handleAuthError(err);
         setStatus({
           type: 'error',
-          msg: err?.message || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
+          msg: translatedError || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
         });
       } finally {
         setLoading(false);
@@ -152,5 +169,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     toggleLanguage,
     handleKeyUp,
     handleSignUp,
+    navigate,
   };
 };
