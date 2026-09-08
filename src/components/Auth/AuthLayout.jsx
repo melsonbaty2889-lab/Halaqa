@@ -1,39 +1,45 @@
 // src/components/Auth/AuthLayout.jsx
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { colors as C } from '@/theme/colors';
+import colors, { colors as themeColors } from '@/theme/colors';
 
-export const AuthLayout = ({ children, langBtn }) => {
+// التكفّل بقراءة الثيم بأمان مهما كانت طريقة تصديره
+const C = colors || themeColors || {};
+
+export default function AuthLayout({ children, langBtn }) {
   const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
 
   // دالة الترجمة الآمنة المعتمدة بالدليل
-  const safeT = useCallback((key, fallback) => {
-    if (typeof t === 'function') {
-      return t(key, { defaultValue: fallback || key });
-    }
-    return fallback || key;
-  }, [t]);
+  const safeT = useCallback(
+    (key, fallback) => {
+      if (typeof t === 'function') {
+        return t(key, { defaultValue: fallback || key });
+      }
+      return fallback || key;
+    },
+    [t]
+  );
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden font-cairo"
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{
-        backgroundColor: C.dark?.bg,
-        color: C.text?.main
+        backgroundColor: C?.dark?.bg || '#030712',
+        color: C?.text?.main || C?.text?.primary || '#FFFFFF',
       }}
     >
       {/* خلفية النجوم والتوهج الزمردي العلوي */}
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none z-0"
         aria-hidden="true"
         style={{
           backgroundImage: `
-            radial-gradient(circle at 50% 0%, ${C.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)'} 0%, transparent 60%),
-            radial-gradient(${C.dark?.starDot || 'rgba(255, 255, 255, 0.15)'} 1.2px, transparent 0)
+            radial-gradient(circle at 50% 0%, ${C?.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)'} 0%, transparent 60%),
+            radial-gradient(${C?.dark?.starDot || 'rgba(255, 255, 255, 0.15)'} 1.2px, transparent 0)
           `,
-          backgroundSize: '100% 100%, 24px 24px'
+          backgroundSize: '100% 100%, 24px 24px',
         }}
       />
 
@@ -45,31 +51,29 @@ export const AuthLayout = ({ children, langBtn }) => {
       )}
 
       {/* الحاوية المركزية للنماذج */}
-      <main 
+      <main
         role="main"
         aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
         className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10"
         style={{
-          backgroundColor: C.dark?.card,
-          borderColor: C.dark?.cardBorder,
+          backgroundColor: C?.dark?.card || '#0F172A',
+          borderColor: C?.dark?.cardBorder || C?.dark?.border || '#1B2738',
           borderWidth: '1px',
           borderStyle: 'solid',
-          boxShadow: C.shadows?.xl
+          boxShadow: C?.shadows?.xl || '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
         }}
       >
         {children}
       </main>
 
       {/* رقم الإصدار أسفل الصفحة */}
-      <footer 
+      <footer
         role="contentinfo"
         className="mt-3 text-[10px] sm:text-[11px] tracking-wider font-mono z-10"
-        style={{ color: C.text?.muted }}
+        style={{ color: C?.text?.muted || C?.text?.secondary || '#94A3B8' }}
       >
         {safeT('common.appName', 'SMART HALAQA')} • v2.5
       </footer>
     </div>
   );
-};
-
-export default AuthLayout;
+}
