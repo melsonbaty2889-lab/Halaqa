@@ -13,7 +13,7 @@ import {
 
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
-import LanguageSwitcher from './LanguageSwitcher';
+import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { getMenuSections } from '@/constants/sidebarMenu';
 
 export default function Header({ 
