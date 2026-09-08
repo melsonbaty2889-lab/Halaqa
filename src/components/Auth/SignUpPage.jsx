@@ -18,13 +18,8 @@ import {
   Loader2 
 } from 'lucide-react';
 
-const safeT = (t, key, fallback) => {
-  const translated = t(key);
-  return translated && translated !== key ? translated : fallback;
-};
-
 export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const {
     isRtl,
@@ -59,7 +54,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     if (!agreeTerms) {
       setStatus({
         type: 'error',
-        msg: safeT(t, 'auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.')
+        msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.')
       });
       return;
     }
@@ -76,9 +71,10 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         if (error) throw error;
       }
     } catch (err) {
+      console.error('Google Auth Error:', err);
       setStatus({
         type: 'error',
-        msg: safeT(t, 'auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google')
+        msg: t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google')
       });
     } finally {
       setGoogleLoading(false);
@@ -98,22 +94,23 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     <button
       type="button"
       onClick={toggleLanguage}
-      aria-label={safeT(t, 'common.switchLanguage', 'تغيير اللغة')}
-      className="border py-1.5 ps-3 pe-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg transition-all min-h-[44px]"
+      title={t('common.switchLanguage', 'تغيير اللغة')}
+      aria-label={t('common.switchLanguage', 'تغيير اللغة')}
+      className="border py-1.5 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg transition-all min-h-[44px]"
       style={{
-        backgroundColor: C.dark?.surfaceInput || C.dark?.surface,
-        borderColor: C.dark?.borderInput || C.inputs?.border,
-        color: C.text?.sub || C.text?.body,
+        backgroundColor: C?.dark?.surfaceInput || C?.dark?.surface || '#0A101D',
+        borderColor: C?.dark?.border || '#1B2738',
+        color: C?.text?.secondary || '#94A3B8',
       }}
     >
-      <Globe size={14} style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
-      <span>{isRtl ? 'English' : 'العربية'}</span>
+      <Globe size={14} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
+      <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
     </button>
   );
 
   return (
     <AuthLayout langBtn={langBtn}>
-      <div dir={isRtl ? 'rtl' : 'ltr'} className="w-full">
+      <div className="w-full">
         {/* الشعار والعنوان */}
         <div className="flex flex-col items-center mb-4 text-center">
           <div className="mb-1 drop-shadow-md">
@@ -121,29 +118,29 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </div>
           <h1 
             className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1 mb-0.5"
-            style={{ color: C.text?.title }}
+            style={{ color: C?.text?.primary || '#FFFFFF' }}
           >
-            {safeT(t, 'auth.joinSmartHalaqa', 'انضم إلى الحلقة الذكية')}
+            {t('auth.joinSmartHalaqa', 'انضم إلى الحلقة الذكية')}
           </h1>
           <p 
             className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase m-0"
-            style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
+            style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
           >
-            {safeT(t, 'auth.platformSubtitle', 'منصة إدارة المقارئ والأكاديميات')}
+            {t('auth.platformSubtitle', 'منصة إدارة المقارئ والأكاديميات')}
           </p>
         </div>
 
         <h2 
           className="text-base sm:text-lg text-center mb-1 font-semibold"
-          style={{ color: C.text?.title }}
+          style={{ color: C?.text?.primary || '#FFFFFF' }}
         >
-          {safeT(t, 'auth.createNewAccount', 'إنشاء حساب جديد')}
+          {t('auth.createNewAccount', 'إنشاء حساب جديد')}
         </h2>
         <p 
           className="text-xs text-center mb-4 leading-relaxed"
-          style={{ color: C.text?.sub || C.text?.muted }}
+          style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
-          {safeT(t, 'auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
+          {t('auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
         </p>
 
         {/* التسجيل عبر Google */}
@@ -151,16 +148,17 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           type="button"
           onClick={handleGoogleSignUp}
           disabled={googleLoading || loading}
-          aria-label={safeT(t, 'auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}
-          className="w-full py-2.5 ps-4 pe-4 border rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4 transition-all disabled:opacity-50 min-h-[44px]"
+          title={t('auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}
+          aria-label={t('auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}
+          className="w-full py-2.5 px-4 border rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4 transition-all disabled:opacity-50 min-h-[44px]"
           style={{
-            backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
-            borderColor: C.dark?.borderInput || C.inputs?.border,
-            color: C.text?.title,
+            backgroundColor: C?.dark?.surfaceInput || '#0A101D',
+            borderColor: C?.dark?.border || '#1B2738',
+            color: C?.text?.primary || '#FFFFFF',
           }}
         >
           {googleLoading ? (
-            <Loader2 size={16} className="animate-spin" style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }} />
+            <Loader2 size={16} className="animate-spin" style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
           ) : (
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -169,17 +167,20 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
             </svg>
           )}
-          <span>{safeT(t, 'auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}</span>
+          <span>{t('auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}</span>
         </button>
 
         {/* فاصل */}
         <div className="relative flex items-center justify-center mb-4">
-          <div className="border-t w-full" style={{ borderColor: C.dark?.borderInput || C.inputs?.border }}></div>
+          <div className="border-t w-full" style={{ borderColor: C?.dark?.border || '#1B2738' }}></div>
           <span 
-            className="ps-3 pe-3 text-[11px] absolute font-medium"
-            style={{ backgroundColor: C.dark?.bg, color: C.text?.muted }}
+            className="px-3 text-[11px] absolute font-medium"
+            style={{ 
+              backgroundColor: C?.dark?.bg || '#060B13', 
+              color: C?.text?.secondary || '#94A3B8' 
+            }}
           >
-            {safeT(t, 'auth.orViaEmail', 'أو عبر البريد')}
+            {t('auth.orViaEmail', 'أو عبر البريد')}
           </span>
         </div>
 
@@ -190,26 +191,27 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <User 
               size={18} 
-              className="absolute pointer-events-none transition-colors inset-y-auto"
+              className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                isRtl ? 'right-3.5' : 'left-3.5'
+              }`}
               style={{
-                [isRtl ? 'right' : 'left']: '0.875rem',
-                color: fullName ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
+                color: fullName ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
               }} 
             />
             <input 
               type="text"
               value={fullName || ''}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder={safeT(t, 'auth.fullNamePlaceholder', 'الاسم الكامل')}
-              aria-label={safeT(t, 'auth.fullNamePlaceholder', 'الاسم الكامل')}
+              placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
+              aria-label={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
               required
-              className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px]"
+              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
+                isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+              }`}
               style={{
-                paddingRight: isRtl ? '2.75rem' : '1rem',
-                paddingLeft: isRtl ? '1rem' : '2.75rem',
-                borderColor: C.dark?.borderInput || C.inputs?.border,
-                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
-                color: C.text?.title,
+                borderColor: C?.dark?.border || '#1B2738',
+                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
+                color: C?.text?.primary || '#FFFFFF',
               }}
             />
           </div>
@@ -218,26 +220,27 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <Mail 
               size={18} 
-              className="absolute pointer-events-none transition-colors inset-y-auto"
+              className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                isRtl ? 'right-3.5' : 'left-3.5'
+              }`}
               style={{
-                [isRtl ? 'right' : 'left']: '0.875rem',
-                color: email ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
+                color: email ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
               }} 
             />
             <input 
               type="email"
               value={email || ''}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={safeT(t, 'auth.emailPlaceholder', 'البريد الإلكتروني')}
-              aria-label={safeT(t, 'auth.emailPlaceholder', 'البريد الإلكتروني')}
+              placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
+              aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
               required
-              className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+              }`}
               style={{
-                paddingRight: isRtl ? '2.75rem' : '1rem',
-                paddingLeft: isRtl ? '1rem' : '2.75rem',
-                borderColor: C.dark?.borderInput || C.inputs?.border,
-                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
-                color: C.text?.title,
+                borderColor: C?.dark?.border || '#1B2738',
+                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
+                color: C?.text?.primary || '#FFFFFF',
               }}
             />
           </div>
@@ -246,10 +249,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <Lock 
               size={18} 
-              className="absolute pointer-events-none transition-colors inset-y-auto"
+              className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                isRtl ? 'right-3.5' : 'left-3.5'
+              }`}
               style={{
-                [isRtl ? 'right' : 'left']: '0.875rem',
-                color: password ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
+                color: password ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
               }} 
             />
             <input 
@@ -257,26 +261,26 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               value={password || ''}
               onKeyUp={handleKeyUp}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={safeT(t, 'auth.passwordPlaceholder', 'كلمة المرور')}
-              aria-label={safeT(t, 'auth.passwordPlaceholder', 'كلمة المرور')}
+              placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
+              aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
               required
-              className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
               style={{
-                paddingRight: '2.75rem',
-                paddingLeft: '2.75rem',
-                borderColor: C.dark?.borderInput || C.inputs?.border,
-                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
-                color: C.text?.title,
+                borderColor: C?.dark?.border || '#1B2738',
+                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
+                color: C?.text?.primary || '#FFFFFF',
               }}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? safeT(t, 'auth.hidePassword', 'إخفاء كلمة المرور') : safeT(t, 'auth.showPassword', 'إظهار كلمة المرور')}
-              className="absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+              aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+              className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                isRtl ? 'left-1' : 'right-1'
+              }`}
               style={{
-                [isRtl ? 'left' : 'right']: '0.25rem',
-                color: C.text?.muted,
+                color: C?.text?.secondary || '#94A3B8',
               }}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -287,36 +291,37 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div className="relative flex items-center">
             <Lock 
               size={18} 
-              className="absolute pointer-events-none transition-colors inset-y-auto"
+              className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                isRtl ? 'right-3.5' : 'left-3.5'
+              }`}
               style={{
-                [isRtl ? 'right' : 'left']: '0.875rem',
-                color: confirmPassword ? (C.amber?.DEFAULT || C.primary?.DEFAULT) : C.text?.muted
+                color: confirmPassword ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
               }} 
             />
             <input 
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword || ''}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={safeT(t, 'auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
-              aria-label={safeT(t, 'auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
+              placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
+              aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
               required
-              className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
               style={{
-                paddingRight: '2.75rem',
-                paddingLeft: '2.75rem',
-                borderColor: C.dark?.borderInput || C.inputs?.border,
-                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
-                color: C.text?.title,
+                borderColor: C?.dark?.border || '#1B2738',
+                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
+                color: C?.text?.primary || '#FFFFFF',
               }}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              aria-label={showConfirmPassword ? safeT(t, 'auth.hidePassword', 'إخفاء كلمة المرور') : safeT(t, 'auth.showPassword', 'إظهار كلمة المرور')}
-              className="absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+              aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+              className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                isRtl ? 'left-1' : 'right-1'
+              }`}
               style={{
-                [isRtl ? 'left' : 'right']: '0.25rem',
-                color: C.text?.muted,
+                color: C?.text?.secondary || '#94A3B8',
               }}
             >
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -327,8 +332,8 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div 
             className="flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all border"
             style={{
-              borderColor: fieldErrors?.agreeTerms ? C.error?.DEFAULT : 'transparent',
-              backgroundColor: fieldErrors?.agreeTerms ? `${C.error?.DEFAULT}15` : 'transparent',
+              borderColor: fieldErrors?.agreeTerms ? (C?.danger?.text || '#F43F5E') : 'transparent',
+              backgroundColor: fieldErrors?.agreeTerms ? (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)') : 'transparent',
             }}
           >
             <input 
@@ -336,36 +341,40 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               id="agreeTerms" 
               checked={Boolean(agreeTerms)} 
               onChange={(e) => setAgreeTerms(e.target.checked)} 
-              aria-label={safeT(t, 'auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
+              aria-label={t('auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
               className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px]" 
               style={{
-                borderColor: C.dark?.borderInput || C.inputs?.border,
-                backgroundColor: C.dark?.surfaceInput || C.inputs?.bg,
-                accentColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
+                borderColor: C?.dark?.border || '#1B2738',
+                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
+                accentColor: C?.primary?.DEFAULT || '#E07A00',
               }}
             />
             <label 
               htmlFor="agreeTerms" 
               className="text-[11px] cursor-pointer leading-tight select-none pt-0.5"
-              style={{ color: C.text?.sub || C.text?.body }}
+              style={{ color: C?.text?.secondary || '#94A3B8' }}
             >
-              {safeT(t, 'auth.iAgreeTo', 'أوافق على')}{' '}
+              {t('auth.iAgreeTo', 'أوافق على')}{' '}
               <button 
                 type="button" 
                 onClick={() => openTermsModal('terms')} 
+                title={t('auth.termsAndConditions', 'الشروط والأحكام')}
+                aria-label={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
+                style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
               >
-                {safeT(t, 'auth.termsAndConditions', 'الشروط والأحكام')}
+                {t('auth.termsAndConditions', 'الشروط والأحكام')}
               </button>{' '}
-              {safeT(t, 'common.and', 'و')}{' '}
+              {t('common.and', 'و')}{' '}
               <button 
                 type="button" 
                 onClick={() => openTermsModal('privacy')} 
+                title={t('auth.privacyPolicy', 'سياسة الخصوصية')}
+                aria-label={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
+                style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
               >
-                {safeT(t, 'auth.privacyPolicy', 'سياسة الخصوصية')}
+                {t('auth.privacyPolicy', 'سياسة الخصوصية')}
               </button>
             </label>
           </div>
@@ -375,9 +384,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div 
               className="p-3 rounded-xl my-1 text-xs leading-relaxed flex items-center gap-2 border"
               style={{
-                backgroundColor: status.type === 'success' ? `${C.emerald?.DEFAULT || C.success?.DEFAULT}15` : `${C.error?.DEFAULT}15`,
-                color: status.type === 'success' ? C.emerald?.light || C.success?.light : C.error?.light,
-                borderColor: status.type === 'success' ? `${C.emerald?.DEFAULT || C.success?.DEFAULT}40` : `${C.error?.DEFAULT}40`,
+                backgroundColor: status.type === 'success' 
+                  ? (C?.emerald?.bg || 'rgba(16, 185, 129, 0.1)') 
+                  : (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)'),
+                color: status.type === 'success' 
+                  ? (C?.emerald?.text || '#10B981') 
+                  : (C?.danger?.text || '#F43F5E'),
+                borderColor: status.type === 'success' 
+                  ? (C?.emerald?.border || 'rgba(16, 185, 129, 0.3)') 
+                  : (C?.danger?.border || 'rgba(244, 63, 94, 0.3)'),
               }}
             >
               <AlertCircle size={16} className="shrink-0" />
@@ -389,17 +404,18 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <button 
             type="submit" 
             disabled={loading}
-            aria-label={safeT(t, 'auth.createNewAccount', 'إنشاء حساب جديد')}
+            title={t('auth.createNewAccount', 'إنشاء حساب جديد')}
+            aria-label={t('auth.createNewAccount', 'إنشاء حساب جديد')}
             className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px]"
             style={{
-              backgroundColor: C.amber?.DEFAULT || C.primary?.DEFAULT,
-              color: C.dark?.bg || '#000000',
+              backgroundColor: C?.primary?.DEFAULT || '#E07A00',
+              color: C?.primary?.text || '#000000',
             }}
           >
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              <span>{safeT(t, 'auth.createNewAccount', 'إنشاء حساب جديد')}</span>
+              <span>{t('auth.createNewAccount', 'إنشاء حساب جديد')}</span>
             )}
           </button>
         </form>
@@ -407,27 +423,29 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         {/* شارة التشفير */}
         <div 
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4"
-          style={{ color: C.text?.muted }}
+          style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
-          <ShieldCheck size={14} style={{ color: C.emerald?.DEFAULT || C.success?.DEFAULT }} />
+          <ShieldCheck size={14} style={{ color: C?.emerald?.text || '#10B981' }} />
           <span>
-            {safeT(t, 'auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
+            {t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
           </span>
         </div>
 
         {/* تحويل الدخول */}
         <div 
           className="mt-3 text-center text-xs"
-          style={{ color: C.text?.sub || C.text?.body }}
+          style={{ color: C?.text?.secondary || '#94A3B8' }}
         >
-          <span>{safeT(t, 'auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>{' '}
+          <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>{' '}
           <button 
             type="button"
             onClick={onSwitchToLogin} 
+            title={t('auth.signIn', 'تسجيل الدخول')}
+            aria-label={t('auth.signIn', 'تسجيل الدخول')}
             className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 ms-1 min-h-[44px] px-1"
-            style={{ color: C.amber?.DEFAULT || C.primary?.DEFAULT }}
+            style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
           >
-            {safeT(t, 'auth.signIn', 'تسجيل الدخول')}
+            {t('auth.signIn', 'تسجيل الدخول')}
           </button>
         </div>
 
