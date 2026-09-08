@@ -86,6 +86,7 @@
     "ssl_secured": "بياناتك مشفرة ومحمية وفق معايير 256-bit",
     "termsAndConditions": "الشروط والأحكام",
     "updatePasswordFailed": "فشل تحديث كلمة المرور",
+    "updatePasswordTitle": "تحديث كلمة المرور",
     "updateSuccessDesc": "تم تغيير كلمة المرور الخاصة بك، جارٍ تحويلك لتسجيل الدخول...",
     "updateSuccessTitle": "تم التحديث بنجاح!",
     "user_not_found": "البريد الإلكتروني غير مسجل لدينا."
