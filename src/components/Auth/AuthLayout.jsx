@@ -1,16 +1,14 @@
-// src/components/Auth/AuthLayout.jsx
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import colors, { colors as themeColors } from '@/theme/colors';
 
-// التكفّل بقراءة الثيم بأمان مهما كانت طريقة تصديره
 const C = colors || themeColors || {};
 
 export default function AuthLayout({ children, langBtn }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
+  const defaultAppName = isRtl ? 'الحلقة الذكية' : 'Smart Halaqa';
 
-  // دالة الترجمة الآمنة المعتمدة بالدليل
   const safeT = useCallback(
     (key, fallback) => {
       if (typeof t === 'function') {
@@ -30,7 +28,7 @@ export default function AuthLayout({ children, langBtn }) {
         color: C?.text?.main || C?.text?.primary || '#FFFFFF',
       }}
     >
-      {/* خلفية النجوم والتوهج الزمردي العلوي */}
+      {/* الخلفية والتوهج */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
         aria-hidden="true"
@@ -43,14 +41,14 @@ export default function AuthLayout({ children, langBtn }) {
         }}
       />
 
-      {/* زر اللغة أعلى الكارت بمحاذاة منسقة تمنع التداخل */}
+      {/* زر اللغة */}
       {langBtn && (
         <div className="w-full max-w-sm sm:max-w-md flex justify-end mb-2 relative z-20">
           {langBtn}
         </div>
       )}
 
-      {/* الحاوية المركزية للنماذج */}
+      {/* حاوية المحتوى */}
       <main
         role="main"
         aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
@@ -66,13 +64,13 @@ export default function AuthLayout({ children, langBtn }) {
         {children}
       </main>
 
-      {/* رقم الإصدار أسفل الصفحة */}
+      {/* الفوتر السفلي */}
       <footer
         role="contentinfo"
-        className="mt-3 text-[10px] sm:text-[11px] tracking-wider font-mono z-10"
+        className="mt-4 text-[10px] sm:text-[11px] tracking-wider font-mono z-10 opacity-60 pointer-events-none"
         style={{ color: C?.text?.muted || C?.text?.secondary || '#94A3B8' }}
       >
-        {safeT('common.appName', 'SMART HALAQA')} • v2.5
+        {safeT('common.appName', defaultAppName)} • v2.5
       </footer>
     </div>
   );
