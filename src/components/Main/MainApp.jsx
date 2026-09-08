@@ -10,6 +10,7 @@ import colorsImport from '@/theme/colors.js';
 
 import Sidebar from '@/components/Sidebar/Sidebar';
 import BottomNav from '@/components/Sidebar/BottomNav';
+import OfflineAndUpdateBanner from '@/components/UI/OfflineAndUpdateBanner';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
