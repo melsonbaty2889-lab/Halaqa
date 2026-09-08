@@ -294,6 +294,12 @@
     "upload_title": "Téléverser un nouveau fichier"
   },
   "endTime": "Heure de fin",
+  "errorBoundary": {
+    "defaultMessage": "حدث خطأ غير متوقع في النظام",
+    "description": "واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.",
+    "reloadBtn": "إعادة تحميل الصفحة",
+    "title": "عذراً، حدث خطأ تقني غير متوقع"
+  },
   "errors": {
     "generic": "Une erreur est survenue lors de la création",
     "server_error": "Erreur serveur",

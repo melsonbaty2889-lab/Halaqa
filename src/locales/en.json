@@ -294,6 +294,12 @@
     "upload_title": "Upload New File"
   },
   "endTime": "End Time",
+  "errorBoundary": {
+    "defaultMessage": "حدث خطأ غير متوقع في النظام",
+    "description": "واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.",
+    "reloadBtn": "إعادة تحميل الصفحة",
+    "title": "عذراً، حدث خطأ تقني غير متوقع"
+  },
   "errors": {
     "generic": "Error occurred during creation",
     "server_error": "Server Error",
