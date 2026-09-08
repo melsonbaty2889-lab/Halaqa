@@ -38,8 +38,8 @@ export default function UpdatePassword({ onSuccess }) {
   const isRtl = i18n?.language === 'ar';
 
   useEffect(() => {
-    document.title = isRtl ? 'تحديث كلمة المرور | الحلقة الذكية' : 'Update Password | Smart Halaqa';
-  }, [isRtl]);
+  document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${t('common.appName', 'الحلقة الذكية')}`;
+}, [i18n.language, t]);
 
   const toggleLanguage = () => {
     const nextLang = isRtl ? 'en' : 'ar';
