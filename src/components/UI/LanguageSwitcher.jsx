@@ -4,12 +4,12 @@ import { Globe, Check, ChevronDown } from 'lucide-react';
 import C from '@/theme/colors';
 
 const SUPPORTED_LANGUAGES = [
-  { code: 'ar', nativeName: 'العربية', flag: '🇸🇦', dir: 'rtl' },
-  { code: 'en', nativeName: 'English', flag: '🇬🇧', dir: 'ltr' },
-  { code: 'fr', nativeName: 'Français', flag: '🇫🇷', dir: 'ltr' },
-  { code: 'tr', nativeName: 'Türkçe', flag: '🇹🇷', dir: 'ltr' },
-  { code: 'ur', nativeName: 'أردو', flag: '🇵🇰', dir: 'rtl' },
-  { code: 'id', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', dir: 'ltr' },
+  { code: 'ar', nativeName: 'العربية' },
+  { code: 'en', nativeName: 'English' },
+  { code: 'fr', nativeName: 'Français' },
+  { code: 'tr', nativeName: 'Türkçe' },
+  { code: 'ur', nativeName: 'اردو' },
+  { code: 'id', nativeName: 'Bahasa Indonesia' },
 ];
 
 export default function LanguageSwitcher() {
@@ -20,23 +20,33 @@ export default function LanguageSwitcher() {
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === currentLangCode) || SUPPORTED_LANGUAGES[0];
 
-  const handleLanguageChange = async (lang) => {
+  const handleLanguageChange = (langCode) => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
-      await i18n.changeLanguage(lang.code);
-      document.documentElement.dir = lang.dir;
-      document.documentElement.lang = lang.code;
+      i18n.changeLanguage(langCode);
     }
     setIsOpen(false);
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handlePointerDownOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDownOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDownOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   return (
@@ -47,28 +57,31 @@ export default function LanguageSwitcher() {
         title={t('common.switchLanguage')}
         aria-label={t('common.switchLanguage')}
         aria-expanded={isOpen}
+        aria-haspopup="menu"
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer min-h-[44px]"
         style={{
-          backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-          borderColor: C?.dark?.border || '#1B2738',
-          color: C?.text?.primary || '#FFFFFF',
+          backgroundColor: C.dark.surfaceInput,
+          borderColor: C.dark.border,
+          color: C.text.primary,
         }}
       >
-        <Globe size={15} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
+        <Globe size={15} style={{ color: C.primary.DEFAULT }} />
         <span className="uppercase">{currentLang.code}</span>
         <ChevronDown
           size={13}
           className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          style={{ color: C?.text?.secondary || '#94A3B8' }}
+          style={{ color: C.text.secondary }}
         />
       </button>
 
       {isOpen && (
         <div
+          role="menu"
+          aria-orientation="vertical"
           className="absolute end-0 mt-2 w-44 rounded-xl border shadow-2xl py-1 z-[999999] overflow-hidden"
           style={{
-            backgroundColor: C?.dark?.surface || '#0F172A',
-            borderColor: C?.dark?.border || '#1B2738',
+            backgroundColor: C.dark.surface,
+            borderColor: C.dark.border,
           }}
         >
           {SUPPORTED_LANGUAGES.map((lang) => {
@@ -76,19 +89,17 @@ export default function LanguageSwitcher() {
             return (
               <button
                 key={lang.code}
+                role="menuitem"
                 type="button"
-                onClick={() => handleLanguageChange(lang)}
+                onClick={() => handleLanguageChange(lang.code)}
                 className="w-full text-start px-3.5 py-2.5 text-xs flex items-center justify-between transition-colors cursor-pointer min-h-[44px]"
                 style={{
-                  backgroundColor: isSelected ? (C?.primary?.DEFAULT || '#E07A00') : 'transparent',
-                  color: isSelected ? '#FFFFFF' : (C?.text?.primary || '#FFFFFF'),
+                  backgroundColor: isSelected ? C.primary.DEFAULT : 'transparent',
+                  color: C.text.primary,
                 }}
               >
-                <div className="flex items-center gap-2">
-                  <span>{lang.flag}</span>
-                  <span>{lang.nativeName}</span>
-                </div>
-                {isSelected && <Check size={14} className="shrink-0" style={{ color: '#FFFFFF' }} />}
+                <span>{lang.nativeName}</span>
+                {isSelected && <Check size={14} className="shrink-0" style={{ color: C.text.primary }} />}
               </button>
             );
           })}
