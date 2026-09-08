@@ -27,7 +27,6 @@ export default function LoginPage({ onNavigate, onSuccess }) {
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
-
   const currentLang = i18n?.language || 'ar';
 
   useEffect(() => {
@@ -63,34 +62,37 @@ export default function LoginPage({ onNavigate, onSuccess }) {
 
   return (
     <AuthLayout langBtn={<LanguageSwitcher />}>
-      <div className="w-full flex flex-col justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
-          {/* الشعار واسم المنصة الموحد */}
-          <div className="flex flex-col items-center mb-5 text-center">
-            <div className="mb-2 drop-shadow-md">
-              <SmartHalaqaProLogo size={52} />
+          {/* الهيدر: اللوجو والعنوان مع مسافات مريحة */}
+          <div className="flex flex-col items-center mb-6 text-center">
+            <div className="mb-3 drop-shadow-md">
+              <SmartHalaqaProLogo size={48} />
             </div>
             
             <AppBrand 
               showTagline={true} 
-              className="flex-col items-center text-center" 
+              className="flex-col items-center text-center gap-1" 
             />
           </div>
 
-          <h2
-            className="text-lg text-center mb-1 font-semibold"
-            style={{ color: C?.text?.primary || '#FFFFFF' }}
-          >
-            {t('auth.loginTitle')}
-          </h2>
-          <p
-            className="text-xs text-center mb-5 leading-relaxed"
-            style={{ color: C?.text?.secondary || '#94A3B8' }}
-          >
-            {t('auth.loginDesc')}
-          </p>
+          {/* نصوص الترحيب */}
+          <div className="text-center mb-6">
+            <h2
+              className="text-lg font-bold mb-1.5 tracking-wide"
+              style={{ color: C?.text?.primary || '#FFFFFF' }}
+            >
+              {t('auth.loginTitle')}
+            </h2>
+            <p
+              className="text-xs leading-relaxed max-w-xs mx-auto"
+              style={{ color: C?.text?.secondary || '#94A3B8' }}
+            >
+              {t('auth.loginDesc')}
+            </p>
+          </div>
 
-          {/* التنبيهات والأخطاء */}
+          {/* الأخطاء */}
           {activeError && (
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border animate-fadeIn"
@@ -111,8 +113,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </div>
           )}
 
-          {/* نموذج الدخول */}
-          <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
+          {/* الفورم */}
+          <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-4">
             {/* البريد الإلكتروني */}
             <div className="relative flex items-center">
               <Mail
@@ -184,8 +186,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-20 ${
-                  isRtl ? 'left-2.5' : 'right-2.5'
+                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-30 ${
+                  isRtl ? 'left-1' : 'right-1'
                 }`}
                 style={{ color: C?.text?.secondary || '#94A3B8' }}
               >
@@ -193,12 +195,12 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               </button>
             </div>
 
-            {/* نسيت كلمة المرور */}
-            <div className="flex justify-end relative z-20">
+            {/* نسيت كلمة المرور - مع إصلاح الضغط وزيادة الوضوح */}
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={(e) => handleNavigation(e, 'forgot-password')}
-                className="text-xs hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
+                className="text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium relative z-30"
                 style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
               >
                 {t('auth.forgotPassword')}
@@ -209,7 +211,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] relative z-20"
+              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] relative z-30"
               style={{
                 backgroundColor: C?.primary?.DEFAULT || '#E07A00',
                 color: C?.primary?.text || '#000000',
@@ -223,8 +225,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </button>
           </form>
 
-          {/* فاصل "أو" */}
-          <div className="relative my-4 flex items-center justify-center">
+          {/* الفاصل */}
+          <div className="relative my-5 flex items-center justify-center">
             <div className="border-t w-full" style={{ borderColor: C?.dark?.border || '#1B2738' }} />
             <span
               className="absolute px-3 text-[10px] uppercase font-mono rounded-full"
@@ -242,7 +244,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-2.5 font-semibold text-xs rounded-xl border transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] relative z-20 disabled:opacity-60 hover:bg-white/5"
+            className="w-full py-2.5 font-semibold text-xs rounded-xl border transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] relative z-30 disabled:opacity-60 hover:bg-white/5"
             style={{
               borderColor: C?.dark?.border || '#1B2738',
               backgroundColor: C?.dark?.surfaceInput || '#0A101D',
@@ -270,16 +272,16 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <span>{t('auth.loginWithGoogle')}</span>
           </button>
 
-          {/* إنشاء حساب جديد */}
+          {/* إنشاء حساب جديد - مع رفع طبقة z-index للضمان */}
           <div
-            className="text-center mt-5 text-xs flex items-center justify-center gap-1 relative z-20"
+            className="text-center mt-6 text-xs flex items-center justify-center gap-1.5 relative z-30"
             style={{ color: C?.text?.secondary || '#94A3B8' }}
           >
             <span>{t('auth.noAccount')}</span>
             <button
               type="button"
               onClick={(e) => handleNavigation(e, 'signup')}
-              className="font-bold hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
+              className="font-bold hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1"
               style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
             >
               {t('auth.createNewAccount')}
