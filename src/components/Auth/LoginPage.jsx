@@ -5,7 +5,6 @@ import AuthLayout from './AuthLayout';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import AppBrand from '@/components/UI/AppBrand';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
-import { C } from '@/theme/colors';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage({ onNavigate, onSuccess }) {
@@ -27,7 +26,6 @@ export default function LoginPage({ onNavigate, onSuccess }) {
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
-  const [focusedInput, setFocusedInput] = useState(null);
   const currentLang = i18n?.language || 'ar';
 
   useEffect(() => {
@@ -65,7 +63,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     <AuthLayout langBtn={<LanguageSwitcher />}>
       <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
-          {/* الهيدر: اللوجو واسم المنصة */}
+          
+          {/* 1. الهيدر والشعار */}
           <div className="flex flex-col items-center mb-5 text-center">
             <div className="mb-2 drop-shadow-md">
               <SmartHalaqaProLogo size={48} />
@@ -77,64 +76,39 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             />
           </div>
 
-          {/* نصوص الترحيب */}
+          {/* 2. النصوص الأساسية */}
           <div className="text-center mb-5">
-            <h2
-              className="text-lg font-bold mb-1 tracking-wide"
-              style={{ color: C.text.title }}
-            >
+            <h2 className="text-lg font-bold mb-1 tracking-wide text-appText-main">
               {t('auth.loginTitle')}
             </h2>
-            <p
-              className="text-xs leading-relaxed max-w-xs mx-auto"
-              style={{ color: C.text.muted }}
-            >
+            <p className="text-xs leading-relaxed max-w-xs mx-auto text-appText-sub">
               {t('auth.loginDesc')}
             </p>
           </div>
 
-          {/* تنبيهات الأخطاء */}
+          {/* 3. صندوق الأخطاء والتنبيهات */}
           {activeError && (
-            <div
-              className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border animate-fadeIn"
-              style={{
-                backgroundColor: status.type === 'success' 
-                  ? 'rgba(16, 185, 129, 0.1)' 
-                  : 'rgba(239, 68, 68, 0.1)',
-                color: status.type === 'success' 
-                  ? C.emerald.DEFAULT 
-                  : C.error.DEFAULT,
-                borderColor: status.type === 'success' 
-                  ? 'rgba(16, 185, 129, 0.3)' 
-                  : 'rgba(239, 68, 68, 0.3)',
-              }}
-            >
+            <div className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border bg-red-500/10 text-red-400 border-red-500/30 animate-fadeIn">
               <AlertCircle size={16} className="shrink-0" />
               <div>{activeError}</div>
             </div>
           )}
 
-          {/* نموذج الدخول */}
+          {/* 4. النموذج */}
           <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
-            {/* البريد الإلكتروني */}
-            <div className="relative flex items-center">
+            
+            {/* حقل البريد الإلكتروني */}
+            <div className="relative flex items-center group">
               <Mail
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                className={`absolute pointer-events-none transition-colors text-appText-muted group-focus-within:text-primary ${
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
-                style={{
-                  color: focusedInput === 'email' || email
-                    ? C.amber.DEFAULT
-                    : C.inputs.icon,
-                }}
               />
               <input
                 type="email"
                 name="email"
                 value={email}
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput(null)}
                 onChange={(e) => {
                   if (localError) setLocalError('');
                   setEmail(e.target.value);
@@ -142,39 +116,24 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 placeholder={t('auth.emailPlaceholder')}
                 aria-label={t('auth.emailPlaceholder')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                className={`w-full py-2.5 rounded-xl text-xs font-sans text-start min-h-[44px] bg-dark-input text-appText-main border border-appBorder-input outline-none transition-all placeholder:text-appText-muted focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                   isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
                 }`}
-                style={{
-                  backgroundColor: C.inputs.bg,
-                  color: C.text.body,
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: focusedInput === 'email' ? C.amber.borderFocus : C.inputs.border,
-                  boxShadow: focusedInput === 'email' ? `0 0 0 3px ${C.amber.glowFocus}` : 'none',
-                }}
               />
             </div>
 
-            {/* كلمة المرور */}
-            <div className="relative flex items-center">
+            {/* حقل كلمة المرور */}
+            <div className="relative flex items-center group">
               <Lock
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                className={`absolute pointer-events-none transition-colors text-appText-muted group-focus-within:text-primary ${
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
-                style={{
-                  color: focusedInput === 'password' || password
-                    ? C.amber.DEFAULT
-                    : C.inputs.icon,
-                }}
               />
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={password}
-                onFocus={() => setFocusedInput('password')}
-                onBlur={() => setFocusedInput(null)}
                 onChange={(e) => {
                   if (localError) setLocalError('');
                   setPassword(e.target.value);
@@ -182,52 +141,37 @@ export default function LoginPage({ onNavigate, onSuccess }) {
                 placeholder={t('auth.passwordPlaceholder')}
                 aria-label={t('auth.passwordPlaceholder')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                className={`w-full py-2.5 rounded-xl text-xs font-sans text-start min-h-[44px] bg-dark-input text-appText-main border border-appBorder-input outline-none transition-all placeholder:text-appText-muted focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                   isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
                 }`}
-                style={{
-                  backgroundColor: C.inputs.bg,
-                  color: C.text.body,
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: focusedInput === 'password' ? C.amber.borderFocus : C.inputs.border,
-                  boxShadow: focusedInput === 'password' ? `0 0 0 3px ${C.amber.glowFocus}` : 'none',
-                }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-30 ${
+                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center text-appText-sub hover:text-appText-main ${
                   isRtl ? 'left-1' : 'right-1'
                 }`}
-                style={{ color: C.text.muted }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
 
-            {/* نسيت كلمة المرور */}
+            {/* رابط نسيت كلمة المرور */}
             <div className="flex justify-end">
               <button
                 type="button"
                 onClick={(e) => handleNavigation(e, 'forgot-password')}
-                className="text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium relative z-30"
-                style={{ color: C.amber.DEFAULT }}
+                className="text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium text-primary hover:text-primary-hover"
               >
                 {t('auth.forgotPassword')}
               </button>
             </div>
 
-            {/* زر تسجيل الدخول الرئيسي */}
+            {/* زر الدخول الرئيسي */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] relative z-30 hover:opacity-95 active:scale-[0.99]"
-              style={{
-                background: C.gradients.primaryBtn,
-                color: '#FFFFFF',
-                boxShadow: `0 4px 14px ${C.amber.buttonGlow}`,
-              }}
+              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/25 active:scale-[0.99]"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -237,31 +181,20 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             </button>
           </form>
 
-          {/* الفاصل */}
+          {/* الفاصل الزمني (OR) */}
           <div className="relative my-4 flex items-center justify-center">
-            <div className="border-t w-full" style={{ borderColor: C.dark.cardBorder }} />
-            <span
-              className="absolute px-3 text-[10px] uppercase font-mono rounded-full"
-              style={{
-                backgroundColor: C.dark.surface,
-                color: C.text.muted,
-              }}
-            >
+            <div className="border-t w-full border-appBorder-card" />
+            <span className="absolute px-3 text-[10px] uppercase font-mono rounded-full bg-dark-card text-appText-sub border border-appBorder-card">
               {t('auth.or')}
             </span>
           </div>
 
-          {/* زر Google */}
+          {/* زر تسجيل الدخول عبر جوجل */}
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-2.5 font-semibold text-xs rounded-xl border transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] relative z-30 disabled:opacity-60 hover:bg-white/5 active:scale-[0.99]"
-            style={{
-              borderColor: C.inputs.border,
-              backgroundColor: C.inputs.bg,
-              color: C.text.body,
-            }}
+            className="w-full py-2.5 font-semibold text-xs rounded-xl border border-appBorder-input bg-dark-google text-appText-main transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px] disabled:opacity-60 hover:border-appBorder-hover active:scale-[0.99]"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -285,20 +218,17 @@ export default function LoginPage({ onNavigate, onSuccess }) {
           </button>
 
           {/* إنشاء حساب جديد */}
-          <div
-            className="text-center mt-5 text-xs flex items-center justify-center gap-1.5 relative z-30"
-            style={{ color: C.text.muted }}
-          >
+          <div className="text-center mt-5 text-xs flex items-center justify-center gap-1.5 text-appText-sub">
             <span>{t('auth.noAccount')}</span>
             <button
               type="button"
               onClick={(e) => handleNavigation(e, 'signup')}
-              className="font-bold hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1"
-              style={{ color: C.amber.DEFAULT }}
+              className="font-bold hover:underline cursor-pointer min-h-[32px] inline-flex items-center px-1 text-primary hover:text-primary-hover"
             >
               {t('auth.createNewAccount')}
             </button>
           </div>
+
         </div>
       </div>
     </AuthLayout>
