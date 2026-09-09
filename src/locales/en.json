@@ -113,6 +113,12 @@
     "importSuccess": "Data imported successfully",
     "title": "Data Backup"
   },
+  "blocked_view": {
+    "default_reason": "تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب مراجعة الاشتراك أو الحساب.",
+    "title": "تم تعليق حساب الأكاديمية",
+    "whatsapp_button": "التواصل مع الإدارة عبر الواتساب",
+    "whatsapp_msg": "السلام عليكم، أنا مالك أكاديمية ({{name}})، تم تعليق الحساب وأود الاستفسار والتفعيل."
+  },
   "blockedView": {
     "contactSupport": "Contact Admin via WhatsApp",
     "defaultAcademyName": "Academy",
@@ -136,6 +142,7 @@
   },
   "close": "Close",
   "common": {
+    "academy": "الأكاديمية",
     "active": "Active",
     "add": "Add",
     "and": "and",
@@ -162,6 +169,7 @@
     "gregorian": "Gregorian",
     "hijri": "Hijri",
     "inactive": "Inactive",
+    "lazy_error": "تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.",
     "loading": "Loading...",
     "loggingOut": "Signing out...",
     "logout": "Sign Out",
@@ -248,6 +256,9 @@
     "uploadLogo": "Upload Logo",
     "weekendConfig": "Weekend Days"
   },
+  "dashboard": {
+    "global_admin": "إدارة المنصة العامة"
+  },
   "datePicker": {
     "ageFormat": "Age: {{age}} years",
     "correspondingGregorian": "Corresponding Gregorian:",
@@ -327,10 +338,17 @@
     "totalWeekly": "Total Weekly Pages"
   },
   "goToAttendance": "Join Live Session",
+  "halaqa": {
+    "unassigned": "غير معين"
+  },
   "halaqasManager": "Quranic Halaqa & Academy Management Platform",
   "halaqaSub": "Manage educational sessions, assign teachers, and track Quranic progress on cloud",
   "header": {
     "admin": "System Administrator"
+  },
+  "hub": {
+    "communications": "مركز التواصل والإشعارات",
+    "reports": "التقارير الذكية"
   },
   "identity": {
     "description": "Academy Brief",

@@ -113,6 +113,12 @@
     "importSuccess": "Veriler başarıyla içe aktarıldı",
     "title": "Veri Yedekleme"
   },
+  "blocked_view": {
+    "default_reason": "تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب مراجعة الاشتراك أو الحساب.",
+    "title": "تم تعليق حساب الأكاديمية",
+    "whatsapp_button": "التواصل مع الإدارة عبر الواتساب",
+    "whatsapp_msg": "السلام عليكم، أنا مالك أكاديمية ({{name}})، تم تعليق الحساب وأود الاستفسار والتفعيل."
+  },
   "blockedView": {
     "contactSupport": "WhatsApp Üzerinden Yönetimle İletişime Geçin",
     "defaultAcademyName": "Akademi",
@@ -136,6 +142,7 @@
   },
   "close": "Kapat",
   "common": {
+    "academy": "الأكاديمية",
     "active": "Aktif",
     "add": "Ekle",
     "and": "ve",
@@ -162,6 +169,7 @@
     "gregorian": "Miladi",
     "hijri": "Hicri",
     "inactive": "Pasif",
+    "lazy_error": "تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.",
     "loading": "Yükleniyor...",
     "loggingOut": "Çıkış yapılıyor...",
     "logout": "Çıkış Yap",
@@ -248,6 +256,9 @@
     "uploadLogo": "Logoyu Yükle",
     "weekendConfig": "Hafta Sonu Günleri"
   },
+  "dashboard": {
+    "global_admin": "إدارة المنصة العامة"
+  },
   "datePicker": {
     "ageFormat": "Yaş: {{age}}",
     "correspondingGregorian": "Miladi Karşılığı:",
@@ -327,10 +338,17 @@
     "totalWeekly": "Toplam Haftalık Sayfa"
   },
   "goToAttendance": "Canlı Oturuma Katıl",
+  "halaqa": {
+    "unassigned": "غير معين"
+  },
   "halaqasManager": "Kur'an Halkaları ve Akademi Yönetim Platformu",
   "halaqaSub": "Eğitim oturumlarını yönetin, eğitmenleri atayın ve Kur'an sürecini bulutta takip edin",
   "header": {
     "admin": "Sistem Yöneticisi"
+  },
+  "hub": {
+    "communications": "مركز التواصل والإشعارات",
+    "reports": "التقارير الذكية"
   },
   "identity": {
     "description": "Akademi Tanıtımı",

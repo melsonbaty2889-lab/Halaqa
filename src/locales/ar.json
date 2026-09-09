@@ -113,6 +113,12 @@
     "importSuccess": "importSuccess",
     "title": "title"
   },
+  "blocked_view": {
+    "default_reason": "تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب مراجعة الاشتراك أو الحساب.",
+    "title": "تم تعليق حساب الأكاديمية",
+    "whatsapp_button": "التواصل مع الإدارة عبر الواتساب",
+    "whatsapp_msg": "السلام عليكم، أنا مالك أكاديمية ({{name}})، تم تعليق الحساب وأود الاستفسار والتفعيل."
+  },
   "blockedView": {
     "contactSupport": "التواصل مع الإدارة عبر الواتساب",
     "defaultAcademyName": "الأكاديمية",
@@ -136,6 +142,7 @@
   },
   "close": "إغلاق",
   "common": {
+    "academy": "الأكاديمية",
     "active": "نشط",
     "add": "add",
     "and": "و",
@@ -162,6 +169,7 @@
     "gregorian": "gregorian",
     "hijri": "hijri",
     "inactive": "غير نشط",
+    "lazy_error": "تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.",
     "loading": "جاري التحميل...",
     "loggingOut": "جاري تسجيل الخروج...",
     "logout": "تسجيل الخروج",
@@ -248,6 +256,9 @@
     "uploadLogo": "تحميل الشعار",
     "weekendConfig": "أيام العطلة الأسبوعية"
   },
+  "dashboard": {
+    "global_admin": "إدارة المنصة العامة"
+  },
   "datePicker": {
     "ageFormat": "العمر: {{age}} سنة",
     "correspondingGregorian": "الموافق ميلادياً:",
@@ -327,10 +338,17 @@
     "totalWeekly": "totalWeekly"
   },
   "goToAttendance": "الانضمام للجلسة المباشرة",
+  "halaqa": {
+    "unassigned": "غير معين"
+  },
   "halaqasManager": "منصة إدارة الحلقات القرآنية والأكاديمية",
   "halaqaSub": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
   "header": {
     "admin": "admin"
+  },
+  "hub": {
+    "communications": "مركز التواصل والإشعارات",
+    "reports": "التقارير الذكية"
   },
   "identity": {
     "description": "description",

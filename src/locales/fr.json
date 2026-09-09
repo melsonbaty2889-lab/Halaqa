@@ -113,6 +113,12 @@
     "importSuccess": "Données importées avec succès",
     "title": "Sauvegarde des données"
   },
+  "blocked_view": {
+    "default_reason": "تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب مراجعة الاشتراك أو الحساب.",
+    "title": "تم تعليق حساب الأكاديمية",
+    "whatsapp_button": "التواصل مع الإدارة عبر الواتساب",
+    "whatsapp_msg": "السلام عليكم، أنا مالك أكاديمية ({{name}})، تم تعليق الحساب وأود الاستفسار والتفعيل."
+  },
   "blockedView": {
     "contactSupport": "Contacter l'administration via WhatsApp",
     "defaultAcademyName": "L'Académie",
@@ -136,6 +142,7 @@
   },
   "close": "Fermer",
   "common": {
+    "academy": "الأكاديمية",
     "active": "Actif",
     "add": "Ajouter",
     "and": "et",
@@ -162,6 +169,7 @@
     "gregorian": "Grégorien",
     "hijri": "Hégirien",
     "inactive": "Inactif",
+    "lazy_error": "تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.",
     "loading": "Chargement...",
     "loggingOut": "Déconnexion en cours...",
     "logout": "Se déconnecter",
@@ -248,6 +256,9 @@
     "uploadLogo": "Téléverser le logo",
     "weekendConfig": "Jours de week-end"
   },
+  "dashboard": {
+    "global_admin": "إدارة المنصة العامة"
+  },
   "datePicker": {
     "ageFormat": "Âge : {{age}} ans",
     "correspondingGregorian": "Correspondance grégorienne :",
@@ -327,10 +338,17 @@
     "totalWeekly": "Total pages hebdomadaires"
   },
   "goToAttendance": "Rejoindre la session en direct",
+  "halaqa": {
+    "unassigned": "غير معين"
+  },
   "halaqasManager": "Plateforme de gestion des halaqas coraniques et académiques",
   "halaqaSub": "Gestion des sessions, répartition des enseignants et suivi coranique dans le cloud",
   "header": {
     "admin": "Administrateur système"
+  },
+  "hub": {
+    "communications": "مركز التواصل والإشعارات",
+    "reports": "التقارير الذكية"
   },
   "identity": {
     "description": "Aperçu de l'académie",

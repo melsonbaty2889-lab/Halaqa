@@ -113,6 +113,12 @@
     "importSuccess": "Data berhasil diimpor",
     "title": "Pencadangan Data"
   },
+  "blocked_view": {
+    "default_reason": "تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب مراجعة الاشتراك أو الحساب.",
+    "title": "تم تعليق حساب الأكاديمية",
+    "whatsapp_button": "التواصل مع الإدارة عبر الواتساب",
+    "whatsapp_msg": "السلام عليكم، أنا مالك أكاديمية ({{name}})، تم تعليق الحساب وأود الاستفسار والتفعيل."
+  },
   "blockedView": {
     "contactSupport": "Hubungi Pengelola via WhatsApp",
     "defaultAcademyName": "Akademi",
@@ -136,6 +142,7 @@
   },
   "close": "Tutup",
   "common": {
+    "academy": "الأكاديمية",
     "active": "Aktif",
     "add": "Tambah",
     "and": "dan",
@@ -162,6 +169,7 @@
     "gregorian": "Masehi",
     "hijri": "Hijriah",
     "inactive": "Nonaktif",
+    "lazy_error": "تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.",
     "loading": "Memuat...",
     "loggingOut": "Sedang keluar...",
     "logout": "Keluar",
@@ -248,6 +256,9 @@
     "uploadLogo": "Unggah Logo",
     "weekendConfig": "Hari Libur Pekanan"
   },
+  "dashboard": {
+    "global_admin": "إدارة المنصة العامة"
+  },
   "datePicker": {
     "ageFormat": "Usia: {{age}} tahun",
     "correspondingGregorian": "Setara Masehi:",
@@ -327,10 +338,17 @@
     "totalWeekly": "Total Halaman Pekanan"
   },
   "goToAttendance": "Bergabung ke Sesi Langsung",
+  "halaqa": {
+    "unassigned": "غير معين"
+  },
   "halaqasManager": "Platform Manajemen Halaqah Quran & Akademi",
   "halaqaSub": "Kelola sesi pembelajaran, alokasikan pengajar, dan pantau kemajuan Quran via cloud",
   "header": {
     "admin": "Administrator Sistem"
+  },
+  "hub": {
+    "communications": "مركز التواصل والإشعارات",
+    "reports": "التقارير الذكية"
   },
   "identity": {
     "description": "Profil Ringkas Akademi",
