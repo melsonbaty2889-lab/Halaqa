@@ -22,18 +22,18 @@ export default function RoleSelectionPage({ onRoleSelected }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // مصطلحات معيارية وأصيلة تناسب كافة المؤسسات القرآنية والشعوب العربية
+  // مصطلحات معيارية وأصيلة تناسب كافة المؤسسات القرآنية
   const roles = [
     {
       id: 'student',
       title: t('roles.student_title', 'طالب / قارئ'),
-      desc: t('roles.student_desc', 'للانضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس'),
+      desc: t('roles.student_desc', 'الإنضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس'),
       icon: GraduationCap,
     },
     {
       id: 'teacher',
       title: t('roles.teacher_title', 'معلم / محفظ'),
-      desc: t('roles.teacher_desc', 'لإدارة الحلقات القرآنية ورصد المتابعة وتقييم مستوى الإتقان'),
+      desc: t('roles.teacher_desc', 'إدارة الحلقات القرآنية ورصد المتابعة وتقييم مستوى الإتقان'),
       icon: BookOpen,
     },
     {
@@ -79,7 +79,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
       // 3. التوجيه للخطوة التالية
       if (onRoleSelected) {
-        onRoleSelected(selectedRole);
+        await onRoleSelected(selectedRole);
       }
     } catch (err) {
       console.error('Role update error:', err);
