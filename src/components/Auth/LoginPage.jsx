@@ -7,7 +7,12 @@ import AppBrand from '@/components/UI/AppBrand';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
-export default function LoginPage({ onNavigate, onSuccess }) {
+export default function LoginPage({ 
+  onNavigate, 
+  onSwitchToSignUp, 
+  onForgotPassword, 
+  onSuccess 
+}) {
   const { t, i18n } = useTranslation();
 
   const {
@@ -32,11 +37,28 @@ export default function LoginPage({ onNavigate, onSuccess }) {
     document.title = `${t('auth.login')} | ${t('app.name', t('common.appName', 'الحلقة الذكية'))}`;
   }, [currentLang, t]);
 
-  const handleNavigation = (e, targetPage) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (typeof onNavigate === 'function') {
-      onNavigate(targetPage);
+  // دالة توجيه مرنة تتعامل مع كافة المسميات الممكنة للـ Props
+  const handleGoToSignUp = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (typeof onSwitchToSignUp === 'function') {
+      onSwitchToSignUp();
+    } else if (typeof onNavigate === 'function') {
+      onNavigate('signup');
+    }
+  };
+
+  const handleGoToForgotPassword = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (typeof onForgotPassword === 'function') {
+      onForgotPassword();
+    } else if (typeof onNavigate === 'function') {
+      onNavigate('forgot-password');
     }
   };
 
@@ -148,6 +170,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label="عرض/إخفاء كلمة المرور"
                 className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center text-appText-sub hover:text-appText-main ${
                   isRtl ? 'left-1' : 'right-1'
                 }`}
@@ -160,7 +183,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={(e) => handleNavigation(e, 'forgot-password')}
+                onClick={handleGoToForgotPassword}
+                aria-label={t('auth.forgotPassword')}
                 className="link-primary text-xs cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium"
               >
                 {t('auth.forgotPassword')}
@@ -171,6 +195,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
+              aria-label={t('auth.login')}
               className="btn-primary min-h-[44px] mt-1 active:scale-[0.99] disabled:opacity-60"
             >
               {loading ? (
@@ -194,6 +219,7 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
+            aria-label={t('auth.loginWithGoogle')}
             className="btn-secondary min-h-[44px] active:scale-[0.99] disabled:opacity-60"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -222,7 +248,8 @@ export default function LoginPage({ onNavigate, onSuccess }) {
             <span>{t('auth.noAccount')}</span>
             <button
               type="button"
-              onClick={(e) => handleNavigation(e, 'signup')}
+              onClick={handleGoToSignUp}
+              aria-label={t('auth.createNewAccount')}
               className="link-primary font-bold cursor-pointer min-h-[32px] inline-flex items-center px-1"
             >
               {t('auth.createNewAccount')}
