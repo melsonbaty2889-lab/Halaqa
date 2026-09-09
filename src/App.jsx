@@ -779,16 +779,36 @@ function MainContent() {
 
   if (appState === 'FULLY_ACTIVE') {
     const formattedSession = user ? { user } : null;
+    const resolvedRole = (userRole || profile?.role || 'student').toString().toLowerCase().trim();
+    const activeSlug = academy?.slug || localStorage.getItem('current_academy_slug');
+
+    // تحديد مسار البداية المناسب لكل دور بدقة
+    const getRoleDefaultSubPath = (role) => {
+      switch (role) {
+        case 'admin':
+        case 'super_admin':
+          return 'dashboard';
+        case 'teacher':
+          return 'teacher';
+        case 'student':
+          return 'student';
+        case 'parent':
+          return 'parent';
+        default:
+          return 'dashboard';
+      }
+    };
 
     return (
       <Routes>
+        {/* 1. المسار المباشر مع الـ slug */}
         <Route 
           path="/:slug/*" 
           element={
             <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
               <MainApp 
                 session={formattedSession} 
-                userRole={userRole || profile?.role || 'admin'} 
+                userRole={resolvedRole} 
                 setShowEarlyUpgrade={setShowEarlyUpgrade}
               />
               <InlineUpgradeModal 
@@ -799,27 +819,27 @@ function MainContent() {
             </ProtectedRoute>
           } 
         />
+
+        {/* 2. إعادة التوجيه التلقائية الصريحة فور دخول المستخدم دون slug */}
         <Route 
           path="/*" 
           element={
-            <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
-              <MainApp 
-                session={formattedSession} 
-                userRole={userRole || profile?.role || 'admin'} 
-                setShowEarlyUpgrade={setShowEarlyUpgrade}
-              />
-              <InlineUpgradeModal 
-                isOpen={showEarlyUpgrade} 
-                onClose={() => setShowEarlyUpgrade(false)} 
-                academyName={academy?.name}
-              />
-            </ProtectedRoute>
+            activeSlug ? (
+              <Navigate to={`/${activeSlug}/${getRoleDefaultSubPath(resolvedRole)}`} replace />
+            ) : (
+              <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
+                <MainApp 
+                  session={formattedSession} 
+                  userRole={resolvedRole} 
+                  setShowEarlyUpgrade={setShowEarlyUpgrade}
+                />
+              </ProtectedRoute>
+            )
           } 
         />
       </Routes>
     );
   }
-
   return (
     <div style={{
       background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection:
