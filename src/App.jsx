@@ -206,12 +206,24 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
     );
   }
 
+  // 1. تحديد الدور الحالي وتنظيفه
   const currentRole = (userRole || profile?.role || 'admin').toString().toLowerCase().trim();
   const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
-  const isAllowed = normalizedAllowed.length === 0 || normalizedAllowed.includes(currentRole) || currentRole === 'admin' || currentRole === 'super_admin';
 
+  // 2. فحص الصلاحيات (الأدمن والسوبر أدمن مجازين دائماً)
+  const isAllowed = normalizedAllowed.length === 0 || 
+                    normalizedAllowed.includes(currentRole) || 
+                    currentRole === 'admin' || 
+                    currentRole === 'super_admin';
+
+  // 3. فحص الأكاديمية بدون إغلاق الوصول في حالة التطابق أو الحسابات الافتراضية
   const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
-  const isCorrectAcademy = !slug || !currentSlug || slug === currentSlug || academy?.id === 'default';
+  const isCorrectAcademy = !slug || 
+                          !currentSlug || 
+                          slug === currentSlug || 
+                          academy?.id === 'default' ||
+                          currentRole === 'super_admin' || 
+                          currentRole === 'admin';
 
   if (!isAllowed || !isCorrectAcademy) {
     return (
@@ -259,7 +271,6 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
 
   return children;
 };
-
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
