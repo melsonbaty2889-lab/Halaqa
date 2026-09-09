@@ -41,7 +41,7 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات البروفايل
+      // 1. جلب بيانات البروفايل الرسمية
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
@@ -85,42 +85,58 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role || 'admin';
 
-      // 2. البحث عن الأكاديمية المملوكة أولاً
-      const { data: ownedAcademy } = await supabase
-        .from('academies')
-        .select('*')
-        .eq('owner_id', currentUser.id)
-        .limit(1)
-        .maybeSingle();
+      // 2. البحث المباشر أولاً عبر academy_id المسجل في ملف المستخدم profile
+      if (activeProfile.academy_id) {
+        const { data: profileAcademy } = await supabase
+          .from('academies')
+          .select('*')
+          .eq('id', activeProfile.academy_id)
+          .maybeSingle();
 
-      if (ownedAcademy) {
-        currentAcademy = ownedAcademy;
-        detectedRole = 'admin';
-      } else {
-        // 3. البحث في عضويات الأكاديمية كـ Fallback مع استرجاع الدور المخصص
-        const { data: memList } = await supabase
-          .from('academy_members')
-          .select('academy_id, role')
-          .eq('user_id', currentUser.id)
+        if (profileAcademy) {
+          currentAcademy = profileAcademy;
+        }
+      }
+
+      // 3. البحث عن الأكاديمية المملوكة (owner_id) إذا لم تكتشف بعد
+      if (!currentAcademy) {
+        const { data: ownedAcademy } = await supabase
+          .from('academies')
+          .select('*')
+          .eq('owner_id', currentUser.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (ownedAcademy) {
+          currentAcademy = ownedAcademy;
+          detectedRole = 'admin';
+        }
+      }
+
+      // 4. البحث في جدول معلمي الأكاديمية (academy_teachers) كـ Fallback
+      if (!currentAcademy) {
+        const { data: teacherList } = await supabase
+          .from('academy_teachers')
+          .select('academy_id')
+          .eq('teacher_id', currentUser.id)
+          .eq('is_active', true)
           .limit(1);
 
-        if (memList && memList.length > 0 && memList[0]?.academy_id) {
-          const { data: joinedAcademy } = await supabase
+        if (teacherList && teacherList.length > 0 && teacherList[0]?.academy_id) {
+          const { data: teacherAcademy } = await supabase
             .from('academies')
             .select('*')
-            .eq('id', memList[0].academy_id)
+            .eq('id', teacherList[0].academy_id)
             .maybeSingle();
 
-          if (joinedAcademy) {
-            currentAcademy = joinedAcademy;
-            if (memList[0].role) {
-              detectedRole = memList[0].role;
-            }
+          if (teacherAcademy) {
+            currentAcademy = teacherAcademy;
+            detectedRole = 'teacher';
           }
         }
       }
 
-      // 4. تعيين الحالة النهائية مع تثبيت الدور
+      // 5. تعيين الحالة النهائية مع تثبيت الدور
       if (isMounted.current) {
         setUserRole(detectedRole);
         
@@ -136,9 +152,9 @@ export const AcademyProvider = ({ children }) => {
             setAppState('FULLY_ACTIVE');
           }
         } else {
-          // في حال عدم وجود أكاديمية، ننشئ كائن مؤقت لتفادي حظر الشاشات
+          // إنشاء كائن افتراضي لتفادي الحظر عند تسجيل الحسابات الجديدة
           setAcademy({
-            id: 'default',
+            id: activeProfile.academy_id || 'default',
             name: 'الأكاديمية الافتراضية',
             is_active: true
           });
