@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
 import colorsImport from '@/theme/colors.js';
-
+import { PageSkeleton } from '@/components/UI/Skeleton';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import BottomNav from '@/components/Sidebar/BottomNav';
 import OfflineAndUpdateBanner from '@/components/UI/OfflineAndUpdateBanner';
