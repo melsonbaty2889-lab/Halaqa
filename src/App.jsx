@@ -742,9 +742,16 @@ function MainContent() {
     );
   }
 
-  if (appState === 'NO_ACADEMY') {
+  if (appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) {
     const cachedSlug = typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
-    if (cachedSlug) {
+
+    // 1. تنظيف الـ Cache القديم إذا كان الحساب الحالي غير مرتبط بأكاديمية في قاعدة البيانات
+    if (!profile?.academy_id && cachedSlug) {
+      localStorage.removeItem('current_academy_slug');
+    }
+
+    // 2. إذا وجد slug ومسجل بالفعل بالبروفايل، نقوم بالتزامن
+    if (cachedSlug && profile?.academy_id) {
       if (refreshStatus) refreshStatus();
       return (
         <div style={{ background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.primary?.DEFAULT, gap: '12px' }}>
@@ -756,14 +763,15 @@ function MainContent() {
       );
     }
 
+    // 3. عرض شاشة التأسيس/اختيار الدور بدلاً من الشاشات الافتراضية
     return (
       <CreateAcademy 
         onLogout={logout} 
         onSubmitAcademy={async (createdAcademyData) => {
-          if (refreshStatus) await refreshStatus();
           if (createdAcademyData?.slug) {
             localStorage.setItem('current_academy_slug', createdAcademyData.slug);
           }
+          if (refreshStatus) await refreshStatus();
         }} 
       />
     );
@@ -813,7 +821,11 @@ function MainContent() {
   }
 
   return (
-    <div style={{ background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: C.text?.title, fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px', textAlign: 'center' }}>
+    <div style={{
+      background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection:
+      'column', justifyContent: 'center', alignItems: 'center', color: C.text?.title,
+      fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px',
+      textAlign: 'center' }}>
       <AlertTriangle size={40} style={{ color: C.error?.DEFAULT, marginBlockEnd: '15px' }} />
       <h2 style={{ marginBlockEnd: '10px' }}>{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
       <p style={{ color: C.text?.muted, marginBlockEnd: '5px' }}>App State: <strong style={{ color: C.primary?.DEFAULT }}>{appState || 'NULL'}</strong></p>
@@ -821,7 +833,10 @@ function MainContent() {
         onClick={logout} 
         aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
         title={getText(t, 'common.logout', 'تسجيل الخروج')}
-        style={{ background: C.primary?.gradient, color: C.text?.title, padding: '10px 25px', minHeight: '44px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+        style={{
+          background: C.primary?.gradient, color: C.text?.title, padding: '10px 25px',
+          minHeight: '44px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+          fontWeight: 'bold' }}
       >
         {getText(t, 'common.logout', 'تسجيل الخروج')}
       </button>
