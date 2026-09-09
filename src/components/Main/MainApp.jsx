@@ -685,7 +685,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           }}
         >
           <ErrorBoundaryInner key={activeTab}>
-            <Suspense fallback={null}>
+            <Suspense fallback={<PageSkeleton />}>
               {renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
