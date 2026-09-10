@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, useRef, ChangeEvent, FormEvent, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // ── Types & Interfaces ──────────────────────────────────────────
@@ -95,12 +95,12 @@ export function useAcademySettings(
 
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  }, []);
 
-  const fetchAcademySettings = async () => {
+  const fetchAcademySettings = useCallback(async () => {
     if (!isValidAcademyId) {
       setLoading(false);
       return;
@@ -112,9 +112,9 @@ export function useAcademySettings(
         .from('academies')
         .select('*')
         .eq('id', currentAcademyId!)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
 
       if (data) {
         setRawAcademyData(data);
@@ -169,11 +169,11 @@ export function useAcademySettings(
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentAcademyId, isValidAcademyId, isRtl, showToast]);
 
   useEffect(() => {
     fetchAcademySettings();
-  }, [currentAcademyId, isRtl]);
+  }, [fetchAcademySettings]);
 
   const updateField = (field: keyof AcademyFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -373,3 +373,5 @@ export function useAcademySettings(
     fetchAcademySettings,
   };
 }
+
+export default useAcademySettings;
