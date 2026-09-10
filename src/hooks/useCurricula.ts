@@ -21,6 +21,7 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
 
   const queryKey = ['curricula', academyId, filters];
 
+  // 1. جلب المناهج
   const {
     data: curricula = [],
     isLoading: loading,
@@ -46,7 +47,7 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
 
       if (filters.searchTerm && filters.searchTerm.trim() !== '') {
         const term = `%${filters.searchTerm.trim()}%`;
-        query = query.or(`title.cast.text.ilike.${term},code.ilike.${term}`);
+        query = query.or(`title->>ar.ilike.${term},title->>en.ilike.${term},code.ilike.${term}`);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -57,11 +58,27 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
     enabled: !!academyId && enabled,
   });
 
+  // 2. Mutation لتغيير حالة التفعيل
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ curriculumId, currentActive }: { curriculumId: string; currentActive: boolean }) => {
       const { error } = await supabase
         .from('curricula')
         .update({ is_active: !currentActive })
+        .eq('id', curriculumId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
+    },
+  });
+
+  // 3. Mutation لحذف منهج
+  const deleteMutation = useMutation({
+    mutationFn: async (curriculumId: string) => {
+      const { error } = await supabase
+        .from('curricula')
+        .delete()
         .eq('id', curriculumId);
 
       if (error) throw error;
@@ -83,6 +100,18 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
     [toggleActiveMutation]
   );
 
+  const deleteCurriculum = useCallback(
+    async (curriculumId: string) => {
+      try {
+        await deleteMutation.mutateAsync(curriculumId);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'فشلت عملية الحذف' };
+      }
+    },
+    [deleteMutation]
+  );
+
   return {
     curricula,
     loading,
@@ -91,6 +120,7 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
     setFilters,
     refetch,
     toggleActiveCurriculum,
+    deleteCurriculum,
   };
 };
 
