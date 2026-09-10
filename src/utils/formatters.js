@@ -59,17 +59,51 @@ export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
 };
 
 // ==========================================
-// 3. تنسيق الهواتف الدولية
+// 3. تنسيق وتوحيد الهواتف (للعرض وللتخزين)
 // ==========================================
-export const formatPhoneNumber = (phone, defaultCountryCode = '+20') => {
+
+/**
+ * دالة لتنسيق الرقم شكلياً للعرض في الواجهات (تضيف + قبل الرقم)
+ */
+export const formatPhoneNumber = (phone, countryCode = 'EG') => {
   if (!phone) return '';
   const cleaned = phone.replace(/[^\d+]/g, '');
   
   if (cleaned.startsWith('+')) return cleaned;
-  if (cleaned.startsWith('00')) return `+${cleaned.slice(2)}`;
-  if (cleaned.startsWith('0')) return `${defaultCountryCode}${cleaned.slice(1)}`;
+
+  // جلب كود الاتصال من ملف الدول
+  const country = COUNTRIES_MAP[countryCode?.toUpperCase()];
+  const dialCode = country ? country.dialCode : '+20';
   
-  return `${defaultCountryCode}${cleaned}`;
+  if (cleaned.startsWith('00')) return `+${cleaned.slice(2)}`;
+  if (cleaned.startsWith('0')) return `${dialCode}${cleaned.slice(1)}`;
+  
+  return `${dialCode}${cleaned}`;
+};
+
+/**
+ * دالة توحيد الرقم لتخزينه في قاعدة البيانات (بدون علامة +)
+ * تطابق تماماً دالة normalize_phone في Supabase
+ */
+export const normalizePhone = (phone, countryCode = 'EG') => {
+  if (!phone) return null;
+
+  // تنظيف الرقم من كافة الرموز (حتى علامة +)
+  let cleaned = phone.replace(/[^0-9]/g, '');
+  if (!cleaned) return null;
+
+  const country = COUNTRIES_MAP[countryCode?.toUpperCase()];
+  const dialCode = country ? country.dialCode.replace('+', '') : '20';
+
+  if (cleaned.startsWith('00')) {
+    cleaned = cleaned.substring(2);
+  } else if (cleaned.startsWith('0')) {
+    cleaned = dialCode + cleaned.substring(1);
+  } else if (!cleaned.startsWith(dialCode) && cleaned.length <= 10) {
+    cleaned = dialCode + cleaned;
+  }
+
+  return cleaned;
 };
 
 // ==========================================
