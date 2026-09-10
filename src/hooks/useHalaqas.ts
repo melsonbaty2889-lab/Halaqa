@@ -41,7 +41,8 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
           teachers (
             id,
             name,
-            email
+            email,
+            phone
           ),
           curricula (
             id,
@@ -77,7 +78,25 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
     enabled: !!academyId && enabled,
   });
 
-  // 2. Mutation للأرشفة
+  // 2. Mutation لإسناد / تغيير المعلم للحلقة
+  const assignTeacherMutation = useMutation({
+    mutationFn: async ({ halaqaId, teacherId }: { halaqaId: string; teacherId: string | null }) => {
+      const { error } = await supabase
+        .from('halaqas')
+        .update({
+          teacher_id: teacherId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', halaqaId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+    },
+  });
+
+  // 3. Mutation للأرشفة
   const archiveMutation = useMutation({
     mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
@@ -95,6 +114,20 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
     },
   });
 
+  // دالة إسناد المعلم
+  const assignTeacherToHalaqa = useCallback(
+    async (halaqaId: string, teacherId: string | null) => {
+      try {
+        await assignTeacherMutation.mutateAsync({ halaqaId, teacherId });
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'فشلت عملية إسناد المعلم' };
+      }
+    },
+    [assignTeacherMutation]
+  );
+
+  // دالة الأرشفة
   const toggleArchiveHalaqa = useCallback(
     async (halaqaId: string, currentArchived: boolean) => {
       try {
@@ -114,6 +147,7 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
     filters,
     setFilters,
     refetch,
+    assignTeacherToHalaqa,
     toggleArchiveHalaqa,
   };
 };
