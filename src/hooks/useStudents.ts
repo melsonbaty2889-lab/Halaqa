@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Student, StudentFilters } from '@/types/student';
+import { normalizePhone } from '@/utils/formatters';
 
 export interface OperationResponse {
   success: boolean;
   error?: string;
+  data?: any;
 }
 
 export const useStudents = (
@@ -14,7 +16,6 @@ export const useStudents = (
 ) => {
   const queryClient = useQueryClient();
 
-  // 1. إدارة حالة الفلاتر
   const [filters, setFilters] = useState<StudentFilters>({
     searchTerm: '',
     gender: 'all',
@@ -23,7 +24,6 @@ export const useStudents = (
     ...initialFilters,
   });
 
-  // 2. حالة كلمة البحث المؤجلة لتخفيف الطلبات (Debounce)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(
     filters.searchTerm
   );
@@ -36,7 +36,6 @@ export const useStudents = (
     return () => clearTimeout(handler);
   }, [filters.searchTerm]);
 
-  // 3. مفتاح الكاش الموحد بناءً على المتغيرات
   const queryKey = [
     'students',
     academyId,
@@ -46,7 +45,7 @@ export const useStudents = (
     debouncedSearchTerm,
   ];
 
-  // 4. جلب البيانات باستخدام React Query
+  // 1. جلب الطلاب
   const {
     data: students = [],
     isLoading: loading,
@@ -59,26 +58,27 @@ export const useStudents = (
 
       let query = supabase
         .from('students')
-        .select(
-          `
+        .select(`
           *,
           halaqas (
             id,
-            name_ar,
-            name_en,
+            name,
             target_audience
+          ),
+          parents (
+            id,
+            name,
+            phone,
+            email
           )
-        `
-        )
+        `)
         .eq('academy_id', academyId)
         .eq('is_archived', filters.isArchived);
 
-      // فلترة الجنس
       if (filters.gender && filters.gender !== 'all') {
         query = query.eq('gender', filters.gender);
       }
 
-      // فلترة الحلقة
       if (filters.halaqaId && filters.halaqaId !== 'all') {
         if (filters.halaqaId === 'none') {
           query = query.is('halaqa_id', null);
@@ -87,34 +87,74 @@ export const useStudents = (
         }
       }
 
-      // البحث بالاسم أو الكود أو الهاتف
       if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
-        const term = `%${debouncedSearchTerm.trim()}%`;
-        // تدعم البحث في الاسم كـ JSON (ar/en) أو كـ string عادي
+        const rawTerm = debouncedSearchTerm.trim();
+        const term = `%${rawTerm}%`;
+        const normalizedTerm = normalizePhone(rawTerm);
+
         query = query.or(
-          `name->>ar.ilike.${term},name->>en.ilike.${term},student_code.ilike.${term},parent_phone.ilike.${term}`
+          `name->>ar.ilike.${term},name->>en.ilike.${term},student_code.ilike.${term},parent_phone.ilike.%${normalizedTerm}%`
         );
       }
 
-      const { data, error } = await query.order('created_at', {
-        ascending: false,
-      });
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       return (data as Student[]) || [];
     },
-    enabled: !!academyId, // يشتغل فقط عند توفر ID الأكاديمية
+    enabled: !!academyId,
   });
 
-  // 5. Mutation الأرشفة مع تحديث الكاش تلقائياً
-  const archiveMutation = useMutation({
+  // 2. إلحاق أو نقل طالب إلى حلقة وتحديث جدول التتبع student_halaqas
+  const assignHalaqaMutation = useMutation({
     mutationFn: async ({
       studentId,
-      currentStatus,
+      halaqaId,
+      notes,
     }: {
       studentId: string;
-      currentStatus: boolean;
+      halaqaId: string | null;
+      notes?: string;
     }) => {
+      // أ) إغلاق الحركة القديمة إن وجدت في student_halaqas
+      await supabase
+        .from('student_halaqas')
+        .update({ left_at: new Date().toISOString(), status: 'transferred' })
+        .eq('student_id', studentId)
+        .is('left_at', null);
+
+      // ب) تحديث جدول الطالب الرئيسي
+      const { error: studentError } = await supabase
+        .from('students')
+        .update({ halaqa_id: halaqaId, updated_at: new Date().toISOString() })
+        .eq('id', studentId);
+
+      if (studentError) throw studentError;
+
+      // جـ) تسجيل الحركة الجديدة إن تم تحديد حلقة
+      if (halaqaId) {
+        const { error: historyError } = await supabase
+          .from('student_halaqas')
+          .insert([{
+            academy_id: academyId,
+            student_id: studentId,
+            halaqa_id: halaqaId,
+            status: 'active',
+            notes,
+          }]);
+
+        if (historyError) throw historyError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students', academyId] });
+      queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+    },
+  });
+
+  // 3. أرشفة وتفعيل
+  const archiveMutation = useMutation({
+    mutationFn: async ({ studentId, currentStatus }: { studentId: string; currentStatus: boolean }) => {
       const { error } = await supabase
         .from('students')
         .update({
@@ -130,14 +170,10 @@ export const useStudents = (
     },
   });
 
-  // 6. Mutation الحذف مع تحديث الكاش تلقائياً
+  // 4. حذف طالب
   const deleteMutation = useMutation({
     mutationFn: async (studentId: string) => {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
-
+      const { error } = await supabase.from('students').delete().eq('id', studentId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -145,11 +181,19 @@ export const useStudents = (
     },
   });
 
-  // دالة أرشفة أو إلغاء أرشفة
-  const toggleArchiveStudent = async (
-    studentId: string,
-    currentStatus: boolean
-  ): Promise<OperationResponse> => {
+  const assignStudentToHalaqa = useCallback(
+    async (studentId: string, halaqaId: string | null, notes?: string): Promise<OperationResponse> => {
+      try {
+        await assignHalaqaMutation.mutateAsync({ studentId, halaqaId, notes });
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'فشلت عملية تسكين الطالب بالحلقة' };
+      }
+    },
+    [assignHalaqaMutation]
+  );
+
+  const toggleArchiveStudent = async (studentId: string, currentStatus: boolean): Promise<OperationResponse> => {
     try {
       await archiveMutation.mutateAsync({ studentId, currentStatus });
       return { success: true };
@@ -158,10 +202,7 @@ export const useStudents = (
     }
   };
 
-  // دالة الحذف
-  const deleteStudent = async (
-    studentId: string
-  ): Promise<OperationResponse> => {
+  const deleteStudent = async (studentId: string): Promise<OperationResponse> => {
     try {
       await deleteMutation.mutateAsync(studentId);
       return { success: true };
@@ -170,15 +211,14 @@ export const useStudents = (
     }
   };
 
-  const error = queryError ? (queryError as Error).message : null;
-
   return {
     students,
     loading,
-    error,
+    error: queryError ? (queryError as Error).message : null,
     filters,
     setFilters,
     refetch,
+    assignStudentToHalaqa,
     toggleArchiveStudent,
     deleteStudent,
   };
