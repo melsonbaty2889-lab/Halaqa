@@ -30,6 +30,12 @@
   },
   "archive": "Archiver",
   "assignTeacher": "Assigner l'enseignant responsable",
+  "attendance": {
+    "grade": "التقييم",
+    "new_memorization": "الحفظ الجديد",
+    "retention": "المراجعة",
+    "status": "حالة الحضور"
+  },
   "auth": {
     "agreeTermsLabel": "J'accepte les conditions et la politique de confidentialité",
     "agreeTermsRequired": "Veuillez d'abord accepter les conditions et la politique de confidentialité.",
@@ -158,6 +164,7 @@
     "confirm_message": "Êtes-vous sûr de vouloir continuer cette action ?",
     "continue_next_step": "Continuer vers l'étape suivante",
     "custom": "Personnalisé",
+    "date": "التاريخ",
     "delete": "Supprimer",
     "disabled": "Désactivé",
     "discard": "Abandonner",
@@ -566,6 +573,9 @@
   },
   "status_active": "Actif",
   "status_inactive": "Inactif",
+  "student": {
+    "name": "الطالب"
+  },
   "students": {
     "academic_info": "Données académiques",
     "add_btn": "Ajouter l'élève",
@@ -677,6 +687,9 @@
     "selectPlan": "Choisir ce plan",
     "selectRegionNotice": "Sélectionnez votre région pour activer les modes de paiement compatibles :"
   },
+  "teacher": {
+    "name": "المعلم"
+  },
   "termsModal": {
     "close": "Fermer",
     "privacyRule1": "1. Toutes les données sont cryptées selon les normes SSL.",
@@ -709,6 +722,10 @@
   "unnamed_student": "Élève sans nom",
   "viewActive": "Halaqas actives",
   "viewArchived": "Archives",
+  "whatsapp": {
+    "footer": "نسأل الله أن يبارك في وقته وحفظه. 🌹",
+    "report_title": "الحلقة الذكية"
+  },
   "إدارة المواعيد": "Gestion des plannings",
   "الإجازات والخبرات": "Ijazat & Expérience",
   "البحث بالاسم أو رقم الهاتف": {

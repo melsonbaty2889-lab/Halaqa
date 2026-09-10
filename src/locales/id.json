@@ -30,6 +30,12 @@
   },
   "archive": "Arsipkan",
   "assignTeacher": "Tugaskan Pengajar Penanggung Jawab",
+  "attendance": {
+    "grade": "التقييم",
+    "new_memorization": "الحفظ الجديد",
+    "retention": "المراجعة",
+    "status": "حالة الحضور"
+  },
   "auth": {
     "agreeTermsLabel": "Saya menyetujui Syarat dan Kebijakan Privasi",
     "agreeTermsRequired": "Silakan setujui Syarat dan Kebijakan Privasi terlebih dahulu.",
@@ -158,6 +164,7 @@
     "confirm_message": "Apakah Anda yakin ingin melanjutkan tindakan ini?",
     "continue_next_step": "Lanjutkan ke Langkah Berikutnya",
     "custom": "Kustom",
+    "date": "التاريخ",
     "delete": "Hapus",
     "disabled": "Dinonaktifkan",
     "discard": "Buang",
@@ -566,6 +573,9 @@
   },
   "status_active": "Aktif",
   "status_inactive": "Nonaktif",
+  "student": {
+    "name": "الطالب"
+  },
   "students": {
     "academic_info": "Data Akademik",
     "add_btn": "Tambah Santri",
@@ -677,6 +687,9 @@
     "selectPlan": "Pilih Paket Ini",
     "selectRegionNotice": "Pilih wilayah geografis untuk mengaktifkan metode pembayaran yang sesuai:"
   },
+  "teacher": {
+    "name": "المعلم"
+  },
   "termsModal": {
     "close": "Tutup",
     "privacyRule1": "1. Semua data dienkripsi menggunakan standar SSL untuk perlindungan.",
@@ -709,6 +722,10 @@
   "unnamed_student": "Santri Tanpa Nama",
   "viewActive": "Halaqah Aktif",
   "viewArchived": "Arsip",
+  "whatsapp": {
+    "footer": "نسأل الله أن يبارك في وقته وحفظه. 🌹",
+    "report_title": "الحلقة الذكية"
+  },
   "إدارة المواعيد": "Manajemen Jadwal",
   "الإجازات والخبرات": "Ijazah & Pengalaman",
   "البحث بالاسم أو رقم الهاتف": {
