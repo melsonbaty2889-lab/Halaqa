@@ -62,7 +62,6 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       setLoading(true);
       setError(null);
 
-      // التحقق الآمن من وجود كائن Supabase وقدرته على الاستعلام
       if (!supabase?.from) {
         throw new Error(t('subscription.errors.clientNotInitialized', 'لم يتم تهيئة الاتصال بالسحابة بشكل صحيح'));
       }
@@ -86,9 +85,32 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
 
   useEffect(() => {
     fetchSubscription();
-  }, [fetchSubscription]);
 
-  // حساب الحالات الزمانية والتنظيمية باستخدام useMemo لتحسين الأداء
+    // 📡 الاشتراك بالاستماع للتغييرات الفورية للخطط والاشتراكات عبر Realtime
+    if (!academyId) return;
+
+    const channel = supabase
+      .channel(`subscription_${academyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'saas_subscriptions',
+          filter: `academy_id=eq.${academyId}`,
+        },
+        () => {
+          fetchSubscription();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [academyId, fetchSubscription]);
+
+  // ⏱️ حساب الحالات والمدد
   const computedState = useMemo(() => {
     const now = new Date();
 
@@ -116,7 +138,7 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       isExpired,
       isActive,
       isPending,
-      daysRemaining
+      daysRemaining,
     };
   }, [subscription]);
 
@@ -132,3 +154,5 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
     refetch: fetchSubscription,
   };
 }
+
+export default useSubscription;
