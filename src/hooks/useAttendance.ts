@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { sessionService } from '../lib/sessionService';
+import { supabase } from '@/lib/supabase';
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
@@ -8,6 +8,10 @@ export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 export interface StudentNameObject {
   ar?: string;
   en?: string;
+  fr?: string;
+  tr?: string;
+  ur?: string;
+  id?: string;
   full_name?: string;
   [key: string]: string | undefined;
 }
@@ -76,7 +80,7 @@ export function useAttendance({
   i18n,
 }: UseAttendanceProps) {
   const currentLang = i18n?.language || 'ar';
-  const isRtl = currentLang === 'ar';
+  const isRtl = currentLang === 'ar' || currentLang === 'ur';
 
   const [selectedDate, setSelectedDate] = useState<string>(
     () => new Date().toISOString().split('T')[0]
@@ -88,28 +92,28 @@ export function useAttendance({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<MessageState>({ text: '', type: '' });
 
-  // 🛠️ دالة الترجمة النصية
+  // 🛠️ دالة الترجمة النصية لجميع اللغات الست
   const translateText = useCallback(
-    (key: string, arText: string, enText: string): string => {
+    (key: string, defaultText: string): string => {
       if (i18n && i18n.exists && i18n.exists(key) && typeof t === 'function') {
         return t(key);
       }
-      return isRtl ? arText : enText;
+      return defaultText;
     },
-    [i18n, isRtl, t]
+    [i18n, t]
   );
 
-  // 🛠️ دالة مساعدة لفك واستخراج اسم الطالب نصياً لعملية البحث
+  // 🛠️ استخراج الاسم نصياً للبحث عبر اللغات
   const getSearchableName = useCallback((nameData: string | StudentNameObject | undefined): string => {
     if (!nameData) return '';
     if (typeof nameData === 'string') return nameData;
     if (typeof nameData === 'object') {
-      return `${nameData.ar || ''} ${nameData.en || ''} ${nameData.full_name || ''} ${Object.values(nameData).join(' ')}`;
+      return Object.values(nameData).filter(Boolean).join(' ');
     }
     return String(nameData);
   }, []);
 
-  // 🔍 فلترة الطلاب الآمنة
+  // 🔍 فلترة الطلاب
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
 
@@ -131,10 +135,7 @@ export function useAttendance({
     const total = filteredStudents.length;
     if (total === 0) return { total: 0, present: 0, absent: 0, late: 0, excused: 0, rate: 0 };
 
-    let present = 0,
-      absent = 0,
-      late = 0,
-      excused = 0;
+    let present = 0, absent = 0, late = 0, excused = 0;
 
     filteredStudents.forEach((st) => {
       const status = attendanceData[st.id]?.status || 'present';
@@ -148,47 +149,54 @@ export function useAttendance({
     return { total, present, absent, late, excused, rate };
   }, [filteredStudents, attendanceData]);
 
-  // 🔄 جلب البيانات لليوم المحدد
-  useEffect(() => {
-    async function fetchAttendance() {
-      if (!academyId || !selectedDate) return;
-      setLoadingFetch(true);
-      setMessage({ text: '', type: '' });
+  // 🔄 جلب البيانات لليوم المحدد مباشرة من Supabase
+  const fetchAttendance = useCallback(async () => {
+    if (!academyId || !selectedDate) return;
+    setLoadingFetch(true);
+    setMessage({ text: '', type: '' });
 
-      try {
-        const data = await sessionService.fetchAttendance(academyId, selectedDate);
-        const mappedData: Record<string, AttendanceEntry> = {};
+    try {
+      let query = supabase
+        .from('attendance')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('date', selectedDate);
 
-        if (data && Array.isArray(data)) {
-          data.forEach((record: any) => {
-            mappedData[record.student_id] = {
-              status: record.status || 'present',
-              notes: record.notes || '',
-              new_memorization: record.new_memorization || record.memorization || '',
-              retention_assignment: record.retention_assignment || record.revision || '',
-              session_grade: record.session_grade ?? record.daily_grade ?? 10,
-              quarter_index: record.quarter_index || 1,
-            };
-          });
-        }
-        setAttendanceData(mappedData);
-      } catch (error: any) {
-        console.error('🚨 خطأ أثناء استدعاء بيانات الحضور:', error);
-        setMessage({
-          text: translateText(
-            'fetchFailed',
-            'تعذر استرجاع بيانات الحضور لهذا اليوم.',
-            'Failed to retrieve attendance logs for this date.'
-          ),
-          type: 'error',
-        });
-      } finally {
-        setLoadingFetch(false);
+      if (selectedHalaqaId) {
+        query = query.eq('halaqa_id', selectedHalaqaId);
       }
-    }
 
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const mappedData: Record<string, AttendanceEntry> = {};
+      if (data && Array.isArray(data)) {
+        data.forEach((record: any) => {
+          mappedData[record.student_id] = {
+            status: record.status || 'present',
+            notes: record.notes || '',
+            new_memorization: record.new_memorization || '',
+            retention_assignment: record.retention_assignment || '',
+            session_grade: record.session_grade ?? 10,
+            quarter_index: record.quarter_index || 1,
+          };
+        });
+      }
+      setAttendanceData(mappedData);
+    } catch (error: any) {
+      console.error('🚨 error fetching attendance:', error);
+      setMessage({
+        text: translateText('fetchFailed', 'Failed to retrieve attendance logs for this date.'),
+        type: 'error',
+      });
+    } finally {
+      setLoadingFetch(false);
+    }
+  }, [academyId, selectedDate, selectedHalaqaId, translateText]);
+
+  useEffect(() => {
     fetchAttendance();
-  }, [selectedDate, academyId, translateText]);
+  }, [fetchAttendance]);
 
   // ⚡ تحديث حقل طالب
   const updateStudentField = useCallback(
@@ -231,34 +239,20 @@ export function useAttendance({
       return updated;
     });
     setMessage({
-      text: translateText(
-        'allMarkedPresent',
-        'تم تحضير جميع طلاب القائمة "حضور" بنجاح 🟢',
-        'All displayed students marked as present 🟢'
-      ),
+      text: translateText('allMarkedPresent', 'All displayed students marked as present 🟢'),
       type: 'success',
     });
   }, [filteredStudents, translateText]);
 
-  // 🔥 الحفظ المجمع
+  // 🔥 الحفظ المجمع في Supabase
   const handleSaveAttendance = async () => {
     if (!academyId) {
-      setMessage({
-        text: translateText('errorLoading', 'حدث خطأ في معرف الأكاديمية', 'Error in academy ID'),
-        type: 'error',
-      });
+      setMessage({ text: translateText('errorLoading', 'Error in academy ID'), type: 'error' });
       return;
     }
 
     if (filteredStudents.length === 0) {
-      setMessage({
-        text: translateText(
-          'noStudentsToSave',
-          'لا يوجد طلاب لتسجيل حضورهم في هذه القائمة',
-          'No students available to save'
-        ),
-        type: 'error',
-      });
+      setMessage({ text: translateText('noStudentsToSave', 'No students available to save'), type: 'error' });
       return;
     }
 
@@ -285,11 +279,7 @@ export function useAttendance({
           student.halaqa_id || (selectedHalaqaId !== '' ? selectedHalaqaId : fallbackHalaqaId);
 
         if (!targetHalaqaId) {
-          throw new Error(
-            isRtl
-              ? 'لم يتم العثور على حلقة مرتبطة بهذا الطالب. يرجى التأكد من إضافة حلقات وتعيين الطالب إليها أولاً.'
-              : 'No halaqa associated with this student.'
-          );
+          throw new Error(translateText('noHalaqaError', 'No halaqa associated with this student.'));
         }
 
         return {
@@ -300,9 +290,7 @@ export function useAttendance({
           status: currentRecord?.status || 'present',
           notes: (currentRecord?.notes || '').trim(),
           new_memorization: isPresent ? (currentRecord?.new_memorization || '').trim() : '',
-          retention_assignment: isPresent
-            ? (currentRecord?.retention_assignment || '').trim()
-            : '',
+          retention_assignment: isPresent ? (currentRecord?.retention_assignment || '').trim() : '',
           session_grade: isPresent ? Number(currentRecord?.session_grade ?? 10) : null,
           quarter_index: qIndex,
           juz: juzNum,
@@ -310,20 +298,20 @@ export function useAttendance({
         };
       });
 
-      await sessionService.upsertAttendance(attendanceRecords);
+      const { error } = await supabase
+        .from('attendance')
+        .upsert(attendanceRecords, { onConflict: 'academy_id,halaqa_id,student_id,date' });
+
+      if (error) throw error;
 
       setMessage({
-        text: translateText(
-          'attendanceSavedSuccess',
-          'تم اعتماد وحفظ كشف الحضور والإنتاجية اليومية بنجاح! 🎉',
-          'Attendance and daily recitation sheet saved successfully! 🎉'
-        ),
+        text: translateText('attendanceSavedSuccess', 'Attendance and daily recitation sheet saved successfully! 🎉'),
         type: 'success',
       });
     } catch (error: any) {
-      console.error('🚨 خطأ أثناء الحفظ المجمع:', error);
+      console.error('🚨 Save error:', error);
       setMessage({
-        text: `${translateText('saveFailed', 'فشل حفظ الكشف:', 'Save failed:')} ${error.message}`,
+        text: `${translateText('saveFailed', 'Save failed:')} ${error.message}`,
         type: 'error',
       });
     } finally {
@@ -350,5 +338,8 @@ export function useAttendance({
     handleMarkAllPresent,
     handleSaveAttendance,
     translateText,
+    refetchAttendance: fetchAttendance,
   };
 }
+
+export default useAttendance;
