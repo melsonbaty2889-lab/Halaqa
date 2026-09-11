@@ -5,6 +5,7 @@ import {
   AlertTriangle, RefreshCw, Zap, CheckCircle, X, Lock, ShieldAlert 
 } from 'lucide-react';
 
+<Route path="/test" element={<TestHooks />} />
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
