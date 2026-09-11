@@ -29,108 +29,85 @@ import { useExams } from '@/hooks/useExams';
 import { useBadgesAndStreaks } from '@/hooks/useBadgesAndStreaks';
 
 export function TestHooks() {
-  const isMobile = useIsMobile();
-  const networkStatus = typeof useNetworkAndUpdateStatus === 'function' ? useNetworkAndUpdateStatus() : null;
-  
-  // 1. الأكاديمية والاشتراكات
-  const { settings, loading: loadingSettings } = useAcademySettings();
-  const { subscription } = useSubscription();
-  const { academyLoading } = useCreateAcademy();
+  const isMobile = safeCall(() => useIsMobile());
+  const networkStatus = safeCall(() => typeof useNetworkAndUpdateStatus === 'function' ? useNetworkAndUpdateStatus() : null);
 
-  // 2. التحليلات والإشعارات والواتساب
-  const { dashboardStats, loadingStats } = useAnalytics();
-  const { notifications, unreadCount } = useNotifications();
-  const { sendWhatsAppReport } = useWhatsApp();
-
-  // 3. الطلاب والرسوم والمستندات
-  const { students, loading: loadingStudents } = useStudents();
-  const { studentFormState } = useStudentForm();
-  const { isManagerLoading } = useStudentsManager();
-  const { documents } = useStudentDocuments();
-
-  // 4. الحلقات، المعلمون، أسر الطلاب
-  const { halaqas, loading: loadingHalaqas } = useHalaqas();
-  const { teachers, loading: loadingTeachers } = useTeachers();
-  const { parents } = useParents();
-
-  // 5. المناهج، الحضور، التقدم القرآني، والتقارير
-  const { curricula } = useCurricula();
-  const { attendanceRecords } = useAttendance();
-  const { quranProgress } = useQuranProgress();
-  const { reportData } = useReports();
-
-  // 6. الحسابات والنماذج
-  const { loginState } = useLoginForm();
-  const { signUpState } = useSignUpForm();
-  const { forgotPasswordState } = useForgotPassword();
-
-  // 7. المدفوعات، الشهادات، الاختبارات، والمكافآت
-  const { overduePayments, fetchOverduePayments } = usePayments();
-  const { certificates, fetchCertificates } = useCertificates();
-  const { exams, fetchExams } = useExams();
-  const { topAchievers, fetchTopAchievers } = useBadgesAndStreaks();
-
-  useEffect(() => {
-    if (fetchOverduePayments) fetchOverduePayments();
-    if (fetchCertificates) fetchCertificates();
-    if (fetchExams) fetchExams();
-    if (fetchTopAchievers) fetchTopAchievers(5);
-  }, []);
+  const academyRes = safeCall(() => useAcademySettings());
+  const subRes = safeCall(() => useSubscription());
+  const createAcadRes = safeCall(() => useCreateAcademy());
+  const analyticsRes = safeCall(() => useAnalytics());
+  const notifRes = safeCall(() => useNotifications());
+  const waRes = safeCall(() => useWhatsApp());
+  const studentsRes = safeCall(() => useStudents());
+  const studentFormRes = safeCall(() => useStudentForm());
+  const studentMgrRes = safeCall(() => useStudentsManager());
+  const docsRes = safeCall(() => useStudentDocuments());
+  const halaqasRes = safeCall(() => useHalaqas());
+  const teachersRes = safeCall(() => useTeachers());
+  const parentsRes = safeCall(() => useParents());
+  const curriculaRes = safeCall(() => useCurricula());
+  const attRes = safeCall(() => useAttendance());
+  const quranRes = safeCall(() => useQuranProgress());
+  const reportsRes = safeCall(() => useReports());
+  const loginRes = safeCall(() => useLoginForm());
+  const signUpRes = safeCall(() => useSignUpForm());
+  const forgotRes = safeCall(() => useForgotPassword());
+  const paymentsRes = safeCall(() => usePayments());
+  const certsRes = safeCall(() => useCertificates());
+  const examsRes = safeCall(() => useExams());
+  const streaksRes = safeCall(() => useBadgesAndStreaks());
 
   return (
     <div style={{ padding: '16px', direction: 'rtl', color: '#E2E8F0', backgroundColor: '#070B11', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-      <h1 style={{ color: '#D97706', fontSize: '1.25rem', borderBottom: '1px solid #1E293B', paddingBottom: '10px' }}>
-        🧪 لوحة فحص كافة الـ Hooks (26/26)
+      <h1 style={{ color: '#D97706', fontSize: '1.2rem', borderBottom: '1px solid #1E293B', paddingBottom: '10px' }}>
+        🧪 لوحة فحص كافة الـ Hooks (المحمية)
       </h1>
 
-      {/* الحالة العامة للنظام */}
-      <div style={{ marginBlock: '12px', padding: '10px', backgroundColor: '#0A0F1C', borderRadius: '8px', border: '1px solid #10B981' }}>
-        <p>📱 نوع الجهاز: <strong>{isMobile ? 'موبايل' : 'سطح المكتب'}</strong></p>
-        <p>🌐 حالة الاتصال: <strong>{networkStatus?.isOnline !== undefined ? (networkStatus.isOnline ? 'متصل' : 'غير متصل') : 'جاهز'}</strong></p>
-      </div>
-
-      {/* قائمة الفحص السريع لكل Hook */}
-      <div style={{ display: 'grid', gap: '8px', fontSize: '0.85rem' }}>
-        <HookStatus title="1. useAcademySettings" loading={loadingSettings} data={settings} />
-        <HookStatus title="2. useAnalytics" loading={loadingStats} data={dashboardStats} />
-        <HookStatus title="3. useNotifications" data={{ count: unreadCount, items: notifications?.length }} />
-        <HookStatus title="4. useStudents" loading={loadingStudents} data={{ totalStudents: students?.length }} />
-        <HookStatus title="5. useHalaqas" loading={loadingHalaqas} data={{ totalHalaqas: halaqas?.length }} />
-        <HookStatus title="6. useTeachers" loading={loadingTeachers} data={{ totalTeachers: teachers?.length }} />
-        <HookStatus title="7. usePayments" data={{ overdueCount: overduePayments?.length }} />
-        <HookStatus title="8. useBadgesAndStreaks" data={{ topAchieversCount: topAchievers?.length }} />
-        <HookStatus title="9. useCertificates" data={{ totalCertificates: certificates?.length }} />
-        <HookStatus title="10. useExams" data={{ totalExams: exams?.length }} />
-        <HookStatus title="11. useSubscription" data={subscription} />
-        <HookStatus title="12. useParents" data={{ totalParents: parents?.length }} />
-        <HookStatus title="13. useCurricula" data={{ curriculaCount: curricula?.length }} />
-        <HookStatus title="14. useAttendance" data={{ recordsCount: attendanceRecords?.length }} />
-        <HookStatus title="15. useQuranProgress" data={quranProgress} />
-        <HookStatus title="16. useReports" data={reportData} />
-        <HookStatus title="17. useStudentDocuments" data={{ docsCount: documents?.length }} />
-        <HookStatus title="18. useStudentForm" data={studentFormState || 'Ready'} />
-        <HookStatus title="19. useStudentsManager" loading={isManagerLoading} />
-        <HookStatus title="20. useCreateAcademy" loading={academyLoading} />
-        <HookStatus title="21. useLoginForm" data={loginState || 'Ready'} />
-        <HookStatus title="22. useSignUpForm" data={signUpState || 'Ready'} />
-        <HookStatus title="23. useForgotPassword" data={forgotPasswordState || 'Ready'} />
-        <HookStatus title="24. useWhatsApp" data={typeof sendWhatsAppReport === 'function' ? 'دالة الإرسال جاهزة' : 'غير جاهز'} />
+      <div style={{ display: 'grid', gap: '8px', fontSize: '0.85rem', marginTop: '12px' }}>
+        <HookStatus title="1. useAcademySettings" data={academyRes} />
+        <HookStatus title="2. useAnalytics" data={analyticsRes} />
+        <HookStatus title="3. useNotifications" data={notifRes} />
+        <HookStatus title="4. useStudents" data={studentsRes} />
+        <HookStatus title="5. useHalaqas" data={halaqasRes} />
+        <HookStatus title="6. useTeachers" data={teachersRes} />
+        <HookStatus title="7. usePayments" data={paymentsRes} />
+        <HookStatus title="8. useBadgesAndStreaks" data={streaksRes} />
+        <HookStatus title="9. useCertificates" data={certsRes} />
+        <HookStatus title="10. useExams" data={examsRes} />
+        <HookStatus title="11. useSubscription" data={subRes} />
+        <HookStatus title="12. useParents" data={parentsRes} />
+        <HookStatus title="13. useCurricula" data={curriculaRes} />
+        <HookStatus title="14. useAttendance" data={attRes} />
+        <HookStatus title="15. useQuranProgress" data={quranRes} />
+        <HookStatus title="16. useReports" data={reportsRes} />
+        <HookStatus title="17. useStudentDocuments" data={docsRes} />
+        <HookStatus title="18. useStudentForm" data={studentFormRes} />
+        <HookStatus title="19. useStudentsManager" data={studentMgrRes} />
+        <HookStatus title="20. useCreateAcademy" data={createAcadRes} />
+        <HookStatus title="21. useLoginForm" data={loginRes} />
+        <HookStatus title="22. useSignUpForm" data={signUpRes} />
+        <HookStatus title="23. useForgotPassword" data={forgotRes} />
+        <HookStatus title="24. useWhatsApp" data={waRes} />
         <HookStatus title="25. useIsMobile" data={isMobile} />
-        <HookStatus title="26. useNetworkAndUpdateStatus" data={networkStatus || 'Ready'} />
+        <HookStatus title="26. useNetworkAndUpdateStatus" data={networkStatus} />
       </div>
     </div>
   );
 }
 
-function HookStatus({ title, loading, data }: { title: string; loading?: boolean; data?: any }) {
+function safeCall(fn: () => any) {
+  try {
+    return fn();
+  } catch (err) {
+    return { error: 'Failed to execution' };
+  }
+}
+
+function HookStatus({ title, data }: { title: string; data?: any }) {
   return (
     <div style={{ padding: '8px 12px', backgroundColor: '#0F172A', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
       <span style={{ fontWeight: 'bold', color: '#34D399' }}>{title}</span>: {' '}
-      {loading ? (
-        <span style={{ color: '#F59E0B' }}>جاري التحميل...</span>
-      ) : (
-        <span style={{ color: '#94A3B8' }}>{data !== undefined ? JSON.stringify(data) : 'سليم ✅'}</span>
-      )}
+      <span style={{ color: '#94A3B8' }}>{data ? JSON.stringify(data).slice(0, 70) : 'جاهز ✅'}</span>
     </div>
   );
 }
