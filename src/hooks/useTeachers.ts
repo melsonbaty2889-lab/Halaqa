@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { normalizePhone } from '@/utils/formatters';
 
-// ── Types & Interfaces ──────────────────────────────────────────
-
 export interface Teacher {
   id: string;
   user_id?: string | null;
@@ -46,8 +44,6 @@ export interface UseTeachersReturn {
   updateTeacher: (id: string, teacherData: Partial<Teacher>) => Promise<boolean>;
 }
 
-// ── Main Hook ───────────────────────────────────────────────────
-
 export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersReturn => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -61,33 +57,44 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
         setError(null);
       }
 
-      let query = supabase
-        .from('teachers')
-        .select('*, academy_teachers!inner(academy_id, is_active)')
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
+      let fetchedTeachers: Teacher[] = [];
 
       if (academyId) {
-        query = query.eq('academy_teachers.academy_id', academyId);
+        // 1. جلب علاقات الأكاديمية أولاً لتجنب أي مشاكل في الـ Schema Cache للـ Joins
+        const { data: relations, error: relError } = await supabase
+          .from('academy_teachers')
+          .select('teacher_id, is_active')
+          .eq('academy_id', academyId);
+
+        if (relError) throw relError;
+
+        const teacherIds = (relations || []).map((r: any) => r.teacher_id);
+
+        if (teacherIds.length > 0) {
+          const { data: teachersData, error: teachersError } = await supabase
+            .from('teachers')
+            .select('*')
+            .in('id', teacherIds)
+            .eq('is_archived', false)
+            .order('created_at', { ascending: false });
+
+          if (teachersError) throw teachersError;
+          fetchedTeachers = (teachersData || []) as Teacher[];
+        }
       } else {
-        query = supabase
+        // 2. جلب كافة المعلمين في حال عدم تحديد أكاديمية
+        const { data, error: supabaseError } = await supabase
           .from('teachers')
           .select('*')
           .eq('is_archived', false)
           .order('created_at', { ascending: false });
+
+        if (supabaseError) throw supabaseError;
+        fetchedTeachers = (data || []) as Teacher[];
       }
 
-      const { data, error: supabaseError } = await query;
-
-      if (supabaseError) throw supabaseError;
-
-      const cleanedTeachers: Teacher[] = (data || []).map((item: any) => {
-        const { academy_teachers, ...teacherData } = item;
-        return teacherData as Teacher;
-      });
-
       if (isMountedRef.current) {
-        setTeachers(cleanedTeachers);
+        setTeachers(fetchedTeachers);
       }
     } catch (err: any) {
       console.error('🚨 Error fetching teachers:', err);
