@@ -18,6 +18,7 @@ export interface UseForgotPasswordReturn {
   status: StatusState;
   toggleLanguage: () => void;
   handleReset: (e?: FormEvent) => Promise<void>;
+  resendResetEmail: () => Promise<void>;
   isRtl: boolean;
   currentLang: string;
 }
@@ -32,10 +33,16 @@ export function useForgotPassword(): UseForgotPasswordReturn {
   const [cooldown, setCooldown] = useState<number>(0);
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
 
+  const currentLang = i18n?.language || 'ar';
+  const isRtl = i18n?.dir() === 'rtl' || currentLang === 'ar';
+
+  // 1. تحديث عنوان الصفحة واتجاه Document
   useEffect(() => {
     document.title = t('auth.forgot_password_title', 'استعادة كلمة المرور | الحلقة الذكية');
-  }, [t, i18n.language]);
+    document.dir = isRtl ? 'rtl' : 'ltr';
+  }, [t, currentLang, isRtl]);
 
+  // 2. إدارة العد التنازلي (Cooldown Timer)
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
     if (cooldown > 0) {
@@ -46,32 +53,52 @@ export function useForgotPassword(): UseForgotPasswordReturn {
     };
   }, [cooldown]);
 
+  // 3. تبديل اللغة
   const toggleLanguage = useCallback(() => {
-    const nextLang = i18n?.language === 'ar' ? 'en' : 'ar';
+    const nextLang = currentLang === 'ar' ? 'en' : 'ar';
     if (i18n?.changeLanguage) {
       i18n.changeLanguage(nextLang);
     }
-  }, [i18n]);
+  }, [i18n, currentLang]);
 
+  // 4. تنفيذ طلب إعادة تعيين كلمة المرور
   const handleReset = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
-      if (!email.trim() || cooldown > 0 || loading) return;
+      const trimmedEmail = email.trim();
+
+      if (!trimmedEmail || cooldown > 0 || loading) return;
+
+      // تحقق بسيط من صيغة البريد
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        setStatus({
+          type: 'error',
+          msg: t('auth.invalid_email', 'يرجى إدخال بريد إلكتروني صحيح.'),
+        });
+        return;
+      }
 
       setLoading(true);
       setStatus({ type: null, msg: '' });
 
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
           redirectTo: `${window.location.origin}/update-password`,
         });
 
         if (error) {
           let errorMsg = error.message || '';
-          if (errorMsg.includes('User not found')) {
+          if (errorMsg.toLowerCase().includes('user not found')) {
             errorMsg = t('auth.user_not_found', 'البريد الإلكتروني غير مسجل لدينا.');
-          } else if (errorMsg.toLowerCase().includes('rate limit') || (error as any).status === 429) {
-            errorMsg = t('auth.rate_limit', 'تجاوزت حد إرسال الرسائل المسموح به. انتظر دقيقة ثم حاول مجدداً.');
+          } else if (
+            errorMsg.toLowerCase().includes('rate limit') ||
+            (error as any).status === 429
+          ) {
+            errorMsg = t(
+              'auth.rate_limit',
+              'تجاوزت حد إرسال الرسائل المسموح به. انتظر دقيقة ثم حاول مجدداً.'
+            );
           } else {
             errorMsg = `${t('errors.server_error', 'خطأ الخادم')}: ${errorMsg}`;
           }
@@ -79,6 +106,10 @@ export function useForgotPassword(): UseForgotPasswordReturn {
         } else {
           setIsSubmitted(true);
           setCooldown(60);
+          setStatus({
+            type: 'success',
+            msg: t('auth.reset_email_sent', 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.'),
+          });
         }
       } catch (err: any) {
         const fallbackMsg = err?.message || t('errors.generic', 'حدث خطأ غير متوقع');
@@ -90,6 +121,13 @@ export function useForgotPassword(): UseForgotPasswordReturn {
     [email, cooldown, loading, t]
   );
 
+  // 5. دالة إعادة الإرسال بعد انتهاء المهلة
+  const resendResetEmail = useCallback(async () => {
+    if (cooldown === 0) {
+      await handleReset();
+    }
+  }, [cooldown, handleReset]);
+
   return {
     email,
     setEmail,
@@ -99,8 +137,9 @@ export function useForgotPassword(): UseForgotPasswordReturn {
     status,
     toggleLanguage,
     handleReset,
-    isRtl: i18n?.dir() === 'rtl',
-    currentLang: i18n?.language || 'ar',
+    resendResetEmail,
+    isRtl,
+    currentLang,
   };
 }
 
