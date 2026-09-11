@@ -10,7 +10,7 @@ import { useForgotPassword } from '@/hooks/useForgotPassword';
 import { useHalaqas } from '@/hooks/useHalaqas';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useLoginForm } from '@/hooks/useLoginForm';
-import { useNetworkAndUpdateStatus } from '@/hooks/useNetworkAndUpdateStatus';
+import useNetworkAndUpdateStatus from '@/hooks/useNetworkAndUpdateStatus';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useParents } from '@/hooks/useParents';
 import { useQuranProgress } from '@/hooks/useQuranProgress';
