@@ -415,12 +415,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         let currentAcademyId = academy?.id;
 
         if (!currentAcademyId) {
-          const { data: staff } = await supabase
-            .from('staff')
-            .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
-            .eq('user_id', currentUserId)
-            .maybeSingle();
-          currentAcademyId = staff?.academies?.id || staff?.academy_id;
+  const { data: staff } = await supabase
+    .from('academy_teachers')
+    .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
+    .eq('teacher_id', currentUserId)
+    .maybeSingle();
+  currentAcademyId = staff?.academies?.id || staff?.academy_id;
         }
 
         if (!currentAcademyId) {
