@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { normalizePhone } from '@/utils/formatters';
 
@@ -29,7 +29,7 @@ export interface Teacher {
   country?: string | null;
   created_at?: string;
   updated_at?: string;
-  country_code?: string; // خاصية مؤقتة للواجهة لتوحيد الرقم
+  country_code?: string;
   [key: string]: any;
 }
 
@@ -52,13 +52,15 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef<boolean>(true);
 
   const fetchTeachers = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      if (isMountedRef.current) {
+        setLoading(true);
+        setError(null);
+      }
 
-      // الربط مع جدول academy_teachers للفلترة حسب الأكاديمية
       let query = supabase
         .from('teachers')
         .select('*, academy_teachers!inner(academy_id, is_active)')
@@ -67,32 +69,64 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
 
       if (academyId) {
         query = query.eq('academy_teachers.academy_id', academyId);
+      } else {
+        // في حال عدم وجود أكاديمية محددة، نستخدم Left Join عادي بدلاً من Inner Join
+        query = supabase
+          .from('teachers')
+          .select('*')
+          .eq('is_archived', false)
+          .order('created_at', { ascending: false });
       }
 
       const { data, error: supabaseError } = await query;
 
       if (supabaseError) throw supabaseError;
-      setTeachers((data as Teacher[]) || []);
+
+      // تنقية البيانات المرجعة واستبعاد كائن العلاقة المدمج
+      const cleanedTeachers: Teacher[] = (data || []).map((item: any) => {
+        const { academy_teachers, ...teacherData } = item;
+        return teacherData as Teacher;
+      });
+
+      if (isMountedRef.current) {
+        setTeachers(cleanedTeachers);
+      }
     } catch (err: any) {
-      console.error('Error fetching teachers:', err);
-      setError(err?.message || 'حدث خطأ أثناء جلب بيانات المعلمين');
+      console.error('🚨 Error fetching teachers:', err);
+      if (isMountedRef.current) {
+        setError(err?.message || 'حدث خطأ أثناء جلب بيانات المعلمين');
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [academyId]);
 
-  // إضافة معلم جديد ورطه مع الأكاديمية وتوحيد هاتفه
+  // تنظيف الحقول الزائدة قبل الإرسال لمنع أخطاء Supabase
+  const sanitizePayload = (data: Partial<Teacher>) => {
+    const payload = { ...data };
+    delete payload.country_code;
+    delete payload.academy_teachers;
+    delete payload.id;
+    delete payload.created_at;
+    delete payload.updated_at;
+    return payload;
+  };
+
   const addTeacher = async (teacherData: Partial<Teacher>): Promise<Teacher | null> => {
     try {
-      setError(null);
-      
+      if (isMountedRef.current) setError(null);
+
       const countryCode = teacherData.country_code || teacherData.country || 'EG';
-      const normalizedPhone = teacherData.phone 
+      const normalizedPhone = teacherData.phone
         ? normalizePhone(teacherData.phone, countryCode)
         : null;
 
-      const payload = { ...teacherData, phone: normalizedPhone };
-      delete payload.country_code;
+      const payload = sanitizePayload({
+        ...teacherData,
+        phone: normalizedPhone,
+      });
 
       // 1. إضافة المعلم لجدول teachers
       const { data: newTeacher, error: insertError } = await supabase
@@ -115,23 +149,27 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
       await fetchTeachers();
       return newTeacher as Teacher;
     } catch (err: any) {
-      console.error('Error adding teacher:', err);
-      setError(err?.message || 'حدث خطأ أثناء إضافة المعلم');
+      console.error('🚨 Error adding teacher:', err);
+      if (isMountedRef.current) {
+        setError(err?.message || 'حدث خطأ أثناء إضافة المعلم');
+      }
       return null;
     }
   };
 
-  // تعديل بيانات معلم
   const updateTeacher = async (id: string, teacherData: Partial<Teacher>): Promise<boolean> => {
     try {
-      setError(null);
+      if (isMountedRef.current) setError(null);
 
-      const payload = { ...teacherData };
-      if (payload.phone) {
-        const countryCode = payload.country_code || payload.country || 'EG';
-        payload.phone = normalizePhone(payload.phone, countryCode);
-      }
-      delete payload.country_code;
+      const countryCode = teacherData.country_code || teacherData.country || 'EG';
+      const normalizedPhone = teacherData.phone
+        ? normalizePhone(teacherData.phone, countryCode)
+        : teacherData.phone;
+
+      const payload = sanitizePayload({
+        ...teacherData,
+        ...(teacherData.phone && { phone: normalizedPhone }),
+      });
 
       const { error: updateError } = await supabase
         .from('teachers')
@@ -143,14 +181,21 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
       await fetchTeachers();
       return true;
     } catch (err: any) {
-      console.error('Error updating teacher:', err);
-      setError(err?.message || 'حدث خطأ أثناء تحديث بيانات المعلم');
+      console.error('🚨 Error updating teacher:', err);
+      if (isMountedRef.current) {
+        setError(err?.message || 'حدث خطأ أثناء تحديث بيانات المعلم');
+      }
       return false;
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchTeachers();
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [fetchTeachers]);
 
   return { teachers, loading, error, refetch: fetchTeachers, addTeacher, updateTeacher };
