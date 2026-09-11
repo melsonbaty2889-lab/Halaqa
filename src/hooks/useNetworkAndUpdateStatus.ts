@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 
-interface NetworkAndUpdateStatus {
+export interface NetworkAndUpdateStatus {
   isOffline: boolean;
   updateAvailable: boolean;
   handleReload: () => void;
 }
 
-export default function useNetworkAndUpdateStatus(): NetworkAndUpdateStatus {
-  const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
+export function useNetworkAndUpdateStatus(): NetworkAndUpdateStatus {
+  const [isOffline, setIsOffline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
 
   useEffect(() => {
@@ -29,3 +31,5 @@ export default function useNetworkAndUpdateStatus(): NetworkAndUpdateStatus {
 
   return { isOffline, updateAvailable, handleReload };
 }
+
+export default useNetworkAndUpdateStatus;
