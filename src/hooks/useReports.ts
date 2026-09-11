@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // ── Types & Interfaces ──────────────────────────────────────────
@@ -23,6 +23,7 @@ export interface DailyProgressReport {
 export interface SummaryAttendanceReport {
   student_id: string;
   student_name: any;
+  halaqa_id?: string;
   total_sessions: number;
   present_count: number;
   absent_count: number;
@@ -33,19 +34,39 @@ export interface SummaryAttendanceReport {
 
 // ── Main Hook ───────────────────────────────────────────────────
 
-export const useReports = (academyId?: string) => {
+export const useReports = (academyId?: string | null) => {
   const [reportData, setReportData] = useState<DailyProgressReport[] | null>(null);
   const [attendanceSummary, setAttendanceSummary] = useState<SummaryAttendanceReport[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isMounted = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const isValidAcademyId = Boolean(
+    academyId &&
+    academyId !== 'undefined' &&
+    typeof academyId === 'string' &&
+    academyId.trim() !== ''
+  );
+
   // 1. توليد تقرير الإنجاز والتسميع اليومي للطلاب
   const generateProgressReport = useCallback(
     async (studentId: string, startDate: string, endDate: string) => {
-      try {
+      if (!studentId) return { success: false, error: 'معرف الطالب مطلوب' };
+
+      if (isMounted.current) {
         setLoading(true);
         setError(null);
+      }
 
+      try {
         let query = supabase
           .from('daily_progress')
           .select('*')
@@ -54,38 +75,55 @@ export const useReports = (academyId?: string) => {
           .lte('date', endDate)
           .order('date', { ascending: true });
 
-        if (academyId) {
-          query = query.eq('academy_id', academyId);
+        if (isValidAcademyId) {
+          query = query.eq('academy_id', academyId!);
         }
 
         const { data, error: fetchError } = await query;
 
         if (fetchError) throw fetchError;
 
-        setReportData(data as DailyProgressReport[]);
+        const resultData = (data as DailyProgressReport[]) || [];
+
+        if (isMounted.current) {
+          setReportData(resultData);
+        }
+
+        return { success: true, data: resultData };
       } catch (err: any) {
         console.error('Progress Report Error:', err);
-        setError(err.message || 'حدث خطأ أثناء جلب التقارير');
+        const errMsg = err?.message || 'حدث خطأ أثناء جلب التقارير';
+        
+        if (isMounted.current) {
+          setError(errMsg);
+        }
+        return { success: false, error: errMsg };
       } finally {
-        setLoading(false);
+        if (isMounted.current) {
+          setLoading(false);
+        }
       }
     },
-    [academyId]
+    [academyId, isValidAcademyId]
   );
 
   // 2. جلب ملخص نسب حضور وغياب طلاب حلقة أو الأكاديمية بالكامل من View
   const generateAttendanceSummary = useCallback(
     async (halaqaId?: string) => {
-      if (!academyId) return;
+      if (!isValidAcademyId) {
+        return { success: false, error: 'معرف الأكاديمية غير صالح' };
+      }
 
-      try {
+      if (isMounted.current) {
         setLoading(true);
         setError(null);
+      }
 
+      try {
         let query = supabase
           .from('v_student_attendance_summary')
           .select('*')
-          .eq('academy_id', academyId);
+          .eq('academy_id', academyId!);
 
         if (halaqaId && halaqaId !== 'all') {
           query = query.eq('halaqa_id', halaqaId);
@@ -95,21 +133,36 @@ export const useReports = (academyId?: string) => {
 
         if (fetchError) throw fetchError;
 
-        setAttendanceSummary(data as SummaryAttendanceReport[]);
+        const resultSummary = (data as SummaryAttendanceReport[]) || [];
+
+        if (isMounted.current) {
+          setAttendanceSummary(resultSummary);
+        }
+
+        return { success: true, data: resultSummary };
       } catch (err: any) {
         console.error('Attendance Summary Error:', err);
-        setError(err.message || 'حدث خطأ أثناء جلب ملخص الحضور');
+        const errMsg = err?.message || 'حدث خطأ أثناء جلب ملخص الحضور';
+
+        if (isMounted.current) {
+          setError(errMsg);
+        }
+        return { success: false, error: errMsg };
       } finally {
-        setLoading(false);
+        if (isMounted.current) {
+          setLoading(false);
+        }
       }
     },
-    [academyId]
+    [academyId, isValidAcademyId]
   );
 
   const resetReport = useCallback(() => {
-    setReportData(null);
-    setAttendanceSummary(null);
-    setError(null);
+    if (isMounted.current) {
+      setReportData(null);
+      setAttendanceSummary(null);
+      setError(null);
+    }
   }, []);
 
   return {
