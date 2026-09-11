@@ -5,15 +5,15 @@ import { supabase } from '@/lib/supabase';
 // ── Types & Interfaces ──────────────────────────────────────────
 
 export interface CreateAcademyPayload {
-  p_name: string;
+  p_name: string | Record<string, string>;
   p_slug: string;
-  p_country_code: string;
-  p_currency: string;
-  p_learning_type: string;
-  p_default_qiraat: string;
-  p_teaching_methodology: string;
-  p_logo_url: string | null;
-  [key: string]: any; // للسماح بتمرير المفاتيح الديناميكية مثل name_ar أو name_en
+  p_country_code?: string;
+  p_currency?: string;
+  p_learning_type?: string;
+  p_default_qiraat?: string;
+  p_teaching_methodology?: string;
+  p_logo_url?: string | null;
+  [key: string]: any;
 }
 
 export type OnSubmitAcademyCallback = (data: any) => Promise<void> | void;
@@ -24,7 +24,30 @@ export interface UseCreateAcademyReturn {
   isSubmitting: boolean;
   isSuccess: boolean;
   errorMsg: string;
-  handleSubmit: (e?: FormEvent) => Promise<void>;
+  handleSubmit: (e?: FormEvent) => Promise<any>;
+  reset: () => void;
+}
+
+// ── Helper Function ─────────────────────────────────────────────
+
+/**
+ * توليد Slug آمن يدعم الحروف العربية والإنجليزية والترقيم
+ */
+function generateSlug(text: string): string {
+  const cleanText = text
+    .trim()
+    .toLowerCase()
+    .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, '') // السماح بالحروف العربية والأرقام واللاتينية
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+  const timeStamp = Date.now().toString().slice(-5);
+  
+  if (!cleanText) {
+    return `academy-${timeStamp}`;
+  }
+  
+  return `${cleanText}-${timeStamp}`;
 }
 
 // ── Main Hook ───────────────────────────────────────────────────
@@ -39,34 +62,35 @@ export function useCreateAcademy(
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
+  const reset = useCallback(() => {
+    setAcademyName('');
+    setIsSubmitting(false);
+    setIsSuccess(false);
+    setErrorMsg('');
+  }, []);
+
   const handleSubmit = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
-      if (isSubmitting || !academyName.trim()) return;
+
+      const trimmedName = academyName.trim();
+      if (isSubmitting || !trimmedName) return;
 
       setIsSubmitting(true);
       setErrorMsg('');
 
       try {
         // 1. توليد Slug تلقائي وآمن من اسم الأكاديمية
-        const cleanSlug = academyName
-          .trim()
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '');
-
-        const generatedSlug = cleanSlug
-          ? `${cleanSlug}-${Date.now().toString().slice(-4)}`
-          : `academy-${Date.now().toString().slice(-6)}`;
+        const generatedSlug = generateSlug(trimmedName);
 
         // 2. تحديد مفتاح اسم اللغة الحالية
-        const currentLang = i18n.language || 'ar';
+        const currentLang = i18n?.language || 'ar';
         const nameKey = `name_${currentLang}`;
 
         // 3. تجهيز بيانات RPC واستدعاء الدالة السحابية
         const rpcPayload: CreateAcademyPayload = {
-          p_name: academyName.trim(),
-          [nameKey]: academyName.trim(),
+          p_name: trimmedName,
+          [nameKey]: trimmedName,
           p_slug: generatedSlug,
           p_country_code: 'SA',
           p_currency: 'SAR',
@@ -81,21 +105,31 @@ export function useCreateAcademy(
         if (error) throw error;
 
         setIsSuccess(true);
-        setTimeout(async () => {
-          if (onSubmitAcademy) await onSubmitAcademy(data);
-        }, 1000);
+
+        if (onSubmitAcademy) {
+          await onSubmitAcademy(data);
+        }
+
+        return data;
       } catch (error: any) {
         console.error('Create academy error:', error);
-        setErrorMsg(
-          error?.message?.includes('duplicate key') || error?.code === '23505'
-            ? t('errors.slug_taken', 'اسم الأكاديمية مستخدم بالفعل، يرجى كتابة اسم آخر')
-            : error?.message || t('errors.generic', 'حدث خطأ أثناء الإنشاء')
-        );
+        
+        const isDuplicate =
+          error?.message?.includes('duplicate key') ||
+          error?.code === '23505' ||
+          error?.message?.includes('academies_slug_key');
+
+        const fallbackMsg = isDuplicate
+          ? t('errors.slug_taken', 'اسم الأكاديمية مستخدم بالفعل، يرجى كتابة اسم آخر')
+          : error?.message || t('errors.generic', 'حدث خطأ أثناء إنشاء الأكاديمية');
+
+        setErrorMsg(fallbackMsg);
+        return null;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [academyName, isSubmitting, i18n.language, onSubmitAcademy, t]
+    [academyName, isSubmitting, i18n?.language, onSubmitAcademy, t]
   );
 
   return {
@@ -105,6 +139,7 @@ export function useCreateAcademy(
     isSuccess,
     errorMsg,
     handleSubmit,
+    reset,
   };
 }
 
