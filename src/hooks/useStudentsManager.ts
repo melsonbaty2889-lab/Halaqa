@@ -1,4 +1,4 @@
-import { useState, useMemo, Dispatch, SetStateAction } from 'react';
+import { useState, useMemo, useCallback, Dispatch, SetStateAction } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatName } from '@/utils/formatters';
 import { getStudentStatusCategory } from '@/utils/studentUtils';
@@ -13,6 +13,7 @@ export interface ConfirmModalState {
   student: Student | { id: string } | null;
   type: ConfirmActionType;
   isLoading: boolean;
+  error?: string | null;
 }
 
 export type TranslateFunction = (key: string, fallback?: string) => string;
@@ -23,6 +24,7 @@ export interface UseStudentsManagerProps {
   onDeleteStudent?: (studentId: string) => Promise<{ success: boolean; error?: string }>;
   isRtl?: boolean;
   t?: TranslateFunction;
+  currentLang?: string;
 }
 
 export interface StudentStats {
@@ -32,6 +34,19 @@ export interface StudentStats {
   archived: number;
 }
 
+// ── Helper Function for Multilingual Search ─────────────────────
+
+const extractAllNames = (nameField: any): string => {
+  if (!nameField) return '';
+  if (typeof nameField === 'string') return nameField;
+  if (typeof nameField === 'object') {
+    return Object.values(nameField)
+      .filter((v): v is string => typeof v === 'string')
+      .join(' ');
+  }
+  return '';
+};
+
 // ── Main Hook ───────────────────────────────────────────────────
 
 export const useStudentsManager = ({
@@ -40,7 +55,8 @@ export const useStudentsManager = ({
   onDeleteStudent,
   isRtl = true,
   t,
-}: UseStudentsManagerProps) => {
+  currentLang = 'ar',
+}: UseStudentsManagerProps = {}) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [halaqaFilter, setHalaqaFilter] = useState<string>('all');
@@ -49,16 +65,20 @@ export const useStudentsManager = ({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [confirmModalState, setConfirmModalState] = useState<ConfirmModalState>({
     isOpen: false,
     student: null,
     type: null,
     isLoading: false,
+    error: null,
   });
 
-  const translate = (key: string, fallback: string) =>
-    t ? t(key, fallback) : fallback;
+  const translate = useCallback(
+    (key: string, fallback: string) => (t ? t(key, fallback) : fallback),
+    [t]
+  );
 
   // 1. حساب الإحصائيات
   const stats: StudentStats = useMemo(
@@ -71,17 +91,17 @@ export const useStudentsManager = ({
     [students]
   );
 
-  // 2. منطق الفلترة والترتيب
+  // 2. منطق الفلترة والترتيب الداعم لجميع اللغات
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
-      const formattedName = formatName((student as any).name || (student as any).full_name || '');
+      const allStudentNames = extractAllNames((student as any).name || (student as any).full_name);
       const parentName = formatName(student.parent_name || (student as any).guardian_name || '');
       const studentCode = student.student_code || '';
       const query = searchQuery.toLowerCase().trim();
 
       const matchesSearch =
         !query ||
-        formattedName.toLowerCase().includes(query) ||
+        allStudentNames.toLowerCase().includes(query) ||
         parentName.toLowerCase().includes(query) ||
         studentCode.toLowerCase().includes(query) ||
         (student.parent_phone && student.parent_phone.includes(query)) ||
@@ -98,61 +118,77 @@ export const useStudentsManager = ({
       if (sortBy === 'newest') {
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       }
-      const nameA = formatName((a as any).name || (a as any).full_name || '');
-      const nameB = formatName((b as any).name || (b as any).full_name || '');
-      return nameA.localeCompare(nameB, isRtl ? 'ar' : 'en');
-    });
-  }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, isRtl]);
 
-  const resetFilters = () => {
+      // استخراج الاسم المعتمد حسب اللغة الحالية للواجهة
+      const getLocalizedName = (s: Student) => {
+        const rawName = (s as any).name || (s as any).full_name;
+        if (typeof rawName === 'object' && rawName !== null) {
+          return rawName[currentLang] || rawName.ar || rawName.en || Object.values(rawName)[0] || '';
+        }
+        return formatName(rawName || '');
+      };
+
+      const nameA = getLocalizedName(a);
+      const nameB = getLocalizedName(b);
+      return nameA.localeCompare(nameB, currentLang);
+    });
+  }, [students, searchQuery, statusFilter, halaqaFilter, sortBy, currentLang]);
+
+  const resetFilters = useCallback(() => {
     setSearchQuery('');
     setStatusFilter('all');
     setHalaqaFilter('all');
     setSortBy('name');
-  };
+  }, []);
 
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = useCallback(() => {
     setEditingStudent(null);
     setIsAddModalOpen(true);
-  };
+  }, []);
 
-  const handleOpenEditModal = (studentToEdit: Student) => {
+  const handleOpenEditModal = useCallback((studentToEdit: Student) => {
     setEditingStudent(studentToEdit);
     setIsAddModalOpen(true);
-  };
+  }, []);
 
-  const handleRequestArchive = (student: Student) => {
+  const handleRequestArchive = useCallback((student: Student) => {
     const isCurrentlyArchived = student.is_archived || (student as any).status === 'graduated';
     setConfirmModalState({
       isOpen: true,
       student,
       type: isCurrentlyArchived ? 'unarchive' : 'archive',
       isLoading: false,
+      error: null,
     });
-  };
+  }, []);
 
-  const handleRequestDelete = (studentId: string) => {
+  const handleRequestDelete = useCallback((studentId: string) => {
     const student = students.find((s) => s.id === studentId) || selectedStudent;
     setConfirmModalState({
       isOpen: true,
       student: student || { id: studentId },
       type: 'delete',
       isLoading: false,
+      error: null,
     });
-  };
+  }, [students, selectedStudent]);
 
-  const handleConfirmAction = async () => {
+  const handleConfirmAction = useCallback(async () => {
     const { student, type } = confirmModalState;
     if (!student) return;
 
-    setConfirmModalState((prev) => ({ ...prev, isLoading: true }));
+    setConfirmModalState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setActionError(null);
 
     try {
       if (type === 'archive' || type === 'unarchive') {
         const newArchivedState = type === 'archive';
         const { error } = await supabase
           .from('students')
-          .update({ is_archived: newArchivedState })
+          .update({ 
+            is_archived: newArchivedState,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', student.id);
 
         if (error) throw error;
@@ -173,27 +209,30 @@ export const useStudentsManager = ({
             if (setStudents) setStudents((prev) => prev.filter((s) => s.id !== student.id));
             if (selectedStudent && selectedStudent.id === student.id) setSelectedStudent(null);
           } else {
-            alert(
-              translate('common.delete_failed', 'فشل الحذف من قاعدة البيانات: ') +
-                (res?.error || '')
-            );
+            throw new Error(res?.error || translate('common.delete_failed', 'فشل الحذف من قاعدة البيانات'));
           }
         } else {
+          const { error } = await supabase
+            .from('students')
+            .delete()
+            .eq('id', student.id);
+
+          if (error) throw error;
+
           if (setStudents) setStudents((prev) => prev.filter((s) => s.id !== student.id));
           if (selectedStudent && selectedStudent.id === student.id) setSelectedStudent(null);
         }
       }
-    } catch (err: any) {
-      alert(
-        translate('common.update_failed', 'فشل تنفيذ الإجراء: ') +
-          (err?.message || '')
-      );
-    } finally {
-      setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false });
-    }
-  };
 
-  const handleModalSuccess = (savedStudent: Student) => {
+      setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false, error: null });
+    } catch (err: any) {
+      const errMsg = err?.message || translate('common.update_failed', 'فشل تنفيذ الإجراء');
+      setActionError(errMsg);
+      setConfirmModalState((prev) => ({ ...prev, isLoading: false, error: errMsg }));
+    }
+  }, [confirmModalState, setStudents, selectedStudent, onDeleteStudent, translate]);
+
+  const handleModalSuccess = useCallback((savedStudent: Student) => {
     if (!savedStudent) return;
     if (setStudents) {
       setStudents((prev) => {
@@ -208,7 +247,7 @@ export const useStudentsManager = ({
     }
     setIsAddModalOpen(false);
     setEditingStudent(null);
-  };
+  }, [setStudents, selectedStudent]);
 
   return {
     searchQuery,
@@ -227,6 +266,7 @@ export const useStudentsManager = ({
     setEditingStudent,
     confirmModalState,
     setConfirmModalState,
+    actionError,
     stats,
     filteredStudents,
     resetFilters,
