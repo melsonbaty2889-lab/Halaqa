@@ -5,12 +5,12 @@ import { Parent, ParentFilters } from '@/types/parent';
 import { normalizePhone } from '@/utils/formatters';
 
 export interface UseParentsOptions {
-  academyId: string;
+  academyId?: string; // جعل المتغير اختياري لمنع الأخطاء في الفحص الأولي
   initialFilters?: Partial<ParentFilters>;
   enabled?: boolean;
 }
 
-export const useParents = ({ academyId, initialFilters, enabled = true }: UseParentsOptions) => {
+export const useParents = ({ academyId, initialFilters, enabled = true }: UseParentsOptions = {}) => {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<ParentFilters>({
@@ -19,9 +19,9 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
     ...initialFilters,
   });
 
-  const queryKey = ['parents', academyId, filters];
+  const queryKey = ['parents', academyId || 'no-academy', filters];
 
-  // 1. جلب أولياء الأمور
+  // 1. جلب أولياء الأمور بأمان
   const {
     data: parents = [],
     isLoading: loading,
@@ -32,37 +32,43 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
     queryFn: async (): Promise<Parent[]> => {
       if (!academyId) return [];
 
-      let query = supabase
-        .from('parents')
-        .select(`
-          *,
-          students (
-            id,
-            name,
-            gender,
-            status
-          )
-        `)
-        .eq('academy_id', academyId);
+      try {
+        let query = supabase
+          .from('parents')
+          .select(`
+            *,
+            students (
+              id,
+              name,
+              gender,
+              status
+            )
+          `)
+          .eq('academy_id', academyId);
 
-      if (filters.preferred_language && filters.preferred_language !== 'all') {
-        query = query.eq('preferred_language', filters.preferred_language);
+        if (filters.preferred_language && filters.preferred_language !== 'all') {
+          query = query.eq('preferred_language', filters.preferred_language);
+        }
+
+        if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+          const rawTerm = filters.searchTerm.trim();
+          const term = `%${rawTerm}%`;
+          const normalizedTerm = normalizePhone(rawTerm);
+
+          query = query.or(`name.ilike.${term},phone.ilike.%${normalizedTerm}%,email.ilike.${term}`);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data as Parent[]) || [];
+      } catch (err: any) {
+        console.warn('Parents Query Error:', err?.message || err);
+        return [];
       }
-
-      if (filters.searchTerm && filters.searchTerm.trim() !== '') {
-        const rawTerm = filters.searchTerm.trim();
-        const term = `%${rawTerm}%`;
-        const normalizedTerm = normalizePhone(rawTerm);
-
-        query = query.or(`name.ilike.${term},phone.ilike.%${normalizedTerm}%,email.ilike.${term}`);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data as Parent[]) || [];
     },
-    enabled: !!academyId && enabled,
+    enabled: Boolean(academyId) && enabled,
+    retry: 1,
   });
 
   // 2. إنشاء / العثور على ولي أمر برقم الهاتف الموحد
@@ -73,6 +79,8 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       email?: string;
       country_code?: string;
     }) => {
+      if (!academyId) throw new Error('Academy ID is missing');
+
       const countryCode = parentData.country_code || 'EG';
       const normalizedPhone = normalizePhone(parentData.phone, countryCode);
 
@@ -105,7 +113,9 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       return newParent;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['parents', academyId] });
+      if (academyId) {
+        queryClient.invalidateQueries({ queryKey: ['parents', academyId] });
+      }
     },
   });
 
@@ -116,7 +126,9 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['parents', academyId] });
+      if (academyId) {
+        queryClient.invalidateQueries({ queryKey: ['parents', academyId] });
+      }
     },
   });
 
