@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // ── Types & Interfaces ──────────────────────────────────────────
@@ -20,7 +20,7 @@ export interface StudentDocument {
 export type TranslateFunction = (key: string, fallback?: string) => string;
 
 export interface UseStudentDocumentsProps {
-  studentId?: string; // جعل المعرف اختياري لمنع أي Crash
+  studentId?: string | null;
   academyId?: string | null;
   t?: TranslateFunction;
 }
@@ -49,52 +49,72 @@ export const useStudentDocuments = ({
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [successToast, setSuccessToast] = useState<string>('');
 
+  const isMounted = useRef<boolean>(true);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const isValidStudentId = Boolean(
+    studentId &&
+    studentId !== 'undefined' &&
+    typeof studentId === 'string' &&
+    studentId.trim() !== ''
+  );
+
   const translate = useCallback(
     (key: string, fallback: string) => (t ? t(key, fallback) : fallback),
     [t]
   );
 
   const showSuccess = useCallback((msg: string) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 4000);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    if (isMounted.current) setSuccessToast(msg);
+    toastTimerRef.current = setTimeout(() => {
+      if (isMounted.current) setSuccessToast('');
+    }, 4000);
   }, []);
 
   const fetchDocuments = useCallback(async () => {
-    // إيقاف التحميل وإعادة مصفوفة فارغة فوراً إن لم يتوفر ID الطالب
-    if (!studentId) {
-      setDocuments([]);
-      setLoading(false);
+    if (!isValidStudentId) {
+      if (isMounted.current) {
+        setDocuments([]);
+        setLoading(false);
+      }
       return;
     }
 
-    setLoading(true);
+    if (isMounted.current) setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from('student_documents')
         .select('*')
-        .eq('student_id', studentId)
+        .eq('student_id', studentId!)
         .order('uploaded_at', { ascending: false });
 
       if (error) throw error;
-      setDocuments((data as StudentDocument[]) || []);
+
+      if (isMounted.current) {
+        setDocuments((data as StudentDocument[]) || []);
+      }
     } catch (err: any) {
       console.warn('Error fetching documents:', err?.message || err);
-      setDocuments([]);
+      if (isMounted.current) {
+        setDocuments([]);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
-  }, [studentId]);
+  }, [studentId, isValidStudentId]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    if (isMounted) {
-      fetchDocuments();
-    }
-
-    return () => {
-      isMounted = false;
-    };
+    fetchDocuments();
   }, [fetchDocuments]);
 
   const handleDelete = async (
@@ -102,7 +122,7 @@ export const useStudentDocuments = ({
     docPath?: string
   ): Promise<OperationResult> => {
     if (!docId) return { success: false, error: 'Document ID is missing' };
-    setIsDeleting(true);
+    if (isMounted.current) setIsDeleting(true);
 
     try {
       if (docPath) {
@@ -117,19 +137,22 @@ export const useStudentDocuments = ({
 
       if (dbError) throw dbError;
 
-      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+      if (isMounted.current) {
+        setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+      }
+
       showSuccess(
         translate('documents.delete_success', 'تم حذف المستند بنجاح')
       );
       return { success: true };
     } catch (err: any) {
       console.warn('Delete Error:', err?.message || err);
-      return { 
-        success: false, 
-        error: translate('common.error', 'حدث خطأ أثناء الحذف: ') + (err?.message || '') 
+      return {
+        success: false,
+        error: translate('common.error', 'حدث خطأ أثناء الحذف: ') + (err?.message || ''),
       };
     } finally {
-      setIsDeleting(false);
+      if (isMounted.current) setIsDeleting(false);
     }
   };
 
@@ -138,11 +161,12 @@ export const useStudentDocuments = ({
     documentType,
     notes,
   }: UploadPayload): Promise<OperationResult> => {
-    if (!studentId) {
-      return { success: false, error: 'Student ID is missing' };
+    if (!isValidStudentId) {
+      return { success: false, error: 'Student ID is missing or invalid' };
     }
 
-    setUploading(true);
+    if (isMounted.current) setUploading(true);
+
     try {
       const {
         data: { user },
@@ -153,7 +177,7 @@ export const useStudentDocuments = ({
         const { data: studentData } = await supabase
           .from('students')
           .select('academy_id')
-          .eq('id', studentId)
+          .eq('id', studentId!)
           .maybeSingle();
 
         currentAcademyId = studentData?.academy_id || null;
@@ -184,10 +208,11 @@ export const useStudentDocuments = ({
       }
 
       const fileExt = file.name.split('.').pop();
-      const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
-        ? crypto.randomUUID() 
-        : Math.random().toString(36).substring(2, 9);
-        
+      const uniqueId =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).substring(2, 9);
+
       const filePath = `students/${studentId}/${Date.now()}_${uniqueId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -205,7 +230,7 @@ export const useStudentDocuments = ({
         .insert([
           {
             academy_id: currentAcademyId,
-            student_id: studentId,
+            student_id: studentId!,
             file_name: file.name,
             file_url: publicUrl,
             file_size: file.size,
@@ -221,12 +246,14 @@ export const useStudentDocuments = ({
 
       if (dbError) throw dbError;
 
-      setDocuments((prev) => {
-        const filtered = isSingleInstance
-          ? prev.filter((doc) => doc.document_type !== documentType)
-          : prev;
-        return [data as StudentDocument, ...filtered];
-      });
+      if (isMounted.current) {
+        setDocuments((prev) => {
+          const filtered = isSingleInstance
+            ? prev.filter((doc) => doc.document_type !== documentType)
+            : prev;
+          return [data as StudentDocument, ...filtered];
+        });
+      }
 
       showSuccess(
         translate('documents.upload_success', 'تم رفع المستند بنجاح!')
@@ -234,12 +261,12 @@ export const useStudentDocuments = ({
       return { success: true };
     } catch (err: any) {
       console.warn('Upload Error:', err?.message || err);
-      return { 
-        success: false, 
-        error: err?.message || 'حدث خطأ أثناء رفع المستند' 
+      return {
+        success: false,
+        error: err?.message || 'حدث خطأ أثناء رفع المستند',
       };
     } finally {
-      setUploading(false);
+      if (isMounted.current) setUploading(false);
     }
   };
 
