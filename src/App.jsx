@@ -289,10 +289,18 @@ if (typeof window !== 'undefined') {
 }
 
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
-  const { t } = useAcademy();
-
+  // 1. الخروج السريع أولاً إذا كان المودال مغلقاً (لتجنب استدعاء الـ Hooks بلا داعٍ)
   if (!isOpen) return null;
 
+  // 2. استخدام Try / Catch أو Safe Navigation للـ Hook لتجنب الـ undefined crash
+  let t;
+  try {
+    const academyContext = useAcademy();
+    t = academyContext?.t;
+  } catch (e) {
+    t = null;
+  }
+  
   return (
     <div style={{
       position: 'fixed',
