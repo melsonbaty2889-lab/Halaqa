@@ -4,12 +4,16 @@ import { supabase } from '@/lib/supabase';
 import { Curriculum, CurriculumFilters } from '@/types/curriculum';
 
 export interface UseCurriculaOptions {
-  academyId?: string; // جعل المعرف اختياري لمنع الـ Crash في الـ Render الأول
+  academyId?: string | null;
   initialFilters?: Partial<CurriculumFilters>;
   enabled?: boolean;
 }
 
-export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseCurriculaOptions = {}) => {
+export const useCurricula = ({
+  academyId,
+  initialFilters,
+  enabled = true,
+}: UseCurriculaOptions = {}) => {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<CurriculumFilters>({
@@ -18,6 +22,13 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
     is_active: 'all',
     ...initialFilters,
   });
+
+  const isValidAcademyId = Boolean(
+    academyId &&
+    academyId !== 'undefined' &&
+    typeof academyId === 'string' &&
+    academyId.trim() !== ''
+  );
 
   const queryKey = ['curricula', academyId || 'no-academy', filters];
 
@@ -30,26 +41,34 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
   } = useQuery({
     queryKey,
     queryFn: async (): Promise<Curriculum[]> => {
-      if (!academyId) return [];
+      if (!isValidAcademyId) return [];
 
       try {
         let query = supabase
           .from('curricula')
           .select('*')
-          .eq('academy_id', academyId);
+          .eq('academy_id', academyId!);
 
+        // فلترة التصنيف (Category)
         if (filters.category && filters.category !== 'all') {
           query = query.eq('category', filters.category);
         }
 
-        if (filters.is_active !== 'all' && typeof filters.is_active === 'boolean') {
-          query = query.eq('is_active', filters.is_active);
+        // فلترة الحالة (Active / Inactive)
+        if (filters.is_active !== undefined && filters.is_active !== 'all') {
+          const activeValue =
+            typeof filters.is_active === 'boolean'
+              ? filters.is_active
+              : filters.is_active === 'true';
+          query = query.eq('is_active', activeValue);
         }
 
+        // البحث عبر العنوان في JSONB والكود
         if (filters.searchTerm && filters.searchTerm.trim() !== '') {
           const term = `%${filters.searchTerm.trim()}%`;
-          // دعم إضافي للبحث في العناوين النصية العادية والـ JSONB بأسلوب آمن
-          query = query.or(`title->>ar.ilike.${term},title->>en.ilike.${term},title.ilike.${term},code.ilike.${term}`);
+          query = query.or(
+            `title->>ar.ilike.${term},title->>en.ilike.${term},title->>fr.ilike.${term},code.ilike.${term}`
+          );
         }
 
         const { data, error } = await query.order('created_at', { ascending: false });
@@ -61,13 +80,19 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
         return [];
       }
     },
-    enabled: Boolean(academyId) && enabled,
+    enabled: isValidAcademyId && enabled,
     retry: 1,
   });
 
   // 2. Mutation لتغيير حالة التفعيل
   const toggleActiveMutation = useMutation({
-    mutationFn: async ({ curriculumId, currentActive }: { curriculumId: string; currentActive: boolean }) => {
+    mutationFn: async ({
+      curriculumId,
+      currentActive,
+    }: {
+      curriculumId: string;
+      currentActive: boolean;
+    }) => {
       const { error } = await supabase
         .from('curricula')
         .update({ is_active: !currentActive })
@@ -76,7 +101,7 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
       if (error) throw error;
     },
     onSuccess: () => {
-      if (academyId) {
+      if (isValidAcademyId) {
         queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
       }
     },
@@ -93,7 +118,7 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
       if (error) throw error;
     },
     onSuccess: () => {
-      if (academyId) {
+      if (isValidAcademyId) {
         queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
       }
     },
