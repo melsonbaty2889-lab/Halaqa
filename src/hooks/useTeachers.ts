@@ -70,7 +70,6 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
       if (academyId) {
         query = query.eq('academy_teachers.academy_id', academyId);
       } else {
-        // في حال عدم وجود أكاديمية محددة، نستخدم Left Join عادي بدلاً من Inner Join
         query = supabase
           .from('teachers')
           .select('*')
@@ -82,7 +81,6 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
 
       if (supabaseError) throw supabaseError;
 
-      // تنقية البيانات المرجعة واستبعاد كائن العلاقة المدمج
       const cleanedTeachers: Teacher[] = (data || []).map((item: any) => {
         const { academy_teachers, ...teacherData } = item;
         return teacherData as Teacher;
@@ -103,7 +101,6 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
     }
   }, [academyId]);
 
-  // تنظيف الحقول الزائدة قبل الإرسال لمنع أخطاء Supabase
   const sanitizePayload = (data: Partial<Teacher>) => {
     const payload = { ...data };
     delete payload.country_code;
@@ -128,7 +125,6 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
         phone: normalizedPhone,
       });
 
-      // 1. إضافة المعلم لجدول teachers
       const { data: newTeacher, error: insertError } = await supabase
         .from('teachers')
         .insert([payload])
@@ -137,7 +133,6 @@ export const useTeachers = ({ academyId }: UseTeachersProps = {}): UseTeachersRe
 
       if (insertError) throw insertError;
 
-      // 2. ربط المعلم بالأكاديمية عبر جدول academy_teachers
       if (academyId && newTeacher) {
         const { error: relError } = await supabase
           .from('academy_teachers')
