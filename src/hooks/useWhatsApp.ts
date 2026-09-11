@@ -56,7 +56,7 @@ export function useWhatsApp(): UseWhatsAppReturn {
   // 1. تنظيف وتنسيق رقم الهاتف بالصيغة الدولية
   const formatPhoneNumber = useCallback((phone: string, defaultCountryCode: string = '20'): string => {
     if (!phone) return '';
-    let cleaned = phone.replace(/\D/g, ''); // إزالة المسافات والأقواس والرموز
+    let cleaned = phone.replace(/\D/g, '');
 
     if (cleaned.startsWith('00')) {
       cleaned = cleaned.substring(2);
@@ -79,7 +79,7 @@ export function useWhatsApp(): UseWhatsAppReturn {
     [formatPhoneNumber]
   );
 
-  // 3. صياغة قالب التقرير اليومي مطبقاً نصوص الواجهة والترجمة
+  // 3. صياغة قالب التقرير اليومي بأسلوب بسيط ونظيف
   const generateReportMessage = useCallback(
     (payload: SendReportPayload): string => {
       const {
@@ -96,51 +96,57 @@ export function useWhatsApp(): UseWhatsAppReturn {
 
       const title = academyName || t('whatsapp.report_title', 'الحلقة الذكية');
 
-      let body = `*📖 تقرير الحفظ والمتابعة اليومي - ${title}*\n`;
-      body += `------------------------------------\n`;
-      body += `👤 *${t('student.name', 'الطالب')}:* ${studentName}\n`;
-      body += `📅 *${t('common.date', 'التاريخ')}:* ${date}\n`;
-      body += `📌 *${t('attendance.status', 'حالة الحضور')}:* ${attendanceStatus}\n`;
+      let body = `*تقرير المتابعة اليومي - ${title}*\n\n`;
+      body += `• *${t('student.name', 'الطالب')}:* ${studentName}\n`;
+      body += `• *${t('common.date', 'التاريخ')}:* ${date}\n`;
+      body += `• *${t('attendance.status', 'حالة الحضور')}:* ${attendanceStatus}\n`;
 
       if (newMemorization) {
-        body += `✨ *${t('attendance.new_memorization', 'الحفظ الجديد')}:* ${newMemorization}\n`;
+        body += `• *${t('attendance.new_memorization', 'الحفظ الجديد')}:* ${newMemorization}\n`;
       }
 
       if (retentionAssignment) {
-        body += `🔄 *${t('attendance.retention', 'المراجعة')}:* ${retentionAssignment}\n`;
+        body += `• *${t('attendance.retention', 'المراجعة')}:* ${retentionAssignment}\n`;
       }
 
       if (grade !== undefined && grade !== null && grade !== '') {
-        body += `⭐ *${t('attendance.grade', 'التقييم')}:* ${grade}\n`;
+        body += `• *${t('attendance.grade', 'التقييم')}:* ${grade}\n`;
       }
 
       if (notes) {
-        body += `📝 *${t('common.notes', 'ملاحظات المعلم')}:* ${notes}\n`;
+        body += `• *${t('common.notes', 'ملاحظات المعلم')}:* ${notes}\n`;
       }
 
       if (teacherName) {
-        body += `👨‍🏫 *${t('teacher.name', 'المعلم')}:* ${teacherName}\n`;
+        body += `• *${t('teacher.name', 'المعلم')}:* ${teacherName}\n`;
       }
 
-      body += `------------------------------------\n`;
-      body += `${t('whatsapp.footer', 'نسأل الله أن يبارك في وقته وحفظه. 🌹')}`;
+      body += `\n${t('whatsapp.footer', 'نسأل الله أن يبارك في وقته وحفظه.')}`;
 
       return body;
     },
     [t]
   );
 
-  // 4. فتح الواتساب للإرسال
+  // 4. فتح الواتساب للإرسال مع معالجة حظر النوافذ
   const sendCustomMessage = useCallback(
-    (phone: string, message: string) => {
-      if (!phone || !message) return;
+    (phone: string, message: string, targetWindow?: Window | null) => {
+      if (!phone || !message) {
+        if (targetWindow) targetWindow.close();
+        return;
+      }
       setSending(true);
 
       try {
         const link = buildWhatsAppLink(phone, message);
-        window.open(link, '_blank', 'noopener,noreferrer');
+        if (targetWindow) {
+          targetWindow.location.href = link;
+        } else {
+          window.open(link, '_blank', 'noopener,noreferrer');
+        }
       } catch (error) {
         console.error('Error opening WhatsApp:', error);
+        if (targetWindow) targetWindow.close();
       } finally {
         setSending(false);
       }
@@ -158,17 +164,20 @@ export function useWhatsApp(): UseWhatsAppReturn {
     [generateReportMessage, sendCustomMessage]
   );
 
-  // 6. جلب بيانات الطالب ورقم ولي أمره مباشرة من Supabase (مطابق تماماً لجدول students عندك)
+  // 6. جلب بيانات الطالب وإرسال التقرير لتفادي حظر الـ Popup
   const sendReportByStudentId = useCallback(
     async (
       studentId: string,
       payload: Omit<SendReportPayload, 'phone' | 'studentName'>
     ) => {
       if (!studentId) return;
+
+      // فتح نافذة فارغة مبدئياً أثناء انتظار الاستعلام لمنع Popup Blocker
+      const newWindow = window.open('about:blank', '_blank');
+
       setSending(true);
 
       try {
-        // الاستعلام من جدول students مع مطابقة حقول parent_whatsapp و parent_phone و name (jsonb)
         const { data: student, error } = await supabase
           .from('students')
           .select('name, parent_whatsapp, parent_phone')
@@ -179,9 +188,9 @@ export function useWhatsApp(): UseWhatsAppReturn {
           throw new Error(error?.message || 'لم يتم العثور على بيانات الطالب');
         }
 
-        // اختيار الرقم المتاح (الأولوية لـ parent_whatsapp ثم parent_phone)
         const phone = student.parent_whatsapp || student.parent_phone;
         if (!phone) {
+          if (newWindow) newWindow.close();
           alert('لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.');
           return;
         }
@@ -196,9 +205,10 @@ export function useWhatsApp(): UseWhatsAppReturn {
         };
 
         const message = generateReportMessage(fullPayload);
-        sendCustomMessage(phone, message);
+        sendCustomMessage(phone, message, newWindow);
       } catch (err) {
         console.error('Failed to send report via Student ID:', err);
+        if (newWindow) newWindow.close();
       } finally {
         setSending(false);
       }
