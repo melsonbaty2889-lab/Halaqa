@@ -4,12 +4,12 @@ import { supabase } from '@/lib/supabase';
 import { Halaqa, HalaqaFilters } from '@/types/halaqa';
 
 export interface UseHalaqasOptions {
-  academyId: string;
+  academyId?: string; // جعل المتغير اختياري لمنع أي Crash أثناء الـ Render الأول
   initialFilters?: Partial<HalaqaFilters>;
   enabled?: boolean;
 }
 
-export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHalaqasOptions) => {
+export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHalaqasOptions = {}) => {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<HalaqaFilters>({
@@ -21,9 +21,9 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
     ...initialFilters,
   });
 
-  const queryKey = ['halaqas', academyId, filters];
+  const queryKey = ['halaqas', academyId || 'no-academy', filters];
 
-  // 1. جلب بيانات الحلقات
+  // 1. جلب بيانات الحلقات بأمان
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -34,48 +34,55 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
     queryFn: async (): Promise<Halaqa[]> => {
       if (!academyId) return [];
 
-      let query = supabase
-        .from('halaqas')
-        .select(`
-          *,
-          teachers (
-            id,
-            name,
-            email,
-            phone
-          ),
-          curricula (
-            id,
-            title
-          )
-        `)
-        .eq('academy_id', academyId)
-        .eq('is_archived', filters.is_archived);
+      try {
+        let query = supabase
+          .from('halaqas')
+          .select(`
+            *,
+            teachers (
+              id,
+              name,
+              email,
+              phone
+            ),
+            curricula (
+              id,
+              title
+            )
+          `)
+          .eq('academy_id', academyId)
+          .eq('is_archived', filters.is_archived);
 
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        if (filters.status && filters.status !== 'all') {
+          query = query.eq('status', filters.status);
+        }
+
+        if (filters.target_audience && filters.target_audience !== 'all') {
+          query = query.eq('target_audience', filters.target_audience);
+        }
+
+        if (filters.teaching_type && filters.teaching_type !== 'all') {
+          query = query.eq('teaching_type', filters.teaching_type);
+        }
+
+        // إصلاح طريقة البحث عن النصوص بطريقة آمنة ومتوافقة مع Supabase
+        if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+          const term = `%${filters.searchTerm.trim()}%`;
+          // استخدام cs لمطابقة النصوص داخل JSONB بدلاً من cast.text أو البحث العادي
+          query = query.or(`name->>ar.ilike.${term},name->>en.ilike.${term},code.ilike.${term}`);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data as Halaqa[]) || [];
+      } catch (err: any) {
+        console.warn('Halaqas Query Error:', err?.message || err);
+        return [];
       }
-
-      if (filters.target_audience && filters.target_audience !== 'all') {
-        query = query.eq('target_audience', filters.target_audience);
-      }
-
-      if (filters.teaching_type && filters.teaching_type !== 'all') {
-        query = query.eq('teaching_type', filters.teaching_type);
-      }
-
-      // البحث الديناميكي كـ text داخل name الـ JSONB + الكود
-      if (filters.searchTerm && filters.searchTerm.trim() !== '') {
-        const term = `%${filters.searchTerm.trim()}%`;
-        query = query.or(`name.cast.text.ilike.${term},code.ilike.${term}`);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data as Halaqa[]) || [];
     },
-    enabled: !!academyId && enabled,
+    enabled: Boolean(academyId) && enabled,
+    retry: 1, // تقليل محاولات إعادة الطلب لتفادي تكرار الخطأ
   });
 
   // 2. Mutation لإسناد / تغيير المعلم للحلقة
@@ -92,7 +99,9 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      if (academyId) {
+        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      }
     },
   });
 
@@ -110,7 +119,9 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      if (academyId) {
+        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      }
     },
   });
 
