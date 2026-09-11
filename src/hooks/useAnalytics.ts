@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { SupportedLanguage, MultiLangName } from '@/constants/academySettingsI18n';
 
-// ── Interfaces ──────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────
+
+export type SupportedLanguage = 'ar' | 'en' | 'fr' | 'tr' | 'ur' | 'id';
+
+export interface MultiLangName {
+  ar?: string;
+  en?: string;
+  fr?: string;
+  tr?: string;
+  ur?: string;
+  id?: string;
+  [key: string]: string | undefined;
+}
 
 export interface DashboardStats {
   academy_id: string;
@@ -55,7 +66,7 @@ export function useAnalytics(academyId?: string | null) {
     academyId.trim() !== ''
   );
 
-  // 1. جلب إحصائيات لوحة التحكم للأكاديمية
+  // 1. جلب إحصائيات لوحة التحكم
   const fetchDashboardStats = useCallback(async () => {
     if (!isValidAcademyId) {
       setLoadingStats(false);
@@ -69,7 +80,7 @@ export function useAnalytics(academyId?: string | null) {
         .from('v_academy_dashboard_stats')
         .select('*')
         .eq('academy_id', academyId!)
-        .maybeSingle(); // استخدام maybeSingle لتفادي الخطأ عند عدم وجود صفوف
+        .maybeSingle();
 
       if (error) throw error;
       setDashboardStats((data as DashboardStats) || null);
@@ -80,7 +91,7 @@ export function useAnalytics(academyId?: string | null) {
     }
   }, [academyId, isValidAcademyId]);
 
-  // 2. جلب ملخص حضور الطلاب للأكاديمية أو لحلقة معينة
+  // 2. جلب ملخص حضور الطلاب
   const fetchAttendanceSummary = useCallback(
     async (halaqaId?: string) => {
       if (!isValidAcademyId) return;
