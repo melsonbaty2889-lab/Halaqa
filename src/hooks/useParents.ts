@@ -5,7 +5,7 @@ import { Parent, ParentFilters } from '@/types/parent';
 import { normalizePhone } from '@/utils/formatters';
 
 export interface UseParentsOptions {
-  academyId?: string; // جعل المتغير اختياري لمنع الأخطاء في الفحص الأولي
+  academyId?: string | null;
   initialFilters?: Partial<ParentFilters>;
   enabled?: boolean;
 }
@@ -19,6 +19,13 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
     ...initialFilters,
   });
 
+  const isValidAcademyId = Boolean(
+    academyId &&
+    academyId !== 'undefined' &&
+    typeof academyId === 'string' &&
+    academyId.trim() !== ''
+  );
+
   const queryKey = ['parents', academyId || 'no-academy', filters];
 
   // 1. جلب أولياء الأمور بأمان
@@ -30,7 +37,7 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
   } = useQuery({
     queryKey,
     queryFn: async (): Promise<Parent[]> => {
-      if (!academyId) return [];
+      if (!isValidAcademyId) return [];
 
       try {
         let query = supabase
@@ -44,7 +51,7 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
               status
             )
           `)
-          .eq('academy_id', academyId);
+          .eq('academy_id', academyId!);
 
         if (filters.preferred_language && filters.preferred_language !== 'all') {
           query = query.eq('preferred_language', filters.preferred_language);
@@ -55,7 +62,10 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
           const term = `%${rawTerm}%`;
           const normalizedTerm = normalizePhone(rawTerm);
 
-          query = query.or(`name.ilike.${term},phone.ilike.%${normalizedTerm}%,email.ilike.${term}`);
+          // يدعم البحث سواء كان الاسم نصاً مباشراً أو JSONB مترجم
+          query = query.or(
+            `name.ilike.${term},name->>ar.ilike.${term},name->>en.ilike.${term},phone.ilike.%${normalizedTerm}%,email.ilike.${term}`
+          );
         }
 
         const { data, error } = await query.order('created_at', { ascending: false });
@@ -67,19 +77,19 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
         return [];
       }
     },
-    enabled: Boolean(academyId) && enabled,
+    enabled: isValidAcademyId && enabled,
     retry: 1,
   });
 
   // 2. إنشاء / العثور على ولي أمر برقم الهاتف الموحد
   const upsertParentMutation = useMutation({
     mutationFn: async (parentData: {
-      name: string;
+      name: string | Record<string, string>;
       phone: string;
       email?: string;
       country_code?: string;
     }) => {
-      if (!academyId) throw new Error('Academy ID is missing');
+      if (!isValidAcademyId) throw new Error('Academy ID is missing or invalid');
 
       const countryCode = parentData.country_code || 'EG';
       const normalizedPhone = normalizePhone(parentData.phone, countryCode);
@@ -88,7 +98,7 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       const { data: existingParent } = await supabase
         .from('parents')
         .select('*')
-        .eq('academy_id', academyId)
+        .eq('academy_id', academyId!)
         .eq('phone', normalizedPhone)
         .maybeSingle();
 
@@ -100,7 +110,7 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       const { data: newParent, error } = await supabase
         .from('parents')
         .insert([{
-          academy_id: academyId,
+          academy_id: academyId!,
           name: parentData.name,
           phone: normalizedPhone,
           email: parentData.email || null,
@@ -113,7 +123,7 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       return newParent;
     },
     onSuccess: () => {
-      if (academyId) {
+      if (isValidAcademyId) {
         queryClient.invalidateQueries({ queryKey: ['parents', academyId] });
       }
     },
@@ -126,14 +136,14 @@ export const useParents = ({ academyId, initialFilters, enabled = true }: UsePar
       if (error) throw error;
     },
     onSuccess: () => {
-      if (academyId) {
+      if (isValidAcademyId) {
         queryClient.invalidateQueries({ queryKey: ['parents', academyId] });
       }
     },
   });
 
   const upsertParent = useCallback(
-    async (parentData: { name: string; phone: string; email?: string; country_code?: string }) => {
+    async (parentData: { name: string | Record<string, string>; phone: string; email?: string; country_code?: string }) => {
       try {
         const result = await upsertParentMutation.mutateAsync(parentData);
         return { success: true, data: result };
