@@ -37,6 +37,32 @@ export interface ToastState {
   type: 'success' | 'error' | 'info';
 }
 
+export interface RawAcademyData {
+  id: string;
+  name?: { ar?: string; en?: string } | string | null;
+  slug?: string | null;
+  logo_url?: string | null;
+  tagline?: string | null;
+  description?: string | null;
+  brand_color?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  website?: string | null;
+  country_code?: string | null;
+  currency?: string | null;
+  timezone?: string | null;
+  language_code?: string | null;
+  calendar_type?: string | null;
+  weekend_days?: string[] | null;
+  learning_type?: string | null;
+  default_qiraat?: string | null;
+  teaching_methodology?: string | null;
+  allow_self_registration?: boolean | null;
+  require_approval?: boolean | null;
+  max_students_per_group?: number | null;
+  [key: string]: unknown;
+}
+
 export const INITIAL_ACADEMY_FORM: AcademyFormData = {
   name_ar: '',
   name_en: '',
@@ -76,7 +102,7 @@ export function useAcademySettings(
 ) {
   const [formData, setFormData] = useState<AcademyFormData>(INITIAL_ACADEMY_FORM);
   const [initialData, setInitialData] = useState<AcademyFormData>(INITIAL_ACADEMY_FORM);
-  const [rawAcademyData, setRawAcademyData] = useState<any>(null);
+  const [rawAcademyData, setRawAcademyData] = useState<RawAcademyData | null>(null);
   
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -117,53 +143,55 @@ export function useAcademySettings(
       if (error) throw error;
 
       if (data) {
-        setRawAcademyData(data);
+        const academyData = data as RawAcademyData;
+        setRawAcademyData(academyData);
         
         let arName = '';
         let enName = '';
-        if (typeof data.name === 'object' && data.name !== null) {
-          arName = data.name.ar || '';
-          enName = data.name.en || '';
-        } else if (typeof data.name === 'string') {
-          arName = data.name;
-          enName = data.name;
+        if (typeof academyData.name === 'object' && academyData.name !== null) {
+          arName = academyData.name.ar || '';
+          enName = academyData.name.en || '';
+        } else if (typeof academyData.name === 'string') {
+          arName = academyData.name;
+          enName = academyData.name;
         }
 
         const fetched: AcademyFormData = {
           name_ar: arName,
           name_en: enName,
-          slug: data.slug || '',
-          logo_url: data.logo_url || '',
-          tagline: data.tagline || '',
-          description: data.description || '',
-          brand_color: data.brand_color || '#D97706',
+          slug: academyData.slug || '',
+          logo_url: academyData.logo_url || '',
+          tagline: academyData.tagline || '',
+          description: academyData.description || '',
+          brand_color: academyData.brand_color || '#D97706',
           
-          contact_email: data.contact_email || '',
-          contact_phone: data.contact_phone || '',
-          website: data.website || '',
-          country_code: data.country_code || 'EG',
+          contact_email: academyData.contact_email || '',
+          contact_phone: academyData.contact_phone || '',
+          website: academyData.website || '',
+          country_code: academyData.country_code || 'EG',
           
-          currency: data.currency || 'EGP',
-          timezone: data.timezone || 'Africa/Cairo',
-          language_code: data.language_code || 'ar',
-          calendar_type: data.calendar_type || 'gregorian',
-          weekend_days: Array.isArray(data.weekend_days) ? data.weekend_days : ['friday', 'saturday'],
+          currency: academyData.currency || 'EGP',
+          timezone: academyData.timezone || 'Africa/Cairo',
+          language_code: academyData.language_code || 'ar',
+          calendar_type: academyData.calendar_type || 'gregorian',
+          weekend_days: Array.isArray(academyData.weekend_days) ? academyData.weekend_days : ['friday', 'saturday'],
           
-          learning_type: data.learning_type || 'online',
-          default_qiraat: data.default_qiraat || 'hafs',
-          teaching_methodology: data.teaching_methodology || 'mashreqi',
+          learning_type: academyData.learning_type || 'online',
+          default_qiraat: academyData.default_qiraat || 'hafs',
+          teaching_methodology: academyData.teaching_methodology || 'mashreqi',
           
-          allow_self_registration: data.allow_self_registration ?? true,
-          require_approval: data.require_approval ?? true,
-          max_students_per_group: Number(data.max_students_per_group) || 25,
+          allow_self_registration: academyData.allow_self_registration ?? true,
+          require_approval: academyData.require_approval ?? true,
+          max_students_per_group: Number(academyData.max_students_per_group) || 25,
         };
 
         setFormData(fetched);
         setInitialData(fetched);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
       showToast(
-        isRtl ? `حدث خطأ أثناء جلب البيانات: ${err.message}` : `Error fetching data: ${err.message}`,
+        isRtl ? `حدث خطأ أثناء جلب البيانات: ${message}` : `Error fetching data: ${message}`,
         'error'
       );
     } finally {
@@ -175,7 +203,7 @@ export function useAcademySettings(
     fetchAcademySettings();
   }, [fetchAcademySettings]);
 
-  const updateField = (field: keyof AcademyFormData, value: any) => {
+  const updateField = <K extends keyof AcademyFormData>(field: K, value: AcademyFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -243,8 +271,9 @@ export function useAcademySettings(
       if (refreshStatus) await refreshStatus();
 
       showToast(isRtl ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
-    } catch (err: any) {
-      showToast((isRtl ? 'فشل رفع الشعار: ' : 'Logo upload failed: ') + err.message, 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      showToast((isRtl ? 'فشل رفع الشعار: ' : 'Logo upload failed: ') + message, 'error');
     } finally {
       setUploadingLogo(false);
     }
@@ -341,8 +370,9 @@ export function useAcademySettings(
       if (onCurrencyChange) onCurrencyChange(formData.currency);
 
       showToast(isRtl ? 'تم حفظ كافة الإعدادات بنجاح' : 'Settings saved successfully');
-    } catch (err: any) {
-      showToast((isRtl ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + err.message, 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      showToast((isRtl ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + message, 'error');
     } finally {
       setSaving(false);
     }
