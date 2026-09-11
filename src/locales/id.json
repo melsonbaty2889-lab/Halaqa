@@ -328,6 +328,7 @@
     "upload_failed": "Gagal mengunggah logo, silakan coba lagi nanti"
   },
   "errRequired": "Silakan masukkan nama Halaqah dan tentukan pengajar penanggung jawab",
+  "fetch_error": "",
   "gamification": {
     "chartSubtitle": "Ringkasan aktivitas santri pekanan",
     "chartTitle": "Kemajuan Setoran & Kehadiran",
@@ -371,6 +372,10 @@
     "slugLabel": "Pengenal Tautan (Slug)",
     "uploadBtn": "Unggah Logo"
   },
+  "invalid_id_logo": "",
+  "invalid_id_save": "",
+  "invalid_max_students": "",
+  "invalid_type": "",
   "languages": {
     "ar": "العربية (Arab)",
     "custom": "Bahasa Lain...",
@@ -380,6 +385,10 @@
     "ur": "اردو (Urdu)"
   },
   "loading": "Memuat data...",
+  "logo_fail": "",
+  "logo_remove_fail": "",
+  "logo_remove_success": "",
+  "logo_success": "",
   "menu": {
     "items": {
       "attendance": "Setoran & Kehadiran",
@@ -410,6 +419,7 @@
     "mashreqi": "Sistem Masyriqi (Hafalan, Muroja'ah Kecil & Besar)",
     "repetitive": "Sistem Pengulangan & Talqin"
   },
+  "name_required": "",
   "nameAr": "Nama Halaqah (Bahasa Arab)",
   "nameEn": "Nama Halaqah (Bahasa Inggris)",
   "nav": {
@@ -420,6 +430,7 @@
   "notifications": {
     "title": "Notifikasi & Peringatan"
   },
+  "public_url_error": "",
   "qiraat": {
     "aldoori": "Al-Duri dari Abi 'Amr",
     "hafs": "Hafs dari 'Asim",
@@ -511,6 +522,8 @@
     "teacher_title": "Pengajar / Ustaz",
     "update_error": "Terjadi kesalahan saat menyimpan peran, silakan coba lagi"
   },
+  "save_fail": "",
+  "save_success": "",
   "search_placeholder": "Cari santri berdasarkan nama, telepon, atau Surah saat ini...",
   "searchPh": "Cari berdasarkan nama Halaqah atau nama Pengajar...",
   "selectTeacher": "-- Pilih Pengajar Resmi --",
@@ -557,6 +570,7 @@
     "footer": "Hak Cipta Dilindungi Undang-Undang",
     "unnamedAcademy": "Akademi Tanpa Nama"
   },
+  "size_exceeded": "",
   "splash": {
     "loading": "Memuat...",
     "skip": "Lewati",

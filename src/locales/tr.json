@@ -328,6 +328,7 @@
     "upload_failed": "Logo yükleme başarısız oldu, lütfen daha sonra tekrar deneyin"
   },
   "errRequired": "Lütfen Halka adını girin ve sorumlu eğitmeni atayın",
+  "fetch_error": "",
   "gamification": {
     "chartSubtitle": "Haftalık öğrenci aktivite özeti",
     "chartTitle": "Okuma ve Devamlılık İlerlemesi",
@@ -371,6 +372,10 @@
     "slugLabel": "Bağlantı Kimliği (Slug)",
     "uploadBtn": "Logoyu Yükle"
   },
+  "invalid_id_logo": "",
+  "invalid_id_save": "",
+  "invalid_max_students": "",
+  "invalid_type": "",
   "languages": {
     "ar": "العربية (Arapça)",
     "custom": "Diğer Dil...",
@@ -380,6 +385,10 @@
     "ur": "اردو (Urduca)"
   },
   "loading": "Veriler yükleniyor...",
+  "logo_fail": "",
+  "logo_remove_fail": "",
+  "logo_remove_success": "",
+  "logo_success": "",
   "menu": {
     "items": {
       "attendance": "Okuma ve Devamlılık",
@@ -410,6 +419,7 @@
     "mashreqi": "Maşrık Sistemi (Ezber, Küçük ve Büyük Tekrar)",
     "repetitive": "Tekrar ve Telkin Sistemi"
   },
+  "name_required": "",
   "nameAr": "Halka Adı (Arapça)",
   "nameEn": "Halka Adı (İngilizce)",
   "nav": {
@@ -420,6 +430,7 @@
   "notifications": {
     "title": "Bildirimler ve Uyarılar"
   },
+  "public_url_error": "",
   "qiraat": {
     "aldoori": "Ebi Amr'dan Dûri",
     "hafs": "Asım'dan Hafs",
@@ -511,6 +522,8 @@
     "teacher_title": "Eğitmen / Hoca",
     "update_error": "Rol kaydedilirken hata oluştu, lütfen tekrar deneyin"
   },
+  "save_fail": "",
+  "save_success": "",
   "search_placeholder": "Öğrenci adı, telefon veya mevcut Sure ile ara...",
   "searchPh": "Halka adı veya görevli eğitmen adı ile ara...",
   "selectTeacher": "-- Yetkili Eğitmeni Seçin --",
@@ -557,6 +570,7 @@
     "footer": "Tüm Hakları Saklıdır",
     "unnamedAcademy": "İsimsiz Akademi"
   },
+  "size_exceeded": "",
   "splash": {
     "loading": "Yükleniyor...",
     "skip": "Atla",

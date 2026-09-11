@@ -328,6 +328,7 @@
     "upload_failed": "فشل رفع الشعار، يرجى المحاولة لاحقاً"
   },
   "errRequired": "يرجى إدخال اسم الحلقة وتعيين المعلم المسؤول",
+  "fetch_error": "fetch_error",
   "gamification": {
     "chartSubtitle": "chartSubtitle",
     "chartTitle": "chartTitle",
@@ -371,6 +372,10 @@
     "slugLabel": "slugLabel",
     "uploadBtn": "uploadBtn"
   },
+  "invalid_id_logo": "invalid_id_logo",
+  "invalid_id_save": "invalid_id_save",
+  "invalid_max_students": "invalid_max_students",
+  "invalid_type": "invalid_type",
   "languages": {
     "ar": "العربية (Arabic)",
     "custom": "لغة أخرى...",
@@ -380,6 +385,10 @@
     "ur": "اردو (Urdu)"
   },
   "loading": "جاري تحميل البيانات...",
+  "logo_fail": "logo_fail",
+  "logo_remove_fail": "logo_remove_fail",
+  "logo_remove_success": "logo_remove_success",
+  "logo_success": "logo_success",
   "menu": {
     "items": {
       "attendance": "التسميع والحضور",
@@ -410,6 +419,7 @@
     "mashreqi": "النظام المشرقي (حفظ ومراجعة صغرى وكبرى)",
     "repetitive": "نظام التكرار والتلقين"
   },
+  "name_required": "name_required",
   "nameAr": "اسم الحلقة (بالعربية)",
   "nameEn": "اسم الحلقة (بالإنجليزية)",
   "nav": {
@@ -420,6 +430,7 @@
   "notifications": {
     "title": "title"
   },
+  "public_url_error": "public_url_error",
   "qiraat": {
     "aldoori": "الدوري عن أبي عمرو",
     "hafs": "حفص عن عاصم",
@@ -511,6 +522,8 @@
     "teacher_title": "معلم / محفظ",
     "update_error": "حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى"
   },
+  "save_fail": "save_fail",
+  "save_success": "save_success",
   "search_placeholder": "ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...",
   "searchPh": "ابحث باسم الحلقة أو اسم المعلم المكلف...",
   "selectTeacher": "-- اختر المعلم المعتمد --",
@@ -557,6 +570,7 @@
     "footer": "حقوق المنظومة محفوظة",
     "unnamedAcademy": "أكاديمية بدون اسم"
   },
+  "size_exceeded": "size_exceeded",
   "splash": {
     "loading": "جاري التحميل...",
     "skip": "تخطي",

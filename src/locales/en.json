@@ -328,6 +328,7 @@
     "upload_failed": "Logo upload failed, please try again later"
   },
   "errRequired": "Please enter Halaqa name and assign a lead teacher",
+  "fetch_error": "",
   "gamification": {
     "chartSubtitle": "Weekly student activity overview",
     "chartTitle": "Recitation & Attendance Progress",
@@ -371,6 +372,10 @@
     "slugLabel": "URL Identifier (Slug)",
     "uploadBtn": "Upload Logo"
   },
+  "invalid_id_logo": "",
+  "invalid_id_save": "",
+  "invalid_max_students": "",
+  "invalid_type": "",
   "languages": {
     "ar": "العربية (Arabic)",
     "custom": "Other Language...",
@@ -380,6 +385,10 @@
     "ur": "اردو (Urdu)"
   },
   "loading": "Loading data...",
+  "logo_fail": "",
+  "logo_remove_fail": "",
+  "logo_remove_success": "",
+  "logo_success": "",
   "menu": {
     "items": {
       "attendance": "Recitation & Attendance",
@@ -410,6 +419,7 @@
     "mashreqi": "Mashreqi System (Memorization, Minor & Major Review)",
     "repetitive": "Repetition & Dictation System"
   },
+  "name_required": "",
   "nameAr": "Halaqa Name (Arabic)",
   "nameEn": "Halaqa Name (English)",
   "nav": {
@@ -420,6 +430,7 @@
   "notifications": {
     "title": "Notifications & Alerts"
   },
+  "public_url_error": "",
   "qiraat": {
     "aldoori": "Al-Duri 'an Abi 'Amr",
     "hafs": "Hafs 'an 'Asim",
@@ -511,6 +522,8 @@
     "teacher_title": "Teacher / Quran Instructor",
     "update_error": "Error saving role, please try again"
   },
+  "save_fail": "",
+  "save_success": "",
   "search_placeholder": "Search student by name, phone, or current Surah...",
   "searchPh": "Search by Halaqa name or assigned teacher...",
   "selectTeacher": "-- Select Certified Teacher --",
@@ -557,6 +570,7 @@
     "footer": "All System Rights Reserved",
     "unnamedAcademy": "Unnamed Academy"
   },
+  "size_exceeded": "",
   "splash": {
     "loading": "Loading...",
     "skip": "Skip",

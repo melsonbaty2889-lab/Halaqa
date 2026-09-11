@@ -328,6 +328,7 @@
     "upload_failed": "لوگو اپ لوڈ ناکام ہو گیا، بعد میں کوشش کریں"
   },
   "errRequired": "براہ کرم حلقہ کا نام درج کریں اور معلم متعین کریں",
+  "fetch_error": "",
   "gamification": {
     "chartSubtitle": "طالب علم کی ہفتہ وار سرگرمیوں کا خلاصہ",
     "chartTitle": "سمع اور حاضری کی پیشرفت",
@@ -371,6 +372,10 @@
     "slugLabel": "ویب شناختی لنک (Slug)",
     "uploadBtn": "لوگو اپ لوڈ کریں"
   },
+  "invalid_id_logo": "",
+  "invalid_id_save": "",
+  "invalid_max_students": "",
+  "invalid_type": "",
   "languages": {
     "ar": "العربية (عربی)",
     "custom": "دیگر زبان...",
@@ -380,6 +385,10 @@
     "ur": "اردو"
   },
   "loading": "ڈیٹا لوڈ ہو رہا ہے...",
+  "logo_fail": "",
+  "logo_remove_fail": "",
+  "logo_remove_success": "",
+  "logo_success": "",
   "menu": {
     "items": {
       "attendance": "تسمیع اور حاضری",
@@ -410,6 +419,7 @@
     "mashreqi": "مشرقی نظام (حفظ، مراجعہ صغری و کبری)",
     "repetitive": "تکرار و تلقین کا نظام"
   },
+  "name_required": "",
   "nameAr": "حلقہ کا نام (عربی میں)",
   "nameEn": "حلقہ کا نام (انگریزی میں)",
   "nav": {
@@ -420,6 +430,7 @@
   "notifications": {
     "title": "اطلاعات اور الرٹس"
   },
+  "public_url_error": "",
   "qiraat": {
     "aldoori": "الدوری عن أبي عمرو",
     "hafs": "حفص عن عاصم",
@@ -511,6 +522,8 @@
     "teacher_title": "معلم / قاری صاحب",
     "update_error": "حیثیت محفوظ کرتے وقت خرابی پیش آئی، دوبارہ کوشش کریں"
   },
+  "save_fail": "",
+  "save_success": "",
   "search_placeholder": "طالب علم کا نام، فون نمبر یا موجودہ سورت سے تلاش کریں...",
   "searchPh": "حلقہ کے نام یا مقررہ معلم کے نام سے تلاش کریں...",
   "selectTeacher": "-- منظور شدہ معلم کا انتخاب کریں --",
@@ -557,6 +570,7 @@
     "footer": "جملہ حقوق محفوظ ہیں",
     "unnamedAcademy": "بغیر نام کی اکیڈمی"
   },
+  "size_exceeded": "",
   "splash": {
     "loading": "لوڈ ہو رہا ہے...",
     "skip": "چھوڑیں",

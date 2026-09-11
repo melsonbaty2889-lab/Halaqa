@@ -328,6 +328,7 @@
     "upload_failed": "Échec du téléversement du logo, réessayez ultérieurement"
   },
   "errRequired": "Veuillez saisir le nom de la Halaqa et assigner un enseignant",
+  "fetch_error": "",
   "gamification": {
     "chartSubtitle": "Aperçu de l'activité hebdomadaire de l'élève",
     "chartTitle": "Progrès de récitation et présence",
@@ -371,6 +372,10 @@
     "slugLabel": "Identifiant d'URL (Slug)",
     "uploadBtn": "Téléverser le logo"
   },
+  "invalid_id_logo": "",
+  "invalid_id_save": "",
+  "invalid_max_students": "",
+  "invalid_type": "",
   "languages": {
     "ar": "العربية (Arabe)",
     "custom": "Autre langue...",
@@ -380,6 +385,10 @@
     "ur": "اردو (Ourdou)"
   },
   "loading": "Chargement des données...",
+  "logo_fail": "",
+  "logo_remove_fail": "",
+  "logo_remove_success": "",
+  "logo_success": "",
   "menu": {
     "items": {
       "attendance": "Récitation & Présence",
@@ -410,6 +419,7 @@
     "mashreqi": "Système Mashreqi (Mémorisation, Révision mineure et majeure)",
     "repetitive": "Système de répétition et dictée"
   },
+  "name_required": "",
   "nameAr": "Nom de la Halaqa (Arabe)",
   "nameEn": "Nom de la Halaqa (Anglais)",
   "nav": {
@@ -420,6 +430,7 @@
   "notifications": {
     "title": "Notifications & Alertes"
   },
+  "public_url_error": "",
   "qiraat": {
     "aldoori": "Al-Duri d'après Abi 'Amr",
     "hafs": "Hafs d'après 'Asim",
@@ -511,6 +522,8 @@
     "teacher_title": "Enseignant / Instructeur",
     "update_error": "Erreur lors de l'enregistrement du rôle, veuillez réessayer"
   },
+  "save_fail": "",
+  "save_success": "",
   "search_placeholder": "Rechercher un élève par nom, téléphone أو Sourate...",
   "searchPh": "Rechercher par nom de Halaqa ou enseignant...",
   "selectTeacher": "-- Sélectionner l'enseignant agréé --",
@@ -557,6 +570,7 @@
     "footer": "Tous droits réservés",
     "unnamedAcademy": "Académie sans nom"
   },
+  "size_exceeded": "",
   "splash": {
     "loading": "Chargement...",
     "skip": "Passer",
