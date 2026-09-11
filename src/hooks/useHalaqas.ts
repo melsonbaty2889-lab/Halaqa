@@ -4,12 +4,16 @@ import { supabase } from '@/lib/supabase';
 import { Halaqa, HalaqaFilters } from '@/types/halaqa';
 
 export interface UseHalaqasOptions {
-  academyId?: string; // جعل المتغير اختياري لمنع أي Crash أثناء الـ Render الأول
+  academyId?: string | null;
   initialFilters?: Partial<HalaqaFilters>;
   enabled?: boolean;
 }
 
-export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHalaqasOptions = {}) => {
+export const useHalaqas = ({
+  academyId,
+  initialFilters,
+  enabled = true,
+}: UseHalaqasOptions = {}) => {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<HalaqaFilters>({
@@ -20,6 +24,13 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
     is_archived: false,
     ...initialFilters,
   });
+
+  const isValidAcademyId = Boolean(
+    academyId &&
+    academyId !== 'undefined' &&
+    typeof academyId === 'string' &&
+    academyId.trim() !== ''
+  );
 
   const queryKey = ['halaqas', academyId || 'no-academy', filters];
 
@@ -32,7 +43,7 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
   } = useQuery({
     queryKey,
     queryFn: async (): Promise<Halaqa[]> => {
-      if (!academyId) return [];
+      if (!isValidAcademyId) return [];
 
       try {
         let query = supabase
@@ -50,7 +61,7 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
               title
             )
           `)
-          .eq('academy_id', academyId)
+          .eq('academy_id', academyId!)
           .eq('is_archived', filters.is_archived);
 
         if (filters.status && filters.status !== 'all') {
@@ -65,10 +76,9 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
           query = query.eq('teaching_type', filters.teaching_type);
         }
 
-        // إصلاح طريقة البحث عن النصوص بطريقة آمنة ومتوافقة مع Supabase
+        // البحث عبر ألسنة اللغات في JSONB وبدلالة الكود
         if (filters.searchTerm && filters.searchTerm.trim() !== '') {
           const term = `%${filters.searchTerm.trim()}%`;
-          // استخدام cs لمطابقة النصوص داخل JSONB بدلاً من cast.text أو البحث العادي
           query = query.or(`name->>ar.ilike.${term},name->>en.ilike.${term},code.ilike.${term}`);
         }
 
@@ -81,8 +91,8 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
         return [];
       }
     },
-    enabled: Boolean(academyId) && enabled,
-    retry: 1, // تقليل محاولات إعادة الطلب لتفادي تكرار الخطأ
+    enabled: isValidAcademyId && enabled,
+    retry: 1,
   });
 
   // 2. Mutation لإسناد / تغيير المعلم للحلقة
@@ -99,7 +109,7 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
       if (error) throw error;
     },
     onSuccess: () => {
-      if (academyId) {
+      if (isValidAcademyId) {
         queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
       }
     },
@@ -119,7 +129,7 @@ export const useHalaqas = ({ academyId, initialFilters, enabled = true }: UseHal
       if (error) throw error;
     },
     onSuccess: () => {
-      if (academyId) {
+      if (isValidAcademyId) {
         queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
       }
     },
