@@ -43,11 +43,11 @@ export interface StudentToEdit {
 export type TranslateFunction = (key: string, fallback?: string) => string;
 
 export interface UseStudentFormProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   studentToEdit?: StudentToEdit | null;
   academyId?: string | null;
   onSuccess?: (data: any) => void | Promise<void>;
-  onClose: () => void;
+  onClose?: () => void;
   t?: TranslateFunction;
   currentLang?: string;
 }
@@ -73,14 +73,14 @@ const initialFormState: StudentFormData = {
 // ── Main Hook ───────────────────────────────────────────────────
 
 export const useStudentForm = ({
-  isOpen,
-  studentToEdit,
-  academyId,
+  isOpen = false,
+  studentToEdit = null,
+  academyId = null,
   onSuccess,
   onClose,
   t,
   currentLang = 'ar',
-}: UseStudentFormProps) => {
+}: UseStudentFormProps = {}) => {
   const [formData, setFormData] = useState<StudentFormData>(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -202,7 +202,9 @@ export const useStudentForm = ({
   };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     if (!validate()) return;
 
     const targetAcademyId = academyId || studentToEdit?.academy_id;
@@ -284,13 +286,10 @@ export const useStudentForm = ({
       }
 
       if (onSuccess) await onSuccess(resultData);
-      onClose();
+      if (onClose) onClose();
     } catch (err: any) {
       console.error('Execution error in useStudentForm:', err);
-      const errorMessage =
-        err?.message ||
-        translate('common.execution_failed', 'Failed to execute student save operation');
-      setSubmitError(errorMessage);
+      setSubmitError(err?.message || translate('common.save_error', 'حدث خطأ أثناء الحفظ'));
     } finally {
       setIsSubmitting(false);
     }
@@ -301,6 +300,7 @@ export const useStudentForm = ({
     setFormData,
     errors,
     submitError,
+    error: submitError,
     isSubmitting,
     showParentFields,
     setShowParentFields,
