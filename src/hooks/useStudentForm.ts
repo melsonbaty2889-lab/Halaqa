@@ -205,7 +205,6 @@ export const useStudentForm = ({
     e.preventDefault();
     if (!validate()) return;
 
-    // 1. التأكد من وجود معرّف الأكاديمية قبل الإرسال
     const targetAcademyId = academyId || studentToEdit?.academy_id;
     if (!targetAcademyId) {
       setSubmitError(
@@ -218,7 +217,6 @@ export const useStudentForm = ({
     setSubmitError(null);
 
     try {
-      // 2. تنظيف كائن Name لتجنب إرسال قيم undefined داخل الـ JSONB
       const cleanedName: Record<string, string> = {};
       Object.entries(formData.name).forEach(([lang, val]) => {
         if (val && val.trim()) {
@@ -288,8 +286,11 @@ export const useStudentForm = ({
       if (onSuccess) await onSuccess(resultData);
       onClose();
     } catch (err: any) {
-      console.error('Error saving student data:', err);
-      setSubmitError(err?.message || translate('common.save_error', 'حدث خطأ أثناء الحفظ'));
+      console.error('Execution error in useStudentForm:', err);
+      const errorMessage =
+        err?.message ||
+        translate('common.execution_failed', 'Failed to execute student save operation');
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
