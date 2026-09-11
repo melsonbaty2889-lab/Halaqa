@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 
@@ -50,17 +50,22 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
   const [subscription, setSubscription] = useState<SaasSubscription | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef<boolean>(true);
 
   const fetchSubscription = useCallback(async () => {
     if (!academyId) {
-      setSubscription(null);
-      setLoading(false);
+      if (isMountedRef.current) {
+        setSubscription(null);
+        setLoading(false);
+      }
       return;
     }
 
     try {
-      setLoading(true);
-      setError(null);
+      if (isMountedRef.current) {
+        setLoading(true);
+        setError(null);
+      }
 
       if (!supabase?.from) {
         throw new Error(t('subscription.errors.clientNotInitialized', 'لم يتم تهيئة الاتصال بالسحابة بشكل صحيح'));
@@ -73,22 +78,30 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
         .maybeSingle();
 
       if (apiError) throw apiError;
-      setSubscription(data as SaasSubscription | null);
+
+      if (isMountedRef.current) {
+        setSubscription(data as SaasSubscription | null);
+      }
     } catch (err: any) {
       console.error('🚨 Error fetching subscription:', err);
-      const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
-      setError(err?.message || fallbackMsg);
+      if (isMountedRef.current) {
+        const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
+        setError(err?.message || fallbackMsg);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [academyId, t]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchSubscription();
 
-    // 📡 الاشتراك بالاستماع للتغييرات الفورية للخطط والاشتراكات عبر Realtime
     if (!academyId) return;
 
+    // 📡 الاشتراك بالاستماع للتغييرات الفورية للخطط والاشتراكات عبر Realtime
     const channel = supabase
       .channel(`subscription_${academyId}`)
       .on(
@@ -106,6 +119,7 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       .subscribe();
 
     return () => {
+      isMountedRef.current = false;
       supabase.removeChannel(channel);
     };
   }, [academyId, fetchSubscription]);
@@ -119,9 +133,13 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       (subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > now)
     );
 
-    const isExpired = subscription?.expires_at
-      ? new Date(subscription.expires_at) < now
-      : false;
+    const targetExpiryDate = subscription?.expires_at
+      ? new Date(subscription.expires_at)
+      : isTrial && subscription?.trial_ends_at
+      ? new Date(subscription.trial_ends_at)
+      : null;
+
+    const isExpired = targetExpiryDate ? targetExpiryDate < now : false;
 
     const isActive = Boolean(
       (subscription?.status === 'active' || subscription?.status === 'trial') && !isExpired
@@ -129,8 +147,8 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
 
     const isPending = subscription?.status === 'unpaid' || subscription?.status === 'past_due';
 
-    const daysRemaining = subscription?.expires_at
-      ? Math.max(0, Math.ceil((new Date(subscription.expires_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    const daysRemaining = targetExpiryDate
+      ? Math.max(0, Math.ceil((targetExpiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       : 0;
 
     return {
