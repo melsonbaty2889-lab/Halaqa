@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export interface PaymentRecord {
@@ -30,21 +30,37 @@ export interface OverduePayment {
   days_overdue: number;
 }
 
-export function usePayments(academyId?: string) {
+export function usePayments(academyId?: string | null) {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [overduePayments, setOverduePayments] = useState<OverduePayment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const isMounted = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const isValidAcademyId = Boolean(
+    academyId &&
+    academyId !== 'undefined' &&
+    typeof academyId === 'string' &&
+    academyId.trim() !== ''
+  );
+
   // جلب سجلات المدفوعات لطالب أو للأكاديمية
   const fetchPayments = useCallback(async (studentId?: string) => {
-    if (!academyId) return;
-    setLoading(true);
+    if (!isValidAcademyId) return;
+    if (isMounted.current) setLoading(true);
 
     try {
       let query = supabase
         .from('payments')
         .select('*')
-        .eq('academy_id', academyId)
+        .eq('academy_id', academyId!)
         .order('created_at', { ascending: false });
 
       if (studentId) {
@@ -53,51 +69,68 @@ export function usePayments(academyId?: string) {
 
       const { data, error } = await query;
       if (error) throw error;
-      setPayments(data as PaymentRecord[]);
+
+      if (isMounted.current) {
+        setPayments((data as PaymentRecord[]) || []);
+      }
     } catch (err) {
       console.error('Error fetching payments:', err);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
-  }, [academyId]);
+  }, [academyId, isValidAcademyId]);
 
   // جلب قائمة المتأخرات المالية من الـ View الجاهز
   const fetchOverduePayments = useCallback(async () => {
-    if (!academyId) return;
-    setLoading(true);
+    if (!isValidAcademyId) return;
+    if (isMounted.current) setLoading(true);
 
     try {
       const { data, error } = await supabase
         .from('v_overdue_payments')
         .select('*')
-        .eq('academy_id', academyId);
+        .eq('academy_id', academyId!);
 
       if (error) throw error;
-      setOverduePayments(data as OverduePayment[]);
+
+      if (isMounted.current) {
+        setOverduePayments((data as OverduePayment[]) || []);
+      }
     } catch (err) {
       console.error('Error fetching overdue payments:', err);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
-  }, [academyId]);
+  }, [academyId, isValidAcademyId]);
 
   // تسجيل دفعة جديدة
   const recordPayment = useCallback(async (paymentData: Partial<PaymentRecord>) => {
+    if (!isValidAcademyId) {
+      return { success: false, error: 'معرف الأكاديمية غير صالح' };
+    }
+
     try {
       const { data, error } = await supabase
         .from('payments')
-        .insert([{ ...paymentData, academy_id: academyId }])
+        .insert([{ ...paymentData, academy_id: academyId! }])
         .select()
         .single();
 
       if (error) throw error;
-      setPayments((prev) => [data as PaymentRecord, ...prev]);
+
+      if (isMounted.current) {
+        setPayments((prev) => [data as PaymentRecord, ...prev]);
+      }
+
+      // تحديث قائمة المتأخرات تلقائياً عند تسجيل الدفع
+      fetchOverduePayments();
+
       return { success: true, data };
     } catch (err) {
       console.error('Error recording payment:', err);
       return { success: false, error: err };
     }
-  }, [academyId]);
+  }, [academyId, isValidAcademyId, fetchOverduePayments]);
 
   return {
     payments,
