@@ -328,6 +328,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
+  // ✅ جلب بيانات الأكاديمية والمدرسين بدون استخدام academy_id الخاطئ في teachers
   const fetchAcademyData = useCallback(async (targetAcademyId) => {
     if (!targetAcademyId) {
       setLoadingData(false);
@@ -352,10 +353,20 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         if (academyData.country_code) setCountryCode(academyData.country_code);
       }
 
+      // جلب معرفات المعلمين من academy_teachers أولاً
+      const { data: rels } = await supabase
+        .from('academy_teachers')
+        .select('teacher_id')
+        .eq('academy_id', targetAcademyId);
+
+      const teacherIds = rels?.map(r => r.teacher_id).filter(Boolean) || [];
+
       const [studentsRes, examsRes, teachersRes, halaqasRes] = await Promise.allSettled([
         supabase.from('students').select('*').eq('academy_id', targetAcademyId),
         supabase.from('exams').select('*', { count: 'exact', head: true }).eq('academy_id', targetAcademyId),
-        supabase.from('teachers').select('*').eq('academy_id', targetAcademyId),
+        teacherIds.length > 0 
+          ? supabase.from('teachers').select('*').in('id', teacherIds)
+          : Promise.resolve({ data: [] }),
         supabase.from('halaqas').select('*').eq('academy_id', targetAcademyId)
       ]);
 
@@ -415,12 +426,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         let currentAcademyId = academy?.id;
 
         if (!currentAcademyId) {
-  const { data: staff } = await supabase
-    .from('academy_teachers')
-    .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
-    .eq('teacher_id', currentUserId)
-    .maybeSingle();
-  currentAcademyId = staff?.academies?.id || staff?.academy_id;
+          const { data: staff } = await supabase
+            .from('academy_teachers')
+            .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
+            .eq('teacher_id', currentUserId)
+            .maybeSingle();
+          currentAcademyId = staff?.academies?.id || staff?.academy_id;
         }
 
         if (!currentAcademyId) {
