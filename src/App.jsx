@@ -902,6 +902,9 @@ export default function App() {
           <>
             <OfflineAndUpdateBanner />
             <Routes>
+              {/* 🧪 مسار صفحة اختبار الـ Hooks */}
+              <Route path="/test" element={<TestHooks />} />
+              
               <Route path="/verify/:certId" element={<CertificateVerify />} />
               <Route path="/*" element={<MainContent />} />
             </Routes>
