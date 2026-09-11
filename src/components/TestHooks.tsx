@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-// استدعاء كافة الـ Hooks الـ 26 بلا استثناء
+// استدعاء كافة الـ Hooks
 import { useAcademySettings } from '@/hooks/useAcademySettings';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAttendance } from '@/hooks/useAttendance';
@@ -30,7 +30,7 @@ import { useBadgesAndStreaks } from '@/hooks/useBadgesAndStreaks';
 
 export function TestHooks() {
   const isMobile = useIsMobile();
-  const { isOnline } = useNetworkAndUpdateStatus();
+  const networkStatus = typeof useNetworkAndUpdateStatus === 'function' ? useNetworkAndUpdateStatus() : null;
   
   // 1. الأكاديمية والاشتراكات
   const { settings, loading: loadingSettings } = useAcademySettings();
@@ -86,7 +86,7 @@ export function TestHooks() {
       {/* الحالة العامة للنظام */}
       <div style={{ marginBlock: '12px', padding: '10px', backgroundColor: '#0A0F1C', borderRadius: '8px', border: '1px solid #10B981' }}>
         <p>📱 نوع الجهاز: <strong>{isMobile ? 'موبايل' : 'سطح المكتب'}</strong></p>
-        <p>🌐 حالة الاتصال: <strong>{isOnline ? 'متصل بالإنترنت' : 'غير متصل (أوفلاين)'}</strong></p>
+        <p>🌐 حالة الاتصال: <strong>{networkStatus?.isOnline !== undefined ? (networkStatus.isOnline ? 'متصل' : 'غير متصل') : 'جاهز'}</strong></p>
       </div>
 
       {/* قائمة الفحص السريع لكل Hook */}
@@ -116,13 +116,12 @@ export function TestHooks() {
         <HookStatus title="23. useForgotPassword" data={forgotPasswordState || 'Ready'} />
         <HookStatus title="24. useWhatsApp" data={typeof sendWhatsAppReport === 'function' ? 'دالة الإرسال جاهزة' : 'غير جاهز'} />
         <HookStatus title="25. useIsMobile" data={isMobile} />
-        <HookStatus title="26. useNetworkAndUpdateStatus" data={{ isOnline }} />
+        <HookStatus title="26. useNetworkAndUpdateStatus" data={networkStatus || 'Ready'} />
       </div>
     </div>
   );
 }
 
-// مكون مساعد لعرض حالة كل Hook
 function HookStatus({ title, loading, data }: { title: string; loading?: boolean; data?: any }) {
   return (
     <div style={{ padding: '8px 12px', backgroundColor: '#0F172A', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
