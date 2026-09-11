@@ -28,6 +28,14 @@ export const useStudents = (
     filters.searchTerm
   );
 
+  // تحديث الفلاتر عند تغير initialFilters الخارجية
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters((prev) => ({ ...prev, ...initialFilters }));
+    }
+  }, [initialFilters]);
+
+  // Debounce لقيمة البحث لمنع كثرة الاستعلامات
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(filters.searchTerm);
@@ -102,10 +110,10 @@ export const useStudents = (
       if (error) throw error;
       return (data as Student[]) || [];
     },
-    enabled: !!academyId,
+    enabled: Boolean(academyId),
   });
 
-  // 2. إلحاق أو نقل طالب إلى حلقة وتحديث جدول التتبع student_halaqas
+  // 2. تسكين/نقل طالب في حلقة وتحديث سجل الحركة
   const assignHalaqaMutation = useMutation({
     mutationFn: async ({
       studentId,
@@ -116,14 +124,14 @@ export const useStudents = (
       halaqaId: string | null;
       notes?: string;
     }) => {
-      // أ) إغلاق الحركة القديمة إن وجدت في student_halaqas
+      // أ) إغلاق الحركة السابقة
       await supabase
         .from('student_halaqas')
         .update({ left_at: new Date().toISOString(), status: 'transferred' })
         .eq('student_id', studentId)
         .is('left_at', null);
 
-      // ب) تحديث جدول الطالب الرئيسي
+      // ب) تحديث حقل الحلقة بالطالب
       const { error: studentError } = await supabase
         .from('students')
         .update({ halaqa_id: halaqaId, updated_at: new Date().toISOString() })
@@ -131,17 +139,19 @@ export const useStudents = (
 
       if (studentError) throw studentError;
 
-      // جـ) تسجيل الحركة الجديدة إن تم تحديد حلقة
+      // جـ) إنشاء سجل حركة جديد إذا تم التسكين
       if (halaqaId) {
         const { error: historyError } = await supabase
           .from('student_halaqas')
-          .insert([{
-            academy_id: academyId,
-            student_id: studentId,
-            halaqa_id: halaqaId,
-            status: 'active',
-            notes,
-          }]);
+          .insert([
+            {
+              academy_id: academyId,
+              student_id: studentId,
+              halaqa_id: halaqaId,
+              status: 'active',
+              notes,
+            },
+          ]);
 
         if (historyError) throw historyError;
       }
@@ -152,7 +162,7 @@ export const useStudents = (
     },
   });
 
-  // 3. أرشفة وتفعيل
+  // 3. أرشفة واستعادة
   const archiveMutation = useMutation({
     mutationFn: async ({ studentId, currentStatus }: { studentId: string; currentStatus: boolean }) => {
       const { error } = await supabase
@@ -170,7 +180,7 @@ export const useStudents = (
     },
   });
 
-  // 4. حذف طالب
+  // 4. حذف نهائي
   const deleteMutation = useMutation({
     mutationFn: async (studentId: string) => {
       const { error } = await supabase.from('students').delete().eq('id', studentId);
@@ -180,6 +190,8 @@ export const useStudents = (
       queryClient.invalidateQueries({ queryKey: ['students', academyId] });
     },
   });
+
+  // ── Callbacks ──────────────────────────────────────────────────
 
   const assignStudentToHalaqa = useCallback(
     async (studentId: string, halaqaId: string | null, notes?: string): Promise<OperationResponse> => {
@@ -193,23 +205,29 @@ export const useStudents = (
     [assignHalaqaMutation]
   );
 
-  const toggleArchiveStudent = async (studentId: string, currentStatus: boolean): Promise<OperationResponse> => {
-    try {
-      await archiveMutation.mutateAsync({ studentId, currentStatus });
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message || 'فشلت عملية الأرشفة' };
-    }
-  };
+  const toggleArchiveStudent = useCallback(
+    async (studentId: string, currentStatus: boolean): Promise<OperationResponse> => {
+      try {
+        await archiveMutation.mutateAsync({ studentId, currentStatus });
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'فشلت عملية الأرشفة' };
+      }
+    },
+    [archiveMutation]
+  );
 
-  const deleteStudent = async (studentId: string): Promise<OperationResponse> => {
-    try {
-      await deleteMutation.mutateAsync(studentId);
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message || 'فشلت عملية الحذف' };
-    }
-  };
+  const deleteStudent = useCallback(
+    async (studentId: string): Promise<OperationResponse> => {
+      try {
+        await deleteMutation.mutateAsync(studentId);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'فشلت عملية الحذف' };
+      }
+    },
+    [deleteMutation]
+  );
 
   return {
     students,
