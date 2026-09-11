@@ -107,7 +107,26 @@ export function useAttendance({
     [i18n, t]
   );
 
-  // 🛠️ استخراج الاسم نصياً للبحث عبر اللغات
+  // 🛠️ استخراج الاسم نصياً للبحث والعرْض عبر اللغات
+  const getStudentName = useCallback(
+    (nameData: string | StudentNameObject | undefined): string => {
+      if (!nameData) return '';
+      if (typeof nameData === 'string') return nameData;
+      if (typeof nameData === 'object') {
+        return (
+          nameData[currentLang] ||
+          nameData.ar ||
+          nameData.en ||
+          nameData.full_name ||
+          Object.values(nameData).find(Boolean) ||
+          ''
+        );
+      }
+      return String(nameData);
+    },
+    [currentLang]
+  );
+
   const getSearchableName = useCallback((nameData: string | StudentNameObject | undefined): string => {
     if (!nameData) return '';
     if (typeof nameData === 'string') return nameData;
@@ -154,7 +173,7 @@ export function useAttendance({
     return { total, present, absent, late, excused, rate };
   }, [filteredStudents, attendanceData]);
 
-  // 🔄 جلب البيانات لليوم المحدد مباشرة من Supabase بأمان
+  // 🔄 جلب البيانات لليوم المحدد من Supabase
   const fetchAttendance = useCallback(async () => {
     if (!academyId || !selectedDate) {
       setAttendanceData({});
@@ -259,7 +278,7 @@ export function useAttendance({
     });
   }, [filteredStudents, translateText]);
 
-  // 🔥 الحفظ المجمع في Supabase بأمان
+  // 🔥 الحفظ المجمع في Supabase
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'Error in academy ID'), type: 'error' });
@@ -322,9 +341,10 @@ export function useAttendance({
         return;
       }
 
+      // 📌 إرسال البيانات مع معيار مطابقة القيد الفرعي المناسب للجدول
       const { error } = await supabase
         .from('attendance')
-        .upsert(attendanceRecords, { onConflict: 'academy_id,halaqa_id,student_id,date' });
+        .upsert(attendanceRecords, { onConflict: 'academy_id,student_id,date' });
 
       if (error) throw error;
 
@@ -361,6 +381,7 @@ export function useAttendance({
     updateStudentField,
     handleMarkAllPresent,
     handleSaveAttendance,
+    getStudentName,
     translateText,
     refetchAttendance: fetchAttendance,
   };
