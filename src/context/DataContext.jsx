@@ -73,27 +73,39 @@ export const DataProvider = ({ children }) => {
     }
   }, []);
 
-  // 3. جلب المدرسين النشطين وحفظهم في الكاش
+  // 3. جلب المدرسين النشطين وحفظهم في الكاش (معدل وآمن تماماً بدون profiles)
   const fetchTeachers = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
-      const { data, error } = await supabase
+      // أ) جلب المعرفات الخاصة بالمعلمين المرتبطين بالأكاديمية
+      const { data: relations, error: relError } = await supabase
         .from('academy_teachers')
-        .select(`
-          teacher_id,
-          profiles (*)
-        `)
+        .select('teacher_id, is_active')
         .eq('academy_id', academyId)
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (relError) throw relError;
 
-      const extractedTeachers = data
-        ?.map(item => item.profiles)
-        .filter(Boolean) || [];
+      const teacherIds = (relations || []).map(item => item.teacher_id).filter(Boolean);
 
-      setTeachers(extractedTeachers);
-      localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(extractedTeachers));
+      if (teacherIds.length === 0) {
+        setTeachers([]);
+        localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify([]));
+        return;
+      }
+
+      // ب) جلب بيانات المعلمين من جدول teachers مباشرة
+      const { data: teachersData, error: teachersError } = await supabase
+        .from('teachers')
+        .select('*')
+        .in('id', teacherIds)
+        .eq('is_archived', false);
+
+      if (teachersError) throw teachersError;
+
+      const freshData = teachersData || [];
+      setTeachers(freshData);
+      localStorage.setItem(getCacheKey(academyId, 'teachers'), JSON.stringify(freshData));
     } catch (err) {
       console.error("🚨 خطأ أثناء جلب المدرسين:", err.message);
     }
