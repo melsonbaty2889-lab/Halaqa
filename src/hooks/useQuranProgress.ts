@@ -22,8 +22,22 @@ export interface DailyProgressPayload {
   system_type?: 'ayah' | 'page' | 'juz' | 'quarter';
 }
 
-export const useQuranProgress = (studentId?: string, academyId?: string) => {
+export const useQuranProgress = (studentId?: string | null, academyId?: string | null) => {
   const queryClient = useQueryClient();
+
+  const isValidStudentId = Boolean(
+    studentId &&
+    studentId !== 'undefined' &&
+    typeof studentId === 'string' &&
+    studentId.trim() !== ''
+  );
+
+  const isValidAcademyId = Boolean(
+    academyId &&
+    academyId !== 'undefined' &&
+    typeof academyId === 'string' &&
+    academyId.trim() !== ''
+  );
 
   // 1. جلب سجل التسميع اليومي للطالب باستخدام React Query
   const {
@@ -32,26 +46,30 @@ export const useQuranProgress = (studentId?: string, academyId?: string) => {
     error: historyError,
     refetch: refetchProgress,
   } = useQuery({
-    queryKey: ['quran-progress', studentId],
+    queryKey: ['quran-progress', academyId, studentId],
     queryFn: async () => {
-      if (!studentId) return [];
+      if (!isValidStudentId) return [];
 
       const { data, error } = await supabase
         .from('daily_progress')
         .select('*')
-        .eq('student_id', studentId)
+        .eq('student_id', studentId!)
         .order('date', { ascending: false })
         .limit(30);
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!studentId,
+    enabled: isValidStudentId,
   });
 
   // 2. Mutation لتسجيل/تحديث التسميع اليومي
   const recordMutation = useMutation({
     mutationFn: async (payload: DailyProgressPayload) => {
+      const targetAcademyId = payload.academy_id || academyId;
+      if (!targetAcademyId) throw new Error('معرف الأكاديمية غير صالح');
+      if (!payload.student_id) throw new Error('معرف الطالب غير صالح');
+
       const recordDate = payload.date || new Date().toISOString().split('T')[0];
 
       const { data, error } = await supabase
@@ -60,10 +78,11 @@ export const useQuranProgress = (studentId?: string, academyId?: string) => {
           [
             {
               ...payload,
+              academy_id: targetAcademyId,
               date: recordDate,
               riwayah: payload.riwayah || 'hafs_an_asem',
               system_type: payload.system_type || 'ayah',
-              mistakes_count: payload.mistakes_count || 0,
+              mistakes_count: payload.mistakes_count ?? 0,
               updated_at: new Date().toISOString(),
             },
           ],
@@ -76,11 +95,18 @@ export const useQuranProgress = (studentId?: string, academyId?: string) => {
       return data;
     },
     onSuccess: (_, variables) => {
+      const activeAcademyId = variables.academy_id || academyId;
+
       // إبطال كاش التسميع للطالب
-      queryClient.invalidateQueries({ queryKey: ['quran-progress', variables.student_id] });
+      queryClient.invalidateQueries({
+        queryKey: ['quran-progress', activeAcademyId, variables.student_id],
+      });
+
       // إبطال كاش قائمة الطلاب لإنعاش الإحصائيات النقاط والسلسلة
-      if (academyId || variables.academy_id) {
-        queryClient.invalidateQueries({ queryKey: ['students', academyId || variables.academy_id] });
+      if (activeAcademyId) {
+        queryClient.invalidateQueries({
+          queryKey: ['students', activeAcademyId],
+        });
       }
     },
   });
@@ -91,7 +117,11 @@ export const useQuranProgress = (studentId?: string, academyId?: string) => {
         const data = await recordMutation.mutateAsync(payload);
         return { success: true, data };
       } catch (err: any) {
-        return { success: false, error: err?.message || 'حدث خطأ أثناء حفظ التسميع اليومي' };
+        console.error('Error recording Quran progress:', err);
+        return {
+          success: false,
+          error: err?.message || 'حدث خطأ أثناء حفظ التسميع اليومي',
+        };
       }
     },
     [recordMutation]
