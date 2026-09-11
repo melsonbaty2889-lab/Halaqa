@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FormEvent, KeyboardEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthResponse } from '@supabase/supabase-js';
@@ -37,6 +37,15 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
 
+  const isMounted = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const toggleLanguage = useCallback(() => {
     const nextLang = i18n.language === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(nextLang);
@@ -46,7 +55,9 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     setAgreeTerms(checked);
     if (checked) {
       setFieldErrors((prev) => ({ ...prev, agreeTerms: false }));
-      setStatus((prev) => (prev.msg?.includes('الشروط') || prev.msg?.includes('Terms') ? { type: null, msg: '' } : prev));
+      setStatus((prev) =>
+        prev.msg?.includes('الشروط') || prev.msg?.includes('Terms') ? { type: null, msg: '' } : prev
+      );
     }
   }, []);
 
@@ -64,7 +75,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
 
     if (!validation.success) {
       const errors: FieldErrors = {};
-      
+
       if (!fullName.trim()) errors.fullName = true;
       if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) errors.email = true;
       if (!password || password.length < 6) errors.password = true;
@@ -95,17 +106,18 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
-      setStatus({ type: null, msg: '' });
+      if (isMounted.current) setStatus({ type: null, msg: '' });
 
       if (!validateForm()) return;
 
       try {
-        setLoading(true);
+        if (isMounted.current) setLoading(true);
 
         const response: AuthResponse = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/login`,
             data: {
               full_name: fullName.trim(),
             },
@@ -114,10 +126,12 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
 
         if (response.error) throw response.error;
 
-        setStatus({
-          type: 'success',
-          msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
-        });
+        if (isMounted.current) {
+          setStatus({
+            type: 'success',
+            msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
+          });
+        }
 
         if (onSignUpSuccess) {
           onSignUpSuccess();
@@ -125,12 +139,14 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       } catch (err: any) {
         console.error('Sign Up Error:', err);
         const translatedError = handleAuthError(err);
-        setStatus({
-          type: 'error',
-          msg: translatedError || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
-        });
+        if (isMounted.current) {
+          setStatus({
+            type: 'error',
+            msg: translatedError || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
+          });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted.current) setLoading(false);
       }
     },
     [email, password, fullName, validateForm, onSignUpSuccess, t]
@@ -172,3 +188,5 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     navigate,
   };
 };
+
+export default useSignUpForm;
