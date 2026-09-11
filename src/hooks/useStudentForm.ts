@@ -5,7 +5,7 @@ import { calculateAge } from '@/utils/dateUtils';
 // ── Types & Interfaces ──────────────────────────────────────────
 
 export interface StudentFormData {
-  name: Record<string, string>; // دعم ديناميكي لجميع اللغات (ar, en, ur, fr, tr, id...)
+  name: Record<string, string>;
   gender: 'male' | 'female' | string;
   birth_date: string;
   country: string;
@@ -22,6 +22,7 @@ export interface StudentFormData {
 
 export interface StudentToEdit {
   id?: string;
+  academy_id?: string;
   name?: Record<string, string> | string | null;
   full_name?: string;
   gender?: string;
@@ -48,7 +49,7 @@ export interface UseStudentFormProps {
   onSuccess?: (data: any) => void | Promise<void>;
   onClose: () => void;
   t?: TranslateFunction;
-  currentLang?: string; // اللغة الحالية للواجهة
+  currentLang?: string;
 }
 
 // ── Initial State ───────────────────────────────────────────────
@@ -189,7 +190,7 @@ export const useStudentForm = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     const hasAnyName = Object.values(formData.name).some((v) => v && v.trim().length > 0);
-    
+
     if (!hasAnyName) {
       newErrors.name = translate(
         'students.val_name_required',
@@ -204,12 +205,30 @@ export const useStudentForm = ({
     e.preventDefault();
     if (!validate()) return;
 
+    // 1. التأكد من وجود معرّف الأكاديمية قبل الإرسال
+    const targetAcademyId = academyId || studentToEdit?.academy_id;
+    if (!targetAcademyId) {
+      setSubmitError(
+        translate('common.academy_required', 'خطأ: لم يتم تحديد الأكاديمية التابع لها الطالب')
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
+
     try {
+      // 2. تنظيف كائن Name لتجنب إرسال قيم undefined داخل الـ JSONB
+      const cleanedName: Record<string, string> = {};
+      Object.entries(formData.name).forEach(([lang, val]) => {
+        if (val && val.trim()) {
+          cleanedName[lang] = val.trim();
+        }
+      });
+
       const payload = {
-        academy_id: academyId,
-        name: formData.name, // يُحفظ كـ JSONB يحتوي على كل اللغات المدخلة
+        academy_id: targetAcademyId,
+        name: cleanedName,
         gender: formData.gender,
         birth_date: formData.birth_date || null,
         country: formData.country || null,
@@ -237,6 +256,7 @@ export const useStudentForm = ({
       };
 
       let resultData: any = null;
+
       if (studentToEdit?.id) {
         const { data, error } = await supabase
           .from('students')
@@ -268,7 +288,7 @@ export const useStudentForm = ({
       if (onSuccess) await onSuccess(resultData);
       onClose();
     } catch (err: any) {
-      console.warn('Error saving student data:', err?.message || err);
+      console.error('Error saving student data:', err);
       setSubmitError(err?.message || translate('common.save_error', 'حدث خطأ أثناء الحفظ'));
     } finally {
       setIsSubmitting(false);
