@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent, KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
@@ -33,6 +33,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isMounted = useRef<boolean>(true);
   const isRtl = i18n?.language === 'ar';
 
   const [email, setEmail] = useState<string>('');
@@ -49,6 +50,13 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
   const [status, setStatus] = useState<AuthStatus>({ type: null, msg: '' });
   const [showResend, setShowResend] = useState<boolean>(false);
   const [resendLoading, setResendLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const state = location.state as { email?: string } | null;
@@ -80,6 +88,8 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
   const handleEmailLogin = async (e: FormEvent) => {
     e.preventDefault();
+    if (!isMounted.current) return;
+
     setStatus({ type: null, msg: '' });
     setFieldErrors({});
     setShowResend(false);
@@ -111,7 +121,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (authError) {
         if (authError.message === 'Email not confirmed') {
-          setShowResend(true);
+          if (isMounted.current) setShowResend(true);
         }
         throw authError;
       }
@@ -119,8 +129,9 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       const user = authData.user;
       if (!user) throw new Error('تعذر العثور على بيانات المستخدم.');
 
-      setRedirecting(true);
+      if (isMounted.current) setRedirecting(true);
 
+      // 1. تحديث تاريخ آخر دخول والحالة بجدول profiles
       await supabase
         .from('profiles')
         .update({
@@ -129,6 +140,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         })
         .eq('id', user.id);
 
+      // 2. جلب الملقف والصلاحيات
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, academy_id, is_activated, is_deleted')
@@ -137,9 +149,10 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (profileError) throw profileError;
 
+      // 3. التحقق من الحساب المحذوف/المعطل
       if (profile?.is_deleted) {
         await supabase.auth.signOut();
-        setRedirecting(false);
+        if (isMounted.current) setRedirecting(false);
         throw new Error(
           isRtl
             ? 'هذا الحساب معطل أو تم حذفه.'
@@ -147,14 +160,17 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         );
       }
 
-      setStatus({
-        type: 'success',
-        msg: isRtl
-          ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...'
-          : '✅ Logged in successfully! Redirecting...',
-      });
+      if (isMounted.current) {
+        setStatus({
+          type: 'success',
+          msg: isRtl
+            ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...'
+            : '✅ Logged in successfully! Redirecting...',
+        });
+      }
 
       setTimeout(() => {
+        if (!isMounted.current) return;
         if (onLoginSuccess) {
           onLoginSuccess({ user, profile: profile as UserProfile });
         } else {
@@ -173,13 +189,15 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     } catch (err: unknown) {
       console.error('Login Error:', err);
       const userFriendlyMsg = handleAuthError(err, isRtl);
-      setStatus({
-        type: 'error',
-        msg: userFriendlyMsg,
-      });
-      setRedirecting(false);
+      if (isMounted.current) {
+        setStatus({
+          type: 'error',
+          msg: userFriendlyMsg,
+        });
+        setRedirecting(false);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -198,19 +216,23 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (error) throw error;
 
-      setStatus({
-        type: 'success',
-        msg: isRtl
-          ? '✅ تم إعادة إرسال رابط التفعيل! تفقد البريد الوارد أو المجلد غير المرغوب به (Spam).'
-          : '✅ Activation link sent! Check your inbox or spam folder.',
-      });
-      setShowResend(false);
-      setCooldown(60);
+      if (isMounted.current) {
+        setStatus({
+          type: 'success',
+          msg: isRtl
+            ? '✅ تم إعادة إرسال رابط التفعيل! تفقد البريد الوارد أو المجلد غير المرغوب به (Spam).'
+            : '✅ Activation link sent! Check your inbox or spam folder.',
+        });
+        setShowResend(false);
+        setCooldown(60);
+      }
     } catch (error: unknown) {
       const userFriendlyMsg = handleAuthError(error, isRtl);
-      setStatus({ type: 'error', msg: userFriendlyMsg });
+      if (isMounted.current) {
+        setStatus({ type: 'error', msg: userFriendlyMsg });
+      }
     } finally {
-      setResendLoading(false);
+      if (isMounted.current) setResendLoading(false);
     }
   };
 
@@ -226,8 +248,10 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       if (error) throw error;
     } catch (err: unknown) {
       const userFriendlyMsg = handleAuthError(err, isRtl);
-      setStatus({ type: 'error', msg: userFriendlyMsg });
-      setLoading(false);
+      if (isMounted.current) {
+        setStatus({ type: 'error', msg: userFriendlyMsg });
+        setLoading(false);
+      }
     }
   };
 
@@ -257,3 +281,5 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     handleGoogleLogin,
   };
 }
+
+export default useLoginForm;
