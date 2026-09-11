@@ -4,12 +4,12 @@ import { supabase } from '@/lib/supabase';
 import { Curriculum, CurriculumFilters } from '@/types/curriculum';
 
 export interface UseCurriculaOptions {
-  academyId: string;
+  academyId?: string; // جعل المعرف اختياري لمنع الـ Crash في الـ Render الأول
   initialFilters?: Partial<CurriculumFilters>;
   enabled?: boolean;
 }
 
-export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseCurriculaOptions) => {
+export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseCurriculaOptions = {}) => {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<CurriculumFilters>({
@@ -19,9 +19,9 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
     ...initialFilters,
   });
 
-  const queryKey = ['curricula', academyId, filters];
+  const queryKey = ['curricula', academyId || 'no-academy', filters];
 
-  // 1. جلب المناهج
+  // 1. جلب المناهج بأمان
   const {
     data: curricula = [],
     isLoading: loading,
@@ -32,30 +32,37 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
     queryFn: async (): Promise<Curriculum[]> => {
       if (!academyId) return [];
 
-      let query = supabase
-        .from('curricula')
-        .select('*')
-        .eq('academy_id', academyId);
+      try {
+        let query = supabase
+          .from('curricula')
+          .select('*')
+          .eq('academy_id', academyId);
 
-      if (filters.category && filters.category !== 'all') {
-        query = query.eq('category', filters.category);
+        if (filters.category && filters.category !== 'all') {
+          query = query.eq('category', filters.category);
+        }
+
+        if (filters.is_active !== 'all' && typeof filters.is_active === 'boolean') {
+          query = query.eq('is_active', filters.is_active);
+        }
+
+        if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+          const term = `%${filters.searchTerm.trim()}%`;
+          // دعم إضافي للبحث في العناوين النصية العادية والـ JSONB بأسلوب آمن
+          query = query.or(`title->>ar.ilike.${term},title->>en.ilike.${term},title.ilike.${term},code.ilike.${term}`);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data as Curriculum[]) || [];
+      } catch (err: any) {
+        console.warn('Curricula Query Error:', err?.message || err);
+        return [];
       }
-
-      if (filters.is_active !== 'all' && typeof filters.is_active === 'boolean') {
-        query = query.eq('is_active', filters.is_active);
-      }
-
-      if (filters.searchTerm && filters.searchTerm.trim() !== '') {
-        const term = `%${filters.searchTerm.trim()}%`;
-        query = query.or(`title->>ar.ilike.${term},title->>en.ilike.${term},code.ilike.${term}`);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data as Curriculum[]) || [];
     },
-    enabled: !!academyId && enabled,
+    enabled: Boolean(academyId) && enabled,
+    retry: 1,
   });
 
   // 2. Mutation لتغيير حالة التفعيل
@@ -69,7 +76,9 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
+      if (academyId) {
+        queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
+      }
     },
   });
 
@@ -84,7 +93,9 @@ export const useCurricula = ({ academyId, initialFilters, enabled = true }: UseC
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
+      if (academyId) {
+        queryClient.invalidateQueries({ queryKey: ['curricula', academyId] });
+      }
     },
   });
 
