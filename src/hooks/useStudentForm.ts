@@ -1,12 +1,11 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateAge } from '@/utils/dateUtils';
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
 export interface StudentFormData {
-  name_ar: string;
-  name_en: string;
+  name: Record<string, string>; // دعم ديناميكي لجميع اللغات (ar, en, ur, fr, tr, id...)
   gender: 'male' | 'female' | string;
   birth_date: string;
   country: string;
@@ -23,7 +22,7 @@ export interface StudentFormData {
 
 export interface StudentToEdit {
   id?: string;
-  name?: string | { ar?: string; en?: string } | null;
+  name?: Record<string, string> | string | null;
   full_name?: string;
   gender?: string;
   birth_date?: string | null;
@@ -36,7 +35,7 @@ export interface StudentToEdit {
   parent_name?: string | null;
   parent_phone?: string | null;
   parent_whatsapp?: string | null;
-  notes?: string | { text?: string } | null;
+  notes?: { text?: string } | string | null;
   [key: string]: any;
 }
 
@@ -49,13 +48,13 @@ export interface UseStudentFormProps {
   onSuccess?: (data: any) => void | Promise<void>;
   onClose: () => void;
   t?: TranslateFunction;
+  currentLang?: string; // اللغة الحالية للواجهة
 }
 
 // ── Initial State ───────────────────────────────────────────────
 
 const initialFormState: StudentFormData = {
-  name_ar: '',
-  name_en: '',
+  name: { ar: '', en: '' },
   gender: 'male',
   birth_date: '',
   country: '',
@@ -79,24 +78,32 @@ export const useStudentForm = ({
   onSuccess,
   onClose,
   t,
+  currentLang = 'ar',
 }: UseStudentFormProps) => {
   const [formData, setFormData] = useState<StudentFormData>(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showParentFields, setShowParentFields] = useState<boolean>(true);
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState<boolean>(false);
 
-  const translate = (key: string, fallback: string) =>
-    t ? t(key, fallback) : fallback;
+  const translate = useCallback(
+    (key: string, fallback: string) => (t ? t(key, fallback) : fallback),
+    [t]
+  );
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (studentToEdit) {
-      const nameObj =
-        typeof studentToEdit.name === 'object' && studentToEdit.name !== null
-          ? studentToEdit.name
-          : { ar: (typeof studentToEdit.name === 'string' ? studentToEdit.name : '') || studentToEdit.full_name || '', en: '' };
+      let nameObj: Record<string, string> = {};
+      if (typeof studentToEdit.name === 'object' && studentToEdit.name !== null) {
+        nameObj = { ...studentToEdit.name };
+      } else if (typeof studentToEdit.name === 'string') {
+        nameObj = { [currentLang]: studentToEdit.name };
+      } else if (studentToEdit.full_name) {
+        nameObj = { [currentLang]: studentToEdit.full_name };
+      }
 
       const notesObj =
         typeof studentToEdit.notes === 'object' && studentToEdit.notes !== null
@@ -107,8 +114,7 @@ export const useStudentForm = ({
       const whatsapp = studentToEdit.parent_whatsapp || '';
 
       setFormData({
-        name_ar: nameObj.ar || (typeof studentToEdit.name === 'string' ? studentToEdit.name : ''),
-        name_en: nameObj.en || '',
+        name: nameObj,
         gender: studentToEdit.gender || 'male',
         birth_date: studentToEdit.birth_date || '',
         country: studentToEdit.country || '',
@@ -135,7 +141,18 @@ export const useStudentForm = ({
       setIsWhatsappManuallyEdited(false);
     }
     setErrors({});
-  }, [studentToEdit, isOpen]);
+    setSubmitError(null);
+  }, [studentToEdit, isOpen, currentLang]);
+
+  const handleNameChange = (langKey: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: {
+        ...prev.name,
+        [langKey]: value,
+      },
+    }));
+  };
 
   const handleDateChange = (date: Date | null) => {
     let bDate = '';
@@ -171,10 +188,12 @@ export const useStudentForm = ({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name_ar.trim()) {
-      newErrors.name_ar = translate(
-        'students.val_name_ar_required',
-        'يرجى إدخال اسم الطالب بالعربية'
+    const hasAnyName = Object.values(formData.name).some((v) => v && v.trim().length > 0);
+    
+    if (!hasAnyName) {
+      newErrors.name = translate(
+        'students.val_name_required',
+        'يرجى إدخال اسم الطالب'
       );
     }
     setErrors(newErrors);
@@ -186,13 +205,11 @@ export const useStudentForm = ({
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const payload = {
         academy_id: academyId,
-        name: {
-          ar: formData.name_ar.trim(),
-          en: formData.name_en.trim() || formData.name_ar.trim(),
-        },
+        name: formData.name, // يُحفظ كـ JSONB يحتوي على كل اللغات المدخلة
         gender: formData.gender,
         birth_date: formData.birth_date || null,
         country: formData.country || null,
@@ -251,12 +268,8 @@ export const useStudentForm = ({
       if (onSuccess) await onSuccess(resultData);
       onClose();
     } catch (err: any) {
-      console.error('Error saving data:', err);
-      alert(
-        `${translate('common.save_error', 'حدث خطأ أثناء الحفظ:')} ${
-          err.message || ''
-        }`
-      );
+      console.warn('Error saving student data:', err?.message || err);
+      setSubmitError(err?.message || translate('common.save_error', 'حدث خطأ أثناء الحفظ'));
     } finally {
       setIsSubmitting(false);
     }
@@ -266,9 +279,11 @@ export const useStudentForm = ({
     formData,
     setFormData,
     errors,
+    submitError,
     isSubmitting,
     showParentFields,
     setShowParentFields,
+    handleNameChange,
     handleDateChange,
     handlePhoneChange,
     handleWhatsappChange,
