@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, FormEvent, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, ChangeEvent, FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateAge } from '@/utils/dateUtils';
 
@@ -88,6 +88,15 @@ export const useStudentForm = ({
   const [showParentFields, setShowParentFields] = useState<boolean>(true);
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState<boolean>(false);
 
+  const isMounted = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const translate = useCallback(
     (key: string, fallback: string) => (t ? t(key, fallback) : fallback),
     [t]
@@ -114,35 +123,42 @@ export const useStudentForm = ({
       const phone = studentToEdit.parent_phone || '';
       const whatsapp = studentToEdit.parent_whatsapp || '';
 
-      setFormData({
-        name: nameObj,
-        gender: studentToEdit.gender || 'male',
-        birth_date: studentToEdit.birth_date || '',
-        country: studentToEdit.country || '',
-        nationality: studentToEdit.nationality || '',
-        halaqa_id: studentToEdit.halaqa_id || '',
-        preferred_riwayah: studentToEdit.preferred_riwayah || '',
-        current_juz: studentToEdit.current_juz ?? null,
-        memorization_system: studentToEdit.memorization_system || '',
-        parent_name: studentToEdit.parent_name || '',
-        parent_phone: phone,
-        parent_whatsapp: whatsapp,
-        notes_text: notesObj.text || '',
-      });
+      if (isMounted.current) {
+        setFormData({
+          name: nameObj,
+          gender: studentToEdit.gender || 'male',
+          birth_date: studentToEdit.birth_date || '',
+          country: studentToEdit.country || '',
+          nationality: studentToEdit.nationality || '',
+          halaqa_id: studentToEdit.halaqa_id || '',
+          preferred_riwayah: studentToEdit.preferred_riwayah || '',
+          current_juz: studentToEdit.current_juz ?? null,
+          memorization_system: studentToEdit.memorization_system || '',
+          parent_name: studentToEdit.parent_name || '',
+          parent_phone: phone,
+          parent_whatsapp: whatsapp,
+          notes_text: notesObj.text || '',
+        });
 
-      setIsWhatsappManuallyEdited(Boolean(whatsapp && whatsapp !== phone));
-      setShowParentFields(
-        studentToEdit.birth_date
-          ? (calculateAge(studentToEdit.birth_date) ?? 0) < 18
-          : true
-      );
+        setIsWhatsappManuallyEdited(Boolean(whatsapp && whatsapp !== phone));
+        setShowParentFields(
+          studentToEdit.birth_date
+            ? (calculateAge(studentToEdit.birth_date) ?? 0) < 18
+            : true
+        );
+      }
     } else {
-      setFormData(initialFormState);
-      setShowParentFields(true);
-      setIsWhatsappManuallyEdited(false);
+      if (isMounted.current) {
+        setFormData(initialFormState);
+        setShowParentFields(true);
+        setIsWhatsappManuallyEdited(false);
+      }
     }
-    setErrors({});
-    setSubmitError(null);
+
+    if (isMounted.current) {
+      setErrors({});
+      setSubmitError(null);
+    }
   }, [studentToEdit, isOpen, currentLang]);
 
   const handleNameChange = (langKey: string, value: string) => {
@@ -201,22 +217,33 @@ export const useStudentForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e?: FormEvent) => {
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
     if (!validate()) return;
 
-    const targetAcademyId = academyId || studentToEdit?.academy_id;
-    if (!targetAcademyId) {
-      setSubmitError(
-        translate('common.academy_required', 'خطأ: لم يتم تحديد الأكاديمية التابع لها الطالب')
-      );
+    const rawAcademyId = academyId || studentToEdit?.academy_id;
+    const isValidAcademyId = Boolean(
+      rawAcademyId &&
+      rawAcademyId !== 'undefined' &&
+      typeof rawAcademyId === 'string' &&
+      rawAcademyId.trim() !== ''
+    );
+
+    if (!isValidAcademyId) {
+      if (isMounted.current) {
+        setSubmitError(
+          translate('common.academy_required', 'خطأ: لم يتم تحديد الأكاديمية التابع لها الطالب')
+        );
+      }
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitError(null);
+    if (isMounted.current) {
+      setIsSubmitting(true);
+      setSubmitError(null);
+    }
 
     try {
       const cleanedName: Record<string, string> = {};
@@ -227,7 +254,7 @@ export const useStudentForm = ({
       });
 
       const payload = {
-        academy_id: targetAcademyId,
+        academy_id: rawAcademyId!,
         name: cleanedName,
         gender: formData.gender,
         birth_date: formData.birth_date || null,
@@ -289,9 +316,13 @@ export const useStudentForm = ({
       if (onClose) onClose();
     } catch (err: any) {
       console.error('Execution error in useStudentForm:', err);
-      setSubmitError(err?.message || translate('common.save_error', 'حدث خطأ أثناء الحفظ'));
+      if (isMounted.current) {
+        setSubmitError(err?.message || translate('common.save_error', 'حدث خطأ أثناء الحفظ'));
+      }
     } finally {
-      setIsSubmitting(false);
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
