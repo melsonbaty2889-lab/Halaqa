@@ -39,7 +39,7 @@ export interface StudentStats {
 const extractAllNames = (nameField: any): string => {
   if (!nameField) return '';
   if (typeof nameField === 'string') return nameField;
-  if (typeof nameField === 'object') {
+  if (typeof nameField === 'object' && nameField !== null) {
     return Object.values(nameField)
       .filter((v): v is string => typeof v === 'string')
       .join(' ');
@@ -144,11 +144,13 @@ export const useStudentsManager = ({
   const handleOpenAddModal = useCallback(() => {
     setEditingStudent(null);
     setIsAddModalOpen(true);
+    setActionError(null);
   }, []);
 
   const handleOpenEditModal = useCallback((studentToEdit: Student) => {
     setEditingStudent(studentToEdit);
     setIsAddModalOpen(true);
+    setActionError(null);
   }, []);
 
   const handleRequestArchive = useCallback((student: Student) => {
@@ -162,16 +164,19 @@ export const useStudentsManager = ({
     });
   }, []);
 
-  const handleRequestDelete = useCallback((studentId: string) => {
-    const student = students.find((s) => s.id === studentId) || selectedStudent;
-    setConfirmModalState({
-      isOpen: true,
-      student: student || { id: studentId },
-      type: 'delete',
-      isLoading: false,
-      error: null,
-    });
-  }, [students, selectedStudent]);
+  const handleRequestDelete = useCallback(
+    (studentId: string) => {
+      const student = students.find((s) => s.id === studentId) || selectedStudent;
+      setConfirmModalState({
+        isOpen: true,
+        student: student || { id: studentId },
+        type: 'delete',
+        isLoading: false,
+        error: null,
+      });
+    },
+    [students, selectedStudent]
+  );
 
   const handleConfirmAction = useCallback(async () => {
     const { student, type } = confirmModalState;
@@ -185,9 +190,9 @@ export const useStudentsManager = ({
         const newArchivedState = type === 'archive';
         const { error } = await supabase
           .from('students')
-          .update({ 
+          .update({
             is_archived: newArchivedState,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('id', student.id);
 
@@ -232,22 +237,25 @@ export const useStudentsManager = ({
     }
   }, [confirmModalState, setStudents, selectedStudent, onDeleteStudent, translate]);
 
-  const handleModalSuccess = useCallback((savedStudent: Student) => {
-    if (!savedStudent) return;
-    if (setStudents) {
-      setStudents((prev) => {
-        const exists = prev.some((s) => s.id === savedStudent.id);
-        return exists
-          ? prev.map((s) => (s.id === savedStudent.id ? savedStudent : s))
-          : [savedStudent, ...prev];
-      });
-    }
-    if (selectedStudent && selectedStudent.id === savedStudent.id) {
-      setSelectedStudent(savedStudent);
-    }
-    setIsAddModalOpen(false);
-    setEditingStudent(null);
-  }, [setStudents, selectedStudent]);
+  const handleModalSuccess = useCallback(
+    (savedStudent: Student) => {
+      if (!savedStudent) return;
+      if (setStudents) {
+        setStudents((prev) => {
+          const exists = prev.some((s) => s.id === savedStudent.id);
+          return exists
+            ? prev.map((s) => (s.id === savedStudent.id ? savedStudent : s))
+            : [savedStudent, ...prev];
+        });
+      }
+      if (selectedStudent && selectedStudent.id === savedStudent.id) {
+        setSelectedStudent(savedStudent);
+      }
+      setIsAddModalOpen(false);
+      setEditingStudent(null);
+    },
+    [setStudents, selectedStudent]
+  );
 
   return {
     searchQuery,
