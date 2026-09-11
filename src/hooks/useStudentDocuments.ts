@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // ── Types & Interfaces ──────────────────────────────────────────
@@ -20,7 +20,7 @@ export interface StudentDocument {
 export type TranslateFunction = (key: string, fallback?: string) => string;
 
 export interface UseStudentDocumentsProps {
-  studentId: string;
+  studentId?: string; // جعل المعرف اختياري لمنع أي Crash
   academyId?: string | null;
   t?: TranslateFunction;
 }
@@ -33,6 +33,7 @@ export interface UploadPayload {
 
 export interface OperationResult {
   success: boolean;
+  error?: string;
 }
 
 // ── Main Hook ───────────────────────────────────────────────────
@@ -41,23 +42,31 @@ export const useStudentDocuments = ({
   studentId,
   academyId,
   t,
-}: UseStudentDocumentsProps) => {
+}: UseStudentDocumentsProps = {}) => {
   const [documents, setDocuments] = useState<StudentDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [uploading, setUploading] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [successToast, setSuccessToast] = useState<string>('');
 
-  const translate = (key: string, fallback: string) =>
-    t ? t(key, fallback) : fallback;
+  const translate = useCallback(
+    (key: string, fallback: string) => (t ? t(key, fallback) : fallback),
+    [t]
+  );
 
-  const showSuccess = (msg: string) => {
+  const showSuccess = useCallback((msg: string) => {
     setSuccessToast(msg);
     setTimeout(() => setSuccessToast(''), 4000);
-  };
+  }, []);
 
-  const fetchDocuments = async () => {
-    if (!studentId) return;
+  const fetchDocuments = useCallback(async () => {
+    // إيقاف التحميل وإعادة مصفوفة فارغة فوراً إن لم يتوفر ID الطالب
+    if (!studentId) {
+      setDocuments([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -68,22 +77,31 @@ export const useStudentDocuments = ({
 
       if (error) throw error;
       setDocuments((data as StudentDocument[]) || []);
-    } catch (err) {
-      console.error('Error fetching documents:', err);
+    } catch (err: any) {
+      console.warn('Error fetching documents:', err?.message || err);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
 
   useEffect(() => {
-    fetchDocuments();
-  }, [studentId]);
+    let isMounted = true;
+
+    if (isMounted) {
+      fetchDocuments();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchDocuments]);
 
   const handleDelete = async (
     docId: string,
     docPath?: string
   ): Promise<OperationResult> => {
-    if (!docId) return { success: false };
+    if (!docId) return { success: false, error: 'Document ID is missing' };
     setIsDeleting(true);
 
     try {
@@ -105,12 +123,11 @@ export const useStudentDocuments = ({
       );
       return { success: true };
     } catch (err: any) {
-      console.error('Delete Error:', err);
-      alert(
-        translate('common.error', 'حدث خطأ أثناء الحذف: ') +
-          (err.message || '')
-      );
-      return { success: false };
+      console.warn('Delete Error:', err?.message || err);
+      return { 
+        success: false, 
+        error: translate('common.error', 'حدث خطأ أثناء الحذف: ') + (err?.message || '') 
+      };
     } finally {
       setIsDeleting(false);
     }
@@ -121,6 +138,10 @@ export const useStudentDocuments = ({
     documentType,
     notes,
   }: UploadPayload): Promise<OperationResult> => {
+    if (!studentId) {
+      return { success: false, error: 'Student ID is missing' };
+    }
+
     setUploading(true);
     try {
       const {
@@ -129,14 +150,13 @@ export const useStudentDocuments = ({
 
       let currentAcademyId = academyId;
       if (!currentAcademyId) {
-        const { data: studentData, error: studentError } = await supabase
+        const { data: studentData } = await supabase
           .from('students')
           .select('academy_id')
           .eq('id', studentId)
-          .single();
+          .maybeSingle();
 
-        if (studentError) throw studentError;
-        currentAcademyId = studentData?.academy_id;
+        currentAcademyId = studentData?.academy_id || null;
       }
 
       const singleInstanceTypes = ['id_card', 'passport', 'birth_certificate'];
@@ -164,7 +184,10 @@ export const useStudentDocuments = ({
       }
 
       const fileExt = file.name.split('.').pop();
-      const uniqueId = crypto.randomUUID();
+      const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+        ? crypto.randomUUID() 
+        : Math.random().toString(36).substring(2, 9);
+        
       const filePath = `students/${studentId}/${Date.now()}_${uniqueId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -210,9 +233,11 @@ export const useStudentDocuments = ({
       );
       return { success: true };
     } catch (err: any) {
-      console.error('Upload Error:', err);
-      alert(err.message || 'حدث خطأ أثناء رفع المستند');
-      return { success: false };
+      console.warn('Upload Error:', err?.message || err);
+      return { 
+        success: false, 
+        error: err?.message || 'حدث خطأ أثناء رفع المستند' 
+      };
     } finally {
       setUploading(false);
     }
@@ -226,6 +251,7 @@ export const useStudentDocuments = ({
     successToast,
     handleDelete,
     handleUpload,
+    refetchDocuments: fetchDocuments,
   };
 };
 
