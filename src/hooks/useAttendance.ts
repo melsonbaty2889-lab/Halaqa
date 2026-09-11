@@ -78,7 +78,7 @@ export function useAttendance({
   halaqas = [],
   t,
   i18n,
-}: UseAttendanceProps) {
+}: UseAttendanceProps = {}) {
   const currentLang = i18n?.language || 'ar';
   const isRtl = currentLang === 'ar' || currentLang === 'ur';
 
@@ -92,11 +92,15 @@ export function useAttendance({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<MessageState>({ text: '', type: '' });
 
-  // 🛠️ دالة الترجمة النصية لجميع اللغات الست
+  // 🛠️ دالة الترجمة النصية لجميع اللغات
   const translateText = useCallback(
     (key: string, defaultText: string): string => {
-      if (i18n && i18n.exists && i18n.exists(key) && typeof t === 'function') {
-        return t(key);
+      try {
+        if (i18n && typeof i18n.exists === 'function' && i18n.exists(key) && typeof t === 'function') {
+          return t(key);
+        }
+      } catch (err) {
+        console.warn('Translation lookup failed:', err);
       }
       return defaultText;
     },
@@ -120,6 +124,7 @@ export function useAttendance({
     const query = searchQuery.trim().toLowerCase();
 
     return students.filter((student) => {
+      if (!student) return false;
       const matchHalaqa =
         !selectedHalaqaId || String(student.halaqa_id) === String(selectedHalaqaId);
 
@@ -149,9 +154,14 @@ export function useAttendance({
     return { total, present, absent, late, excused, rate };
   }, [filteredStudents, attendanceData]);
 
-  // 🔄 جلب البيانات لليوم المحدد مباشرة من Supabase
+  // 🔄 جلب البيانات لليوم المحدد مباشرة من Supabase بأمان
   const fetchAttendance = useCallback(async () => {
-    if (!academyId || !selectedDate) return;
+    if (!academyId || !selectedDate) {
+      setAttendanceData({});
+      setLoadingFetch(false);
+      return;
+    }
+
     setLoadingFetch(true);
     setMessage({ text: '', type: '' });
 
@@ -172,23 +182,26 @@ export function useAttendance({
       const mappedData: Record<string, AttendanceEntry> = {};
       if (data && Array.isArray(data)) {
         data.forEach((record: any) => {
-          mappedData[record.student_id] = {
-            status: record.status || 'present',
-            notes: record.notes || '',
-            new_memorization: record.new_memorization || '',
-            retention_assignment: record.retention_assignment || '',
-            session_grade: record.session_grade ?? 10,
-            quarter_index: record.quarter_index || 1,
-          };
+          if (record && record.student_id) {
+            mappedData[record.student_id] = {
+              status: record.status || 'present',
+              notes: record.notes || '',
+              new_memorization: record.new_memorization || '',
+              retention_assignment: record.retention_assignment || '',
+              session_grade: record.session_grade ?? 10,
+              quarter_index: record.quarter_index || 1,
+            };
+          }
         });
       }
       setAttendanceData(mappedData);
     } catch (error: any) {
-      console.error('🚨 error fetching attendance:', error);
+      console.warn('Attendance fetch error:', error?.message || error);
       setMessage({
         text: translateText('fetchFailed', 'Failed to retrieve attendance logs for this date.'),
         type: 'error',
       });
+      setAttendanceData({});
     } finally {
       setLoadingFetch(false);
     }
@@ -225,16 +238,18 @@ export function useAttendance({
     setAttendanceData((prev) => {
       const updated = { ...prev };
       filteredStudents.forEach((st) => {
-        updated[st.id] = {
-          ...(updated[st.id] || {
-            notes: '',
-            new_memorization: '',
-            retention_assignment: '',
-            session_grade: 10,
-            quarter_index: 1,
-          }),
-          status: 'present',
-        };
+        if (st?.id) {
+          updated[st.id] = {
+            ...(updated[st.id] || {
+              notes: '',
+              new_memorization: '',
+              retention_assignment: '',
+              session_grade: 10,
+              quarter_index: 1,
+            }),
+            status: 'present',
+          };
+        }
       });
       return updated;
     });
@@ -244,7 +259,7 @@ export function useAttendance({
     });
   }, [filteredStudents, translateText]);
 
-  // 🔥 الحفظ المجمع في Supabase
+  // 🔥 الحفظ المجمع في Supabase بأمان
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'Error in academy ID'), type: 'error' });
@@ -259,10 +274,14 @@ export function useAttendance({
     setIsSaving(true);
     setMessage({ text: '', type: '' });
 
-    const fallbackHalaqaId = halaqas.length > 0 ? halaqas[0].id : null;
+    const fallbackHalaqaId = halaqas && halaqas.length > 0 ? halaqas[0].id : null;
 
     try {
-      const attendanceRecords: AttendanceRecordPayload[] = filteredStudents.map((student) => {
+      const attendanceRecords: AttendanceRecordPayload[] = [];
+
+      for (const student of filteredStudents) {
+        if (!student?.id) continue;
+
         const currentRecord = attendanceData[student.id];
         const isPresent =
           !currentRecord?.status ||
@@ -282,7 +301,7 @@ export function useAttendance({
           throw new Error(translateText('noHalaqaError', 'No halaqa associated with this student.'));
         }
 
-        return {
+        attendanceRecords.push({
           student_id: student.id,
           academy_id: academyId,
           halaqa_id: targetHalaqaId,
@@ -295,8 +314,13 @@ export function useAttendance({
           quarter_index: qIndex,
           juz: juzNum,
           quarter_in_hizb: qInHizb,
-        };
-      });
+        });
+      }
+
+      if (attendanceRecords.length === 0) {
+        setMessage({ text: translateText('noStudentsToSave', 'No students available to save'), type: 'error' });
+        return;
+      }
 
       const { error } = await supabase
         .from('attendance')
@@ -309,9 +333,9 @@ export function useAttendance({
         type: 'success',
       });
     } catch (error: any) {
-      console.error('🚨 Save error:', error);
+      console.warn('Save error:', error?.message || error);
       setMessage({
-        text: `${translateText('saveFailed', 'Save failed:')} ${error.message}`,
+        text: `${translateText('saveFailed', 'Save failed:')} ${error?.message || ''}`,
         type: 'error',
       });
     } finally {
