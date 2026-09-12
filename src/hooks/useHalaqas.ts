@@ -76,10 +76,13 @@ export const useHalaqas = ({
           query = query.eq('teaching_type', filters.teaching_type);
         }
 
-        // البحث عبر ألسنة اللغات في JSONB وبدلالة الكود
+        // 💡 البحث الشامل والذكي داخل جميع لغات الـ JSONB وبدلالة الكود
         if (filters.searchTerm && filters.searchTerm.trim() !== '') {
           const term = `%${filters.searchTerm.trim()}%`;
-          query = query.or(`name->>ar.ilike.${term},name->>en.ilike.${term},code.ilike.${term}`);
+          // التعديل: البحث عبر كافة اللغات (ar, en, tr, fr, ur, id) بحسب القيمة النصية لـ JSONB
+          query = query.or(
+            `name->>ar.ilike.${term},name->>en.ilike.${term},name->>tr.ilike.${term},name->>fr.ilike.${term},name->>ur.ilike.${term},name->>id.ilike.${term},code.ilike.${term}`
+          );
         }
 
         const { data, error } = await query.order('created_at', { ascending: false });
