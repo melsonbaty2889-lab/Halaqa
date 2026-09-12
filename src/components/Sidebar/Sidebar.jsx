@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatHijriDate } from '@/utils/dateUtils';
-import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext'; // ✅ استيراد الـ Context المركزي
 import { getMenuSections } from '@/constants/sidebarMenu';
 import { X } from "lucide-react";
 import { colors as C } from '@/theme/colors';
@@ -16,7 +16,7 @@ import SidebarFooter from './SidebarFooter';
 
 export default function Sidebar({
   currentAcademyId,
-  academy,
+  academy: propAcademy,
   onSwitchAcademy,
   activeTab,
   setActiveTab,
@@ -33,17 +33,16 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { slug } = useParams();
 
+  // ✅ استخدام البيانات مباشرة من الـ Context دون أي طلبات شبكة جديدة
+  const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
+
   const { i18n } = useTranslation();
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
   const currentDir = i18n.dir ? i18n.dir(currentLang) : (isRtl ? 'rtl' : 'ltr');
 
-  const [academiesList, setAcademiesList] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
-
-  // لمنع تنفيذ الدالة أثناء جلب البيانات بالفعل
-  const isFetchingRef = useRef(false);
 
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
@@ -79,6 +78,16 @@ export default function Sidebar({
     }
     if (isMobile && typeof setSidebarOpen === 'function') {
       setSidebarOpen(false);
+    }
+  };
+
+  const handleSwitch = (academyId) => {
+    const selected = academiesList.find(a => a.id === academyId);
+    if (selected) {
+      setAcademy(selected);
+    }
+    if (typeof onSwitchAcademy === 'function') {
+      onSwitchAcademy(academyId);
     }
   };
 
@@ -118,100 +127,16 @@ export default function Sidebar({
 
   const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
-  const loadAcademies = useCallback(async () => {
-    if (!supabase || isFetchingRef.current) return;
-    isFetchingRef.current = true;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        isFetchingRef.current = false;
-        return;
-      }
-
-      let list = [];
-      const { data: rpcAcademyId, error: rpcError } = await supabase.rpc('get_user_academy_id');
-      if (rpcAcademyId && !rpcError) {
-        const { data: academyData } = await supabase
-          .from('academies')
-          .select('id, name, logo_url, slug, trial_ends_at, is_active')
-          .eq('id', rpcAcademyId)
-          .single();
-        if (academyData) list.push(academyData);
-      }
-
-      if (list.length === 0) {
-        const { data: teacherData } = await supabase
-          .from('academy_teachers')
-          .select('academy_id, academies(id, name, logo_url, slug, trial_ends_at, is_active)')
-          .eq('teacher_id', user.id);
-
-        if (teacherData && teacherData.length > 0) {
-          list = teacherData.map(s => s.academies).filter(Boolean);
-        }
-      }
-
-      if (list.length === 0) {
-        const { data: ownedAcademies } = await supabase
-          .from('academies')
-          .select('id, name, logo_url, slug, trial_ends_at, is_active')
-          .eq('owner_id', user.id);
-        if (ownedAcademies && ownedAcademies.length > 0) {
-          list = ownedAcademies;
-        }
-      }
-
-      setAcademiesList(list);
-
-      if (list.length > 0) {
-        const exists = list.some(a => a.id === currentAcademyId);
-        if (!currentAcademyId || !exists) {
-          if (typeof onSwitchAcademy === 'function') {
-            onSwitchAcademy(list[0].id);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error loading academies:", err);
-    } finally {
-      isFetchingRef.current = false;
-    }
-  }, [currentAcademyId, onSwitchAcademy]);
-
-  useEffect(() => {
-    loadAcademies();
-
-    let channel = null;
-    try {
-      if (typeof supabase?.channel === 'function') {
-        channel = supabase
-          .channel('sidebar-academy-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
-            loadAcademies();
-          })
-          .subscribe();
-      }
-    } catch (err) {
-      console.error("Realtime subscription error:", err);
-    }
-
-    return () => {
-      if (channel && supabase && typeof supabase.removeChannel === 'function') {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [loadAcademies]);
-
   const currentAcademy = useMemo(() => {
-    return academiesList.find(a => a.id === currentAcademyId) || academy || academiesList[0];
-  }, [academiesList, currentAcademyId, academy]);
+    return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0];
+  }, [academiesList, currentAcademyId, propAcademy, contextAcademy]);
 
   const rawAcademyName = getText(currentAcademy?.name);
   const currentAcademyName = typeof rawAcademyName === 'string' && rawAcademyName.trim() !== '' 
     ? rawAcademyName.trim() 
     : safeT('sidebar.unnamedAcademy', 'أكاديمية بدون اسم');
 
-  const rawLogo = currentAcademy?.logo_url || academy?.logo_url;
+  const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
   const calculateEffectiveDaysLeft = useCallback(() => {
@@ -347,14 +272,14 @@ export default function Sidebar({
           <div style={{ flex: 1, minWidth: 0 }}>
             <AcademySelector
               academiesList={academiesList}
-              currentAcademyId={currentAcademyId}
+              currentAcademyId={currentAcademyId || currentAcademy?.id}
               currentAcademyName={currentAcademyName}
               academyLogo={academyLogo}
               dropdownOpen={dropdownOpen}
               setDropdownOpen={setDropdownOpen}
               dropdownRef={dropdownRef}
               statusBadge={statusBadge}
-              onSwitchAcademy={onSwitchAcademy}
+              onSwitchAcademy={handleSwitch}
               getText={getText}
               isRtl={isRtl}
             />
