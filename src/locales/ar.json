@@ -1,5 +1,7 @@
 {
   "academy": {
+    "add_30_days": "+30 يوم",
+    "add_7_days": "+7 أيام",
     "add_phone": "+ إضافة رقم",
     "basic_plan": "خطة أساسية",
     "create_subtitle": "أدخل البيانات الأساسية للبدء",
@@ -10,7 +12,9 @@
     "enter_owner_phone": "إدخال رقم هاتف المالك",
     "enter_phone_description": "أدخل رقم هاتف مالك أكاديمية ({{academyName}}) لتفعيل التواصل عبر الواتساب:",
     "establish_button": "تأسيس الأكاديمية",
+    "extend_subscription": "تمديد اشتراك الأكاديمية",
     "finish_setup": "تأكيد وتأسيس الأكاديمية",
+    "grant_lifetime": "اشتراك دائم (Lifetime)",
     "logo_label": "شعار الأكاديمية",
     "monthly": "شهري",
     "name": "اسم الأكاديمية",
