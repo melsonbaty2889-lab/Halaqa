@@ -275,8 +275,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  // مرجع لتسجيل آخر أكاديمية جُلبت بياناتها تفادياً لتكرار الاستعلامات
+  // المراجع المطلوبة لمنع تكرار الطلبات وحمايتها أثناء التحميل
   const fetchedAcademyIdRef = useRef(null);
+  const isFetchingRef = useRef(false);
 
   const numberFormatter = useMemo(() => {
     try {
@@ -325,18 +326,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
-  // جلب البيانات الفرعية (طلاب، معلمون، حلقات) وتجنب التكرار إذا جُلبت من قبل
+  // جلب البيانات الفرعية مع حماية Strict Mode وقفل الطلبات القائمة
   const fetchSubResources = useCallback(async (targetAcademyId, forceRefresh = false) => {
     if (!targetAcademyId) {
       setLoadingData(false);
       return;
     }
 
-    if (!forceRefresh && fetchedAcademyIdRef.current === targetAcademyId) {
-      return;
+    // منع الإرسال المكرر إذا كان الطلب جارياً بالفعل لنفس الأكاديمية أو تم جلبها سابقاً
+    if (!forceRefresh) {
+      if (fetchedAcademyIdRef.current === targetAcademyId || isFetchingRef.current) {
+        return;
+      }
     }
 
+    isFetchingRef.current = true;
     setLoadingData(true);
+
     try {
       const { data: rels } = await supabase
         .from('academy_teachers')
@@ -363,6 +369,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     } catch (error) {
       console.error("Error fetching sub-resources:", error);
     } finally {
+      isFetchingRef.current = false;
       setLoadingData(false);
     }
   }, []);
@@ -385,6 +392,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     if (!newAcademyId || newAcademyId === academyId) return;
     const target = academiesList.find(a => a.id === newAcademyId);
     if (target) {
+      // إعادة ضبط التتبع عند تغيير الأكاديمية
+      fetchedAcademyIdRef.current = null;
       setAcademy(target);
     }
   }, [academyId, academiesList, setAcademy]);
