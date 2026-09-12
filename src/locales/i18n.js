@@ -42,7 +42,9 @@ i18n
     react: { useSuspense: false },
     interpolation: { escapeValue: false },
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      // إضافة querystring لقياس اللغة القادمة مباشرة في الرابط ?lang=en
+      order: ['querystring', 'localStorage', 'navigator', 'htmlTag'],
+      lookupQuerystring: 'lang',
       lookupLocalStorage: 'i18nextLng',
       caches: ['localStorage'],
     },
