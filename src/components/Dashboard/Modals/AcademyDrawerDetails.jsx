@@ -9,7 +9,7 @@ import {
   History, 
   Globe, 
   Calendar,
-  PhonePlus
+  PhoneCall
 } from 'lucide-react';
 import { C } from '@/theme/colors';
 
