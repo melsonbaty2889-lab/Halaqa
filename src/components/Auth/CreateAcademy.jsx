@@ -4,7 +4,7 @@ import AuthLayout from './AuthLayout';
 import { C } from '@/theme/colors';
 import { useCreateAcademy } from '@/hooks/useCreateAcademy';
 
-import { Building2, Check, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe } from 'lucide-react';
 
 export default function CreateAcademy({ onSubmitAcademy }) {
   const { t } = useTranslation();
@@ -16,6 +16,17 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     errorMsg,
     handleSubmit
   } = useCreateAcademy(onSubmitAcademy);
+
+  // دالة مساعدة لتوليد معاينة الـ slug بشكل نظيف وسلس
+  const generateSlugPreview = (name) => {
+    if (!name) return 'academy-name';
+    return name
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\u0621-\u064A\-]+/g, '') // السماح بالعربية والأنجليزية والشرطات
+      .slice(0, 30);
+  };
 
   if (isSuccess) {
     return (
@@ -84,6 +95,14 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             required
             autoFocus
           />
+          
+          {/* معاينة الرابط الفورية (Slug Preview) */}
+          <div className="flex items-center gap-1.5 px-1 pt-1 text-[11px] font-mono tracking-tight opacity-80" style={{ color: C.text?.muted }}>
+            <Globe size={12} style={{ color: C.amber?.DEFAULT }} />
+            <span className="truncate">
+              {window.location.host}/{generateSlugPreview(academyName)}/...
+            </span>
+          </div>
         </div>
 
         <div className="pt-2">
