@@ -1,10 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
-import C from '@/theme/colors';
+import { C } from '@/theme/colors';
 import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { TermsModal } from '@/components/UI/TermsModal';
 import {
   User,
@@ -100,12 +99,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       aria-label={t('common.switchLanguage', 'تغيير اللغة')}
       className="border py-1.5 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg transition-all min-h-[44px]"
       style={{
-        backgroundColor: C?.dark?.surfaceInput || C?.dark?.surface || '#0A101D',
-        borderColor: C?.dark?.border || '#1B2738',
-        color: C?.text?.secondary || '#94A3B8',
+        backgroundColor: C.inputs?.bg,
+        borderColor: C.inputs?.border,
+        color: C.text?.muted,
       }}
     >
-      <Globe size={14} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
+      <Globe size={14} style={{ color: C.amber?.DEFAULT }} />
       <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
     </button>
   );
@@ -113,37 +112,20 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   return (
     <AuthLayout langBtn={langBtn}>
       <div className="w-full">
-        {/* الشعار والعنوان */}
-        <div className="flex flex-col items-center mb-4 text-center">
-          <div className="mb-1 drop-shadow-md">
-            <SmartHalaqaProLogo size={44} />
-          </div>
+        <div className="text-center mb-4">
           <h1
-            className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1 mb-0.5"
-            style={{ color: C?.text?.primary || '#FFFFFF' }}
+            className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
+            style={{ color: C.text?.title }}
           >
-            {t('auth.joinSmartHalaqa', 'انضم إلى الحلقة الذكية')}
+            {t('auth.createNewAccount', 'إنشاء حساب جديد')}
           </h1>
           <p
-            className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase m-0"
-            style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+            className="text-xs font-medium leading-relaxed m-0"
+            style={{ color: C.text?.muted }}
           >
-            {t('auth.platformSubtitle', 'منصة إدارة المقارئ والأكاديميات')}
+            {t('auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
           </p>
         </div>
-
-        <h2
-          className="text-base sm:text-lg text-center mb-1 font-semibold"
-          style={{ color: C?.text?.primary || '#FFFFFF' }}
-        >
-          {t('auth.createNewAccount', 'إنشاء حساب جديد')}
-        </h2>
-        <p
-          className="text-xs text-center mb-4 leading-relaxed"
-          style={{ color: C?.text?.secondary || '#94A3B8' }}
-        >
-          {t('auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
-        </p>
 
         {/* التسجيل عبر Google */}
         <button
@@ -154,13 +136,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           aria-label={t('auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}
           className="w-full py-2.5 px-4 border rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 cursor-pointer mb-4 transition-all disabled:opacity-50 min-h-[44px]"
           style={{
-            backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-            borderColor: C?.dark?.border || '#1B2738',
-            color: C?.text?.primary || '#FFFFFF',
+            backgroundColor: C.inputs?.bg,
+            borderColor: C.inputs?.border,
+            color: C.text?.title,
           }}
         >
           {googleLoading ? (
-            <Loader2 size={16} className="animate-spin" style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
+            <Loader2 size={16} className="animate-spin" style={{ color: C.amber?.DEFAULT }} />
           ) : (
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -174,12 +156,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
         {/* فاصل */}
         <div className="relative flex items-center justify-center mb-4">
-          <div className="border-t w-full" style={{ borderColor: C?.dark?.border || '#1B2738' }}></div>
+          <div className="border-t w-full" style={{ borderColor: C.inputs?.border }}></div>
           <span
             className="px-3 text-[11px] absolute font-medium"
             style={{
-              backgroundColor: C?.dark?.bg || '#060B13',
-              color: C?.text?.secondary || '#94A3B8',
+              backgroundColor: C.dark?.surface,
+              color: C.text?.muted,
             }}
           >
             {t('auth.orViaEmail', 'أو عبر البريد')}
@@ -196,7 +178,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: fullName ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+                color: fullName ? C.amber?.DEFAULT : C.text?.muted,
               }}
             />
             <input
@@ -210,9 +192,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
               }`}
               style={{
-                borderColor: fieldErrors?.fullName ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
-                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                color: C?.text?.primary || '#FFFFFF',
+                borderColor: fieldErrors?.fullName ? C.error?.DEFAULT : C.inputs?.border,
+                backgroundColor: C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
           </div>
@@ -225,7 +207,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: email ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+                color: email ? C.amber?.DEFAULT : C.text?.muted,
               }}
             />
             <input
@@ -239,9 +221,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
               }`}
               style={{
-                borderColor: fieldErrors?.email ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
-                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                color: C?.text?.primary || '#FFFFFF',
+                borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
+                backgroundColor: C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
           </div>
@@ -254,7 +236,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: password ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+                color: password ? C.amber?.DEFAULT : C.text?.muted,
               }}
             />
             <input
@@ -265,11 +247,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
               aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
               required
-              className="w-full py-2.5 ps-11 pe-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+              }`}
               style={{
-                borderColor: fieldErrors?.password ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
-                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                color: C?.text?.primary || '#FFFFFF',
+                borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
+                backgroundColor: C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
             <button
@@ -281,7 +265,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'left-1' : 'right-1'
               }`}
               style={{
-                color: C?.text?.secondary || '#94A3B8',
+                color: C.text?.muted,
               }}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -296,7 +280,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'right-3.5' : 'left-3.5'
               }`}
               style={{
-                color: confirmPassword ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8'),
+                color: confirmPassword ? C.amber?.DEFAULT : C.text?.muted,
               }}
             />
             <input
@@ -306,11 +290,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
               aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
               required
-              className="w-full py-2.5 ps-11 pe-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+              }`}
               style={{
-                borderColor: fieldErrors?.confirmPassword ? (C?.danger?.text || '#F43F5E') : (C?.dark?.border || '#1B2738'),
-                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                color: C?.text?.primary || '#FFFFFF',
+                borderColor: fieldErrors?.confirmPassword ? C.error?.DEFAULT : C.inputs?.border,
+                backgroundColor: C.inputs?.bg,
+                color: C.text?.title,
               }}
             />
             <button
@@ -322,7 +308,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 isRtl ? 'left-1' : 'right-1'
               }`}
               style={{
-                color: C?.text?.secondary || '#94A3B8',
+                color: C.text?.muted,
               }}
             >
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -333,8 +319,8 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div
             className="flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all border"
             style={{
-              borderColor: fieldErrors?.agreeTerms ? (C?.danger?.text || '#F43F5E') : 'transparent',
-              backgroundColor: fieldErrors?.agreeTerms ? (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)') : 'transparent',
+              borderColor: fieldErrors?.agreeTerms ? C.error?.DEFAULT : 'transparent',
+              backgroundColor: fieldErrors?.agreeTerms ? 'rgba(244, 63, 94, 0.1)' : 'transparent',
             }}
           >
             <input
@@ -345,15 +331,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               aria-label={t('auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
               className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px]"
               style={{
-                borderColor: C?.dark?.border || '#1B2738',
-                backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                accentColor: C?.primary?.DEFAULT || '#E07A00',
+                borderColor: C.inputs?.border,
+                backgroundColor: C.inputs?.bg,
+                accentColor: C.amber?.DEFAULT,
               }}
             />
             <label
               htmlFor="agreeTerms"
               className="text-[11px] cursor-pointer leading-tight select-none pt-0.5"
-              style={{ color: C?.text?.secondary || '#94A3B8' }}
+              style={{ color: C.text?.muted }}
             >
               {t('auth.iAgreeTo', 'أوافق على')}{' '}
               <button
@@ -362,7 +348,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 title={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 aria-label={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+                style={{ color: C.amber?.DEFAULT }}
               >
                 {t('auth.termsAndConditions', 'الشروط والأحكام')}
               </button>{' '}
@@ -373,7 +359,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 title={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 aria-label={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+                style={{ color: C.amber?.DEFAULT }}
               >
                 {t('auth.privacyPolicy', 'سياسة الخصوصية')}
               </button>
@@ -387,16 +373,16 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               style={{
                 backgroundColor:
                   status.type === 'success'
-                    ? C?.emerald?.bg || 'rgba(16, 185, 129, 0.1)'
-                    : C?.danger?.bg || 'rgba(244, 63, 94, 0.1)',
+                    ? 'rgba(16, 185, 129, 0.1)'
+                    : 'rgba(244, 63, 94, 0.1)',
                 color:
                   status.type === 'success'
-                    ? C?.emerald?.text || '#10B981'
-                    : C?.danger?.text || '#F43F5E',
+                    ? C.emerald?.DEFAULT
+                    : C.error?.DEFAULT,
                 borderColor:
                   status.type === 'success'
-                    ? C?.emerald?.border || 'rgba(16, 185, 129, 0.3)'
-                    : C?.danger?.border || 'rgba(244, 63, 94, 0.3)',
+                    ? C.emerald?.DEFAULT
+                    : C.error?.DEFAULT,
               }}
             >
               <AlertCircle size={16} className="shrink-0" />
@@ -410,10 +396,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             disabled={loading}
             title={t('auth.createNewAccount', 'إنشاء حساب جديد')}
             aria-label={t('auth.createNewAccount', 'إنشاء حساب جديد')}
-            className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px]"
+            className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white active:scale-[0.98]"
             style={{
-              backgroundColor: C?.primary?.DEFAULT || '#E07A00',
-              color: C?.primary?.text || '#000000',
+              background: C.gradients?.primaryBtn,
             }}
           >
             {loading ? (
@@ -427,25 +412,25 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         {/* شارة التشفير */}
         <div
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4"
-          style={{ color: C?.text?.secondary || '#94A3B8' }}
+          style={{ color: C.text?.muted }}
         >
-          <ShieldCheck size={14} style={{ color: C?.emerald?.text || '#10B981' }} />
+          <ShieldCheck size={14} style={{ color: C.emerald?.DEFAULT }} />
           <span>{t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}</span>
         </div>
 
         {/* تحويل الدخول */}
         <div
-          className="mt-3 text-center text-xs"
-          style={{ color: C?.text?.secondary || '#94A3B8' }}
+          className="mt-3 text-center text-xs flex items-center justify-center gap-1"
+          style={{ color: C.text?.muted }}
         >
-          <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>{' '}
+          <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>
           <button
             type="button"
             onClick={onSwitchToLogin}
             title={t('auth.signIn', 'تسجيل الدخول')}
             aria-label={t('auth.signIn', 'تسجيل الدخول')}
-            className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 ms-1 min-h-[44px] px-1"
-            style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+            className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 min-h-[44px] px-1 flex items-center"
+            style={{ color: C.amber?.DEFAULT }}
           >
             {t('auth.signIn', 'تسجيل الدخول')}
           </button>
