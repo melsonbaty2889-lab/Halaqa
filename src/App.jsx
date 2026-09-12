@@ -272,6 +272,7 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
 
   return children;
 };
+
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
@@ -289,17 +290,11 @@ if (typeof window !== 'undefined') {
 }
 
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
-  // 1. الخروج السريع أولاً إذا كان المودال مغلقاً (لتجنب استدعاء الـ Hooks بلا داعٍ)
-  if (!isOpen) return null;
+  // استدعاء Hook المزامنة دائماً في الأعلى لامتثال قواعد React
+  const academyContext = useAcademy();
+  const t = academyContext?.t;
 
-  // 2. استخدام Try / Catch أو Safe Navigation للـ Hook لتجنب الـ undefined crash
-  let t;
-  try {
-    const academyContext = useAcademy();
-    t = academyContext?.t;
-  } catch (e) {
-    t = null;
-  }
+  if (!isOpen) return null;
   
   return (
     <div style={{
