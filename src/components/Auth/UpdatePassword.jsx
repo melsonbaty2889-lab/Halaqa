@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import AuthLayout from './AuthLayout';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
-import C from '@/theme/colors';
+import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import { C } from '@/theme/colors';
 import { 
   Lock, 
   Eye, 
@@ -11,7 +11,6 @@ import {
   AlertCircle, 
   ShieldCheck, 
   Loader2, 
-  Globe, 
   CheckCircle2 
 } from 'lucide-react';
 
@@ -38,13 +37,8 @@ export default function UpdatePassword({ onSuccess }) {
   const isRtl = i18n?.language === 'ar';
 
   useEffect(() => {
-    document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${t('common.appName', 'الحلقة الذكية')}`;
+    document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${t('app.name', t('common.appName', 'الحلقة الذكية'))}`;
   }, [i18n.language, t]);
-
-  const toggleLanguage = () => {
-    const nextLang = isRtl ? 'en' : 'ar';
-    if (i18n?.changeLanguage) i18n.changeLanguage(nextLang);
-  };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -92,75 +86,36 @@ export default function UpdatePassword({ onSuccess }) {
     }
   };
 
-  const langBtn = (
-    <button
-      type="button"
-      onClick={toggleLanguage}
-      title={t('common.switchLanguage', 'تغيير اللغة')}
-      aria-label={t('common.switchLanguage', 'تغيير اللغة')}
-      className="border py-1.5 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg z-50 transition-all min-h-[44px]"
-      style={{
-        backgroundColor: C?.dark?.surfaceInput || C?.dark?.surface || '#0A101D',
-        borderColor: C?.dark?.border || '#1B2738',
-        color: C?.text?.secondary || '#94A3B8',
-      }}
-    >
-      <Globe size={14} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
-      <span>{isRtl ? 'English' : 'العربية'}</span>
-    </button>
-  );
-
   return (
-    <AuthLayout langBtn={langBtn}>
-      <div className="w-full">
-        {/* الشعار والعنوان */}
-        <div className="flex flex-col items-center mb-5 text-center">
-          <div className="mb-2 drop-shadow-md">
-            <SmartHalaqaProLogo size={52} />
-          </div>
-          <h1 
-            className="text-2xl font-extrabold tracking-tight mt-1 mb-0.5"
-            style={{ color: C?.text?.primary || '#FFFFFF' }}
-          >
-            {t('common.appName', 'الحلقة الذكية')}
-          </h1>
-          <p 
-            className="text-[11px] font-bold tracking-wider uppercase m-0"
-            style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
-          >
-            {t('auth.platformSubtitle', 'منصة إدارة المقارئ والأكاديميات')}
-          </p>
-        </div>
-
+    <AuthLayout langBtn={<LanguageSwitcher />}>
+      <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         {!isDone ? (
           <>
-            <h2 
-              className="text-lg text-center mb-1 font-semibold"
-              style={{ color: C?.text?.primary || '#FFFFFF' }}
-            >
-              {t('auth.setNewPassword', 'تعيين كلمة مرور جديدة')}
-            </h2>
-            <p 
-              className="text-xs text-center mb-5 leading-relaxed"
-              style={{ color: C?.text?.secondary || '#94A3B8' }}
-            >
-              {t('auth.setNewPasswordDesc', 'يرجى إدخال كلمة المرور الجديدة وتأكيدها')}
-            </p>
+            {/* النصوص الأساسية */}
+            <div className="text-center mb-5">
+              <h1 
+                className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
+                style={{ color: C.text?.title }}
+              >
+                {t('auth.setNewPassword', 'تعيين كلمة مرور جديدة')}
+              </h1>
+              <p 
+                className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0"
+                style={{ color: C.text?.muted }}
+              >
+                {t('auth.setNewPasswordDesc', 'يرجى إدخال كلمة المرور الجديدة وتأكيدها')}
+              </p>
+            </div>
 
-            {/* التنبيهات والأخطاء */}
+            {/* صندوق التنبيهات والأخطاء */}
             {status?.msg && (
               <div 
-                className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border"
+                className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
+                role="alert"
                 style={{
-                  backgroundColor: status.type === 'success' 
-                    ? (C?.emerald?.bg || 'rgba(16, 185, 129, 0.1)') 
-                    : (C?.danger?.bg || 'rgba(244, 63, 94, 0.1)'),
-                  color: status.type === 'success' 
-                    ? (C?.emerald?.text || '#10B981') 
-                    : (C?.danger?.text || '#F43F5E'),
-                  borderColor: status.type === 'success' 
-                    ? (C?.emerald?.border || 'rgba(16, 185, 129, 0.3)') 
-                    : (C?.danger?.border || 'rgba(244, 63, 94, 0.3)'),
+                  backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                  borderColor: status.type === 'success' ? C.emerald?.DEFAULT : C.error?.DEFAULT,
+                  color: status.type === 'success' ? C.emerald?.DEFAULT : C.error?.DEFAULT,
                 }}
               >
                 <AlertCircle size={16} className="shrink-0" />
@@ -168,31 +123,35 @@ export default function UpdatePassword({ onSuccess }) {
               </div>
             )}
 
+            {/* النموذج */}
             <form onSubmit={handleUpdate} className="flex flex-col gap-3.5">
+              
               {/* كلمة المرور الجديدة */}
-              <div className="relative flex items-center">
+              <div className="relative flex items-center group">
                 <Lock 
                   size={18} 
                   className={`absolute pointer-events-none transition-colors inset-y-auto ${
                     isRtl ? 'right-3.5' : 'left-3.5'
                   }`}
                   style={{
-                    color: password ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
+                    color: password ? C.amber?.DEFAULT : C.text?.muted
                   }} 
                 />
                 <input 
                   type={showPassword ? 'text' : 'password'}
-                  value={password} 
+                  value={password || ''} 
                   onChange={(e) => setPassword(e.target.value)} 
                   placeholder={t('auth.newPasswordPlaceholder', 'كلمة المرور الجديدة')}
                   aria-label={t('auth.newPasswordPlaceholder', 'كلمة المرور الجديدة')}
                   required
                   dir="ltr"
-                  className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+                  className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
+                    isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+                  }`}
                   style={{
-                    borderColor: C?.dark?.border || '#1B2738',
-                    backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                    color: C?.text?.primary || '#FFFFFF',
+                    borderColor: C.inputs?.border,
+                    backgroundColor: C.inputs?.bg,
+                    color: C.text?.title,
                   }}
                 />
                 <button
@@ -203,38 +162,38 @@ export default function UpdatePassword({ onSuccess }) {
                   className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     isRtl ? 'left-1' : 'right-1'
                   }`}
-                  style={{
-                    color: C?.text?.secondary || '#94A3B8',
-                  }}
+                  style={{ color: C.text?.muted }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 
               {/* تأكيد كلمة المرور الجديدة */}
-              <div className="relative flex items-center">
+              <div className="relative flex items-center group">
                 <Lock 
                   size={18} 
                   className={`absolute pointer-events-none transition-colors inset-y-auto ${
                     isRtl ? 'right-3.5' : 'left-3.5'
                   }`}
                   style={{
-                    color: confirmPassword ? (C?.primary?.DEFAULT || '#E07A00') : (C?.text?.secondary || '#94A3B8')
+                    color: confirmPassword ? C.amber?.DEFAULT : C.text?.muted
                   }} 
                 />
                 <input 
                   type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword} 
+                  value={confirmPassword || ''} 
                   onChange={(e) => setConfirmPassword(e.target.value)} 
                   placeholder={t('auth.confirmNewPasswordPlaceholder', 'تأكيد كلمة المرور الجديدة')}
                   aria-label={t('auth.confirmNewPasswordPlaceholder', 'تأكيد كلمة المرور الجديدة')}
                   required
                   dir="ltr"
-                  className="w-full py-2.5 px-11 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px]"
+                  className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
+                    isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+                  }`}
                   style={{
-                    borderColor: C?.dark?.border || '#1B2738',
-                    backgroundColor: C?.dark?.surfaceInput || '#0A101D',
-                    color: C?.text?.primary || '#FFFFFF',
+                    borderColor: C.inputs?.border,
+                    backgroundColor: C.inputs?.bg,
+                    color: C.text?.title,
                   }}
                 />
                 <button
@@ -245,23 +204,21 @@ export default function UpdatePassword({ onSuccess }) {
                   className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     isRtl ? 'left-1' : 'right-1'
                   }`}
-                  style={{
-                    color: C?.text?.secondary || '#94A3B8',
-                  }}
+                  style={{ color: C.text?.muted }}
                 >
                   {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 
+              {/* زر الحفظ الرئيسي */}
               <button 
                 type="submit" 
                 disabled={loading}
                 title={t('auth.saveNewPassword', 'حفظ كلمة المرور')}
                 aria-label={t('auth.saveNewPassword', 'حفظ كلمة المرور')}
-                className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px]"
+                className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white active:scale-[0.98]"
                 style={{
-                  backgroundColor: C?.primary?.DEFAULT || '#E07A00',
-                  color: C?.primary?.text || '#000000',
+                  background: C.gradients?.primaryBtn,
                 }}
               >
                 {loading ? (
@@ -273,17 +230,18 @@ export default function UpdatePassword({ onSuccess }) {
             </form>
           </>
         ) : (
-          <div className="text-center py-2">
-            <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: C?.emerald?.text || '#10B981' }} />
+          /* حالة النجاح */
+          <div className="text-center py-4 animate-fadeIn">
+            <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: C.emerald?.DEFAULT }} />
             <h2 
               className="text-lg font-bold mb-2"
-              style={{ color: C?.text?.primary || '#FFFFFF' }}
+              style={{ color: C.text?.title }}
             >
               {t('auth.updateSuccessTitle', 'تم التحديث بنجاح!')}
             </h2>
             <p 
               className="text-xs leading-relaxed"
-              style={{ color: C?.text?.secondary || '#94A3B8' }}
+              style={{ color: C.text?.muted }}
             >
               {t('auth.updateSuccessDesc', 'تم تغيير كلمة المرور الخاصة بك، جارٍ تحويلك لتسجيل الدخول...')}
             </p>
@@ -293,9 +251,9 @@ export default function UpdatePassword({ onSuccess }) {
         {/* شارة الأمان */}
         <div 
           className="flex items-center justify-center gap-1.5 text-[11px] mt-5"
-          style={{ color: C?.text?.secondary || '#94A3B8' }}
+          style={{ color: C.text?.muted }}
         >
-          <ShieldCheck size={14} style={{ color: C?.emerald?.text || '#10B981' }} />
+          <ShieldCheck size={14} style={{ color: C.emerald?.DEFAULT }} />
           <span>
             {t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
           </span>
