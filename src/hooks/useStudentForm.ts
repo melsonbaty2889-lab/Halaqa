@@ -55,7 +55,7 @@ export interface UseStudentFormProps {
 // ── Initial State ───────────────────────────────────────────────
 
 const initialFormState: StudentFormData = {
-  name: { ar: '', en: '' },
+  name: { ar: '', en: '', tr: '', fr: '', ur: '', id: '' },
   gender: 'male',
   birth_date: '',
   country: '',
@@ -106,13 +106,14 @@ export const useStudentForm = ({
     if (!isOpen) return;
 
     if (studentToEdit) {
-      let nameObj: Record<string, string> = {};
+      let nameObj: Record<string, string> = { ar: '', en: '', tr: '', fr: '', ur: '', id: '' };
+      
       if (typeof studentToEdit.name === 'object' && studentToEdit.name !== null) {
-        nameObj = { ...studentToEdit.name };
+        nameObj = { ...nameObj, ...studentToEdit.name };
       } else if (typeof studentToEdit.name === 'string') {
-        nameObj = { [currentLang]: studentToEdit.name };
+        nameObj[currentLang] = studentToEdit.name;
       } else if (studentToEdit.full_name) {
-        nameObj = { [currentLang]: studentToEdit.full_name };
+        nameObj[currentLang] = studentToEdit.full_name;
       }
 
       const notesObj =
