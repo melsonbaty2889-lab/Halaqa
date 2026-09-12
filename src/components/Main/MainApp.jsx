@@ -221,7 +221,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const { isOffline, updateAvailable, handleReload } = useNetworkAndUpdateStatus();
 
-  // ✅ الاعتماد المباشر على البيانات الجاهزة من Context المنصة
+  // الاعتماد المباشر على البيانات الجاهزة من Context المنصة
   const { academy, academiesList, setAcademy } = useAcademy();
 
   const isMobile = useIsMobile(1024);
@@ -275,6 +275,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || null;
   const isAcademyActive = academy?.is_active ?? true;
 
+  // مرجع لتسجيل آخر أكاديمية جُلبت بياناتها تفادياً لتكرار الاستعلامات
+  const fetchedAcademyIdRef = useRef(null);
+
   const numberFormatter = useMemo(() => {
     try {
       return new Intl.NumberFormat(currentLang, { useGrouping: true });
@@ -322,12 +325,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
-  // ✅ جلب البيانات الفرعية (طلاب، معلمون، حلقات) فقط عند تغيير ID الأكاديمية المفعلة
-  const fetchSubResources = useCallback(async (targetAcademyId) => {
+  // جلب البيانات الفرعية (طلاب، معلمون، حلقات) وتجنب التكرار إذا جُلبت من قبل
+  const fetchSubResources = useCallback(async (targetAcademyId, forceRefresh = false) => {
     if (!targetAcademyId) {
       setLoadingData(false);
       return;
     }
+
+    if (!forceRefresh && fetchedAcademyIdRef.current === targetAcademyId) {
+      return;
+    }
+
     setLoadingData(true);
     try {
       const { data: rels } = await supabase
@@ -350,6 +358,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setCompletedExamsCount(examsRes.status === 'fulfilled' ? examsRes.value.count ?? 0 : 0);
       setTeachers(teachersRes.status === 'fulfilled' ? teachersRes.value.data || [] : []);
       setHalaqas(halaqasRes.status === 'fulfilled' ? halaqasRes.value.data || [] : []);
+
+      fetchedAcademyIdRef.current = targetAcademyId;
     } catch (error) {
       console.error("Error fetching sub-resources:", error);
     } finally {
@@ -358,15 +368,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, []);
 
   useEffect(() => {
+    if (academy) {
+      if (academy.currency) setCurrency(academy.currency);
+      if (academy.timezone) setTimezone(academy.timezone);
+      if (academy.country_code) setCountryCode(academy.country_code);
+    }
+
     if (academyId) {
-      if (academy?.currency) setCurrency(academy.currency);
-      if (academy?.timezone) setTimezone(academy.timezone);
-      if (academy?.country_code) setCountryCode(academy.country_code);
       fetchSubResources(academyId);
     } else {
       setLoadingData(false);
     }
-  }, [academyId, fetchSubResources, academy]);
+  }, [academyId, academy?.currency, academy?.timezone, academy?.country_code, fetchSubResources]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
     if (!newAcademyId || newAcademyId === academyId) return;
@@ -500,7 +513,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             setTeachers={setTeachers} 
             academyId={academyId} 
             halaqas={enrichedHalaqas}
-            onRefresh={() => fetchSubResources(academyId)}
+            onRefresh={() => fetchSubResources(academyId, true)}
             t={t}
             isRtl={isRtl}
           />
