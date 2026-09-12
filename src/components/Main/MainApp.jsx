@@ -218,17 +218,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { t, i18n } = useTranslation(); 
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
   const currentLang = i18n?.language || 'ar';
-  const lastFetchedUserId = useRef(null);
 
   const { isOffline, updateAvailable, handleReload } = useNetworkAndUpdateStatus();
 
-  let academyContext = null;
-  try {
-    academyContext = useAcademy();
-  } catch (e) {
-    console.warn("AcademyContext unavailable:", e);
-  }
-  const academy = academyContext?.academy || null;
+  // ✅ الاعتماد المباشر على البيانات الجاهزة من Context المنصة
+  const { academy, academiesList, setAcademy } = useAcademy();
+
   const isMobile = useIsMobile(1024);
 
   const getDefaultTabForRole = useCallback((role) => {
@@ -268,18 +263,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [halaqas, setHalaqas] = useState([]);
-  const [academyId, setAcademyId] = useState(null);
-  const [academyName, setAcademyName] = useState(""); 
-  const [isAcademyActive, setIsAcademyActive] = useState(true);
-  const [rawAcademyData, setRawAcademyData] = useState(null);
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
 
   const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
-  const [currency, setCurrency] = useState(isPlatformAdmin ? "EGP" : "USD");         
-  const [timezone, setTimezone] = useState(isPlatformAdmin ? "Africa/Cairo" : "UTC");         
-  const [countryCode, setCountryCode] = useState(isPlatformAdmin ? "EG" : "US");   
+  const [currency, setCurrency] = useState(academy?.currency || (isPlatformAdmin ? "EGP" : "USD"));         
+  const [timezone, setTimezone] = useState(academy?.timezone || (isPlatformAdmin ? "Africa/Cairo" : "UTC"));         
+  const [countryCode, setCountryCode] = useState(academy?.country_code || (isPlatformAdmin ? "EG" : "US"));   
   const [academyTime, setAcademyTime] = useState("");
+
+  const academyId = academy?.id || null;
+  const isAcademyActive = academy?.is_active ?? true;
 
   const numberFormatter = useMemo(() => {
     try {
@@ -328,32 +322,14 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
-  // ✅ جلب بيانات الأكاديمية والمدرسين بدون استخدام academy_id الخاطئ في teachers
-  const fetchAcademyData = useCallback(async (targetAcademyId) => {
+  // ✅ جلب البيانات الفرعية (طلاب، معلمون، حلقات) فقط عند تغيير ID الأكاديمية المفعلة
+  const fetchSubResources = useCallback(async (targetAcademyId) => {
     if (!targetAcademyId) {
       setLoadingData(false);
       return;
     }
     setLoadingData(true);
     try {
-      const { data: academyData } = await supabase
-        .from('academies')
-        .select('id, name, currency, timezone, country_code, is_active, blocked_reason')
-        .eq('id', targetAcademyId)
-        .maybeSingle();
-
-      if (academyData) {
-        setRawAcademyData(academyData);
-        const rawName = academyData.name || academy?.name || "";
-        setAcademyName(formatLocalizedText(rawName, currentLang));
-        
-        setIsAcademyActive(academyData.is_active ?? true);
-        if (academyData.currency) setCurrency(academyData.currency);
-        if (academyData.timezone) setTimezone(academyData.timezone);
-        if (academyData.country_code) setCountryCode(academyData.country_code);
-      }
-
-      // جلب معرفات المعلمين من academy_teachers أولاً
       const { data: rels } = await supabase
         .from('academy_teachers')
         .select('teacher_id')
@@ -375,17 +351,30 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setTeachers(teachersRes.status === 'fulfilled' ? teachersRes.value.data || [] : []);
       setHalaqas(halaqasRes.status === 'fulfilled' ? halaqasRes.value.data || [] : []);
     } catch (error) {
-      console.error("Error fetching academy data:", error);
+      console.error("Error fetching sub-resources:", error);
     } finally {
       setLoadingData(false);
     }
-  }, [academy?.name, currentLang]);
+  }, []);
+
+  useEffect(() => {
+    if (academyId) {
+      if (academy?.currency) setCurrency(academy.currency);
+      if (academy?.timezone) setTimezone(academy.timezone);
+      if (academy?.country_code) setCountryCode(academy.country_code);
+      fetchSubResources(academyId);
+    } else {
+      setLoadingData(false);
+    }
+  }, [academyId, fetchSubResources, academy]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
     if (!newAcademyId || newAcademyId === academyId) return;
-    setAcademyId(newAcademyId);
-    fetchAcademyData(newAcademyId);
-  }, [academyId, fetchAcademyData]);
+    const target = academiesList.find(a => a.id === newAcademyId);
+    if (target) {
+      setAcademy(target);
+    }
+  }, [academyId, academiesList, setAcademy]);
 
   const handleDeleteStudent = useCallback(async (studentId) => {
     try {
@@ -402,78 +391,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoadingData(false);
-    }, 4000);
-
-    const currentUserId = session?.user?.id;
-    if (!currentUserId) {
-      setLoadingData(false);
-      clearTimeout(timer);
-      return;
-    }
-
-    if (lastFetchedUserId.current === currentUserId) {
-      clearTimeout(timer);
-      return;
-    }
-    lastFetchedUserId.current = currentUserId;
-
-    async function loadInitialData() {
-      try {
-        setLoadingData(true);
-        let currentAcademyId = academy?.id;
-
-        if (!currentAcademyId) {
-          const { data: staff } = await supabase
-            .from('academy_teachers')
-            .select('academy_id, academies(id, name, currency, timezone, country_code, is_active, blocked_reason)')
-            .eq('teacher_id', currentUserId)
-            .maybeSingle();
-          currentAcademyId = staff?.academies?.id || staff?.academy_id;
-        }
-
-        if (!currentAcademyId) {
-          const { data: ownedAcademy } = await supabase
-            .from('academies')
-            .select('id')
-            .eq('owner_id', currentUserId)
-            .maybeSingle();
-          currentAcademyId = ownedAcademy?.id;
-        }
-
-        if (!currentAcademyId) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('academy_id')
-            .eq('id', currentUserId)
-            .maybeSingle();
-          currentAcademyId = profileData?.academy_id;
-        }
-
-        if (currentAcademyId) {
-          setAcademyId(currentAcademyId);
-          await fetchAcademyData(currentAcademyId);
-        } else {
-          setLoadingData(false);
-        }
-      } catch (error) {
-        console.error("🚨 Error loading initial data:", error);
-        setLoadingData(false);
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-
-    loadInitialData();
-    return () => clearTimeout(timer);
-  }, [session, fetchAcademyData, academy?.id]);
-
   if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
     return (
       <BlockedView 
-        academy={rawAcademyData || academy} 
+        academy={academy} 
         onLogout={onLogout} 
         isRtl={isRtl} 
       />
@@ -493,7 +414,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [halaqas, teachers, currentLang, t]);
 
   const preloadedDashboardData = useMemo(() => {
-    const rawAcademyName = academyName || academy?.name;
+    const rawAcademyName = academy?.name;
     const resolvedName = formatLocalizedText(rawAcademyName, currentLang) || t('common.academy', 'الأكاديمية');
     const globalAdminLabel = t('dashboard.global_admin', 'إدارة المنصة العامة');
 
@@ -510,7 +431,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         completedExams: completedExamsCount || 0
       }
     };
-  }, [isPlatformAdmin, academyName, academy?.name, currentLang, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
+  }, [isPlatformAdmin, academy?.name, currentLang, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
 
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
@@ -579,7 +500,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             setTeachers={setTeachers} 
             academyId={academyId} 
             halaqas={enrichedHalaqas}
-            onRefresh={() => fetchAcademyData(academyId)}
+            onRefresh={() => fetchSubResources(academyId)}
             t={t}
             isRtl={isRtl}
           />
