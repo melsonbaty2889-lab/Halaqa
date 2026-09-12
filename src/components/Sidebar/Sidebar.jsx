@@ -42,7 +42,9 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  // دالة الترجمة الآمنة المتوافقة مع i18next-parser
+  // لمنع تنفيذ الدالة أثناء جلب البيانات بالفعل
+  const isFetchingRef = useRef(false);
+
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       return t(key, { defaultValue: fallback || key });
@@ -117,10 +119,15 @@ export default function Sidebar({
   const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
   const loadAcademies = useCallback(async () => {
-    if (!supabase) return;
+    if (!supabase || isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        isFetchingRef.current = false;
+        return;
+      }
 
       let list = [];
       const { data: rpcAcademyId, error: rpcError } = await supabase.rpc('get_user_academy_id');
@@ -166,12 +173,13 @@ export default function Sidebar({
       }
     } catch (err) {
       console.error("Error loading academies:", err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, [currentAcademyId, onSwitchAcademy]);
 
   useEffect(() => {
-    let isMounted = true;
-    if (isMounted) loadAcademies();
+    loadAcademies();
 
     let channel = null;
     try {
@@ -179,7 +187,7 @@ export default function Sidebar({
         channel = supabase
           .channel('sidebar-academy-changes')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => {
-            if (isMounted) loadAcademies();
+            loadAcademies();
           })
           .subscribe();
       }
@@ -188,7 +196,6 @@ export default function Sidebar({
     }
 
     return () => {
-      isMounted = false;
       if (channel && supabase && typeof supabase.removeChannel === 'function') {
         supabase.removeChannel(channel);
       }
