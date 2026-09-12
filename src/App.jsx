@@ -9,7 +9,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
-import rawColors from '@/theme/colors.js';
+import { C } from '@/theme/colors';
 import { getText } from '@/utils/textUtils';
 
 // 🚀 Dynamic Imports (Lazy Loading)
@@ -29,58 +29,6 @@ const DevPlayground = lazy(() => {
   }
   return Promise.resolve({ default: () => null });
 });
-
-// 🎨 كائن الألوان الديناميكي المطور وفقاً لنظام الألوان v2.5
-const C = {
-  ...rawColors,
-  dark: {
-    main: rawColors?.dark?.bg || '#070B11',
-    card: rawColors?.dark?.card || 'rgba(15, 23, 42, 0.85)',
-    border: rawColors?.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)',
-    surface: rawColors?.dark?.surface || '#0A0F1C',
-  },
-  primary: {
-    DEFAULT: rawColors?.amber?.DEFAULT || rawColors?.primary?.DEFAULT || '#D97706',
-    hover: rawColors?.primary?.hover || '#B45309',
-    gradient: rawColors?.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
-  },
-  brandEmerald: {
-    DEFAULT: rawColors?.emerald?.DEFAULT || rawColors?.brandEmerald?.DEFAULT || '#10B981',
-    dark: rawColors?.emerald?.dark || '#059669',
-    light: rawColors?.emerald?.light || '#34D399',
-    bgGlow: rawColors?.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)',
-    logoGlow: rawColors?.emerald?.logoGlow || 'rgba(16, 185, 129, 0.35)',
-    bg: rawColors?.brandEmerald?.bg || '#09332C',
-    border: rawColors?.brandEmerald?.border || '#0D5C4D',
-  },
-  text: {
-    title: rawColors?.text?.title || '#FFFFFF',
-    subtitle: rawColors?.text?.subtitle || '#D97706',
-    body: rawColors?.text?.body || '#E2E8F0',
-    muted: rawColors?.text?.muted || '#94A3B8',
-    placeholder: rawColors?.text?.placeholder || '#64748B',
-  },
-  inputs: {
-    bg: rawColors?.inputs?.bg || 'rgba(10, 15, 28, 0.8)',
-    border: rawColors?.inputs?.border || 'rgba(255, 255, 255, 0.12)',
-    borderFocus: rawColors?.inputs?.borderFocus || '#D97706',
-    icon: rawColors?.inputs?.icon || '#64748B',
-  },
-  gradients: {
-    starsBg: rawColors?.gradients?.starsBg || `
-      radial-gradient(circle at 50% 28%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
-      radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px)
-    `,
-    primaryBtn: rawColors?.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
-    logoBox: rawColors?.gradients?.logoBox || 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-    progressBar: rawColors?.gradients?.progressBar || 'linear-gradient(90deg, #10B981 0%, #F59E0B 100%)',
-  },
-  error: {
-    DEFAULT: rawColors?.error?.DEFAULT || '#EF4444',
-    bgGlow: 'rgba(239, 68, 68, 0.15)',
-    light: '#FCA5A5',
-  }
-};
 
 function OfflineAndUpdateBanner() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -123,8 +71,8 @@ function OfflineAndUpdateBanner() {
     <>
       {!isOnline && (
         <div style={{
-          background: C.error?.DEFAULT,
-          color: C.text?.title,
+          background: C.error?.DEFAULT || '#EF4444',
+          color: C.text?.title || '#FFFFFF',
           textAlign: 'center',
           padding: '8px 16px',
           position: 'fixed',
@@ -148,8 +96,8 @@ function OfflineAndUpdateBanner() {
 
       {needRefresh && (
         <div style={{
-          background: C.brandEmerald?.DEFAULT,
-          color: C.dark?.surface,
+          background: C.emerald?.DEFAULT || '#10B981',
+          color: C.dark?.bg || '#050811',
           textAlign: 'center',
           padding: '8px 16px',
           position: 'fixed',
@@ -171,8 +119,8 @@ function OfflineAndUpdateBanner() {
             aria-label={getText(t, 'system.update_now', 'تحديث الآن')}
             title={getText(t, 'system.update_now', 'تحديث الآن')}
             style={{
-              background: C.dark?.main,
-              color: C.brandEmerald?.DEFAULT,
+              background: C.dark?.bg || '#050811',
+              color: C.emerald?.DEFAULT || '#10B981',
               border: 'none',
               padding: '6px 12px',
               minHeight: '44px',
@@ -201,7 +149,7 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
 
   if (appState === 'LOADING') {
     return (
-      <div style={{ background: C.dark?.main, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: C.primary?.DEFAULT }}>
+      <div style={{ background: C.dark?.bg || '#050811', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: C.amber?.DEFAULT || '#D97706' }}>
         <Loader2 className="animate-spin" size={28} />
       </div>
     );
@@ -229,24 +177,24 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   if (!isAllowed || !isCorrectAcademy) {
     return (
       <div style={{
-        background: C.dark?.main,
+        background: C.dark?.bg || '#050811',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: C.text?.title,
+        color: C.text?.title || '#FFFFFF',
         padding: '20px',
         textAlign: 'center',
         fontFamily: "'Cairo', system-ui, sans-serif"
       }}>
-        <div style={{ background: C.error?.bgGlow, padding: '20px', borderRadius: '50%', marginBlockEnd: '16px', color: C.error?.DEFAULT }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.15)', padding: '20px', borderRadius: '50%', marginBlockEnd: '16px', color: C.error?.DEFAULT || '#EF4444' }}>
           <Lock size={40} />
         </div>
         <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBlockEnd: '8px' }}>
           {getText(t, 'auth.unauthorized_title', 'غير مصرح لك بالوصول لهذه الشاشة')}
         </h2>
-        <p style={{ color: C.text?.muted, fontSize: '14px', maxWidth: '400px', marginBlockEnd: '24px' }}>
+        <p style={{ color: C.text?.muted || '#94A3B8', fontSize: '14px', maxWidth: '400px', marginBlockEnd: '24px' }}>
           {getText(t, 'auth.unauthorized_desc', 'دور حسابك الحالي غير مجاز لاستخدام هذه الصفحة.')}
         </p>
         <button
@@ -256,8 +204,8 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
           style={{
             padding: '10px 20px',
             minHeight: '44px',
-            background: C.primary?.gradient,
-            color: C.text?.title,
+            background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+            color: C.text?.title || '#FFFFFF',
             border: 'none',
             borderRadius: '8px',
             fontWeight: 'bold',
@@ -290,7 +238,6 @@ if (typeof window !== 'undefined') {
 }
 
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
-  // استدعاء Hook المزامنة دائماً في الأعلى لامتثال قواعد React
   const academyContext = useAcademy();
   const t = academyContext?.t;
 
@@ -310,8 +257,8 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
       fontFamily: "'Cairo', system-ui, sans-serif"
     }}>
       <div style={{
-        background: C.dark?.card,
-        border: `1px solid ${C.dark?.border}`,
+        background: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
+        border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
         borderRadius: '16px',
         maxWidth: '480px',
         width: '100%',
@@ -329,7 +276,7 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             insetInlineStart: '16px',
             background: 'none',
             border: 'none',
-            color: C.text?.muted,
+            color: C.text?.muted || '#94A3B8',
             cursor: 'pointer',
             minHeight: '44px',
             minWidth: '44px',
@@ -346,8 +293,8 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             width: '50px',
             height: '50px',
             borderRadius: '50%',
-            background: C.brandEmerald?.bgGlow,
-            color: C.brandEmerald?.DEFAULT,
+            background: C.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)',
+            color: C.emerald?.DEFAULT || '#10B981',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -355,32 +302,32 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           }}>
             <Zap size={24} />
           </div>
-          <h2 style={{ color: C.text?.title, fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
+          <h2 style={{ color: C.text?.title || '#FFFFFF', fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
             {getText(t, 'upgrade.title', 'ترقية حساب الأكاديمية')}
           </h2>
-          <p style={{ color: C.text?.muted, fontSize: '0.85rem', margin: 0 }}>
+          <p style={{ color: C.text?.muted || '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
             {getText(t, 'upgrade.subtitle', 'احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك')} ({academyName || ''})
           </p>
         </div>
 
         <div style={{
-          background: C.dark?.surface,
+          background: C.dark?.surface || '#0A0F1C',
           borderRadius: '10px',
           padding: '14px',
           marginBlockEnd: '20px',
-          border: `1px solid ${C.dark?.border}`
+          border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`
         }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text?.body, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text?.body || '#E2E8F0', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={18} style={{ color: C.brandEmerald?.DEFAULT }} />
+              <CheckCircle size={18} style={{ color: C.emerald?.DEFAULT || '#10B981' }} />
               <span>{getText(t, 'upgrade.feat1', 'إدارة عدد غير محدود من الطلاب والحلقات')}</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={18} style={{ color: C.brandEmerald?.DEFAULT }} />
+              <CheckCircle size={18} style={{ color: C.emerald?.DEFAULT || '#10B981' }} />
               <span>{getText(t, 'upgrade.feat2', 'تقارير وأداء لحظي وتنبيهات مستمرة')}</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={18} style={{ color: C.brandEmerald?.DEFAULT }} />
+              <CheckCircle size={18} style={{ color: C.emerald?.DEFAULT || '#10B981' }} />
               <span>{getText(t, 'upgrade.feat3', 'دعم فني وتحديثات مستمرة للباقة الاحترافية')}</span>
             </li>
           </ul>
@@ -398,8 +345,8 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
               flex: 1,
               padding: '12px',
               minHeight: '44px',
-              background: C.primary?.gradient,
-              color: C.text?.title,
+              background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+              color: C.text?.title || '#FFFFFF',
               border: 'none',
               borderRadius: '8px',
               fontWeight: 'bold',
@@ -417,8 +364,8 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
               padding: '12px 18px',
               minHeight: '44px',
               background: 'transparent',
-              color: C.text?.muted,
-              border: `1px solid ${C.dark?.border}`,
+              color: C.text?.muted || '#94A3B8',
+              border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
               borderRadius: '8px',
               fontSize: '0.9rem',
               cursor: 'pointer'
@@ -459,19 +406,19 @@ class GlobalErrorBoundary extends Component {
       return (
         <div style={{
           minHeight: '100vh',
-          background: C.dark?.main,
+          background: C.dark?.bg || '#050811',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
           fontFamily: "'Cairo', system-ui, sans-serif",
-          color: C.text?.title
+          color: C.text?.title || '#FFFFFF'
         }}>
           <div style={{
             width: '100%',
             maxWidth: '520px',
-            background: C.dark?.card,
-            border: `1px solid ${C.dark?.border}`,
+            background: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
+            border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
             borderRadius: '24px',
             padding: '36px 28px',
             textAlign: 'center',
@@ -486,7 +433,7 @@ class GlobalErrorBoundary extends Component {
               transform: 'translateX(-50%)',
               width: '180px',
               height: '180px',
-              background: C.error?.DEFAULT,
+              background: C.error?.DEFAULT || '#EF4444',
               filter: 'blur(90px)',
               opacity: 0.25,
               pointerEvents: 'none'
@@ -496,9 +443,9 @@ class GlobalErrorBoundary extends Component {
               width: '72px',
               height: '72px',
               borderRadius: '20px',
-              background: C.error?.bgGlow,
-              border: `1px solid ${C.error?.DEFAULT}`,
-              color: C.error?.DEFAULT,
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: `1px solid ${C.error?.DEFAULT || '#EF4444'}`,
+              color: C.error?.DEFAULT || '#EF4444',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -507,28 +454,28 @@ class GlobalErrorBoundary extends Component {
               <AlertTriangle size={36} />
             </div>
 
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.text?.title }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.text?.title || '#FFFFFF' }}>
               عذراً، حدث خطأ تقني غير متوقع
             </h2>
-            <p style={{ fontSize: '0.875rem', color: C.text?.muted, marginBlockEnd: '24px', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '0.875rem', color: C.text?.muted || '#94A3B8', marginBlockEnd: '24px', lineHeight: '1.6' }}>
               واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.
             </p>
 
             <div style={{
-              background: C.dark?.surface,
-              border: `1px solid ${C.dark?.border}`,
+              background: C.dark?.surface || '#0A0F1C',
+              border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
               borderRadius: '12px',
               padding: '14px 16px',
               textAlign: 'start',
               marginBlockEnd: '28px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: C.text?.muted, marginBlockEnd: '6px', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '0.75rem', color: C.text?.muted || '#94A3B8', marginBlockEnd: '6px', display: 'flex', justifyContent: 'space-between' }}>
                 <span>تفاصيل الخطأ:</span>
-                <span style={{ color: C.error?.light }}>CRASH_REPORT</span>
+                <span style={{ color: '#FCA5A5' }}>CRASH_REPORT</span>
               </div>
               <p style={{
                 fontSize: '0.8rem',
-                color: C.error?.light,
+                color: '#FCA5A5',
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -547,8 +494,8 @@ class GlobalErrorBoundary extends Component {
                 width: '100%',
                 padding: '12px 20px',
                 minHeight: '44px',
-                background: C.primary?.gradient,
-                color: C.text?.title,
+                background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
+                color: C.text?.title || '#FFFFFF',
                 border: 'none',
                 borderRadius: '12px',
                 fontWeight: '700',
@@ -624,9 +571,9 @@ function MainContent() {
 
   if (appState === 'LOADING' || !appState) {
     return (
-      <div style={{ background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.primary?.DEFAULT, gap: '12px' }}>
+      <div style={{ background: C.dark?.bg || '#050811', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.amber?.DEFAULT || '#D97706', gap: '12px' }}>
         <Loader2 className="animate-spin" size={32} />
-        <span style={{ fontSize: '0.85rem', color: C.text?.muted, fontFamily: "'Cairo', system-ui, sans-serif" }}>
+        <span style={{ fontSize: '0.85rem', color: C.text?.muted || '#94A3B8', fontFamily: "'Cairo', system-ui, sans-serif" }}>
           {getText(t, 'system.loading', 'جاري تحميل المنظومة...')}
         </span>
       </div>
@@ -635,7 +582,7 @@ function MainContent() {
 
   if (appState === 'UNAUTHENTICATED') {
     return (
-      <div style={{ background: C.dark?.main, minHeight: '100vh' }}>
+      <div style={{ background: C.dark?.bg || '#050811', minHeight: '100vh' }}>
         {authView === 'login' && (
           <LoginPage 
             onSwitchToSignUp={() => setAuthView('signup')} 
@@ -655,13 +602,13 @@ function MainContent() {
 
   if (appState === 'PENDING_APPROVAL') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark?.main, padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-        <div style={{ width: '100%', maxWidth: '500px', background: C.dark?.card, padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${C.dark?.border}` }}>
-          <Clock size={40} style={{ color: C.primary?.DEFAULT, marginBlockEnd: '20px' }} />
-          <h2 style={{ color: C.text?.title, marginBlockEnd: '15px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark?.bg || '#050811', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: C.dark?.card || 'rgba(15, 23, 42, 0.85)', padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}` }}>
+          <Clock size={40} style={{ color: C.amber?.DEFAULT || '#D97706', marginBlockEnd: '20px' }} />
+          <h2 style={{ color: C.text?.title || '#FFFFFF', marginBlockEnd: '15px' }}>
             {getText(t, 'approval.pending_title', 'طلبك قيد المراجعة')}
           </h2>
-          <p style={{ color: C.text?.muted, marginBlockEnd: '25px', lineHeight: '1.6' }}>
+          <p style={{ color: C.text?.muted || '#94A3B8', marginBlockEnd: '25px', lineHeight: '1.6' }}>
             {getText(t, 'approval.pending_desc', 'حسابك وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.')}
           </p>
 
@@ -671,7 +618,7 @@ function MainContent() {
               disabled={isRefreshing}
               aria-label={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
               title={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
-              style={{ padding: '10px 20px', minHeight: '44px', background: C.primary?.gradient, color: C.text?.title, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', minHeight: '44px', background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)', color: C.text?.title || '#FFFFFF', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
               {isRefreshing ? getText(t, 'common.checking', 'جاري الفحص...') : getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
@@ -681,7 +628,7 @@ function MainContent() {
               onClick={logout} 
               aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
               title={getText(t, 'common.logout', 'تسجيل الخروج')}
-              style={{ padding: '10px 20px', minHeight: '44px', background: 'transparent', color: C.error?.DEFAULT, border: `1px solid ${C.error?.DEFAULT}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', minHeight: '44px', background: 'transparent', color: C.error?.DEFAULT || '#EF4444', border: `1px solid ${C.error?.DEFAULT || '#EF4444'}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <LogOut size={16} />
               {getText(t, 'common.logout', 'تسجيل الخروج')}
@@ -694,19 +641,19 @@ function MainContent() {
 
   if (appState === 'SUSPENDED') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark?.main, padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-        <div style={{ width: '100%', maxWidth: '500px', background: C.dark?.card, padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${C.dark?.border}` }}>
-          <div style={{ background: C.error?.bgGlow, width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: C.error?.DEFAULT }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.dark?.bg || '#050811', padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
+        <div style={{ width: '100%', maxWidth: '500px', background: C.dark?.card || 'rgba(15, 23, 42, 0.85)', padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}` }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.15)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: C.error?.DEFAULT || '#EF4444' }}>
             <ShieldAlert size={36} />
           </div>
-          <h2 style={{ color: C.text?.title, marginBlockEnd: '12px', fontSize: '1.4rem', fontWeight: 'bold' }}>
+          <h2 style={{ color: C.text?.title || '#FFFFFF', marginBlockEnd: '12px', fontSize: '1.4rem', fontWeight: 'bold' }}>
             {getText(t, 'suspension.title', 'تم إيقاف حساب الأكاديمية')}
           </h2>
-          <div style={{ background: C.dark?.surface, padding: '16px', borderRadius: '12px', border: `1px solid ${C.dark?.border}`, marginBlockEnd: '24px', textAlign: 'start' }}>
-            <span style={{ fontSize: '0.8rem', color: C.text?.muted, display: 'block', marginBlockEnd: '4px' }}>
+          <div style={{ background: C.dark?.surface || '#0A0F1C', padding: '16px', borderRadius: '12px', border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`, marginBlockEnd: '24px', textAlign: 'start' }}>
+            <span style={{ fontSize: '0.8rem', color: C.text?.muted || '#94A3B8', display: 'block', marginBlockEnd: '4px' }}>
               {getText(t, 'suspension.reason_label', 'سبب الإيقاف:')}
             </span>
-            <p style={{ color: C.error?.light, margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>
+            <p style={{ color: '#FCA5A5', margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>
               {getSuspensionReason()}
             </p>
           </div>
@@ -717,7 +664,7 @@ function MainContent() {
               disabled={isRefreshing}
               aria-label={getText(t, 'common.refresh', 'إعادة التحديث')}
               title={getText(t, 'common.refresh', 'إعادة التحديث')}
-              style={{ padding: '10px 20px', minHeight: '44px', background: C.primary?.gradient, color: C.text?.title, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', minHeight: '44px', background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)', color: C.text?.title || '#FFFFFF', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
               {isRefreshing ? getText(t, 'common.checking', 'جاري التحقق...') : getText(t, 'common.refresh', 'إعادة التحديث')}
@@ -727,7 +674,7 @@ function MainContent() {
               onClick={logout} 
               aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
               title={getText(t, 'common.logout', 'تسجيل الخروج')}
-              style={{ padding: '10px 20px', minHeight: '44px', background: 'transparent', color: C.error?.DEFAULT, border: `1px solid ${C.error?.DEFAULT}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '10px 20px', minHeight: '44px', background: 'transparent', color: C.error?.DEFAULT || '#EF4444', border: `1px solid ${C.error?.DEFAULT || '#EF4444'}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <LogOut size={16} />
               {getText(t, 'common.logout', 'تسجيل الخروج')}
@@ -749,25 +696,22 @@ function MainContent() {
   if (appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) {
     const cachedSlug = typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
 
-    // 1. تنظيف الـ Cache القديم إذا كان الحساب الحالي غير مرتبط بأكاديمية في قاعدة البيانات
     if (!profile?.academy_id && cachedSlug) {
       localStorage.removeItem('current_academy_slug');
     }
 
-    // 2. إذا وجد slug ومسجل بالفعل بالبروفايل، نقوم بالتزامن
     if (cachedSlug && profile?.academy_id) {
       if (refreshStatus) refreshStatus();
       return (
-        <div style={{ background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.primary?.DEFAULT, gap: '12px' }}>
+        <div style={{ background: C.dark?.bg || '#050811', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.amber?.DEFAULT || '#D97706', gap: '12px' }}>
           <Loader2 className="animate-spin" size={32} />
-          <span style={{ fontSize: '0.85rem', color: C.text?.muted, fontFamily: "'Cairo', system-ui, sans-serif" }}>
+          <span style={{ fontSize: '0.85rem', color: C.text?.muted || '#94A3B8', fontFamily: "'Cairo', system-ui, sans-serif" }}>
             {getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')}
           </span>
         </div>
       );
     }
 
-    // 3. عرض شاشة التأسيس/اختيار الدور بدلاً من الشاشات الافتراضية
     return (
       <CreateAcademy 
         onLogout={logout} 
@@ -786,7 +730,6 @@ function MainContent() {
     const resolvedRole = (userRole || profile?.role || 'student').toString().toLowerCase().trim();
     const activeSlug = academy?.slug || localStorage.getItem('current_academy_slug');
 
-    // تحديد مسار البداية المناسب لكل دور بدقة
     const getRoleDefaultSubPath = (role) => {
       switch (role) {
         case 'admin':
@@ -805,7 +748,6 @@ function MainContent() {
 
     return (
       <Routes>
-        {/* 1. المسار المباشر مع الـ slug */}
         <Route 
           path="/:slug/*" 
           element={
@@ -824,7 +766,6 @@ function MainContent() {
           } 
         />
 
-        {/* 2. إعادة التوجيه التلقائية الصريحة فور دخول المستخدم دون slug */}
         <Route 
           path="/*" 
           element={
@@ -844,21 +785,22 @@ function MainContent() {
       </Routes>
     );
   }
+
   return (
     <div style={{
-      background: C.dark?.main, minHeight: '100vh', display: 'flex', flexDirection:
-      'column', justifyContent: 'center', alignItems: 'center', color: C.text?.title,
+      background: C.dark?.bg || '#050811', minHeight: '100vh', display: 'flex', flexDirection:
+      'column', justifyContent: 'center', alignItems: 'center', color: C.text?.title || '#FFFFFF',
       fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px',
       textAlign: 'center' }}>
-      <AlertTriangle size={40} style={{ color: C.error?.DEFAULT, marginBlockEnd: '15px' }} />
+      <AlertTriangle size={40} style={{ color: C.error?.DEFAULT || '#EF4444', marginBlockEnd: '15px' }} />
       <h2 style={{ marginBlockEnd: '10px' }}>{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
-      <p style={{ color: C.text?.muted, marginBlockEnd: '5px' }}>App State: <strong style={{ color: C.primary?.DEFAULT }}>{appState || 'NULL'}</strong></p>
+      <p style={{ color: C.text?.muted || '#94A3B8', marginBlockEnd: '5px' }}>App State: <strong style={{ color: C.amber?.DEFAULT || '#D97706' }}>{appState || 'NULL'}</strong></p>
       <button 
         onClick={logout} 
         aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
         title={getText(t, 'common.logout', 'تسجيل الخروج')}
         style={{
-          background: C.primary?.gradient, color: C.text?.title, padding: '10px 25px',
+          background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)', color: C.text?.title || '#FFFFFF', padding: '10px 25px',
           minHeight: '44px', border: 'none', borderRadius: '6px', cursor: 'pointer',
           fontWeight: 'bold' }}
       >
@@ -893,7 +835,7 @@ export default function App() {
   return (
     <GlobalErrorBoundary>
       <Suspense fallback={
-        <div style={{ background: C.dark?.main, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary?.DEFAULT }}>
+        <div style={{ background: C.dark?.bg || '#050811', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.amber?.DEFAULT || '#D97706' }}>
           <Loader2 className="animate-spin" size={32} />
         </div>
       }>
@@ -905,9 +847,7 @@ export default function App() {
           <>
             <OfflineAndUpdateBanner />
             <Routes>
-              {/* 🧪 مسار صفحة اختبار الـ Hooks */}
               <Route path="/test" element={<TestHooks />} />
-              
               <Route path="/verify/:certId" element={<CertificateVerify />} />
               <Route path="/*" element={<MainContent />} />
             </Routes>
