@@ -24,6 +24,41 @@
   "activeSession": "جلسة نشطة",
   "add_new_student": "إضافة طالب جديد",
   "addHalaqa": "إنشاء حلقة جديدة",
+  "affiliate": {
+    "activeAcademies": "activeAcademies",
+    "autoDiscount": "autoDiscount",
+    "badge": "badge",
+    "copied": "copied",
+    "copyLink": "copyLink",
+    "directLink": "directLink",
+    "emptyDesc": "emptyDesc",
+    "emptyTitle": "emptyTitle",
+    "heroDesc": "heroDesc",
+    "heroTitle": "heroTitle",
+    "loading": "جاري تحميل سجل الإحالات...",
+    "pendingDiscount": "pendingDiscount",
+    "recordsTitle": "recordsTitle",
+    "status": {
+      "pending": "pending",
+      "rewarded": "rewarded",
+      "subscribed": "subscribed"
+    },
+    "step1Desc": "step1Desc",
+    "step1Title": "step1Title",
+    "step2Desc": "step2Desc",
+    "step2Title": "step2Title",
+    "step3Desc": "step3Desc",
+    "step3Title": "step3Title",
+    "table": {
+      "academy": "academy",
+      "date": "date",
+      "reward": "reward",
+      "status": "status"
+    },
+    "totalDiscountEarned": "totalDiscountEarned",
+    "totalReferrals": "totalReferrals",
+    "whatsapp": "whatsapp"
+  },
   "app": {
     "name": "الحلقة الذكية",
     "tagline": "منصة إدارة المقارئ والأكاديميات"

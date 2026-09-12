@@ -24,6 +24,41 @@
   "activeSession": "Aktif Oturum",
   "add_new_student": "Yeni Öğrenci Ekle",
   "addHalaqa": "Yeni Halka Oluştur",
+  "affiliate": {
+    "activeAcademies": "",
+    "autoDiscount": "",
+    "badge": "",
+    "copied": "",
+    "copyLink": "",
+    "directLink": "",
+    "emptyDesc": "",
+    "emptyTitle": "",
+    "heroDesc": "",
+    "heroTitle": "",
+    "loading": "جاري تحميل سجل الإحالات...",
+    "pendingDiscount": "",
+    "recordsTitle": "",
+    "status": {
+      "pending": "",
+      "rewarded": "",
+      "subscribed": ""
+    },
+    "step1Desc": "",
+    "step1Title": "",
+    "step2Desc": "",
+    "step2Title": "",
+    "step3Desc": "",
+    "step3Title": "",
+    "table": {
+      "academy": "",
+      "date": "",
+      "reward": "",
+      "status": ""
+    },
+    "totalDiscountEarned": "",
+    "totalReferrals": "",
+    "whatsapp": ""
+  },
   "app": {
     "name": "Akıllı Halka",
     "tagline": "Kur'an Kursları ve Akademiler Yönetim Platformu"

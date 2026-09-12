@@ -24,6 +24,41 @@
   "activeSession": "Sesi Aktif",
   "add_new_student": "Tambah Santri Baru",
   "addHalaqa": "Buat Halaqah Baru",
+  "affiliate": {
+    "activeAcademies": "",
+    "autoDiscount": "",
+    "badge": "",
+    "copied": "",
+    "copyLink": "",
+    "directLink": "",
+    "emptyDesc": "",
+    "emptyTitle": "",
+    "heroDesc": "",
+    "heroTitle": "",
+    "loading": "جاري تحميل سجل الإحالات...",
+    "pendingDiscount": "",
+    "recordsTitle": "",
+    "status": {
+      "pending": "",
+      "rewarded": "",
+      "subscribed": ""
+    },
+    "step1Desc": "",
+    "step1Title": "",
+    "step2Desc": "",
+    "step2Title": "",
+    "step3Desc": "",
+    "step3Title": "",
+    "table": {
+      "academy": "",
+      "date": "",
+      "reward": "",
+      "status": ""
+    },
+    "totalDiscountEarned": "",
+    "totalReferrals": "",
+    "whatsapp": ""
+  },
   "app": {
     "name": "Halaqah Pintar",
     "tagline": "Platform Manajemen Rumah Quran & Akademi"
