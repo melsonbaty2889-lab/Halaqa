@@ -1,23 +1,34 @@
 // src/components/SaaS/AffiliateRewards.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  Copy, Check, Share2, Users, Award, 
-  Sparkles, Percent, Tag, ShieldCheck
+  Copy, 
+  Check, 
+  Share2, 
+  Users, 
+  Award, 
+  Sparkles, 
+  Percent, 
+  Tag, 
+  ShieldCheck,
+  Loader2,
+  Building2,
+  ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { colors as C } from '@/theme/colors.js';
 
 export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: isRtlProp, currentLang: currentLangProp }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   
-  const isRtl = isRtlProp !== undefined ? isRtlProp : (i18n?.dir ? i18n.dir() === 'rtl' : true);
   const currentLang = currentLangProp || i18n?.language || 'ar';
+  const rtlLanguages = ['ar', 'ur'];
+  const isRtl = isRtlProp !== undefined ? isRtlProp : rtlLanguages.some(lang => currentLang.startsWith(lang));
   const isEn = currentLang.startsWith('en');
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(true);
+  const [referralList, setReferralList] = useState([]);
   const [stats, setStats] = useState({
     totalReferrals: 0,
     activeAcademies: 0,
@@ -26,95 +37,110 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
   });
 
   const labels = {
-    badge: isEn ? "Partner Program" : "برنامج شركاء النجاح",
-    heroTitle: isEn ? "Refer Academies, Lower Your Renewal" : "ادعُ المقارئ واخصِم من اشتراكك",
-    heroDesc: isEn 
+    badge: t('affiliate.badge', isEn ? "Partner Program" : "برنامج شركاء النجاح"),
+    heroTitle: t('affiliate.heroTitle', isEn ? "Refer Academies, Lower Your Renewal" : "ادعُ المقارئ واخصِم من اشتراكك"),
+    heroDesc: t('affiliate.heroDesc', isEn 
       ? "Get direct discount credits on your next platform invoice for every academy that joins through you." 
-      : "احصل على خصومات فورية تُطبّق تلقائياً على فاتورة تجديدك القادمة لكل أكاديمية تنضم عن طريقك.",
-    directLink: isEn ? "Your Referral Link" : "رابط الإحالة المباشر",
-    copyLink: isEn ? "Copy" : "نسخ",
-    copied: isEn ? "Copied!" : "تم النسخ",
-    whatsapp: isEn ? "Share via WhatsApp" : "مشاركة عبر واتساب",
-    step1Title: isEn ? "1. Share" : "1. شارك",
-    step1Desc: isEn ? "Send link to directors." : "أرسل رابطك للمديرين",
-    step2Title: isEn ? "2. Subscribe" : "2. اشتركوا",
-    step2Desc: isEn ? "Academy starts a plan." : "تسجل الأكاديمية بالمنظومة",
-    step3Title: isEn ? "3. Save" : "3. وفّر",
-    step3Desc: isEn ? "Discount applied automatically." : "يُخصم التخفيض من فاتورتك",
-    totalReferrals: isEn ? "Total Referrals" : "إجمالي الإحالات",
-    activeAcademies: isEn ? "Active Academies" : "أكاديميات مشتركة",
-    pendingDiscount: isEn ? "Next Renewal Discount" : "خصم التجديد القادم",
-    totalDiscountEarned: isEn ? "Total Savings" : "إجمالي الوفر",
-    emptyTitle: isEn ? "No Referrals Yet" : "لا توجد إحالات بعد",
-    emptyDesc: isEn 
+      : "احصل على خصومات فورية تُطبّق تلقائياً على فاتورة تجديدك القادمة لكل أكاديمية تنضم عن طريقك."),
+    autoDiscount: t('affiliate.autoDiscount', isEn ? 'Automatic Discount' : 'تطبيق تلقائي للخصم'),
+    directLink: t('affiliate.directLink', isEn ? "Your Referral Link" : "رابط الإحالة المباشر"),
+    copyLink: t('affiliate.copyLink', isEn ? "Copy" : "نسخ"),
+    copied: t('affiliate.copied', isEn ? "Copied!" : "تم النسخ"),
+    whatsapp: t('affiliate.whatsapp', isEn ? "Share via WhatsApp" : "مشاركة عبر واتساب"),
+    
+    step1Title: t('affiliate.step1Title', isEn ? "1. Share" : "1. شارك"),
+    step1Desc: t('affiliate.step1Desc', isEn ? "Send link to directors." : "أرسل رابطك للمديرين"),
+    step2Title: t('affiliate.step2Title', isEn ? "2. Subscribe" : "2. اشتركوا"),
+    step2Desc: t('affiliate.step2Desc', isEn ? "Academy starts a plan." : "تسجل الأكاديمية بالمنظومة"),
+    step3Title: t('affiliate.step3Title', isEn ? "3. Save" : "3. وفّر"),
+    step3Desc: t('affiliate.step3Desc', isEn ? "Discount applied automatically." : "يُخصم التخفيض من فاتورتك"),
+    
+    totalReferrals: t('affiliate.totalReferrals', isEn ? "Total Referrals" : "إجمالي الإحالات"),
+    activeAcademies: t('affiliate.activeAcademies', isEn ? "Active Academies" : "أكاديميات مشتركة"),
+    pendingDiscount: t('affiliate.pendingDiscount', isEn ? "Next Renewal Discount" : "خصم التجديد القادم"),
+    totalDiscountEarned: t('affiliate.totalDiscountEarned', isEn ? "Total Savings" : "إجمالي الوفر"),
+    
+    recordsTitle: t('affiliate.recordsTitle', isEn ? "Referral Records" : "سجل الأكاديميات المُحالة"),
+    emptyTitle: t('affiliate.emptyTitle', isEn ? "No Referrals Yet" : "لا توجد إحالات بعد"),
+    emptyDesc: t('affiliate.emptyDesc', isEn 
       ? "Share your custom link to start unlocking instant discounts on your upcoming invoices." 
-      : "شارك رابطك المباشر مع زملائك لبدء تخفيض قيمة اشتراكك القادم تلقائياً."
+      : "شارك رابطك المباشر مع زملائك لبدء تخفيض قيمة اشتراكك القادم تلقائياً."),
+      
+    tableAcademy: t('affiliate.table.academy', isEn ? "Academy / User" : "الأكاديمية / المستخدم"),
+    tableStatus: t('affiliate.table.status', isEn ? "Status" : "الحالة"),
+    tableReward: t('affiliate.table.reward', isEn ? "Discount Value" : "قيمة الخصم"),
+    tableDate: t('affiliate.table.date', isEn ? "Date" : "التاريخ"),
+    
+    statusSubscribed: t('affiliate.status.subscribed', isEn ? "Subscribed" : "مشترك نشط"),
+    statusRewarded: t('affiliate.status.rewarded', isEn ? "Discount Applied" : "تم الخصم"),
+    statusPending: t('affiliate.status.pending', isEn ? "Pending" : "قيد الانتظار")
   };
 
-  useEffect(() => {
-    async function loadReferralData() {
-      try {
-        setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const loadReferralData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        let targetAcademyId = academyId;
-        if (!targetAcademyId) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('academy_id')
-            .eq('id', user.id)
-            .maybeSingle();
-          targetAcademyId = profile?.academy_id;
-        }
-
-        if (targetAcademyId) {
-          const { data: academy } = await supabase
-            .from('academies')
-            .select('referral_code, id')
-            .eq('id', targetAcademyId)
-            .maybeSingle();
-
-          if (academy?.referral_code) {
-            setReferralCode(academy.referral_code);
-          } else {
-            const generatedCode = 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-            await supabase
-              .from('academies')
-              .update({ referral_code: generatedCode })
-              .eq('id', targetAcademyId);
-            setReferralCode(generatedCode);
-          }
-
-          // تطبيق المبدأ المتوازن: جلب كل حقول جدول الإحالات الرئيسي saas_referrals
-          const { data: referrals } = await supabase
-            .from('saas_referrals')
-            .select('*')
-            .eq('referrer_academy_id', targetAcademyId);
-
-          if (referrals) {
-            const total = referrals.length;
-            const active = referrals.filter(r => r.status === 'subscribed' || r.status === 'rewarded').length;
-            const pending = referrals.filter(r => r.status === 'pending').reduce((sum, r) => sum + (Number(r.reward_amount) || 0), 0);
-            const earned = referrals.filter(r => r.status === 'rewarded').reduce((sum, r) => sum + (Number(r.reward_amount) || 0), 0);
-
-            setStats({
-              totalReferrals: total,
-              activeAcademies: active,
-              pendingDiscount: pending,
-              totalDiscountEarned: earned
-            });
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching referral data:', err);
-      } finally {
-        setLoading(false);
+      let targetAcademyId = academyId;
+      if (!targetAcademyId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('academy_id')
+          .eq('id', user.id)
+          .maybeSingle();
+        targetAcademyId = profile?.academy_id;
       }
-    }
 
-    loadReferralData();
+      if (targetAcademyId) {
+        const { data: academy } = await supabase
+          .from('academies')
+          .select('referral_code, id')
+          .eq('id', targetAcademyId)
+          .maybeSingle();
+
+        if (academy?.referral_code) {
+          setReferralCode(academy.referral_code);
+        } else {
+          const generatedCode = 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          await supabase
+            .from('academies')
+            .update({ referral_code: generatedCode })
+            .eq('id', targetAcademyId);
+          setReferralCode(generatedCode);
+        }
+
+        const { data: referrals } = await supabase
+          .from('saas_referrals')
+          .select('*')
+          .eq('referrer_academy_id', targetAcademyId)
+          .order('created_at', { ascending: false });
+
+        if (referrals) {
+          setReferralList(referrals);
+          const total = referrals.length;
+          const active = referrals.filter(r => r.status === 'subscribed' || r.status === 'rewarded').length;
+          const pending = referrals.filter(r => r.status === 'pending').reduce((sum, r) => sum + (Number(r.reward_amount) || 0), 0);
+          const earned = referrals.filter(r => r.status === 'rewarded').reduce((sum, r) => sum + (Number(r.reward_amount) || 0), 0);
+
+          setStats({
+            totalReferrals: total,
+            activeAcademies: active,
+            pendingDiscount: pending,
+            totalDiscountEarned: earned
+          });
+        }
+      }
+    } catch (err) {
+      console.error('🚨 Error fetching referral data:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [academyId]);
+
+  useEffect(() => {
+    loadReferralData();
+  }, [loadReferralData]);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smart-halaqa.vercel.app';
   const referralLink = `${baseUrl}/signup?ref=${referralCode || 'REF-27TJK2'}`;
@@ -156,7 +182,19 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         overflow: 'hidden'
       }}>
         {/* Ambient Glow Effects */}
-        <div style={{ position: 'absolute', top: '-40px', left: isRtl ? '-40px' : 'auto', right: isRtl ? 'auto' : '-40px', width: '120px', height: '120px', background: '#10B981', opacity: 0.15, filter: 'blur(50px)', borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ 
+          position: 'absolute', 
+          top: '-40px', 
+          left: isRtl ? '-40px' : 'auto', 
+          right: isRtl ? 'auto' : '-40px', 
+          width: '120px', 
+          height: '120px', 
+          background: '#10B981', 
+          opacity: 0.15, 
+          filter: 'blur(50px)', 
+          borderRadius: '50%', 
+          pointerEvents: 'none' 
+        }} />
 
         {/* Top Tag */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -166,7 +204,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
           </div>
           <div style={{ fontSize: '0.75rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <ShieldCheck size={14} className="text-emerald-400" />
-            <span>{isEn ? 'Automatic Discount' : 'تطبيق تلقائي للخصم'}</span>
+            <span>{labels.autoDiscount}</span>
           </div>
         </div>
 
@@ -212,6 +250,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
             </div>
 
             <button
+              type="button"
               onClick={() => handleCopy(referralLink)}
               style={{
                 padding: '9px 14px',
@@ -225,7 +264,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
-                shrink: 0,
+                flexShrink: 0,
                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)'
               }}
             >
@@ -235,6 +274,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
           </div>
 
           <button
+            type="button"
             onClick={handleShareWhatsApp}
             style={{
               width: '100%',
@@ -346,27 +386,89 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
 
       </div>
 
-      {/* 🟢 4. EMPTY RECORDS CARD */}
+      {/* 🟢 4. RECORDS SECTION (LIST / EMPTY STATE) */}
       <div style={{
         background: 'rgba(15, 23, 42, 0.5)',
         border: '1px solid rgba(30, 41, 59, 0.8)',
         borderRadius: '20px',
-        padding: '24px 16px',
-        textAlign: 'center',
+        padding: '16px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8px'
+        gap: '12px'
       }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(30, 41, 59, 0.8)', border: '1px solid rgba(51, 65, 85, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B' }}>
-          <Sparkles size={18} />
-        </div>
-        <h3 style={{ color: '#E2E8F0', margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>
-          {labels.emptyTitle}
-        </h3>
-        <p style={{ color: '#64748B', fontSize: '0.775rem', margin: 0, maxWidth: '320px', lineHeight: '1.4' }}>
-          {labels.emptyDesc}
-        </p>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '24px 0', color: '#34D399', fontSize: '0.8rem', fontWeight: '600' }}>
+            <Loader2 size={18} className="animate-spin" />
+            <span>{t('affiliate.loading', 'جاري تحميل سجل الإحالات...')}</span>
+          </div>
+        ) : referralList.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '16px 0'
+          }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(30, 41, 59, 0.8)', border: '1px solid rgba(51, 65, 85, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B' }}>
+              <Sparkles size={18} />
+            </div>
+            <h3 style={{ color: '#E2E8F0', margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>
+              {labels.emptyTitle}
+            </h3>
+            <p style={{ color: '#64748B', fontSize: '0.775rem', margin: 0, maxWidth: '320px', lineHeight: '1.4' }}>
+              {labels.emptyDesc}
+            </p>
+          </div>
+        ) : (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#CBD5E1', fontSize: '0.85rem', fontWeight: '700', marginBottom: '12px' }}>
+              <Building2 size={16} className="text-emerald-400" />
+              <span>{labels.recordsTitle}</span>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', fontSize: '0.75rem', textAlign: isRtl ? 'right' : 'left', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ color: '#64748B', borderBottom: '1px solid rgba(51, 65, 85, 0.5)' }}>
+                    <th style={{ padding: '8px', fontWeight: '700' }}>{labels.tableAcademy}</th>
+                    <th style={{ padding: '8px', fontWeight: '700' }}>{labels.tableStatus}</th>
+                    <th style={{ padding: '8px', fontWeight: '700' }}>{labels.tableReward}</th>
+                    <th style={{ padding: '8px', fontWeight: '700', textAlign: 'center' }}>{labels.tableDate}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {referralList.map((item) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid rgba(30, 41, 59, 0.4)', color: '#E2E8F0' }}>
+                      <td style={{ padding: '10px 8px', fontWeight: '600' }}>
+                        {item.referred_academy_name || item.referred_email || 'أكاديمية مجاورة'}
+                      </td>
+                      <td style={{ padding: '10px 8px' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          fontSize: '0.675rem',
+                          fontWeight: '700',
+                          background: item.status === 'rewarded' ? 'rgba(139, 92, 246, 0.15)' : item.status === 'subscribed' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                          color: item.status === 'rewarded' ? '#C084FC' : item.status === 'subscribed' ? '#34D399' : '#FBBF24',
+                          border: `1px solid ${item.status === 'rewarded' ? 'rgba(139, 92, 246, 0.3)' : item.status === 'subscribed' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                        }}>
+                          {item.status === 'rewarded' ? labels.statusRewarded : item.status === 'subscribed' ? labels.statusSubscribed : labels.statusPending}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 8px', fontWeight: '700', color: '#FBBF24' }}>
+                        {Number(item.reward_amount) || 0} {currency}
+                      </td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', color: '#64748B', fontFamily: 'monospace', fontSize: '0.7rem' }}>
+                        {item.created_at ? new Date(item.created_at).toLocaleDateString(currentLang) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>
