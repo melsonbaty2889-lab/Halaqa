@@ -620,6 +620,7 @@
     "nationality": "Kewarganegaraan:",
     "no_halaqa": "Belum ditempatkan di halaqah",
     "no_match_hint": "Coba ubah kata kunci pencarian atau tambah santri baru",
+    "not_found": "لم يتم العثور على بيانات الطالب",
     "parent_info": "Data Orang Tua / Wali",
     "parent_name": "Nama Orang Tua / Wali:",
     "parent_phone": "Telepon Orang Tua:",
@@ -740,6 +741,8 @@
   "viewArchived": "Arsip",
   "whatsapp": {
     "footer": "نسأل الله أن يبارك في وقته وحفظه. 🌹",
+    "no_phone_error": "لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.",
+    "report_header": "تقرير المتابعة اليومي",
     "report_title": "الحلقة الذكية"
   },
   "إدارة المواعيد": "Manajemen Jadwal",

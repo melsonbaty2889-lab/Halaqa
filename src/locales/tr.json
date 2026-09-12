@@ -620,6 +620,7 @@
     "nationality": "Uyruk:",
     "no_halaqa": "Bir halkaya atanmadı",
     "no_match_hint": "Aramayı değiştirmeyi veya yeni öğrenci eklemeyi deneyin",
+    "not_found": "لم يتم العثور على بيانات الطالب",
     "parent_info": "Veli Bilgileri",
     "parent_name": "Veli Adı:",
     "parent_phone": "Veli Telefonu:",
@@ -740,6 +741,8 @@
   "viewArchived": "Arşiv",
   "whatsapp": {
     "footer": "نسأل الله أن يبارك في وقته وحفظه. 🌹",
+    "no_phone_error": "لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.",
+    "report_header": "تقرير المتابعة اليومي",
     "report_title": "الحلقة الذكية"
   },
   "إدارة المواعيد": "Randevu Yönetimi",

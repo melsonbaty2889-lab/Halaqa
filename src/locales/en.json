@@ -620,6 +620,7 @@
     "nationality": "Nationality:",
     "no_halaqa": "Not assigned to a Halaqa",
     "no_match_hint": "Try changing search terms or add a new student",
+    "not_found": "لم يتم العثور على بيانات الطالب",
     "parent_info": "Guardian Info",
     "parent_name": "Guardian Name:",
     "parent_phone": "Guardian Phone:",
@@ -740,6 +741,8 @@
   "viewArchived": "Archived",
   "whatsapp": {
     "footer": "نسأل الله أن يبارك في وقته وحفظه. 🌹",
+    "no_phone_error": "لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.",
+    "report_header": "تقرير المتابعة اليومي",
     "report_title": "الحلقة الذكية"
   },
   "إدارة المواعيد": "Schedule Management",

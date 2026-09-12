@@ -620,6 +620,7 @@
     "nationality": "Nationalité :",
     "no_halaqa": "Non affecté à une halaqa",
     "no_match_hint": "Essayez de modifier la recherche ou d'ajouter un élève",
+    "not_found": "لم يتم العثور على بيانات الطالب",
     "parent_info": "Informations du tuteur",
     "parent_name": "Nom du tuteur :",
     "parent_phone": "Téléphone du tuteur :",
@@ -740,6 +741,8 @@
   "viewArchived": "Archives",
   "whatsapp": {
     "footer": "نسأل الله أن يبارك في وقته وحفظه. 🌹",
+    "no_phone_error": "لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.",
+    "report_header": "تقرير المتابعة اليومي",
     "report_title": "الحلقة الذكية"
   },
   "إدارة المواعيد": "Gestion des plannings",
