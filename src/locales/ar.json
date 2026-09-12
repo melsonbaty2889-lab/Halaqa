@@ -183,6 +183,23 @@
     "gregorian": "gregorian",
     "hijri": "hijri"
   },
+  "cert": {
+    "certBody1": "certBody1",
+    "certBody2": "certBody2",
+    "certBody3": "certBody3",
+    "certSubTitle": "certSubTitle",
+    "certTitle": "certTitle",
+    "gradeExcellent": "gradeExcellent",
+    "gradeGood": "gradeGood",
+    "issueDate": "issueDate",
+    "printBtn": "printBtn",
+    "signatureTitle": "signatureTitle",
+    "signatureValue": "signatureValue",
+    "subHeader": "subHeader",
+    "tajweedText": "tajweedText",
+    "verificationCode": "verificationCode",
+    "verified": "verified"
+  },
   "close": "إغلاق",
   "common": {
     "academy": "الأكاديمية",

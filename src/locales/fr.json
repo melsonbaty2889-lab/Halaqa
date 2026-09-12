@@ -183,6 +183,23 @@
     "gregorian": "Grégorien",
     "hijri": "Hégirien"
   },
+  "cert": {
+    "certBody1": "",
+    "certBody2": "",
+    "certBody3": "",
+    "certSubTitle": "",
+    "certTitle": "",
+    "gradeExcellent": "",
+    "gradeGood": "",
+    "issueDate": "",
+    "printBtn": "",
+    "signatureTitle": "",
+    "signatureValue": "",
+    "subHeader": "",
+    "tajweedText": "",
+    "verificationCode": "",
+    "verified": ""
+  },
   "close": "Fermer",
   "common": {
     "academy": "الأكاديمية",
