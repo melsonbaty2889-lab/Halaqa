@@ -1,8 +1,7 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import colors, { colors as themeColors } from '@/theme/colors';
-
-const C = colors || themeColors || {};
+import { BookOpen } from 'lucide-react';
+import { C } from '@/theme/colors';
 
 export default function AuthLayout({ children, langBtn }) {
   const { t, i18n } = useTranslation();
@@ -24,19 +23,16 @@ export default function AuthLayout({ children, langBtn }) {
       className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden font-cairo"
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{
-        backgroundColor: C?.dark?.bg || '#030712',
-        color: C?.text?.main || C?.text?.primary || '#FFFFFF',
+        backgroundColor: C.dark?.bg,
+        color: C.text?.title,
       }}
     >
-      {/* الخلفية والتوهج */}
+      {/* الخلفية والتوهج الزمردي العلوي */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
         aria-hidden="true"
         style={{
-          backgroundImage: `
-            radial-gradient(circle at 50% 0%, ${C?.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)'} 0%, transparent 60%),
-            radial-gradient(${C?.dark?.starDot || 'rgba(255, 255, 255, 0.15)'} 1.2px, transparent 0)
-          `,
+          backgroundImage: C.gradients?.starsBg,
           backgroundSize: '100% 100%, 24px 24px',
         }}
       />
@@ -48,19 +44,33 @@ export default function AuthLayout({ children, langBtn }) {
         </div>
       )}
 
-      {/* حاوية المحتوى */}
+      {/* حاوية المحتوى الرئيسية */}
       <main
         role="main"
         aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
-        className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10"
+        className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10 border shadow-2xl space-y-6"
         style={{
-          backgroundColor: C?.dark?.card || '#0F172A',
-          borderColor: C?.dark?.cardBorder || C?.dark?.border || '#1B2738',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          boxShadow: C?.shadows?.xl || '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+          backgroundColor: C.dark?.card,
+          borderColor: C.dark?.cardBorder,
         }}
       >
+        {/* ترويسة الشعار الموحدة */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center border shadow-lg"
+            style={{ 
+              background: C.gradients?.logoBox, 
+              borderColor: C.emerald?.light,
+              boxShadow: `0 0 20px ${C.emerald?.logoGlow}` 
+            }}
+          >
+            <BookOpen className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-xl font-black text-white tracking-tight">
+            {safeT('common.appName', defaultAppName)}
+          </h1>
+        </div>
+
         {children}
       </main>
 
@@ -68,10 +78,10 @@ export default function AuthLayout({ children, langBtn }) {
       <footer
         role="contentinfo"
         className="mt-4 text-[10px] sm:text-[11px] tracking-wider font-mono z-10 opacity-60 pointer-events-none"
-        style={{ color: C?.text?.muted || C?.text?.secondary || '#94A3B8' }}
+        style={{ color: C.text?.muted }}
       >
         {safeT('common.appName', defaultAppName)} • v2.5
       </footer>
-    </div>
+      </div>
   );
 }
