@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
-import C from '@/theme/colors';
+import { C } from '@/theme/colors';
 import { 
   GraduationCap, 
   BookOpen, 
@@ -15,19 +14,17 @@ import {
 } from 'lucide-react';
 
 export default function RoleSelectionPage({ onRoleSelected }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl';
+  const { t } = useTranslation();
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // مصطلحات معيارية وأصيلة تناسب كافة المؤسسات القرآنية
   const roles = [
     {
       id: 'student',
       title: t('roles.student_title', 'طالب / قارئ'),
-      desc: t('roles.student_desc', 'الإنضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس'),
+      desc: t('roles.student_desc', 'الانضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس'),
       icon: GraduationCap,
     },
     {
@@ -61,12 +58,10 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         throw new Error(t('auth.session_error', 'عفواً، لم نتمكن من التحقق من الجلسة'));
       }
 
-      // 1. تحديث بيانات المستخدم في user_metadata
       await supabase.auth.updateUser({
         data: { role: selectedRole }
       });
 
-      // 2. تحديث جدول profiles الرئيسي لضمان الاستجابة المباشرة
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -77,7 +72,6 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
       if (profileError) throw profileError;
 
-      // 3. التوجيه للخطوة التالية
       if (onRoleSelected) {
         await onRoleSelected(selectedRole);
       }
@@ -91,34 +85,29 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
   return (
     <AuthLayout>
-      {/* الشعار والعنوان */}
-      <div className="flex flex-col items-center mb-5">
-        <div className="mb-2">
-          <SmartHalaqaProLogo size={52} />
-        </div>
+      <div className="flex flex-col items-center mb-5 text-center">
         <h1 
-          className="text-xl font-extrabold tracking-tight mt-1 mb-0.5 text-center"
-          style={{ color: C?.text?.primary || '#FFFFFF' }}
+          className="text-lg font-extrabold tracking-tight mb-1"
+          style={{ color: C.text?.title }}
         >
           {t('roles.select_header', 'كيف تود استخدام المنصة؟')}
         </h1>
         <p 
-          className="text-xs text-center m-0"
-          style={{ color: C?.text?.secondary || '#94A3B8' }}
+          className="text-xs font-medium"
+          style={{ color: C.text?.muted }}
         >
           {t('roles.select_subheader', 'حدد صفة استخدامك لنقوم بتخصيص الواجهة المناسبة لك')}
         </p>
       </div>
 
-      {/* رسالة الخطأ إن وجدت */}
       {errorMsg && (
         <div 
           className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs border"
           role="alert"
           style={{
-            backgroundColor: C?.danger?.bg || 'rgba(244, 63, 94, 0.1)',
-            borderColor: C?.danger?.border || 'rgba(244, 63, 94, 0.3)',
-            color: C?.danger?.text || '#F43F5E'
+            backgroundColor: `${C.error?.DEFAULT}15`,
+            borderColor: C.error?.DEFAULT,
+            color: C.error?.DEFAULT
           }}
         >
           <AlertCircle size={16} className="shrink-0" />
@@ -126,7 +115,6 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         </div>
       )}
 
-      {/* بطاقات الصفات والأدوار */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
         {roles.map((item) => {
           const Icon = item.icon;
@@ -147,38 +135,41 @@ export default function RoleSelectionPage({ onRoleSelected }) {
               className="relative p-3.5 rounded-xl border text-start cursor-pointer transition-all flex flex-col justify-between"
               style={{
                 backgroundColor: isSelected 
-                  ? (C?.primary?.bg || 'rgba(224, 122, 0, 0.1)') 
-                  : (C?.dark?.surface || '#0A101D'),
+                  ? 'rgba(217, 119, 6, 0.12)' 
+                  : C.inputs?.bg,
                 borderColor: isSelected 
-                  ? (C?.primary?.DEFAULT || '#E07A00') 
-                  : (C?.dark?.border || '#1B2738')
+                  ? C.amber?.DEFAULT 
+                  : C.inputs?.border
               }}
             >
               {isSelected && (
                 <CheckCircle2 
                   size={16} 
-                  className={`absolute top-2.5 ${isRtl ? 'left-2.5' : 'right-2.5'}`} 
-                  style={{ color: C?.primary?.DEFAULT || '#E07A00' }}
+                  className="absolute top-2.5 end-2.5" 
+                  style={{ color: C.amber?.DEFAULT }}
                 />
               )}
               
-              <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="flex items-center gap-2.5 mb-1.5 pe-5">
                 <div 
-                  className="p-2 rounded-lg shrink-0"
+                  className="p-2 rounded-lg shrink-0 border"
                   style={{
                     backgroundColor: isSelected 
-                      ? (C?.primary?.DEFAULT || '#E07A00') 
-                      : (C?.dark?.bg || '#162032'),
+                      ? C.amber?.DEFAULT 
+                      : 'rgba(255, 255, 255, 0.05)',
+                    borderColor: isSelected 
+                      ? C.amber?.DEFAULT 
+                      : 'rgba(255, 255, 255, 0.08)',
                     color: isSelected 
-                      ? (C?.primary?.text || '#000000') 
-                      : (C?.primary?.DEFAULT || '#E07A00')
+                      ? '#FFFFFF' 
+                      : C.amber?.DEFAULT
                   }}
                 >
                   <Icon size={18} />
                 </div>
                 <h3 
                   className="font-bold text-xs m-0"
-                  style={{ color: C?.text?.primary || '#FFFFFF' }}
+                  style={{ color: C.text?.title }}
                 >
                   {item.title}
                 </h3>
@@ -186,7 +177,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
               
               <p 
                 className="text-[11px] leading-relaxed m-0"
-                style={{ color: C?.text?.secondary || '#94A3B8' }}
+                style={{ color: C.text?.muted }}
               >
                 {item.desc}
               </p>
@@ -195,17 +186,15 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         })}
       </div>
 
-      {/* زر الحفظ والتأكيد */}
       <button
         type="button"
         onClick={handleSaveRole}
         disabled={!selectedRole || loading}
         title={t('common.continue_next_step', 'متابعة إلى الخطوة التالية')}
         aria-label={t('common.continue_next_step', 'متابعة إلى الخطوة التالية')}
-        className="w-full min-h-[44px] py-2.5 font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+        className="w-full min-h-[44px] py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-white active:scale-[0.98]"
         style={{
-          backgroundColor: C?.primary?.DEFAULT || '#E07A00',
-          color: C?.primary?.text || '#000000'
+          background: C.gradients?.primaryBtn
         }}
       >
         {loading ? (
