@@ -1,6 +1,7 @@
 /**
  * src/lib/dashboardService.js
  * التحديث الشامل لدعم الإحصائيات العالمية، الـ Streaks، والروايات وأنظمة التسميع
+ * معدّل لدعم تعدد اللغات الموحد عبر JSONB
  */
 
 export async function getDashboardStats(supabase, profile) {
@@ -137,16 +138,10 @@ export async function getDashboardStats(supabase, profile) {
             attendance_rate = Math.round((presentCount / halaqaAttendance.length) * 100);
           }
 
-          const nameObj = typeof halaqa.name === 'object' && halaqa.name !== null ? halaqa.name : {};
-          const nameAr = nameObj.ar || nameObj.en || (typeof halaqa.name === 'string' ? halaqa.name : '');
-          const nameEn = nameObj.en || nameObj.ar || (typeof halaqa.name === 'string' ? halaqa.name : '');
-
           return {
             id: halaqa.id,
-            name_ar: nameAr,
-            name_en: nameEn,
-            teacher_name_ar: halaqa.teachers?.name || 'غير محدد',
-            teacher_name_en: halaqa.teachers?.name || 'Not Assigned',
+            name: halaqa.name, // تمرير كائن JSONB كاملاً ليدعم كافة اللغات عبر formatName
+            teacher_name: halaqa.teachers?.name || null, // تمرير كائن أو اسم المعلم كاملاً
             time_display_ar: `${startFormatted.ar} - ${endFormatted.ar}`,
             time_display_en: `${startFormatted.en} - ${endFormatted.en}`,
             teaching_type: halaqa.teaching_type || 'حضوري',
