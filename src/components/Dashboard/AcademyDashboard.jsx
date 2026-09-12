@@ -10,7 +10,6 @@ import {
   Zap,
   BarChart2
 } from 'lucide-react';
-import { C } from '@/theme/colors';
 
 import ActiveHalaqas from '@/components/Dashboard/ActiveHalaqas';
 import AchievementChart from '@/components/Gamification/AchievementChart';
@@ -49,31 +48,28 @@ export default function AcademyDashboard({
   const totalPagesMuted = stats.totalPagesMuted || null;
 
   return (
-    <div 
-      className={`p-4 md:p-6 pb-24 space-y-6 font-sans ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}
-      style={{ backgroundColor: C?.dark?.background || '#060A12', color: C?.text?.primary || '#FFFFFF' }}
-    >
+    <div className={`p-4 md:p-6 pb-24 space-y-6 font-cairo bg-dark-bg text-appText-main ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
       
-      {/* 🟢 الهيدر والترحيب */}
-      <header 
-        className="p-5 md:p-6 rounded-xl border shadow-xl backdrop-blur-md"
-        style={{ backgroundColor: C?.dark?.surface || '#0A101D', borderColor: C?.dark?.border || '#1B2738' }}
-      >
-        <h1 className="text-2xl font-black m-0 mb-1 leading-snug" style={{ color: C?.text?.primary || '#FFFFFF' }}>
-          {getText(greeting, translate('dashboard.welcome_default', 'مرحباً بك'))}
-        </h1>
-        <p className="text-sm font-extrabold m-0 flex items-center gap-2" style={{ color: C?.amber?.gold || '#F59E0B' }}>
-          <span>🏛️</span>
-          <span>{getText(academyName, translate('dashboard.default_academy_title', 'الأكاديمية القرآنيّة الرقمية'))}</span>
-        </p>
+      {/* 🟢 الهيدر والترحيب بالهوية الموحدة */}
+      <header className="card-surface flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-white m-0 mb-1 leading-snug">
+            {getText(greeting, translate('dashboard.welcome_default', 'مرحباً بك'))}
+          </h1>
+          <p className="text-sm font-bold text-amber-500 m-0 flex items-center gap-2">
+            <span>🏛️</span>
+            <span>{getText(academyName, translate('dashboard.default_academy_title', 'الأكاديمية القرآنيّة الرقمية'))}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brandEmerald-bg border border-brandEmerald-border text-brandEmerald text-xs font-semibold">
+          <span className="w-2 h-2 rounded-full bg-brandEmerald animate-pulse"></span>
+          <span>متزامن لحظياً</span>
+        </div>
       </header>
 
-      {/* 🟢 الإجراءات السريعة */}
-      <section 
-        className="p-5 rounded-xl border shadow-xl space-y-4"
-        style={{ backgroundColor: C?.dark?.surface || '#0A101D', borderColor: C?.dark?.border || '#1B2738' }}
-      >
-        <h2 className="text-base font-extrabold m-0 flex items-center gap-2" style={{ color: C?.amber?.gold || '#F59E0B' }}>
+      {/* 🟢 الإجراءات السريعة (أزرار الهوية الموحدة) */}
+      <section className="card-surface space-y-4">
+        <h2 className="text-base font-extrabold m-0 flex items-center gap-2 text-amber-500">
           <Zap size={18} />
           <span>{translate('dashboard.quick_actions', 'الإجراءات السريعة والمباشرة')}</span>
         </h2>
@@ -82,35 +78,22 @@ export default function AcademyDashboard({
           <button 
             onClick={() => setActiveTab && setActiveTab('attendance')} 
             aria-label={translate('dashboard.action_attendance', 'رصد التحضير والتسميع اليومي')}
-            className="border-0 p-4 rounded-xl cursor-pointer transition-all shadow-lg active:scale-95 flex items-center gap-3 min-h-[44px]"
-            style={{ backgroundColor: C?.amber?.gold || '#F59E0B', color: C?.dark?.background || '#060A12' }}
+            className="btn-primary flex items-center justify-start gap-3 min-h-[48px]"
           >
-            <div className="p-2.5 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
+            <div className="p-2 rounded-lg bg-black/20 shrink-0">
               <BookOpen size={20} />
             </div>
-            <div className="font-extrabold text-xs text-start">
+            <span className="font-extrabold text-xs">
               {translate('dashboard.action_attendance', 'رصد التحضير والتسميع اليومي')}
-            </div>
+            </span>
           </button>
 
           <button 
             onClick={() => setActiveTab && setActiveTab('exams')} 
             aria-label={translate('dashboard.action_exams', 'الاختبارات والترقيات')}
-            className="border p-4 rounded-xl cursor-pointer transition-all active:scale-95 flex items-center gap-3 min-h-[44px]"
-            style={{ 
-              backgroundColor: C?.dark?.background || '#060A12', 
-              borderColor: C?.dark?.border || '#1B2738',
-              color: C?.text?.primary || '#FFFFFF'
-            }}
+            className="btn-secondary flex items-center justify-start gap-3 min-h-[48px]"
           >
-            <div 
-              className="p-2.5 rounded-lg shrink-0 border"
-              style={{ 
-                backgroundColor: `${C?.amber?.gold || '#F59E0B'}15`, 
-                borderColor: `${C?.amber?.gold || '#F59E0B'}30`,
-                color: C?.amber?.gold || '#F59E0B'
-              }}
-            >
+            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 shrink-0">
               <Award size={20} />
             </div>
             <span className="text-xs font-extrabold">
@@ -121,21 +104,9 @@ export default function AcademyDashboard({
           <button 
             onClick={() => setActiveTab && setActiveTab('reports')} 
             aria-label={translate('dashboard.action_reports', 'تقارير أولياء الأمور')}
-            className="border p-4 rounded-xl cursor-pointer transition-all active:scale-95 flex items-center gap-3 min-h-[44px]"
-            style={{ 
-              backgroundColor: C?.dark?.background || '#060A12', 
-              borderColor: C?.dark?.border || '#1B2738',
-              color: C?.text?.primary || '#FFFFFF'
-            }}
+            className="btn-secondary flex items-center justify-start gap-3 min-h-[48px]"
           >
-            <div 
-              className="p-2.5 rounded-lg shrink-0 border"
-              style={{ 
-                backgroundColor: `${C?.success?.main || '#10B981'}15`, 
-                borderColor: `${C?.success?.main || '#10B981'}30`,
-                color: C?.success?.main || '#10B981'
-              }}
-            >
+            <div className="p-2 rounded-lg bg-brandEmerald-bg border border-brandEmerald-border text-brandEmerald shrink-0">
               <MessageCircle size={20} />
             </div>
             <span className="text-xs font-extrabold">
@@ -145,12 +116,9 @@ export default function AcademyDashboard({
         </div>
       </section>
 
-      {/* 🟢 شبكة المؤشرات بالألوان القياسية */}
-      <section 
-        className="p-5 rounded-xl border shadow-xl space-y-4"
-        style={{ backgroundColor: C?.dark?.surface || '#0A101D', borderColor: C?.dark?.border || '#1B2738' }}
-      >
-        <h2 className="text-base font-extrabold m-0 flex items-center gap-2" style={{ color: C?.sky?.main || '#0EA5E9' }}>
+      {/* 🟢 شبكة المؤشرات بالبطاقات الموحدة */}
+      <section className="card-surface space-y-4">
+        <h2 className="text-base font-extrabold m-0 flex items-center gap-2 text-brandEmerald">
           <BarChart2 size={18} />
           <span>{translate('dashboard.academy_overview', 'مؤشرات الأداء العام للأكاديمية')}</span>
         </h2>
@@ -158,95 +126,74 @@ export default function AcademyDashboard({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           
           {/* إجمالي الطلاب */}
-          <div 
-            className="border p-4 rounded-xl flex flex-col justify-between shadow-md"
-            style={{ backgroundColor: C?.dark?.background || '#060A12', borderColor: C?.dark?.border || '#1B2738' }}
-          >
-            <p className="text-[11px] font-bold m-0 mb-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+          <div className="bg-dark-input border border-appBorder-input p-4 rounded-xl flex flex-col justify-between shadow-md">
+            <p className="text-[11px] font-bold text-appText-sub m-0 mb-1">
               {translate('dashboard.total_students', 'إجمالي الطلاب')}
             </p>
             <div className="flex justify-between items-end">
-              <h3 className="text-xl md:text-2xl font-black m-0" style={{ color: C?.text?.primary || '#FFFFFF' }}>{studentsCount}</h3>
-              <GraduationCap size={20} style={{ color: C?.amber?.gold || '#F59E0B' }} />
+              <h3 className="text-xl md:text-2xl font-black text-white m-0">{studentsCount}</h3>
+              <GraduationCap size={20} className="text-amber-500" />
             </div>
           </div>
 
           {/* نسبة الحضور */}
           {attendanceRate !== null && (
-            <div 
-              className="border p-4 rounded-xl flex flex-col justify-between shadow-md"
-              style={{ backgroundColor: C?.dark?.background || '#060A12', borderColor: C?.dark?.border || '#1B2738' }}
-            >
-              <p className="text-[11px] font-bold m-0 mb-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+            <div className="bg-dark-input border border-appBorder-input p-4 rounded-xl flex flex-col justify-between shadow-md">
+              <p className="text-[11px] font-bold text-appText-sub m-0 mb-1">
                 {translate('dashboard.attendance_rate', 'نسبة الحضور')}
               </p>
               <div className="flex justify-between items-end">
-                <h3 className="text-xl md:text-2xl font-black m-0" style={{ color: C?.success?.main || '#10B981' }}>{attendanceRate}</h3>
-                <CheckCircle2 size={20} style={{ color: C?.success?.main || '#10B981' }} />
+                <h3 className="text-xl md:text-2xl font-black text-brandEmerald m-0">{attendanceRate}</h3>
+                <CheckCircle2 size={20} className="text-brandEmerald" />
               </div>
             </div>
           )}
 
           {/* صفحات التسميع */}
           {totalPagesMuted !== null && (
-            <div 
-              className="border p-4 rounded-xl flex flex-col justify-between shadow-md"
-              style={{ backgroundColor: C?.dark?.background || '#060A12', borderColor: C?.dark?.border || '#1B2738' }}
-            >
-              <p className="text-[11px] font-bold m-0 mb-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+            <div className="bg-dark-input border border-appBorder-input p-4 rounded-xl flex flex-col justify-between shadow-md">
+              <p className="text-[11px] font-bold text-appText-sub m-0 mb-1">
                 {translate('dashboard.pages_recited_today', 'صفحات القرآن اليوم')}
               </p>
               <div className="flex justify-between items-end">
-                <h3 className="text-xl md:text-2xl font-black m-0" style={{ color: C?.sky?.main || '#0EA5E9' }}>{totalPagesMuted}</h3>
-                <BookOpen size={20} style={{ color: C?.sky?.main || '#0EA5E9' }} />
+                <h3 className="text-xl md:text-2xl font-black text-amber-500 m-0">{totalPagesMuted}</h3>
+                <BookOpen size={20} className="text-amber-500" />
               </div>
             </div>
           )}
 
           {/* المستحقات المعلقة */}
-          <div 
-            className="border p-4 rounded-xl flex flex-col justify-between shadow-md"
-            style={{ backgroundColor: C?.dark?.background || '#060A12', borderColor: C?.dark?.border || '#1B2738' }}
-          >
-            <p className="text-[11px] font-bold m-0 mb-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+          <div className="bg-dark-input border border-appBorder-input p-4 rounded-xl flex flex-col justify-between shadow-md">
+            <p className="text-[11px] font-bold text-appText-sub m-0 mb-1">
               {translate('dashboard.pending_payments', 'المدفوعات المعلقة')}
             </p>
             <div className="flex justify-between items-end">
-              <h3 
-                className="text-xl md:text-2xl font-black m-0" 
-                style={{ color: pendingCount > 0 ? (C?.danger?.text || '#F43F5E') : (C?.text?.primary || '#FFFFFF') }}
-              >
+              <h3 className={`text-xl md:text-2xl font-black m-0 ${pendingCount > 0 ? 'text-red-500' : 'text-white'}`}>
                 {pendingCount}
               </h3>
-              <Clock size={20} style={{ color: pendingCount > 0 ? (C?.danger?.text || '#F43F5E') : (C?.text?.muted || '#64748B') }} />
+              <Clock size={20} className={pendingCount > 0 ? 'text-red-500' : 'text-appText-muted'} />
             </div>
           </div>
 
           {/* الحلقات النشطة */}
-          <div 
-            className="border p-4 rounded-xl flex flex-col justify-between shadow-md"
-            style={{ backgroundColor: C?.dark?.background || '#060A12', borderColor: C?.dark?.border || '#1B2738' }}
-          >
-            <p className="text-[11px] font-bold m-0 mb-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+          <div className="bg-dark-input border border-appBorder-input p-4 rounded-xl flex flex-col justify-between shadow-md">
+            <p className="text-[11px] font-bold text-appText-sub m-0 mb-1">
               {translate('dashboard.active_halagas', 'الحلقات النشطة')}
             </p>
             <div className="flex justify-between items-end">
-              <h3 className="text-xl md:text-2xl font-black m-0" style={{ color: C?.amber?.gold || '#F59E0B' }}>{activeHalagas}</h3>
-              <Landmark size={20} style={{ color: C?.amber?.gold || '#F59E0B' }} />
+              <h3 className="text-xl md:text-2xl font-black text-amber-500 m-0">{activeHalagas}</h3>
+              <Landmark size={20} className="text-amber-500" />
             </div>
           </div>
 
           {/* الاختبارات المكتملة */}
-          <div 
-            className="border p-4 rounded-xl flex flex-col justify-between shadow-md"
-            style={{ backgroundColor: C?.dark?.background || '#060A12', borderColor: C?.dark?.border || '#1B2738' }}
-          >
-            <p className="text-[11px] font-bold m-0 mb-1" style={{ color: C?.text?.secondary || '#94A3B8' }}>
+          <div className="bg-dark-input border border-appBorder-input p-4 rounded-xl flex flex-col justify-between shadow-md">
+            <p className="text-[11px] font-bold text-appText-sub m-0 mb-1">
               {translate('dashboard.completed_exams', 'الاختبارات المكتملة')}
             </p>
             <div className="flex justify-between items-end">
-              <h3 className="text-xl md:text-2xl font-black m-0" style={{ color: C?.success?.main || '#10B981' }}>{completedExams}</h3>
-              <CheckCircle2 size={20} style={{ color: C?.success?.main || '#10B981' }} />
+              <h3 className="text-xl md:text-2xl font-black text-brandEmerald m-0">{completedExams}</h3>
+              <CheckCircle2 size={20} className="text-brandEmerald" />
             </div>
           </div>
 
