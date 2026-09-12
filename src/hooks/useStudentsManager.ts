@@ -91,7 +91,7 @@ export const useStudentsManager = ({
     [students]
   );
 
-  // 2. منطق الفلترة والترتيب الداعم لجميع اللغات
+  // 2. منطق الفلترة والترتيب الداعم لجميع اللغات (AR, EN, TR, FR, UR, ID)
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
       const allStudentNames = extractAllNames((student as any).name || (student as any).full_name);
@@ -119,11 +119,21 @@ export const useStudentsManager = ({
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       }
 
-      // استخراج الاسم المعتمد حسب اللغة الحالية للواجهة
+      // استخراج الاسم المعتمد بحسب اللغة الحالية لجميع اللغات المدعومة
       const getLocalizedName = (s: Student) => {
         const rawName = (s as any).name || (s as any).full_name;
         if (typeof rawName === 'object' && rawName !== null) {
-          return rawName[currentLang] || rawName.ar || rawName.en || Object.values(rawName)[0] || '';
+          return (
+            rawName[currentLang] ||
+            rawName.ar ||
+            rawName.en ||
+            rawName.tr ||
+            rawName.fr ||
+            rawName.ur ||
+            rawName.id ||
+            Object.values(rawName).find((v) => typeof v === 'string' && v.trim() !== '') ||
+            ''
+          );
         }
         return formatName(rawName || '');
       };
