@@ -1,7 +1,7 @@
 /**
  * src/lib/dashboardService.js
  * التحديث الشامل لدعم الإحصائيات العالمية، الـ Streaks، والروايات وأنظمة التسميع
- * معدّل لدعم تعدد اللغات الموحد عبر JSONB
+ * معدّل لدعم تعدد اللغات الموحد عبر JSONB (AR, EN, TR, FR, UR, ID)
  */
 
 export async function getDashboardStats(supabase, profile) {
@@ -140,8 +140,8 @@ export async function getDashboardStats(supabase, profile) {
 
           return {
             id: halaqa.id,
-            name: halaqa.name, // تمرير كائن JSONB كاملاً ليدعم كافة اللغات عبر formatName
-            teacher_name: halaqa.teachers?.name || null, // تمرير كائن أو اسم المعلم كاملاً
+            name: halaqa.name, // كائن JSONB متعدد اللغات
+            teacher_name: halaqa.teachers?.name || null, // كائن JSONB أو اسم نصي للمعلم
             time_display_ar: `${startFormatted.ar} - ${endFormatted.ar}`,
             time_display_en: `${startFormatted.en} - ${endFormatted.en}`,
             teaching_type: halaqa.teaching_type || 'حضوري',
