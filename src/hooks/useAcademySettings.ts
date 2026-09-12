@@ -3,9 +3,18 @@ import { supabase } from '@/lib/supabase';
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
+export interface AcademyNames {
+  ar?: string;
+  en?: string;
+  tr?: string;
+  fr?: string;
+  ur?: string;
+  id?: string;
+  [key: string]: string | undefined;
+}
+
 export interface AcademyFormData {
-  name_ar: string;
-  name_en: string;
+  names: AcademyNames;
   slug: string;
   logo_url: string;
   tagline: string;
@@ -39,7 +48,7 @@ export interface ToastState {
 
 export interface RawAcademyData {
   id: string;
-  name?: { ar?: string; en?: string } | string | null;
+  name?: AcademyNames | string | null;
   slug?: string | null;
   logo_url?: string | null;
   tagline?: string | null;
@@ -64,8 +73,14 @@ export interface RawAcademyData {
 }
 
 export const INITIAL_ACADEMY_FORM: AcademyFormData = {
-  name_ar: '',
-  name_en: '',
+  names: {
+    ar: '',
+    en: '',
+    tr: '',
+    fr: '',
+    ur: '',
+    id: '',
+  },
   slug: '',
   logo_url: '',
   tagline: '',
@@ -146,19 +161,27 @@ export function useAcademySettings(
         const academyData = data as RawAcademyData;
         setRawAcademyData(academyData);
         
-        let arName = '';
-        let enName = '';
+        let parsedNames: AcademyNames = { ar: '', en: '', tr: '', fr: '', ur: '', id: '' };
+
         if (typeof academyData.name === 'object' && academyData.name !== null) {
-          arName = academyData.name.ar || '';
-          enName = academyData.name.en || '';
+          parsedNames = { ...parsedNames, ...academyData.name };
         } else if (typeof academyData.name === 'string') {
-          arName = academyData.name;
-          enName = academyData.name;
+          try {
+            const parsed = JSON.parse(academyData.name);
+            if (typeof parsed === 'object' && parsed !== null) {
+              parsedNames = { ...parsedNames, ...parsed };
+            } else {
+              parsedNames.ar = academyData.name;
+              parsedNames.en = academyData.name;
+            }
+          } catch {
+            parsedNames.ar = academyData.name;
+            parsedNames.en = academyData.name;
+          }
         }
 
         const fetched: AcademyFormData = {
-          name_ar: arName,
-          name_en: enName,
+          names: parsedNames,
           slug: academyData.slug || '',
           logo_url: academyData.logo_url || '',
           tagline: academyData.tagline || '',
@@ -207,7 +230,7 @@ export function useAcademySettings(
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleNameChange = (lang: 'ar' | 'en', value: string) => {
+  const handleNameChange = (lang: string, value: string) => {
     const generatedSlug = value
       .trim()
       .toLowerCase()
@@ -216,7 +239,10 @@ export function useAcademySettings(
 
     setFormData((prev) => ({
       ...prev,
-      [`name_${lang}`]: value,
+      names: {
+        ...prev.names,
+        [lang]: value,
+      },
       slug: prev.slug === '' || prev.slug === initialData.slug ? generatedSlug : prev.slug,
     }));
   };
@@ -303,9 +329,10 @@ export function useAcademySettings(
       return;
     }
 
-    if (!formData.name_ar.trim() && !formData.name_en.trim()) {
+    const hasAnyName = Object.values(formData.names).some((name) => name && name.trim() !== '');
+    if (!hasAnyName) {
       showToast(
-        isRtl ? 'يرجى إدخال اسم الأكاديمية على الأقل بلغتك الأساسية' : 'Please enter academy name',
+        isRtl ? 'يرجى إدخال اسم الأكاديمية بلغة واحدة على الأقل' : 'Please enter academy name in at least one language',
         'error'
       );
       return;
@@ -314,9 +341,14 @@ export function useAcademySettings(
     try {
       setSaving(true);
 
-      const namePayload = {
-        ar: formData.name_ar.trim() || formData.name_en.trim(),
-        en: formData.name_en.trim() || formData.name_ar.trim(),
+      const fallbackName = Object.values(formData.names).find((n) => n && n.trim() !== '') || '';
+      const namePayload: AcademyNames = {
+        ar: formData.names.ar?.trim() || fallbackName,
+        en: formData.names.en?.trim() || fallbackName,
+        tr: formData.names.tr?.trim() || fallbackName,
+        fr: formData.names.fr?.trim() || fallbackName,
+        ur: formData.names.ur?.trim() || fallbackName,
+        id: formData.names.id?.trim() || fallbackName,
       };
 
       let formattedSlug = formData.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
