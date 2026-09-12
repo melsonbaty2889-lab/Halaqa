@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen } from 'lucide-react';
+import { SmartHalaqaProLogo } from '@/components/UI/SmartHalaqaProLogo';
 import { C } from '@/theme/colors';
 
 export default function AuthLayout({ children, langBtn }) {
