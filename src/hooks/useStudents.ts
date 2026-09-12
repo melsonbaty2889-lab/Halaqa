@@ -95,13 +95,14 @@ export const useStudents = (
         }
       }
 
+      // 💡 البحث الشامل والذكي عبر كافة اللغات المدعومة (ar, en, tr, fr, ur, id) وكود الطالب ورقم الهاتف
       if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
         const rawTerm = debouncedSearchTerm.trim();
         const term = `%${rawTerm}%`;
         const normalizedTerm = normalizePhone(rawTerm);
 
         query = query.or(
-          `name->>ar.ilike.${term},name->>en.ilike.${term},student_code.ilike.${term},parent_phone.ilike.%${normalizedTerm}%`
+          `name->>ar.ilike.${term},name->>en.ilike.${term},name->>tr.ilike.${term},name->>fr.ilike.${term},name->>ur.ilike.${term},name->>id.ilike.${term},student_code.ilike.${term},parent_phone.ilike.%${normalizedTerm}%`
         );
       }
 
