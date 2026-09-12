@@ -8,10 +8,12 @@ export const AcademyProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [academy, setAcademy] = useState(null);
+  const [academiesList, setAcademiesList] = useState([]); // ✅ إضافة القائمة الكاملة للاستخدام الموحد
   const [userRole, setUserRole] = useState(null);
   const [appState, setAppState] = useState('LOADING');
 
   const isMounted = useRef(true);
+  const isFetchingRef = useRef(false); // ✅ منع جلب البيانات المتزامن المكرر
 
   useEffect(() => {
     isMounted.current = true;
@@ -32,11 +34,16 @@ export const AcademyProvider = ({ children }) => {
         setUser(null);
         setProfile(null);
         setAcademy(null);
+        setAcademiesList([]);
         setUserRole(null);
         setAppState('UNAUTHENTICATED');
       }
       return;
     }
+
+    // ✅ منع دخول الدالة إذا كانت قيد التنفيذ حالياً
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
     try {
       if (isMounted.current) setUser(currentUser);
@@ -68,6 +75,7 @@ export const AcademyProvider = ({ children }) => {
       if (activeProfile.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
+          setAcademiesList([]);
           setAppState('SUPER_ADMIN');
         }
         return;
@@ -77,15 +85,17 @@ export const AcademyProvider = ({ children }) => {
       if (activeProfile.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
+          setAcademiesList([]);
           setAppState('PENDING_APPROVAL');
         }
         return;
       }
 
+      let fetchedList = [];
       let currentAcademy = null;
       let detectedRole = activeProfile.role || 'admin';
 
-      // 2. البحث المباشر أولاً عبر academy_id المسجل في ملف المستخدم profile
+      // 2. البحث عبر profile.academy_id
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
@@ -93,53 +103,43 @@ export const AcademyProvider = ({ children }) => {
           .eq('id', activeProfile.academy_id)
           .maybeSingle();
 
-        if (profileAcademy) {
-          currentAcademy = profileAcademy;
+        if (profileAcademy) fetchedList.push(profileAcademy);
+      }
+
+      // 3. البحث في academy_teachers
+      if (fetchedList.length === 0) {
+        const { data: teacherList } = await supabase
+          .from('academy_teachers')
+          .select('academy_id, academies(*)')
+          .eq('teacher_id', currentUser.id)
+          .eq('is_active', true);
+
+        if (teacherList && teacherList.length > 0) {
+          fetchedList = teacherList.map(t => t.academies).filter(Boolean);
+          detectedRole = 'teacher';
         }
       }
 
-      // 3. البحث عن الأكاديمية المملوكة (owner_id) إذا لم تكتشف بعد
-      if (!currentAcademy) {
-        const { data: ownedAcademy } = await supabase
+      // 4. البحث في الأكاديميات المملوكة owner_id
+      if (fetchedList.length === 0) {
+        const { data: ownedAcademies } = await supabase
           .from('academies')
           .select('*')
-          .eq('owner_id', currentUser.id)
-          .limit(1)
-          .maybeSingle();
+          .eq('owner_id', currentUser.id);
 
-        if (ownedAcademy) {
-          currentAcademy = ownedAcademy;
+        if (ownedAcademies && ownedAcademies.length > 0) {
+          fetchedList = ownedAcademies;
           detectedRole = 'admin';
         }
       }
 
-      // 4. البحث في جدول معلمي الأكاديمية (academy_teachers) كـ Fallback
-      if (!currentAcademy) {
-        const { data: teacherList } = await supabase
-          .from('academy_teachers')
-          .select('academy_id')
-          .eq('teacher_id', currentUser.id)
-          .eq('is_active', true)
-          .limit(1);
+      currentAcademy = fetchedList[0] || null;
 
-        if (teacherList && teacherList.length > 0 && teacherList[0]?.academy_id) {
-          const { data: teacherAcademy } = await supabase
-            .from('academies')
-            .select('*')
-            .eq('id', teacherList[0].academy_id)
-            .maybeSingle();
-
-          if (teacherAcademy) {
-            currentAcademy = teacherAcademy;
-            detectedRole = 'teacher';
-          }
-        }
-      }
-
-      // 5. تعيين الحالة النهائية مع تثبيت الدور
+      // 5. تعيين الحالة النهائية
       if (isMounted.current) {
         setUserRole(detectedRole);
-        
+        setAcademiesList(fetchedList);
+
         if (currentAcademy) {
           setAcademy(currentAcademy);
           if (currentAcademy.slug) {
@@ -152,7 +152,6 @@ export const AcademyProvider = ({ children }) => {
             setAppState('FULLY_ACTIVE');
           }
         } else {
-          // إنشاء كائن افتراضي لتفادي الحظر عند تسجيل الحسابات الجديدة
           setAcademy({
             id: activeProfile.academy_id || 'default',
             name: 'الأكاديمية الافتراضية',
@@ -165,6 +164,8 @@ export const AcademyProvider = ({ children }) => {
     } catch (e) {
       console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
       if (isMounted.current) setAppState('FULLY_ACTIVE');
+    } finally {
+      isFetchingRef.current = false; // ✅ تحرير المرجع
     }
   }, []);
 
@@ -259,6 +260,7 @@ export const AcademyProvider = ({ children }) => {
       }
       if (isMounted.current) {
         setAcademy(null);
+        setAcademiesList([]);
         setUser(null);
         setProfile(null);
         setUserRole(null);
@@ -275,8 +277,10 @@ export const AcademyProvider = ({ children }) => {
       user,
       profile,
       academy,
+      academiesList,
       userRole,
       appState,
+      setAcademy,
       updateAcademyState,
       logout,
       refreshStatus
@@ -293,8 +297,10 @@ export const useAcademy = () => {
       user: null,
       profile: null,
       academy: null,
+      academiesList: [],
       userRole: null,
       appState: 'LOADING',
+      setAcademy: () => {},
       updateAcademyState: () => {},
       logout: async () => {},
       refreshStatus: async () => {}
