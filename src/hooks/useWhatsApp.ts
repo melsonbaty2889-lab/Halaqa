@@ -21,7 +21,7 @@ export interface UseWhatsAppReturn {
   sending: boolean;
   formatPhoneNumber: (phone: string, defaultCountryCode?: string) => string;
   generateReportMessage: (payload: SendReportPayload) => string;
-  sendCustomMessage: (phone: string, message: string) => void;
+  sendCustomMessage: (phone: string, message: string, targetWindow?: Window | null) => void;
   sendDailyReport: (payload: SendReportPayload) => void;
   sendReportByStudentId: (
     studentId: string,
@@ -30,20 +30,33 @@ export interface UseWhatsAppReturn {
   buildWhatsAppLink: (phone: string, message: string) => string;
 }
 
-// Helper لفك تشفير اسم الطالب إذا كان مخزناً كـ JSONB أو string
+// Helper لفك تشفير اسم الطالب واستخراج اللغة المناسبة
 const extractName = (nameData: any, lang: string = 'ar'): string => {
   if (!nameData) return '';
+  
+  let parsed = nameData;
   if (typeof nameData === 'string') {
     try {
-      const parsed = JSON.parse(nameData);
-      return parsed[lang] || parsed.ar || parsed.en || nameData;
+      parsed = JSON.parse(nameData);
     } catch {
       return nameData;
     }
   }
-  if (typeof nameData === 'object') {
-    return nameData[lang] || nameData.ar || nameData.en || Object.values(nameData)[0] || '';
+
+  if (typeof parsed === 'object' && parsed !== null) {
+    return (
+      parsed[lang] ||
+      parsed.ar ||
+      parsed.en ||
+      parsed.tr ||
+      parsed.fr ||
+      parsed.ur ||
+      parsed.id ||
+      Object.values(parsed).find((val) => typeof val === 'string' && val.trim() !== '') ||
+      ''
+    );
   }
+
   return String(nameData);
 };
 
@@ -79,7 +92,7 @@ export function useWhatsApp(): UseWhatsAppReturn {
     [formatPhoneNumber]
   );
 
-  // 3. صياغة قالب التقرير اليومي بأسلوب بسيط ونظيف
+  // 3. صياغة قالب التقرير اليومي بأسلوب بسيط ونظيف يدعم التدويل
   const generateReportMessage = useCallback(
     (payload: SendReportPayload): string => {
       const {
@@ -96,7 +109,7 @@ export function useWhatsApp(): UseWhatsAppReturn {
 
       const title = academyName || t('whatsapp.report_title', 'الحلقة الذكية');
 
-      let body = `*تقرير المتابعة اليومي - ${title}*\n\n`;
+      let body = `*${t('whatsapp.report_header', 'تقرير المتابعة اليومي')} - ${title}*\n\n`;
       body += `• *${t('student.name', 'الطالب')}:* ${studentName}\n`;
       body += `• *${t('common.date', 'التاريخ')}:* ${date}\n`;
       body += `• *${t('attendance.status', 'حالة الحضور')}:* ${attendanceStatus}\n`;
@@ -185,13 +198,13 @@ export function useWhatsApp(): UseWhatsAppReturn {
           .single();
 
         if (error || !student) {
-          throw new Error(error?.message || 'لم يتم العثور على بيانات الطالب');
+          throw new Error(error?.message || t('students.not_found', 'لم يتم العثور على بيانات الطالب'));
         }
 
         const phone = student.parent_whatsapp || student.parent_phone;
         if (!phone) {
           if (newWindow) newWindow.close();
-          alert('لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.');
+          alert(t('whatsapp.no_phone_error', 'لا يوجد رقم واتساب أو هاتف مسجل لولي أمر هذا الطالب.'));
           return;
         }
 
@@ -213,7 +226,7 @@ export function useWhatsApp(): UseWhatsAppReturn {
         setSending(false);
       }
     },
-    [generateReportMessage, sendCustomMessage, i18n.language]
+    [generateReportMessage, sendCustomMessage, i18n.language, t]
   );
 
   return {
