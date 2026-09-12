@@ -1,3 +1,6 @@
+src/components/Auth/ProtectedRoute.jsx
+
+
 import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
