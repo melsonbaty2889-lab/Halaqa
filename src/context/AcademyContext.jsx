@@ -1,19 +1,51 @@
 /* src/context/AcademyContext.jsx */
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
 const AcademyContext = createContext(null);
 
+// ── Helper Function for Multilingual Name Extraction ──────────────
+const extractAcademyName = (nameData, lang = 'ar') => {
+  if (!nameData) return '';
+  
+  let parsed = nameData;
+  if (typeof nameData === 'string') {
+    try {
+      parsed = JSON.parse(nameData);
+    } catch {
+      return nameData;
+    }
+  }
+
+  if (typeof parsed === 'object' && parsed !== null) {
+    return (
+      parsed[lang] ||
+      parsed.ar ||
+      parsed.en ||
+      parsed.tr ||
+      parsed.fr ||
+      parsed.ur ||
+      parsed.id ||
+      Object.values(parsed).find((val) => typeof val === 'string' && val.trim() !== '') ||
+      ''
+    );
+  }
+
+  return String(nameData);
+};
+
 export const AcademyProvider = ({ children }) => {
+  const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [academy, setAcademy] = useState(null);
-  const [academiesList, setAcademiesList] = useState([]); // ✅ إضافة القائمة الكاملة للاستخدام الموحد
+  const [academiesList, setAcademiesList] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const [appState, setAppState] = useState('LOADING');
 
   const isMounted = useRef(true);
-  const isFetchingRef = useRef(false); // ✅ منع جلب البيانات المتزامن المكرر
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     isMounted.current = true;
@@ -28,6 +60,16 @@ export const AcademyProvider = ({ children }) => {
     }
   }, []);
 
+  // دالة مساعدة لاستخراج اسم الأكاديمية الحالية حسب اللغة النشطة
+  const getAcademyName = useCallback(
+    (targetAcademy = academy) => {
+      if (!targetAcademy) return '';
+      const currentLang = i18n.language || 'ar';
+      return extractAcademyName(targetAcademy.name || targetAcademy.title, currentLang);
+    },
+    [academy, i18n.language]
+  );
+
   const fetchUserStatus = useCallback(async (currentUser) => {
     if (!currentUser) {
       if (isMounted.current) {
@@ -41,7 +83,6 @@ export const AcademyProvider = ({ children }) => {
       return;
     }
 
-    // ✅ منع دخول الدالة إذا كانت قيد التنفيذ حالياً
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
 
@@ -115,7 +156,7 @@ export const AcademyProvider = ({ children }) => {
           .eq('is_active', true);
 
         if (teacherList && teacherList.length > 0) {
-          fetchedList = teacherList.map(t => t.academies).filter(Boolean);
+          fetchedList = teacherList.map((t) => t.academies).filter(Boolean);
           detectedRole = 'teacher';
         }
       }
@@ -154,7 +195,7 @@ export const AcademyProvider = ({ children }) => {
         } else {
           setAcademy({
             id: activeProfile.academy_id || 'default',
-            name: 'الأكاديمية الافتراضية',
+            name: { ar: 'الأكاديمية الافتراضية', en: 'Default Academy' },
             is_active: true
           });
           setAppState('FULLY_ACTIVE');
@@ -165,7 +206,7 @@ export const AcademyProvider = ({ children }) => {
       console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
       if (isMounted.current) setAppState('FULLY_ACTIVE');
     } finally {
-      isFetchingRef.current = false; // ✅ تحرير المرجع
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -231,14 +272,18 @@ export const AcademyProvider = ({ children }) => {
       
       if (channel && typeof channel.on === 'function') {
         channel
-          .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'profiles',
-            filter: `id=eq.${user.id}`
-          }, () => {
-            refreshStatus();
-          })
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${user.id}`
+            },
+            () => {
+              refreshStatus();
+            }
+          )
           .subscribe();
       }
     } catch (err) {
@@ -273,18 +318,21 @@ export const AcademyProvider = ({ children }) => {
   };
 
   return (
-    <AcademyContext.Provider value={{
-      user,
-      profile,
-      academy,
-      academiesList,
-      userRole,
-      appState,
-      setAcademy,
-      updateAcademyState,
-      logout,
-      refreshStatus
-    }}>
+    <AcademyContext.Provider
+      value={{
+        user,
+        profile,
+        academy,
+        academiesList,
+        userRole,
+        appState,
+        setAcademy,
+        updateAcademyState,
+        getAcademyName,
+        logout,
+        refreshStatus
+      }}
+    >
       {children}
     </AcademyContext.Provider>
   );
@@ -302,6 +350,7 @@ export const useAcademy = () => {
       appState: 'LOADING',
       setAcademy: () => {},
       updateAcademyState: () => {},
+      getAcademyName: () => '',
       logout: async () => {},
       refreshStatus: async () => {}
     };
