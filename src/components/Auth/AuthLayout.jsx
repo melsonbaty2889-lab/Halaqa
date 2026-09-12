@@ -54,18 +54,9 @@ export default function AuthLayout({ children, langBtn }) {
           borderColor: C.dark?.cardBorder,
         }}
       >
-        {/* ترويسة الشعار الموحدة */}
+        {/* ترويسة الشعار الاحترافي الموحد */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center border shadow-lg"
-            style={{ 
-              background: C.gradients?.logoBox, 
-              borderColor: C.emerald?.light,
-              boxShadow: `0 0 20px ${C.emerald?.logoGlow}` 
-            }}
-          >
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
+          <SmartHalaqaProLogo size={52} />
           <h1 className="text-xl font-black text-white tracking-tight">
             {safeT('common.appName', defaultAppName)}
           </h1>
@@ -82,6 +73,6 @@ export default function AuthLayout({ children, langBtn }) {
       >
         {safeT('common.appName', defaultAppName)} • v2.5
       </footer>
-      </div>
+    </div>
   );
 }
