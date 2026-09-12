@@ -1,18 +1,42 @@
 import { supabase } from '@/lib/supabase';
 
-// 🛡️ دالة مساعدة معالجة النصوص الآمنة
-export const getSafeText = (val, defaultVal = '') => {
+// 🛡️ دالة مساعدة معالجة النصوص والأسماء متعددة اللغات الآمنة
+export const getSafeText = (val, defaultVal = '', lang = 'ar') => {
   if (val === null || val === undefined) return defaultVal;
-  if (typeof val === 'string' || typeof val === 'number') return String(val);
-  if (typeof val === 'object') {
-    if (val.ar) return String(val.ar);
-    if (val.en) return String(val.en);
-    if (val.name) return getSafeText(val.name, defaultVal);
-    if (val.title) return getSafeText(val.title, defaultVal);
-    const firstVal = Object.values(val)[0];
-    if (firstVal && typeof firstVal !== 'object') return String(firstVal);
+  
+  // إذا كانت القيمة نصاً محولاً لـ JSON
+  let parsed = val;
+  if (typeof val === 'string') {
+    try {
+      parsed = JSON.parse(val);
+    } catch {
+      return String(val);
+    }
+  }
+
+  if (typeof parsed === 'number') return String(parsed);
+
+  if (typeof parsed === 'object' && parsed !== null) {
+    // 1. استخراج القيمة باللغة المطلوبة أو اللغات الأخرى البديلة
+    if (parsed[lang] && typeof parsed[lang] === 'string') return parsed[lang];
+    if (parsed.ar && typeof parsed.ar === 'string') return parsed.ar;
+    if (parsed.en && typeof parsed.en === 'string') return parsed.en;
+    if (parsed.tr && typeof parsed.tr === 'string') return parsed.tr;
+    if (parsed.fr && typeof parsed.fr === 'string') return parsed.fr;
+    if (parsed.ur && typeof parsed.ur === 'string') return parsed.ur;
+    if (parsed.id && typeof parsed.id === 'string') return parsed.id;
+    
+    // 2. فحص الحقول الفرعية الممكنة
+    if (parsed.name) return getSafeText(parsed.name, defaultVal, lang);
+    if (parsed.title) return getSafeText(parsed.title, defaultVal, lang);
+
+    // 3. أخذ أول قيمة نصية غير فارغة
+    const firstVal = Object.values(parsed).find((v) => typeof v === 'string' && v.trim() !== '');
+    if (firstVal) return String(firstVal);
+
     return defaultVal;
   }
+
   return String(val);
 };
 
@@ -112,7 +136,7 @@ export const fetchAcademyDeepDetails = async (academyId) => {
 
   return {
     studentsCount: stCount || 0,
-    halaqatCount: hCount || 0,
+    halakatCount: hCount || 0,
     payments: paymentsData || []
   };
 };
