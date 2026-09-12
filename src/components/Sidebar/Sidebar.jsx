@@ -134,12 +134,13 @@ export default function Sidebar({
       }
 
       if (list.length === 0) {
-        const { data: staffData } = await supabase
-          .from('staff')
+        const { data: teacherData } = await supabase
+          .from('academy_teachers')
           .select('academy_id, academies(id, name, logo_url, slug, trial_ends_at, is_active)')
-          .eq('user_id', user.id);
-        if (staffData && staffData.length > 0) {
-          list = staffData.map(s => s.academies).filter(Boolean);
+          .eq('teacher_id', user.id);
+
+        if (teacherData && teacherData.length > 0) {
+          list = teacherData.map(s => s.academies).filter(Boolean);
         }
       }
 
