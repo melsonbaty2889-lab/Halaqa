@@ -9,7 +9,7 @@ import QuranicPoliciesTab from './QuranicPoliciesTab';
 import DataBackupTab from './DataBackupTab';
 
 // دالة ذكية لتوليد الـ Slug
-const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
+const generateSmartSlug = (names, rawSlug, currentId) => {
   if (rawSlug && !rawSlug.startsWith('academy-')) {
     const cleanedCustom = rawSlug
       .toLowerCase()
@@ -20,14 +20,17 @@ const generateSmartSlug = (enName, arName, rawSlug, currentId) => {
     if (cleanedCustom) return cleanedCustom;
   }
 
-  if (enName && enName.trim() !== '') {
-    const cleanedEn = enName
+  // البحث عن أول اسم بلغة نصية إنكليزية أو لاتينية
+  const candidateName = names?.en || names?.tr || names?.fr || names?.id || names?.ar || names?.ur;
+
+  if (candidateName && candidateName.trim() !== '') {
+    const cleaned = candidateName
       .toLowerCase()
       .trim()
       .replace(/\s+/g, '-')
       .replace(/[^\w\-]+/g, '')
       .replace(/\-\-+/g, '-');
-    if (cleanedEn) return cleanedEn;
+    if (cleaned) return cleaned;
   }
 
   const shortId = currentId ? currentId.slice(0, 8) : Math.random().toString(36).substring(2, 8);
@@ -66,9 +69,9 @@ export default function Settings({
   const importInputRef = useRef(null);
   const isDirtyRef = useRef(false);
 
-  // حالة البيانات الأساسية
+  // حالة البيانات الأساسية متضمنة أسماء الأكاديمية للغات الست
   const [formData, setFormData] = useState({
-    name: { ar: '', en: '' },
+    name: { ar: '', en: '', tr: '', fr: '', ur: '', id: '' },
     slug: '',
     description: '',
     logo_url: '',
@@ -107,19 +110,22 @@ export default function Settings({
         if (error) throw error;
 
         if (data) {
-          let parsedName = { ar: '', en: '' };
+          let parsedName = { ar: '', en: '', tr: '', fr: '', ur: '', id: '' };
           
           if (typeof data.name === 'object' && data.name !== null) {
-            parsedName = {
-              ar: data.name.ar || '',
-              en: data.name.en || ''
-            };
+            parsedName = { ...parsedName, ...data.name };
           } else if (typeof data.name === 'string') {
             try {
               const jsonParsed = JSON.parse(data.name);
-              parsedName = { ar: jsonParsed.ar || '', en: jsonParsed.en || '' };
+              if (typeof jsonParsed === 'object' && jsonParsed !== null) {
+                parsedName = { ...parsedName, ...jsonParsed };
+              } else {
+                parsedName.ar = data.name;
+                parsedName.en = data.name;
+              }
             } catch {
               parsedName.ar = data.name;
+              parsedName.en = data.name;
             }
           }
 
@@ -162,7 +168,7 @@ export default function Settings({
     }
 
     loadAcademySettings();
-  }, [academyId]);
+  }, [academyId, currentCurrency, currentTimezone, currentCountryCode]);
 
   // تحديث الحقول
   const updateField = (field, value) => {
@@ -185,14 +191,14 @@ export default function Settings({
     }
   };
 
-  // تحديث الاسم
+  // تحديث الاسم بأي لغة مدعومة
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
       const updatedName = { ...prev.name, [lang]: value };
       
       let newSlug = prev.slug;
       if (!prev.slug || prev.slug.startsWith('academy-')) {
-        newSlug = generateSmartSlug(updatedName.en, updatedName.ar, '', academyId);
+        newSlug = generateSmartSlug(updatedName, '', academyId);
       }
 
       const updated = { ...prev, name: updatedName, slug: newSlug };
@@ -306,10 +312,9 @@ export default function Settings({
     e.preventDefault();
     if (!academyId) return;
 
-    const arName = formData.name?.ar?.trim();
-    const enName = formData.name?.en?.trim();
+    const hasAnyName = Object.values(formData.name || {}).some(n => n && n.trim() !== '');
 
-    if (!arName && !enName) {
+    if (!hasAnyName) {
       showToast(t('settings.nameRequired'), 'error');
       return;
     }
@@ -317,7 +322,7 @@ export default function Settings({
     try {
       setSaving(true);
 
-      const cleanSlug = generateSmartSlug(enName, arName, formData.slug, academyId);
+      const cleanSlug = generateSmartSlug(formData.name, formData.slug, academyId);
 
       const updatePayload = {
         name: formData.name,
