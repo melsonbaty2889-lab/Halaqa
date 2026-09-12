@@ -1,30 +1,102 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthLayout from './AuthLayout';
 import { C } from '@/theme/colors';
 import { useCreateAcademy } from '@/hooks/useCreateAcademy';
+import CustomSelect from '@/components/UI/CustomSelect.jsx';
+import { COUNTRIES_LIST } from '@/constants/countries.js';
+import { CURRENCIES } from '@/constants/currencies.js';
 
-import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe } from 'lucide-react';
+import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe, Mail, Phone, MapPin, Globe2, Calendar } from 'lucide-react';
 
 export default function CreateAcademy({ onSubmitAcademy }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  
+  const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
+  const isAr = i18n.language === 'ar';
+
+  // حالة البيانات الأساسية المطلوبة للتأسيس
+  const [academyData, setAcademyData] = useState({
+    name: '',
+    contact_email: '',
+    contact_phone: '',
+    country_code: 'EG',
+    currency: 'EGP',
+    timezone: 'Africa/Cairo',
+    calendar_type: 'gregorian'
+  });
+
+  const updateField = (field, value) => {
+    setAcademyData(prev => ({ ...prev, [field]: value }));
+  };
+
   const {
-    academyName,
-    setAcademyName,
     isSubmitting,
     isSuccess,
     errorMsg,
-    handleSubmit
-  } = useCreateAcademy(onSubmitAcademy);
+    handleSubmit: submitHookHandler
+  } = useCreateAcademy((data) => {
+    if (typeof onSubmitAcademy === 'function') {
+      onSubmitAcademy({
+        ...data,
+        ...academyData,
+        // هيكلة الاسم بالشكل الداعم للغات المتعددة المعتمد في المنظومة
+        name: { ar: academyData.name, en: academyData.name, tr: '', fr: '', ur: '', id: '' }
+      });
+    }
+  });
 
-  // دالة مساعدة لتوليد معاينة الـ slug بشكل نظيف وسلس
+  // تحضير خيارات الدول
+  const countryOptions = useMemo(() => {
+    return (COUNTRIES_LIST || []).map(country => ({
+      label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
+      value: country.code
+    }));
+  }, [isAr]);
+
+  // تحضير خيارات العملات
+  const currencyOptions = useMemo(() => {
+    return (CURRENCIES || []).map(currency => ({
+      label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
+      value: currency.code
+    }));
+  }, [isAr]);
+
+  // خيارات المناطق الزمنية
+  const timezoneOptions = useMemo(() => [
+    { label: isRtl ? 'القاهرة (GMT+2 / GMT+3)' : 'Cairo (GMT+2 / GMT+3)', value: 'Africa/Cairo' },
+    { label: isRtl ? 'مكة المكرمة / الرياض (GMT+3)' : 'Riyadh / Mecca (GMT+3)', value: 'Asia/Riyadh' },
+    { label: isRtl ? 'دبي (GMT+4)' : 'Dubai (GMT+4)', value: 'Asia/Dubai' },
+    { label: isRtl ? 'جرينتش / التوقيت العالمي (UTC+0)' : 'Greenwich / UTC (UTC+0)', value: 'UTC' }
+  ], [isRtl]);
+
+  // خيارات التقويم
+  const calendarOptions = useMemo(() => [
+    { label: isRtl ? 'ميلادي' : 'Gregorian', value: 'gregorian' },
+    { label: isRtl ? 'هجري' : 'Hijri', value: 'hijri' }
+  ], [isRtl]);
+
+  // ربط الدولة بالعملة والمنطقة الزمنية تلقائياً
+  const handleCountryChange = (countryCode) => {
+    updateField('country_code', countryCode);
+    const matchedCountry = (COUNTRIES_LIST || []).find(c => c.code === countryCode);
+    if (matchedCountry?.timezone) {
+      updateField('timezone', matchedCountry.timezone);
+    }
+    const matchedCurrency = (CURRENCIES || []).find(c => c.countryCode === countryCode);
+    if (matchedCurrency?.code) {
+      updateField('currency', matchedCurrency.code);
+    }
+  };
+
+  // توليد معاينة الرابط الفورية
   const generateSlugPreview = (name) => {
     if (!name) return 'academy-name';
     return name
       .trim()
       .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[^\w\u0621-\u064A\-]+/g, '') // السماح بالعربية والأنجليزية والشرطات
+      .replace(/[^\w\u0621-\u064A\-]+/g, '')
       .slice(0, 30);
   };
 
@@ -32,9 +104,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     return (
       <AuthLayout>
         <div className="flex flex-col items-center justify-center py-6 text-center animate-fadeIn">
-          <div 
-            className="w-12 h-12 rounded-full flex items-center justify-center mb-3 border shadow-lg bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-          >
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 border shadow-lg bg-emerald-500/15 border-emerald-500/30 text-emerald-400">
             <CheckCircle2 size={28} />
           </div>
           <h2 className="text-base font-bold mb-1" style={{ color: C.text?.title }}>
@@ -55,7 +125,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           {t('academy.create_title', 'إنشاء أكاديمية جديدة')}
         </h2>
         <p className="text-xs font-medium mt-1" style={{ color: C.text?.muted }}>
-          {t('academy.create_subtitle', 'قم بإدخال اسم المقرأة أو الأكاديمية لبدء إعداد النظام')}
+          {t('academy.create_subtitle', 'قم بإدخال البيانات الأساسية لتأسيس المقرأة أو الأكاديمية')}
         </p>
       </div>
 
@@ -74,47 +144,116 @@ export default function CreateAcademy({ onSubmitAcademy }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 animate-fadeIn" noValidate>
-        <div className="space-y-1.5">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        // تمرير الاسم للوهوك الأساسي ليتطابق مع متطلبات الـ hook
+        submitHookHandler(e);
+      }} className="space-y-3.5 animate-fadeIn" noValidate>
+        
+        {/* اسم الأكاديمية */}
+        <div className="space-y-1">
           <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: C.text?.body }}>
-            <Building2 size={14} style={{ color: C.amber?.DEFAULT }} />
+            <Building2 size={13} style={{ color: C.amber?.DEFAULT }} />
             <span>{t('academy.name', 'اسم الأكاديمية')} *</span>
           </label>
           <input
             type="text"
-            value={academyName}
-            onChange={(e) => setAcademyName(e.target.value)}
+            value={academyData.name}
+            onChange={(e) => updateField('name', e.target.value)}
             placeholder={t('academy.name_placeholder', 'أدخل اسم الأكاديمية')}
-            className="w-full px-3.5 min-h-[44px] text-xs rounded-xl border outline-none transition focus:border-amber-500"
+            className="w-full px-3.5 min-h-[40px] text-xs rounded-xl border outline-none transition focus:border-amber-500"
             style={{ 
               backgroundColor: C.inputs?.bg, 
               borderColor: C.inputs?.border,
               color: C.text?.title
             }}
-            aria-label={t('academy.name', 'اسم الأكاديمية')}
             required
             autoFocus
           />
-          
-          {/* معاينة الرابط الفورية (Slug Preview) */}
-          <div className="flex items-center gap-1.5 px-1 pt-1 text-[11px] font-mono tracking-tight opacity-80" style={{ color: C.text?.muted }}>
-            <Globe size={12} style={{ color: C.amber?.DEFAULT }} />
-            <span className="truncate">
-              {window.location.host}/{generateSlugPreview(academyName)}/...
+          <div className="flex items-center gap-1.5 px-1 pt-0.5 text-[10px] font-mono tracking-tight opacity-75" style={{ color: C.text?.muted }}>
+            <Globe size={11} style={{ color: C.amber?.DEFAULT }} />
+            <span className="truncate" dir="ltr">
+              {window.location.host}/{generateSlugPreview(academyData.name)}
             </span>
           </div>
+        </div>
+
+        {/* البريد الإلكتروني والهاتف */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: C.text?.body }}>
+              <Mail size={13} style={{ color: C.amber?.DEFAULT }} />
+              <span>{t('settings.officialEmail', 'البريد الرسمي')}</span>
+            </label>
+            <input 
+              type="email" 
+              value={academyData.contact_email} 
+              onChange={(e) => updateField('contact_email', e.target.value)} 
+              dir="ltr"
+              placeholder="admin@academy.com"
+              className="w-full px-3 min-h-[40px] text-xs rounded-xl border outline-none transition focus:border-amber-500 text-start"
+              style={{ backgroundColor: C.inputs?.bg, borderColor: C.inputs?.border, color: C.text?.title }}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: C.text?.body }}>
+              <Phone size={13} style={{ color: C.amber?.DEFAULT }} />
+              <span>{t('settings.phoneWhatsapp', 'الهاتف / الواتساب')}</span>
+            </label>
+            <input 
+              type="text" 
+              value={academyData.contact_phone} 
+              onChange={(e) => updateField('contact_phone', e.target.value)} 
+              dir="ltr"
+              placeholder="+20..."
+              className="w-full px-3 min-h-[40px] text-xs rounded-xl border outline-none transition focus:border-amber-500 text-start"
+              style={{ backgroundColor: C.inputs?.bg, borderColor: C.inputs?.border, color: C.text?.title }}
+            />
+          </div>
+        </div>
+
+        {/* الدولة والعملة */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
+          <CustomSelect 
+            label={t('settings.country', 'الدولة')}
+            value={academyData.country_code}
+            onChange={handleCountryChange}
+            options={countryOptions}
+            searchable={true}
+          />
+          <CustomSelect 
+            label={t('settings.currency', 'العملة الرسمية')}
+            value={academyData.currency}
+            onChange={(val) => updateField('currency', val)}
+            options={currencyOptions}
+            searchable={true}
+          />
+        </div>
+
+        {/* المنطقة الزمنية والتقويم */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
+          <CustomSelect 
+            label={t('settings.timezone', 'المنطقة الزمنية')}
+            value={academyData.timezone}
+            onChange={(val) => updateField('timezone', val)}
+            options={timezoneOptions}
+            searchable={true}
+          />
+          <CustomSelect 
+            label={t('settings.calendarType', 'نوع التقويم')}
+            value={academyData.calendar_type}
+            onChange={(val) => updateField('calendar_type', val)}
+            options={calendarOptions}
+          />
         </div>
 
         <div className="pt-2">
           <button
             type="submit"
-            disabled={!academyName.trim() || isSubmitting}
-            title={t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
-            aria-label={t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
-            className="w-full min-h-[44px] py-2.5 px-4 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer text-white active:scale-[0.98]"
-            style={{ 
-              background: C.gradients?.primaryBtn
-            }}
+            disabled={!academyData.name.trim() || isSubmitting}
+            className="w-full min-h-[42px] py-2.5 px-4 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer text-white active:scale-[0.98]"
+            style={{ background: C.gradients?.primaryBtn }}
           >
             {isSubmitting ? (
               <Loader2 size={16} className="animate-spin" />
