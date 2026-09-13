@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
 import { C } from '@/theme/colors';
 import { supabase } from '@/lib/supabase';
-import AuthLayout from './AuthLayout';
+import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
+import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { TermsModal } from '@/components/UI/TermsModal';
 import {
   User,
@@ -12,7 +13,6 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  Globe,
   ShieldCheck,
   Loader2,
   CheckCircle2,
@@ -43,7 +43,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setFieldErrors,
     status,
     setStatus,
-    toggleLanguage,
     handleKeyUp,
     handleSignUp,
   } = useSignUpForm(onSignUpSuccess);
@@ -51,6 +50,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('terms');
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
+  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
+
+  useEffect(() => {
+    document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${appSubtitle}`;
+  }, [i18n.language, t, appSubtitle]);
 
   // --- حساب قوة كلمة المرور والمعايير ---
   const passwordCriteria = useMemo(() => {
@@ -113,26 +119,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowModal(false);
   }, []);
 
-  const langBtn = (
-    <button
-      type="button"
-      onClick={toggleLanguage}
-      title={t('common.switchLanguage', 'تغيير اللغة')}
-      aria-label={t('common.switchLanguage', 'تغيير اللغة')}
-      className="border py-1.5 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg transition-all min-h-[44px]"
-      style={{
-        backgroundColor: C.inputs?.bg,
-        borderColor: C.inputs?.border,
-        color: C.text?.muted,
-      }}
-    >
-      <Globe size={14} style={{ color: C.amber?.DEFAULT }} />
-      <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
-    </button>
-  );
-
   return (
-    <AuthLayout langBtn={langBtn}>
+    <AuthLayout 
+      langBtn={<LanguageSwitcher />} 
+      subtitle={appSubtitle}
+    >
       <div className="w-full">
         <div className="text-center mb-4">
           <h1
