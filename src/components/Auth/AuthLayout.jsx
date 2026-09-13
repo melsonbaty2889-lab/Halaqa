@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SmartHalaqaProLogo } from '@/components/UI/SmartHalaqaProLogo';
+import AppBrand from '@/components/UI/AppBrand';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 
@@ -20,7 +20,6 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLangCode);
 
-  // تحديث الاسم الفرعي بناءً على اللغة المختارة أو الخاصية الممررة
   const appSubtitle = useMemo(() => {
     if (subtitle) return subtitle;
     return APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
@@ -70,16 +69,8 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
           borderColor: C?.dark?.cardBorder || 'rgba(255,255,255,0.1)',
         }}
       >
-        {/* اللوجو مع الاسم أسفله باللغة المختارة */}
-        <div className="flex flex-col items-center text-center space-y-2">
-          <SmartHalaqaProLogo size={52} />
-          <h1 
-            className="text-lg font-bold tracking-wide"
-            style={{ color: C?.amber?.DEFAULT || '#D97706' }}
-          >
-            {appSubtitle}
-          </h1>
-        </div>
+        {/* الشعار الموحد مع التوهج الزمردي واسم المنصة الهرمي */}
+        <AppBrand subtitle={appSubtitle} />
 
         {children}
       </main>
