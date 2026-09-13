@@ -7,11 +7,11 @@ import { handleAuthError } from '@/utils/errorHandler';
 import { signUpSchema, validateFormData } from '@/schemas/auth';
 
 export interface FieldErrors {
-  fullName?: boolean;
-  email?: boolean;
-  password?: boolean;
-  confirmPassword?: boolean;
-  agreeTerms?: boolean;
+  fullName?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  agreeTerms?: string;
 }
 
 export interface StatusState {
@@ -54,7 +54,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const handleAgreeTermsChange = useCallback((checked: boolean) => {
     setAgreeTerms(checked);
     if (checked) {
-      setFieldErrors((prev) => ({ ...prev, agreeTerms: false }));
+      setFieldErrors((prev) => ({ ...prev, agreeTerms: undefined }));
       setStatus((prev) =>
         prev.msg?.includes('الشروط') || prev.msg?.includes('Terms') ? { type: null, msg: '' } : prev
       );
@@ -73,28 +73,33 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       agreeTerms,
     };
 
-    // 1. التحقق اليدوي البسيط لحماية الحقول وتنظيف المسافات
     const errors: FieldErrors = {};
 
-    if (!cleanFullName) errors.fullName = true;
-    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) errors.email = true;
-    if (!password || password.length < 6) errors.password = true;
-    if (password !== confirmPassword) errors.confirmPassword = true;
-    if (!agreeTerms) errors.agreeTerms = true;
+    if (!cleanFullName) {
+      errors.fullName = t('auth.fullNameRequired', 'الاسم الكامل مطلوب');
+    }
+    if (!cleanEmail) {
+      errors.email = t('auth.emailRequired', 'البريد الإلكتروني مطلوب');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      errors.email = t('auth.invalidEmail', 'البريد الإلكتروني غير صحيح');
+    }
+    if (!password) {
+      errors.password = t('auth.passwordRequired', 'كلمة المرور مطلوبة');
+    } else if (password.length < 8) {
+      errors.password = t('auth.passwordMinLength', 'كلمة المرور يجب أن لا تقل عن 8 أحرف');
+    }
+    if (password !== confirmPassword) {
+      errors.confirmPassword = t('auth.passwordsDoNotMatch', 'كلمتا المرور غير متطابقتين');
+    }
+    if (!agreeTerms) {
+      errors.agreeTerms = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
+    }
 
-    // 2. التحقق عبر مخطط Zod
+    // التحقق المتقدم باستخدام Schema
     const validation = validateFormData(signUpSchema, formData);
 
     if (Object.keys(errors).length > 0 || !validation.success) {
       setFieldErrors(errors);
-
-      if (errors.agreeTerms && Object.keys(errors).length === 1) {
-        setStatus({
-          type: 'error',
-          msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
-        });
-        return false;
-      }
 
       setStatus({
         type: 'error',
