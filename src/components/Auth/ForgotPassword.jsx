@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import { PrimaryButton } from '@/components/UI/AuthButtons';
 import { C } from '@/theme/colors';
 import { useForgotPassword } from '@/hooks/useForgotPassword';
 
@@ -11,7 +12,6 @@ import {
   ArrowLeft, 
   AlertCircle, 
   ShieldCheck, 
-  Loader2, 
   CheckCircle2, 
   RefreshCw 
 } from 'lucide-react';
@@ -103,22 +103,13 @@ export default function ForgotPassword({ onBackToLogin }) {
                 />
               </div>
 
-              <button 
-                type="submit" 
-                disabled={loading || cooldown > 0}
-                title={t('auth.send_reset_link', 'إرسال رابط الحماية')}
-                aria-label={t('auth.send_reset_link', 'إرسال رابط الحماية')}
-                className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white active:scale-[0.98]"
-                style={{
-                  background: C?.gradients?.primaryBtn,
-                }}
+              {/* زر إرسال الرابط الرئيسي الموحد */}
+              <PrimaryButton 
+                loading={loading}
+                disabled={cooldown > 0}
               >
-                {loading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <span>{t('auth.send_reset_link', 'إرسال رابط الحماية')}</span>
-                )}
-              </button>
+                {t('auth.send_reset_link', 'إرسال رابط الحماية')}
+              </PrimaryButton>
             </form>
           </>
         ) : (
