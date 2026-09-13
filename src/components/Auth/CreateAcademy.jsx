@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import AuthLayout from './AuthLayout';
+import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 import { useCreateAcademy } from '@/hooks/useCreateAcademy';
@@ -13,24 +13,12 @@ import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe, Mail, Phon
 export default function CreateAcademy({ onSubmitAcademy }) {
   const { t, i18n } = useTranslation();
   
-  // تحديد اللغة والاتجاه التلقائي
   const currentLang = i18n?.language?.split('-')[0] || 'ar';
-  const rtlLanguages = ['ar', 'ur'];
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : rtlLanguages.includes(currentLang);
+  const isRtl = ['ar', 'ur'].includes(currentLang);
   const isAr = currentLang === 'ar';
 
-  // ترجمة اسم المنصة الفرعي للعرض أسفل اللوجو
-  const appSubtitleMap = {
-    ar: 'الحلقة الذكية',
-    en: 'Smart Halaqa',
-    fr: 'Halaqa Intelligente',
-    tr: 'Akıllı Halka',
-    ur: 'اسمارٹ حلقہ',
-    id: 'Halaqa Pintar'
-  };
-  const appSubtitle = appSubtitleMap[currentLang] || appSubtitleMap.ar;
+  const appSubtitle = APP_SUBTITLES[currentLang] || APP_SUBTITLES.ar;
 
-  // حالة البيانات الأساسية المطلوبة للتأسيس
   const [academyData, setAcademyData] = useState({
     name: '',
     contact_email: '',
@@ -55,7 +43,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
       onSubmitAcademy({
         ...data,
         ...academyData,
-        // هيكلة الاسم الداعمة لجميع اللغات الست المعتمدة
         name: { 
           ar: academyData.name, 
           en: academyData.name, 
@@ -68,7 +55,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     }
   });
 
-  // تحضير خيارات الدول
   const countryOptions = useMemo(() => {
     return (COUNTRIES_LIST || []).map(country => ({
       label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
@@ -76,7 +62,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     }));
   }, [isAr]);
 
-  // تحضير خيارات العملات
   const currencyOptions = useMemo(() => {
     return (CURRENCIES || []).map(currency => ({
       label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
@@ -84,7 +69,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     }));
   }, [isAr]);
 
-  // خيارات المناطق الزمنية مع الترجمة والتوافق
   const timezoneOptions = useMemo(() => [
     { label: isRtl ? 'القاهرة (GMT+2 / GMT+3)' : 'Cairo (GMT+2 / GMT+3)', value: 'Africa/Cairo' },
     { label: isRtl ? 'مكة المكرمة / الرياض (GMT+3)' : 'Riyadh / Mecca (GMT+3)', value: 'Asia/Riyadh' },
@@ -92,13 +76,11 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     { label: isRtl ? 'جرينتش / التوقيت العالمي (UTC+0)' : 'Greenwich / UTC (UTC+0)', value: 'UTC' }
   ], [isRtl]);
 
-  // خيارات التقويم
   const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
     { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' }
   ], [isRtl, t]);
 
-  // ربط الدولة بالعملة والمنطقة الزمنية تلقائياً
   const handleCountryChange = (countryCode) => {
     updateField('country_code', countryCode);
     const matchedCountry = (COUNTRIES_LIST || []).find(c => c.code === countryCode);
@@ -111,7 +93,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     }
   };
 
-  // توليد معاينة الرابط الفورية
   const generateSlugPreview = (name) => {
     if (!name) return 'academy-name';
     return name
@@ -178,7 +159,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           submitHookHandler(e);
         }} className="space-y-3.5 animate-fadeIn" noValidate>
           
-          {/* اسم الأكاديمية */}
           <div className="space-y-1">
             <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: C?.text?.body }}>
               <Building2 size={13} style={{ color: C?.amber?.DEFAULT }} />
@@ -206,7 +186,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             </div>
           </div>
 
-          {/* البريد الإلكتروني والهاتف */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: C?.text?.body }}>
@@ -241,7 +220,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             </div>
           </div>
 
-          {/* الدولة والعملة */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
             <CustomSelect 
               label={t('settings.country', 'الدولة')}
@@ -259,7 +237,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             />
           </div>
 
-          {/* المنطقة الزمنية والتقويم */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
             <CustomSelect 
               label={t('settings.timezone', 'المنطقة الزمنية')}
