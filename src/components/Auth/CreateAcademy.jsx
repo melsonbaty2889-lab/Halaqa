@@ -6,7 +6,8 @@ import { useCreateAcademy } from '@/hooks/useCreateAcademy';
 import CustomSelect from '@/components/UI/CustomSelect.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
 import { CURRENCIES } from '@/constants/currencies.js';
-import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe, Mail, Phone, Languages } from 'lucide-react';
+
+import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe, Mail, Phone, MapPin, Globe2, Calendar } from 'lucide-react';
 
 export default function CreateAcademy({ onSubmitAcademy }) {
   const { t, i18n } = useTranslation();
@@ -39,15 +40,11 @@ export default function CreateAcademy({ onSubmitAcademy }) {
       onSubmitAcademy({
         ...data,
         ...academyData,
+        // هيكلة الاسم بالشكل الداعم للغات المتعددة المعتمد في المنظومة
         name: { ar: academyData.name, en: academyData.name, tr: '', fr: '', ur: '', id: '' }
       });
     }
   });
-
-  // دالة تغيير اللغة في التطبيق
-  const toggleLanguage = (langCode) => {
-    i18n.changeLanguage(langCode);
-  };
 
   // تحضير خيارات الدول
   const countryOptions = useMemo(() => {
@@ -92,6 +89,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     }
   };
 
+  // توليد معاينة الرابط الفورية
   const generateSlugPreview = (name) => {
     if (!name) return 'academy-name';
     return name
@@ -122,38 +120,6 @@ export default function CreateAcademy({ onSubmitAcademy }) {
 
   return (
     <AuthLayout>
-      {/* شريط محول اللغة العلوي داخل الكارد */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-500">
-          <Languages size={15} />
-          <span>{isAr ? 'لغة العرض:' : 'Display Lang:'}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => toggleLanguage('ar')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              i18n.language === 'ar' 
-                ? 'bg-amber-500 text-slate-950 shadow' 
-                : 'bg-white/5 text-slate-300 hover:bg-white/10'
-            }`}
-          >
-            العربية
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleLanguage('en')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              i18n.language === 'en' 
-                ? 'bg-amber-500 text-slate-950 shadow' 
-                : 'bg-white/5 text-slate-300 hover:bg-white/10'
-            }`}
-          >
-            English
-          </button>
-        </div>
-      </div>
-
       <div className="flex flex-col items-center mb-4 text-center">
         <h2 className="text-base font-bold" style={{ color: C.text?.title }}>
           {t('academy.create_title', 'إنشاء أكاديمية جديدة')}
@@ -180,6 +146,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
 
       <form onSubmit={(e) => {
         e.preventDefault();
+        // تمرير الاسم للوهوك الأساسي ليتطابق مع متطلبات الـ hook
         submitHookHandler(e);
       }} className="space-y-3.5 animate-fadeIn" noValidate>
         
