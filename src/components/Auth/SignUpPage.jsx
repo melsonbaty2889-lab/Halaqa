@@ -58,7 +58,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${appSubtitle}`;
   }, [i18n.language, t, appSubtitle]);
 
-  // --- حساب قوة كلمة المرور والمعايير ---
   const passwordCriteria = useMemo(() => {
     const val = password || '';
     return {
@@ -80,7 +79,10 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   const handleGoogleSignUp = useCallback(async () => {
     if (!agreeTerms) {
-      setFieldErrors((prev) => ({ ...prev, agreeTerms: true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        agreeTerms: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
+      }));
       setStatus({
         type: 'error',
         msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
@@ -120,10 +122,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   }, []);
 
   return (
-    <AuthLayout 
-      langBtn={<LanguageSwitcher />} 
-      subtitle={appSubtitle}
-    >
+    <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
       <div className="w-full">
         <div className="text-center mb-4">
           <h1
@@ -140,7 +139,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </p>
         </div>
 
-        {/* التسجيل عبر Google */}
+        {/* Google SignUp Button */}
         <button
           type="button"
           onClick={handleGoogleSignUp}
@@ -167,7 +166,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <span>{t('auth.quickGoogleSignUp', 'التسجيل السريع باستخدام Google')}</span>
         </button>
 
-        {/* فاصل */}
         <div className="relative flex items-center justify-center mb-4">
           <div className="border-t w-full" style={{ borderColor: C.inputs?.border }}></div>
           <span
@@ -181,7 +179,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </span>
         </div>
 
-        {/* نموذج إنشاء الحساب */}
         <form onSubmit={handleSignUp} className="flex flex-col gap-3" noValidate>
           {/* الاسم الكامل */}
           <div>
@@ -294,7 +291,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               </button>
             </div>
 
-            {/* مؤشر وشروط كلمة المرور */}
             {password && (
               <div className="mt-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 space-y-1.5">
                 <div className="flex items-center justify-between text-[10px] font-bold">
@@ -376,12 +372,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                   isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
                 }`}
                 style={{
-                  borderColor:
-                    confirmPassword && password !== confirmPassword
-                      ? C.error?.DEFAULT
-                      : fieldErrors?.confirmPassword
-                      ? C.error?.DEFAULT
-                      : C.inputs?.border,
+                  borderColor: fieldErrors?.confirmPassword ? C.error?.DEFAULT : C.inputs?.border,
                   backgroundColor: C.inputs?.bg,
                   color: C.text?.title,
                 }}
@@ -399,14 +390,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {confirmPassword && password !== confirmPassword && (
-              <p className="text-[10px] mt-1 text-rose-500 px-1">
-                {t('auth.passwordsDoNotMatch', 'كلمتا المرور غير متطابقتين')}
-              </p>
+            {fieldErrors?.confirmPassword && (
+              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.confirmPassword}</p>
             )}
           </div>
 
-          {/* التعهد بالشروط */}
+          {/* الشروط والأحكام */}
           <div
             className="flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all border"
             style={{
@@ -457,7 +446,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             </label>
           </div>
 
-          {/* التنبيهات والأخطاء العامة */}
           {status?.msg && (
             <div
               className="p-3 rounded-xl my-1 text-xs leading-relaxed flex items-center gap-2 border"
@@ -481,7 +469,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             </div>
           )}
 
-          {/* زر إنشاء الحساب */}
           <button
             type="submit"
             disabled={loading}
@@ -500,7 +487,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </button>
         </form>
 
-        {/* شارة التشفير */}
         <div
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4"
           style={{ color: C.text?.muted }}
@@ -509,7 +495,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <span>{t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}</span>
         </div>
 
-        {/* تحويل الدخول */}
         <div
           className="mt-3 text-center text-xs flex items-center justify-center gap-1"
           style={{ color: C.text?.muted }}
