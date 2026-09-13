@@ -1,13 +1,34 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SmartHalaqaProLogo } from '@/components/UI/SmartHalaqaProLogo';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 
+// خريطة أسماء التطبيق حسب كود كل لغة
+const APP_NAMES = {
+  ar: 'الحلقة الذكية',
+  ur: 'اسمارٹ حلقہ',
+  en: 'Smart Halaqa',
+  fr: 'Smart Halaqa',
+  tr: 'Akıllı Halaka',
+  id: 'Halaqah Pintar',
+};
+
 export default function AuthLayout({ children, langBtn }) {
   const { t, i18n } = useTranslation();
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
-  const defaultAppName = isRtl ? 'الحلقة الذكية' : 'Smart Halaqa';
+
+  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLangCode);
+
+  // تحديد اسم التطبيق ديناميكياً بناءً على اللغة الحالية
+  const appName = useMemo(() => {
+    // 1. محاولة جلب الاسم المترجم من ملفات i18n إن وجد
+    const translatedName = t('common.appName', { defaultValue: '' });
+    if (translatedName) return translatedName;
+
+    // 2. استخدام الخريطة كـ Fallback حسب كود اللغة
+    return APP_NAMES[currentLangCode] || APP_NAMES.en;
+  }, [t, currentLangCode]);
 
   const safeT = useCallback(
     (key, fallback) => {
@@ -38,8 +59,8 @@ export default function AuthLayout({ children, langBtn }) {
         }}
       />
 
-      {/* محول اللغات: يتغير موقعه تلقائياً (يمين مع العربية والأوردو / يسار مع باقي اللغات) */}
-      <div className={`w-full max-w-sm sm:max-w-md flex relative z-20 mb-2 ${isRtl ? 'justify-start' : 'justify-end'}`}>
+      {/* محول اللغات */}
+      <div className="w-full max-w-sm sm:max-w-md flex justify-end relative z-20 mb-2">
         {langBtn || <LanguageSwitcher />}
       </div>
 
@@ -57,7 +78,7 @@ export default function AuthLayout({ children, langBtn }) {
         <div className="flex flex-col items-center text-center space-y-2">
           <SmartHalaqaProLogo size={52} />
           <h1 className="text-xl font-black text-white tracking-tight">
-            {safeT('common.appName', defaultAppName)}
+            {appName}
           </h1>
         </div>
 
@@ -70,7 +91,7 @@ export default function AuthLayout({ children, langBtn }) {
         className="mt-4 text-[10px] sm:text-[11px] tracking-wider font-mono z-10 opacity-60 pointer-events-none"
         style={{ color: C.text?.muted }}
       >
-        {safeT('common.appName', defaultAppName)} • v2.5
+        {appName} • v2.5
       </footer>
     </div>
   );
