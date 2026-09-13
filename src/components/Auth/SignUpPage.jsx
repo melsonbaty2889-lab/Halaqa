@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
 import { C } from '@/theme/colors';
@@ -15,6 +15,8 @@ import {
   Globe,
   ShieldCheck,
   Loader2,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 
 export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
@@ -49,6 +51,26 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('terms');
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // --- حساب قوة كلمة المرور والمعايير ---
+  const passwordCriteria = useMemo(() => {
+    const val = password || '';
+    return {
+      minLength: val.length >= 8,
+      hasLetter: /[a-zA-Z]/.test(val),
+      hasNumber: /\d/.test(val),
+      hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(val),
+    };
+  }, [password]);
+
+  const passwordStrength = useMemo(() => {
+    if (!password) return { score: 0, label: '', color: '' };
+    const passedCount = Object.values(passwordCriteria).filter(Boolean).length;
+    if (passedCount <= 1) return { score: 25, label: t('auth.weak', 'ضعيفة جداً'), color: C.error?.DEFAULT || '#f43f5e' };
+    if (passedCount === 2) return { score: 50, label: t('auth.medium', 'ضعيفة'), color: '#f59e0b' };
+    if (passedCount === 3) return { score: 75, label: t('auth.good', 'جيدة'), color: '#3b82f6' };
+    return { score: 100, label: t('auth.strong', 'قوية ممتاز'), color: C.emerald?.DEFAULT || '#10b981' };
+  }, [password, passwordCriteria, t]);
 
   const handleGoogleSignUp = useCallback(async () => {
     if (!agreeTerms) {
@@ -169,150 +191,228 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </div>
 
         {/* نموذج إنشاء الحساب */}
-        <form onSubmit={handleSignUp} className="flex flex-col gap-3">
+        <form onSubmit={handleSignUp} className="flex flex-col gap-3" noValidate>
           {/* الاسم الكامل */}
-          <div className="relative flex items-center">
-            <User
-              size={18}
-              className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                isRtl ? 'right-3.5' : 'left-3.5'
-              }`}
-              style={{
-                color: fullName ? C.amber?.DEFAULT : C.text?.muted,
-              }}
-            />
-            <input
-              type="text"
-              value={fullName || ''}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
-              aria-label={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
-              required
-              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
-                isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
-              }`}
-              style={{
-                borderColor: fieldErrors?.fullName ? C.error?.DEFAULT : C.inputs?.border,
-                backgroundColor: C.inputs?.bg,
-                color: C.text?.title,
-              }}
-            />
+          <div>
+            <div className="relative flex items-center">
+              <User
+                size={18}
+                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
+                style={{
+                  color: fullName ? C.amber?.DEFAULT : C.text?.muted,
+                }}
+              />
+              <input
+                type="text"
+                value={fullName || ''}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
+                aria-label={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
+                required
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+                }`}
+                style={{
+                  borderColor: fieldErrors?.fullName ? C.error?.DEFAULT : C.inputs?.border,
+                  backgroundColor: C.inputs?.bg,
+                  color: C.text?.title,
+                }}
+              />
+            </div>
+            {fieldErrors?.fullName && (
+              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.fullName}</p>
+            )}
           </div>
 
           {/* البريد الإلكتروني */}
-          <div className="relative flex items-center">
-            <Mail
-              size={18}
-              className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                isRtl ? 'right-3.5' : 'left-3.5'
-              }`}
-              style={{
-                color: email ? C.amber?.DEFAULT : C.text?.muted,
-              }}
-            />
-            <input
-              type="email"
-              value={email || ''}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
-              aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
-              required
-              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
-                isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
-              }`}
-              style={{
-                borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
-                backgroundColor: C.inputs?.bg,
-                color: C.text?.title,
-              }}
-            />
+          <div>
+            <div className="relative flex items-center">
+              <Mail
+                size={18}
+                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
+                style={{
+                  color: email ? C.amber?.DEFAULT : C.text?.muted,
+                }}
+              />
+              <input
+                type="email"
+                value={email || ''}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
+                aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
+                required
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+                }`}
+                style={{
+                  borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
+                  backgroundColor: C.inputs?.bg,
+                  color: C.text?.title,
+                }}
+              />
+            </div>
+            {fieldErrors?.email && (
+              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           {/* كلمة المرور */}
-          <div className="relative flex items-center">
-            <Lock
-              size={18}
-              className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                isRtl ? 'right-3.5' : 'left-3.5'
-              }`}
-              style={{
-                color: password ? C.amber?.DEFAULT : C.text?.muted,
-              }}
-            />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password || ''}
-              onKeyUp={handleKeyUp}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
-              aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
-              required
-              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
-                isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
-              }`}
-              style={{
-                borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
-                backgroundColor: C.inputs?.bg,
-                color: C.text?.title,
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-              aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-              className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                isRtl ? 'left-1' : 'right-1'
-              }`}
-              style={{
-                color: C.text?.muted,
-              }}
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+          <div>
+            <div className="relative flex items-center">
+              <Lock
+                size={18}
+                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
+                style={{
+                  color: password ? C.amber?.DEFAULT : C.text?.muted,
+                }}
+              />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password || ''}
+                onKeyUp={handleKeyUp}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
+                aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
+                required
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+                }`}
+                style={{
+                  borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
+                  backgroundColor: C.inputs?.bg,
+                  color: C.text?.title,
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+                aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                  isRtl ? 'left-1' : 'right-1'
+                }`}
+                style={{ color: C.text?.muted }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {/* مؤشر وشروط كلمة المرور */}
+            {password && (
+              <div className="mt-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] font-bold">
+                  <span style={{ color: C.text?.muted }}>
+                    {t('auth.strength', 'قوة كلمة المرور:')}
+                  </span>
+                  <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 h-1 rounded-full overflow-hidden">
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{
+                      width: `${passwordStrength.score}%`,
+                      backgroundColor: passwordStrength.color,
+                    }}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-1 pt-1 text-[10px]" style={{ color: C.text?.muted }}>
+                  <div className="flex items-center gap-1">
+                    {passwordCriteria.minLength ? (
+                      <CheckCircle2 size={12} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400" />
+                    )}
+                    <span>{t('auth.min8Chars', '8 حروف على الأقل')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {passwordCriteria.hasLetter ? (
+                      <CheckCircle2 size={12} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400" />
+                    )}
+                    <span>{t('auth.hasLetter', 'تتضمن حروف')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {passwordCriteria.hasNumber ? (
+                      <CheckCircle2 size={12} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400" />
+                    )}
+                    <span>{t('auth.hasNumber', 'تتضمن أرقام')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {passwordCriteria.hasSpecial ? (
+                      <CheckCircle2 size={12} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400" />
+                    )}
+                    <span>{t('auth.hasSpecial', 'رمز خاص (@#$)')}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {fieldErrors?.password && (
+              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           {/* تأكيد كلمة المرور */}
-          <div className="relative flex items-center">
-            <Lock
-              size={18}
-              className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                isRtl ? 'right-3.5' : 'left-3.5'
-              }`}
-              style={{
-                color: confirmPassword ? C.amber?.DEFAULT : C.text?.muted,
-              }}
-            />
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={confirmPassword || ''}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
-              aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
-              required
-              className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
-                isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
-              }`}
-              style={{
-                borderColor: fieldErrors?.confirmPassword ? C.error?.DEFAULT : C.inputs?.border,
-                backgroundColor: C.inputs?.bg,
-                color: C.text?.title,
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-              aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-              className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                isRtl ? 'left-1' : 'right-1'
-              }`}
-              style={{
-                color: C.text?.muted,
-              }}
-            >
-              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+          <div>
+            <div className="relative flex items-center">
+              <Lock
+                size={18}
+                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
+                style={{
+                  color: confirmPassword ? C.amber?.DEFAULT : C.text?.muted,
+                }}
+              />
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword || ''}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
+                aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
+                required
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+                }`}
+                style={{
+                  borderColor:
+                    confirmPassword && password !== confirmPassword
+                      ? C.error?.DEFAULT
+                      : fieldErrors?.confirmPassword
+                      ? C.error?.DEFAULT
+                      : C.inputs?.border,
+                  backgroundColor: C.inputs?.bg,
+                  color: C.text?.title,
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+                aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
+                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                  isRtl ? 'left-1' : 'right-1'
+                }`}
+                style={{ color: C.text?.muted }}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {confirmPassword && password !== confirmPassword && (
+              <p className="text-[10px] mt-1 text-rose-500 px-1">
+                {t('auth.passwordsDoNotMatch', 'كلمتا المرور غير متطابقتين')}
+              </p>
+            )}
           </div>
 
           {/* التعهد بالشروط */}
@@ -366,7 +466,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             </label>
           </div>
 
-          {/* التنبيهات والأخطاء */}
+          {/* التنبيهات والأخطاء العامة */}
           {status?.msg && (
             <div
               className="p-3 rounded-xl my-1 text-xs leading-relaxed flex items-center gap-2 border"
