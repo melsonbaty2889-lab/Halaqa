@@ -4,7 +4,6 @@ import AppBrand from '@/components/UI/AppBrand';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 
-// خريطة أسماء المنصة الفرعية بدقة لكل لغة
 export const APP_SUBTITLES = {
   ar: 'الحلقة الذكية',
   ur: 'اسمارٹ حلقہ',
@@ -37,7 +36,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden font-cairo"
+      className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden max-w-full font-cairo"
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{
         backgroundColor: C?.dark?.bg || '#0F172A',
@@ -46,7 +45,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
     >
       {/* الخلفية والتوهج العلوي */}
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
         aria-hidden="true"
         style={{
           backgroundImage: C?.gradients?.starsBg,
@@ -55,7 +54,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
       />
 
       {/* محول اللغات */}
-      <div className="w-full max-w-sm sm:max-w-md flex justify-end relative z-20 mb-2">
+      <div className="w-full max-w-sm sm:max-w-md flex justify-end relative z-20 mb-2 px-1">
         {langBtn || <LanguageSwitcher />}
       </div>
 
@@ -63,13 +62,12 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
       <main
         role="main"
         aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
-        className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10 border shadow-2xl space-y-6"
+        className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10 border shadow-2xl space-y-6 box-border"
         style={{
           backgroundColor: C?.dark?.card || '#1E293B',
           borderColor: C?.dark?.cardBorder || 'rgba(255,255,255,0.1)',
         }}
       >
-        {/* الشعار الموحد مع التوهج الزمردي واسم المنصة الهرمي */}
         <AppBrand subtitle={appSubtitle} />
 
         {children}
