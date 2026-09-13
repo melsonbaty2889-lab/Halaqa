@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import AuthLayout from './AuthLayout';
+import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 import { 
@@ -21,21 +21,17 @@ export default function RoleSelectionPage({ onRoleSelected }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // استخراج اللغة الحالية وتحديد اتجاه الصفحة (RTL للعربية والأوردو)
-  const currentLang = i18n?.language?.split('-')[0] || 'ar';
+  // استخراج اللغة الحالية وتحديد اتجاه الصفحة
+  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const rtlLanguages = ['ar', 'ur'];
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : rtlLanguages.includes(currentLang);
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : rtlLanguages.includes(currentLangCode);
 
-  // ترجمة اسم المنصة الفرعي للعرض أسفل اللوجو
-  const appSubtitleMap = {
-    ar: 'الحلقة الذكية',
-    en: 'Smart Halaqa',
-    fr: 'Halaqa Intelligente',
-    tr: 'Akıllı Halka',
-    ur: 'اسمارٹ حلقہ',
-    id: 'Halaqa Pintar'
-  };
-  const appSubtitle = appSubtitleMap[currentLang] || appSubtitleMap.ar;
+  // استخراج اسم المنصة الفرعي من المكون الرئيسي AuthLayout
+  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
+
+  useEffect(() => {
+    document.title = `${t('roles.select_header', 'تحديد نوع الحساب')} | ${appSubtitle}`;
+  }, [i18n.language, t, appSubtitle]);
 
   const roles = [
     {
