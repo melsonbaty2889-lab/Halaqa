@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLoginForm } from '@/hooks/useLoginForm';
-import AuthLayout from './AuthLayout';
+import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
@@ -30,11 +30,14 @@ export default function LoginPage({
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
-  const currentLang = i18n?.language || 'ar';
+  
+  // استخراج رمز اللغة الحالية واستخراج subtitle المنصة المناسب
+  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
+  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
 
   useEffect(() => {
-    document.title = `${t('auth.login', 'تسجيل الدخول')} | ${t('app.name', t('common.appName', 'الحلقة الذكية'))}`;
-  }, [currentLang, t]);
+    document.title = `${t('auth.login', 'تسجيل الدخول')} | ${appSubtitle}`;
+  }, [i18n.language, t, appSubtitle]);
 
   const handleGoToSignUp = (e) => {
     if (e) {
@@ -80,7 +83,10 @@ export default function LoginPage({
   const activeError = localError || status?.msg || fieldErrors?.email || fieldErrors?.password;
 
   return (
-    <AuthLayout langBtn={<LanguageSwitcher />}>
+    <AuthLayout 
+      langBtn={<LanguageSwitcher />}
+      subtitle={appSubtitle}
+    >
       <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="w-full">
           
