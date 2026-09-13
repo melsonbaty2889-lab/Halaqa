@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
-import AuthLayout from './AuthLayout';
+import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 import { 
@@ -24,21 +24,23 @@ export default function UpdatePassword({ onSuccess }) {
   const [isDone, setIsDone] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
+  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLangCode);
+  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
+
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const langParam = searchParams.get('lang');
-    if (langParam && (langParam === 'ar' || langParam === 'en')) {
+    if (langParam && ['ar', 'en', 'ur', 'fr', 'tr', 'id'].includes(langParam)) {
       if (i18n?.changeLanguage) {
         i18n.changeLanguage(langParam);
       }
     }
   }, [i18n]);
 
-  const isRtl = i18n?.language === 'ar';
-
   useEffect(() => {
-    document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${t('app.name', t('common.appName', 'الحلقة الذكية'))}`;
-  }, [i18n.language, t]);
+    document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${appSubtitle}`;
+  }, [i18n.language, t, appSubtitle]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -87,21 +89,24 @@ export default function UpdatePassword({ onSuccess }) {
   };
 
   return (
-    <AuthLayout langBtn={<LanguageSwitcher />}>
+    <AuthLayout 
+      langBtn={<LanguageSwitcher />} 
+      subtitle={appSubtitle}
+    >
       <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         {!isDone ? (
           <>
             {/* النصوص الأساسية */}
             <div className="text-center mb-5">
-              <h1 
+              <h2 
                 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
-                style={{ color: C.text?.title }}
+                style={{ color: C?.text?.title }}
               >
                 {t('auth.setNewPassword', 'تعيين كلمة مرور جديدة')}
-              </h1>
+              </h2>
               <p 
                 className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0"
-                style={{ color: C.text?.muted }}
+                style={{ color: C?.text?.muted }}
               >
                 {t('auth.setNewPasswordDesc', 'يرجى إدخال كلمة المرور الجديدة وتأكيدها')}
               </p>
@@ -114,8 +119,8 @@ export default function UpdatePassword({ onSuccess }) {
                 role="alert"
                 style={{
                   backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                  borderColor: status.type === 'success' ? C.emerald?.DEFAULT : C.error?.DEFAULT,
-                  color: status.type === 'success' ? C.emerald?.DEFAULT : C.error?.DEFAULT,
+                  borderColor: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
+                  color: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
                 }}
               >
                 <AlertCircle size={16} className="shrink-0" />
@@ -124,7 +129,7 @@ export default function UpdatePassword({ onSuccess }) {
             )}
 
             {/* النموذج */}
-            <form onSubmit={handleUpdate} className="flex flex-col gap-3.5">
+            <form onSubmit={handleUpdate} className="flex flex-col gap-3.5" noValidate>
               
               {/* كلمة المرور الجديدة */}
               <div className="relative flex items-center group">
@@ -134,7 +139,7 @@ export default function UpdatePassword({ onSuccess }) {
                     isRtl ? 'right-3.5' : 'left-3.5'
                   }`}
                   style={{
-                    color: password ? C.amber?.DEFAULT : C.text?.muted
+                    color: password ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted
                   }} 
                 />
                 <input 
@@ -149,9 +154,9 @@ export default function UpdatePassword({ onSuccess }) {
                     isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
                   }`}
                   style={{
-                    borderColor: C.inputs?.border,
-                    backgroundColor: C.inputs?.bg,
-                    color: C.text?.title,
+                    borderColor: C?.inputs?.border,
+                    backgroundColor: C?.inputs?.bg,
+                    color: C?.text?.title,
                   }}
                 />
                 <button
@@ -162,7 +167,7 @@ export default function UpdatePassword({ onSuccess }) {
                   className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     isRtl ? 'left-1' : 'right-1'
                   }`}
-                  style={{ color: C.text?.muted }}
+                  style={{ color: C?.text?.muted }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -176,7 +181,7 @@ export default function UpdatePassword({ onSuccess }) {
                     isRtl ? 'right-3.5' : 'left-3.5'
                   }`}
                   style={{
-                    color: confirmPassword ? C.amber?.DEFAULT : C.text?.muted
+                    color: confirmPassword ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted
                   }} 
                 />
                 <input 
@@ -191,9 +196,9 @@ export default function UpdatePassword({ onSuccess }) {
                     isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
                   }`}
                   style={{
-                    borderColor: C.inputs?.border,
-                    backgroundColor: C.inputs?.bg,
-                    color: C.text?.title,
+                    borderColor: C?.inputs?.border,
+                    backgroundColor: C?.inputs?.bg,
+                    color: C?.text?.title,
                   }}
                 />
                 <button
@@ -204,7 +209,7 @@ export default function UpdatePassword({ onSuccess }) {
                   className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     isRtl ? 'left-1' : 'right-1'
                   }`}
-                  style={{ color: C.text?.muted }}
+                  style={{ color: C?.text?.muted }}
                 >
                   {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -218,7 +223,7 @@ export default function UpdatePassword({ onSuccess }) {
                 aria-label={t('auth.saveNewPassword', 'حفظ كلمة المرور')}
                 className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white active:scale-[0.98]"
                 style={{
-                  background: C.gradients?.primaryBtn,
+                  background: C?.gradients?.primaryBtn,
                 }}
               >
                 {loading ? (
@@ -232,16 +237,16 @@ export default function UpdatePassword({ onSuccess }) {
         ) : (
           /* حالة النجاح */
           <div className="text-center py-4 animate-fadeIn">
-            <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: C.emerald?.DEFAULT }} />
+            <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: C?.emerald?.DEFAULT || '#10B981' }} />
             <h2 
               className="text-lg font-bold mb-2"
-              style={{ color: C.text?.title }}
+              style={{ color: C?.text?.title }}
             >
               {t('auth.updateSuccessTitle', 'تم التحديث بنجاح!')}
             </h2>
             <p 
               className="text-xs leading-relaxed"
-              style={{ color: C.text?.muted }}
+              style={{ color: C?.text?.muted }}
             >
               {t('auth.updateSuccessDesc', 'تم تغيير كلمة المرور الخاصة بك، جارٍ تحويلك لتسجيل الدخول...')}
             </p>
@@ -250,10 +255,10 @@ export default function UpdatePassword({ onSuccess }) {
 
         {/* شارة الأمان */}
         <div 
-          className="flex items-center justify-center gap-1.5 text-[11px] mt-5"
-          style={{ color: C.text?.muted }}
+          className="flex items-center justify-center gap-1.5 text-[11px] mt-5 opacity-75"
+          style={{ color: C?.text?.muted }}
         >
-          <ShieldCheck size={14} style={{ color: C.emerald?.DEFAULT }} />
+          <ShieldCheck size={14} style={{ color: C?.emerald?.DEFAULT || '#10B981' }} />
           <span>
             {t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
           </span>
