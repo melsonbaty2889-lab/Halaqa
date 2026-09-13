@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import { C } from '@/theme/colors';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function LoginPage({ 
   onNavigate, 
@@ -31,7 +32,6 @@ export default function LoginPage({
 
   const [localError, setLocalError] = useState('');
   
-  // استخراج رمز اللغة الحالية واستخراج subtitle المنصة المناسب
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
 
@@ -146,7 +146,7 @@ export default function LoginPage({
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
                   isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
                 }`}
                 style={{
@@ -179,7 +179,7 @@ export default function LoginPage({
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
                   isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
                 }`}
                 style={{
@@ -216,23 +216,10 @@ export default function LoginPage({
               </button>
             </div>
 
-            {/* زر الدخول الرئيسي */}
-            <button
-              type="submit"
-              disabled={loading}
-              title={t('auth.login', 'تسجيل الدخول')}
-              aria-label={t('auth.login', 'تسجيل الدخول')}
-              className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white active:scale-[0.98]"
-              style={{
-                background: C.gradients?.primaryBtn,
-              }}
-            >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <span>{t('auth.login', 'تسجيل الدخول')}</span>
-              )}
-            </button>
+            {/* زر الدخول الرئيسي الموحد */}
+            <PrimaryButton loading={loading}>
+              {t('auth.login', 'تسجيل الدخول')}
+            </PrimaryButton>
           </form>
 
           {/* الفاصل الزمني (OR) */}
@@ -250,28 +237,12 @@ export default function LoginPage({
             </span>
           </div>
 
-          {/* زر تسجيل الدخول عبر جوجل */}
-          <button
-            type="button"
+          {/* زر تسجيل الدخول عبر جوجل الموحد */}
+          <GoogleButton 
             onClick={handleGoogleLogin}
-            disabled={loading}
-            title={t('auth.loginWithGoogle', 'تسجيل الدخول بواسطة Google')}
-            aria-label={t('auth.loginWithGoogle', 'تسجيل الدخول بواسطة Google')}
-            className="w-full py-2.5 px-4 border rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 cursor-pointer transition-all disabled:opacity-60 min-h-[44px]"
-            style={{
-              backgroundColor: C.inputs?.bg,
-              borderColor: C.inputs?.border,
-              color: C.text?.title,
-            }}
-          >
-            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-            </svg>
-            <span>{t('auth.loginWithGoogle', 'تسجيل الدخول بواسطة Google')}</span>
-          </button>
+            loading={loading}
+            text={t('auth.loginWithGoogle', 'متابعة باستخدام Google')}
+          />
 
           {/* إنشاء حساب جديد */}
           <div
