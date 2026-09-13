@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SmartHalaqaProLogo } from '@/components/UI/SmartHalaqaProLogo';
+import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 
 export default function AuthLayout({ children, langBtn }) {
@@ -37,12 +38,10 @@ export default function AuthLayout({ children, langBtn }) {
         }}
       />
 
-      {/* زر اللغة */}
-      {langBtn && (
-        <div className="w-full max-w-sm sm:max-w-md flex justify-end mb-2 relative z-20">
-          {langBtn}
-        </div>
-      )}
+      {/* محول اللغات: يتغير موقعه تلقائياً (يمين مع العربية والأوردو / يسار مع باقي اللغات) */}
+      <div className={`w-full max-w-sm sm:max-w-md flex relative z-20 mb-2 ${isRtl ? 'justify-start' : 'justify-end'}`}>
+        {langBtn || <LanguageSwitcher />}
+      </div>
 
       {/* حاوية المحتوى الرئيسية */}
       <main
