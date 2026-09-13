@@ -1,15 +1,14 @@
-src/components/Auth/ProtectedRoute.jsx
-
-
 import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
+import { useAuth } from '@/context/AuthContext'; // 1. استدعاء سياق المصادقة لجلب الدور
 import C from '@/theme/colors';
 
 export default function ProtectedRoute({ children }) {
   const { academy, appState } = useAcademy();
+  const { user, profile } = useAuth(); // 2. جلب بيانات البروفايل والدور
   const { slug } = useParams();
   const { t } = useTranslation();
 
@@ -35,14 +34,24 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // 2. التحقق من وجود الأكاديمية ومطابقة الـ slug في الرابط مع الأكاديمية الخاصة بالمستخدم
-  const hasAccess = academy && academy.slug === slug;
-
-  // 3. إذا لم تكن لديه صلاحية أو لا يملك أكاديمية، يتم توجيهه للتأسيس
-  if (!hasAccess) {
-    return <Navigate to="/create-academy" replace />;
+  // 2. التحقق مما إذا كان المستخدم لم يحدد دوره بعد
+  const userRole = profile?.role || user?.user_metadata?.role;
+  if (!userRole) {
+    return <Navigate to="/select-role" replace />;
   }
 
-  // 4. إذا كان مصرحاً له، يتم عرض الصفحة المطلوبة
+  // 3. التحقق من وجود الأكاديمية ومطابقة الـ slug في الرابط مع الأكاديمية الخاصة بالمستخدم
+  const hasAccess = academy && academy.slug === slug;
+
+  // 4. إذا لم يملك أكاديمية وكان دوره مديراً يتم توجيهه للتأسيس
+  if (!hasAccess) {
+    if (userRole === 'admin') {
+      return <Navigate to="/create-academy" replace />;
+    }
+    // إذا كان دور آخر (معلم/طالب) وليس لديه أكاديمية يتم توجيهه للمسار المخصص له
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // 5. إذا كان مصرحاً له، يتم عرض الصفحة المطلوبة
   return children;
 }
