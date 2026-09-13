@@ -19,6 +19,7 @@ export default function LanguageSwitcher() {
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === currentLangCode) || SUPPORTED_LANGUAGES[0];
+  const isRtl = ['ar', 'ur'].includes(currentLangCode);
 
   const handleLanguageChange = (langCode) => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
@@ -53,7 +54,6 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
-      {/* تم تصغير الارتفاع وتنسيق الحواف ليكون أنيقاً */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -69,7 +69,7 @@ export default function LanguageSwitcher() {
         }}
       >
         <Globe size={13} style={{ color: C?.primary?.DEFAULT || '#E07A00' }} />
-        <span className="uppercase tracking-wider">{currentLang.code}</span>
+        <span className="uppercase tracking-wider font-mono">{currentLang.code}</span>
         <ChevronDown
           size={12}
           className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -77,12 +77,14 @@ export default function LanguageSwitcher() {
         />
       </button>
 
-      {/* القائمة المنسدلة */}
+      {/* القائمة المنسدلة: ضبط الاتجاه باستخدام left/right صراحة لتجنب تداخل RTL */}
       {isOpen && (
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute end-0 mt-1.5 w-40 rounded-xl border shadow-2xl py-1 z-[999999] overflow-hidden"
+          className={`absolute mt-1.5 w-44 rounded-xl border shadow-2xl py-1 z-[999999] overflow-hidden ${
+            isRtl ? 'right-0' : 'left-0'
+          }`}
           style={{
             backgroundColor: C?.dark?.surface || '#0F172A',
             borderColor: C?.dark?.border || '#1B2738',
