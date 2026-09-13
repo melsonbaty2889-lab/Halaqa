@@ -62,26 +62,30 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   }, []);
 
   const validateForm = useCallback(() => {
+    const cleanFullName = fullName.trim();
+    const cleanEmail = email.trim();
+
     const formData = {
-      fullName,
-      email,
+      fullName: cleanFullName,
+      email: cleanEmail,
       password,
       confirmPassword,
       agreeTerms,
     };
 
-    // التحقق عبر Zod / signUpSchema
+    // 1. التحقق اليدوي البسيط لحماية الحقول وتنظيف المسافات
+    const errors: FieldErrors = {};
+
+    if (!cleanFullName) errors.fullName = true;
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) errors.email = true;
+    if (!password || password.length < 6) errors.password = true;
+    if (password !== confirmPassword) errors.confirmPassword = true;
+    if (!agreeTerms) errors.agreeTerms = true;
+
+    // 2. التحقق عبر مخطط Zod
     const validation = validateFormData(signUpSchema, formData);
 
-    if (!validation.success) {
-      const errors: FieldErrors = {};
-
-      if (!fullName.trim()) errors.fullName = true;
-      if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) errors.email = true;
-      if (!password || password.length < 6) errors.password = true;
-      if (password !== confirmPassword) errors.confirmPassword = true;
-      if (!agreeTerms) errors.agreeTerms = true;
-
+    if (Object.keys(errors).length > 0 || !validation.success) {
       setFieldErrors(errors);
 
       if (errors.agreeTerms && Object.keys(errors).length === 1) {
