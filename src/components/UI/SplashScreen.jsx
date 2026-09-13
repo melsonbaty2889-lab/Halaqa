@@ -135,8 +135,8 @@ export default function SplashScreen({ onFinish }) {
               borderColor: borderCard
             }}
           >
-            <span className="text-sm font-semibold block leading-relaxed dir-rtl" style={{ color: primaryColor }}>
-              ﴿ {selectedAyaObj.ar} ﴾
+            <span className="text-sm font-bold block leading-relaxed dir-rtl" style={{ color: primaryColor }}>
+           ﴿ {selectedAyaObj.ar} ﴾
             </span>
             {currentLang !== 'ar' && (
               <span 
