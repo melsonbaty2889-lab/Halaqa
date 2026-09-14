@@ -135,9 +135,7 @@ export default function UpdatePassword({ onSuccess }) {
               <div className="relative flex items-center group">
                 <Lock 
                   size={18} 
-                  className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                    isRtl ? 'right-3.5' : 'left-3.5'
-                  }`}
+                  className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                   style={{
                     color: password ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted
                   }} 
@@ -149,10 +147,7 @@ export default function UpdatePassword({ onSuccess }) {
                   placeholder={t('auth.newPasswordPlaceholder', 'كلمة المرور الجديدة')}
                   aria-label={t('auth.newPasswordPlaceholder', 'كلمة المرور الجديدة')}
                   required
-                  dir="ltr"
-                  className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
-                    isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
-                  }`}
+                  className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ps-11 pe-11"
                   style={{
                     borderColor: C?.inputs?.border,
                     backgroundColor: C?.inputs?.bg,
@@ -164,9 +159,7 @@ export default function UpdatePassword({ onSuccess }) {
                   onClick={() => setShowPassword(!showPassword)}
                   title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                   aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                  className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                    isRtl ? 'left-1' : 'right-1'
-                  }`}
+                  className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
                   style={{ color: C?.text?.muted }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -177,9 +170,7 @@ export default function UpdatePassword({ onSuccess }) {
               <div className="relative flex items-center group">
                 <Lock 
                   size={18} 
-                  className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                    isRtl ? 'right-3.5' : 'left-3.5'
-                  }`}
+                  className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                   style={{
                     color: confirmPassword ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted
                   }} 
@@ -191,10 +182,7 @@ export default function UpdatePassword({ onSuccess }) {
                   placeholder={t('auth.confirmNewPasswordPlaceholder', 'تأكيد كلمة المرور الجديدة')}
                   aria-label={t('auth.confirmNewPasswordPlaceholder', 'تأكيد كلمة المرور الجديدة')}
                   required
-                  dir="ltr"
-                  className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
-                    isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
-                  }`}
+                  className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ps-11 pe-11"
                   style={{
                     borderColor: C?.inputs?.border,
                     backgroundColor: C?.inputs?.bg,
@@ -206,9 +194,7 @@ export default function UpdatePassword({ onSuccess }) {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                   aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                  className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                    isRtl ? 'left-1' : 'right-1'
-                  }`}
+                  className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
                   style={{ color: C?.text?.muted }}
                 >
                   {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
