@@ -7,6 +7,8 @@ import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { TermsModal } from '@/components/UI/TermsModal';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
+import Toast from '@/components/UI/Toast';
+import { useToast } from '@/hooks/useToast';
 import {
   User,
   Mail,
@@ -21,6 +23,7 @@ import {
 
 export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const { t, i18n } = useTranslation();
+  const { toastState, showToast, hideToast } = useToast();
 
   const {
     isRtl,
@@ -58,6 +61,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${appSubtitle}`;
   }, [i18n.language, t, appSubtitle]);
 
+  // إظهار Toast عند تغير حالة التسجيل من הـ Hook
+  useEffect(() => {
+    if (status?.msg) {
+      showToast(status.msg, status.type === 'success' ? 'success' : 'error');
+    }
+  }, [status, showToast]);
+
   const passwordCriteria = useMemo(() => {
     const val = password || '';
     return {
@@ -79,14 +89,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   const handleGoogleSignUp = useCallback(async () => {
     if (!agreeTerms) {
+      const errorMsg = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
       setFieldErrors((prev) => ({
         ...prev,
-        agreeTerms: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
+        agreeTerms: errorMsg,
       }));
-      setStatus({
-        type: 'error',
-        msg: t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.'),
-      });
+      showToast(errorMsg, 'error');
       return;
     }
 
@@ -103,14 +111,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       }
     } catch (err) {
       console.error('Google Auth Error:', err);
-      setStatus({
-        type: 'error',
-        msg: t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
-      });
-    } finally {
+      showToast(t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'), 'error');
+    } fontFinally {
       setGoogleLoading(false);
     }
-  }, [agreeTerms, setFieldErrors, setStatus, t]);
+  }, [agreeTerms, setFieldErrors, showToast, t]);
 
   const openTermsModal = useCallback((type) => {
     setModalType(type);
@@ -465,6 +470,14 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
         <TermsModal isOpen={showModal} onClose={closeTermsModal} contentType={modalType} isRtl={isRtl} />
       </div>
+
+      {/* مكون الـ Toast المنزلق أسفل الشاشة */}
+      <Toast
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
+        onClose={hideToast}
+      />
     </AuthLayout>
   );
 }
