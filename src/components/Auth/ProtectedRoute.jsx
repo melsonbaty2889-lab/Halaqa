@@ -6,12 +6,12 @@ import { useAcademy } from '@/context/AcademyContext';
 import { C } from '@/theme/colors';
 
 export default function ProtectedRoute({ children }) {
-  // جلب كافة بيانات الجلسة والأكاديمية من السياق الموحد useAcademy
+  // جلب كافة بيانات المصادقة والأكاديمية من useAcademy مباشرة
   const { academy, appState, user, profile, userRole } = useAcademy();
   const { slug } = useParams();
   const { t } = useTranslation();
 
-  // 1. حالة التحميل أثناء فحص الجلسة والصلاحيات
+  // 1. حالة التحميل أثناء جلب الجلسة والبيانات
   if (appState === 'LOADING') {
     return (
       <div 
@@ -33,21 +33,21 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // 2. التحقق مما إذا كان المستخدم غير مسجل الدخول
+  // 2. التحقق من وجود المستخدم وتسجيل الدخول
   if (appState === 'UNAUTHENTICATED' || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // 3. التحقق مما إذا كان المستخدم لم يحدد دوره بعد
+  // 3. التحقق من وجود دور للمستخدم (Role)
   const activeRole = userRole || profile?.role || user?.user_metadata?.role;
   if (!activeRole) {
     return <Navigate to="/select-role" replace />;
   }
 
-  // 4. التحقق من وجود الأكاديمية ومطابقة الـ slug في الرابط مع الأكاديمية الخاصة بالمستخدم
+  // 4. التحقق من الوصول للأكاديمية الحالية ومطابقة الرابط (Slug)
   const hasAccess = academy && academy.slug === slug;
 
-  // 5. إذا لم يملك الوصول للأكاديمية الحالية
+  // 5. إعادة التوجيه في حال عدم امتلاك صلاحية الوصول للأكاديمية
   if (!hasAccess) {
     if (activeRole === 'admin') {
       return <Navigate to="/create-academy" replace />;
@@ -55,6 +55,6 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // 6. عرض الصفحة المطلوبة عند توفر الصلاحيات
+  // 6. عرض المحتوى وحمايته بنجاح
   return children;
 }
