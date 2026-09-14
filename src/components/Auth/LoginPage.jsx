@@ -4,6 +4,8 @@ import { useLoginForm } from '@/hooks/useLoginForm';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
+import Toast from '@/components/UI/Toast';
+import { useToast } from '@/hooks/useToast';
 import { C } from '@/theme/colors';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
@@ -14,6 +16,7 @@ export default function LoginPage({
   onSuccess 
 }) {
   const { t, i18n } = useTranslation();
+  const { toastState, showToast, hideToast } = useToast();
 
   const {
     isRtl,
@@ -38,6 +41,14 @@ export default function LoginPage({
   useEffect(() => {
     document.title = `${t('auth.login', 'تسجيل الدخول')} | ${appSubtitle}`;
   }, [i18n.language, t, appSubtitle]);
+
+  // إظهار تنبيهات Toast فور وجود أخطاء قادمة من النظام أو النموذج
+  useEffect(() => {
+    const errorMsg = status?.msg || fieldErrors?.email || fieldErrors?.password;
+    if (errorMsg) {
+      showToast(errorMsg, 'error');
+    }
+  }, [status, fieldErrors, showToast]);
 
   const handleGoToSignUp = (e) => {
     if (e) {
@@ -68,12 +79,16 @@ export default function LoginPage({
     setLocalError('');
 
     if (!email.trim()) {
-      setLocalError(t('auth.emailRequired', 'يرجى إدخال البريد الإلكتروني'));
+      const msg = t('auth.emailRequired', 'يرجى إدخال البريد الإلكتروني');
+      setLocalError(msg);
+      showToast(msg, 'warning');
       return;
     }
 
     if (!password.trim()) {
-      setLocalError(t('auth.passwordRequired', 'يرجى إدخال كلمة المرور'));
+      const msg = t('auth.passwordRequired', 'يرجى إدخال كلمة المرور');
+      setLocalError(msg);
+      showToast(msg, 'warning');
       return;
     }
 
@@ -106,7 +121,7 @@ export default function LoginPage({
             </p>
           </div>
 
-          {/* صندوق الأخطاء والتنبيهات */}
+          {/* صندوق الأخطاء والتنبيهات المباشرة */}
           {activeError && (
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
@@ -264,6 +279,14 @@ export default function LoginPage({
 
         </div>
       </div>
+
+      {/* تنبيه Toast الموحد المنسدل */}
+      <Toast
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
+        onClose={hideToast}
+      />
     </AuthLayout>
   );
 }
