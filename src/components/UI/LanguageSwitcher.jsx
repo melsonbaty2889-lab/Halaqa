@@ -19,7 +19,6 @@ export default function LanguageSwitcher() {
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
   const isRtl = i18n.dir() === 'rtl';
 
-  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -31,45 +30,46 @@ export default function LanguageSwitcher() {
   }, []);
 
   const handleLanguageChange = (code) => {
-    i18n.changeLanguage(code);
     const selected = LANGUAGES.find((l) => l.code === code);
+    i18n.changeLanguage(code);
     document.documentElement.dir = selected?.dir || 'ltr';
     document.documentElement.lang = code;
     setIsOpen(false);
   };
 
   return (
-    <div className="relative inline-block text-left z-50" ref={dropdownRef}>
-      {/* زر محول اللغة */}
+    <div className="relative inline-block text-start z-50" ref={dropdownRef}>
+      {/* زر اختيار اللغة */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700/60 bg-slate-900/80 text-slate-200 text-xs font-semibold hover:bg-slate-800 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/60 bg-slate-900/90 text-slate-200 text-xs font-semibold hover:bg-slate-800 transition-all shadow-md"
       >
-        <Globe className="w-4 h-4 text-amber-500" />
-        <span className="uppercase">{currentLang.code}</span>
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <Globe className="w-4 h-4 text-amber-500 shrink-0" />
+        <span className="uppercase tracking-wider">{currentLang.code}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* القائمة المنبثقة - معالجة محاذاة الاتجاه لمنع الخروج عن الشاشة */}
+      {/* القائمة المنبثقة التكيفية */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 w-44 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden py-1 z-50 ${
-            isRtl ? 'start-0' : 'end-0'
+          className={`absolute top-full mt-2 w-48 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl py-1.5 z-50 overflow-hidden ${
+            isRtl ? 'right-0 origin-top-right' : 'left-0 origin-top-left'
           }`}
         >
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
+              type="button"
               onClick={() => handleLanguageChange(lang.code)}
-              className={`w-full text-start px-4 py-2 text-xs flex items-center justify-between transition-colors ${
+              className={`w-full text-start px-4 py-2.5 text-xs flex items-center justify-between transition-colors ${
                 i18n.language === lang.code
-                  ? 'bg-amber-500/10 text-amber-500 font-bold'
+                  ? 'bg-amber-500/15 text-amber-400 font-bold'
                   : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               }`}
             >
-              <span>{lang.name}</span>
-              {i18n.language === lang.code && <Check className="w-3.5 h-3.5 text-amber-500" />}
+              <span className="truncate">{lang.name}</span>
+              {i18n.language === lang.code && <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
             </button>
           ))}
         </div>
