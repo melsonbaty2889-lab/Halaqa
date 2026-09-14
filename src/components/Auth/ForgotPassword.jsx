@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { PrimaryButton } from '@/components/UI/AuthButtons';
+import Toast from '@/components/UI/Toast';
+import { useToast } from '@/hooks/useToast';
 import { C } from '@/theme/colors';
 import { useForgotPassword } from '@/hooks/useForgotPassword';
 
@@ -18,6 +20,7 @@ import {
 
 export default function ForgotPassword({ onBackToLogin }) {
   const { t, i18n } = useTranslation();
+  const { toastState, showToast, hideToast } = useToast();
   
   // استخراج بيانات الـ Hook
   const {
@@ -35,6 +38,22 @@ export default function ForgotPassword({ onBackToLogin }) {
   // تحديد كود اللغة الحالية والاسم الفرعي أسفل اللوجو
   const currentLang = i18n?.language?.split('-')[0] || hookLang || 'ar';
   const appSubtitle = APP_SUBTITLES[currentLang] || APP_SUBTITLES.ar;
+
+  // إظهار Toast عند تغير الحالة (status) من الـ Hook
+  useEffect(() => {
+    if (status?.msg) {
+      showToast(status.msg, status.type === 'success' ? 'success' : 'error');
+    }
+  }, [status, showToast]);
+
+  const onSubmitForm = (e) => {
+    e.preventDefault();
+    if (!email || !email.trim()) {
+      showToast(t('auth.emailRequired', 'يرجى إدخال البريد الإلكتروني'), 'warning');
+      return;
+    }
+    handleReset(e);
+  };
 
   return (
     <AuthLayout 
@@ -59,7 +78,7 @@ export default function ForgotPassword({ onBackToLogin }) {
               </p>
             </div>
 
-            {/* التنبيهات والأخطاء */}
+            {/* التنبيهات والأخطاء المباشرة */}
             {status?.msg && (
               <div 
                 className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
@@ -75,16 +94,14 @@ export default function ForgotPassword({ onBackToLogin }) {
               </div>
             )}
 
-            <form onSubmit={handleReset} className="flex flex-col gap-3.5" noValidate>
+            <form onSubmit={onSubmitForm} className="flex flex-col gap-3.5" noValidate>
               <div className="relative flex items-center">
-                {/* تم استخدام start-3.5 للموقع المنطقي حسب اتجاه RTL/LTR */}
                 <Mail 
                   size={18} 
                   className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                   style={{ color: email ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted }}
                 />
                 
-                {/* ضبط المسافات الداخلية ps-11 (Padding Start) لتتطابق تلقائياً مع موقع الأيقونة */}
                 <input 
                   type="email"
                   value={email || ''}
@@ -157,7 +174,7 @@ export default function ForgotPassword({ onBackToLogin }) {
           </div>
         )}
 
-        {/* العودة لتسجيل الدخول مع الانعكاس التلقائي للسهم */}
+        {/* العودة لتسجيل الدخول */}
         <div className="mt-5 text-center flex items-center justify-center">
           <button 
             type="button"
@@ -187,6 +204,14 @@ export default function ForgotPassword({ onBackToLogin }) {
           </span>
         </div>
       </div>
+
+      {/* تنبيه Toast الموحد أسفل الشاشة */}
+      <Toast
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
+        onClose={hideToast}
+      />
     </AuthLayout>
   );
 }
