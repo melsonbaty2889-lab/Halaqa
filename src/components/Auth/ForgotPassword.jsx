@@ -77,24 +77,22 @@ export default function ForgotPassword({ onBackToLogin }) {
 
             <form onSubmit={handleReset} className="flex flex-col gap-3.5" noValidate>
               <div className="relative flex items-center">
+                {/* تم استخدام start-3.5 للموقع المنطقي حسب اتجاه RTL/LTR */}
                 <Mail 
                   size={18} 
-                  className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                    isRtl ? 'right-3.5' : 'left-3.5'
-                  }`}
+                  className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                   style={{ color: email ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted }}
                 />
+                
+                {/* ضبط المسافات الداخلية ps-11 (Padding Start) لتتطابق تلقائياً مع موقع الأيقونة */}
                 <input 
                   type="email"
                   value={email || ''}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('auth.email_placeholder', 'البريد الإلكتروني')}
                   required
-                  dir="ltr"
                   aria-label={t('auth.email_placeholder', 'البريد الإلكتروني')}
-                  className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ${
-                    isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
-                  }`}
+                  className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans min-h-[44px] ps-11 pe-4 text-start"
                   style={{
                     backgroundColor: C?.inputs?.bg,
                     borderColor: C?.inputs?.border,
@@ -159,7 +157,7 @@ export default function ForgotPassword({ onBackToLogin }) {
           </div>
         )}
 
-        {/* العودة لتسجيل الدخول */}
+        {/* العودة لتسجيل الدخول مع الانعكاس التلقائي للسهم */}
         <div className="mt-5 text-center flex items-center justify-center">
           <button 
             type="button"
