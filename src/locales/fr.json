@@ -104,6 +104,11 @@
     "emailPlaceholder": "Adresse e-mail",
     "emailRequired": "",
     "encryptionNotice": "Vos données sont cryptées et protégées selon la norme 256 bits",
+    "errors": {
+      "accountDeactivated": "",
+      "fixHighlighted": "",
+      "userNotFound": "تعذر العثور على بيانات المستخدم."
+    },
     "fillRequiredFields": "Veuillez remplir correctement tous les champs obligatoires.",
     "forgot_password": "Mot de passe oublié ?",
     "forgot_password_title": "Récupération du mot de passe | Smart Halaqa",
@@ -167,6 +172,10 @@
     "ssl_secured": "Vos données sont cryptées et protégées selon la norme 256 bits",
     "strength": "قوة كلمة المرور:",
     "strong": "قوية ممتاز",
+    "success": {
+      "login": "",
+      "resend": ""
+    },
     "termsAndConditions": "Conditions générales",
     "updatePasswordFailed": "Échec de la mise à jour du mot de passe",
     "updatePasswordTitle": "Mettre à jour le mot de passe",

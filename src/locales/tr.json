@@ -104,6 +104,11 @@
     "emailPlaceholder": "E-posta Adresi",
     "emailRequired": "",
     "encryptionNotice": "Verileriniz 256-bit standartlarında şifrelenir ve korunur",
+    "errors": {
+      "accountDeactivated": "",
+      "fixHighlighted": "",
+      "userNotFound": "تعذر العثور على بيانات المستخدم."
+    },
     "fillRequiredFields": "Lütfen gerekli tüm alanları doğru bir şekilde doldurun.",
     "forgot_password": "Şifrenizi mi unuttunuz?",
     "forgot_password_title": "Şifre Kurtarma | Smart Halaqa",
@@ -167,6 +172,10 @@
     "ssl_secured": "Verileriniz 256-bit standartlarında şifrelenir ve korunur",
     "strength": "قوة كلمة المرور:",
     "strong": "قوية ممتاز",
+    "success": {
+      "login": "",
+      "resend": ""
+    },
     "termsAndConditions": "Şartlar ve Koşullar",
     "updatePasswordFailed": "Şifre güncellenemedi",
     "updatePasswordTitle": "Şifreyi Güncelle",

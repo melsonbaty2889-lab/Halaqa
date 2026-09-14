@@ -104,6 +104,11 @@
     "emailPlaceholder": "ای میل ایڈریس",
     "emailRequired": "",
     "encryptionNotice": "آپ کی معلومات 256-bit کے معیار کے مطابق محفوظ اور انکرپٹڈ ہیں",
+    "errors": {
+      "accountDeactivated": "",
+      "fixHighlighted": "",
+      "userNotFound": "تعذر العثور على بيانات المستخدم."
+    },
     "fillRequiredFields": "براہ کرم تمام ضروری خانوں کو درست طریقے سے بھریں۔",
     "forgot_password": "پاس ورڈ بھول گئے؟",
     "forgot_password_title": "پاس ورڈ کی بحالی | الحلقة الذكية",
@@ -167,6 +172,10 @@
     "ssl_secured": "آپ کی معلومات 256-bit کے معیار کے مطابق محفوظ اور انکرپٹڈ ہیں",
     "strength": "قوة كلمة المرور:",
     "strong": "قوية ممتاز",
+    "success": {
+      "login": "",
+      "resend": ""
+    },
     "termsAndConditions": "شرائط و ضوابط",
     "updatePasswordFailed": "پاس ورڈ اپ ڈیٹ ناکام ہو گیا",
     "updatePasswordTitle": "پاس ورڈ اپ ڈیٹ کریں",

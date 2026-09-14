@@ -104,6 +104,11 @@
     "emailPlaceholder": "Alamat Email",
     "emailRequired": "",
     "encryptionNotice": "Data Anda dienkripsi dan dilindungi standar 256-bit",
+    "errors": {
+      "accountDeactivated": "",
+      "fixHighlighted": "",
+      "userNotFound": "تعذر العثور على بيانات المستخدم."
+    },
     "fillRequiredFields": "Silakan isi semua bidang yang wajib diisi dengan benar.",
     "forgot_password": "Lupa Kata Sandi?",
     "forgot_password_title": "Pemulihan Kata Sandi | Smart Halaqa",
@@ -167,6 +172,10 @@
     "ssl_secured": "Data Anda dienkripsi dan dilindungi standar 256-bit",
     "strength": "قوة كلمة المرور:",
     "strong": "قوية ممتاز",
+    "success": {
+      "login": "",
+      "resend": ""
+    },
     "termsAndConditions": "Syarat & Ketentuan",
     "updatePasswordFailed": "Gagal memperbarui kata sandi",
     "updatePasswordTitle": "Perbarui Kata Sandi",

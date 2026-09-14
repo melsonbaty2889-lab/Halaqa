@@ -104,6 +104,11 @@
     "emailPlaceholder": "البريد الإلكتروني",
     "emailRequired": "emailRequired",
     "encryptionNotice": "بياناتك مشفرة ومحمية وفق معايير 256-bit",
+    "errors": {
+      "accountDeactivated": "accountDeactivated",
+      "fixHighlighted": "fixHighlighted",
+      "userNotFound": "تعذر العثور على بيانات المستخدم."
+    },
     "fillRequiredFields": "يرجى ملء جميع الحقول المطلوبة بشكل صحيح.",
     "forgot_password": "نسيت كلمة المرور؟",
     "forgot_password_title": "استعادة كلمة المرور | الحلقة الذكية",
@@ -167,6 +172,10 @@
     "ssl_secured": "بياناتك مشفرة ومحمية وفق معايير 256-bit",
     "strength": "قوة كلمة المرور:",
     "strong": "قوية ممتاز",
+    "success": {
+      "login": "login",
+      "resend": "resend"
+    },
     "termsAndConditions": "الشروط والأحكام",
     "updatePasswordFailed": "فشل تحديث كلمة المرور",
     "updatePasswordTitle": "تحديث كلمة المرور",
