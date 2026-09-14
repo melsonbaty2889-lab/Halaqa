@@ -53,29 +53,25 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
         }}
       />
 
-      {/* الحاوية الرئيسية الشاملة لزر اللغات والكارت */}
-      <div className="w-full max-w-sm sm:max-w-md relative z-10 flex flex-col">
-        
-        {/* شريط محول اللغات - تم ضبط المحاذاة الداخلية بـ text-start/end لمنع الخروج عن الشاشة */}
-        <div className="w-full flex justify-end mb-3 px-1">
+      {/* حاوية المحتوى الرئيسية */}
+      <main
+        role="main"
+        aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
+        className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10 border shadow-2xl space-y-6 box-border"
+        style={{
+          backgroundColor: C?.dark?.card || '#1E293B',
+          borderColor: C?.dark?.cardBorder || 'rgba(255,255,255,0.1)',
+        }}
+      >
+        {/* زر اللغات مثبت أعلى الكارت من الداخل */}
+        <div className="flex justify-end w-full -mb-2">
           {langBtn || <LanguageSwitcher />}
         </div>
 
-        {/* حاوية المحتوى الرئيسية */}
-        <main
-          role="main"
-          aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
-          className="w-full backdrop-blur-md rounded-2xl p-5 sm:p-8 border shadow-2xl space-y-6 box-border"
-          style={{
-            backgroundColor: C?.dark?.card || '#1E293B',
-            borderColor: C?.dark?.cardBorder || 'rgba(255,255,255,0.1)',
-          }}
-        >
-          <AppBrand subtitle={appSubtitle} />
+        <AppBrand subtitle={appSubtitle} />
 
-          {children}
-        </main>
-      </div>
+        {children}
+      </main>
 
       {/* الفوتر السفلي */}
       <footer
