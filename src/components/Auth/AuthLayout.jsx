@@ -1,3 +1,4 @@
+// src/components/Auth/AuthLayout.jsx
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppBrand from '@/components/UI/AppBrand';
@@ -43,7 +44,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
         color: C?.text?.title || '#FFFFFF',
       }}
     >
-      {/* الخلفية والتوهج العلوي */}
+      {/* خلفية النجوم والتوهج */}
       <div
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
         aria-hidden="true"
@@ -63,7 +64,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
           borderColor: C?.dark?.cardBorder || 'rgba(255,255,255,0.1)',
         }}
       >
-        {/* زر اللغات مثبت أعلى الكارت من الداخل */}
+        {/* زر تغيير اللغة */}
         <div className="flex justify-end w-full -mb-2">
           {langBtn || <LanguageSwitcher />}
         </div>
@@ -73,13 +74,13 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
         {children}
       </main>
 
-      {/* الفوتر السفلي */}
+      {/* الفوتر الموحد مع الشاشة الافتتاحية بحجم عالي الدقة وخط النظام */}
       <footer
         role="contentinfo"
-        className="mt-4 text-[10px] sm:text-[11px] tracking-wider font-mono z-10 opacity-60 pointer-events-none text-center"
-        style={{ color: C?.text?.muted }}
+        className="mt-4 text-[10px] sm:text-[11px] tracking-widest font-mono z-10 opacity-50 pointer-events-none text-center uppercase"
+        style={{ color: C?.text?.muted || '#94A3B8' }}
       >
-        Smart Halaqa • v2.5
+        SMART HALAQA • v2.5
       </footer>
     </div>
   );
