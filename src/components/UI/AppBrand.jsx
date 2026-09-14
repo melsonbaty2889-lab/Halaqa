@@ -1,3 +1,4 @@
+// src/components/UI/AppBrand.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
@@ -8,7 +9,7 @@ export default function AppBrand({ className = '', subtitle }) {
 
   return (
     <div className={`flex flex-col items-center text-center select-none ${className}`}>
-      {/* غلاف اللوجو مع التوهج الزمردي الموحد */}
+      {/* غلاف اللوجو والتوهج */}
       <div className="relative mb-3 flex items-center justify-center">
         <div
           className="absolute inset-0 rounded-full blur-xl opacity-60 pointer-events-none"
@@ -21,9 +22,9 @@ export default function AppBrand({ className = '', subtitle }) {
         </div>
       </div>
 
-      {/* اسم التطبيق الموحد باللون الأبيض والخط العريض */}
+      {/* اسم المنصة باللون الأبيض يتغير حسب اللغة المختارة */}
       <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-white">
-        {t('common.appName', 'الحلقة الذكية')}
+        {t('common.appName')}
       </h2>
 
       {/* العنوان الفرعي المترجم */}
