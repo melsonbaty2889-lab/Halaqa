@@ -3,6 +3,9 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import { PrimaryButton } from '@/components/UI/AuthButtons';
+import Toast from '@/components/UI/Toast';
+import { useToast } from '@/hooks/useToast';
 import { C } from '@/theme/colors';
 import { 
   Lock, 
@@ -10,12 +13,13 @@ import {
   EyeOff, 
   AlertCircle, 
   ShieldCheck, 
-  Loader2, 
   CheckCircle2 
 } from 'lucide-react';
 
 export default function UpdatePassword({ onSuccess }) {
   const { t, i18n } = useTranslation();
+  const { toastState, showToast, hideToast } = useToast();
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -42,23 +46,26 @@ export default function UpdatePassword({ onSuccess }) {
     document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${appSubtitle}`;
   }, [i18n.language, t, appSubtitle]);
 
+  // إظهار Toast عند حدث أخطاء أو تنبيهات
+  useEffect(() => {
+    if (status?.msg) {
+      showToast(status.msg, status.type === 'success' ? 'success' : 'error');
+    }
+  }, [status, showToast]);
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
 
     if (password.length < 6) {
-      setStatus({
-        type: 'error',
-        msg: t('auth.passwordTooShort', 'كلمة المرور يجب أن لا تقل عن 6 أحرف')
-      });
+      const msg = t('auth.passwordTooShort', 'كلمة المرور يجب أن لا تقل عن 6 أحرف');
+      setStatus({ type: 'error', msg });
       return;
     }
 
     if (password !== confirmPassword) {
-      setStatus({
-        type: 'error',
-        msg: t('auth.passwordsMismatch', 'كلمتا المرور غير متطابقتين')
-      });
+      const msg = t('auth.passwordsMismatch', 'كلمتا المرور غير متطابقتين');
+      setStatus({ type: 'error', msg });
       return;
     }
 
@@ -70,9 +77,11 @@ export default function UpdatePassword({ onSuccess }) {
       if (error) {
         setStatus({
           type: 'error',
-          msg: error.message || t('auth.updatePasswordFailed', 'فشل تحديث كلمة المرور')
+          msg: error.message || t('auth.updatePasswordFailed', 'فشل تحديث كلمة المرور'),
         });
       } else {
+        const successMsg = t('auth.updateSuccessTitle', 'تم التحديث بنجاح!');
+        setStatus({ type: 'success', msg: successMsg });
         setIsDone(true);
         setTimeout(() => {
           if (onSuccess) onSuccess();
@@ -81,7 +90,7 @@ export default function UpdatePassword({ onSuccess }) {
     } catch (err) {
       setStatus({
         type: 'error',
-        msg: err?.message || t('common.unexpectedError', 'حدث خطأ غير متوقع')
+        msg: err?.message || t('common.unexpectedError', 'حدث خطأ غير متوقع'),
       });
     } finally {
       setLoading(false);
@@ -201,23 +210,10 @@ export default function UpdatePassword({ onSuccess }) {
                 </button>
               </div>
 
-              {/* زر الحفظ الرئيسي */}
-              <button 
-                type="submit" 
-                disabled={loading}
-                title={t('auth.saveNewPassword', 'حفظ كلمة المرور')}
-                aria-label={t('auth.saveNewPassword', 'حفظ كلمة المرور')}
-                className="w-full py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-1 cursor-pointer disabled:opacity-60 min-h-[44px] text-white active:scale-[0.98]"
-                style={{
-                  background: C?.gradients?.primaryBtn,
-                }}
-              >
-                {loading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <span>{t('auth.saveNewPassword', 'حفظ كلمة المرور')}</span>
-                )}
-              </button>
+              {/* زر الحفظ الرئيسي الموحد */}
+              <PrimaryButton loading={loading}>
+                {t('auth.saveNewPassword', 'حفظ كلمة المرور')}
+              </PrimaryButton>
             </form>
           </>
         ) : (
@@ -250,6 +246,14 @@ export default function UpdatePassword({ onSuccess }) {
           </span>
         </div>
       </div>
+
+      {/* مكون الـ Toast المنزلق أسفل الشاشة */}
+      <Toast
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
+        onClose={hideToast}
+      />
     </AuthLayout>
   );
 }
