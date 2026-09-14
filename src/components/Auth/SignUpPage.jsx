@@ -123,7 +123,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   return (
     <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
-      <div className="w-full">
+      <div className="w-full" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="text-center mb-4">
           <h1
             className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
@@ -168,11 +168,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <User
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                  isRtl ? 'right-3.5' : 'left-3.5'
-                }`}
+                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                 style={{
-                  color: fullName ? C.amber?.DEFAULT : C.text?.muted,
+                  color: fullName ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
                 }}
               />
               <input
@@ -182,9 +180,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
                 aria-label={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
                 required
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
-                }`}
+                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ps-11 pe-4"
                 style={{
                   borderColor: fieldErrors?.fullName ? C.error?.DEFAULT : C.inputs?.border,
                   backgroundColor: C.inputs?.bg,
@@ -202,11 +198,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <Mail
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                  isRtl ? 'right-3.5' : 'left-3.5'
-                }`}
+                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                 style={{
-                  color: email ? C.amber?.DEFAULT : C.text?.muted,
+                  color: email ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
                 }}
               />
               <input
@@ -216,9 +210,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 required
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
-                }`}
+                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ps-11 pe-4"
                 style={{
                   borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
                   backgroundColor: C.inputs?.bg,
@@ -236,11 +228,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <Lock
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                  isRtl ? 'right-3.5' : 'left-3.5'
-                }`}
+                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                 style={{
-                  color: password ? C.amber?.DEFAULT : C.text?.muted,
+                  color: password ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
                 }}
               />
               <input
@@ -251,9 +241,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 required
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
-                }`}
+                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ps-11 pe-11"
                 style={{
                   borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
                   backgroundColor: C.inputs?.bg,
@@ -265,9 +253,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 onClick={() => setShowPassword(!showPassword)}
                 title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                 aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                  isRtl ? 'left-1' : 'right-1'
-                }`}
+                className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
                 style={{ color: C.text?.muted }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -294,33 +280,33 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 <div className="grid grid-cols-2 gap-1 pt-1 text-[10px]" style={{ color: C.text?.muted }}>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.minLength ? (
-                      <CheckCircle2 size={12} className="text-emerald-500" />
+                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
                     ) : (
-                      <XCircle size={12} className="text-gray-400" />
+                      <XCircle size={12} className="text-gray-400 shrink-0" />
                     )}
                     <span>{t('auth.min8Chars', '8 حروف على الأقل')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasLetter ? (
-                      <CheckCircle2 size={12} className="text-emerald-500" />
+                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
                     ) : (
-                      <XCircle size={12} className="text-gray-400" />
+                      <XCircle size={12} className="text-gray-400 shrink-0" />
                     )}
                     <span>{t('auth.hasLetter', 'تتضمن حروف')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasNumber ? (
-                      <CheckCircle2 size={12} className="text-emerald-500" />
+                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
                     ) : (
-                      <XCircle size={12} className="text-gray-400" />
+                      <XCircle size={12} className="text-gray-400 shrink-0" />
                     )}
                     <span>{t('auth.hasNumber', 'تتضمن أرقام')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasSpecial ? (
-                      <CheckCircle2 size={12} className="text-emerald-500" />
+                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
                     ) : (
-                      <XCircle size={12} className="text-gray-400" />
+                      <XCircle size={12} className="text-gray-400 shrink-0" />
                     )}
                     <span>{t('auth.hasSpecial', 'رمز خاص (@#$)')}</span>
                   </div>
@@ -337,11 +323,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <Lock
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
-                  isRtl ? 'right-3.5' : 'left-3.5'
-                }`}
+                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                 style={{
-                  color: confirmPassword ? C.amber?.DEFAULT : C.text?.muted,
+                  color: confirmPassword ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
                 }}
               />
               <input
@@ -351,9 +335,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
                 aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
                 required
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
-                }`}
+                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ps-11 pe-11"
                 style={{
                   borderColor: fieldErrors?.confirmPassword ? C.error?.DEFAULT : C.inputs?.border,
                   backgroundColor: C.inputs?.bg,
@@ -365,9 +347,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                 aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                  isRtl ? 'left-1' : 'right-1'
-                }`}
+                className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
                 style={{ color: C.text?.muted }}
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -392,7 +372,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               checked={Boolean(agreeTerms)}
               onChange={(e) => setAgreeTerms(e.target.checked)}
               aria-label={t('auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
-              className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px]"
+              className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px] shrink-0"
               style={{
                 borderColor: C.inputs?.border,
                 backgroundColor: C.inputs?.bg,
