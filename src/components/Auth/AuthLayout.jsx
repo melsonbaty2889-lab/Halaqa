@@ -14,6 +14,15 @@ export const APP_SUBTITLES = {
   id: 'Platform Pintar untuk Manajemen Halaqah',
 };
 
+export const APP_NAMES = {
+  ar: 'الحلقة الذكية',
+  ur: 'اسمارٹ حلقہ',
+  en: 'Smart Halaqa',
+  fr: 'Smart Halaqa',
+  tr: 'Smart Halaqa',
+  id: 'Smart Halaqa',
+};
+
 export default function AuthLayout({ children, langBtn, subtitle }) {
   const { t, i18n } = useTranslation();
 
