@@ -5,12 +5,12 @@ import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { C } from '@/theme/colors';
 
 export const APP_SUBTITLES = {
-  ar: 'الحلقة الذكية',
-  ur: 'اسمارٹ حلقہ',
-  en: 'Smart Halaqa',
-  fr: 'Smart Halaqa',
-  tr: 'Akıllı Halaka',
-  id: 'Halaqah Pintar',
+  ar: 'المنصة الذكية لإدارة حلقات القرآن الكريم',
+  ur: 'قرآن مجید کے حلقوں کے انتظام کے لیے اسمارٹ پلیٹ فارم',
+  en: 'Smart Platform for Quran Halaqa Management',
+  fr: 'Plateforme intelligente pour la gestion des halaqas',
+  tr: "Kur'an Halkaları Yönetimi İçin Akıllı Platform",
+  id: 'Platform Pintar untuk Manajemen Halaqah',
 };
 
 export default function AuthLayout({ children, langBtn, subtitle }) {
@@ -79,7 +79,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
         className="mt-4 text-[10px] sm:text-[11px] tracking-wider font-mono z-10 opacity-60 pointer-events-none text-center"
         style={{ color: C?.text?.muted }}
       >
-        {appSubtitle} • v2.5
+        Smart Halaqa • v2.5
       </footer>
     </div>
   );
