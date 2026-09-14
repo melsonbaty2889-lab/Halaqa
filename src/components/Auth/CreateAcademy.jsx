@@ -1,18 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import { PrimaryButton } from '@/components/UI/AuthButtons';
+import Toast from '@/components/UI/Toast';
+import { useToast } from '@/hooks/useToast';
 import { C } from '@/theme/colors';
 import { useCreateAcademy } from '@/hooks/useCreateAcademy';
 import CustomSelect from '@/components/UI/CustomSelect.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
 import { CURRENCIES } from '@/constants/currencies.js';
 
-import { Building2, Check, Loader2, AlertCircle, CheckCircle2, Globe, Mail, Phone } from 'lucide-react';
+import { Building2, CheckCircle2, Globe, Mail, Phone, AlertCircle } from 'lucide-react';
 
 export default function CreateAcademy({ onSubmitAcademy }) {
   const { t, i18n } = useTranslation();
-  
+  const { toastState, showToast, hideToast } = useToast();
+
   const currentLang = i18n?.language?.split('-')[0] || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLang);
   const isAr = currentLang === 'ar';
@@ -26,68 +30,81 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     country_code: 'EG',
     currency: 'EGP',
     timezone: 'Africa/Cairo',
-    calendar_type: 'gregorian'
+    calendar_type: 'gregorian',
   });
 
   const updateField = (field, value) => {
-    setAcademyData(prev => ({ ...prev, [field]: value }));
+    setAcademyData((prev) => ({ ...prev, [field]: value }));
   };
 
   const {
     isSubmitting,
     isSuccess,
     errorMsg,
-    handleSubmit: submitHookHandler
+    handleSubmit: submitHookHandler,
   } = useCreateAcademy((data) => {
     if (typeof onSubmitAcademy === 'function') {
       onSubmitAcademy({
         ...data,
         ...academyData,
-        name: { 
-          ar: academyData.name, 
-          en: academyData.name, 
-          tr: academyData.name, 
-          fr: academyData.name, 
-          ur: academyData.name, 
-          id: academyData.name 
-        }
+        name: {
+          ar: academyData.name,
+          en: academyData.name,
+          tr: academyData.name,
+          fr: academyData.name,
+          ur: academyData.name,
+          id: academyData.name,
+        },
       });
     }
   });
 
+  // إظهار Toast عند وقوع خطأ أثناء الإنشاء
+  useEffect(() => {
+    if (errorMsg) {
+      showToast(errorMsg, 'error');
+    }
+  }, [errorMsg, showToast]);
+
   const countryOptions = useMemo(() => {
-    return (COUNTRIES_LIST || []).map(country => ({
+    return (COUNTRIES_LIST || []).map((country) => ({
       label: `${country.flag} ${isAr ? country.nameAr : country.nameEn}`,
-      value: country.code
+      value: country.code,
     }));
   }, [isAr]);
 
   const currencyOptions = useMemo(() => {
-    return (CURRENCIES || []).map(currency => ({
+    return (CURRENCIES || []).map((currency) => ({
       label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
-      value: currency.code
+      value: currency.code,
     }));
   }, [isAr]);
 
-  const timezoneOptions = useMemo(() => [
-    { label: isRtl ? 'القاهرة (GMT+2 / GMT+3)' : 'Cairo (GMT+2 / GMT+3)', value: 'Africa/Cairo' },
-    { label: isRtl ? 'مكة المكرمة / الرياض (GMT+3)' : 'Riyadh / Mecca (GMT+3)', value: 'Asia/Riyadh' },
-    { label: isRtl ? 'دبي (GMT+4)' : 'Dubai (GMT+4)', value: 'Asia/Dubai' },
-    { label: isRtl ? 'جرينتش / التوقيت العالمي (UTC+0)' : 'Greenwich / UTC (UTC+0)', value: 'UTC' }
-  ], [isRtl]);
+  const timezoneOptions = useMemo(
+    () => [
+      { label: isRtl ? 'القاهرة (GMT+2 / GMT+3)' : 'Cairo (GMT+2 / GMT+3)', value: 'Africa/Cairo' },
+      { label: isRtl ? 'مكة المكرمة / الرياض (GMT+3)' : 'Riyadh / Mecca (GMT+3)', value: 'Asia/Riyadh' },
+      { label: isRtl ? 'دبي (GMT+4)' : 'Dubai (GMT+4)', value: 'Asia/Dubai' },
+      { label: isRtl ? 'جرينتش / التوقيت العالمي (UTC+0)' : 'Greenwich / UTC (UTC+0)', value: 'UTC' },
+    ],
+    [isRtl]
+  );
 
-  const calendarOptions = useMemo(() => [
-    { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
-    { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' }
-  ], [isRtl, t]);
+  const calendarOptions = useMemo(
+    () => [
+      { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
+      { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' },
+    ],
+    [isRtl, t]
+  );
 
   const handleCountryChange = (countryCode) => {
     updateField('country_code', countryCode);
-    const matchedCountry = (COUNTRIES_LIST || []).find(c => c.code === countryCode);
+    const matchedCountry = (COUNTRIES_LIST || []).find((c) => c.code === countryCode);
     if (matchedCountry?.timezone) {
       updateField('timezone', matchedCountry.timezone);
     }
-    const matchedCurrency = (CURRENCIES || []).find(c => c.countryCode === countryCode);
+    const matchedCurrency = (CURRENCIES || []).find((c) => c.countryCode === countryCode);
     if (matchedCurrency?.code) {
       updateField('currency', matchedCurrency.code);
     }
@@ -105,10 +122,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
 
   if (isSuccess) {
     return (
-      <AuthLayout 
-        langBtn={<LanguageSwitcher />}
-        subtitle={appSubtitle}
-      >
+      <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
         <div className="flex flex-col items-center justify-center py-6 text-center animate-fadeIn" dir={isRtl ? 'rtl' : 'ltr'}>
           <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 border shadow-lg bg-emerald-500/15 border-emerald-500/30 text-emerald-400">
             <CheckCircle2 size={28} />
@@ -125,10 +139,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
   }
 
   return (
-    <AuthLayout 
-      langBtn={<LanguageSwitcher />}
-      subtitle={appSubtitle}
-    >
+    <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
       <div className="w-full" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="flex flex-col items-center mb-4 text-center">
           <h2 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1" style={{ color: C?.text?.title }}>
@@ -140,13 +151,13 @@ export default function CreateAcademy({ onSubmitAcademy }) {
         </div>
 
         {errorMsg && (
-          <div 
+          <div
             className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs border transition-all"
             role="alert"
-            style={{ 
+            style={{
               backgroundColor: 'rgba(244, 63, 94, 0.1)',
               borderColor: C?.error?.DEFAULT || '#EF4444',
-              color: C?.error?.DEFAULT || '#EF4444'
+              color: C?.error?.DEFAULT || '#EF4444',
             }}
           >
             <AlertCircle size={16} className="shrink-0" />
@@ -154,11 +165,14 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           </div>
         )}
 
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          submitHookHandler(e);
-        }} className="space-y-3.5 animate-fadeIn" noValidate>
-          
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitHookHandler(e);
+          }}
+          className="space-y-3.5 animate-fadeIn"
+          noValidate
+        >
           <div className="space-y-1">
             <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: C?.text?.body }}>
               <Building2 size={13} style={{ color: C?.amber?.DEFAULT }} />
@@ -170,10 +184,10 @@ export default function CreateAcademy({ onSubmitAcademy }) {
               onChange={(e) => updateField('name', e.target.value)}
               placeholder={t('academy.name_placeholder', 'أدخل اسم الأكاديمية')}
               className="w-full px-3.5 min-h-[44px] text-xs rounded-xl border outline-none transition-all text-start"
-              style={{ 
-                backgroundColor: C?.inputs?.bg, 
+              style={{
+                backgroundColor: C?.inputs?.bg,
                 borderColor: C?.inputs?.border,
-                color: C?.text?.title
+                color: C?.text?.title,
               }}
               required
               autoFocus
@@ -192,10 +206,10 @@ export default function CreateAcademy({ onSubmitAcademy }) {
                 <Mail size={13} style={{ color: C?.amber?.DEFAULT }} />
                 <span>{t('settings.officialEmail', 'البريد الرسمي')}</span>
               </label>
-              <input 
-                type="email" 
-                value={academyData.contact_email} 
-                onChange={(e) => updateField('contact_email', e.target.value)} 
+              <input
+                type="email"
+                value={academyData.contact_email}
+                onChange={(e) => updateField('contact_email', e.target.value)}
                 dir="ltr"
                 placeholder="admin@academy.com"
                 className="w-full px-3 min-h-[44px] text-xs rounded-xl border outline-none transition-all font-sans text-start"
@@ -208,10 +222,10 @@ export default function CreateAcademy({ onSubmitAcademy }) {
                 <Phone size={13} style={{ color: C?.amber?.DEFAULT }} />
                 <span>{t('settings.phoneWhatsapp', 'الهاتف / الواتساب')}</span>
               </label>
-              <input 
-                type="text" 
-                value={academyData.contact_phone} 
-                onChange={(e) => updateField('contact_phone', e.target.value)} 
+              <input
+                type="text"
+                value={academyData.contact_phone}
+                onChange={(e) => updateField('contact_phone', e.target.value)}
                 dir="ltr"
                 placeholder="+20..."
                 className="w-full px-3 min-h-[44px] text-xs rounded-xl border outline-none transition-all font-sans text-start"
@@ -221,14 +235,14 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
-            <CustomSelect 
+            <CustomSelect
               label={t('settings.country', 'الدولة')}
               value={academyData.country_code}
               onChange={handleCountryChange}
               options={countryOptions}
               searchable={true}
             />
-            <CustomSelect 
+            <CustomSelect
               label={t('settings.currency', 'العملة الرسمية')}
               value={academyData.currency}
               onChange={(val) => updateField('currency', val)}
@@ -238,14 +252,14 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
-            <CustomSelect 
+            <CustomSelect
               label={t('settings.timezone', 'المنطقة الزمنية')}
               value={academyData.timezone}
               onChange={(val) => updateField('timezone', val)}
               options={timezoneOptions}
               searchable={true}
             />
-            <CustomSelect 
+            <CustomSelect
               label={t('settings.calendarType', 'نوع التقويم')}
               value={academyData.calendar_type}
               onChange={(val) => updateField('calendar_type', val)}
@@ -253,27 +267,22 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             />
           </div>
 
+          {/* زر التأكيد الرئيسي الموحد */}
           <div className="pt-2">
-            <button
-              type="submit"
-              disabled={!academyData.name.trim() || isSubmitting}
-              title={t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
-              aria-label={t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
-              className="w-full min-h-[44px] py-2.5 px-4 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer text-white active:scale-[0.98]"
-              style={{ background: C?.gradients?.primaryBtn }}
-            >
-              {isSubmitting ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <>
-                  <Check size={16} />
-                  <span>{t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}</span>
-                </>
-              )}
-            </button>
+            <PrimaryButton loading={isSubmitting} disabled={!academyData.name.trim()}>
+              {t('academy.finish_setup', 'تأكيد وتأسيس الأكاديمية')}
+            </PrimaryButton>
           </div>
         </form>
       </div>
+
+      {/* مكون الـ Toast المنزلق أسفل الشاشة */}
+      <Toast
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
+        onClose={hideToast}
+      />
     </AuthLayout>
   );
 }
