@@ -26,15 +26,27 @@ export type OnLoginSuccessCallback = (data: {
   profile: UserProfile | null;
 }) => void;
 
+// اللغات المدعومة بالترتيب
+const SUPPORTED_LANGUAGES = ['ar', 'en', 'fr', 'tr', 'ur', 'id'] as const;
+type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+
+// لغات الـ RTL
+const RTL_LANGUAGES = ['ar', 'ur', 'fa', 'he'];
+
 // ── Main Hook ───────────────────────────────────────────────────
 
 export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isMounted = useRef<boolean>(true);
-  const isRtl = i18n?.language === 'ar';
+
+  // استخراج كود اللغة الأساسي (مثلاً ur من ur-PK)
+  const currentLangCode = (i18n?.language?.split('-')[0] || 'ar').toLowerCase();
+  
+  // التحقق الصحيح من اتجاه RTL لجميع اللغات المدعومة
+  const isRtl = RTL_LANGUAGES.includes(currentLangCode);
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -73,8 +85,12 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  // التبديل الدوري بين اللغات الـ 6 المدعومة
   const toggleLanguage = () => {
-    const nextLang = isRtl ? 'en' : 'ar';
+    const currentIndex = SUPPORTED_LANGUAGES.indexOf(currentLangCode as SupportedLanguage);
+    const nextIndex = currentIndex !== -1 ? (currentIndex + 1) % SUPPORTED_LANGUAGES.length : 0;
+    const nextLang = SUPPORTED_LANGUAGES[nextIndex];
+    
     if (i18n?.changeLanguage) {
       i18n.changeLanguage(nextLang);
     }
@@ -103,9 +119,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       setFieldErrors(validationResult.errors || {});
       setStatus({
         type: 'error',
-        msg: isRtl
-          ? 'يرجى تصحيح الأخطاء الموضحة أدناه.'
-          : 'Please correct the highlighted errors.',
+        msg: t('auth.errors.fixHighlighted', isRtl ? 'يرجى تصحيح الأخطاء الموضحة أدناه.' : 'Please correct the highlighted errors.'),
       });
       return;
     }
@@ -127,7 +141,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       }
 
       const user = authData.user;
-      if (!user) throw new Error('تعذر العثور على بيانات المستخدم.');
+      if (!user) throw new Error(t('auth.errors.userNotFound', 'تعذر العثور على بيانات المستخدم.'));
 
       if (isMounted.current) setRedirecting(true);
 
@@ -140,7 +154,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         })
         .eq('id', user.id);
 
-      // 2. جلب الملقف والصلاحيات
+      // 2. جلب الملف والصلاحيات
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, academy_id, is_activated, is_deleted')
@@ -154,18 +168,14 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         await supabase.auth.signOut();
         if (isMounted.current) setRedirecting(false);
         throw new Error(
-          isRtl
-            ? 'هذا الحساب معطل أو تم حذفه.'
-            : 'This account is deactivated or deleted.'
+          t('auth.errors.accountDeactivated', isRtl ? 'هذا الحساب معطل أو تم حذفه.' : 'This account is deactivated or deleted.')
         );
       }
 
       if (isMounted.current) {
         setStatus({
           type: 'success',
-          msg: isRtl
-            ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...'
-            : '✅ Logged in successfully! Redirecting...',
+          msg: t('auth.success.login', isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...' : '✅ Logged in successfully! Redirecting...'),
         });
       }
 
@@ -210,7 +220,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         type: 'signup',
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}?lang=${i18n?.language || 'ar'}`,
+          emailRedirectTo: `${window.location.origin}?lang=${currentLangCode}`,
         },
       });
 
@@ -219,9 +229,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       if (isMounted.current) {
         setStatus({
           type: 'success',
-          msg: isRtl
-            ? '✅ تم إعادة إرسال رابط التفعيل! تفقد البريد الوارد أو المجلد غير المرغوب به (Spam).'
-            : '✅ Activation link sent! Check your inbox or spam folder.',
+          msg: t('auth.success.resend', isRtl ? '✅ تم إعادة إرسال رابط التفعيل!' : '✅ Activation link sent!'),
         });
         setShowResend(false);
         setCooldown(60);
@@ -257,6 +265,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
   return {
     isRtl,
+    currentLang: currentLangCode,
     email,
     setEmail,
     password,
