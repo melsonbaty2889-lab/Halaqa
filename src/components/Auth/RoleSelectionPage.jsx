@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import { PrimaryButton } from '@/components/UI/AuthButtons';
+import Toast from '@/components/UI/Toast';
+import { useToast } from '@/hooks/useToast';
 import { C } from '@/theme/colors';
 import { 
   GraduationCap, 
@@ -10,12 +13,12 @@ import {
   Users, 
   Building2, 
   CheckCircle2, 
-  Loader2,
   AlertCircle
 } from 'lucide-react';
 
 export default function RoleSelectionPage({ onRoleSelected }) {
   const { t, i18n } = useTranslation();
+  const { toastState, showToast, hideToast } = useToast();
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -90,7 +93,9 @@ export default function RoleSelectionPage({ onRoleSelected }) {
       }
     } catch (err) {
       console.error('Role update error:', err);
-      setErrorMsg(t('roles.update_error', 'حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى'));
+      const message = t('roles.update_error', 'حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى');
+      setErrorMsg(message);
+      showToast(message, 'error');
     } finally {
       setLoading(false);
     }
@@ -203,24 +208,23 @@ export default function RoleSelectionPage({ onRoleSelected }) {
           })}
         </div>
 
-        <button
-          type="button"
+        {/* زر التخصيص والمتابعة الموحد */}
+        <PrimaryButton
           onClick={handleSaveRole}
-          disabled={!selectedRole || loading}
-          title={t('common.continue_next_step', 'متابعة إلى الخطوة التالية')}
-          aria-label={t('common.continue_next_step', 'متابعة إلى الخطوة التالية')}
-          className="w-full min-h-[44px] py-2.5 font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-white active:scale-[0.98]"
-          style={{
-            background: C?.gradients?.primaryBtn
-          }}
+          loading={loading}
+          disabled={!selectedRole}
         >
-          {loading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <span>{t('common.continue_next_step', 'متابعة إلى الخطوة التالية')}</span>
-          )}
-        </button>
+          {t('common.continue_next_step', 'متابعة إلى الخطوة التالية')}
+        </PrimaryButton>
       </div>
+
+      {/* مكون الـ Toast للأخطاء والتنبيهات */}
+      <Toast
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
+        onClose={hideToast}
+      />
     </AuthLayout>
   );
 }
