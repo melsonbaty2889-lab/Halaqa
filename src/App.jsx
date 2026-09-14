@@ -1,3 +1,4 @@
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import TestHooks from '@/components/TestHooks';
 import React, { useState, useEffect, Component, lazy, Suspense, useCallback } from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
@@ -518,7 +519,12 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
+
+
 function MainContent() {
+  
+  useDocumentTitle();
+  
   const { appState, user, profile, academy, logout, refreshStatus, userRole, t } = useAcademy();
   const [authView, setAuthView] = useState('login');
   const [isRefreshing, setIsRefreshing] = useState(false);
