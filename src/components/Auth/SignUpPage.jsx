@@ -112,7 +112,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     } catch (err) {
       console.error('Google Auth Error:', err);
       showToast(t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'), 'error');
-    } fontFinally {
+    } finally {
       setGoogleLoading(false);
     }
   }, [agreeTerms, setFieldErrors, showToast, t]);
