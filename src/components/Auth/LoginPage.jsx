@@ -125,10 +125,10 @@ export default function LoginPage({
           <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             
             {/* حقل البريد الإلكتروني */}
-            <div className="relative flex items-center group">
+            <div className="relative flex items-center group w-full">
               <Mail
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
@@ -146,8 +146,8 @@ export default function LoginPage({
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
                 }`}
                 style={{
                   borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
@@ -158,10 +158,10 @@ export default function LoginPage({
             </div>
 
             {/* حقل كلمة المرور */}
-            <div className="relative flex items-center group">
+            <div className="relative flex items-center group w-full">
               <Lock
                 size={18}
-                className={`absolute pointer-events-none transition-colors inset-y-auto ${
+                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
@@ -179,8 +179,8 @@ export default function LoginPage({
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 dir="ltr"
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-11' : 'pl-11 pr-11'
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
                 }`}
                 style={{
                   borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
@@ -193,7 +193,7 @@ export default function LoginPage({
                 onClick={() => setShowPassword(!showPassword)}
                 title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                 aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                className={`absolute transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                className={`absolute z-10 top-1/2 -translate-y-1/2 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                   isRtl ? 'left-1' : 'right-1'
                 }`}
                 style={{ color: C.text?.muted }}
