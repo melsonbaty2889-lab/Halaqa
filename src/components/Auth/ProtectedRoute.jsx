@@ -6,12 +6,11 @@ import { useAcademy } from '@/context/AcademyContext';
 import { C } from '@/theme/colors';
 
 export default function ProtectedRoute({ children }) {
-  // جلب كافة بيانات المصادقة والأكاديمية من useAcademy مباشرة
   const { academy, appState, user, profile, userRole } = useAcademy();
   const { slug } = useParams();
   const { t } = useTranslation();
 
-  // 1. حالة التحميل أثناء جلب الجلسة والبيانات
+  // 1. حالة التحميل
   if (appState === 'LOADING') {
     return (
       <div 
@@ -33,29 +32,15 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // 2. التحقق من وجود المستخدم وتسجيل الدخول
+  // 2. إذا لم يكن المستخدم مسجل الدخول، اسمح للتطبيق بالتحميل ليعالج شاشة تسجيل الدخول داخلياً لمنع الـ Loop
   if (appState === 'UNAUTHENTICATED' || !user) {
-    return <Navigate to="/login" replace />;
+    return children;
   }
 
-  // 3. التحقق من وجود دور للمستخدم (Role)
-  const activeRole = userRole || profile?.role || user?.user_metadata?.role;
-  if (!activeRole) {
-    return <Navigate to="/select-role" replace />;
+  // 3. التحقق من الـ Slug فقط في حال وجوده في الرابط وعدم مطابقته
+  if (slug && academy?.slug && academy.slug !== slug) {
+    return <Navigate to={`/${academy.slug}`} replace />;
   }
 
-  // 4. التحقق من الوصول للأكاديمية ومطابقة الرابط (Slug) فقط في حال وجود slug بالرابط
-  if (slug) {
-    const hasAccess = academy && academy.slug === slug;
-
-    if (!hasAccess) {
-      if (activeRole === 'admin') {
-        return <Navigate to="/create-academy" replace />;
-      }
-      return <Navigate to="/unauthorized" replace />;
-    }
-  }
-
-  // 5. عرض المحتوى وحمايته بنجاح
   return children;
 }
