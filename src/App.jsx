@@ -8,7 +8,28 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 import MainApp from '@/components/Main/MainApp';
-import LoginPage from '@/components/Auth/LoginPage'; // تم إضافة استيراد صفحة الدخول
+import LoginPage from '@/components/Auth/LoginPage'; 
+
+// مكون ذكي للتحويل عند فتح الرابط الرئيسي /
+const RootRedirect = () => {
+  const { academy, loading } = useAcademy();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#070C14] text-white font-bold">
+        جاري جلب بيانات الأكاديمية...
+      </div>
+    );
+  }
+
+  // إذا كانت الأكاديمية معروفة ولديها slug، يحولك تلقائياً لـ /slug
+  if (academy?.slug) {
+    return <Navigate to={`/${academy.slug}`} replace />;
+  }
+
+  // إذا لم تكن معروفة، يعرض التطبيق الرئيسي
+  return <MainApp />;
+};
 
 export default function App() {
   const context = useAcademy() || {};
@@ -42,10 +63,10 @@ export default function App() {
         />
 
         <Routes>
-          {/* 1. مسار تسجيل الدخول الصريح لتفادي التعليق عند الخروج */}
+          {/* مسار صريح لصفحة الدخول */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* 2. مسار الأكاديمية المخصص مع دعم المسارات الفرعية /* */}
+          {/* مسار الأكاديمية المخصص باستخدام :slug */}
           <Route
             path="/:slug/*"
             element={
@@ -55,17 +76,17 @@ export default function App() {
             }
           />
 
-          {/* 3. المسار الرئيسي مع دعم المسارات الفرعية /* لتفتح جميع الشاشات */}
+          {/* الرابط الرئيسي / يقوم بالتحويل التلقائي للأكاديمية الصحيحة */}
           <Route
-            path="/*"
+            path="/"
             element={
               <ProtectedRoute>
-                <MainApp />
+                <RootRedirect />
               </ProtectedRoute>
             }
           />
 
-          {/* 4. التوجيه الاحتياطي */}
+          {/* أي مسار آخر غير معروف يعاد توجيهه إلى / */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
