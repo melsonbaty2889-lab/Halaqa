@@ -9,39 +9,8 @@ import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 import MainApp from '@/components/Main/MainApp';
 
-// مكون التوجيه الذكي للمسار الرئيسي
-function RootRedirect() {
-  const { academy, user, appState } = useAcademy();
-
-  if (appState === 'LOADING') {
-    return (
-      <div className="min-h-screen bg-[#070C14] flex flex-col items-center justify-center font-['Cairo',sans-serif]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs text-slate-400 animate-pulse">جاري جلب بيانات الأكاديمية...</p>
-      </div>
-    );
-  }
-
-  // إذا كان المستخدم غير مسجل الدخول، ProtectedRoute سيتكفل به
-  if (academy?.slug) {
-    return <Navigate to={`/${academy.slug}`} replace />;
-  }
-
-  return <MainApp />;
-}
-
 export default function App() {
-  const context = useAcademy();
-
-  // 1. شاشة التحميل الأولية حتى تجهيز الـ Context بالكامل
-  if (!context || context.appState === 'LOADING') {
-    return (
-      <div className="min-h-screen bg-[#070C14] flex flex-col items-center justify-center font-['Cairo',sans-serif]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs text-slate-400 animate-pulse">جاري تحميل المنصة...</p>
-      </div>
-    );
-  }
+  const context = useAcademy() || {};
 
   const { 
     isOffline = false, 
@@ -72,7 +41,7 @@ export default function App() {
         />
 
         <Routes>
-          {/* 1. مسار التطبيق عند وجود slug في الرابط */}
+          {/* مسار الأكاديمية عبر الـ Slug */}
           <Route
             path="/:slug/*"
             element={
@@ -82,18 +51,20 @@ export default function App() {
             }
           />
 
-          {/* 2. المسار الرئيسي المباشر / عند فتح الموقع */}
+          {/* المسار الرئيسي */}
           <Route
             path="/"
             element={
               <ProtectedRoute>
-                <RootRedirect />
+                <MainApp />
               </ProtectedRoute>
             }
           />
 
-          {/* 3. التعامل مع أي مسارات غير معرّفة لمنع الشاشة السوداء */}
-          <Route path="*" element={<RootRedirect />} />
+          {/* المسارات الشائعة لمنع حلقات التوجيه السوداء */}
+          <Route path="/login" element={<MainApp />} />
+          <Route path="/unauthorized" element={<MainApp />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </GlobalErrorBoundary>
