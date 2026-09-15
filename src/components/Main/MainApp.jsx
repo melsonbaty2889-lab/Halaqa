@@ -10,7 +10,7 @@ import colorsImport from '@/theme/colors.js';
 import { PageSkeleton } from '@/components/UI/Skeleton';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import BottomNav from '@/components/Sidebar/BottomNav';
-import OfflineAndUpdateBanner from '@/components/UI/OfflineAndUpdateBanner';
+import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
 import Header from '@/components/Header/Header'; 
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
