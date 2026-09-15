@@ -8,6 +8,7 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 import MainApp from '@/components/Main/MainApp';
+import LoginPage from '@/pages/LoginPage'; // تم إضافة استيراد صفحة الدخول
 
 export default function App() {
   const context = useAcademy() || {};
@@ -41,7 +42,10 @@ export default function App() {
         />
 
         <Routes>
-          {/* مسار الأكاديمية بالأصالة */}
+          {/* 1. مسار تسجيل الدخول الصريح لتفادي التعليق عند الخروج */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* 2. مسار الأكاديمية المخصص مع دعم المسارات الفرعية /* */}
           <Route
             path="/:slug/*"
             element={
@@ -51,9 +55,9 @@ export default function App() {
             }
           />
 
-          {/* المسار الرئيسي */}
+          {/* 3. المسار الرئيسي مع دعم المسارات الفرعية /* لتفتح جميع الشاشات */}
           <Route
-            path="/"
+            path="/*"
             element={
               <ProtectedRoute>
                 <MainApp />
@@ -61,7 +65,7 @@ export default function App() {
             }
           />
 
-          {/* أي مسار آخر يتم توجيهه للرئيسية مباشرة دون شاشة سوداء */}
+          {/* 4. التوجيه الاحتياطي */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
