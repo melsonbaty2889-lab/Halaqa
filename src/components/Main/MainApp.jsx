@@ -226,14 +226,52 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   // الاعتماد المباشر على البيانات الجاهزة من Context المنصة ودوال الخروج واستخراج الاسم
   const { academy, academiesList, setAcademy, logout, getAcademyName } = useAcademy();
 
-  // معالجة دالة تسجيل الخروج بشكل مدمج لضمان العمل سواء مررت Prop أو Context
+  // 1. دالة تسجيل خروج حتمية تنفذ الخروج وتفريغ التخزين يدوياً للتغلب على أي انسداد
   const handleLogoutAction = useCallback(async () => {
-    if (onLogout) {
-      await onLogout();
-    } else if (logout) {
-      await logout();
+    try {
+      if (onLogout) {
+        await onLogout();
+      } else if (logout) {
+        await logout();
+      } else {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error("Logout Error:", err);
+    } finally {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/login';
     }
   }, [onLogout, logout]);
+
+  // 2. معالجة استخراج الاسم عبر مستويات فحص متعددة لضمان عدم ظهور "أكاديمية بلا اسم"
+  const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
+
+  const resolvedAcademyName = useMemo(() => {
+    if (isPlatformAdmin) {
+      return t('dashboard.global_admin', 'إدارة المنصة العامة');
+    }
+
+    // الفحص الأول: عبر دالة getAcademyName
+    const nameFromContext = getAcademyName ? getAcademyName() : null;
+    if (nameFromContext && nameFromContext !== 'أكاديمية بلا اسم') return nameFromContext;
+
+    // الفحص الثاني: قراءة مباشرة من كائن الأكاديمية
+    if (academy?.name) {
+      const parsed = formatLocalizedText(academy.name, currentLang);
+      if (parsed && parsed !== 'أكاديمية بلا اسم') return parsed;
+    }
+
+    // الفحص الثالث: البحث في قائمة الأكاديميات الكلية
+    const currentFromList = academiesList?.find(a => a.id === academy?.id);
+    if (currentFromList?.name) {
+      const parsedList = formatLocalizedText(currentFromList.name, currentLang);
+      if (parsedList) return parsedList;
+    }
+
+    return t('common.academy', 'الأكاديمية');
+  }, [isPlatformAdmin, getAcademyName, academy, academiesList, currentLang, t]);
 
   const isMobile = useIsMobile(1024);
 
@@ -277,7 +315,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
 
-  const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
   const [currency, setCurrency] = useState(academy?.currency || (isPlatformAdmin ? "EGP" : "USD"));         
   const [timezone, setTimezone] = useState(academy?.timezone || (isPlatformAdmin ? "Africa/Cairo" : "UTC"));         
   const [countryCode, setCountryCode] = useState(academy?.country_code || (isPlatformAdmin ? "EG" : "US"));   
@@ -446,14 +483,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     });
   }, [halaqas, teachers, currentLang, t]);
 
+  // 3. ربط preloadedDashboardData بالاسم المضمون
   const preloadedDashboardData = useMemo(() => {
-    const resolvedName = getAcademyName() || t('common.academy', 'الأكاديمية');
-    const globalAdminLabel = t('dashboard.global_admin', 'إدارة المنصة العامة');
-
     return {
-      academyName: isPlatformAdmin 
-        ? globalAdminLabel 
-        : resolvedName,
+      academyName: resolvedAcademyName,
       role: userRole || 'staff', 
       is_activated: isAcademyActive,
       stats: {
@@ -463,7 +496,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         completedExams: completedExamsCount || 0
       }
     };
-  }, [isPlatformAdmin, getAcademyName, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
+  }, [resolvedAcademyName, userRole, isAcademyActive, students, halaqas, completedExamsCount]);
 
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
