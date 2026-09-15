@@ -44,17 +44,18 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/select-role" replace />;
   }
 
-  // 4. التحقق من الوصول للأكاديمية الحالية ومطابقة الرابط (Slug)
-  const hasAccess = academy && academy.slug === slug;
+  // 4. التحقق من الوصول للأكاديمية ومطابقة الرابط (Slug) فقط في حال وجود slug بالرابط
+  if (slug) {
+    const hasAccess = academy && academy.slug === slug;
 
-  // 5. إعادة التوجيه في حال عدم امتلاك صلاحية الوصول للأكاديمية
-  if (!hasAccess) {
-    if (activeRole === 'admin') {
-      return <Navigate to="/create-academy" replace />;
+    if (!hasAccess) {
+      if (activeRole === 'admin') {
+        return <Navigate to="/create-academy" replace />;
+      }
+      return <Navigate to="/unauthorized" replace />;
     }
-    return <Navigate to="/unauthorized" replace />;
   }
 
-  // 6. عرض المحتوى وحمايته بنجاح
+  // 5. عرض المحتوى وحمايته بنجاح
   return children;
 }
