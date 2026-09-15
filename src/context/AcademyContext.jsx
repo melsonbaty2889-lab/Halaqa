@@ -64,10 +64,11 @@ export const AcademyProvider = ({ children }) => {
   const getAcademyName = useCallback(
     (targetAcademy = academy) => {
       if (!targetAcademy) return '';
-      const currentLang = i18n.language || 'ar';
-      return extractAcademyName(targetAcademy.name || targetAcademy.title, currentLang);
+      const currentLang = i18n?.language || 'ar';
+      const extracted = extractAcademyName(targetAcademy.name || targetAcademy.title, currentLang);
+      return extracted || (targetAcademy.name && typeof targetAcademy.name === 'string' ? targetAcademy.name : '');
     },
-    [academy, i18n.language]
+    [academy, i18n?.language]
   );
 
   const fetchUserStatus = useCallback(async (currentUser) => {
@@ -297,11 +298,17 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [user?.id, refreshStatus]);
 
-  const logout = async () => {
+  // دالة تسجيل خروج حتمية ومعززة
+  const logout = useCallback(async () => {
     try {
+      // إرسال أمر الخروج لـ Supabase دون إيقاف السلسلة الحالية
+      supabase.auth.signOut().catch((err) => console.warn("Supabase async logout warning:", err));
+    } catch (error) {
+      console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
+    } finally {
       if (typeof window !== 'undefined') {
+        localStorage.clear();
         sessionStorage.clear();
-        localStorage.removeItem('current_academy_slug');
       }
       if (isMounted.current) {
         setAcademy(null);
@@ -311,11 +318,12 @@ export const AcademyProvider = ({ children }) => {
         setUserRole(null);
         setAppState('UNAUTHENTICATED');
       }
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
+      // إجبار المتصفح على الانتقال لصفحة تسجيل الدخول فوراً
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
-  };
+  }, []);
 
   return (
     <AcademyContext.Provider
