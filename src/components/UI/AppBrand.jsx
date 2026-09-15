@@ -4,8 +4,25 @@ import { useTranslation } from 'react-i18next';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { C } from '@/theme/colors';
 
+// أسماء المنصة الموحدة
+const BRAND_NAMES = {
+  ar: 'الحلقة الذكية',
+  ur: 'اسمارٹ حلقہ',
+  // تثبيت الاسم الإنجليزي لكافة اللغات اللاتينية
+  en: 'Smart Halaqa',
+  fr: 'Smart Halaqa',
+  tr: 'Smart Halaqa',
+  id: 'Smart Halaqa',
+};
+
 export default function AppBrand({ className = '', subtitle }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // الحصول على كود اللغة الحالي (مثلاً: 'id' أو 'tr')
+  const currentLang = i18n?.language?.split('-')[0] || 'ar';
+
+  // تحديد اسم البراند برمجياً مع إمكانية التراجع لـ t()
+  const brandName = BRAND_NAMES[currentLang] || t('common.appName', 'Smart Halaqa');
 
   return (
     <div className={`flex flex-col items-center text-center select-none ${className}`}>
@@ -22,9 +39,9 @@ export default function AppBrand({ className = '', subtitle }) {
         </div>
       </div>
 
-      {/* اسم المنصة باللون الأبيض يتغير حسب اللغة المختارة */}
+      {/* اسم المنصة باللون الأبيض */}
       <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-white">
-        {t('common.appName')}
+        {brandName}
       </h2>
 
       {/* العنوان الفرعي المترجم */}
