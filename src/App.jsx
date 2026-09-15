@@ -11,7 +11,6 @@ import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import { C } from '@/theme/colors';
-import { getText } from '@/utils/textUtils';
 
 // 🚀 Dynamic Imports (Lazy Loading)
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
@@ -34,7 +33,10 @@ const DevPlayground = lazy(() => {
 function OfflineAndUpdateBanner() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [needRefresh, setNeedRefresh] = useState(false);
-  const { t } = useAcademy();
+  const { t, language } = useAcademy(); // استدعاء دالة الترجمة واللغة من Context
+
+  const currentLang = language || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLang);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -70,62 +72,69 @@ function OfflineAndUpdateBanner() {
 
   return (
     <>
+      {/* شريط الأوفلاين */}
       {!isOnline && (
-        <div style={{
-          background: C.error?.DEFAULT || '#EF4444',
-          color: C.text?.title || '#FFFFFF',
-          textAlign: 'center',
-          padding: '8px 16px',
-          position: 'fixed',
-          insetBlockStart: 0,
-          insetInlineStart: 0,
-          insetInlineEnd: 0,
-          zIndex: 99999,
-          fontWeight: 'bold',
-          fontSize: '0.85rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-          fontFamily: "'Cairo', system-ui, sans-serif"
-        }}>
+        <div 
+          dir={isRtl ? 'rtl' : 'ltr'}
+          style={{
+            background: C.error?.DEFAULT || '#EF4444',
+            color: C.text?.title || '#FFFFFF',
+            textAlign: 'center',
+            padding: '8px 16px',
+            position: 'fixed',
+            insetBlockStart: 0,
+            insetInlineStart: 0,
+            insetInlineEnd: 0,
+            zIndex: 99999,
+            fontWeight: 'bold',
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+            fontFamily: "'Cairo', system-ui, sans-serif"
+          }}
+        >
           <WifiOff size={18} />
-          <span>{getText(t, 'system.offline_notice', 'أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)')}</span>
+          <span>{t('system.offline_notice', 'أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)')}</span>
         </div>
       )}
 
+      {/* شريط التحديث الديناميكي المصحح الموحد */}
       {needRefresh && (
-        <div style={{
-          background: C.emerald?.DEFAULT || '#10B981',
-          color: C.dark?.bg || '#050811',
-          textAlign: 'center',
-          padding: '8px 16px',
-          position: 'fixed',
-          insetBlockEnd: '16px',
-          insetInlineEnd: '16px',
-          zIndex: 99999,
-          borderRadius: '12px',
-          fontWeight: 'bold',
-          fontSize: '0.85rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-          fontFamily: "'Cairo', system-ui, sans-serif"
-        }}>
-          <span>{getText(t, 'system.update_available', 'يتوفر تحديث جديد للمنظومة!')}</span>
+        <div 
+          dir={isRtl ? 'rtl' : 'ltr'}
+          style={{
+            background: C.emerald?.DEFAULT || '#10B981',
+            color: C.dark?.bg || '#050811',
+            padding: '10px 16px',
+            position: 'fixed',
+            insetBlockEnd: '16px',
+            insetInlineEnd: '16px',
+            zIndex: 99999,
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            fontFamily: "'Cairo', system-ui, sans-serif"
+          }}
+        >
+          <span>{t('pwa.updateAvailable', 'يتوفر تحديث جديد للمنظومة!')}</span>
           <button
             onClick={handleReload}
-            aria-label={getText(t, 'system.update_now', 'تحديث الآن')}
-            title={getText(t, 'system.update_now', 'تحديث الآن')}
+            aria-label={t('pwa.updateNow', 'تحديث الآن')}
+            title={t('pwa.updateNow', 'تحديث الآن')}
             style={{
               background: C.dark?.bg || '#050811',
               color: C.emerald?.DEFAULT || '#10B981',
               border: 'none',
-              padding: '6px 12px',
-              minHeight: '44px',
-              borderRadius: '6px',
+              padding: '6px 14px',
+              minHeight: '36px',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: 'bold',
               display: 'flex',
@@ -135,7 +144,7 @@ function OfflineAndUpdateBanner() {
             }}
           >
             <RefreshCw size={14} />
-            {getText(t, 'system.update_now', 'تحديث الآن')}
+            {t('pwa.updateNow', 'تحديث الآن')}
           </button>
         </div>
       )}
@@ -155,6 +164,10 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
       </div>
     );
   }
+
+  // تجنيب التكرار وتأكيد المتابعة
+  return children;
+};
 
   // 1. تحديد الدور الحالي وتنظيفه
   const currentRole = (userRole || profile?.role || 'admin').toString().toLowerCase().trim();
