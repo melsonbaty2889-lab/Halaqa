@@ -618,9 +618,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
+  // أضف هذا التعديل البسيط في جزء الـ Main/Suspense ليعرض الهيكل الموحد فوراً بدون شاشة سوداء إضافية
   return (
     <div 
-      className="relative flex min-h-screen w-full overflow-x-hidden"
+      className="relative flex min-h-screen w-full overflow-x-hidden select-none"
       style={{ 
         fontFamily: "'Cairo', system-ui, sans-serif",
         backgroundColor: C?.dark?.main || '#0f172a',
@@ -688,7 +689,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         >
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={<PageSkeleton />}>
-              {renderActiveTabContent()}
+              {loadingData ? <PageSkeleton /> : renderActiveTabContent()}
             </Suspense>
           </ErrorBoundaryInner>
         </main>
@@ -701,4 +702,3 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       />
     </div>
   );
-}
