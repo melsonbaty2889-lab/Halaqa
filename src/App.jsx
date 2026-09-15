@@ -1,90 +1,42 @@
 // src/App.jsx
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+
 import GlobalErrorBoundary from '@/components/UI/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/UI/OfflineAndUpdateBanner';
-import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 
-// تحميل المكون الرئيسي
-const MainApp = lazy(() => import('@/components/Main/MainApp'));
-
-// مكون بسيط للتعامل مع التحويل في المسار الرئيسي بدون كسر ProtectedRoute
-function IndexRedirect() {
-  const { academy, appState } = useAcademy();
-
-  if (appState === 'LOADING') {
-    return (
-      <div className="min-h-screen bg-[#070C14] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // إذا كانت الأكاديمية موجودة يحول إلى slug الأكاديمية، وإلا يتجه إلى اختيار الأكاديمية
-  if (academy?.slug) {
-    return <Navigate to={`/${academy.slug}`} replace />;
-  }
-
-  return <Navigate to="/select-role" replace />;
-}
+// استدعاء مباشر بدلاً من lazy للقطع بالإيجاب في سلامة المسار
+import MainApp from '@/components/Main/MainApp';
 
 export default function App() {
-  const context = useAcademy();
-
-  const { 
-    isOffline = false, 
-    updateAvailable = false, 
-    handleReload,
-    isUpgradeModalOpen = false,
-    closeUpgradeModal,
-    academy,
-    tierConfig,
-    navigateToSubscription 
-  } = context || {};
+  const academyData = useAcademy() || {};
 
   return (
     <GlobalErrorBoundary>
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-[#070C14] flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        }
-      >
+      <div className="min-h-screen bg-[#070C14] text-white font-['Cairo',sans-serif]">
         <OfflineAndUpdateBanner
-          isOffline={isOffline}
-          updateAvailable={updateAvailable}
-          onReload={handleReload}
+          isOffline={academyData.isOffline}
+          updateAvailable={academyData.updateAvailable}
+          onReload={academyData.handleReload}
         />
 
         <InlineUpgradeModal
-          isOpen={isUpgradeModalOpen}
-          onClose={closeUpgradeModal}
-          academyName={academy?.name}
-          tierConfig={tierConfig}
-          onNavigateSubscription={navigateToSubscription}
+          isOpen={academyData.isUpgradeModalOpen}
+          onClose={academyData.closeUpgradeModal}
+          academyName={academyData.academy?.name}
+          tierConfig={academyData.tierConfig}
+          onNavigateSubscription={academyData.navigateToSubscription}
         />
 
         <Routes>
-          {/* 1. المسار الرئيسي المعتمد على الـ slug */}
-          <Route
-            path="/:slug/*"
-            element={
-              <ProtectedRoute>
-                <MainApp />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 2. جذر الموقع / يحيلك إلى slug الأكاديمية بدلاً من كسر ProtectedRoute */}
-          <Route path="/" element={<IndexRedirect />} />
-
-          {/* 3. إعادة التوجيه للرئيسية لأي مسار غير معرّف */}
+          {/* عرض MainApp مباشرة للتأكد من تحميل الصفحة دون اعتراض من ProtectedRoute */}
+          <Route path="/:slug/*" element={<MainApp />} />
+          <Route path="/" element={<MainApp />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense>
+      </div>
     </GlobalErrorBoundary>
   );
 }
