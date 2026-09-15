@@ -10,6 +10,17 @@ import { useAcademy } from '@/context/AcademyContext';
 const MainApp = lazy(() => import('@/components/Main/MainApp'));
 
 export default function App() {
+  const context = useAcademy();
+
+  // في حال لم يكتمل الـ Context أو كان يحمل البيانات
+  if (!context) {
+    return (
+      <div className="min-h-screen bg-[#070C14] flex items-center justify-center text-white font-['Cairo',sans-serif]">
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const { 
     isOffline, 
     updateAvailable, 
@@ -19,7 +30,7 @@ export default function App() {
     academy,
     tierConfig,
     navigateToSubscription 
-  } = useAcademy();
+  } = context;
 
   return (
     <GlobalErrorBoundary>
@@ -45,7 +56,7 @@ export default function App() {
         />
 
         <Routes>
-          {/* 1. مسار الأكاديمية بالـ Slug */}
+          {/* مسار التطبيق الرئيسي */}
           <Route
             path="/:slug/*"
             element={
@@ -55,21 +66,16 @@ export default function App() {
             }
           />
 
-          {/* 2. المسار الرئيسي: التوجيه لأكاديمية المستخدم إن وجدت أو صفحة اختيار الأكاديمية */}
+          {/* التوجيه للمسار الرئيسي */}
           <Route
             path="/"
             element={
-              academy?.slug ? (
-                <Navigate to={`/${academy.slug}`} replace />
-              ) : (
-                <ProtectedRoute>
-                  <MainApp />
-                </ProtectedRoute>
-              )
+              <ProtectedRoute>
+                <MainApp />
+              </ProtectedRoute>
             }
           />
 
-          {/* 3. أي مسار غير معروف يتم إعادة توجيهه للرئيسية */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
