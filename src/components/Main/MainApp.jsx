@@ -1,3 +1,5 @@
+// src/components/Main/MainApp.jsx
+
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
@@ -221,8 +223,17 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   const { isOffline, updateAvailable, handleReload } = useNetworkAndUpdateStatus();
 
-  // الاعتماد المباشر على البيانات الجاهزة من Context المنصة
-  const { academy, academiesList, setAcademy } = useAcademy();
+  // الاعتماد المباشر على البيانات الجاهزة من Context المنصة ودوال الخروج واستخراج الاسم
+  const { academy, academiesList, setAcademy, logout, getAcademyName } = useAcademy();
+
+  // معالجة دالة تسجيل الخروج بشكل مدمج لضمان العمل سواء مررت Prop أو Context
+  const handleLogoutAction = useCallback(async () => {
+    if (onLogout) {
+      await onLogout();
+    } else if (logout) {
+      await logout();
+    }
+  }, [onLogout, logout]);
 
   const isMobile = useIsMobile(1024);
 
@@ -417,7 +428,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     return (
       <BlockedView 
         academy={academy} 
-        onLogout={onLogout} 
+        onLogout={handleLogoutAction} 
         isRtl={isRtl} 
       />
     );
@@ -436,8 +447,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   }, [halaqas, teachers, currentLang, t]);
 
   const preloadedDashboardData = useMemo(() => {
-    const rawAcademyName = academy?.name;
-    const resolvedName = formatLocalizedText(rawAcademyName, currentLang) || t('common.academy', 'الأكاديمية');
+    const resolvedName = getAcademyName() || t('common.academy', 'الأكاديمية');
     const globalAdminLabel = t('dashboard.global_admin', 'إدارة المنصة العامة');
 
     return {
@@ -453,7 +463,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         completedExams: completedExamsCount || 0
       }
     };
-  }, [isPlatformAdmin, academy?.name, currentLang, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
+  }, [isPlatformAdmin, getAcademyName, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
 
   const handleCurrencyUpdate = (newCurrency) => {
     setCurrency(newCurrency);
