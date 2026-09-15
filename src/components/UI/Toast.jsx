@@ -13,11 +13,12 @@ export default function Toast({ isOpen, message, type = 'info', onClose, duratio
 
   if (!isOpen) return null;
 
-  const styles = {
-    success: 'bg-emerald-950/90 border-emerald-500 text-emerald-200',
-    error: 'bg-red-950/90 border-red-500 text-red-200',
-    warning: 'bg-amber-950/90 border-amber-500 text-amber-200',
-    info: 'bg-slate-900/90 border-amber-500/50 text-slate-200',
+  // أنماط الألوان متكاملة للخلفية والحدود والنصوص
+  const typeStyles = {
+    success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
+    error: 'bg-red-950/95 border-red-500/50 text-red-200',
+    warning: 'bg-amber-950/95 border-amber-500/50 text-amber-200',
+    info: 'bg-slate-900/95 border-amber-500/40 text-slate-200',
   };
 
   const icons = {
@@ -27,17 +28,25 @@ export default function Toast({ isOpen, message, type = 'info', onClose, duratio
     info: <Info className="w-5 h-5 text-amber-400 shrink-0" />,
   };
 
+  const currentStyle = typeStyles[type] || typeStyles.info;
+  const currentIcon = icons[type] || icons.info;
+
   return (
-    <div className="fixed bottom-6 start-1/2 -translate-x-1/2 z-[99999] min-w-[300px] max-w-[90vw] p-4 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300">
-      <div className={`flex items-center justify-between gap-3 text-sm font-medium ${styles[type] || styles.info}`}>
-        <div className="flex items-center gap-2">
-          {icons[type] || icons.info}
-          <span>{message}</span>
+    <div 
+      dir="auto"
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-md p-3.5 sm:p-4 rounded-2xl border backdrop-blur-md shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${currentStyle}`}
+    >
+      <div className="flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {currentIcon}
+          <span className="leading-snug break-words truncate">{message}</span>
         </div>
+
         <button 
+          type="button"
           onClick={onClose} 
-          className="text-slate-400 hover:text-white transition-colors p-1"
-          aria-label="إغلاق"
+          className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors shrink-0 cursor-pointer"
+          aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
