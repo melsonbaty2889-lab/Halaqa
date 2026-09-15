@@ -7,7 +7,6 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 
-// تحميل المكون الرئيسي بشكل كسول (Lazy Loading)
 const MainApp = lazy(() => import('@/components/Main/MainApp'));
 
 export default function App() {
@@ -31,14 +30,12 @@ export default function App() {
           </div>
         }
       >
-        {/* شريط حالة الاتصال والتحديثات */}
         <OfflineAndUpdateBanner
           isOffline={isOffline}
           updateAvailable={updateAvailable}
           onReload={handleReload}
         />
 
-        {/* نافذة الترقية المنبثقة */}
         <InlineUpgradeModal
           isOpen={isUpgradeModalOpen}
           onClose={closeUpgradeModal}
@@ -47,8 +44,8 @@ export default function App() {
           onNavigateSubscription={navigateToSubscription}
         />
 
-        {/* إدارة المسارات */}
         <Routes>
+          {/* 1. مسار الأكاديمية بالـ Slug */}
           <Route
             path="/:slug/*"
             element={
@@ -57,7 +54,22 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* تحويل المسار الرئيسي تلقائياً إلى MainApp أو معالجته عبر ProtectedRoute */}
+
+          {/* 2. المسار الرئيسي: التوجيه لأكاديمية المستخدم إن وجدت أو صفحة اختيار الأكاديمية */}
+          <Route
+            path="/"
+            element={
+              academy?.slug ? (
+                <Navigate to={`/${academy.slug}`} replace />
+              ) : (
+                <ProtectedRoute>
+                  <MainApp />
+                </ProtectedRoute>
+              )
+            }
+          />
+
+          {/* 3. أي مسار غير معروف يتم إعادة توجيهه للرئيسية */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
