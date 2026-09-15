@@ -615,6 +615,7 @@
   "notifications": {
     "title": "Bildirimler"
   },
+  "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "Genel URL hatası",
   "pwa": {
     "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
@@ -641,6 +642,7 @@
     "selectRiwaya": "Rivayet Seçin",
     "title": "Kur'an ve Akademik Yapılandırma"
   },
+  "reloadNow": "تحديث الآن",
   "reports": {
     "assessment_test": "Değerlendirme Sınavı",
     "card": {
@@ -927,6 +929,7 @@
   "trackTilawah": "Tilavet ve Düzeltme Yolu",
   "unassigned": "Atama Bekliyor",
   "unnamed_student": "İsimsiz Öğrenci",
+  "updateAvailable": "يتوفر تحديث جديد للتطبيق",
   "viewActive": "Aktif Halkalar",
   "viewArchived": "Arşiv",
   "whatsapp": {

@@ -615,6 +615,7 @@
   "notifications": {
     "title": "Notifications"
   },
+  "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "Public URL error",
   "pwa": {
     "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
@@ -641,6 +642,7 @@
     "selectRiwaya": "Select Riwayah",
     "title": "Quranic & Academic Setup"
   },
+  "reloadNow": "تحديث الآن",
   "reports": {
     "assessment_test": "Assessment Test",
     "card": {
@@ -927,6 +929,7 @@
   "trackTilawah": "Recitation & Correction Track",
   "unassigned": "Awaiting Certified Assignment",
   "unnamed_student": "Unnamed Student",
+  "updateAvailable": "يتوفر تحديث جديد للتطبيق",
   "viewActive": "Active Halaqas",
   "viewArchived": "Archive",
   "whatsapp": {

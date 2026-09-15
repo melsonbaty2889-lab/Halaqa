@@ -617,6 +617,7 @@
   "notifications": {
     "title": "title"
   },
+  "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "public_url_error",
   "pwa": {
     "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
@@ -643,6 +644,7 @@
     "selectRiwaya": "selectRiwaya",
     "title": "title"
   },
+  "reloadNow": "تحديث الآن",
   "reports": {
     "assessment_test": "assessment_test",
     "card": {
@@ -929,6 +931,7 @@
   "trackTilawah": "مسار التلاوة وتصحيح الأداء",
   "unassigned": "بانتظار تعيين معتمد",
   "unnamed_student": "طالب بدون اسم",
+  "updateAvailable": "يتوفر تحديث جديد للتطبيق",
   "viewActive": "الحلقات النشطة",
   "viewArchived": "الأرشيف",
   "whatsapp": {

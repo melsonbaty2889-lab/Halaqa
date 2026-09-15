@@ -615,6 +615,7 @@
   "notifications": {
     "title": "Notifikasi"
   },
+  "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "Kesalahan URL Publik",
   "pwa": {
     "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
@@ -641,6 +642,7 @@
     "selectRiwaya": "Pilih Riwayat",
     "title": "Konfigurasi Quran & Akademi"
   },
+  "reloadNow": "تحديث الآن",
   "reports": {
     "assessment_test": "Ujian Penilaian",
     "card": {
@@ -927,6 +929,7 @@
   "trackTilawah": "Jalur Tilawah & Perbaikan Bacaan",
   "unassigned": "Menunggu Penugasan Resmi",
   "unnamed_student": "Santri Tanpa Nama",
+  "updateAvailable": "يتوفر تحديث جديد للتطبيق",
   "viewActive": "Halaqah Aktif",
   "viewArchived": "Arsip",
   "whatsapp": {

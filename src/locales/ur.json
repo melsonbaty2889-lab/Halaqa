@@ -615,6 +615,7 @@
   "notifications": {
     "title": "اطلاعات"
   },
+  "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "پبلک یو آر ایل میں خرابی",
   "pwa": {
     "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
@@ -641,6 +642,7 @@
     "selectRiwaya": "روایت کا انتخاب کریں",
     "title": "قرآنی و اکادمی ترتیبات"
   },
+  "reloadNow": "تحديث الآن",
   "reports": {
     "assessment_test": "ارزابی ٹیسٹ",
     "card": {
@@ -927,6 +929,7 @@
   "trackTilawah": "تلاوت اور تصحیح کا راستہ",
   "unassigned": "معلم کی تعیینی کا منتظر",
   "unnamed_student": "بغیر نام کے طالب علم",
+  "updateAvailable": "يتوفر تحديث جديد للتطبيق",
   "viewActive": "فعال حلقے",
   "viewArchived": "آرکائیو",
   "whatsapp": {
