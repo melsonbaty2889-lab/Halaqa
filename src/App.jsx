@@ -12,6 +12,15 @@ import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
 import { C } from '@/theme/colors';
 
+// 🛠️ دالة مساعدة للحصول على النصوص بأمان لمنع أخطاء الترجمة
+const getText = (tFunc, key, fallback) => {
+  if (typeof tFunc === 'function') {
+    const res = tFunc(key, fallback);
+    if (res && res !== key) return res;
+  }
+  return fallback;
+};
+
 // 🚀 Dynamic Imports (Lazy Loading)
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
 const LoginPage = lazy(() => import('@/components/Auth/LoginPage'));
@@ -33,8 +42,7 @@ const DevPlayground = lazy(() => {
 function OfflineAndUpdateBanner() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [needRefresh, setNeedRefresh] = useState(false);
-  const { t, language } = useAcademy(); // استدعاء دالة الترجمة واللغة من Context
-
+  const { t, language } = useAcademy();
   const currentLang = language || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
@@ -97,7 +105,7 @@ function OfflineAndUpdateBanner() {
           }}
         >
           <WifiOff size={18} />
-          <span>{t('system.offline_notice', 'أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)')}</span>
+          <span>{getText(t, 'system.offline_notice', 'أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)')}</span>
         </div>
       )}
 
@@ -123,11 +131,11 @@ function OfflineAndUpdateBanner() {
             fontFamily: "'Cairo', system-ui, sans-serif"
           }}
         >
-          <span>{t('pwa.updateAvailable', 'يتوفر تحديث جديد للمنظومة!')}</span>
+          <span>{getText(t, 'pwa.updateAvailable', 'يتوفر تحديث جديد للمنظومة!')}</span>
           <button
             onClick={handleReload}
-            aria-label={t('pwa.updateNow', 'تحديث الآن')}
-            title={t('pwa.updateNow', 'تحديث الآن')}
+            aria-label={getText(t, 'pwa.updateNow', 'تحديث الآن')}
+            title={getText(t, 'pwa.updateNow', 'تحديث الآن')}
             style={{
               background: C.dark?.bg || '#050811',
               color: C.emerald?.DEFAULT || '#10B981',
@@ -144,7 +152,7 @@ function OfflineAndUpdateBanner() {
             }}
           >
             <RefreshCw size={14} />
-            {t('pwa.updateNow', 'تحديث الآن')}
+            {getText(t, 'pwa.updateNow', 'تحديث الآن')}
           </button>
         </div>
       )}
@@ -164,10 +172,6 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
       </div>
     );
   }
-
-  // تجنيب التكرار وتأكيد المتابعة
-  return children;
-};
 
   // 1. تحديد الدور الحالي وتنظيفه
   const currentRole = (userRole || profile?.role || 'admin').toString().toLowerCase().trim();
@@ -254,7 +258,6 @@ if (typeof window !== 'undefined') {
 function InlineUpgradeModal({ isOpen, onClose, academyName }) {
   const academyContext = useAcademy();
   const t = academyContext?.t;
-
   if (!isOpen) return null;
   
   return (
@@ -301,7 +304,6 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
         >
           <X size={20} />
         </button>
-
         <div style={{ textAlign: 'center', marginBlockEnd: '20px' }}>
           <div style={{
             width: '50px',
@@ -323,7 +325,6 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             {getText(t, 'upgrade.subtitle', 'احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك')} ({academyName || ''})
           </p>
         </div>
-
         <div style={{
           background: C.dark?.surface || '#0A0F1C',
           borderRadius: '10px',
@@ -346,7 +347,6 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             </li>
           </ul>
         </div>
-
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={() => {
@@ -395,15 +395,12 @@ function InlineUpgradeModal({ isOpen, onClose, academyName }) {
 
 class GlobalErrorBoundary extends Component {
   state = { hasError: false, error: null };
-
   static getDerivedStateFromError(error) { 
     return { hasError: true, error }; 
   }
-
   componentDidCatch(error, errorInfo) {
     console.error("🚨 Global App Crash:", error, errorInfo);
   }
-
   handleReload = () => {
     if ('caches' in window) {
       caches.keys().then((names) => {
@@ -412,11 +409,9 @@ class GlobalErrorBoundary extends Component {
     }
     window.location.reload();
   };
-
   render() {
     if (this.state.hasError) {
       const errorMessage = this.state.error?.toString() || 'حدث خطأ غير متوقع في النظام';
-
       return (
         <div style={{
           minHeight: '100vh',
@@ -452,7 +447,6 @@ class GlobalErrorBoundary extends Component {
               opacity: 0.25,
               pointerEvents: 'none'
             }} />
-
             <div style={{
               width: '72px',
               height: '72px',
@@ -467,14 +461,12 @@ class GlobalErrorBoundary extends Component {
             }}>
               <AlertTriangle size={36} />
             </div>
-
             <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.text?.title || '#FFFFFF' }}>
               عذراً، حدث خطأ تقني غير متوقع
             </h2>
             <p style={{ fontSize: '0.875rem', color: C.text?.muted || '#94A3B8', marginBlockEnd: '24px', lineHeight: '1.6' }}>
               واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.
             </p>
-
             <div style={{
               background: C.dark?.surface || '#0A0F1C',
               border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
@@ -499,7 +491,6 @@ class GlobalErrorBoundary extends Component {
                 {errorMessage}
               </p>
             </div>
-
             <button
               onClick={this.handleReload}
               aria-label="إعادة تحميل الصفحة"
@@ -532,10 +523,7 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-
-
 function MainContent() {
-  
   useDocumentTitle();
   
   const { appState, user, profile, academy, logout, refreshStatus, userRole, t } = useAcademy();
@@ -555,7 +543,6 @@ function MainContent() {
     } catch (err) {
       console.error("Supabase Auth listener error:", err);
     }
-
     return () => {
       if (subscription?.unsubscribe) subscription.unsubscribe();
     };
@@ -630,7 +617,6 @@ function MainContent() {
           <p style={{ color: C.text?.muted || '#94A3B8', marginBlockEnd: '25px', lineHeight: '1.6' }}>
             {getText(t, 'approval.pending_desc', 'حسابك وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.')}
           </p>
-
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
               onClick={handleManualRefresh} 
@@ -676,7 +662,6 @@ function MainContent() {
               {getSuspensionReason()}
             </p>
           </div>
-
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
               onClick={handleManualRefresh} 
@@ -714,11 +699,9 @@ function MainContent() {
 
   if (appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) {
     const cachedSlug = typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
-
     if (!profile?.academy_id && cachedSlug) {
       localStorage.removeItem('current_academy_slug');
     }
-
     if (cachedSlug && profile?.academy_id) {
       if (refreshStatus) refreshStatus();
       return (
@@ -730,7 +713,6 @@ function MainContent() {
         </div>
       );
     }
-
     return (
       <CreateAcademy 
         onLogout={logout} 
@@ -784,7 +766,6 @@ function MainContent() {
             </ProtectedRoute>
           } 
         />
-
         <Route 
           path="/*" 
           element={
@@ -832,7 +813,6 @@ function MainContent() {
 export default function App() {
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const view = urlParams.get('view');
-
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
