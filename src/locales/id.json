@@ -616,6 +616,10 @@
     "title": "Notifikasi"
   },
   "public_url_error": "Kesalahan URL Publik",
+  "pwa": {
+    "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
+    "updateNow": "تحديث الآن"
+  },
   "qiraat": {
     "aldoori": "Ad-Duri dari Abu Amr",
     "hafs": "Hafs dari Asim",
@@ -886,6 +890,9 @@
     },
     "selectPlan": "Pilih Paket Ini",
     "selectRegionNotice": "Tentukan wilayah geografis Anda untuk mengaktifkan opsi pembayaran lokal:"
+  },
+  "system": {
+    "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"
   },
   "teacher": {
     "name": "Pengajar"

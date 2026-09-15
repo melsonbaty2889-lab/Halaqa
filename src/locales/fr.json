@@ -616,6 +616,10 @@
     "title": "Notifications"
   },
   "public_url_error": "Erreur d'URL publique",
+  "pwa": {
+    "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
+    "updateNow": "تحديث الآن"
+  },
   "qiraat": {
     "aldoori": "Al-Doori d'après Abu Amr",
     "hafs": "Hafs d'après Asim",
@@ -886,6 +890,9 @@
     },
     "selectPlan": "Choisir ce plan",
     "selectRegionNotice": "Sélectionnez votre zone géographique pour les options de paiement :"
+  },
+  "system": {
+    "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"
   },
   "teacher": {
     "name": "Enseignant"

@@ -616,6 +616,10 @@
     "title": "Bildirimler"
   },
   "public_url_error": "Genel URL hatası",
+  "pwa": {
+    "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
+    "updateNow": "تحديث الآن"
+  },
   "qiraat": {
     "aldoori": "Ebu Amr'dan Dûrî",
     "hafs": "Âsım'dan Hafs",
@@ -886,6 +890,9 @@
     },
     "selectPlan": "Bu Planı Seç",
     "selectRegionNotice": "Bölgenize uygun ödeme seçeneklerini etkinleştirmek için coğrafi bölge seçin:"
+  },
+  "system": {
+    "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"
   },
   "teacher": {
     "name": "Öğretmen"
