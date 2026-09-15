@@ -23,7 +23,10 @@ const extractAcademyName = (nameData, lang = 'ar') => {
       parsed[lang] ||
       parsed.ar ||
       parsed.en ||
-      parsed.title ||
+      parsed.tr ||
+      parsed.fr ||
+      parsed.ur ||
+      parsed.id ||
       Object.values(parsed).find((val) => typeof val === 'string' && val.trim() !== '') ||
       ''
     );
@@ -52,30 +55,22 @@ export const AcademyProvider = ({ children }) => {
   }, []);
 
   const updateAcademyState = useCallback((newAcademyData) => {
-    if (isMounted.current && newAcademyData) {
+    if (isMounted.current) {
       setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
     }
   }, []);
 
-  // استخراج الاسم الآمن ومنع تحوله لـ "بدون اسم"
+  // دالة مساعدة لاستخراج اسم الأكاديمية الحالية حسب اللغة النشطة
   const getAcademyName = useCallback(
     (targetAcademy = academy) => {
       if (!targetAcademy) return '';
-      const currentLang = i18n?.language || 'ar';
-      
-      const extracted = extractAcademyName(targetAcademy.name || targetAcademy.title, currentLang);
-      if (extracted) return extracted;
-
-      if (typeof targetAcademy.name === 'string' && targetAcademy.name.trim() !== '') {
-        return targetAcademy.name;
-      }
-
-      return 'أكاديمية عباد الرحمن'; // Fallback آمن ومباشر لمنع الاسم الفارغ
+      const currentLang = i18n.language || 'ar';
+      return extractAcademyName(targetAcademy.name || targetAcademy.title, currentLang);
     },
-    [academy, i18n?.language]
+    [academy, i18n.language]
   );
 
-  const fetchUserStatus = useCallback(async (currentUser, forceRefresh = false) => {
+  const fetchUserStatus = useCallback(async (currentUser) => {
     if (!currentUser) {
       if (isMounted.current) {
         setUser(null);
@@ -88,13 +83,13 @@ export const AcademyProvider = ({ children }) => {
       return;
     }
 
-    if (isFetchingRef.current && !forceRefresh) return;
+    if (isFetchingRef.current) return;
     isFetchingRef.current = true;
 
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب البروفايل
+      // 1. جلب بيانات البروفايل الرسمية
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
@@ -117,6 +112,7 @@ export const AcademyProvider = ({ children }) => {
         setUserRole(activeProfile.role || 'admin');
       }
 
+      // حسابات Super Admin
       if (activeProfile.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
@@ -126,6 +122,7 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
+      // حسابات غير مفعلة
       if (activeProfile.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
@@ -139,7 +136,7 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role || 'admin';
 
-      // 2. البحث عن الأكاديمية بواسطة profile.academy_id
+      // 2. البحث عبر profile.academy_id
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
@@ -164,7 +161,7 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
-      // 4. البحث في owner_id
+      // 4. البحث في الأكاديميات المملوكة owner_id
       if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
@@ -177,20 +174,9 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
-      // 5. جلب كافة الأكاديميات المتاحة كحل احتياطي
-      if (fetchedList.length === 0) {
-        const { data: fallbackAcademies } = await supabase
-          .from('academies')
-          .select('*')
-          .limit(1);
-
-        if (fallbackAcademies && fallbackAcademies.length > 0) {
-          fetchedList = fallbackAcademies;
-        }
-      }
-
       currentAcademy = fetchedList[0] || null;
 
+      // 5. تعيين الحالة النهائية
       if (isMounted.current) {
         setUserRole(detectedRole);
         setAcademiesList(fetchedList);
@@ -200,14 +186,16 @@ export const AcademyProvider = ({ children }) => {
           if (currentAcademy.slug) {
             localStorage.setItem('current_academy_slug', currentAcademy.slug);
           }
-          setAppState(currentAcademy.is_active === false ? 'SUSPENDED' : 'FULLY_ACTIVE');
+
+          if (currentAcademy.is_active === false) {
+            setAppState('SUSPENDED');
+          } else {
+            setAppState('FULLY_ACTIVE');
+          }
         } else {
-          // كائن افتراضي ذو بنية نصوص مباشرة لحماية واجهة المستخدم
           setAcademy({
             id: activeProfile.academy_id || 'default',
-            name: 'أكاديمية عباد الرحمن',
-            title: 'أكاديمية عباد الرحمن',
-            slug: 'ebad-elrahman',
+            name: { ar: 'الأكاديمية الافتراضية', en: 'Default Academy' },
             is_active: true
           });
           setAppState('FULLY_ACTIVE');
@@ -225,7 +213,7 @@ export const AcademyProvider = ({ children }) => {
   const refreshStatus = useCallback(async () => {
     try {
       const { data } = await supabase.auth.getUser();
-      await fetchUserStatus(data?.user || null, true);
+      await fetchUserStatus(data?.user || null);
     } catch (err) {
       console.error("🚨 خطأ أثناء تحديث الحالة:", err);
       if (isMounted.current) setAppState('FULLY_ACTIVE');
@@ -254,7 +242,7 @@ export const AcademyProvider = ({ children }) => {
       const res = supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'INITIAL_SESSION') return;
         if (isSubscribed) {
-          fetchUserStatus(session?.user || null, true);
+          fetchUserStatus(session?.user || null);
         }
       });
       authListener = res?.data?.subscription || res?.subscription || null;
@@ -264,7 +252,7 @@ export const AcademyProvider = ({ children }) => {
       if (isMounted.current) {
         setAppState((prev) => (prev === 'LOADING' ? 'FULLY_ACTIVE' : prev));
       }
-    }, 2500);
+    }, 3000);
 
     return () => {
       isSubscribed = false;
@@ -281,6 +269,7 @@ export const AcademyProvider = ({ children }) => {
     let channel = null;
     try {
       channel = supabase.channel(`profile_changes_${user.id}`);
+      
       if (channel && typeof channel.on === 'function') {
         channel
           .on(
@@ -308,15 +297,11 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [user?.id, refreshStatus]);
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
-    } finally {
       if (typeof window !== 'undefined') {
-        localStorage.clear();
         sessionStorage.clear();
+        localStorage.removeItem('current_academy_slug');
       }
       if (isMounted.current) {
         setAcademy(null);
@@ -326,11 +311,11 @@ export const AcademyProvider = ({ children }) => {
         setUserRole(null);
         setAppState('UNAUTHENTICATED');
       }
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
     }
-  }, []);
+  };
 
   return (
     <AcademyContext.Provider
