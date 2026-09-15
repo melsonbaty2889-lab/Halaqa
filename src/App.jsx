@@ -8,7 +8,7 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 import MainApp from '@/components/Main/MainApp';
-import LoginPage from '@/pages/LoginPage'; // تم إضافة استيراد صفحة الدخول
+import LoginPage from '@/components/Auth/LoginPage'; // تم إضافة استيراد صفحة الدخول
 
 export default function App() {
   const context = useAcademy() || {};
