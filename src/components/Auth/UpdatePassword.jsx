@@ -53,6 +53,15 @@ export default function UpdatePassword({ onSuccess }) {
     }
   }, [status, showToast]);
 
+  // دالة تحويل الخطأ إلى نص واضح بدلاً من إرجاع {}
+  const getErrorMessage = (err, fallbackKey, fallbackDefault) => {
+    if (!err) return t(fallbackKey, fallbackDefault);
+    if (typeof err === 'string') return err;
+    if (err.message && typeof err.message === 'string') return err.message;
+    if (err.error_description && typeof err.error_description === 'string') return err.error_description;
+    return t(fallbackKey, fallbackDefault);
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     setStatus({ type: null, msg: '' });
@@ -75,10 +84,8 @@ export default function UpdatePassword({ onSuccess }) {
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
-        setStatus({
-          type: 'error',
-          msg: error.message || t('auth.updatePasswordFailed', 'فشل تحديث كلمة المرور'),
-        });
+        const errorMsg = getErrorMessage(error, 'auth.updatePasswordFailed', 'فشل تحديث كلمة المرور');
+        setStatus({ type: 'error', msg: errorMsg });
       } else {
         const successMsg = t('auth.updateSuccessTitle', 'تم التحديث بنجاح!');
         setStatus({ type: 'success', msg: successMsg });
@@ -88,10 +95,8 @@ export default function UpdatePassword({ onSuccess }) {
         }, 2500);
       }
     } catch (err) {
-      setStatus({
-        type: 'error',
-        msg: err?.message || t('common.unexpectedError', 'حدث خطأ غير متوقع'),
-      });
+      const errorMsg = getErrorMessage(err, 'common.unexpectedError', 'حدث خطأ غير متوقع');
+      setStatus({ type: 'error', msg: errorMsg });
     } finally {
       setLoading(false);
     }
