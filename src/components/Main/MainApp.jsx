@@ -702,3 +702,4 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       />
     </div>
   );
+}
