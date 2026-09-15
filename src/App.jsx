@@ -9,40 +9,8 @@ import InlineUpgradeModal from '@/components/Modals/InlineUpgradeModal';
 import { useAcademy } from '@/context/AcademyContext';
 import MainApp from '@/components/Main/MainApp';
 
-// مكون لضمان توجيه المستخدم للأكاديمية الصحيحة أو شاشة تسجيل الدخول
-function RootRedirect() {
-  const { academy, user, appState } = useAcademy();
-
-  // 1. انتهاء التحميل
-  if (appState === 'LOADING') {
-    return (
-      <div className="min-h-screen bg-[#070C14] flex flex-col items-center justify-center font-['Cairo',sans-serif]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs text-slate-400">جاري جلب بيانات الأكاديمية...</p>
-      </div>
-    );
-  }
-
-  // 2. إذا كان المستخدم مسجل الدخول وتوفرت الأكاديمية، وجهه مباشرة للرابط المخصص لها
-  if (academy?.slug) {
-    return <Navigate to={`/${academy.slug}`} replace />;
-  }
-
-  // 3. إذا لم توجد أكاديمية، قم بعرض التطبيق الأساسي مع الحماية
-  return <MainApp />;
-}
-
 export default function App() {
-  const context = useAcademy();
-
-  // في حالة جاري تحميل البيانات الأولية للـ Context
-  if (!context || context.appState === 'LOADING') {
-    return (
-      <div className="min-h-screen bg-[#070C14] flex items-center justify-center font-['Cairo',sans-serif]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const context = useAcademy() || {};
 
   const { 
     isOffline = false, 
@@ -73,7 +41,7 @@ export default function App() {
         />
 
         <Routes>
-          {/* 1. مسار الأكاديمية المباشر المحمي بالـ Slug */}
+          {/* مسار الأكاديمية بالأصالة */}
           <Route
             path="/:slug/*"
             element={
@@ -83,17 +51,17 @@ export default function App() {
             }
           />
 
-          {/* 2. المسار الرئيسي / يحولك إلى الأكاديمية بالاسم المخصص */}
+          {/* المسار الرئيسي */}
           <Route
             path="/"
             element={
               <ProtectedRoute>
-                <RootRedirect />
+                <MainApp />
               </ProtectedRoute>
             }
           />
 
-          {/* 3. التعامل مع أي مسارات غير معروفة */}
+          {/* أي مسار آخر يتم توجيهه للرئيسية مباشرة دون شاشة سوداء */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
