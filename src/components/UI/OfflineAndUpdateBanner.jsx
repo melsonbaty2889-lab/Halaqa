@@ -20,7 +20,7 @@ export default function OfflineAndUpdateBanner({ isOffline, updateAvailable, onR
         >
           <WifiOff size={16} className="shrink-0 text-white animate-pulse" />
           <span className="font-bold">
-            {t('common.offlineNotice', 'أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)')}
+            {t('offlineNotice', 'أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)')}
           </span>
         </div>
       )}
@@ -35,7 +35,7 @@ export default function OfflineAndUpdateBanner({ isOffline, updateAvailable, onR
             <div className="flex items-center gap-2.5 min-w-0">
               <RefreshCw size={18} className="shrink-0 text-emerald-400 animate-spin" />
               <span className="text-xs sm:text-sm font-medium truncate">
-                {t('common.updateAvailable', 'يتوفر تحديث جديد للتطبيق')}
+                {t('updateAvailable', 'يتوفر تحديث جديد للتطبيق')}
               </span>
             </div>
             
@@ -44,7 +44,7 @@ export default function OfflineAndUpdateBanner({ isOffline, updateAvailable, onR
               onClick={onReload}
               className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold rounded-xl text-xs transition-all shrink-0 cursor-pointer shadow-md"
             >
-              {t('common.reloadNow', 'تحديث الآن')}
+              {t('reloadNow', 'تحديث الآن')}
             </button>
           </div>
         </div>
