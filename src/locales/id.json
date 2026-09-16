@@ -899,7 +899,9 @@
       "global": "Internasional / Seluruh Dunia"
     },
     "selectPlan": "Pilih Paket Ini",
-    "selectRegionNotice": "Tentukan wilayah geografis Anda untuk mengaktifkan opsi pembayaran lokal:"
+    "selectRegionNotice": "Tentukan wilayah geografis Anda untuk mengaktifkan opsi pembayaran lokal:",
+    "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
+    "successTitle": "تم استلام طلب الاشتراك بنجاح"
   },
   "system": {
     "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"
