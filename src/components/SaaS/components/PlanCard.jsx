@@ -13,13 +13,13 @@ export default function PlanCard({
 }) {
   const { t } = useTranslation();
 
-  // جلب القيم من ثيم الألوان الموحد مع وجود قيم افتراضية آمنة
-  const cardBg = colors?.dark?.card || '#0F172A';
-  const borderColor = colors?.dark?.cardBorder || colors?.dark?.border || '#1E293B';
-  const primaryAccent = colors?.emerald?.light || colors?.accent?.amber || '#10B981';
-  const textPrimary = colors?.dark?.text || colors?.text?.title || '#F8FAFC';
-  const textMuted = colors?.dark?.textMuted || colors?.text?.muted || '#94A3B8';
-  const textSubtle = colors?.dark?.textSubtle || colors?.text?.subtle || '#64748B';
+  // الاعتماد المباشر على شجرة ألوان النظام الموحد
+  const cardBg = colors?.dark?.card;
+  const borderColor = colors?.dark?.cardBorder;
+  const primaryAccent = colors?.emerald?.light;
+  const textPrimary = colors?.dark?.text;
+  const textMuted = colors?.dark?.textMuted;
+  const textSubtle = colors?.dark?.textSubtle;
 
   return (
     <div 
@@ -35,8 +35,8 @@ export default function PlanCard({
     >
       {plan.badge && (
         <span 
-          style={{ backgroundColor: plan.badgeBg || primaryAccent }}
-          className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-extrabold text-white shadow-lg"
+          style={{ backgroundColor: plan.badgeBg || primaryAccent, color: colors?.dark?.bg }}
+          className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-extrabold shadow-lg"
         >
           {plan.badge}
         </span>
@@ -74,7 +74,7 @@ export default function PlanCard({
         type="button"
         style={{
           backgroundColor: isSelected ? primaryAccent : borderColor,
-          color: isSelected ? '#FFFFFF' : textMuted
+          color: isSelected ? colors?.dark?.bg : textMuted
         }}
         className="w-full py-3 min-h-[44px] rounded-xl font-bold text-xs transition-all mt-2 hover:opacity-90"
       >
