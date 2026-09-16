@@ -36,7 +36,8 @@
     --border-input: #1B2738;
     --border-hover: #2E3E56;
     
-    /* 5. الأخطاء والحالات */
+    /* 5. الظلال والحالات */
+    --shadow-main: 0 20px 50px rgba(0, 0, 0, 0.4);
     --error: #EF4444;
   }
 
@@ -50,13 +51,42 @@
     color: var(--text-main);
     font-family: 'Cairo', sans-serif;
     direction: rtl;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ... بقية إعدادات العناصر العامة ... */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* تخصيص شريط التمرير الموحد */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
 }
 
+/* 🌟 مكونات إعادة الاستخدام العالمية (Global Reusable Components) */
 @layer components {
-  /* ✏️ حقول الإدخال باستخدام المتغيرات بدلاً من ألوان Hex صريحة */
+  .card-surface {
+    background-color: var(--surface-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-card);
+    border-radius: 1.25rem;
+    padding: 1.25rem 1rem;
+    box-shadow: var(--shadow-main);
+  }
+
   .app-input {
     width: 100%;
     height: 2.375rem;
@@ -69,10 +99,6 @@
     transition: all 0.2s ease-in-out;
   }
 
-  .app-input::placeholder {
-    color: var(--text-muted);
-  }
-
   .app-input:hover {
     border-color: var(--border-hover);
   }
@@ -83,7 +109,6 @@
     box-shadow: 0 0 0 3px var(--primary-glow);
   }
 
-  /* 🔘 الأزرار الرئيسية باستخدام التدرج والمتغيرات */
   .btn-primary {
     width: 100%;
     background: linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%);
@@ -100,5 +125,10 @@
     border: none;
     cursor: pointer;
     box-shadow: 0 4px 14px var(--primary-glow);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 6px 20px var(--primary-glow);
+    transform: translateY(-1px);
   }
 }
