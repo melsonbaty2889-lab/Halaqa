@@ -348,7 +348,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       fetchedAcademyIdRef.current = targetAcademyId;
     } catch (error) {
       console.error("Error fetching sub-resources:", error);
-    } fontally {
+    } finally {
       isFetchingRef.current = false;
       setLoadingData(false);
     }
