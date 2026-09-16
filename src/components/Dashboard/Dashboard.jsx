@@ -1,3 +1,4 @@
+// src/components/Dashboard/Dashboard.jsx
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -170,7 +171,7 @@ export default function Dashboard({
   if (loading) {
     return (
       <div className="p-4 md:p-6 space-y-6 flex flex-col items-center justify-center min-h-[400px] bg-dark-bg text-appText-sub">
-        <Loader2 className="animate-spin text-amber-500 mb-2" size={36} />
+        <Loader2 className="animate-spin text-primary mb-2" size={36} />
         <p className="text-sm font-semibold">
           {t('common.loading', 'جاري تحميل لوحة التحكم...')}
         </p>
@@ -182,7 +183,7 @@ export default function Dashboard({
     return (
       <Suspense fallback={
         <div className="p-8 text-center font-bold flex items-center justify-center gap-2 text-appText-sub">
-          <Loader2 className="animate-spin text-amber-500" size={20} />
+          <Loader2 className="animate-spin text-primary" size={20} />
           <span>{t('dashboard.loading_admin', 'جاري تحميل لوحة التحكم العامة...')}</span>
         </div>
       }>
@@ -203,7 +204,7 @@ export default function Dashboard({
       
       {/* 🔴 تنبيه وضع المسؤول العام Super Admin */}
       {isSuperAdmin && selectedAdminAcademy && (
-        <div className="flex items-center justify-between p-3.5 rounded-xl border bg-amber-500/10 border-amber-500/20 text-amber-500">
+        <div className="flex items-center justify-between p-3.5 rounded-xl border bg-primary/10 border-primary/30 text-primary">
           <span className="text-xs font-bold flex items-center gap-2">
             <ShieldCheck size={18} />
             <span>{t('dashboard.viewing_academy', 'تتصفح الآن أكاديمية:')} {displayName}</span>
@@ -222,10 +223,10 @@ export default function Dashboard({
       {/* 🟢 الترحيب وتزامن البيانات */}
       <header className="card-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2 m-0 text-white">
+          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2 m-0 text-appText-main">
             <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
-            <span className="text-amber-500">{displayName}</span>
-            <Sparkles size={20} className="animate-pulse text-amber-500" />
+            <span className="text-primary">{displayName}</span>
+            <Sparkles size={20} className="animate-pulse text-primary" />
           </h1>
           <p className="text-xs md:text-sm mt-1 m-0 text-appText-sub">
             {t('dashboard.subtitle', 'منصة إدارة الحلقات الحية والرصد الأكاديمي الموحد')}
@@ -255,7 +256,7 @@ export default function Dashboard({
           aria-label={t('dashboard.record_attendance', 'تسجيل الحضور')}
           className="btn-secondary flex items-center justify-center gap-2 min-h-[48px]"
         >
-          <ClipboardCheck size={18} className="text-sky-400" />
+          <ClipboardCheck size={18} className="text-brandEmerald" />
           <span>{t('dashboard.record_attendance', 'تسجيل الحضور')}</span>
         </button>
 
@@ -264,7 +265,7 @@ export default function Dashboard({
           aria-label={t('dashboard.evaluations', 'توثيق الإنجاز والتسميع')}
           className="btn-secondary flex items-center justify-center gap-2 min-h-[48px]"
         >
-          <BookOpen size={18} className="text-amber-500" />
+          <BookOpen size={18} className="text-primary" />
           <span>{t('dashboard.evaluations', 'توثيق الإنجاز والتسميع')}</span>
         </button>
       </section>
@@ -278,15 +279,15 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.total_students', 'إجمالي الطلاب')}
-          className="bg-dark-surface border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-amber-500/40 transition-all shadow-md group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-primary/40 transition-all shadow-main group relative overflow-hidden"
         >
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
             <span className="truncate">{t('dashboard.total_students', 'إجمالي الطلاب')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg">
-              <GraduationCap className="text-sky-400" size={18} />
+            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+              <GraduationCap className="text-brandEmerald" size={18} />
             </div>
           </div>
-          <div className="text-2xl md:text-3xl font-black text-white">
+          <div className="text-2xl md:text-3xl font-black text-appText-main">
             {safeText(stats?.studentsCount, '0')}
           </div>
           <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-brandEmerald">
@@ -295,17 +296,17 @@ export default function Dashboard({
         </div>
 
         {/* الاستمرارية والتتابع */}
-        <div className="bg-dark-surface border border-appBorder-card p-4 rounded-xl shadow-md group relative overflow-hidden">
+        <div className="bg-dark-card border border-appBorder-card p-4 rounded-xl shadow-main group relative overflow-hidden">
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
             <span>{t('dashboard.consistency', 'مؤشر الاستمرارية')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg">
-              <Flame className="text-orange-500" size={18} />
+            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+              <Flame className="text-primary" size={18} />
             </div>
           </div>
-          <div className="text-2xl md:text-3xl font-black text-orange-500">
+          <div className="text-2xl md:text-3xl font-black text-primary">
             {safeText(stats?.avgStreak, '0')} <span className="text-xs font-normal text-appText-sub">{t('dashboard.days', 'يوم')}</span>
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-orange-400">
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-primary">
             <span>🔥</span> {t('dashboard.active_streak', 'التتابع المستمر')}
           </div>
         </div>
@@ -316,18 +317,18 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.attendance_rate', 'نسبة الحضور')}
-          className="bg-dark-surface border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-sky-500/40 transition-all shadow-md group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-brandEmerald/40 transition-all shadow-main group relative overflow-hidden"
         >
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
             <span>{t('dashboard.attendance_rate', 'نسبة الحضور')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg">
-              <TrendingUp className="text-sky-400" size={18} />
+            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+              <TrendingUp className="text-brandEmerald" size={18} />
             </div>
           </div>
-          <div className="text-2xl md:text-3xl font-black text-sky-400">
+          <div className="text-2xl md:text-3xl font-black text-brandEmerald">
             {safeText(stats?.attendanceRate, '0%')}
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-sky-400">
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-brandEmerald">
             <span>📈</span> {t('dashboard.engagement_rate', 'معدل المشاركة')}
           </div>
         </div>
@@ -338,18 +339,18 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.evaluations_sessions', 'جلسات التسميع')}
-          className="bg-dark-surface border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-amber-500/40 transition-all shadow-md group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-primary/40 transition-all shadow-main group relative overflow-hidden"
         >
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
             <span>{t('dashboard.evaluations_sessions', 'جلسات التسميع')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg">
-              <BookOpen className="text-amber-500" size={18} />
+            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+              <BookOpen className="text-primary" size={18} />
             </div>
           </div>
-          <div className="text-2xl md:text-3xl font-black text-amber-500">
+          <div className="text-2xl md:text-3xl font-black text-primary">
             {safeText(stats?.totalSessions, '0')} <span className="text-xs font-normal text-appText-sub">{t('dashboard.sessions', 'جلسة')}</span>
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-amber-500">
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-primary">
             <span>✅</span> {t('dashboard.completed_today', 'المكتملة اليوم')}
           </div>
         </div>
@@ -360,18 +361,18 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.overdue_status', 'حالة المتأخرات')}
-          className="bg-dark-surface border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-red-500/40 transition-all shadow-md group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-appError/40 transition-all shadow-main group relative overflow-hidden"
         >
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
             <span>{t('dashboard.overdue_status', 'المتأخرات')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg">
-              <AlertTriangle className={(stats?.overdueCount || 0) > 0 ? 'text-red-500' : 'text-brandEmerald'} size={18} />
+            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+              <AlertTriangle className={(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'} size={18} />
             </div>
           </div>
-          <div className={`text-2xl md:text-3xl font-black ${(stats?.overdueCount || 0) > 0 ? 'text-red-500' : 'text-brandEmerald'}`}>
+          <div className={`text-2xl md:text-3xl font-black ${(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'}`}>
             {safeText(stats?.overdueCount, '0')}
           </div>
-          <div className={`text-[11px] mt-1 font-semibold flex items-center gap-1 ${(stats?.overdueCount || 0) > 0 ? 'text-red-500' : 'text-brandEmerald'}`}>
+          <div className={`text-[11px] mt-1 font-semibold flex items-center gap-1 ${(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'}`}>
             <span>⚠️</span> {t('dashboard.pending_tasks', 'طلبات وملاحظات')}
           </div>
         </div>
@@ -381,11 +382,11 @@ export default function Dashboard({
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
         <section className="card-surface">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-base font-black flex items-center gap-2 m-0 text-white">
-              <Landmark className="text-amber-500" size={20} />
+            <h2 className="text-base font-black flex items-center gap-2 m-0 text-appText-main">
+              <Landmark className="text-primary" size={20} />
               <span>{t('dashboard.active_halaqas_title', 'الحلقات النشطة وحالة التسميع اللحظية')}</span>
             </h2>
-            <span className="text-xs px-2.5 py-1 rounded-full border border-appBorder-input bg-dark-bg text-appText-sub font-bold">
+            <span className="text-xs px-2.5 py-1 rounded-full border border-appBorder-input bg-dark-input text-appText-sub font-bold">
               {stats.activeHalaqasData.length} {t('dashboard.halaqa_unit', 'حلقة')}
             </span>
           </div>
@@ -396,10 +397,10 @@ export default function Dashboard({
               const isFinished = halaqa.status === 'finished';
               
               const statusClass = isLive 
-                ? 'bg-red-500/10 border-red-500/30 text-red-500' 
+                ? 'bg-appError/10 border-appError/30 text-appError' 
                 : isFinished 
                 ? 'bg-brandEmerald-bg border-brandEmerald-border text-brandEmerald' 
-                : 'bg-sky-500/10 border-sky-500/30 text-sky-400';
+                : 'bg-primary/10 border-primary/30 text-primary';
 
               const statusLabel = isLive 
                 ? t('dashboard.status_live', 'جارية الآن') 
@@ -416,11 +417,11 @@ export default function Dashboard({
               return (
                 <div 
                   key={halaqa.id || idx} 
-                  className="p-4 rounded-xl border border-appBorder-input bg-dark-bg flex flex-col justify-between"
+                  className="p-4 rounded-xl border border-appBorder-input bg-dark-input flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-2">
-                      <h3 className="m-0 text-sm font-bold leading-snug text-white">
+                      <h3 className="m-0 text-sm font-bold leading-snug text-appText-main">
                         {halaqaName}
                       </h3>
                       <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold inline-flex items-center gap-1 shrink-0 ${statusClass}`}>
@@ -443,14 +444,14 @@ export default function Dashboard({
                   </div>
 
                   <div className="pt-2 border-t border-appBorder-input flex justify-between items-center">
-                    <span className="text-[10px] px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-500 font-bold inline-flex items-center gap-1">
+                    <span className="text-[10px] px-2 py-0.5 rounded border border-primary/30 bg-primary/10 text-primary font-bold inline-flex items-center gap-1">
                       <Award size={11} />
                       <span>{teachingType}</span>
                     </span>
                     <button 
                       onClick={() => setActiveTab && setActiveTab('halaqas')} 
                       aria-label={t('dashboard.view_halaqa_details', 'تفاصيل الحلقة')}
-                      className="text-[11px] font-bold text-amber-500 bg-transparent border-0 cursor-pointer p-0 hover:underline min-h-[44px] flex items-center"
+                      className="text-[11px] font-bold text-primary bg-transparent border-0 cursor-pointer p-0 hover:underline min-h-[44px] flex items-center"
                     >
                       {t('dashboard.view_details', 'تفاصيل الحلقة ←')}
                     </button>
