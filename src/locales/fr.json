@@ -864,8 +864,14 @@
     "backToDashboard": "Retour au tableau de bord",
     "currencies": {
       "egp": "EGP",
+      "egpDesc": "المحافظ والوسائل المحلية",
+      "egpLabel": "الجنيه المصري",
       "sar": "SAR",
-      "usd": "USD"
+      "sarDesc": "مدى وسداد والبطاقات",
+      "sarLabel": "الريال السعودي",
+      "usd": "USD",
+      "usdDesc": "جميع البطاقات والدول",
+      "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Votre licence actuellement active",
     "errors": {
@@ -898,6 +904,8 @@
       "gcc": "Pays du Golfe (CCG)",
       "global": "International / Reste du monde"
     },
+    "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
+    "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Choisir ce plan",
     "selectRegionNotice": "Sélectionnez votre zone géographique pour les options de paiement :",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",

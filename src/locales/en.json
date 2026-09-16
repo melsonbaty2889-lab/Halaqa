@@ -864,8 +864,14 @@
     "backToDashboard": "Return to Dashboard & Analytics",
     "currencies": {
       "egp": "EGP",
+      "egpDesc": "المحافظ والوسائل المحلية",
+      "egpLabel": "الجنيه المصري",
       "sar": "SAR",
-      "usd": "USD"
+      "sarDesc": "مدى وسداد والبطاقات",
+      "sarLabel": "الريال السعودي",
+      "usd": "USD",
+      "usdDesc": "جميع البطاقات والدول",
+      "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Your Currently Active License",
     "errors": {
@@ -898,6 +904,8 @@
       "gcc": "GCC Countries",
       "global": "International / Rest of World"
     },
+    "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
+    "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Select This Plan",
     "selectRegionNotice": "Select region to activate localized payment options:",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",

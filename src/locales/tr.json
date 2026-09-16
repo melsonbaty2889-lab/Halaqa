@@ -864,8 +864,14 @@
     "backToDashboard": "Kontrol Paneline Dön",
     "currencies": {
       "egp": "EGP",
+      "egpDesc": "المحافظ والوسائل المحلية",
+      "egpLabel": "الجنيه المصري",
       "sar": "SAR",
-      "usd": "USD"
+      "sarDesc": "مدى وسداد والبطاقات",
+      "sarLabel": "الريال السعودي",
+      "usd": "USD",
+      "usdDesc": "جميع البطاقات والدول",
+      "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Şu An Aktif Lisansınız",
     "errors": {
@@ -898,6 +904,8 @@
       "gcc": "Körfez İşbirliği Konseyi Ülkeleri",
       "global": "Uluslararası / Dünyanın Geri Kalanı"
     },
+    "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
+    "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Bu Planı Seç",
     "selectRegionNotice": "Bölgenize uygun ödeme seçeneklerini etkinleştirmek için coğrafi bölge seçin:",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
