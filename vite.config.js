@@ -75,6 +75,8 @@ export default defineConfig({
     })
   ],
   build: {
+    // إلغاء تحذير الـ Preload الناتج عن تحميل المكونات الكاسلة (Lazy components)
+    modulePreload: false,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
