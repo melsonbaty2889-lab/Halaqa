@@ -20,13 +20,18 @@ export default {
           DEFAULT: 'var(--primary)',       // #E07A00
           hover: 'var(--primary-hover)',   // #C66B00
           glow: 'var(--primary-glow)',     // rgba(224, 122, 0, 0.35)
+          btnStart: 'var(--primary-btn-start)',
+          btnEnd: 'var(--primary-btn-end)',
         },
-        // 3. الهوية الزمردية (للنجاح والإنجاز والشارات)
+        // 3. الهوية الزمردية (Emerald)
         brandEmerald: {
           DEFAULT: 'var(--emerald-text)',  // #10B981
           bg: 'var(--emerald-bg)',        // #09332C
           border: 'var(--emerald-border)',// #0D5C4D
+          dark: 'var(--emerald-dark)',    // #059669
+          light: 'var(--emerald-light)',   // #34D399
           glow: 'var(--emerald-radial-glow)',
+          logoGlow: 'var(--emerald-logo-glow)',
         },
         // 4. ألوان النصوص الموحدة
         appText: {
@@ -40,6 +45,8 @@ export default {
           input: 'var(--border-input)',   // #1B2738
           hover: 'var(--border-hover)',   // #2E3E56
         },
+        // 6. حالة الخطأ والحالات الخاصة
+        appError: 'var(--error)',
       },
     },
   },
