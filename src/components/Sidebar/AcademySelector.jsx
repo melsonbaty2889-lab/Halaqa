@@ -40,6 +40,8 @@ export default function AcademySelector({
   };
 
   const hasMultipleAcademies = academiesList.length > 1;
+  // إمكانية فتح القائمة المنسدلة تتفاعل عند وجود أكثر من أكاديمية أو عند إمكانية إنشاء أكاديمية جديدة
+  const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
   // حساب حالة الاشتراك تلقائياً
   const getSubStatus = () => {
@@ -136,11 +138,11 @@ export default function AcademySelector({
     <div ref={dropdownRef} className="relative w-full flex items-center gap-2" dir={isRtl ? 'rtl' : 'ltr'}>
       <button
         type="button"
-        disabled={!hasMultipleAcademies}
-        onClick={() => hasMultipleAcademies && setDropdownOpen(!dropdownOpen)}
+        disabled={!canOpenDropdown}
+        onClick={() => canOpenDropdown && setDropdownOpen(!dropdownOpen)}
         aria-label={activeName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
         className={`w-full flex items-center justify-between p-3 min-h-[62px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
-          hasMultipleAcademies ? 'cursor-pointer' : 'cursor-default'
+          canOpenDropdown ? 'cursor-pointer' : 'cursor-default'
         }`}
         style={{
           backgroundColor: C.dark?.card,
@@ -192,7 +194,7 @@ export default function AcademySelector({
           </div>
         </div>
 
-        {hasMultipleAcademies && (
+        {canOpenDropdown && (
           <ChevronDown
             size={18}
             className={`shrink-0 ms-2 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
@@ -219,7 +221,7 @@ export default function AcademySelector({
       )}
 
       {/* القائمة المنسدلة */}
-      {dropdownOpen && hasMultipleAcademies && (
+      {dropdownOpen && canOpenDropdown && (
         <div 
           className="absolute top-full inset-x-0 mt-2 p-1.5 rounded-xl backdrop-blur-2xl z-50 overflow-hidden"
           style={{
@@ -230,58 +232,60 @@ export default function AcademySelector({
             boxShadow: C.shadows?.dropdown
           }}
         >
-          <div className="max-h-56 overflow-y-auto space-y-1 custom-scrollbar">
-            {academiesList.map((acc) => {
-              const isSelected = acc.id === currentAcademyId;
-              const accName = resolveText(acc.name);
-              const accLogo = acc.logo_url;
+          {hasMultipleAcademies && (
+            <div className="max-h-56 overflow-y-auto space-y-1 custom-scrollbar">
+              {academiesList.map((acc) => {
+                const isSelected = acc.id === currentAcademyId;
+                const accName = resolveText(acc.name);
+                const accLogo = acc.logo_url;
 
-              return (
-                <button
-                  key={acc.id}
-                  type="button"
-                  onClick={() => {
-                    if (onSwitchAcademy) onSwitchAcademy(acc.id);
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group"
-                  style={{
-                    backgroundColor: isSelected ? C.badge?.activeBg : 'transparent',
-                    color: isSelected ? C.emerald?.light : C.text?.body
-                  }}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div 
-                      className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center overflow-hidden p-0.5"
-                      style={{
-                        backgroundColor: C.dark?.bg,
-                        borderColor: C.dark?.cardBorder,
-                        borderWidth: '1px',
-                        borderStyle: 'solid'
-                      }}
-                    >
-                      {accLogo ? (
-                        <img src={accLogo} alt={accName} className="w-full h-full object-contain rounded" />
-                      ) : (
-                        <Building2 size={14} style={{ color: C.emerald?.light }} />
-                      )}
+                return (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    onClick={() => {
+                      if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                      setDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group"
+                    style={{
+                      backgroundColor: isSelected ? C.badge?.activeBg : 'transparent',
+                      color: isSelected ? C.emerald?.light : C.text?.body
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div 
+                        className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center overflow-hidden p-0.5"
+                        style={{
+                          backgroundColor: C.dark?.bg,
+                          borderColor: C.dark?.cardBorder,
+                          borderWidth: '1px',
+                          borderStyle: 'solid'
+                        }}
+                      >
+                        {accLogo ? (
+                          <img src={accLogo} alt={accName} className="w-full h-full object-contain rounded" />
+                        ) : (
+                          <Building2 size={14} style={{ color: C.emerald?.light }} />
+                        )}
+                      </div>
+
+                      <span className="truncate text-start font-medium">
+                        {accName}
+                      </span>
                     </div>
 
-                    <span className="truncate text-start font-medium">
-                      {accName}
-                    </span>
-                  </div>
-
-                  {isSelected && (
-                    <Check size={14} className="shrink-0 ms-1" style={{ color: C.emerald?.light }} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                    {isSelected && (
+                      <Check size={14} className="shrink-0 ms-1" style={{ color: C.emerald?.light }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {onOpenCreateAcademy && (
-            <div className="pt-1 mt-1 border-t" style={{ borderColor: C.dark?.cardBorder }}>
+            <div className={hasMultipleAcademies ? 'pt-1 mt-1 border-t' : ''} style={{ borderColor: C.dark?.cardBorder }}>
               <button
                 type="button"
                 onClick={() => {
