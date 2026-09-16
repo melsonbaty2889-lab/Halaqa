@@ -46,6 +46,7 @@
     "badge": "Badge",
     "copied": "Copié",
     "copyLink": "Copier le lien",
+    "defaultAcademyName": "أكاديمية مجاورة",
     "directLink": "Lien direct",
     "emptyDesc": "Aucun enregistrement de parrainage pour l'instant.",
     "emptyTitle": "Aucun parrainage",
@@ -73,7 +74,8 @@
     },
     "totalDiscountEarned": "Total des réductions gagnées",
     "totalReferrals": "Total des parrainages",
-    "whatsapp": "Partager via WhatsApp"
+    "whatsapp": "Partager via WhatsApp",
+    "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
   "app": {
     "name": "Smart Halaqa",

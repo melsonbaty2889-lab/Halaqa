@@ -46,6 +46,7 @@
     "badge": "Rozet",
     "copied": "Kopyalandı",
     "copyLink": "Bağlantıyı Kopyala",
+    "defaultAcademyName": "أكاديمية مجاورة",
     "directLink": "Doğrudan Bağlantı",
     "emptyDesc": "Henüz davet kaydı yok.",
     "emptyTitle": "Davet Yok",
@@ -73,7 +74,8 @@
     },
     "totalDiscountEarned": "Kazanılan Toplam İndirim",
     "totalReferrals": "Toplam Davet",
-    "whatsapp": "WhatsApp ile Paylaş"
+    "whatsapp": "WhatsApp ile Paylaş",
+    "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
   "app": {
     "name": "Smart Halaqa",

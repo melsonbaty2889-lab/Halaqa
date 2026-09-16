@@ -46,6 +46,7 @@
     "badge": "Badge",
     "copied": "Copied",
     "copyLink": "Copy Link",
+    "defaultAcademyName": "أكاديمية مجاورة",
     "directLink": "Direct Link",
     "emptyDesc": "No referral records yet.",
     "emptyTitle": "No Referrals",
@@ -73,7 +74,8 @@
     },
     "totalDiscountEarned": "Total Discount Earned",
     "totalReferrals": "Total Referrals",
-    "whatsapp": "Share via WhatsApp"
+    "whatsapp": "Share via WhatsApp",
+    "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
   "app": {
     "name": "Smart Halaqa",

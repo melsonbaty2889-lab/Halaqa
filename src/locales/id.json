@@ -46,6 +46,7 @@
     "badge": "Lencana",
     "copied": "Tersalin",
     "copyLink": "Salin Tautan",
+    "defaultAcademyName": "أكاديمية مجاورة",
     "directLink": "Tautan Langsung",
     "emptyDesc": "Belum ada catatan rujukan.",
     "emptyTitle": "Belum Ada Rujukan",
@@ -73,7 +74,8 @@
     },
     "totalDiscountEarned": "Total Diskon Diperoleh",
     "totalReferrals": "Total Rujukan",
-    "whatsapp": "Bagikan via WhatsApp"
+    "whatsapp": "Bagikan via WhatsApp",
+    "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
   "app": {
     "name": "Smart Halaqa",

@@ -33,6 +33,7 @@
     "badge": "badge",
     "copied": "copied",
     "copyLink": "copyLink",
+    "defaultAcademyName": "أكاديمية مجاورة",
     "directLink": "directLink",
     "emptyDesc": "emptyDesc",
     "emptyTitle": "emptyTitle",
@@ -60,7 +61,8 @@
     },
     "totalDiscountEarned": "totalDiscountEarned",
     "totalReferrals": "totalReferrals",
-    "whatsapp": "whatsapp"
+    "whatsapp": "whatsapp",
+    "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
   "archive": "أرشفة",
   "assignTeacher": "تعيين المعلم المسؤول",
