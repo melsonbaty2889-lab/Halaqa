@@ -18,10 +18,10 @@ import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
 const OriginalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-    <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-emerald-950/40 to-slate-950" />
-    <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[140px]" />
-    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[130px]" />
-    <div className="absolute -bottom-[20%] right-[15%] w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[160px]" />
+    <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg" />
+    <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-brandEmerald/10 rounded-full blur-[140px]" />
+    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-brandEmerald/10 rounded-full blur-[130px]" />
+    <div className="absolute -bottom-[20%] right-[15%] w-[600px] h-[600px] bg-brandEmerald/5 rounded-full blur-[160px]" />
     <div 
       className="absolute inset-0 opacity-[0.15]" 
       style={{
@@ -76,7 +76,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
           <button
             type="button"
             onClick={handleSupportContact}
-            className="w-full border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors bg-brandEmerald-dark text-white hover:bg-brandEmerald"
+            className="w-full border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors bg-brandEmerald text-white hover:bg-brandEmerald-hover"
           >
             <MessageCircle size={18} />
             {t('blocked_view.whatsapp_button', 'التواصل مع الإدارة عبر الواتساب')}
@@ -130,16 +130,15 @@ const StudentDocuments = safeLazy(() => import('@/components/Student/StudentDocu
 const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }) => {
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState('communications');
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-cairo">
       <div className="flex gap-2 p-1 rounded-xl border border-appBorder-card w-fit backdrop-blur-md bg-dark-card/60">
         <button
           type="button"
           onClick={() => setActiveSubTab('communications')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
-              ? 'bg-brandEmerald-dark text-white shadow-lg' 
+              ? 'bg-brandEmerald text-white shadow-lg' 
               : 'text-appText-sub hover:text-appText-main'
           }`}
         >
@@ -150,7 +149,7 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           onClick={() => setActiveSubTab('reports')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
-              ? 'bg-brandEmerald-dark text-white shadow-lg' 
+              ? 'bg-brandEmerald text-white shadow-lg' 
               : 'text-appText-sub hover:text-appText-main'
           }`}
         >
@@ -180,12 +179,12 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-6 bg-dark-card rounded-2xl border border-appError/40 text-appError my-5 dir-rtl">
+        <div className="p-6 bg-dark-card rounded-2xl border border-appError/40 text-appError my-5 font-cairo">
           <div className="flex items-center gap-2.5 mb-3">
             <AlertTriangle size={22} />
             <h3 className="m-0 text-appError text-base font-bold">حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre className="bg-dark-bg p-3 rounded-xl text-appText-sub text-xs overflow-x-auto dir-ltr font-mono">
+          <pre className="bg-dark-bg p-3 rounded-xl text-appText-sub text-xs overflow-x-auto font-mono">
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -209,12 +208,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { t, i18n } = useTranslation(); 
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
   const currentLang = i18n?.language || 'ar';
-
   const { isOffline, updateAvailable, handleReload } = useNetworkAndUpdateStatus();
 
-  // الاعتماد المباشر على البيانات الجاهزة من Context المنصة
   const { academy, academiesList, setAcademy } = useAcademy();
-
   const isMobile = useIsMobile(1024);
 
   const getDefaultTabForRole = useCallback((role) => {
@@ -266,7 +262,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  // المراجع المطلوبة لمنع تكرار الطلبات وحمايتها أثناء التحميل
   const fetchedAcademyIdRef = useRef(null);
   const isFetchingRef = useRef(false);
 
@@ -317,22 +312,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   }, []);
 
-  // جلب البيانات الفرعية مع حماية Strict Mode وقفل الطلبات القائمة
   const fetchSubResources = useCallback(async (targetAcademyId, forceRefresh = false) => {
     if (!targetAcademyId) {
       setLoadingData(false);
       return;
     }
-
     if (!forceRefresh) {
       if (fetchedAcademyIdRef.current === targetAcademyId || isFetchingRef.current) {
         return;
       }
     }
-
     isFetchingRef.current = true;
     setLoadingData(true);
-
     try {
       const { data: rels } = await supabase
         .from('academy_teachers')
@@ -354,11 +345,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setCompletedExamsCount(examsRes.status === 'fulfilled' ? examsRes.value.count ?? 0 : 0);
       setTeachers(teachersRes.status === 'fulfilled' ? teachersRes.value.data || [] : []);
       setHalaqas(halaqasRes.status === 'fulfilled' ? halaqasRes.value.data || [] : []);
-
       fetchedAcademyIdRef.current = targetAcademyId;
     } catch (error) {
       console.error("Error fetching sub-resources:", error);
-    } finally {
+    } fontally {
       isFetchingRef.current = false;
       setLoadingData(false);
     }
@@ -370,7 +360,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       if (academy.timezone) setTimezone(academy.timezone);
       if (academy.country_code) setCountryCode(academy.country_code);
     }
-
     if (academyId) {
       fetchSubResources(academyId);
     } else {
@@ -428,7 +417,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     const rawAcademyName = academy?.name;
     const resolvedName = formatLocalizedText(rawAcademyName, currentLang) || t('common.academy', 'الأكاديمية');
     const globalAdminLabel = t('dashboard.global_admin', 'إدارة المنصة العامة');
-
     return {
       academyName: isPlatformAdmin 
         ? globalAdminLabel 
@@ -457,36 +445,29 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     switch (activeTab) {
       case 'interactive_quran':
         return <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'gamification':
       case 'gamification-streaks':
       case 'achievements':
       case 'rewards':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="leaderboard" />;
-
       case 'streaks':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="streaks" />;
-
       case 'badges':
         return <GamificationStreaks academyId={academyId} isRtl={isRtl} initialTab="badges" />;
-
       case 'dashboard':
         return isAdmin 
           ? <Dashboard session={session} setActiveTab={handleTabChange} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />
           : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'subscriptions':
       case 'upgrade':
         return isAdmin 
           ? <SubscriptionPage session={session} academyId={academyId} onBack={() => handleTabChange('dashboard')} />
           : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'payments':
       case 'finance':
         return isAdmin 
           ? <Payments students={students} academyId={academyId} currency={currency} />
           : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'settings':
         return isAdmin ? (
           <Settings 
@@ -499,11 +480,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             onTimezoneChange={handleTimezoneUpdate}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'realtime-audit':
       case 'audit_logs':
         return isAdmin ? <RealtimeAudit session={session} userRole={userRole} /> : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'teachers':
         return isAdmin ? (
           <Teachers 
@@ -516,7 +495,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isRtl={isRtl}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'halaqas':
       case 'active-halaqas':
       case 'classes':
@@ -535,13 +513,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             }}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'attendance':
         return isTeacher ? <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} /> : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'exams':
         return isTeacher ? <Exams students={students} academyId={academyId} /> : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'curriculum':
       case 'curricula':
       case 'curricula-islamic-studies':
@@ -554,7 +529,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isRtl={isRtl} 
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'students':
       case 'student-profile':
       case 'students-management':
@@ -567,7 +541,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             onDeleteStudent={handleDeleteStudent}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'parents':
       case 'parents-guardians':
       case 'parents-management':
@@ -578,7 +551,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isRtl={isRtl} 
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-
       case 'documents':
       case 'student-documents':
       case 'documents-files':
@@ -590,16 +562,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isRtl={isRtl} 
           />
         );
-
       case 'communications-reports':
       case 'notifications_reports':
       case 'reports':
         return <CommunicationsAndReportsHub academyId={academyId} isRtl={isRtl} students={students} countryCode={countryCode} />;
-
       case 'referrals':
       case 'affiliate-rewards':
         return <AffiliateRewards academyId={academyId} currency={currency} isRtl={isRtl} currentLang={currentLang} />;
-
       default:
         return isAdmin 
           ? <Dashboard session={session} setActiveTab={handleTabChange} preloadedDashboardData={preloadedDashboardData} currency={currency} isActivated={isAcademyActive} />
@@ -616,7 +585,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-dark-bg/80 backdrop-blur-sm z-40 transition-opacity duration-300"
         />
       )}
       <Sidebar 
