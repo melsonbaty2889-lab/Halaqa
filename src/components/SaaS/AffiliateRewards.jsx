@@ -12,8 +12,7 @@ import {
   Tag, 
   ShieldCheck,
   Loader2,
-  Building2,
-  ExternalLink
+  Building2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -21,9 +20,12 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
   const { t, i18n } = useTranslation();
   
   const currentLang = currentLangProp || i18n?.language || 'ar';
+  
+  // اللغات التي تكتب من اليمين إلى اليسار (العربية والأوردو)
   const rtlLanguages = ['ar', 'ur'];
-  const isRtl = isRtlProp !== undefined ? isRtlProp : rtlLanguages.some(lang => currentLang.startsWith(lang));
-  const isEn = currentLang.startsWith('en');
+  const isRtl = isRtlProp !== undefined 
+    ? isRtlProp 
+    : rtlLanguages.some(lang => currentLang.startsWith(lang));
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [referralCode, setReferralCode] = useState('');
@@ -35,46 +37,6 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
     pendingDiscount: 0,
     totalDiscountEarned: 0
   });
-
-  const labels = {
-    badge: t('affiliate.badge', isEn ? "Partner Program" : "برنامج شركاء النجاح"),
-    heroTitle: t('affiliate.heroTitle', isEn ? "Refer Academies, Lower Your Renewal" : "ادعُ المقارئ واخصِم من اشتراكك"),
-    heroDesc: t('affiliate.heroDesc', isEn 
-      ? "Get direct discount credits on your next platform invoice for every academy that joins through you." 
-      : "احصل على خصومات فورية تُطبّق تلقائياً على فاتورة تجديدك القادمة لكل أكاديمية تنضم عن طريقك."),
-    autoDiscount: t('affiliate.autoDiscount', isEn ? 'Automatic Discount' : 'تطبيق تلقائي للخصم'),
-    directLink: t('affiliate.directLink', isEn ? "Your Referral Link" : "رابط الإحالة المباشر"),
-    copyLink: t('affiliate.copyLink', isEn ? "Copy" : "نسخ"),
-    copied: t('affiliate.copied', isEn ? "Copied!" : "تم النسخ"),
-    whatsapp: t('affiliate.whatsapp', isEn ? "Share via WhatsApp" : "مشاركة عبر واتساب"),
-    
-    step1Title: t('affiliate.step1Title', isEn ? "1. Share" : "1. شارك"),
-    step1Desc: t('affiliate.step1Desc', isEn ? "Send link to directors." : "أرسل رابطك للمديرين"),
-    step2Title: t('affiliate.step2Title', isEn ? "2. Subscribe" : "2. اشتركوا"),
-    step2Desc: t('affiliate.step2Desc', isEn ? "Academy starts a plan." : "تسجل الأكاديمية بالمنظومة"),
-    step3Title: t('affiliate.step3Title', isEn ? "3. Save" : "3. وفّر"),
-    step3Desc: t('affiliate.step3Desc', isEn ? "Discount applied automatically." : "يُخصم التخفيض من فاتورتك"),
-    
-    totalReferrals: t('affiliate.totalReferrals', isEn ? "Total Referrals" : "إجمالي الإحالات"),
-    activeAcademies: t('affiliate.activeAcademies', isEn ? "Active Academies" : "أكاديميات مشتركة"),
-    pendingDiscount: t('affiliate.pendingDiscount', isEn ? "Next Renewal Discount" : "خصم التجديد القادم"),
-    totalDiscountEarned: t('affiliate.totalDiscountEarned', isEn ? "Total Savings" : "إجمالي الوفر"),
-    
-    recordsTitle: t('affiliate.recordsTitle', isEn ? "Referral Records" : "سجل الأكاديميات المُحالة"),
-    emptyTitle: t('affiliate.emptyTitle', isEn ? "No Referrals Yet" : "لا توجد إحالات بعد"),
-    emptyDesc: t('affiliate.emptyDesc', isEn 
-      ? "Share your custom link to start unlocking instant discounts on your upcoming invoices." 
-      : "شارك رابطك المباشر مع زملائك لبدء تخفيض قيمة اشتراكك القادم تلقائياً."),
-      
-    tableAcademy: t('affiliate.table.academy', isEn ? "Academy / User" : "الأكاديمية / المستخدم"),
-    tableStatus: t('affiliate.table.status', isEn ? "Status" : "الحالة"),
-    tableReward: t('affiliate.table.reward', isEn ? "Discount Value" : "قيمة الخصم"),
-    tableDate: t('affiliate.table.date', isEn ? "Date" : "التاريخ"),
-    
-    statusSubscribed: t('affiliate.status.subscribed', isEn ? "Subscribed" : "مشترك نشط"),
-    statusRewarded: t('affiliate.status.rewarded', isEn ? "Discount Applied" : "تم الخصم"),
-    statusPending: t('affiliate.status.pending', isEn ? "Pending" : "قيد الانتظار")
-  };
 
   const loadReferralData = useCallback(async () => {
     try {
@@ -152,9 +114,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
   };
 
   const handleShareWhatsApp = () => {
-    const msg = isEn
-      ? `Join Smart Halaqa to manage your Quranic Academy with an exclusive discount using my link:\n${referralLink}`
-      : `السلام عليكم، أدعوك لتجربة "منظومة الحلقة الذكية" لإدارة الحلقات والمقارئ القرآنية مع الحصول على خصم خاص عبر رابطي:\n${referralLink}`;
+    const msg = `${t('affiliate.whatsappShareMessage', 'أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:')}\n${referralLink}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -200,20 +160,20 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34D399', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '700' }}>
             <Tag size={12} />
-            <span>{labels.badge}</span>
+            <span>{t('affiliate.badge', 'برنامج شركاء النجاح')}</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <ShieldCheck size={14} className="text-emerald-400" />
-            <span>{labels.autoDiscount}</span>
+            <span>{t('affiliate.autoDiscount', 'تطبيق تلقائي للخصم')}</span>
           </div>
         </div>
 
         {/* Heading */}
         <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#F8FAFC', margin: '0 0 6px 0', lineHeight: '1.3' }}>
-          {labels.heroTitle}
+          {t('affiliate.heroTitle', 'ادعُ المقارئ واخصِم من اشتراكك')}
         </h2>
         <p style={{ color: '#94A3B8', fontSize: '0.825rem', margin: '0 0 16px 0', lineHeight: '1.5' }}>
-          {labels.heroDesc}
+          {t('affiliate.heroDesc', 'احصل على خصومات فورية تُطبّق تلقائياً على فاتورة تجديدك القادمة لكل أكاديمية تنضم عن طريقك.')}
         </p>
 
         {/* Link Box Container */}
@@ -227,7 +187,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
           gap: '10px'
         }}>
           <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: '600' }}>
-            {labels.directLink}
+            {t('affiliate.directLink', 'رابط الإحالة المباشر')}
           </span>
           
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -269,7 +229,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
               }}
             >
               {copiedLink ? <Check size={14} /> : <Copy size={14} />}
-              <span>{copiedLink ? labels.copied : labels.copyLink}</span>
+              <span>{copiedLink ? t('affiliate.copied', 'تم النسخ') : t('affiliate.copyLink', 'نسخ')}</span>
             </button>
           </div>
 
@@ -294,7 +254,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
             }}
           >
             <Share2 size={15} />
-            <span>{labels.whatsapp}</span>
+            <span>{t('affiliate.whatsapp', 'مشاركة عبر واتساب')}</span>
           </button>
         </div>
       </div>
@@ -302,9 +262,9 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
       {/* 🟢 2. COMPACT STEPS (HORIZONTAL FLOW) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
         {[
-          { step: '1', title: labels.step1Title, desc: labels.step1Desc },
-          { step: '2', title: labels.step2Title, desc: labels.step2Desc },
-          { step: '3', title: labels.step3Title, desc: labels.step3Desc }
+          { step: '1', title: t('affiliate.step1Title', '1. شارك'), desc: t('affiliate.step1Desc', 'أرسل رابطك للمديرين') },
+          { step: '2', title: t('affiliate.step2Title', '2. اشتركوا'), desc: t('affiliate.step2Desc', 'تسجل الأكاديمية بالمنظومة') },
+          { step: '3', title: t('affiliate.step3Title', '3. وفّر'), desc: t('affiliate.step3Desc', 'يُخصم التخفيض من فاتورتك') }
         ].map((item, idx) => (
           <div key={idx} style={{ 
             background: 'rgba(15, 23, 42, 0.6)', 
@@ -343,7 +303,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         {/* إجمالي الإحالات */}
         <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(51, 65, 85, 0.6)', borderRadius: '16px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: '0.725rem', color: '#94A3B8', marginBottom: '2px' }}>{labels.totalReferrals}</div>
+            <div style={{ fontSize: '0.725rem', color: '#94A3B8', marginBottom: '2px' }}>{t('affiliate.totalReferrals', 'إجمالي الإحالات')}</div>
             <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#F8FAFC' }}>{stats.totalReferrals}</div>
           </div>
           <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.12)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -354,7 +314,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         {/* أكاديميات مشتركة */}
         <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(51, 65, 85, 0.6)', borderRadius: '16px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: '0.725rem', color: '#94A3B8', marginBottom: '2px' }}>{labels.activeAcademies}</div>
+            <div style={{ fontSize: '0.725rem', color: '#94A3B8', marginBottom: '2px' }}>{t('affiliate.activeAcademies', 'أكاديميات مشتركة')}</div>
             <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#F8FAFC' }}>{stats.activeAcademies}</div>
           </div>
           <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.12)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -365,7 +325,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         {/* خصم التجديد القادم */}
         <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '16px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: '0.725rem', color: '#FBBF24', marginBottom: '2px' }}>{labels.pendingDiscount}</div>
+            <div style={{ fontSize: '0.725rem', color: '#FBBF24', marginBottom: '2px' }}>{t('affiliate.pendingDiscount', 'خصم التجديد القادم')}</div>
             <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#FBBF24' }}>{stats.pendingDiscount} {currency}</div>
           </div>
           <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.12)', color: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -376,7 +336,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
         {/* إجمالي الوفر */}
         <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '16px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: '0.725rem', color: '#C084FC', marginBottom: '2px' }}>{labels.totalDiscountEarned}</div>
+            <div style={{ fontSize: '0.725rem', color: '#C084FC', marginBottom: '2px' }}>{t('affiliate.totalDiscountEarned', 'إجمالي الوفر')}</div>
             <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#C084FC' }}>{stats.totalDiscountEarned} {currency}</div>
           </div>
           <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(139, 92, 246, 0.12)', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -414,34 +374,34 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
               <Sparkles size={18} />
             </div>
             <h3 style={{ color: '#E2E8F0', margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>
-              {labels.emptyTitle}
+              {t('affiliate.emptyTitle', 'لا توجد إحالات بعد')}
             </h3>
             <p style={{ color: '#64748B', fontSize: '0.775rem', margin: 0, maxWidth: '320px', lineHeight: '1.4' }}>
-              {labels.emptyDesc}
+              {t('affiliate.emptyDesc', 'شارك رابطك المباشر مع زملائك لبدء تخفيض قيمة اشتراكك القادم تلقائياً.')}
             </p>
           </div>
         ) : (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#CBD5E1', fontSize: '0.85rem', fontWeight: '700', marginBottom: '12px' }}>
               <Building2 size={16} className="text-emerald-400" />
-              <span>{labels.recordsTitle}</span>
+              <span>{t('affiliate.recordsTitle', 'سجل الأكاديميات المُحالة')}</span>
             </div>
 
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: '0.75rem', textAlign: isRtl ? 'right' : 'left', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ color: '#64748B', borderBottom: '1px solid rgba(51, 65, 85, 0.5)' }}>
-                    <th style={{ padding: '8px', fontWeight: '700' }}>{labels.tableAcademy}</th>
-                    <th style={{ padding: '8px', fontWeight: '700' }}>{labels.tableStatus}</th>
-                    <th style={{ padding: '8px', fontWeight: '700' }}>{labels.tableReward}</th>
-                    <th style={{ padding: '8px', fontWeight: '700', textAlign: 'center' }}>{labels.tableDate}</th>
+                    <th style={{ padding: '8px', fontWeight: '700' }}>{t('affiliate.table.academy', 'الأكاديمية / المستخدم')}</th>
+                    <th style={{ padding: '8px', fontWeight: '700' }}>{t('affiliate.table.status', 'الحالة')}</th>
+                    <th style={{ padding: '8px', fontWeight: '700' }}>{t('affiliate.table.reward', 'قيمة الخصم')}</th>
+                    <th style={{ padding: '8px', fontWeight: '700', textAlign: 'center' }}>{t('affiliate.table.date', 'التاريخ')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {referralList.map((item) => (
                     <tr key={item.id} style={{ borderBottom: '1px solid rgba(30, 41, 59, 0.4)', color: '#E2E8F0' }}>
                       <td style={{ padding: '10px 8px', fontWeight: '600' }}>
-                        {item.referred_academy_name || item.referred_email || 'أكاديمية مجاورة'}
+                        {item.referred_academy_name || item.referred_email || t('affiliate.defaultAcademyName', 'أكاديمية مجاورة')}
                       </td>
                       <td style={{ padding: '10px 8px' }}>
                         <span style={{
@@ -453,7 +413,11 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
                           color: item.status === 'rewarded' ? '#C084FC' : item.status === 'subscribed' ? '#34D399' : '#FBBF24',
                           border: `1px solid ${item.status === 'rewarded' ? 'rgba(139, 92, 246, 0.3)' : item.status === 'subscribed' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
                         }}>
-                          {item.status === 'rewarded' ? labels.statusRewarded : item.status === 'subscribed' ? labels.statusSubscribed : labels.statusPending}
+                          {item.status === 'rewarded' 
+                            ? t('affiliate.status.rewarded', 'تم الخصم') 
+                            : item.status === 'subscribed' 
+                              ? t('affiliate.status.subscribed', 'مشترك نشط') 
+                              : t('affiliate.status.pending', 'قيد الانتظار')}
                         </span>
                       </td>
                       <td style={{ padding: '10px 8px', fontWeight: '700', color: '#FBBF24' }}>
