@@ -1,21 +1,22 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Check, Building2, Plus, Sparkles, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronDown, Check, Building2, Plus, Sparkles, Clock, AlertTriangle, X } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 import { colors as C } from '@/theme/colors';
 
 export default function AcademySelector({
   academiesList = [],
-  currentAcademy, // يمكن تمرير كائن الأكاديمية بالكامل من Supabase
+  currentAcademy,
   currentAcademyId,
   currentAcademyName,
   academyLogo,
-  trialEndsAt, // تاريخ انتهاء الاشتراك/التجربة من السحابة
+  trialEndsAt,
   dropdownOpen,
   setDropdownOpen,
   dropdownRef,
   onSwitchAcademy,
   onOpenCreateAcademy,
+  onClose, // دالة إغلاق القائمة الجانبية للموبايل
   getText
 }) {
   const { t, i18n } = useTranslation();
@@ -70,7 +71,7 @@ export default function AcademySelector({
         <span
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
           style={{
-            backgroundColor: C.badge?.activeBg || 'rgba(16, 185, 129, 0.1)',
+            backgroundColor: C.badge?.activeBg,
             color: C.emerald?.light,
             border: `1px solid ${C.brandEmerald?.border || C.emerald?.light}`
           }}
@@ -86,7 +87,7 @@ export default function AcademySelector({
         <span
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
           style={{
-            backgroundColor: C.warning?.bg || 'rgba(245, 158, 11, 0.1)',
+            backgroundColor: C.warning?.bg,
             color: C.warning?.text || C.amber?.light,
             border: `1px solid ${C.warning?.border || C.amber?.light}`
           }}
@@ -104,7 +105,7 @@ export default function AcademySelector({
         <span
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
           style={{
-            backgroundColor: C.error?.bg || 'rgba(239, 68, 68, 0.1)',
+            backgroundColor: C.error?.bg,
             color: C.error?.text || C.rose?.light,
             border: `1px solid ${C.error?.border || C.rose?.light}`
           }}
@@ -118,7 +119,7 @@ export default function AcademySelector({
       <span
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide"
         style={{
-          backgroundColor: C.badge?.activeBg || 'rgba(16, 185, 129, 0.1)',
+          backgroundColor: C.badge?.activeBg,
           color: C.emerald?.light,
           border: `1px solid ${C.brandEmerald?.border || C.emerald?.light}`
         }}
@@ -132,7 +133,7 @@ export default function AcademySelector({
   };
 
   return (
-    <div ref={dropdownRef} className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div ref={dropdownRef} className="relative w-full flex items-center gap-2" dir={isRtl ? 'rtl' : 'ltr'}>
       <button
         type="button"
         disabled={!hasMultipleAcademies}
@@ -200,6 +201,23 @@ export default function AcademySelector({
         )}
       </button>
 
+      {/* زر إغلاق القائمة الجانبية للموبايل */}
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('common.close', 'إغلاق')}
+          className="md:hidden flex items-center justify-center w-11 h-11 min-h-[44px] rounded-2xl border shrink-0 transition-colors"
+          style={{
+            backgroundColor: C.dark?.card,
+            borderColor: C.dark?.cardBorder,
+            color: C.text?.muted
+          }}
+        >
+          <X size={20} />
+        </button>
+      )}
+
       {/* القائمة المنسدلة */}
       {dropdownOpen && hasMultipleAcademies && (
         <div 
@@ -226,7 +244,7 @@ export default function AcademySelector({
                     if (onSwitchAcademy) onSwitchAcademy(acc.id);
                     setDropdownOpen(false);
                   }}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 group"
+                  className="w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group"
                   style={{
                     backgroundColor: isSelected ? C.badge?.activeBg : 'transparent',
                     color: isSelected ? C.emerald?.light : C.text?.body
@@ -270,7 +288,7 @@ export default function AcademySelector({
                   setDropdownOpen(false);
                   onOpenCreateAcademy();
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-2 min-h-[44px] rounded-lg text-xs font-medium transition-colors cursor-pointer"
                 style={{ color: C.emerald?.light }}
               >
                 <Plus size={14} />
