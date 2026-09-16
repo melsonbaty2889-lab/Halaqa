@@ -37,9 +37,14 @@ export default function ForgotPassword({ onBackToLogin }) {
   const currentLang = i18n?.language?.split('-')[0] || hookLang || 'ar';
   const appSubtitle = APP_SUBTITLES[currentLang] || APP_SUBTITLES.ar;
 
-  // إظهار Toast فقط عندما تكون الرسالة نصية وصالحة
+  // التحقق المزدوج من نص الرسالة لمنع ظهور {} داخل Toast
   useEffect(() => {
-    if (status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '') {
+    if (
+      status?.msg && 
+      typeof status.msg === 'string' && 
+      status.msg.trim() !== '' && 
+      !status.msg.includes('{}')
+    ) {
       showToast(status.msg, status.type === 'success' ? 'success' : 'error');
     }
   }, [status?.msg, status?.type]);
@@ -52,6 +57,8 @@ export default function ForgotPassword({ onBackToLogin }) {
     }
     handleReset(e);
   };
+
+  const isMsgValid = status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '' && !status.msg.includes('{}');
 
   return (
     <AuthLayout 
@@ -76,8 +83,8 @@ export default function ForgotPassword({ onBackToLogin }) {
               </p>
             </div>
 
-            {/* التنبيه المباشر */}
-            {status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '' && (
+            {/* التنبيه المباشر ينعرض فقط عند صحة الرسالة */}
+            {isMsgValid && (
               <div 
                 className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
                 role="alert"
