@@ -1,18 +1,18 @@
 import React, { useState, useEffect, forwardRef, useId, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import C, { C as C_named, g } from "@/theme/colors";
+import C, { C as C_named } from "@/theme/colors";
 
-// استخراج الهوية وثيم الألوان المعياري
+// استخراج الهوية وثيم الألوان المعياري بدقة
 const Theme = C || C_named || {};
 
-const getPrimary = () => Theme.primary?.DEFAULT || Theme.primary || Theme.amber?.DEFAULT;
-const getSurface = () => Theme.dark?.surface || Theme.surface;
-const getCardBg = () => Theme.dark?.card || Theme.card || getSurface();
-const getBorder = () => Theme.border || Theme.dark?.borderInput || Theme.dark?.border;
-const getTextTitle = () => Theme.text?.title || Theme.text;
-const getTextSub = () => Theme.text?.sub || Theme.textSub;
-const getDanger = () => Theme.rose?.DEFAULT || Theme.danger;
-const getSuccess = () => Theme.emerald?.DEFAULT || Theme.success;
+const getPrimary = () => 'var(--primary)';
+const getSurface = () => 'var(--surface-input)';
+const getCardBg = () => 'var(--surface-card)';
+const getBorder = () => 'var(--border-input)';
+const getTextTitle = () => 'var(--text-main)';
+const getTextSub = () => 'var(--text-sub)';
+const getDanger = () => 'var(--error)';
+const getSuccess = () => 'var(--emerald-text)';
 
 // مؤشر التحميل القياسي الداخلي
 const Spinner = ({ size = 18 }) => (
@@ -48,9 +48,9 @@ const Badge = forwardRef(({ children, color, className = "", style = {}, ...prop
         borderRadius: 20, 
         fontSize: "0.75rem", 
         fontWeight: 700, 
-        background: `${badgeColor}1A`, 
+        background: `rgba(224, 122, 0, 0.12)`, 
         color: badgeColor, 
-        border: `1px solid ${badgeColor}33`, 
+        border: `1px solid rgba(224, 122, 0, 0.25)`, 
         whiteSpace: "nowrap",
         fontFamily: "inherit",
         ...style 
@@ -79,20 +79,14 @@ const Btn = forwardRef(({
   ...props 
 }, ref) => {
   const [isHovered, setIsHovered] = useState(false);
-  
-  const primaryColor = getPrimary();
-  const dangerColor = getDanger();
-  const successColor = getSuccess();
-  const textTitle = getTextTitle();
-  const borderCol = getBorder();
 
   const styles = {
-    primary: { background: g?.gold || g?.emerald || primaryColor, color: Theme.white || textTitle, fontWeight: "bold" },
-    secondary: { background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}30` },
-    ghost: { background: Theme.ghostBg || `${borderCol}20`, color: textTitle, border: `1px solid ${borderCol}` },
-    danger: { background: `${dangerColor}15`, color: dangerColor, border: `1px solid ${dangerColor}30` },
-    success: { background: successColor, color: Theme.white || textTitle, fontWeight: "bold" },
-    failed: { background: dangerColor, color: Theme.white || textTitle, fontWeight: "bold" }
+    primary: { background: "linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%)", color: "var(--text-main)", fontWeight: "bold", boxShadow: "0 4px 14px var(--primary-glow)" },
+    secondary: { background: "rgba(224, 122, 0, 0.12)", color: "var(--primary)", border: "1px solid rgba(224, 122, 0, 0.25)" },
+    ghost: { background: "var(--surface-input)", color: "var(--text-main)", border: "1px solid var(--border-input)" },
+    danger: { background: "rgba(239, 68, 68, 0.12)", color: "var(--error)", border: "1px solid rgba(239, 68, 68, 0.25)" },
+    success: { background: "var(--emerald-dark)", color: "var(--text-main)", fontWeight: "bold" },
+    failed: { background: "var(--error)", color: "var(--text-main)", fontWeight: "bold" }
   };
 
   const isDisabled = disabled || loading;
@@ -115,8 +109,8 @@ const Btn = forwardRef(({
         justifyContent: "center",
         gap: 8,
         padding: "10px 18px",
-        minHeight: "44px", // التزام بقاعدة Mobile-First لمساحات اللمس
-        borderRadius: 10,
+        minHeight: "44px",
+        borderRadius: 12,
         border: "none",
         cursor: isDisabled ? "not-allowed" : "pointer",
         fontFamily: "inherit",
@@ -151,9 +145,11 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
       padding: 20, 
       width: "100%", 
       boxSizing: "border-box", 
-      boxShadow: Theme.shadow,
+      boxShadow: "var(--shadow-main)",
       color: getTextTitle(),
-      textAlign: "start", // استخدام خصائص المحاذاة المنطقية
+      textAlign: "start",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
       ...style 
     }}
     {...props}
@@ -209,17 +205,16 @@ const Input = forwardRef(({
   const autoId = useId();
   const inputId = customId || autoId;
 
-  const primaryColor = getPrimary();
   const borderCol = errorText ? getDanger() : getBorder();
 
   const baseStyle = { 
     width: "100%", 
     background: getSurface(), 
-    border: isFocused ? `1px solid ${errorText ? getDanger() : primaryColor}` : `1px solid ${borderCol}`, 
+    border: isFocused ? `1px solid ${errorText ? getDanger() : getPrimary()}` : `1px solid ${borderCol}`, 
     borderRadius: 10, 
     padding: "10px 14px",
-    paddingLeft: startIcon ? "40px" : "14px",
-    paddingRight: endIcon ? "40px" : "14px",
+    paddingInlineStart: startIcon ? "40px" : "14px",
+    paddingInlineEnd: endIcon ? "40px" : "14px",
     minHeight: as === "textarea" ? "auto" : "44px",
     color: getTextTitle(), 
     fontFamily: "inherit", 
@@ -227,7 +222,7 @@ const Input = forwardRef(({
     outline: "none", 
     boxSizing: "border-box",
     textAlign: "start",
-    boxShadow: isFocused ? `0 0 0 3px ${errorText ? `${getDanger()}20` : `${primaryColor}15`}` : "none",
+    boxShadow: isFocused ? `0 0 0 3px ${errorText ? 'rgba(239, 68, 68, 0.2)' : 'var(--primary-glow)'}` : "none",
     transition: "all 0.2s ease",
     colorScheme: "dark",
     ...style
@@ -238,7 +233,7 @@ const Input = forwardRef(({
       {label && (
         <label 
           htmlFor={inputId}
-          style={{ fontSize: "0.8rem", color: errorText ? getDanger() : primaryColor, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
+          style={{ fontSize: "0.8rem", color: errorText ? getDanger() : getPrimary(), marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
         >
           {label}
         </label>
@@ -246,7 +241,7 @@ const Input = forwardRef(({
 
       <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
         {startIcon && (
-          <span style={{ position: "absolute", left: 12, display: "flex", alignItems: "center", color: getTextSub(), pointerEvents: "none" }}>
+          <span style={{ position: "absolute", insetInlineStart: 12, display: "flex", alignItems: "center", color: getTextSub(), pointerEvents: "none" }}>
             {startIcon}
           </span>
         )}
@@ -283,7 +278,7 @@ const Input = forwardRef(({
         )}
 
         {endIcon && (
-          <span style={{ position: "absolute", right: 12, display: "flex", alignItems: "center", color: getTextSub() }}>
+          <span style={{ position: "absolute", insetInlineEnd: 12, display: "flex", alignItems: "center", color: getTextSub() }}>
             {endIcon}
           </span>
         )}
@@ -308,9 +303,6 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
   const selectId = customId || autoId;
 
   const selectedOption = options.find(o => o.value === value) || options[0];
-  const primaryColor = getPrimary();
-  const borderCol = getBorder();
-  const textTitle = getTextTitle();
 
   const handleToggle = useCallback(() => {
     if (!isOpen && triggerRef.current) {
@@ -336,7 +328,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
       {label && (
         <label 
           htmlFor={selectId}
-          style={{ fontSize: "0.8rem", color: primaryColor, marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
+          style={{ fontSize: "0.8rem", color: getPrimary(), marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
         >
           {label}
         </label>
@@ -358,10 +350,10 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           width: "100%",
           minHeight: "44px",
           background: getSurface(),
-          border: isOpen ? `1px solid ${primaryColor}` : `1px solid ${borderCol}`,
+          border: isOpen ? `1px solid ${getPrimary()}` : `1px solid ${getBorder()}`,
           borderRadius: 10,
           padding: "12px 14px",
-          color: textTitle,
+          color: getTextTitle(),
           fontFamily: "inherit",
           fontSize: "0.875rem",
           display: "flex",
@@ -369,14 +361,14 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           alignItems: "center",
           cursor: "pointer",
           boxSizing: "border-box",
-          boxShadow: isOpen ? `0 0 0 3px ${primaryColor}15` : "none",
+          boxShadow: isOpen ? `0 0 0 3px var(--primary-glow)` : "none",
           transition: "all 0.2s ease",
           ...style
         }}
         {...props}
       >
         <span>{selectedOption?.label || "اختر..."}</span>
-        <span style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", fontSize: "0.7rem", color: primaryColor }}>▼</span>
+        <span style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", fontSize: "0.7rem", color: getPrimary() }}>▼</span>
       </button>
 
       {isOpen && typeof window !== 'undefined' && createPortal(
@@ -391,7 +383,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
               left: coords.left,
               width: coords.width,
               background: getSurface(),
-              border: `1px solid ${borderCol}`,
+              border: `1px solid ${getBorder()}`,
               borderRadius: 12,
               padding: "6px 0",
               margin: 0,
@@ -399,7 +391,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
               zIndex: 9999,
               maxHeight: 220,
               overflowY: "auto",
-              boxShadow: Theme.shadow,
+              boxShadow: "var(--shadow-main)",
               backdropFilter: "blur(12px)"
             }}
           >
@@ -417,8 +409,8 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
                   padding: "10px 14px",
                   minHeight: "44px",
                   fontSize: "0.875rem",
-                  color: value === o.value ? primaryColor : textTitle,
-                  background: value === o.value ? `${primaryColor}1A` : "transparent",
+                  color: value === o.value ? getPrimary() : getTextTitle(),
+                  background: value === o.value ? "rgba(224, 122, 0, 0.12)" : "transparent",
                   cursor: "pointer",
                   textAlign: "start",
                   fontWeight: value === o.value ? 700 : 400,
@@ -429,7 +421,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
                 }}
               >
                 <span>{o.label}</span>
-                {value === o.value && <span style={{ color: primaryColor, fontSize: "0.8rem" }}>✓</span>}
+                {value === o.value && <span style={{ color: getPrimary(), fontSize: "0.8rem" }}>✓</span>}
               </li>
             ))}
           </ul>
@@ -459,13 +451,13 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
-      style={{ position: "fixed", inset: 0, background: Theme.overlayBg || `${getSurface()}E6`, backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16 }} 
+      style={{ position: "fixed", inset: 0, background: "rgba(7, 11, 17, 0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16 }} 
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div 
         className={`ui-modal ${className}`}
         style={{ 
-          background: getSurface(), 
+          background: getCardBg(), 
           border: `1px solid ${getBorder()}`, 
           borderRadius: 20, 
           padding: 24, 
@@ -474,7 +466,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
           maxHeight: "85vh", 
           overflowY: "auto", 
           boxSizing: "border-box", 
-          boxShadow: Theme.shadow,
+          boxShadow: "var(--shadow-main)",
           textAlign: "start",
           color: getTextTitle(),
           ...style 
