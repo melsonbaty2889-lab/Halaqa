@@ -290,6 +290,7 @@
     "preparing_dashboard": "Sistem hazırlanıyor...",
     "previous": "Önceki",
     "prevMonth": "Önceki Ay",
+    "processing": "جاري المعالجة...",
     "reloadNow": "Yenile",
     "remove": "Kaldır",
     "reset_filters": "Filtreleri Sıfırla",
@@ -861,6 +862,7 @@
   },
   "students_management_title": "Öğrenci İşleri ve Eğitim Yolu",
   "subscription": {
+    "attachReceipt": "إرفاق صورة إشعار التحويل:",
     "backToDashboard": "Kontrol Paneline Dön",
     "currencies": {
       "egp": "EGP",
@@ -889,6 +891,7 @@
     },
     "headerSubtitle": "Size en uygun akademik yatırım planını seçin ve dünya çapındaki lider Kur'an akademilerine katılın.",
     "headerTitle": "Sistem Lisansı Edinin - Akıllı Halaka Platformu",
+    "orderReceived": "تم استلام الطلب وستتم المراجعة والتفعيل فوراً",
     "periods": {
       "monthly": "Aylık",
       "yearly": "Yıllık"
@@ -899,17 +902,22 @@
       "yearlyDesc": "Kapsamlı kurumlar ve akademiler için",
       "yearlyTitle": "Sürdürülebilir Verimlilik (Yıllık Lisans)"
     },
+    "proceedToPayment": "تأكيد وإتمام الطلب",
     "regions": {
       "egypt": "Mısır Arap Cumhuriyeti",
       "gcc": "Körfez İşbirliği Konseyi Ülkeleri",
       "global": "Uluslararası / Dünyanın Geri Kalanı"
     },
+    "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Bu Planı Seç",
+    "selectReceiptFile": "اختر ملف الإشعار أو التقط صورة",
     "selectRegionNotice": "Bölgenize uygun ödeme seçeneklerini etkinleştirmek için coğrafi bölge seçin:",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
-    "successTitle": "تم استلام طلب الاشتراك بنجاح"
+    "successTitle": "تم استلام طلب الاشتراك بنجاح",
+    "txIdLabel": "رقم عملية التحويل / المرجع (اختياري)",
+    "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
   "system": {
     "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"

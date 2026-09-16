@@ -290,6 +290,7 @@
     "preparing_dashboard": "Preparing system...",
     "previous": "Previous",
     "prevMonth": "Previous Month",
+    "processing": "جاري المعالجة...",
     "reloadNow": "Reload Now",
     "remove": "Remove",
     "reset_filters": "Reset Filters",
@@ -861,6 +862,7 @@
   },
   "students_management_title": "Student Affairs & Learning Track",
   "subscription": {
+    "attachReceipt": "إرفاق صورة إشعار التحويل:",
     "backToDashboard": "Return to Dashboard & Analytics",
     "currencies": {
       "egp": "EGP",
@@ -889,6 +891,7 @@
     },
     "headerSubtitle": "Choose the academic investment plan that suits you best, and join leading Quranic academies around the world.",
     "headerTitle": "Acquire System License - Smart Halaqa Platform",
+    "orderReceived": "تم استلام الطلب وستتم المراجعة والتفعيل فوراً",
     "periods": {
       "monthly": "Monthly",
       "yearly": "Yearly"
@@ -899,17 +902,22 @@
       "yearlyDesc": "For comprehensive institutions & academies",
       "yearlyTitle": "Sustainable Efficiency (Annual License)"
     },
+    "proceedToPayment": "تأكيد وإتمام الطلب",
     "regions": {
       "egypt": "Arab Republic of Egypt",
       "gcc": "GCC Countries",
       "global": "International / Rest of World"
     },
+    "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Select This Plan",
+    "selectReceiptFile": "اختر ملف الإشعار أو التقط صورة",
     "selectRegionNotice": "Select region to activate localized payment options:",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
-    "successTitle": "تم استلام طلب الاشتراك بنجاح"
+    "successTitle": "تم استلام طلب الاشتراك بنجاح",
+    "txIdLabel": "رقم عملية التحويل / المرجع (اختياري)",
+    "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
   "system": {
     "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"

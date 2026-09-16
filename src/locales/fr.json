@@ -290,6 +290,7 @@
     "preparing_dashboard": "Préparation du système...",
     "previous": "Précédent",
     "prevMonth": "Mois précédent",
+    "processing": "جاري المعالجة...",
     "reloadNow": "Actualiser",
     "remove": "Retirer",
     "reset_filters": "Réinitialiser les filtres",
@@ -861,6 +862,7 @@
   },
   "students_management_title": "Affaires scolaires et parcours pédagogique",
   "subscription": {
+    "attachReceipt": "إرفاق صورة إشعار التحويل:",
     "backToDashboard": "Retour au tableau de bord",
     "currencies": {
       "egp": "EGP",
@@ -889,6 +891,7 @@
     },
     "headerSubtitle": "Choisissez le plan qui vous convient et rejoignez les plus grandes académies coraniques au monde.",
     "headerTitle": "Licence du système - Plateforme Smart Halaqa",
+    "orderReceived": "تم استلام الطلب وستتم المراجعة والتفعيل فوراً",
     "periods": {
       "monthly": "Mensuel",
       "yearly": "Annuel"
@@ -899,17 +902,22 @@
       "yearlyDesc": "Pour les institutions et écoles complètes",
       "yearlyTitle": "Efficacité durable (Licence annuelle)"
     },
+    "proceedToPayment": "تأكيد وإتمام الطلب",
     "regions": {
       "egypt": "République Arabe d'Égypte",
       "gcc": "Pays du Golfe (CCG)",
       "global": "International / Reste du monde"
     },
+    "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Choisir ce plan",
+    "selectReceiptFile": "اختر ملف الإشعار أو التقط صورة",
     "selectRegionNotice": "Sélectionnez votre zone géographique pour les options de paiement :",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
-    "successTitle": "تم استلام طلب الاشتراك بنجاح"
+    "successTitle": "تم استلام طلب الاشتراك بنجاح",
+    "txIdLabel": "رقم عملية التحويل / المرجع (اختياري)",
+    "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
   "system": {
     "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"

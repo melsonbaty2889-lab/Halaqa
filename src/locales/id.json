@@ -290,6 +290,7 @@
     "preparing_dashboard": "Menyiapkan sistem...",
     "previous": "Sebelumnya",
     "prevMonth": "Bulan Sebelumnya",
+    "processing": "جاري المعالجة...",
     "reloadNow": "Muat Ulang",
     "remove": "Hapus",
     "reset_filters": "Atur Ulang Filter",
@@ -861,6 +862,7 @@
   },
   "students_management_title": "Kesiswaan & Jalur Pembelajaran",
   "subscription": {
+    "attachReceipt": "إرفاق صورة إشعار التحويل:",
     "backToDashboard": "Kembali ke Pusat Kontrol & Analisis",
     "currencies": {
       "egp": "EGP",
@@ -889,6 +891,7 @@
     },
     "headerSubtitle": "Pilih paket investasi akademik yang paling sesuai dengan Anda, dan bergabunglah dengan akademi Quran terkemuka di seluruh dunia.",
     "headerTitle": "Dapatkan Lisensi Sistem - Platform Halaqah Pintar",
+    "orderReceived": "تم استلام الطلب وستتم المراجعة والتفعيل فوراً",
     "periods": {
       "monthly": "Bulanan",
       "yearly": "Tahunan"
@@ -899,17 +902,22 @@
       "yearlyDesc": "Untuk lembaga & akademi terintegrasi",
       "yearlyTitle": "Efisiensi Berkelanjutan (Lisensi Tahunan)"
     },
+    "proceedToPayment": "تأكيد وإتمام الطلب",
     "regions": {
       "egypt": "Republik Arab Mesir",
       "gcc": "Negara-negara Teluk (GCC)",
       "global": "Internasional / Seluruh Dunia"
     },
+    "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
     "selectPlan": "Pilih Paket Ini",
+    "selectReceiptFile": "اختر ملف الإشعار أو التقط صورة",
     "selectRegionNotice": "Tentukan wilayah geografis Anda untuk mengaktifkan opsi pembayaran lokal:",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
-    "successTitle": "تم استلام طلب الاشتراك بنجاح"
+    "successTitle": "تم استلام طلب الاشتراك بنجاح",
+    "txIdLabel": "رقم عملية التحويل / المرجع (اختياري)",
+    "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
   "system": {
     "offline_notice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)"
