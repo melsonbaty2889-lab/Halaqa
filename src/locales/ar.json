@@ -436,6 +436,8 @@
     "warnings": "الردة / التنبيه (مساعدة الفتح للشيخ)"
   },
   "gamification": {
+    "acquired": "مكتسب",
+    "badgesTitle": "شارات التميز والإتقان",
     "chartSubtitle": "chartSubtitle",
     "chartTitle": "chartTitle",
     "defaultQuest": "التزام الحضور والتسميع الأسبوعي",
@@ -444,6 +446,7 @@
     "pages": "pages",
     "peakDay": "peakDay",
     "progress": "التقدم",
+    "pts": "نقطة",
     "student": "طالب",
     "subtitle": "subtitle",
     "tabs": {

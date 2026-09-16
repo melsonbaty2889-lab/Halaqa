@@ -516,6 +516,8 @@
   },
   "fetch_error": "Veri çekme hatası",
   "gamification": {
+    "acquired": "مكتسب",
+    "badgesTitle": "شارات التميز والإتقان",
     "chartSubtitle": "Haftalık ilerleme trendleri ve öğrenci performans analizi",
     "chartTitle": "Haftalık Okuma Analizi",
     "defaultQuest": "Haftalık Devam ve Okuma Sorumluluğu",
@@ -524,6 +526,7 @@
     "pages": "sayfa",
     "peakDay": "En Yoğun Gün",
     "progress": "التقدم",
+    "pts": "نقطة",
     "student": "طالب",
     "subtitle": "Öğrenci Motivasyonu, Rozetler ve Liderlik Tabloları",
     "tabs": {

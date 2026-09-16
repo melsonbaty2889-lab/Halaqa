@@ -516,6 +516,8 @@
   },
   "fetch_error": "Failed to fetch data",
   "gamification": {
+    "acquired": "مكتسب",
+    "badgesTitle": "شارات التميز والإتقان",
     "chartSubtitle": "Weekly progress trends and student performance analytics",
     "chartTitle": "Weekly Recitation Analytics",
     "defaultQuest": "Weekly Attendance & Recitation Commitment",
@@ -524,6 +526,7 @@
     "pages": "Pages",
     "peakDay": "Peak Day",
     "progress": "التقدم",
+    "pts": "نقطة",
     "student": "طالب",
     "subtitle": "Student Motivation, Badges & Leaderboards",
     "tabs": {

@@ -516,6 +516,8 @@
   },
   "fetch_error": "Gagal mengambil data",
   "gamification": {
+    "acquired": "مكتسب",
+    "badgesTitle": "شارات التميز والإتقان",
     "chartSubtitle": "Tren kemajuan mingguan dan analisis kinerja santri",
     "chartTitle": "Analisis Setoran Bacaan Mingguan",
     "defaultQuest": "Komitmen Kehadiran & Setoran Mingguan",
@@ -524,6 +526,7 @@
     "pages": "halaman",
     "peakDay": "Hari Puncak",
     "progress": "التقدم",
+    "pts": "نقطة",
     "student": "طالب",
     "subtitle": "Motivasi Santri, Lencana & Papan Peringkat",
     "tabs": {

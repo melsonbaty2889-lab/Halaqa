@@ -516,6 +516,8 @@
   },
   "fetch_error": "Échec de la récupération des données",
   "gamification": {
+    "acquired": "مكتسب",
+    "badgesTitle": "شارات التميز والإتقان",
     "chartSubtitle": "Statistiques hebdomadaires et performances des élèves",
     "chartTitle": "Analyse de récitation hebdomadaire",
     "defaultQuest": "Assiduité et récitation hebdomadaire",
@@ -524,6 +526,7 @@
     "pages": "pages",
     "peakDay": "Jour de pointe",
     "progress": "التقدم",
+    "pts": "نقطة",
     "student": "طالب",
     "subtitle": "Motivation, badges et classements des élèves",
     "tabs": {
