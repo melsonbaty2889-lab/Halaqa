@@ -65,9 +65,9 @@
 }
 
 .sidebarNavBtnSelected {
-  background: linear-gradient(180deg, #E67E00 0%, #D97706 100%) !important;
-  color: #FFFFFF !important;
+  background: linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%) !important;
+  color: var(--text-main) !important;
   font-weight: 800;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid var(--border-card) !important;
   box-shadow: 0 4px 15px var(--primary-glow) !important;
 }
