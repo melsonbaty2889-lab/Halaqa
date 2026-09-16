@@ -520,8 +520,11 @@
     "chartTitle": "Haftalık Okuma Analizi",
     "defaultQuest": "Haftalık Devam ve Okuma Sorumluluğu",
     "leaderboardUpdating": "Sıralama Güncelleniyor...",
+    "noLeaderboardData": "جاري تحديث نقاط لوحة المتصدرين...",
     "pages": "sayfa",
     "peakDay": "En Yoğun Gün",
+    "progress": "التقدم",
+    "student": "طالب",
     "subtitle": "Öğrenci Motivasyonu, Rozetler ve Liderlik Tabloları",
     "tabs": {
       "badges": "Rozetler",
@@ -529,7 +532,8 @@
       "streaks": "Seriler"
     },
     "title": "Motivasyon ve Onur Köşesi",
-    "totalWeekly": "Haftalık Toplam Sayfa"
+    "totalWeekly": "Haftalık Toplam Sayfa",
+    "weeklyQuest": "التحدي الأسبوعي"
   },
   "goToAttendance": "Canlı Oturuma Katıl",
   "halaqa": {

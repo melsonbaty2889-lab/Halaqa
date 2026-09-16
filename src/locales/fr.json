@@ -520,8 +520,11 @@
     "chartTitle": "Analyse de récitation hebdomadaire",
     "defaultQuest": "Assiduité et récitation hebdomadaire",
     "leaderboardUpdating": "Mise à jour du classement...",
+    "noLeaderboardData": "جاري تحديث نقاط لوحة المتصدرين...",
     "pages": "pages",
     "peakDay": "Jour de pointe",
+    "progress": "التقدم",
+    "student": "طالب",
     "subtitle": "Motivation, badges et classements des élèves",
     "tabs": {
       "badges": "Badges",
@@ -529,7 +532,8 @@
       "streaks": "Séries"
     },
     "title": "Motivation & Tableau d'Honneur",
-    "totalWeekly": "Total des pages hebdomadaires"
+    "totalWeekly": "Total des pages hebdomadaires",
+    "weeklyQuest": "التحدي الأسبوعي"
   },
   "goToAttendance": "Rejoindre la session en direct",
   "halaqa": {

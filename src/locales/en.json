@@ -520,8 +520,11 @@
     "chartTitle": "Weekly Recitation Analytics",
     "defaultQuest": "Weekly Attendance & Recitation Commitment",
     "leaderboardUpdating": "Updating Leaderboard...",
+    "noLeaderboardData": "جاري تحديث نقاط لوحة المتصدرين...",
     "pages": "Pages",
     "peakDay": "Peak Day",
+    "progress": "التقدم",
+    "student": "طالب",
     "subtitle": "Student Motivation, Badges & Leaderboards",
     "tabs": {
       "badges": "Badges",
@@ -529,7 +532,8 @@
       "streaks": "Streaks"
     },
     "title": "Motivation & Honor Roll",
-    "totalWeekly": "Total Weekly Pages"
+    "totalWeekly": "Total Weekly Pages",
+    "weeklyQuest": "التحدي الأسبوعي"
   },
   "goToAttendance": "Join Live Session",
   "halaqa": {

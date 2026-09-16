@@ -520,8 +520,11 @@
     "chartTitle": "Analisis Setoran Bacaan Mingguan",
     "defaultQuest": "Komitmen Kehadiran & Setoran Mingguan",
     "leaderboardUpdating": "Memperbarui Papan Peringkat...",
+    "noLeaderboardData": "جاري تحديث نقاط لوحة المتصدرين...",
     "pages": "halaman",
     "peakDay": "Hari Puncak",
+    "progress": "التقدم",
+    "student": "طالب",
     "subtitle": "Motivasi Santri, Lencana & Papan Peringkat",
     "tabs": {
       "badges": "Lencana",
@@ -529,7 +532,8 @@
       "streaks": "Rentetan"
     },
     "title": "Motivasi & Papan Kehormatan",
-    "totalWeekly": "Total Halaman Mingguan"
+    "totalWeekly": "Total Halaman Mingguan",
+    "weeklyQuest": "التحدي الأسبوعي"
   },
   "goToAttendance": "Bergabung ke Sesi Langsung",
   "halaqa": {

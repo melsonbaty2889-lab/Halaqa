@@ -520,8 +520,11 @@
     "chartTitle": "ہفتہ وار تلاوت کے تجزئیات",
     "defaultQuest": "ہفتہ وار حاضری اور التسمیع کی پابندی",
     "leaderboardUpdating": "لیڈر بورڈ اپ ڈیٹ ہو رہا ہے...",
+    "noLeaderboardData": "جاري تحديث نقاط لوحة المتصدرين...",
     "pages": "صفحات",
     "peakDay": "بہترین دن",
+    "progress": "التقدم",
+    "student": "طالب",
     "subtitle": "طلباء کی ترغیب، تمغے اور رینکنگ بورڈ",
     "tabs": {
       "badges": "",
@@ -529,7 +532,8 @@
       "streaks": ""
     },
     "title": "ترغیب اور بورڈ آف آنر",
-    "totalWeekly": "ہفتہ وار کل صفحات"
+    "totalWeekly": "ہفتہ وار کل صفحات",
+    "weeklyQuest": "التحدي الأسبوعي"
   },
   "goToAttendance": "لائیو سیشن میں شامل ہوں",
   "halaqa": {

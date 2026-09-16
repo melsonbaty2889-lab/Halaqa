@@ -440,8 +440,11 @@
     "chartTitle": "chartTitle",
     "defaultQuest": "التزام الحضور والتسميع الأسبوعي",
     "leaderboardUpdating": "leaderboardUpdating",
+    "noLeaderboardData": "جاري تحديث نقاط لوحة المتصدرين...",
     "pages": "pages",
     "peakDay": "peakDay",
+    "progress": "التقدم",
+    "student": "طالب",
     "subtitle": "subtitle",
     "tabs": {
       "badges": "badges",
@@ -449,7 +452,8 @@
       "streaks": "streaks"
     },
     "title": "title",
-    "totalWeekly": "totalWeekly"
+    "totalWeekly": "totalWeekly",
+    "weeklyQuest": "التحدي الأسبوعي"
   },
   "goToAttendance": "الانضمام للجلسة المباشرة",
   "halaqa": {
