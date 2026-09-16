@@ -1,80 +1,49 @@
 /**
  * نظام الألوان الموحد - Smart Halaqa Design System (v2.5)
- * مستخرج ومطابق بدقة 100% لشاشة البداية وشاشات تسجيل الدخول واستعادة كلمة المرور
+ * يقرأ القيم ديناميكياً من CSS Variables لضمان عدم وجود أي تضارب.
  */
 
+// دالة قراءة قيمة المتغير مباشرة من DOM (تستخدم في وقت التشغيل/Runtime)
+export const getCssVar = (varName) => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+  return '';
+};
+
 export const colors = {
-  // 1. الخلفيات والأسطح الزجاجية
   dark: {
-    bg: '#050811',                       // الكحلي الداكن الموحد للخلفية الأساسية
-    card: 'rgba(15, 23, 42, 0.85)',     // خلفية بطاقة Form الزجاجية المعتمة
-    cardBorder: 'rgba(255, 255, 255, 0.08)', // حدود البطاقة الناعمة جداً
-    surface: '#0A0F1C',                  // خلفية حقول الإدخال الداخلية
+    bg: 'var(--bg-dark)',
+    card: 'var(--surface-card)',
+    surface: 'var(--surface-input)',
   },
-
-  // 2. البرتقالي / الكهرماني الهوياتي
   amber: {
-    DEFAULT: '#D97706',                // البرتقالي الكهرماني للروابط والعناوين الفرعية
-    buttonStart: '#E67E00',            // بداية تدرج زر الإرسال
-    buttonEnd: '#D97706',              // نهاية تدرج زر الإرسال
-    borderFocus: '#D97706',            // إطار حقل الإدخال النشط عند الكتابة
-    glowFocus: 'rgba(217, 119, 6, 0.2)', // توهج حقل الإدخال النشط
-    buttonGlow: 'rgba(217, 119, 6, 0.3)',// ظلال زر التسجيل والإرسال
+    DEFAULT: 'var(--primary)',
+    buttonStart: 'var(--primary-btn-start)',
+    buttonEnd: 'var(--primary-btn-end)',
+    glowFocus: 'var(--primary-glow)',
   },
-
-  // 3. الزمردي المضيء
   emerald: {
-    DEFAULT: '#10B981',
-    dark: '#059669',                   // بداية تدرج مربع الشعار
-    light: '#34D399',                  // حدود الشعار وتوهجه
-    radialGlow: 'rgba(16, 185, 129, 0.14)', // التوهج الشعاعي العلوي خلف الشعار
-    logoGlow: 'rgba(16, 185, 129, 0.35)',   // توهج شعار التطبيق
+    DEFAULT: 'var(--emerald-text)',
+    dark: 'var(--emerald-dark)',
+    light: 'var(--emerald-light)',
+    radialGlow: 'var(--emerald-radial-glow)',
+    logoGlow: 'var(--emerald-logo-glow)',
   },
-
-  // 4. النصوص والتباين البصري
   text: {
-    title: '#FFFFFF',                  // أبيض ناصع للعناوين الرئيسية
-    subtitle: '#D97706',               // برتقالي كهرماني للعناوين الفرعية
-    body: '#E2E8F0',                   // أبيض ناعم للنصوص
-    muted: '#94A3B8',                  // رمادي للنصوص الوصفية
-    placeholder: '#64748B',            // رمادي معتم لنص الإرشاد داخل الحقول
+    title: 'var(--text-main)',
+    subtitle: 'var(--primary)',
+    body: 'var(--text-sub)',
+    muted: 'var(--text-muted)',
   },
-
-  // 5. حقول المدخلات (Form Inputs)
-  inputs: {
-    bg: 'rgba(10, 15, 28, 0.8)',       // خلفية الحقل الشفافة الداكنة
-    border: 'rgba(255, 255, 255, 0.12)', // حدود الحقل العادية
-    borderFocus: '#D97706',            // حدود الحقل باللون البرتقالي عند الكتابة
-    icon: '#64748B',                   // لون أيقونة الحقل
-  },
-
-  // 6. خلفيات التدرج والنجوم
-  gradients: {
-    starsBg: `
-      radial-gradient(circle at 50% 28%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
-      radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px)
-    `,
-    primaryBtn: 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
-    logoBox: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-    progressBar: 'linear-gradient(90deg, #10B981 0%, #F59E0B 100%)',
-  },
-
-  // 7. مفاتيح وصول مباشرة للتوافق المباشر
   primary: {
-    DEFAULT: '#D97706',
-    hover: '#B45309',
-  },
-  brandEmerald: {
-    DEFAULT: '#10B981',
-    bg: '#09332C',
-    border: '#0D5C4D',
+    DEFAULT: 'var(--primary)',
+    hover: 'var(--primary-hover)',
   },
   error: {
-    DEFAULT: '#EF4444',
+    DEFAULT: 'var(--error)',
   }
 };
 
 export const C = colors;
-export const g = (colorVal) => colorVal;
-
 export default colors;
