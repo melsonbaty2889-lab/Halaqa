@@ -6,7 +6,7 @@ import useNetworkAndUpdateStatus from '@/hooks/useNetworkAndUpdateStatus';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
-import colorsImport from '@/theme/colors.js';
+import { UI } from '@/theme/styles.js';
 import { PageSkeleton } from '@/components/UI/Skeleton';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import BottomNav from '@/components/Sidebar/BottomNav';
@@ -15,13 +15,6 @@ import Header from '@/components/Header/Header';
 import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
-
-const C = colorsImport?.colors || colorsImport || {
-  dark: { main: '#0f172a', card: '#1e293b', border: '#334155' },
-  text: { title: '#f8fafc', body: '#cbd5e1' },
-  error: { light: '#fca5a5', border: '#f87171' },
-  primary: { gradient: 'linear-gradient(to right, #f59e0b, #d97706)' }
-};
 
 const OriginalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
@@ -65,26 +58,25 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative z-10" style={{ backgroundColor: C?.dark?.main || '#0f172a' }} dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="max-w-md w-full border rounded-2xl p-6 text-center shadow-2xl space-y-5" style={{ backgroundColor: C?.dark?.card || '#1e293b', borderColor: C?.error?.border || '#f87171' }}>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: 'rgba(244, 63, 94, 0.1)', color: C?.error?.light || '#fca5a5' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative z-10 bg-dark-bg" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="max-w-md w-full bg-dark-card border border-appError/30 rounded-2xl p-6 text-center shadow-2xl space-y-5">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-appError/10 text-appError">
           <AlertOctagon size={36} />
         </div>
         <div>
-          <h2 className="text-xl font-bold mb-1" style={{ color: C?.text?.title || '#f8fafc' }}>
+          <h2 className={UI.title}>
             {t('blocked_view.title', 'تم تعليق حساب الأكاديمية')}
           </h2>
-          <p className="text-sm font-semibold" style={{ color: C?.error?.light || '#fca5a5' }}>{academyName}</p>
+          <p className="text-sm font-semibold text-appError mt-1">{academyName}</p>
         </div>
-        <div className="border p-4 rounded-xl text-xs leading-relaxed text-start" style={{ backgroundColor: C?.dark?.main || '#0f172a', borderColor: C?.dark?.border || '#334155', color: C?.text?.body || '#cbd5e1' }}>
+        <div className="bg-dark-bg border border-appBorder-card p-4 rounded-xl text-xs leading-relaxed text-start text-appText-sub">
           {blockReason}
         </div>
         <div className="space-y-2 pt-2">
           <button
             type="button"
             onClick={handleSupportContact}
-            className="w-full border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors"
-            style={{ backgroundColor: '#059669', color: '#ffffff' }}
+            className="w-full border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors bg-brandEmerald-dark text-white hover:bg-brandEmerald"
           >
             <MessageCircle size={18} />
             {t('blocked_view.whatsapp_button', 'التواصل مع الإدارة عبر الواتساب')}
@@ -93,8 +85,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
             <button
               type="button"
               onClick={onLogout}
-              className="w-full border-0 py-2.5 rounded-xl font-semibold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors"
-              style={{ backgroundColor: C?.dark?.border || '#334155', color: C?.text?.body || '#cbd5e1' }}
+              className={UI.btnSecondary}
             >
               <LogOut size={16} />
               {t('common.logout', 'تسجيل الخروج')}
@@ -113,7 +104,7 @@ const safeLazy = (importFn) => {
       return { 
         default: () => {
           const { t } = useTranslation();
-          return <div className="p-4 text-rose-400 text-center">{t('common.lazy_error', 'تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.')}</div>;
+          return <div className="p-4 text-appError text-center font-semibold">{t('common.lazy_error', 'تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.')}</div>;
         } 
       };
     })
@@ -142,14 +133,14 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 p-1 rounded-xl border w-fit backdrop-blur-md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', borderColor: C?.dark?.border || '#334155' }}>
+      <div className="flex gap-2 p-1 rounded-xl border border-appBorder-card w-fit backdrop-blur-md bg-dark-card/60">
         <button
           type="button"
           onClick={() => setActiveSubTab('communications')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'communications' 
-              ? 'bg-emerald-600 text-white shadow-lg' 
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-brandEmerald-dark text-white shadow-lg' 
+              : 'text-appText-sub hover:text-appText-main'
           }`}
         >
           {t('hub.communications', 'مركز التواصل والإشعارات')}
@@ -159,8 +150,8 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
           onClick={() => setActiveSubTab('reports')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeSubTab === 'reports' 
-              ? 'bg-emerald-600 text-white shadow-lg' 
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-brandEmerald-dark text-white shadow-lg' 
+              : 'text-appText-sub hover:text-appText-main'
           }`}
         >
           {t('hub.reports', 'التقارير الذكية')}
@@ -189,12 +180,12 @@ class ErrorBoundaryInner extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '24px', background: C?.dark?.card || '#1e293b', borderRadius: '16px', border: `1px solid ${C?.error?.border || '#f87171'}`, color: C?.error?.light || '#fca5a5', margin: '20px', direction: 'rtl' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+        <div className="p-6 bg-dark-card rounded-2xl border border-appError/40 text-appError my-5 dir-rtl">
+          <div className="flex items-center gap-2.5 mb-3">
             <AlertTriangle size={22} />
-            <h3 style={{ margin: 0, color: C?.error?.light || '#fca5a5', fontSize: '16px' }}>حدث خطأ أثناء عرض هذا القسم</h3>
+            <h3 className="m-0 text-appError text-base font-bold">حدث خطأ أثناء عرض هذا القسم</h3>
           </div>
-          <pre style={{ background: C?.dark?.main || '#0f172a', padding: '12px', borderRadius: '8px', color: C?.text?.body || '#cbd5e1', fontSize: '12px', overflowX: 'auto', direction: 'ltr' }}>
+          <pre className="bg-dark-bg p-3 rounded-xl text-appText-sub text-xs overflow-x-auto dir-ltr font-mono">
             {this.state.error?.toString()}
           </pre>
           <button 
@@ -203,7 +194,7 @@ class ErrorBoundaryInner extends React.Component {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }} 
-            style={{ padding: '10px 18px', background: C?.primary?.gradient || '#d97706', color: C?.dark?.main || '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            className={`${UI.btnPrimary} w-auto mt-3.5 px-4 py-2.5`}
           >
             <RefreshCw size={16} /> إعادة تحميل الصفحة
           </button>
@@ -333,7 +324,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       return;
     }
 
-    // منع الإرسال المكرر إذا كان الطلب جارياً بالفعل لنفس الأكاديمية أو تم جلبها سابقاً
     if (!forceRefresh) {
       if (fetchedAcademyIdRef.current === targetAcademyId || isFetchingRef.current) {
         return;
@@ -392,7 +382,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     if (!newAcademyId || newAcademyId === academyId) return;
     const target = academiesList.find(a => a.id === newAcademyId);
     if (target) {
-      // إعادة ضبط التتبع عند تغيير الأكاديمية
       fetchedAcademyIdRef.current = null;
       setAcademy(target);
     }
@@ -618,15 +607,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
   };
 
-  // أضف هذا التعديل البسيط في جزء الـ Main/Suspense ليعرض الهيكل الموحد فوراً بدون شاشة سوداء إضافية
   return (
     <div 
-      className="relative flex min-h-screen w-full overflow-x-hidden select-none"
-      style={{ 
-        fontFamily: "'Cairo', system-ui, sans-serif",
-        backgroundColor: C?.dark?.main || '#0f172a',
-        color: C?.text?.title || '#f8fafc'
-      }} 
+      className="relative flex min-h-screen w-full overflow-x-hidden select-none bg-dark-bg text-appText-main font-cairo"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <OriginalEmeraldBackground />
@@ -681,11 +664,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           }}
         />
         <main 
-          className="flex-1 w-full box-border overflow-y-auto"
-          style={{ 
-            padding: isMobile ? '12px' : '24px', 
-            paddingBottom: isMobile ? '80px' : '24px'
-          }}
+          className={`flex-1 w-full box-border overflow-y-auto ${
+            isMobile ? 'p-3 pb-20' : 'p-6 pb-6'
+          }`}
         >
           <ErrorBoundaryInner key={activeTab}>
             <Suspense fallback={<PageSkeleton />}>
