@@ -5,31 +5,39 @@
 @tailwind utilities;
 
 @layer base {
-  /* 1. الخلفيات والأسطح */
   :root {
+    /* 1. الخلفيات والأسطح */
     --bg-dark: #070B11;
     --surface-card: rgba(15, 23, 42, 0.85);
     --surface-input: #0A101D;
     --surface-google: #162032;
 
-    /* 2. الهوية البصرية الرئيسية (Amber/Gold) */
+    /* 2. الهوية الرئيسية (Amber/Orange) */
     --primary: #E07A00;
     --primary-hover: #C66B00;
     --primary-glow: rgba(224, 122, 0, 0.35);
+    --primary-btn-start: #E67E00;
+    --primary-btn-end: #D97706;
 
-    /* 3. عناصر الشعار والمؤشرات الخضراء والتوهج العلوي */
+    /* 3. الهوية الزمردية (Emerald) */
     --emerald-bg: #09332C;
     --emerald-border: #0D5C4D;
     --emerald-text: #10B981;
+    --emerald-dark: #059669;
+    --emerald-light: #34D399;
     --emerald-radial-glow: rgba(16, 185, 129, 0.14);
+    --emerald-logo-glow: rgba(16, 185, 129, 0.35);
 
-    /* 4. النصوص والحدود الموحدة */
+    /* 4. النصوص والحدود */
     --text-main: #FFFFFF;
     --text-sub: #94A3B8;
     --text-muted: #475569;
     --border-card: rgba(255, 255, 255, 0.08);
     --border-input: #1B2738;
     --border-hover: #2E3E56;
+    
+    /* 5. الأخطاء والحالات */
+    --error: #EF4444;
   }
 
   html, body {
@@ -38,94 +46,23 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden !important;
-    background-color: #070B11;
-    
-    background-image: 
-      radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
-      radial-gradient(rgba(255, 255, 255, 0.18) 1.2px, transparent 1.2px);
-    background-size: 100% 100%, 28px 28px;
-    background-position: 0 0, 0 0;
-    background-attachment: fixed;
-
-    color: #FFFFFF;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     font-family: 'Cairo', sans-serif;
     direction: rtl;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  button, input, select, textarea {
-    font-family: 'Cairo', sans-serif !important;
-  }
-
-  select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: #0A101D !important;
-    color: #FFFFFF !important;
-  }
-
-  select option {
-    background-color: #0F172A !important;
-    color: #FFFFFF !important;
-    padding: 10px;
-  }
-
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-
-  #root {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* شريط التمرير العام */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #070B11;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #1E293B;
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #E07A00;
-  }
+  /* ... بقية إعدادات العناصر العامة ... */
 }
 
 @layer components {
-  /* 📦 1. بطاقة المحتوى الموحدة */
-  .card-surface {
-    background-color: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.25rem;
-    padding: 1.25rem 1rem;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-    overflow: visible !important;
-  }
-
-  @media (min-width: 640px) {
-    .card-surface {
-      padding: 1.5rem 1.25rem;
-    }
-  }
-
-  /* ✏️ 2. حقول الإدخال */
+  /* ✏️ حقول الإدخال باستخدام المتغيرات بدلاً من ألوان Hex صريحة */
   .app-input {
     width: 100%;
     height: 2.375rem;
-    background-color: #0A101D;
-    border: 1px solid #1B2738;
-    color: #FFFFFF;
+    background-color: var(--surface-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
     border-radius: 0.625rem;
     padding: 0.375rem 0.75rem;
     font-size: 0.8125rem;
@@ -133,24 +70,24 @@
   }
 
   .app-input::placeholder {
-    color: #475569;
+    color: var(--text-muted);
   }
 
   .app-input:hover {
-    border-color: #2E3E56;
+    border-color: var(--border-hover);
   }
 
   .app-input:focus {
     outline: none;
-    border-color: #E07A00;
-    box-shadow: 0 0 0 3px rgba(224, 122, 0, 0.35);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
   }
 
-  /* 🔘 3. الأزرار */
+  /* 🔘 الأزرار الرئيسية باستخدام التدرج والمتغيرات */
   .btn-primary {
     width: 100%;
-    background: linear-gradient(180deg, #E67E00 0%, #D97706 100%);
-    color: #FFFFFF;
+    background: linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%);
+    color: var(--text-main);
     font-weight: 700;
     font-size: 0.875rem;
     padding: 0.625rem 1rem;
@@ -162,224 +99,6 @@
     gap: 0.5rem;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(224, 122, 0, 0.3);
+    box-shadow: 0 4px 14px var(--primary-glow);
   }
-
-  .btn-primary:hover {
-    box-shadow: 0 6px 20px rgba(224, 122, 0, 0.45);
-    transform: translateY(-1px);
-  }
-
-  .btn-primary:active {
-    transform: translateY(0);
-  }
-
-  .btn-secondary {
-    width: 100%;
-    background-color: #162032;
-    color: #FFFFFF;
-    border: 1px solid #1B2738;
-    font-weight: 600;
-    font-size: 0.875rem;
-    padding: 0.625rem 1rem;
-    border-radius: 0.75rem;
-    transition: all 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    cursor: pointer;
-  }
-
-  .btn-secondary:hover {
-    background-color: #1C293F;
-    border-color: #2E3E56;
-  }
-
-  /* 🔗 4. الروابط الملونة */
-  .link-primary {
-    color: #E07A00;
-    font-weight: 700;
-    transition: color 0.2s ease;
-    text-decoration: none;
-  }
-
-  .link-primary:hover {
-    color: #C66B00;
-    text-decoration: underline;
-  }
-
-  /* 📖 5. الشعار الأعلى */
-  .logo-icon-wrapper {
-    width: 3.5rem;
-    height: 3.5rem;
-    background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-    border: 1px solid rgba(52, 211, 153, 0.3);
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem auto;
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
-  }
-}
-
-/* 🌟 إخفاء شريط التمرير الأفقي لتبويبات الملاحة */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* 📜 شريط تمرير القوائم المنسدلة المخصصة */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1B2738;
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #E07A00;
-}
-
-/* 🌐 إعدادات عنصر الـ Dropdown Portal المباشرة وإصلاح الشفافية والتداخل */
-#portal-select-dropdown {
-  box-sizing: border-box;
-  touch-action: manipulation;
-  background-color: #0F172A !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.8) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  isolation: isolate;
-}
-
-/* =========================================================
-   📅 6. تخصيص منتقي التاريخ (Custom Dark Datepicker)
-   ========================================================= */
-.custom-dark-calendar {
-  background-color: #0F172A !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 1rem !important;
-  font-family: 'Cairo', sans-serif !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85) !important;
-  overflow: hidden !important;
-  z-index: 9999 !important;
-}
-
-.custom-dark-calendar .react-datepicker__header {
-  background-color: #162032 !important;
-  border-bottom: 1px solid #1B2738 !important;
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
-}
-
-.custom-dark-calendar .react-datepicker__current-month,
-.custom-dark-calendar .react-datepicker-time__header {
-  color: #94A3B8 !important;
-  font-weight: 600 !important;
-}
-
-/* محاذاة وتوزيع الأيام بمرونة */
-.custom-dark-calendar .react-datepicker__day-names,
-.custom-dark-calendar .react-datepicker__week {
-  display: flex !important;
-  justify-content: space-around !important;
-  align-items: center !important;
-}
-
-.custom-dark-calendar .react-datepicker__day-name {
-  color: #10B981 !important;
-  font-weight: 700 !important;
-  width: 2.2rem !important;
-  line-height: 2rem !important;
-  font-size: 0.725rem !important;
-  margin: 0.02rem !important;
-  text-align: center !important;
-}
-
-.custom-dark-calendar .react-datepicker__day {
-  color: #E2E8F0 !important;
-  border-radius: 0.5rem !important;
-  width: 2.2rem !important;
-  height: 2.2rem !important;
-  line-height: 2.2rem !important;
-  margin: 0.02rem !important;
-  font-size: 0.8125rem !important;
-  text-align: center !important;
-  transition: all 0.15s ease !important;
-}
-
-/* إصلاح تباين وألوان قائمة اختيار السنة المنسدلة Dropdown */
-.custom-dark-calendar .react-datepicker__year-dropdown,
-.custom-dark-calendar .react-datepicker__month-dropdown {
-  background-color: #0F172A !important;
-  border: 1px solid #1B2738 !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
-  color: #FFFFFF !important;
-  padding: 6px 0 !important;
-}
-
-.custom-dark-calendar .react-datepicker__year-option,
-.custom-dark-calendar .react-datepicker__month-option {
-  padding: 6px 12px !important;
-  color: #E2E8F0 !important;
-  font-size: 0.8125rem !important;
-}
-
-.custom-dark-calendar .react-datepicker__year-option:hover,
-.custom-dark-calendar .react-datepicker__month-option:hover {
-  background-color: #10B981 !important;
-  color: #FFFFFF !important;
-}
-
-.custom-dark-calendar select.react-datepicker__year-select,
-.custom-dark-calendar select.react-datepicker__month-select {
-  background-color: #0A101D !important;
-  color: #10B981 !important;
-  border: 1px solid #1B2738 !important;
-  border-radius: 0.5rem !important;
-  padding: 4px 8px !important;
-}
-
-.custom-dark-calendar .react-datepicker__day:hover {
-  background-color: #1B2738 !important;
-  color: #10B981 !important;
-}
-
-.custom-dark-calendar .react-datepicker__day--selected,
-.custom-dark-calendar .react-datepicker__day--in-range {
-  background-color: #10B981 !important;
-  color: #FFFFFF !important;
-  font-weight: bold !important;
-}
-
-.custom-dark-calendar .react-datepicker__day--in-selecting-range {
-  background-color: rgba(16, 185, 129, 0.2) !important;
-  color: #10B981 !important;
-}
-
-.custom-dark-calendar .react-datepicker__day--disabled {
-  color: #475569 !important;
-  opacity: 0.3;
-}
-
-.custom-dark-calendar .react-datepicker__navigation-icon::before {
-  border-color: #94A3B8 !important;
-}
-
-.react-datepicker-popper {
-  z-index: 9999 !important;
-}
-
-.react-datepicker__portal {
-  background-color: rgba(7, 11, 17, 0.8) !important;
-  backdrop-filter: blur(4px) !important;
-  z-index: 99999 !important;
 }
