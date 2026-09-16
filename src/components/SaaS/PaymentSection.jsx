@@ -1,51 +1,39 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, ShieldCheck, Check, Copy, X } from 'lucide-react';
-import { useAcademy } from '@/context/AcademyContext';
-import rawColors from '@/theme/colors.js';
-import { getText } from '@/utils/textUtils';
+import { colors } from '@/theme/colors';
 import PaymentMethods from './components/PaymentMethods';
 
-// 🎨 الألوان المعتمدة v2.5
-const C = {
-  ...rawColors,
-  dark: {
-    card: rawColors?.dark?.card,
-    border: rawColors?.dark?.cardBorder,
-    surface: rawColors?.dark?.surface,
-  },
-  amber: {
-    DEFAULT: rawColors?.amber?.DEFAULT,
-    buttonStart: rawColors?.amber?.buttonStart,
-    buttonEnd: rawColors?.amber?.buttonEnd,
-    glow: rawColors?.amber?.buttonGlow,
-  },
-  emerald: {
-    DEFAULT: rawColors?.emerald?.DEFAULT,
-  },
-  text: {
-    title: rawColors?.text?.title,
-    body: rawColors?.text?.body,
-    muted: rawColors?.text?.muted,
-  },
-  inputs: {
-    bg: rawColors?.inputs?.bg,
-    border: rawColors?.inputs?.border,
-  }
-};
-
 export default function PaymentSection({ 
-  region = 'egypt', 
-  txId, 
+  region = 'EGP', 
+  txId = '', 
   setTxId, 
-  isSubmitted, 
-  loading, 
+  isSubmitted = false, 
+  loading = false, 
   onSubmit, 
-  isRTL 
+  isRTL = false 
 }) {
-  const { t } = useAcademy();
+  const { t } = useTranslation();
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [receiptFile, setReceiptFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  // استخراج ألوان الثيم بأسلوب دفاعي لمنع أي كسر
+  const cardBg = colors?.dark?.card || '#0F172A';
+  const cardBorder = colors?.dark?.cardBorder || '#1E293B';
+  const surfaceBg = colors?.dark?.surface || '#182234';
+  const textPrimary = colors?.dark?.text || '#F8FAFC';
+  const textMuted = colors?.dark?.textMuted || '#94A3B8';
+  const accentEmerald = colors?.emerald?.light || '#10B981';
+  const inputBg = colors?.inputs?.bg || 'rgba(15, 23, 42, 0.6)';
+  const inputBorder = colors?.inputs?.border || '#334155';
+
+  // توحيد رمز المنطقة المالي مع الحفاظ على التوافق الخلفي
+  const normalizedRegion = useMemo(() => {
+    if (region === 'egypt' || region === 'EGP') return 'EGP';
+    if (region === 'gcc' || region === 'SAR') return 'SAR';
+    return 'USD';
+  }, [region]);
 
   const handleRemoveFile = useCallback((e) => {
     e.stopPropagation();
@@ -55,86 +43,89 @@ export default function PaymentSection({
     }
   }, []);
 
-  return (
-    <div style={{
-      backgroundColor: C.dark?.card,
-      borderColor: C.dark?.border,
-      borderRadius: '20px',
-      padding: '24px',
-      maxWidth: '600px',
-      marginInline: 'auto',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-      border: `1px solid ${C.dark?.border}`
-    }}>
+  const handleFormSubmit = (e) => {
+    e?.preventDefault();
+    if (onSubmit) {
+      onSubmit(
+        selectedGateway?.id, 
+        Boolean(selectedGateway?.accountNumber || selectedGateway?.isManual), 
+        receiptFile
+      );
+    }
+  };
 
-      {/* 💳 1. استدعاء مكون وسائل الدفع (بدون تكرار) */}
+  return (
+    <div 
+      style={{
+        backgroundColor: cardBg,
+        borderColor: cardBorder,
+      }}
+      className="border rounded-2xl p-6 max-w-xl mx-auto shadow-2xl space-y-5"
+    >
+      {/* 💳 1. استدعاء مكون وسائل الدفع */}
       <PaymentMethods 
+        region={normalizedRegion}
         onSelectPayment={(gateway) => setSelectedGateway(gateway)} 
       />
 
       {/* 📝 2. تفاصيل الإشعار ورقم المعاملة للدفع اليدوي */}
-      {selectedGateway?.accountNumber && (
-        <div style={{
-          backgroundColor: C.dark?.surface,
-          borderColor: C.dark?.border,
-          border: `1px solid ${C.dark?.border}`,
-          borderRadius: '12px',
-          padding: '16px',
-          marginBlockStart: '16px'
-        }}>
+      {(selectedGateway?.accountNumber || selectedGateway?.isManual) && (
+        <div 
+          style={{
+            backgroundColor: surfaceBg,
+            borderColor: cardBorder,
+          }}
+          className="border rounded-xl p-4 space-y-3 transition-all duration-200"
+        >
           {/* مدخل رقم المعاملة */}
-          <div style={{ marginBlockEnd: '12px' }}>
+          <div className="space-y-1">
+            <label style={{ color: textMuted }} className="text-xs font-bold block">
+              {t('subscription.txIdLabel', 'رقم عملية التحويل / المرجع (اختياري)')}
+            </label>
             <input 
               type="text" 
               value={txId}
-              onChange={(e) => setTxId(e.target.value)}
-              placeholder={getText(t, 'subscription.txIdPlaceholder', 'رقم المعاملة / اسم المحول (اختياري)')}
+              onChange={(e) => setTxId?.(e.target.value)}
+              placeholder={t('subscription.txIdPlaceholder', 'أدخل رقم المعاملة أو اسم المحوِّل')}
               style={{
-                backgroundColor: C.inputs?.bg,
-                borderColor: C.inputs?.border,
-                color: C.text?.title,
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                fontSize: '0.85rem',
-                border: `1px solid ${C.inputs?.border}`,
-                outline: 'none'
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: textPrimary,
               }}
+              className="w-full p-3 rounded-lg text-xs border outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
             />
           </div>
 
           {/* رفع صورة الإشعار */}
-          <div>
-            <label style={{ color: C.text?.muted, fontSize: '0.75rem', display: 'block', marginBlockEnd: '6px' }}>
-              {getText(t, 'subscription.attachReceipt', 'إرفاق صورة إشعار التحويل:')}
+          <div className="space-y-1">
+            <label style={{ color: textMuted }} className="text-xs font-bold block">
+              {t('subscription.attachReceipt', 'إرفاق صورة إشعار التحويل:')}
             </label>
             
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <label style={{
-                backgroundColor: C.inputs?.bg,
-                borderColor: C.inputs?.border,
-                border: `1px dashed ${C.inputs?.border}`,
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '12px',
-                minHeight: '44px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                gap: '8px'
-              }}>
-                <Upload size={16} style={{ color: C.amber?.DEFAULT }} />
-                <span style={{ color: receiptFile ? C.emerald?.DEFAULT : C.text?.muted, fontWeight: receiptFile ? 'bold' : 'normal' }}>
-                  {receiptFile ? receiptFile.name : getText(t, 'subscription.selectReceiptFile', 'اختر ملف الإشعار أو التقط صورة')}
+            <div className="relative flex items-center">
+              <label 
+                style={{
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                }}
+                className="w-full flex items-center justify-center p-3 border border-dashed rounded-lg cursor-pointer text-xs gap-2 min-h-[44px] transition-all hover:border-slate-500"
+              >
+                <Upload size={16} style={{ color: accentEmerald }} />
+                <span 
+                  style={{ 
+                    color: receiptFile ? accentEmerald : textMuted, 
+                    fontWeight: receiptFile ? 'bold' : 'normal' 
+                  }}
+                  className="truncate max-w-[240px]"
+                >
+                  {receiptFile ? receiptFile.name : t('subscription.selectReceiptFile', 'اختر ملف الإشعار أو التقط صورة')}
                 </span>
                 <input 
                   ref={fileInputRef}
                   type="file" 
-                  accept="image/*" 
+                  accept="image/*,.pdf" 
                   onChange={(e) => setReceiptFile(e.target.files[0] || null)} 
-                  style={{ display: 'none' }} 
+                  className="hidden" 
                 />
               </label>
 
@@ -142,17 +133,8 @@ export default function PaymentSection({
                 <button
                   type="button"
                   onClick={handleRemoveFile}
-                  aria-label={getText(t, 'common.remove', 'إزالة')}
-                  style={{
-                    position: 'absolute',
-                    insetInlineEnd: '8px',
-                    background: 'rgba(239, 68, 68, 0.2)',
-                    color: '#EF4444',
-                    border: 'none',
-                    borderRadius: '50%',
-                    padding: '4px',
-                    cursor: 'pointer'
-                  }}
+                  aria-label={t('common.remove', 'إزالة الملف')}
+                  className="absolute inline-end-2 p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-colors"
                 >
                   <X size={14} />
                 </button>
@@ -163,63 +145,46 @@ export default function PaymentSection({
       )}
 
       {/* 🛡️ 3. تنبيه الأمان */}
-      <div style={{
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        color: C.emerald?.DEFAULT,
-        border: `1px solid rgba(16, 185, 129, 0.2)`,
-        padding: '10px',
-        borderRadius: '10px',
-        marginBlockStart: '16px',
-        textAlign: 'center',
-        fontSize: '0.75rem',
-        fontWeight: 'bold'
-      }}>
-        {getText(t, 'subscription.secureNotice', 'دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.')}
+      <div 
+        style={{
+          backgroundColor: 'rgba(16, 185, 129, 0.08)',
+          color: accentEmerald,
+          borderColor: 'rgba(16, 185, 129, 0.2)',
+        }}
+        className="border p-2.5 rounded-xl text-center text-xs font-bold"
+      >
+        {t('subscription.secureNotice', 'دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.')}
       </div>
 
       {/* 🚀 4. زر إتمام الطلب النهائي */}
       {isSubmitted ? (
-        <div style={{
-          backgroundColor: 'rgba(16, 185, 129, 0.15)',
-          color: C.emerald?.DEFAULT,
-          border: `1px solid rgba(16, 185, 129, 0.3)`,
-          padding: '14px',
-          borderRadius: '12px',
-          marginBlockStart: '16px',
-          textAlign: 'center',
-          fontSize: '0.85rem',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px'
-        }}>
+        <div 
+          style={{
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            color: accentEmerald,
+            borderColor: 'rgba(16, 185, 129, 0.3)',
+          }}
+          className="border p-3.5 rounded-xl text-center text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2"
+        >
           <ShieldCheck size={18} />
-          <span>{getText(t, 'subscription.orderReceived', 'تم استلام الطلب وستتم المراجعة والتفعيل فوراً')}</span>
+          <span>{t('subscription.orderReceived', 'تم استلام الطلب وستتم المراجعة والتفعيل فوراً')}</span>
         </div>
       ) : (
         <button 
-          onClick={() => onSubmit(selectedGateway?.id, !!selectedGateway?.accountNumber, receiptFile)}
+          type="button"
+          onClick={handleFormSubmit}
           disabled={loading}
-          aria-label={getText(t, 'subscription.proceedToPayment', 'تأكيد وإتمام الطلب')}
+          aria-label={t('subscription.proceedToPayment', 'تأكيد وإتمام الطلب')}
           style={{
-            width: '100%',
-            marginBlockStart: '16px',
-            padding: '14px',
-            minHeight: '48px',
-            backgroundColor: C.amber?.DEFAULT,
-            color: '#FFFFFF',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '0.9rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
+            backgroundColor: accentEmerald,
+            color: colors?.dark?.bg || '#090F16',
             opacity: loading ? 0.6 : 1
           }}
+          className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center justify-center gap-2 hover:brightness-110 shadow-lg shadow-emerald-950/20"
         >
           {loading 
-            ? getText(t, 'common.processing', 'جاري المعالجة...') 
-            : getText(t, 'subscription.proceedToPayment', 'تأكيد وإتمام الطلب')}
+            ? t('common.processing', 'جاري المعالجة...') 
+            : t('subscription.proceedToPayment', 'تأكيد وإتمام الطلب')}
         </button>
       )}
     </div>
