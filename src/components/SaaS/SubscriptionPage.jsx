@@ -10,28 +10,9 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
   validateCoupon, 
-  calculateFinalPrice 
+  calculateFinalPrice,
+  detectUserCurrencyRegion
 } from '@/constants/subscriptionData';
-
-// 🌐 اكتشاف إقليم العميل تلقائياً بناءً على المنطقة الزمنية لمتصفح المستخدم
-const detectUserRegion = () => {
-  try {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    if (timeZone.includes('Cairo') || timeZone.includes('Africa/Cairo')) {
-      return 'egypt';
-    } 
-    if (
-      timeZone.includes('Riyadh') || timeZone.includes('Dubai') || 
-      timeZone.includes('Kuwait') || timeZone.includes('Qatar') || 
-      timeZone.includes('Bahrain') || timeZone.includes('Muscat')
-    ) {
-      return 'gcc';
-    }
-    return 'global';
-  } catch (e) {
-    return 'global';
-  }
-};
 
 export default function SubscriptionPage({ onBack }) {
   const { t, i18n } = useTranslation();
@@ -39,8 +20,8 @@ export default function SubscriptionPage({ onBack }) {
   // 🌍 تحديد اتجاه الصفحة ولغة النظام بناءً على المحول العام للموقع
   const isRTL = i18n.dir ? i18n.dir() === 'rtl' : i18n.language === 'ar';
 
-  // 🌍 ضبط الإقليم والخيارات الافتراضية
-  const [region, setRegion] = useState(() => detectUserRegion());
+  // 🌍 ضبط العملة والنطاق المالي الافتراضي ديناميكياً بحيادية
+  const [region, setRegion] = useState(() => detectUserCurrencyRegion());
   const [selectedPlan, setSelectedPlan] = useState('yearly'); // الاشتراك السنوي افتراضي
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
@@ -62,17 +43,28 @@ export default function SubscriptionPage({ onBack }) {
 
   // جلب الأسعار والعملة ديناميكياً من ملف الثوابت الموحد
   const currentRegionData = useMemo(() => {
-    return SUBSCRIPTION_PLANS[region] || SUBSCRIPTION_PLANS.egypt;
+    return SUBSCRIPTION_PLANS[region] || SUBSCRIPTION_PLANS.USD;
   }, [region]);
 
   const currencyLabel = useMemo(() => {
     return t(currentRegionData.currencyKey, currentRegionData.defaultCurrency);
   }, [t, currentRegionData]);
 
-  // بناء خطط الاشتراك (الشهري والسنوي) بصياغة حيدة وعالمية
+  // بناء خطط الاشتراك (الشهري والسنوي) بصياغة محايدة وعالمية
   const plans = useMemo(() => {
     const monthlyPrice = currentRegionData.plans.monthly.price;
     const yearlyPrice = currentRegionData.plans.yearly.price;
+
+    // جلب الشارة المناسبة بناءً على اللغة الحالية
+    const getBadgeText = () => {
+      const lang = (i18n.language || 'ar').toLowerCase();
+      if (lang.startsWith('en')) return currentRegionData.plans.yearly.badgeEn;
+      if (lang.startsWith('fr')) return currentRegionData.plans.yearly.badgeFr || currentRegionData.plans.yearly.badgeEn;
+      if (lang.startsWith('tr')) return currentRegionData.plans.yearly.badgeTr || currentRegionData.plans.yearly.badgeEn;
+      if (lang.startsWith('ur')) return currentRegionData.plans.yearly.badgeUr || currentRegionData.plans.yearly.badgeAr;
+      if (lang.startsWith('id')) return currentRegionData.plans.yearly.badgeId || currentRegionData.plans.yearly.badgeEn;
+      return currentRegionData.plans.yearly.badgeAr;
+    };
 
     return [
       {
@@ -90,9 +82,7 @@ export default function SubscriptionPage({ onBack }) {
       {
         id: 'yearly',
         title: t('subscription.plans.yearlyTitle', 'الاستقرار الأكاديمي (اشتراك سنوي)'),
-        badge: isRTL 
-          ? (currentRegionData.plans.yearly.badgeAr || 'توفير شهرين مجاناً 🔥')
-          : (currentRegionData.plans.yearly.badgeEn || 'Save 2 Months 🔥'),
+        badge: getBadgeText(),
         badgeBg: theme.accent,
         description: t('subscription.plans.yearlyDesc', 'خيار مستدام للمؤسسات والمجمعات التعليمية المتكاملة'),
         periodText: t('subscription.periods.yearly', 'سنوياً'),
@@ -104,7 +94,7 @@ export default function SubscriptionPage({ onBack }) {
         ]
       }
     ];
-  }, [currentRegionData, isRTL, t, theme.accent]);
+  }, [currentRegionData, i18n.language, t, theme.accent]);
 
   // معالجة وتطبيق كود الخصم
   const handleApplyPromo = useCallback(() => {
@@ -139,7 +129,7 @@ export default function SubscriptionPage({ onBack }) {
         }
       }
 
-      // الحفظ في جدول saas_subscriptions
+      // الحفظ في جدول saas_subscriptions بالهيكلية الجديدة
       if (supabase?.from) {
         const { error: insertError } = await supabase.from('saas_subscriptions').insert([
           {
@@ -180,7 +170,7 @@ export default function SubscriptionPage({ onBack }) {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* زر العودة العلوي فقط بدون محول لغات محلي */}
+        {/* زر العودة العلوي فقط */}
         <div 
           className="flex items-center justify-start pb-4 border-b"
           style={{ borderColor: theme.borderColor }}
@@ -213,7 +203,7 @@ export default function SubscriptionPage({ onBack }) {
           </p>
         </div>
 
-        {/* في حالة إتمام الطلب بنجاح */}
+        {/* شاشة إتمام الطلب بنجاح */}
         {isSubmitted ? (
           <div 
             className="p-8 rounded-2xl border text-center space-y-4 max-w-lg mx-auto"
@@ -236,7 +226,7 @@ export default function SubscriptionPage({ onBack }) {
           </div>
         ) : (
           <>
-            {/* محدد المنطقة والعملة */}
+            {/* محدد العملة والمنطقة */}
             <RegionSelector 
               region={region} 
               setRegion={setRegion} 
