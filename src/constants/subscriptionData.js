@@ -63,7 +63,7 @@ export const SUBSCRIPTION_PLANS = {
   }
 };
 
-// 🔄 خريطة التوافق الخلفي للرموز القديمة (تمنع كسر أي مكونات استدعت egypt أو gcc)
+// 🔄 خريطة التوافق الخلفي للرموز القديمة (تمنع كسر أي مكونات استدعت egypt أو gcc أو global)
 SUBSCRIPTION_PLANS.egypt = SUBSCRIPTION_PLANS.EGP;
 SUBSCRIPTION_PLANS.gcc = SUBSCRIPTION_PLANS.SAR;
 SUBSCRIPTION_PLANS.global = SUBSCRIPTION_PLANS.USD;
@@ -79,16 +79,17 @@ export const COUPON_CODES = {
 };
 
 /**
- * 3. دالة كشف النطاق المالي والعملة بشكل محايد وعالمي ودقيق
+ * 3. دالة كشف النطاق المالي والعملة بشكل محايد وعالمي ودقيق (تغطي كافة دول الخليج الست ومصر والنطاق الدولي)
  */
 export const detectUserCurrencyRegion = (userLoc = '', currentLang = 'ar') => {
   try {
     const locUpper = String(userLoc || '').toUpperCase();
+    const gccCountryCodes = ['SA', 'KW', 'AE', 'QA', 'BH', 'OM'];
 
-    // 1. فحص دولة العميل المسجلة صراحة
+    // 1. فحص دولة العميل المسجلة صراحة عبر كود الدولة ISO
     if (locUpper) {
       if (locUpper.includes('EG')) return 'EGP';
-      if (['SA', 'KW', 'AE', 'QA', 'BH', 'OM'].some(code => locUpper.includes(code))) return 'SAR';
+      if (gccCountryCodes.some(code => locUpper.includes(code))) return 'SAR';
       if (locUpper !== 'GLOBAL') return 'USD';
     }
 
@@ -105,7 +106,7 @@ export const detectUserCurrencyRegion = (userLoc = '', currentLang = 'ar') => {
       }
     }
 
-    // 3. فحص المنطقة الزمنية للمتصفح (Timezone)
+    // 3. فحص المنطقة الزمنية للمتصفح (Timezone) لكافة عواصم ومناطق الخليج ومصر
     if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
       if (timeZone.includes('Cairo') || timeZone.includes('Africa/Cairo')) {
