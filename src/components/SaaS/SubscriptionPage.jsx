@@ -6,7 +6,7 @@ import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme/colors';
-import { ArrowLeft, Globe, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
   validateCoupon, 
@@ -27,14 +27,17 @@ const detectUserRegion = () => {
     ) {
       return 'gcc';
     }
-    return 'global'; // النطاق العالمي لجميع الدول الأخرى
+    return 'global';
   } catch (e) {
     return 'global';
   }
 };
 
-export default function SubscriptionPage({ isRTL = true, onBack }) {
+export default function SubscriptionPage({ onBack }) {
   const { t, i18n } = useTranslation();
+  
+  // 🌍 تحديد اتجاه الصفحة ولغة النظام بناءً على المحول العام للموقع
+  const isRTL = i18n.dir ? i18n.dir() === 'rtl' : i18n.language === 'ar';
 
   // 🌍 ضبط الإقليم والخيارات الافتراضية
   const [region, setRegion] = useState(() => detectUserRegion());
@@ -46,7 +49,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // جلب ألوان النظام الموحدة مع قيم أمان
+  // جلب ألوان النظام الموحدة
   const theme = useMemo(() => ({
     bg: colors?.dark?.bg,
     cardBg: colors?.dark?.card,
@@ -136,7 +139,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
         }
       }
 
-      // الحفظ في جدول saas_subscriptions بالهيكلية الجديدة
+      // الحفظ في جدول saas_subscriptions
       if (supabase?.from) {
         const { error: insertError } = await supabase.from('saas_subscriptions').insert([
           {
@@ -164,12 +167,6 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
     }
   }, [selectedPlan, region, txId, appliedDiscount]);
 
-  // تبديل لغة الواجهة عالمياً
-  const toggleLanguage = useCallback(() => {
-    const nextLang = i18n.language === 'en' ? 'ar' : 'en';
-    i18n.changeLanguage(nextLang);
-  }, [i18n]);
-
   return (
     <div 
       style={{
@@ -183,9 +180,9 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* أزرار التنقل واللغة العلوية */}
+        {/* زر العودة العلوي فقط بدون محول لغات محلي */}
         <div 
-          className="flex items-center justify-between pb-4 border-b"
+          className="flex items-center justify-start pb-4 border-b"
           style={{ borderColor: theme.borderColor }}
         >
           <button 
@@ -200,20 +197,6 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
           >
             <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
             <span>{t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}</span>
-          </button>
-
-          <button 
-            onClick={toggleLanguage}
-            aria-label={t('common.switchLanguage', 'تغيير اللغة')}
-            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90"
-            style={{ 
-              backgroundColor: theme.cardBg, 
-              borderColor: theme.borderColor,
-              color: theme.accent 
-            }}
-          >
-            <Globe size={16} />
-            <span>{i18n.language === 'en' ? 'العربية' : 'English'}</span>
           </button>
         </div>
 
@@ -245,7 +228,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
             </p>
             <button
               onClick={onBack}
-              className="mt-4 px-6 py-3 rounded-xl text-xs font-bold w-full transition-all"
+              className="mt-4 px-6 py-3 rounded-xl text-xs font-bold w-full transition-all cursor-pointer"
               style={{ backgroundColor: theme.accent, color: theme.bg }}
             >
               {t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
