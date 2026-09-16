@@ -5,15 +5,15 @@ import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
-import { colors } from '@/theme';
-import { ArrowLeft, Globe } from 'lucide-react';
+import { colors } from '@/theme/colors';
+import { ArrowLeft, Globe, CheckCircle2 } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
   validateCoupon, 
   calculateFinalPrice 
 } from '@/constants/subscriptionData';
 
-// 🌐 دالة الاكتشاف التلقائي لإقليم العميل بناءً على المنطقة الزمنية للمتصفح
+// 🌐 اكتشاف إقليم العميل تلقائياً بناءً على المنطقة الزمنية لمتصفح المستخدم
 const detectUserRegion = () => {
   try {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
@@ -27,7 +27,7 @@ const detectUserRegion = () => {
     ) {
       return 'gcc';
     }
-    return 'global'; // الافتراضي للدول الدولية (أوروبا، أمريكا، باقي آسيا)
+    return 'global'; // النطاق العالمي لجميع الدول الأخرى
   } catch (e) {
     return 'global';
   }
@@ -36,9 +36,9 @@ const detectUserRegion = () => {
 export default function SubscriptionPage({ isRTL = true, onBack }) {
   const { t, i18n } = useTranslation();
 
-  // 🌍 ضبط الإقليم الافتراضي ديناميكياً بدلاً من القيمة الصلبة 'egypt'
+  // 🌍 ضبط الإقليم والخيارات الافتراضية
   const [region, setRegion] = useState(() => detectUserRegion());
-  const [selectedPlan, setSelectedPlan] = useState('yearly'); // السنوي افتراضي
+  const [selectedPlan, setSelectedPlan] = useState('yearly'); // الاشتراك السنوي افتراضي
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
@@ -46,13 +46,16 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // جلب ألوان الثيم آمنة مع دعم الأوضاع الداكنة
-  const themeColors = useMemo(() => {
-    return colors || {
-      dark: { card: '#0F172A', border: '#1E293B', text: '#F8FAFC', textMuted: '#CBD5E1' },
-      accent: { primary: '#0F766E', gold: '#F59E0B' }
-    };
-  }, []);
+  // جلب ألوان النظام الموحدة مع قيم أمان
+  const theme = useMemo(() => ({
+    bg: colors?.dark?.bg,
+    cardBg: colors?.dark?.card,
+    borderColor: colors?.dark?.cardBorder,
+    accent: colors?.emerald?.light,
+    textPrimary: colors?.dark?.text,
+    textMuted: colors?.dark?.textMuted,
+    textSubtle: colors?.dark?.textSubtle,
+  }), []);
 
   // جلب الأسعار والعملة ديناميكياً من ملف الثوابت الموحد
   const currentRegionData = useMemo(() => {
@@ -63,7 +66,7 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
     return t(currentRegionData.currencyKey, currentRegionData.defaultCurrency);
   }, [t, currentRegionData]);
 
-  // تجهيز خطتي (الشهري والسنوي) فقط
+  // بناء خطط الاشتراك (الشهري والسنوي) بصياغة حيدة وعالمية
   const plans = useMemo(() => {
     const monthlyPrice = currentRegionData.plans.monthly.price;
     const yearlyPrice = currentRegionData.plans.yearly.price;
@@ -72,35 +75,35 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
       {
         id: 'monthly',
         title: t('subscription.plans.monthlyTitle', 'الوصول المرن (اشتراك شهري)'),
-        description: t('subscription.plans.monthlyDesc', 'مثالي للمراكز والحلقات الناشئة'),
+        description: t('subscription.plans.monthlyDesc', 'مناسب للمراكز والمؤسسات الناشئة لمرونة السداد'),
         periodText: t('subscription.periods.monthly', 'شهرياً'),
         basePrice: monthlyPrice,
         features: [
-          t('subscription.features.instantAccess', 'تفعيل فوري لكامل النظام'),
-          t('subscription.features.management', 'إدارة الطلاب والدورات والحلقات'),
-          t('subscription.features.standardSupport', 'دعم فني قياسي ومستمر')
+          t('subscription.features.instantAccess', 'تفعيل فوري ووصول لكافة الخصائص والأدوات'),
+          t('subscription.features.management', 'إدارة الحلقات والطلاب والمعلمين بدون قيود'),
+          t('subscription.features.standardSupport', 'دعم فني وتحديثات نظام دورية مستمرة')
         ]
       },
       {
         id: 'yearly',
-        title: t('subscription.plans.yearlyTitle', 'الكفاءة المستدامة (ترخيص سنوي)'),
+        title: t('subscription.plans.yearlyTitle', 'الاستقرار الأكاديمي (اشتراك سنوي)'),
         badge: isRTL 
           ? (currentRegionData.plans.yearly.badgeAr || 'توفير شهرين مجاناً 🔥')
           : (currentRegionData.plans.yearly.badgeEn || 'Save 2 Months 🔥'),
-        badgeBg: 'bg-[#10B981]',
-        description: t('subscription.plans.yearlyDesc', 'للمؤسسات والمقارئ المتكاملة'),
+        badgeBg: theme.accent,
+        description: t('subscription.plans.yearlyDesc', 'خيار مستدام للمؤسسات والمجمعات التعليمية المتكاملة'),
         periodText: t('subscription.periods.yearly', 'سنوياً'),
         basePrice: yearlyPrice,
         features: [
-          t('subscription.features.allMonthly', 'كل مميزات الاشتراك الشهري'),
-          t('subscription.features.saveMonths', 'توفير قيمة شهرين كاملين'),
-          t('subscription.features.prioritySupport', 'أولوية في الدعم الفني والتحديثات')
+          t('subscription.features.allMonthly', 'جميع المميزات المتوفرة في الاشتراك الشهري'),
+          t('subscription.features.saveMonths', 'توفير تكلفة شهرين كاملين عند السداد السنوي'),
+          t('subscription.features.prioritySupport', 'أولوية في الدعم الفني المباشر والتطوير المخصص')
         ]
       }
     ];
-  }, [currentRegionData, isRTL, t]);
+  }, [currentRegionData, isRTL, t, theme.accent]);
 
-  // تطبيق كود الخصم باستخدام دالة validateCoupon
+  // معالجة وتطبيق كود الخصم
   const handleApplyPromo = useCallback(() => {
     setPromoError('');
     const couponResult = validateCoupon(promoCode);
@@ -109,17 +112,17 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
       setAppliedDiscount(couponResult.discountPercent);
     } else {
       setAppliedDiscount(0);
-      setPromoError(t('subscription.errors.invalidPromo', 'كود الخصم غير صحيح أو منتهي الصلاحية'));
+      setPromoError(t('subscription.errors.invalidPromo', 'كود الخصم غير صحيح أو غير سارٍ'));
     }
   }, [promoCode, t]);
 
-  // إرسال طلب الاشتراك والتأكيد
+  // إرسال وإدراج الاشتراك في قاعدة البيانات الموحدة
   const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
     setLoading(true);
     try {
       let receiptUrl = null;
 
-      // رفع صورة الإشعار أو الإيصال بكتلة محامية بـ Supabase
+      // رفع إشعار التحويل المالي إن وجد
       if (receiptFile && supabase?.storage) {
         const fileExt = receiptFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -133,16 +136,19 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
         }
       }
 
+      // الحفظ في جدول saas_subscriptions بالهيكلية الجديدة
       if (supabase?.from) {
-        const { error: insertError } = await supabase.from('subscriptions').insert([
+        const { error: insertError } = await supabase.from('saas_subscriptions').insert([
           {
-            plan_type: selectedPlan,
-            region: region,
-            payment_method: methodId,
-            transaction_ref: txId,
-            receipt_url: receiptUrl,
-            discount_percentage: appliedDiscount,
-            status: 'pending',
+            plan_duration: selectedPlan,
+            payment_gateway: methodId,
+            status: 'pending_verification',
+            metadata: {
+              region: region,
+              transaction_ref: txId,
+              receipt_url: receiptUrl,
+              discount_applied: appliedDiscount
+            },
             created_at: new Date().toISOString()
           }
         ]);
@@ -152,13 +158,13 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
 
       setIsSubmitted(true);
     } catch (err) {
-      console.error('🚨 Error submitting subscription:', err);
+      console.error('🚨 الخطأ عند معالجة طلب الاشتراك:', err);
     } finally {
       setLoading(false);
     }
   }, [selectedPlan, region, txId, appliedDiscount]);
 
-  // تبديل لغة الواجهة
+  // تبديل لغة الواجهة عالمياً
   const toggleLanguage = useCallback(() => {
     const nextLang = i18n.language === 'en' ? 'ar' : 'en';
     i18n.changeLanguage(nextLang);
@@ -168,90 +174,132 @@ export default function SubscriptionPage({ isRTL = true, onBack }) {
     <div 
       style={{
         minHeight: '100vh',
-        background: 'radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.18) 0%, #070C12 70%)',
+        backgroundColor: theme.bg,
+        color: theme.textPrimary,
         fontFamily: "'Cairo', sans-serif"
       }}
-      className="py-10 px-4 text-[#F8FAFC]"
+      className="py-10 px-4 transition-colors duration-200"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* أزرار العودة واللغة بالأعلى */}
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#1E293B]">
+        {/* أزرار التنقل واللغة العلوية */}
+        <div 
+          className="flex items-center justify-between pb-4 border-b"
+          style={{ borderColor: theme.borderColor }}
+        >
           <button 
             onClick={onBack} 
-            aria-label={t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}
-            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#CBD5E1] transition-all cursor-pointer"
+            aria-label={t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
+            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90"
+            style={{ 
+              backgroundColor: theme.cardBg, 
+              borderColor: theme.borderColor,
+              color: theme.textMuted 
+            }}
           >
             <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
-            <span>{t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}</span>
+            <span>{t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}</span>
           </button>
 
           <button 
             onClick={toggleLanguage}
             aria-label={t('common.switchLanguage', 'تغيير اللغة')}
-            className="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] hover:border-[#334155] px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-[#F59E0B] transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90"
+            style={{ 
+              backgroundColor: theme.cardBg, 
+              borderColor: theme.borderColor,
+              color: theme.accent 
+            }}
           >
             <Globe size={16} />
             <span>{i18n.language === 'en' ? 'العربية' : 'English'}</span>
           </button>
         </div>
 
-        {/* الهيدر الرئيسي */}
-        <div className="flex flex-col items-center text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#F59E0B] mb-3 leading-tight">
-            {t('subscription.headerTitle', 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية')}
+        {/* العنوان الرئيسي والتعريفي */}
+        <div className="flex flex-col items-center text-center space-y-3">
+          <h1 
+            className="text-2xl sm:text-4xl font-extrabold leading-tight"
+            style={{ color: theme.accent }}
+          >
+            {t('subscription.headerTitle', 'خطط اشتراك منصة الحلقة الذكية')}
           </h1>
-          <p className="text-[#CBD5E1] text-xs sm:text-sm max-w-xl leading-relaxed">
-            {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لك، وانضم إلى كبرى الأكاديميات والمراكز التعليمية حول العالم.')}
+          <p className="text-xs sm:text-sm max-w-xl leading-relaxed" style={{ color: theme.textMuted }}>
+            {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لمؤسستك، وانضم إلى كبرى المراكز والجهات التعليمية حول العالم.')}
           </p>
         </div>
 
-        {/* محدد المنطقة والعملة */}
-        <RegionSelector 
-          region={region} 
-          setRegion={setRegion} 
-          isRTL={isRTL} 
-        />
+        {/* في حالة إتمام الطلب بنجاح */}
+        {isSubmitted ? (
+          <div 
+            className="p-8 rounded-2xl border text-center space-y-4 max-w-lg mx-auto"
+            style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
+          >
+            <CheckCircle2 size={48} className="mx-auto" style={{ color: theme.accent }} />
+            <h2 className="text-xl font-extrabold" style={{ color: theme.textPrimary }}>
+              {t('subscription.successTitle', 'تم استلام طلب الاشتراك بنجاح')}
+            </h2>
+            <p className="text-xs leading-relaxed" style={{ color: theme.textMuted }}>
+              {t('subscription.successDesc', 'جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.')}
+            </p>
+            <button
+              onClick={onBack}
+              className="mt-4 px-6 py-3 rounded-xl text-xs font-bold w-full transition-all"
+              style={{ backgroundColor: theme.accent, color: theme.bg }}
+            >
+              {t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* محدد المنطقة والعملة */}
+            <RegionSelector 
+              region={region} 
+              setRegion={setRegion} 
+              isRTL={isRTL} 
+            />
 
-        {/* أدخل كود الخصم */}
-        <PromoCodeInput 
-          promoCode={promoCode}
-          setPromoCode={setPromoCode}
-          onApply={handleApplyPromo}
-          appliedDiscount={appliedDiscount}
-          error={promoError}
-          isRTL={isRTL}
-        />
+            {/* إدخال كود الخصم */}
+            <PromoCodeInput 
+              promoCode={promoCode}
+              setPromoCode={setPromoCode}
+              onApply={handleApplyPromo}
+              appliedDiscount={appliedDiscount}
+              error={promoError}
+              isRTL={isRTL}
+            />
 
-        {/* كروت الخطط (شهري / سنوي) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {plans.map((p) => {
-            const finalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
-            return (
-              <PlanCard 
-                key={p.id}
-                plan={p}
-                isSelected={selectedPlan === p.id}
-                onSelect={() => setSelectedPlan(p.id)}
-                finalPrice={finalPrice}
-                currency={currencyLabel}
-                isRTL={isRTL}
-              />
-            );
-          })}
-        </div>
+            {/* عرض بطاقات الخطط المتاحة (شهري / سنوي) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {plans.map((p) => {
+                const finalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
+                return (
+                  <PlanCard 
+                    key={p.id}
+                    plan={p}
+                    isSelected={selectedPlan === p.id}
+                    onSelect={() => setSelectedPlan(p.id)}
+                    finalPrice={finalPrice}
+                    currency={currencyLabel}
+                    isRTL={isRTL}
+                  />
+                );
+              })}
+            </div>
 
-        {/* قسم الدفع والتأكيد */}
-        <PaymentSection 
-          region={region}
-          txId={txId}
-          setTxId={setTxId}
-          isSubmitted={isSubmitted}
-          loading={loading}
-          onSubmit={handleSubmitSubscription}
-          isRTL={isRTL}
-        />
+            {/* قسم وسيلة الدفع والتأكيد */}
+            <PaymentSection 
+              region={region}
+              txId={txId}
+              setTxId={setTxId}
+              isSubmitted={isSubmitted}
+              loading={loading}
+              onSubmit={handleSubmitSubscription}
+              isRTL={isRTL}
+            />
+          </>
+        )}
 
       </div>
     </div>
