@@ -54,17 +54,30 @@ export function useForgotPassword(): UseForgotPasswordReturn {
     }
   }, [i18n, currentLang]);
 
-  // دالة مساعدة لضمان استخراج نص الخطأ بشكل آمن
+  // دالة تحويل وحظر كائنات الأخطاء الفارغة {}
   const parseErrorMessage = (err: any): string => {
     if (!err) return t('errors.generic', 'حدث خطأ غير متوقع');
-    if (typeof err === 'string') return err;
-    if (typeof err.message === 'string' && err.message.trim() !== '' && err.message !== '{}') {
-      return err.message;
+    
+    // استخراج النص من مختلف خواص الأخطاء الممكنة في Supabase
+    let rawMsg = '';
+    if (typeof err === 'string') {
+      rawMsg = err;
+    } else if (typeof err === 'object') {
+      rawMsg = err.message || err.error_description || err.msg || err.details || '';
     }
-    if (typeof err.error_description === 'string') {
-      return err.error_description;
+
+    // تنظيف النص وتصفية الكائنات المجوفة
+    rawMsg = typeof rawMsg === 'string' ? rawMsg.trim() : '';
+
+    if (!rawMsg || rawMsg === '{}' || rawMsg === '[object Object]') {
+      // التعامل مع حالات عدم وجود شبكة أو رفض الطلب من السيرفر
+      if (err?.status === 0 || err?.name === 'FetchError') {
+        return t('errors.network_error', 'فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.');
+      }
+      return t('errors.generic', 'حدث خطأ غير متوقع أثناء معالجة الطلب');
     }
-    return t('errors.generic', 'حدث خطأ غير متوقع');
+
+    return rawMsg;
   };
 
   const handleReset = useCallback(
