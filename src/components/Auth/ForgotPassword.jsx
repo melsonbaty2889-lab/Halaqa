@@ -39,22 +39,12 @@ export default function ForgotPassword({ onBackToLogin }) {
   const currentLang = i18n?.language?.split('-')[0] || hookLang || 'ar';
   const appSubtitle = APP_SUBTITLES[currentLang] || APP_SUBTITLES.ar;
 
-  // استخراج النص بشكل آمن لحماية الواجهة من {}
-  const safeStatusMsg = React.useMemo(() => {
-    if (!status?.msg) return '';
-    if (typeof status.msg === 'string') return status.msg;
-    if (typeof status.msg === 'object') {
-      return status.msg.message || status.msg.error_description || JSON.stringify(status.msg);
-    }
-    return String(status.msg);
-  }, [status]);
-
-  // إظهار Toast عند تغير الحالة (status) من الـ Hook
+  // إظهار Toast فقط عند وجود رسالة كـ string آمن لمنع ظهور {}
   useEffect(() => {
-    if (safeStatusMsg) {
-      showToast(safeStatusMsg, status?.type === 'success' ? 'success' : 'error');
+    if (status?.msg && typeof status.msg === 'string') {
+      showToast(status.msg, status.type === 'success' ? 'success' : 'error');
     }
-  }, [safeStatusMsg, status?.type, showToast]);
+  }, [status?.msg, status?.type]); // فصل الاعتماديات المباشرة لتفادي Re-renders غير المنتهية
 
   const onSubmitForm = (e) => {
     e.preventDefault();
@@ -89,18 +79,18 @@ export default function ForgotPassword({ onBackToLogin }) {
             </div>
 
             {/* التنبيهات والأخطاء المباشرة */}
-            {safeStatusMsg && (
+            {status?.msg && typeof status.msg === 'string' && (
               <div 
                 className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
                 role="alert"
                 style={{
-                  backgroundColor: status?.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                  borderColor: status?.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
-                  color: status?.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
+                  backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                  borderColor: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
+                  color: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
                 }}
               >
                 <AlertCircle size={16} className="shrink-0" />
-                <div>{safeStatusMsg}</div>
+                <div>{status.msg}</div>
               </div>
             )}
 
