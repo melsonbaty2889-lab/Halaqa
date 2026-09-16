@@ -453,6 +453,7 @@
   },
   "errors": {
     "generic": "Terjadi kesalahan saat pembuatan",
+    "network_error": "فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.",
     "server_error": "Kesalahan Server",
     "slug_taken": "Tautan akademi sudah digunakan",
     "upload_failed": "Gagal mengunggah logo, silakan coba lagi nanti"

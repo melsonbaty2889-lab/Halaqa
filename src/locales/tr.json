@@ -453,6 +453,7 @@
   },
   "errors": {
     "generic": "Oluşturma sırasında bir hata oluştu",
+    "network_error": "فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.",
     "server_error": "Sunucu Hatası",
     "slug_taken": "Akademi bağlantısı zaten kullanılıyor",
     "upload_failed": "Logo yüklenemedi, lütfen daha sonra tekrar deneyin"

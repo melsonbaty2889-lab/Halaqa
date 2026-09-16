@@ -453,6 +453,7 @@
   },
   "errors": {
     "generic": "Une erreur s'est produite lors de la création",
+    "network_error": "فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.",
     "server_error": "Erreur serveur",
     "slug_taken": "Le lien de l'académie est déjà utilisé",
     "upload_failed": "Échec du téléversement du logo. Veuillez réessayer plus tard."

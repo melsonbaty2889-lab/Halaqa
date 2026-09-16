@@ -453,6 +453,7 @@
   },
   "errors": {
     "generic": "An error occurred during creation",
+    "network_error": "فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.",
     "server_error": "Server Error",
     "slug_taken": "Academy URL is already taken",
     "upload_failed": "Failed to upload logo. Please try again later."
