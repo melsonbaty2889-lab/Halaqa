@@ -7,47 +7,53 @@ export default {
         cairo: ['Cairo', 'sans-serif'],
         sans: ['Cairo', 'sans-serif'],
       },
-      colors: {
-        // 1. الخلفيات والأسطح
-        dark: {
-          bg: 'var(--bg-dark)',           // #070B11
-          card: 'var(--surface-card)',     // rgba(15, 23, 42, 0.85)
-          input: 'var(--surface-input)',   // #0A101D
-          google: 'var(--surface-google)', // #162032
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out forwards',
+        'spin-slow': 'spin 3s linear infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        // 2. اللون الأساسي للتطبيق (Primary Amber/Orange)
+      },
+      colors: {
+        dark: {
+          bg: 'var(--bg-dark)',
+          card: 'var(--surface-card)',
+          input: 'var(--surface-input)',
+          google: 'var(--surface-google)',
+        },
         primary: {
-          DEFAULT: 'var(--primary)',       // #E07A00
-          hover: 'var(--primary-hover)',   // #C66B00
-          glow: 'var(--primary-glow)',     // rgba(224, 122, 0, 0.35)
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+          glow: 'var(--primary-glow)',
           btnStart: 'var(--primary-btn-start)',
           btnEnd: 'var(--primary-btn-end)',
         },
-        // 3. الهوية الزمردية (Emerald)
         brandEmerald: {
-          DEFAULT: 'var(--emerald-text)',  // #10B981
-          bg: 'var(--emerald-bg)',        // #09332C
-          border: 'var(--emerald-border)',// #0D5C4D
-          dark: 'var(--emerald-dark)',    // #059669
-          light: 'var(--emerald-light)',   // #34D399
+          DEFAULT: 'var(--emerald-text)',
+          bg: 'var(--emerald-bg)',
+          border: 'var(--emerald-border)',
+          dark: 'var(--emerald-dark)',
+          light: 'var(--emerald-light)',
           glow: 'var(--emerald-radial-glow)',
-          logoGlow: 'var(--emerald-logo-glow)',
         },
-        // 4. ألوان النصوص الموحدة
         appText: {
-          main: 'var(--text-main)',       // #FFFFFF
-          sub: 'var(--text-sub)',         // #94A3B8
-          muted: 'var(--text-muted)',     // #475569
+          main: 'var(--text-main)',
+          sub: 'var(--text-sub)',
+          muted: 'var(--text-muted)',
         },
-        // 5. ألوان الحدود الموحدة
         appBorder: {
-          card: 'var(--border-card)',     // rgba(255, 255, 255, 0.08)
-          input: 'var(--border-input)',   // #1B2738
-          hover: 'var(--border-hover)',   // #2E3E56
+          card: 'var(--border-card)',
+          input: 'var(--border-input)',
+          hover: 'var(--border-hover)',
         },
-        // 6. حالة الخطأ والحالات الخاصة
         appError: 'var(--error)',
       },
+      boxShadow: {
+        'main': 'var(--shadow-main)',
+      }
     },
   },
   plugins: [],
