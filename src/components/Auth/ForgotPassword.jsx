@@ -22,7 +22,6 @@ export default function ForgotPassword({ onBackToLogin }) {
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
   
-  // استخراج بيانات الـ Hook
   const {
     email,
     setEmail,
@@ -35,16 +34,15 @@ export default function ForgotPassword({ onBackToLogin }) {
     currentLang: hookLang
   } = useForgotPassword();
 
-  // تحديد كود اللغة الحالية والاسم الفرعي أسفل اللوجو
   const currentLang = i18n?.language?.split('-')[0] || hookLang || 'ar';
   const appSubtitle = APP_SUBTITLES[currentLang] || APP_SUBTITLES.ar;
 
-  // إظهار Toast فقط عند وجود رسالة كـ string آمن لمنع ظهور {}
+  // إظهار Toast فقط عندما تكون الرسالة نصية وصالحة
   useEffect(() => {
-    if (status?.msg && typeof status.msg === 'string') {
+    if (status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '') {
       showToast(status.msg, status.type === 'success' ? 'success' : 'error');
     }
-  }, [status?.msg, status?.type]); // فصل الاعتماديات المباشرة لتفادي Re-renders غير المنتهية
+  }, [status?.msg, status?.type]);
 
   const onSubmitForm = (e) => {
     e.preventDefault();
@@ -78,8 +76,8 @@ export default function ForgotPassword({ onBackToLogin }) {
               </p>
             </div>
 
-            {/* التنبيهات والأخطاء المباشرة */}
-            {status?.msg && typeof status.msg === 'string' && (
+            {/* التنبيه المباشر */}
+            {status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '' && (
               <div 
                 className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
                 role="alert"
@@ -118,7 +116,6 @@ export default function ForgotPassword({ onBackToLogin }) {
                 />
               </div>
 
-              {/* زر إرسال الرابط الرئيسي الموحد */}
               <PrimaryButton 
                 loading={loading}
                 disabled={cooldown > 0}
@@ -174,7 +171,6 @@ export default function ForgotPassword({ onBackToLogin }) {
           </div>
         )}
 
-        {/* العودة لتسجيل الدخول */}
         <div className="mt-5 text-center flex items-center justify-center">
           <button 
             type="button"
@@ -193,7 +189,6 @@ export default function ForgotPassword({ onBackToLogin }) {
           </button>
         </div>
 
-        {/* شارة الأمان */}
         <div 
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4 opacity-75"
           style={{ color: C?.text?.muted }}
@@ -205,7 +200,6 @@ export default function ForgotPassword({ onBackToLogin }) {
         </div>
       </div>
 
-      {/* تنبيه Toast الموحد أسفل الشاشة */}
       <Toast
         isOpen={toastState.isOpen}
         message={toastState.message}
