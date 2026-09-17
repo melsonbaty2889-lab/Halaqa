@@ -3,8 +3,6 @@ import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { C } from '@/theme/colors';
 
-import BlockedView from '@/components/UI/BlockedView';
-
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
 import MainContent from '@/components/AppLayout/MainContent';
@@ -22,7 +20,7 @@ const DevPlayground = lazy(() => {
   return Promise.resolve({ default: () => null });
 });
 
-// 🌟 مكون الوهج الزمردي الديناميكي الخفيف (بدون طبقة سوداء مصمتة)
+// 🌟 مكون الوهج الزمردي الديناميكي الخفيف
 const GlobalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
     <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-[#10B981]/20 rounded-full blur-[140px]" />
@@ -82,36 +80,16 @@ export default function App() {
       return false;
     }
   });
-  // 🧪 معاينة دقيقة ومطابقة تماماً لما سيظهر للمستخدم الحقيقي
-return (
-  <BlockedView 
-    academy={{ 
-      name: {
-        ar: "أكاديمية الفرقان للقرآن الكريم",
-        en: "Al-Furqan Quran Academy",
-        fr: "Académie Al-Furqan",
-        tr: "Al-Furqan Akademisi",
-        ur: "الفرقان اکیڈمی",
-        id: "Akademi Al-Furqan"
-      }
-    }} 
-    onLogout={() => {
-      // محاكاة تسجيل الخروج الحقيقي (تنظيف الجلسة والتوجيه)
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/login';
-    }} 
-  />
-);
 
-const handleSplashFinish = useCallback(() => {
-  try {
-    sessionStorage.setItem('app_splash_seen', 'true');
-  } catch {
-    // Ignored
-  }
-  setShowSplash(false);
-}, []);
+  const handleSplashFinish = useCallback(() => {
+    try {
+      sessionStorage.setItem('app_splash_seen', 'true');
+    } catch {
+      // Ignored
+    }
+    setShowSplash(false);
+  }, []);
+
   return (
     <GlobalErrorBoundary>
       <div className="relative min-h-screen bg-transparent text-white font-cairo overflow-hidden">
