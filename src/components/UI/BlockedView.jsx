@@ -1,7 +1,6 @@
 import React from 'react';
 import { AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import C from '@/theme/colors';
 
 // 🛡️ دالة آمنة لمعالجة الكائنات المترجمة { ar: "..." } ومنع الخطأ #31
 const getSafeText = (val, currentLang = 'ar', defaultVal = '') => {
@@ -47,72 +46,40 @@ export default function BlockedView({ academy, onLogout }) {
     window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
   };
 
-  // استخراج الأنماط البصرية من كائن الألوان C
-  const mainBg = C.dark?.bg || '#0F172A';
-  const cardBg = C.dark?.surface || '#1E293B';
-  const titleColor = C.text?.title || '#F8FAFC';
-  const textColor = C.text?.body || C.text?.sub || '#CBD5E1';
-  const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
-  
-  const errorColor = C.error?.DEFAULT || '#EF4444';
-  const emeraldColor = C.emerald?.DEFAULT || C.success?.DEFAULT || '#10B981';
-
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 transition-colors"
-      style={{ backgroundColor: mainBg }}
+      className="min-h-screen flex items-center justify-center p-4 bg-dark-bg text-appText-main transition-colors select-none"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <div 
-        className="max-w-md w-full border rounded-2xl p-6 text-center shadow-2xl space-y-5"
-        style={{ 
-          backgroundColor: cardBg,
-          borderColor: `${errorColor}40`
-        }}
-      >
-        <div 
-          className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
-          style={{ 
-            backgroundColor: `${errorColor}1A`,
-            borderColor: `${errorColor}33`,
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            color: errorColor
-          }}
-        >
+      <div className="max-w-md w-full bg-dark-card border border-appError/30 rounded-2xl p-6 text-center shadow-main space-y-5 backdrop-blur-md">
+        
+        {/* أيقونة التنبيه */}
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-appError/10 border border-appError/20 text-appError">
           <AlertOctagon size={36} />
         </div>
 
+        {/* العناوين */}
         <div>
-          <h2 className="text-xl font-bold mb-1" style={{ color: titleColor }}>
+          <h2 className="text-xl font-bold mb-1 text-appText-main">
             {t('blockedView.title', 'تم تعليق حساب الأكاديمية')}
           </h2>
-          <p className="text-sm font-semibold" style={{ color: errorColor }}>
+          <p className="text-sm font-semibold text-appError">
             {academyName}
           </p>
         </div>
 
-        <div 
-          className="border p-4 rounded-xl text-xs leading-relaxed text-start"
-          style={{ 
-            backgroundColor: mainBg,
-            borderColor: borderCol,
-            color: textColor
-          }}
-        >
+        {/* سببية الحظر */}
+        <div className="border border-appBorder-input bg-dark-input p-4 rounded-xl text-xs leading-relaxed text-start text-appText-sub">
           {blockReason}
         </div>
 
+        {/* الأزرار والإجراءات */}
         <div className="space-y-2 pt-2">
           <button
             type="button"
             onClick={handleSupportContact}
             aria-label={t('blockedView.contactSupport', 'التواصل مع الإدارة عبر الواتساب')}
-            className="w-full border-0 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-all min-h-[44px]"
-            style={{ 
-              backgroundColor: emeraldColor,
-              color: mainBg
-            }}
+            className="w-full rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-all min-h-[44px] bg-brandEmerald text-dark-bg hover:opacity-90 active:scale-[0.99]"
           >
             <MessageCircle size={18} />
             <span>{t('blockedView.contactSupport', 'التواصل مع الإدارة عبر الواتساب')}</span>
@@ -123,11 +90,7 @@ export default function BlockedView({ academy, onLogout }) {
               type="button"
               onClick={onLogout}
               aria-label={t('blockedView.logout', 'تسجيل الخروج')}
-              className="w-full border-0 rounded-xl font-semibold text-xs cursor-pointer flex items-center justify-center gap-2 transition-all min-h-[44px]"
-              style={{ 
-                backgroundColor: borderCol,
-                color: titleColor
-              }}
+              className="w-full border border-appBorder-input bg-dark-input hover:bg-dark-card text-appText-main rounded-xl font-semibold text-xs cursor-pointer flex items-center justify-center gap-2 transition-all min-h-[44px] active:scale-[0.99]"
             >
               <LogOut size={16} />
               <span>{t('blockedView.logout', 'تسجيل الخروج')}</span>
