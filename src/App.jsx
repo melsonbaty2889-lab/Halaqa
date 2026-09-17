@@ -2,10 +2,8 @@ import React, { useState, lazy, Suspense, useCallback } from 'react';
 import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { C } from '@/theme/colors';
-
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
-import MainContent from '@/components/AppLayout/MainContent';
 
 const TestHooks = lazy(() => import('@/components/TestHooks'));
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
