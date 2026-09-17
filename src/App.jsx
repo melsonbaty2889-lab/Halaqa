@@ -5,7 +5,7 @@ import { C } from '@/theme/colors';
 
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
-import MainContent from '@/components/AppLayout/MainContent'; // ✅ تمت إضافة الاستيراد المفقود
+import MainContent from '@/components/AppLayout/MainContent';
 
 const TestHooks = lazy(() => import('@/components/TestHooks'));
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
@@ -19,6 +19,16 @@ const DevPlayground = lazy(() => {
   }
   return Promise.resolve({ default: () => null });
 });
+
+// 🌟 طبقة الوهج الزمردي الشاملة لكافة الشاشات (تسجيل الدخول، الشاشة الافتتاحية، ولوحة التحكم)
+const GlobalEmeraldBackground = () => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+    <div className="absolute inset-0 bg-[#070B11]" />
+    <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-[#10B981]/20 rounded-full blur-[140px]" />
+    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-[#10B981]/15 rounded-full blur-[130px]" />
+    <div className="absolute -bottom-[10%] right-[15%] w-[600px] h-[600px] bg-[#10B981]/10 rounded-full blur-[160px]" />
+  </div>
+);
 
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
@@ -69,7 +79,8 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
-      return !sessionStorage.getItem('app_splash_seen');
+      // إتاحة إظهار الشاشة عند اختيار view=splash أو تلقائياً في حالة عدم المشاهدة
+      return view === 'splash' || !sessionStorage.getItem('app_splash_seen');
     } catch {
       return false;
     }
@@ -86,24 +97,31 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
-      <OfflineAndUpdateBanner />
-      
-      <Suspense fallback={<FallbackLoader />}>
-        {view === 'test' ? (
-          <DevPlayground />
-        ) : view === 'splash' || showSplash ? (
-          <SplashScreen 
-            lang="ar" 
-            onFinish={view === 'splash' ? () => alert('انتهى عرض الشاشة الافتتاحية') : handleSplashFinish} 
-          />
-        ) : (
-          <Routes>
-            <Route path="/test" element={<TestHooks />} />
-            <Route path="/verify/:certId" element={<CertificateVerify />} />
-            <Route path="/*" element={<MainContent />} />
-          </Routes>
-        )}
-      </Suspense>
+      <div className="relative min-h-screen bg-[#070B11] text-white font-cairo overflow-hidden">
+        {/* تفعيل خلفية الوهج الزمردية لتعمل في خلفية كل التطبيق */}
+        <GlobalEmeraldBackground />
+
+        <div className="relative z-10 min-h-screen flex flex-col">
+          <OfflineAndUpdateBanner />
+          
+          <Suspense fallback={<FallbackLoader />}>
+            {view === 'test' ? (
+              <DevPlayground />
+            ) : showSplash ? (
+              <SplashScreen 
+                lang="ar" 
+                onFinish={handleSplashFinish} 
+              />
+            ) : (
+              <Routes>
+                <Route path="/test" element={<TestHooks />} />
+                <Route path="/verify/:certId" element={<CertificateVerify />} />
+                <Route path="/*" element={<MainContent />} />
+              </Routes>
+            )}
+          </Suspense>
+        </div>
+      </div>
     </GlobalErrorBoundary>
   );
 }
