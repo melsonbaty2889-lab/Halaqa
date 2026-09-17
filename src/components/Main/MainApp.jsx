@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspens
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
-import useNetworkAndUpdateStatus from '@/hooks/useNetworkAndUpdateStatus';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
 import { ROLES } from '@/constants/roles';
@@ -207,7 +206,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { t, i18n } = useTranslation(); 
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
   const currentLang = i18n?.language || 'ar';
-  const { isOffline, updateAvailable, handleReload } = useNetworkAndUpdateStatus();
 
   const { academy, academiesList, setAcademy } = useAcademy();
   const isMobile = useIsMobile(1024);
@@ -608,11 +606,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
         academyTime={academyTime}
       />
       <div className="flex flex-col flex-1 min-w-0 min-h-screen w-full relative z-10 overflow-x-hidden">
-        <OfflineAndUpdateBanner 
-          isOffline={isOffline} 
-          updateAvailable={updateAvailable} 
-          onReload={handleReload} 
-        />
         <Header 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
