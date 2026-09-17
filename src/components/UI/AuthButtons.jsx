@@ -7,7 +7,7 @@ export function PrimaryButton({ children, onClick, type = "submit", loading = fa
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`w-full h-11 bg-gradient-to-b from-[#E67E00] to-[#D97706] hover:from-[#D97706] hover:to-[#C66B00] text-white font-bold text-sm rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(224,122,0,0.3)] hover:shadow-[0_6px_20px_rgba(224,122,0,0.45)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`btn-primary h-11 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {loading ? (
         <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -25,9 +25,9 @@ export function GoogleButton({ onClick, text = "متابعة باستخدام Go
       type="button"
       onClick={onClick}
       disabled={disabled || loading}
-      className={`w-full h-11 bg-[#162032] hover:bg-[#1C293F] text-white font-semibold text-sm border border-[#1B2738] hover:border-[#2E3E56] rounded-xl transition-all duration-200 flex items-center justify-center gap-3 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`w-full h-11 bg-dark-google hover:bg-dark-card text-appText-main font-semibold text-sm border border-appBorder-input hover:border-appBorder-hover rounded-xl transition-all duration-200 flex items-center justify-center gap-3 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
-      <svg className="w-5 h-5" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
         <path
           fill="#EA4335"
           d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
