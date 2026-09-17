@@ -1,7 +1,18 @@
+/* src/components/CommunicationHub/LivePreview.jsx */
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 
-export default function LivePreview({ isRtl, title, templateTitle, currentAcademyDisplayName, previewText }) {
+export default function LivePreview({ 
+  isRtl, 
+  title, 
+  templateTitle, 
+  currentAcademyDisplayName = 'ح', 
+  previewText 
+}) {
+  const displayChar = (currentAcademyDisplayName && currentAcademyDisplayName.trim()) 
+    ? currentAcademyDisplayName.trim().charAt(0) 
+    : 'ح';
+
   return (
     <div className="w-full max-w-[320px] p-4 rounded-3xl shadow-2xl flex flex-col items-center bg-[var(--surface-card,rgba(15,23,42,0.85))] border border-[var(--border-card,rgba(255,255,255,0.08))] border-t-4 border-t-[var(--primary,#E07A00)] backdrop-blur-md">
       <div className="w-12 h-1 bg-[var(--border-input,#1B2738)] rounded-full mb-4" />
@@ -14,7 +25,7 @@ export default function LivePreview({ isRtl, title, templateTitle, currentAcadem
         <div>
           <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-[var(--border-input,#1B2738)]">
             <div className="w-7 h-7 rounded-full bg-[var(--emerald-text,#10B981)]/10 text-[var(--emerald-text,#10B981)] flex items-center justify-center text-[11px] font-bold border border-[var(--emerald-text,#10B981)]/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-              {currentAcademyDisplayName.charAt(0)}
+              {displayChar}
             </div>
             <div className="flex-1 truncate">
               <div className="text-[11px] font-bold text-[var(--text-main,#FFFFFF)] truncate">
