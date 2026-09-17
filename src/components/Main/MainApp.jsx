@@ -528,7 +528,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
 
   return (
     <div 
-      className="relative flex min-h-screen w-full overflow-x-hidden select-none bg-dark-bg text-appText-main font-cairo"
+      className="relative flex min-h-screen w-full overflow-x-hidden select-none bg-transparent text-appText-main font-cairo"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <OriginalEmeraldBackground />
