@@ -2,9 +2,6 @@
  * Smart Halaqa Design System - Dynamic Theme Provider
  */
 
-/**
- * دالة مساعدة استثنائية لجلب القيمة الحقيقية للون عند الحاجة في المكتبات البرمجية (مثل Charts/Canvas)
- */
 export const getCssVar = (varName) => {
   if (typeof window !== 'undefined') {
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -26,19 +23,20 @@ export const colors = {
     btnStart: 'var(--primary-btn-start)',
     btnEnd: 'var(--primary-btn-end)',
   },
-  emerald: {
+  brandEmerald: {
     DEFAULT: 'var(--emerald-text)',
     bg: 'var(--emerald-bg)',
     border: 'var(--emerald-border)',
     dark: 'var(--emerald-dark)',
     light: 'var(--emerald-light)',
+    glow: 'var(--emerald-radial-glow)',
   },
-  text: {
+  appText: {
     main: 'var(--text-main)',
     sub: 'var(--text-sub)',
     muted: 'var(--text-muted)',
   },
-  border: {
+  appBorder: {
     card: 'var(--border-card)',
     input: 'var(--border-input)',
     hover: 'var(--border-hover)',
