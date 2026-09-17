@@ -20,10 +20,9 @@ const DevPlayground = lazy(() => {
   return Promise.resolve({ default: () => null });
 });
 
-// 🌟 مكون الوهج الزمردي الديناميكي الموحد خلف التطبيق
+// 🌟 مكون الوهج الزمردي الديناميكي الخفيف (بدون طبقة سوداء مصمتة)
 const GlobalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-    <div className="absolute inset-0 bg-[#070B11]" />
     <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-[#10B981]/20 rounded-full blur-[140px]" />
     <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-[#10B981]/15 rounded-full blur-[130px]" />
     <div className="absolute -bottom-[10%] right-[15%] w-[600px] h-[600px] bg-[#10B981]/10 rounded-full blur-[160px]" />
@@ -59,12 +58,8 @@ const FallbackLoader = () => (
   <div 
     role="status"
     aria-label="جاري التحميل"
+    className="bg-transparent min-h-screen flex items-center justify-center"
     style={{ 
-      background: C?.dark?.bg || 'var(--bg-dark, #070B11)', 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
       color: C?.primary?.DEFAULT || 'var(--primary, #E07A00)' 
     }}
   >
@@ -97,11 +92,11 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
-      <div className="relative min-h-screen bg-[#070B11] text-white font-cairo overflow-hidden">
+      <div className="relative min-h-screen bg-transparent text-white font-cairo overflow-hidden">
         {/* 🌟 إدراج خلفية الوهج الزمردي الثابتة لتعمل خلف كل المكونات */}
         <GlobalEmeraldBackground />
 
-        <div className="relative z-10 min-h-screen flex flex-col">
+        <div className="relative z-10 min-h-screen flex flex-col bg-transparent">
           <OfflineAndUpdateBanner />
           
           <Suspense fallback={<FallbackLoader />}>
