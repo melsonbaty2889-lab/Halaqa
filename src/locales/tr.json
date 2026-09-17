@@ -207,6 +207,7 @@
     "defaultAcademyName": "Akademi",
     "defaultReason": "Akademi hesabı, abonelik süresinin dolması veya inceleme nedeniyle geçici olarak askıya alınmıştır.",
     "demoMode": "",
+    "description": "",
     "logout": "Çıkış Yap",
     "title": "Akademi Hesabı Askıya Alındı",
     "whatsappMsg": "Merhaba, ({{name}}) akademisinin sahibiyim. Hesabım askıya alındı, bilgi almak ve etkinleştirmek istiyorum."

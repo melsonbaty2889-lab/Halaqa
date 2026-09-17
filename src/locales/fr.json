@@ -207,6 +207,7 @@
     "defaultAcademyName": "Académie",
     "defaultReason": "Le compte de l'académie a été temporairement suspendu par l'administration en raison d'une expiration d'abonnement ou révision.",
     "demoMode": "",
+    "description": "",
     "logout": "Déconnexion",
     "title": "Compte d'académie suspendu",
     "whatsappMsg": "Bonjour, je suis le propriétaire de l'académie ({{name}}). Le compte est suspendu et je souhaite me renseigner pour l'activer."
