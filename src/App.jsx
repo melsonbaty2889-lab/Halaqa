@@ -82,6 +82,8 @@ export default function App() {
       return false;
     }
   });
+  // 🧪 معاينة مؤقتة لشاشة الحظر (قم بحذف هذا السطر أو التعليق عليه بعد المعاينة)
+  return <BlockedView academy={{ name: "أكاديمية التجربة" }} onLogout={() => alert("تسجيل الخروج")} />;
 
   const handleSplashFinish = useCallback(() => {
     try {
