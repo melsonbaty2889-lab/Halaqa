@@ -1,11 +1,11 @@
 /* src/components/Notifications/NotificationCenter.jsx */
 import React from 'react';
 import { Bell, CheckCircle2, AlertCircle, Info, Trash2 } from 'lucide-react';
-import colors from '@/theme/colors';
 
 export default function NotificationCenter({ notifications = [], onMarkAsRead, onDelete }) {
   return (
-    <div className={`w-full max-w-md bg-[${colors.surface || '#0F172A'}] border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-right rtl`}>
+    // ✅ تم استبدال الكلاس الديناميكي بالاعتماد على متغير CSS أو كلاسات Tailwind المعرفة
+    <div className="w-full max-w-md bg-[var(--surface-card,#0F172A)] border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-right rtl">
       <div className="flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5 text-[#FBBF24]" />
