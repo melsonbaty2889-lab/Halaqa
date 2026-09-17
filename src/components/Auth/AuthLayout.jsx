@@ -46,13 +46,13 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden max-w-full font-cairo"
-      dir={isRtl ? 'rtl' : 'ltr'}
-      style={{
-        backgroundColor: C?.dark?.bg || '#0F172A',
-        color: C?.text?.title || '#FFFFFF',
-      }}
-    >
+  className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden max-w-full font-cairo bg-transparent"
+  dir={isRtl ? 'rtl' : 'ltr'}
+  style={{
+    backgroundColor: 'transparent',
+    color: C?.text?.title || '#FFFFFF',
+  }}
+>
       {/* خلفية النجوم والتوهج */}
       <div
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
