@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, AlertTriangle, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
+import { RefreshCw, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
@@ -14,19 +14,13 @@ import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
+// خلفية موحدة تعتمد على كلاسات Tailwind المعرفة
 const OriginalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-    <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg" />
-    <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-brandEmerald/10 rounded-full blur-[140px]" />
-    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-brandEmerald/10 rounded-full blur-[130px]" />
-    <div className="absolute -bottom-[20%] right-[15%] w-[600px] h-[600px] bg-brandEmerald/5 rounded-full blur-[160px]" />
-    <div 
-      className="absolute inset-0 opacity-[0.15]" 
-      style={{
-        backgroundImage: `radial-gradient(rgba(52, 211, 153, 0.4) 1px, transparent 1px)`,
-        backgroundSize: '32px 32px'
-      }}
-    />
+    <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-card to-dark-bg" />
+    <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-brandEmerald-bg/20 rounded-full blur-[140px]" />
+    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-brandEmerald-bg/15 rounded-full blur-[130px]" />
+    <div className="absolute -bottom-[20%] right-[15%] w-[600px] h-[600px] bg-brandEmerald-bg/10 rounded-full blur-[160px]" />
   </div>
 );
 
@@ -74,7 +68,7 @@ const BlockedView = ({ academy, onLogout, isRtl = true }) => {
           <button
             type="button"
             onClick={handleSupportContact}
-            className="w-full border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors bg-brandEmerald text-white hover:bg-brandEmerald-hover"
+            className="w-full border-0 py-3 rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-colors bg-brandEmerald text-white hover:bg-brandEmerald-dark"
           >
             <MessageCircle size={18} />
             {t('blocked_view.whatsapp_button', 'التواصل مع الإدارة عبر الواتساب')}
@@ -100,15 +94,17 @@ const safeLazy = (importFn) => {
     importFn().catch((error) => {
       console.error("🚨 Lazy Load Error:", error);
       return { 
-        default: () => {
-          const { t } = useTranslation();
-          return <div className="p-4 text-appError text-center font-semibold">{t('common.lazy_error', 'تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.')}</div>;
-        } 
+        default: () => (
+          <div className="p-4 text-appError text-center font-semibold">
+            تعذر تحميل هذا القسم، يرجى إعادة تنشيط الصفحة.
+          </div>
+        )
       };
     })
   );
 };
 
+// الاستدعاء الموزع للمكونات
 const Students = safeLazy(() => import('@/components/Student/StudentsList.jsx'));
 const Teachers = safeLazy(() => import('@/components/Teachers/Teachers.jsx')); 
 const Attendance = safeLazy(() => import('@/components/Attendance/Attendance.jsx'));
@@ -162,45 +158,6 @@ const CommunicationsAndReportsHub = ({ academyId, isRtl, students, countryCode }
     </div>
   );
 };
-
-class ErrorBoundaryInner extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error, errorInfo) {
-    console.error("🚨 Error Logged in Boundary:", error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-6 bg-dark-card rounded-2xl border border-appError/40 text-appError my-5 font-cairo">
-          <div className="flex items-center gap-2.5 mb-3">
-            <AlertTriangle size={22} />
-            <h3 className="m-0 text-appError text-base font-bold">حدث خطأ أثناء عرض هذا القسم</h3>
-          </div>
-          <pre className="bg-dark-bg p-3 rounded-xl text-appText-sub text-xs overflow-x-auto font-mono">
-            {this.state.error?.toString()}
-          </pre>
-          <button 
-            type="button"
-            onClick={() => {
-              this.setState({ hasError: false, error: null });
-              window.location.reload();
-            }} 
-            className={`${UI.btnPrimary} w-auto mt-3.5 px-4 py-2.5`}
-          >
-            <RefreshCw size={16} /> إعادة تحميل الصفحة
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 export default function MainApp({ session, userRole, trialDaysLeft, isTrial = true, isActivated, setShowEarlyUpgrade, onLogout }) {
   const { t, i18n } = useTranslation(); 
@@ -429,10 +386,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     };
   }, [isPlatformAdmin, academy?.name, currentLang, userRole, isAcademyActive, students, halaqas, completedExamsCount, t]);
 
-  const handleCurrencyUpdate = (newCurrency) => {
-    setCurrency(newCurrency);
-  };
-
   const renderActiveTabContent = () => {
     const role = (userRole || 'admin').toString().toLowerCase().trim();
     const isAdmin = role === 'admin' || role === 'super_admin';
@@ -473,7 +426,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             currentCurrency={currency} 
             currentTimezone={timezone} 
             currentCountryCode={countryCode} 
-            onCurrencyChange={handleCurrencyUpdate}
+            onCurrencyChange={(c) => setCurrency(c)}
             onTimezoneChange={handleTimezoneUpdate}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
@@ -629,11 +582,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isMobile ? 'p-3 pb-20' : 'p-6 pb-6'
           }`}
         >
-          <ErrorBoundaryInner key={activeTab}>
-            <Suspense fallback={<PageSkeleton />}>
-              {loadingData ? <PageSkeleton /> : renderActiveTabContent()}
-            </Suspense>
-          </ErrorBoundaryInner>
+          <Suspense fallback={<PageSkeleton />}>
+            {loadingData ? <PageSkeleton /> : renderActiveTabContent()}
+          </Suspense>
         </main>
       </div>
       <BottomNav 
