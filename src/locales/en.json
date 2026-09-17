@@ -206,6 +206,7 @@
     "contactSupport": "Contact Support via WhatsApp",
     "defaultAcademyName": "Academy",
     "defaultReason": "The academy account has been temporarily suspended by system management due to subscription expiration or account review.",
+    "demoMode": "",
     "logout": "Log Out",
     "title": "Academy Account Suspended",
     "whatsappMsg": "Hello, I am the owner of academy ({{name}}). The account is suspended, and I would like to inquire and activate."

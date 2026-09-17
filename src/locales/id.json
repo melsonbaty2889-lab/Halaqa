@@ -206,6 +206,7 @@
     "contactSupport": "Hubungi Dukungan via WhatsApp",
     "defaultAcademyName": "Akademi",
     "defaultReason": "Akun akademi telah ditangguhkan sementara oleh manajemen karena masa langganan berakhir atau peninjauan akun.",
+    "demoMode": "",
     "logout": "Keluar",
     "title": "Akun Akademi Ditangguhkan",
     "whatsappMsg": "Halo, saya pemilik akademi ({{name}}). Akun ditangguhkan dan saya ingin bertanya serta mengaktifkannya."
