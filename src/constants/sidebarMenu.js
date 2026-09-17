@@ -14,7 +14,8 @@ import {
   Users,
   Flame,
   ShieldCheck,
-  FolderOpen
+  FolderOpen,
+  FileBarChart
 } from "lucide-react";
 
 export const getMenuSections = (t, userRole = 'admin') => {
@@ -45,8 +46,8 @@ export const getMenuSections = (t, userRole = 'admin') => {
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
-          id: 'notifications_reports', 
-          label: safeT('menu.items.notifications_reports', 'الإشعارات والتقارير'), 
+          id: 'communication', 
+          label: safeT('menu.items.communication', 'التواصل والتعاميم'), 
           icon: Send, 
           roles: ['admin', 'teacher', 'parent'] 
         }
@@ -116,6 +117,12 @@ export const getMenuSections = (t, userRole = 'admin') => {
       id: 'management-finance',
       title: safeT('menu.sections.management_finance', 'الإدارة والمالية'),
       items: [
+        { 
+          id: 'reports', 
+          label: safeT('menu.items.reports', 'التقارير والتحليلات'), 
+          icon: FileBarChart, 
+          roles: ['admin', 'teacher'] 
+        },
         { 
           id: 'finance', 
           label: safeT('menu.items.finance', 'الاشتراكات والمالية'), 
