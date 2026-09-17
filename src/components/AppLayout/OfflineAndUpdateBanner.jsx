@@ -49,14 +49,20 @@ export default function OfflineAndUpdateBanner() {
     window.location.reload();
   }, []);
 
+  // الحماية والتأمين لمنع حدوث Uncaught TypeError عند غياب أي لون من كائن C
+  const errorColor = C?.error || '#EF4444';
+  const textMainColor = C?.text?.main || '#FFFFFF';
+  const emeraldColor = C?.emerald?.DEFAULT || '#10B981';
+  const darkBgColor = C?.dark?.bg || '#070B11';
+
   return (
     <>
       {!isOnline && (
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
           style={{
-            background: C.error,
-            color: C.text.main,
+            background: errorColor,
+            color: textMainColor,
             textAlign: 'center',
             padding: '8px 16px',
             position: 'fixed',
@@ -70,7 +76,7 @@ export default function OfflineAndUpdateBanner() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            boxShadow: 'var(--shadow-main)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             fontFamily: "'Cairo', system-ui, sans-serif"
           }}
         >
@@ -83,8 +89,8 @@ export default function OfflineAndUpdateBanner() {
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
           style={{
-            background: C.emerald.DEFAULT,
-            color: C.dark.bg,
+            background: emeraldColor,
+            color: darkBgColor,
             padding: '10px 16px',
             position: 'fixed',
             insetBlockEnd: '16px',
@@ -96,7 +102,7 @@ export default function OfflineAndUpdateBanner() {
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            boxShadow: 'var(--shadow-main)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
             fontFamily: "'Cairo', system-ui, sans-serif"
           }}
         >
@@ -106,8 +112,8 @@ export default function OfflineAndUpdateBanner() {
             aria-label={getText(t, 'pwa.updateNow', 'تحديث الآن')}
             title={getText(t, 'pwa.updateNow', 'تحديث الآن')}
             style={{
-              background: C.dark.bg,
-              color: C.emerald.DEFAULT,
+              background: darkBgColor,
+              color: emeraldColor,
               border: 'none',
               padding: '6px 14px',
               minHeight: '36px',
