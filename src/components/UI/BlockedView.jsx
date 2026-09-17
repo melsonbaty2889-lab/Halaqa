@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
+import { AlertOctagon, MessageCircle, LogOut, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 // 🛡️ دالة آمنة لمعالجة الكائنات المترجمة ومنع الخطأ #31
@@ -17,7 +17,17 @@ const getSafeText = (val, currentLang = 'ar', defaultVal = '') => {
   return String(val);
 };
 
-export default function BlockedView({ academy, onLogout }) {
+// اللغات المدعومة
+const LANGUAGES = [
+  { code: 'ar', label: 'العربية' },
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'ur', label: 'اردو' },
+  { code: 'id', label: 'Bahasa Indonesia' },
+];
+
+export default function BlockedView({ academy, onLogout, isDemo = false }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const cleanLang = currentLang.toLowerCase().split('-')[0];
@@ -45,11 +55,39 @@ export default function BlockedView({ academy, onLogout }) {
     window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
   };
 
+  const changeLanguage = (langCode) => {
+    if (i18n && typeof i18n.changeLanguage === 'function') {
+      i18n.changeLanguage(langCode);
+    }
+  };
+
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 bg-dark-bg text-appText-main transition-colors select-none"
+      className="min-h-screen flex flex-col items-center justify-center p-4 bg-dark-bg text-appText-main transition-colors select-none"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
+      {/* شريط تبديل اللغات للمعاينة */}
+      <div className="mb-4 flex items-center gap-2 bg-dark-card border border-appBorder-input px-3 py-1.5 rounded-xl shadow-sm">
+        <Globe size={16} className="text-brandEmerald" />
+        <select
+          value={cleanLang}
+          onChange={(e) => changeLanguage(e.target.value)}
+          className="bg-transparent text-xs font-medium text-appText-main focus:outline-none cursor-pointer"
+          aria-label="Select Language"
+        >
+          {LANGUAGES.map((lang) => (
+            <option key={lang.code} value={lang.code} className="bg-dark-card text-appText-main">
+              {lang.label}
+            </option>
+          ))}
+        </select>
+        {isDemo && (
+          <span className="text-[10px] bg-brandEmerald/20 text-brandEmerald px-2 py-0.5 rounded-md font-bold">
+            {t('blockedView.demoMode')}
+          </span>
+        )}
+      </div>
+
       <div className="max-w-md w-full bg-dark-card border border-appError/30 rounded-2xl p-6 text-center shadow-main space-y-5 backdrop-blur-md">
         
         {/* أيقونة التنبيه */}
