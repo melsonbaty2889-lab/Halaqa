@@ -6,17 +6,20 @@
 
 @layer base {
   :root {
+    /* 1. الخلفيات والأسطح */
     --bg-dark: #070B11;
     --surface-card: rgba(15, 23, 42, 0.85);
     --surface-input: #0A101D;
     --surface-google: #162032;
 
+    /* 2. الهوية الرئيسية (Amber/Orange) */
     --primary: #E07A00;
     --primary-hover: #C66B00;
     --primary-glow: rgba(224, 122, 0, 0.35);
     --primary-btn-start: #E67E00;
     --primary-btn-end: #D97706;
 
+    /* 3. الهوية الزمردية (Emerald) */
     --emerald-bg: #09332C;
     --emerald-border: #0D5C4D;
     --emerald-text: #10B981;
@@ -25,6 +28,7 @@
     --emerald-radial-glow: rgba(16, 185, 129, 0.14);
     --emerald-logo-glow: rgba(16, 185, 129, 0.35);
 
+    /* 4. النصوص والحدود */
     --text-main: #FFFFFF;
     --text-sub: #94A3B8;
     --text-muted: #475569;
@@ -32,6 +36,7 @@
     --border-input: #1B2738;
     --border-hover: #2E3E56;
     
+    /* 5. الظلال والحالات */
     --shadow-main: 0 20px 50px rgba(0, 0, 0, 0.4);
     --error: #EF4444;
   }
@@ -48,18 +53,20 @@
     direction: rtl;
     -webkit-font-smoothing: antialiased;
 
-    /* 🌟 تطبيق الوهج الزمردي والتدرج الأصلي بشكل دائم في خلفية الموقع */
+    /* 🌟 إدراج خلفية الوهج الزمردي التلقائية لجميع الشاشات دون استثناء */
     background-image: 
-      radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
-      radial-gradient(circle at 10% 80%, rgba(16, 185, 129, 0.10) 0%, transparent 45%),
-      radial-gradient(circle at 50% 50%, rgba(7, 11, 17, 0.8) 0%, #070B11 100%);
+      radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.18) 0%, transparent 40%),
+      radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(7, 11, 17, 0.85) 0%, #070B11 100%);
     background-attachment: fixed;
+    background-size: cover;
   }
 
   *, *::before, *::after {
     box-sizing: border-box;
   }
 
+  /* تخصيص شريط التمرير الموحد */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -76,6 +83,7 @@
   }
 }
 
+/* 🌟 مكونات إعادة الاستخدام العالمية */
 @layer components {
   .card-surface {
     background-color: var(--surface-card);
