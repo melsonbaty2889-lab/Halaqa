@@ -2,14 +2,15 @@ import React, { useState, lazy, Suspense, useCallback } from 'react';
 import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { C } from '@/theme/colors';
+
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
+import MainContent from '@/components/AppLayout/MainContent'; // ✅ تمت إضافة الاستيراد المفقود
 
 const TestHooks = lazy(() => import('@/components/TestHooks'));
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
 const CertificateVerify = lazy(() => import('@/components/Certificates/CertificateVerify'));
 const DevPlayground = lazy(() => {
-  // التوافق المعياري مع Vite و Node
   const isDev = import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
   const hasTestParam = typeof window !== 'undefined' && window.location.search.includes('view=test');
 
@@ -19,19 +20,15 @@ const DevPlayground = lazy(() => {
   return Promise.resolve({ default: () => null });
 });
 
-// معالجة أخطاء الـ Dynamic Chunks مع الحماية من التكرار المفرط
 if (typeof window !== 'undefined') {
   const handleChunkError = (error) => {
     const errorMsg = error?.message || error?.toString() || '';
     if (/Failed to fetch dynamically imported module|chunk load error|loading chunk|Unexpected token/i.test(errorMsg)) {
-      
-      // تفادي إعادة التحميل إذا كان الجهاز غير متصل بالإنترنت
       if (typeof navigator !== 'undefined' && !navigator.onLine) return;
 
       const lastReload = sessionStorage.getItem('chunk_reload_timestamp');
       const now = Date.now();
 
-      // السماح بإنعاش الصفحة مرة واحدة كل 12 ثانية كحد أقصى
       if (!lastReload || now - Number(lastReload) > 12000) {
         sessionStorage.setItem('chunk_reload_timestamp', now.toString());
         if ('caches' in window) {
@@ -48,7 +45,6 @@ if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => handleChunkError(event.error), true);
 }
 
-// شاشة التحميل المركزية المتوافقة مع متطلبات CSS Variables
 const FallbackLoader = () => (
   <div 
     role="status"
@@ -90,7 +86,6 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
-      {/* شريط التنبيهات والأوفلاين في أعلى الشجرة */}
       <OfflineAndUpdateBanner />
       
       <Suspense fallback={<FallbackLoader />}>
