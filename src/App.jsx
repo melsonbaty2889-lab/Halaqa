@@ -96,7 +96,8 @@ export default function App() {
         {/* 🌟 إدراج خلفية الوهج الزمردي الثابتة لتعمل خلف كل المكونات */}
         <GlobalEmeraldBackground />
 
-        <div className="relative z-10 min-h-screen flex flex-col bg-transparent">
+        {/* 🌟 تم إضافة pb-24 للجوال لرفع المحتوى فوق شريط التنقل السفلي */}
+        <div className="relative z-10 min-h-screen flex flex-col bg-transparent pb-24 md:pb-0">
           <OfflineAndUpdateBanner />
           
           <Suspense fallback={<FallbackLoader />}>
