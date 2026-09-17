@@ -82,15 +82,24 @@ export default function App() {
       return false;
     }
   });
-  // 🧪 معاينة مؤقتة لشاشة الحظر (قم بحذف هذا السطر أو التعليق عليه بعد المعاينة)
+  // 🧪 معاينة دقيقة ومطابقة تماماً لما سيظهر للمستخدم الحقيقي
 return (
   <BlockedView 
-    academy={{ name: "أكاديمية التجربة" }} 
-    isDemo={true}
+    academy={{ 
+      name: {
+        ar: "أكاديمية الفرقان للقرآن الكريم",
+        en: "Al-Furqan Quran Academy",
+        fr: "Académie Al-Furqan",
+        tr: "Al-Furqan Akademisi",
+        ur: "الفرقان اکیڈمی",
+        id: "Akademi Al-Furqan"
+      }
+    }} 
     onLogout={() => {
-      console.log("Logout triggered successfully");
-      // يمكنك توجيه المستخدم أو إعادة تحميل الصفحة
-      window.location.reload();
+      // محاكاة تسجيل الخروج الحقيقي (تنظيف الجلسة والتوجيه)
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/login';
     }} 
   />
 );
