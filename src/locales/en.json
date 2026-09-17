@@ -589,6 +589,7 @@
     "items": {
       "attendance": "Recitation & Attendance",
       "audit_logs": "Security Audit Logs",
+      "communication": "التواصل والتعاميم",
       "curricula": "Curricula & Islamic Studies",
       "dashboard": "Dashboard",
       "documents": "Documents & Files",
@@ -599,6 +600,7 @@
       "interactive_quran": "Smart Mushaf & Recitation",
       "notifications_reports": "Notifications & Reports",
       "parents": "Parents",
+      "reports": "التقارير والتحليلات",
       "settings": "System Settings",
       "students": "Student Management",
       "teachers": "Teaching & Admin Staff"

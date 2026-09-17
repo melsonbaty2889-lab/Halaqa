@@ -589,6 +589,7 @@
     "items": {
       "attendance": "التسمیع اور حاضری",
       "audit_logs": "سیکیورٹی آڈٹ لاگز",
+      "communication": "التواصل والتعاميم",
       "curricula": "نصاب و علومِ شرعیہ",
       "dashboard": "ڈیش بورڈ",
       "documents": "دستاویزات اور فائلیں",
@@ -599,6 +600,7 @@
       "interactive_quran": "مصحف اور اسمارٹ تلاوت",
       "notifications_reports": "اطلاعات اور رپورٹس",
       "parents": "والدین / سرپرست",
+      "reports": "التقارير والتحليلات",
       "settings": "سسٹم کی ترتیبات",
       "students": "طلباء کا انتظام",
       "teachers": "تدریسی و انتظامی عملہ"

@@ -589,6 +589,7 @@
     "items": {
       "attendance": "Setoran & Kehadiran",
       "audit_logs": "Log Audit Keamanan",
+      "communication": "التواصل والتعاميم",
       "curricula": "Kurikulum & Studi Islam",
       "dashboard": "Dasbor",
       "documents": "Dokumen & Berkas",
@@ -599,6 +600,7 @@
       "interactive_quran": "Mushaf Interaktif & Setoran",
       "notifications_reports": "Notifikasi & Laporan",
       "parents": "Wali Santri",
+      "reports": "التقارير والتحليلات",
       "settings": "Pengaturan Sistem",
       "students": "Manajemen Santri",
       "teachers": "Pengajar & Staf Admin"

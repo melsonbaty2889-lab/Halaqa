@@ -589,6 +589,7 @@
     "items": {
       "attendance": "Okuma ve Devam",
       "audit_logs": "Güvenlik Denetim Kayıtları",
+      "communication": "التواصل والتعاميم",
       "curricula": "Müfredat ve İslami İlimler",
       "dashboard": "Kontrol Paneli",
       "documents": "Belgeler ve Dosyalar",
@@ -599,6 +600,7 @@
       "interactive_quran": "Etkileşimli Kur'an ve Akıllı Okuma",
       "notifications_reports": "Bildirimler ve Raporlar",
       "parents": "Veliler",
+      "reports": "التقارير والتحليلات",
       "settings": "Sistem Ayarları",
       "students": "Öğrenci Yönetimi",
       "teachers": "Eğitmen ve İdari Kadro"

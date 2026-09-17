@@ -589,6 +589,7 @@
     "items": {
       "attendance": "Récitation & Présence",
       "audit_logs": "Journal de sécurité",
+      "communication": "التواصل والتعاميم",
       "curricula": "Programmes et sciences islamiques",
       "dashboard": "Tableau de bord",
       "documents": "Documents & Fichiers",
@@ -599,6 +600,7 @@
       "interactive_quran": "Coran interactif & Récitation",
       "notifications_reports": "Notifications & Rapports",
       "parents": "Parents d'élèves",
+      "reports": "التقارير والتحليلات",
       "settings": "Paramètres du système",
       "students": "Gestion des élèves",
       "teachers": "Corps enseignant & Admin"
