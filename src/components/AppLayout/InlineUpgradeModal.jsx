@@ -31,15 +31,16 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
       fontFamily: "'Cairo', system-ui, sans-serif"
     }}>
       <div style={{
-        background: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
-        border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+        background: C.dark.card,
+        border: `1px solid ${C.border.card}`,
         borderRadius: '16px',
         maxWidth: '480px',
         width: '100%',
         padding: '24px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+        boxShadow: 'var(--shadow-main)',
         position: 'relative'
       }}>
+        {/* زر الإغلاق */}
         <button 
           onClick={onClose}
           aria-label={getText(t, 'common.close', 'إغلاق')}
@@ -50,7 +51,7 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
             insetInlineStart: '16px',
             background: 'none',
             border: 'none',
-            color: C.text?.muted || '#94A3B8',
+            color: C.text.sub,
             cursor: 'pointer',
             minHeight: '44px',
             minWidth: '44px',
@@ -61,13 +62,15 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
         >
           <X size={20} />
         </button>
+
+        {/* الهيدر والأيقونة */}
         <div style={{ textAlign: 'center', marginBlockEnd: '20px' }}>
           <div style={{
             width: '50px',
             height: '50px',
             borderRadius: '50%',
-            background: C.emerald?.radialGlow || 'rgba(16, 185, 129, 0.14)',
-            color: C.emerald?.DEFAULT || '#10B981',
+            background: 'var(--emerald-radial-glow)',
+            color: C.emerald.DEFAULT,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -75,35 +78,39 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           }}>
             <Zap size={24} />
           </div>
-          <h2 style={{ color: C.text?.title || '#FFFFFF', fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
+          <h2 style={{ color: C.text.main, fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
             {getText(t, 'upgrade.title', 'ترقية حساب الأكاديمية')}
           </h2>
-          <p style={{ color: C.text?.muted || '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
+          <p style={{ color: C.text.sub, fontSize: '0.85rem', margin: 0 }}>
             {getText(t, 'upgrade.subtitle', 'احصل على كافة مميزات المنظومة الاحترافية لأكاديميتك')} ({academyName || ''})
           </p>
         </div>
+
+        {/* قائمة المميزات */}
         <div style={{
-          background: C.dark?.surface || '#0A0F1C',
+          background: C.dark.input,
           borderRadius: '10px',
           padding: '14px',
           marginBlockEnd: '20px',
-          border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`
+          border: `1px solid ${C.border.card}`
         }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text?.body || '#E2E8F0', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text.main, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={18} style={{ color: C.emerald?.DEFAULT || '#10B981' }} />
+              <CheckCircle size={18} style={{ color: C.emerald.DEFAULT }} />
               <span>{getText(t, 'upgrade.feat1', 'إدارة عدد غير محدود من الطلاب والحلقات')}</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={18} style={{ color: C.emerald?.DEFAULT || '#10B981' }} />
+              <CheckCircle size={18} style={{ color: C.emerald.DEFAULT }} />
               <span>{getText(t, 'upgrade.feat2', 'تقارير وأداء لحظي وتنبيهات مستمرة')}</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={18} style={{ color: C.emerald?.DEFAULT || '#10B981' }} />
+              <CheckCircle size={18} style={{ color: C.emerald.DEFAULT }} />
               <span>{getText(t, 'upgrade.feat3', 'دعم فني وتحديثات مستمرة للباقة الاحترافية')}</span>
             </li>
           </ul>
         </div>
+
+        {/* الأزرار الإجرائية */}
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={() => {
@@ -116,13 +123,14 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
               flex: 1,
               padding: '12px',
               minHeight: '44px',
-              background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
-              color: C.text?.title || '#FFFFFF',
+              background: `linear-gradient(180deg, ${C.primary.btnStart} 0%, ${C.primary.btnEnd} 100%)`,
+              color: C.text.main,
               border: 'none',
               borderRadius: '8px',
               fontWeight: 'bold',
               fontSize: '0.9rem',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: `0 4px 14px ${C.primary.glow}`
             }}
           >
             {getText(t, 'upgrade.confirm', 'تأكيد طلب الترقية')}
@@ -135,8 +143,8 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
               padding: '12px 18px',
               minHeight: '44px',
               background: 'transparent',
-              color: C.text?.muted || '#94A3B8',
-              border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+              color: C.text.sub,
+              border: `1px solid ${C.border.card}`,
               borderRadius: '8px',
               fontSize: '0.9rem',
               cursor: 'pointer'
