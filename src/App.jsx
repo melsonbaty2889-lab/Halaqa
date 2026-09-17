@@ -3,6 +3,8 @@ import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { C } from '@/theme/colors';
 
+import BlockedView from '@/components/UI/BlockedView';
+
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
 import MainContent from '@/components/AppLayout/MainContent';
