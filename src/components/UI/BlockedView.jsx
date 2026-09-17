@@ -2,7 +2,7 @@ import React from 'react';
 import { AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-// 🛡️ دالة آمنة لمعالجة الكائنات المترجمة { ar: "..." } ومنع الخطأ #31
+// 🛡️ دالة آمنة لمعالجة الكائنات المترجمة ومنع الخطأ #31
 const getSafeText = (val, currentLang = 'ar', defaultVal = '') => {
   if (val === null || val === undefined) return defaultVal;
   if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -21,27 +21,26 @@ export default function BlockedView({ academy, onLogout }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
   const cleanLang = currentLang.toLowerCase().split('-')[0];
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
+  
+  const isRtl = i18n?.dir 
+    ? i18n.dir() === 'rtl' 
+    : ['ar', 'ur'].includes(cleanLang);
 
   const academyName = getSafeText(
     academy?.name, 
     cleanLang, 
-    t('blockedView.defaultAcademyName', 'الأكاديمية')
+    t('blockedView.defaultAcademyName')
   );
 
   const blockReason = getSafeText(
     academy?.blocked_reason, 
     cleanLang, 
-    t('blockedView.defaultReason', 'تم تعليق حساب الأكاديمية مؤقتاً من قبل إدارة المنصة بسبب انتهاء الاشتراك أو مراجعة الحساب.')
+    t('blockedView.defaultReason')
   );
 
   const handleSupportContact = () => {
     const supportPhone = "201552518406";
-    const msgText = t(
-      'blockedView.whatsappMsg', 
-      'السلام عليكم، أنا مالك أكاديمية ({{name}})، تم تعليق الحساب وأود الاستفسار والتفعيل.', 
-      { name: academyName }
-    );
+    const msgText = t('blockedView.whatsappMsg', { name: academyName });
     const msg = encodeURIComponent(msgText);
     window.open(`https://wa.me/${supportPhone}?text=${msg}`, '_blank');
   };
@@ -61,14 +60,14 @@ export default function BlockedView({ academy, onLogout }) {
         {/* العناوين */}
         <div>
           <h2 className="text-xl font-bold mb-1 text-appText-main">
-            {t('blockedView.title', 'تم تعليق حساب الأكاديمية')}
+            {t('blockedView.title')}
           </h2>
           <p className="text-sm font-semibold text-appError">
             {academyName}
           </p>
         </div>
 
-        {/* سببية الحظر */}
+        {/* سبب الحظر */}
         <div className="border border-appBorder-input bg-dark-input p-4 rounded-xl text-xs leading-relaxed text-start text-appText-sub">
           {blockReason}
         </div>
@@ -78,22 +77,22 @@ export default function BlockedView({ academy, onLogout }) {
           <button
             type="button"
             onClick={handleSupportContact}
-            aria-label={t('blockedView.contactSupport', 'التواصل مع الإدارة عبر الواتساب')}
+            aria-label={t('blockedView.contactSupport')}
             className="w-full rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center gap-2 transition-all min-h-[44px] bg-brandEmerald text-dark-bg hover:opacity-90 active:scale-[0.99]"
           >
             <MessageCircle size={18} />
-            <span>{t('blockedView.contactSupport', 'التواصل مع الإدارة عبر الواتساب')}</span>
+            <span>{t('blockedView.contactSupport')}</span>
           </button>
 
           {onLogout && (
             <button
               type="button"
               onClick={onLogout}
-              aria-label={t('blockedView.logout', 'تسجيل الخروج')}
+              aria-label={t('blockedView.logout')}
               className="w-full border border-appBorder-input bg-dark-input hover:bg-dark-card text-appText-main rounded-xl font-semibold text-xs cursor-pointer flex items-center justify-center gap-2 transition-all min-h-[44px] active:scale-[0.99]"
             >
               <LogOut size={16} />
-              <span>{t('blockedView.logout', 'تسجيل الخروج')}</span>
+              <span>{t('blockedView.logout')}</span>
             </button>
           )}
         </div>
