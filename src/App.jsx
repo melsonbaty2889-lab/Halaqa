@@ -20,7 +20,7 @@ const DevPlayground = lazy(() => {
   return Promise.resolve({ default: () => null });
 });
 
-// 🌟 طبقة الوهج الزمردي الشاملة لكافة الشاشات (تسجيل الدخول، الشاشة الافتتاحية، ولوحة التحكم)
+// 🌟 مكون الوهج الزمردي الديناميكي الموحد خلف التطبيق
 const GlobalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
     <div className="absolute inset-0 bg-[#070B11]" />
@@ -76,10 +76,10 @@ export default function App() {
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
 
+  // فحص حالة الشاشة الافتتاحية مع السماح بإظهارها عبر ?view=splash
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
-      // إتاحة إظهار الشاشة عند اختيار view=splash أو تلقائياً في حالة عدم المشاهدة
       return view === 'splash' || !sessionStorage.getItem('app_splash_seen');
     } catch {
       return false;
@@ -98,7 +98,7 @@ export default function App() {
   return (
     <GlobalErrorBoundary>
       <div className="relative min-h-screen bg-[#070B11] text-white font-cairo overflow-hidden">
-        {/* تفعيل خلفية الوهج الزمردية لتعمل في خلفية كل التطبيق */}
+        {/* 🌟 إدراج خلفية الوهج الزمردي الثابتة لتعمل خلف كل المكونات */}
         <GlobalEmeraldBackground />
 
         <div className="relative z-10 min-h-screen flex flex-col">
