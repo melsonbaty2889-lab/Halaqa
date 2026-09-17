@@ -100,8 +100,7 @@ const CustomSelect = ({
       {label && (
         <label 
           htmlFor={id}
-          className="block text-xs font-bold mb-1.5 transition-colors select-none"
-          style={{ color: C.text?.title }}
+          className="block text-xs font-bold mb-1.5 transition-colors select-none text-appText-main"
         >
           {label}
         </label>
@@ -123,28 +122,23 @@ const CustomSelect = ({
           setSearchTerm('');
           setIsOpen((prev) => !prev);
         }}
-        className="app-input w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[44px] px-3.5 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed select-none"
-        style={{
-          backgroundColor: C.inputs?.bg || C.dark?.surface,
-          borderColor: error ? C.error?.DEFAULT : (isOpen ? C.amber?.DEFAULT || C.inputs?.borderFocus : C.inputs?.border),
-          color: selectedOption ? C.text?.title : C.text?.placeholder,
-        }}
+        className={`app-input w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[44px] px-3.5 py-2.5 rounded-xl border bg-dark-input focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed select-none ${
+          error ? 'border-appError' : (isOpen ? 'border-primary' : 'border-appBorder-input')
+        }`}
       >
-        <span className={`truncate text-xs ${selectedOption ? 'font-semibold' : ''}`}>
+        <span className={`truncate text-xs ${selectedOption ? 'font-semibold text-appText-main' : 'text-appText-muted'}`}>
           {selectedOption ? selectedOption.label : resolvedPlaceholder}
         </span>
         <ChevronDown
           size={16}
-          className="transition-transform duration-200 shrink-0 ms-2"
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            color: isOpen ? C.amber?.DEFAULT : C.text?.muted,
-          }}
+          className={`transition-transform duration-200 shrink-0 ms-2 ${
+            isOpen ? 'rotate-180 text-primary' : 'text-appText-muted'
+          }`}
         />
       </button>
 
       {error && (
-        <p className="text-[11px] mt-1.5 font-medium" style={{ color: C.error?.DEFAULT }}>
+        <p className="text-[11px] mt-1.5 font-medium text-appError">
           {error}
         </p>
       )}
@@ -164,26 +158,17 @@ const CustomSelect = ({
               zIndex: 999999,
               opacity: isPositioned ? 1 : 0,
               visibility: isPositioned ? 'visible' : 'hidden',
-              backgroundColor: C.dark?.card || C.dark?.bg,
-              borderColor: C.dark?.cardBorder || C.inputs?.border,
             }}
-            className={`overflow-hidden border rounded-xl shadow-2xl flex flex-col backdrop-blur-md ${
+            className={`overflow-hidden border border-appBorder-card rounded-xl shadow-2xl flex flex-col bg-dark-card backdrop-blur-md ${
               isPositioned ? 'transition-opacity duration-150' : ''
             }`}
           >
             {searchable && (
-              <div 
-                className="p-2 border-b sticky top-0 z-10"
-                style={{
-                  backgroundColor: C.dark?.card || C.dark?.bg,
-                  borderColor: C.dark?.cardBorder || C.inputs?.border,
-                }}
-              >
+              <div className="p-2 border-b border-appBorder-card sticky top-0 z-10 bg-dark-card">
                 <div className="relative flex items-center">
                   <Search 
                     size={14} 
-                    className="absolute start-3 pointer-events-none" 
-                    style={{ color: C.text?.muted }}
+                    className="absolute start-3 pointer-events-none text-appText-muted" 
                   />
                   <input
                     type="text"
@@ -193,28 +178,16 @@ const CustomSelect = ({
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={(e) => e.stopPropagation()}
                     aria-label={resolvedSearchPlaceholder}
-                    className="w-full rounded-lg ps-8 pe-3 py-2 text-xs focus:outline-none transition-all text-start"
-                    style={{
-                      backgroundColor: C.dark?.surface || C.inputs?.bg,
-                      borderColor: C.inputs?.border,
-                      color: C.text?.title,
-                      borderWidth: '1px',
-                    }}
+                    className="w-full rounded-lg ps-8 pe-3 py-2 text-xs focus:outline-none transition-all text-start bg-dark-input border border-appBorder-input text-appText-main"
                     autoFocus
                   />
                 </div>
               </div>
             )}
 
-            <div 
-              className="overflow-y-auto flex-1 custom-scrollbar p-1.5 space-y-1"
-              style={{ backgroundColor: C.dark?.card || C.dark?.bg }}
-            >
+            <div className="overflow-y-auto flex-1 custom-scrollbar p-1.5 space-y-1 bg-dark-card">
               {filteredOptions.length === 0 ? (
-                <div 
-                  className="px-3 py-4 text-xs text-center font-medium"
-                  style={{ color: C.text?.muted }}
-                >
+                <div className="px-3 py-4 text-xs text-center font-medium text-appText-muted">
                   {resolvedNoOptionsMessage}
                 </div>
               ) : (
@@ -228,31 +201,17 @@ const CustomSelect = ({
                       role="option"
                       aria-selected={isSelected}
                       onClick={(e) => handleSelect(e, opt.value)}
-                      className="w-full text-start px-3 py-2.5 min-h-[40px] text-xs rounded-lg flex items-center justify-between transition-all duration-150 cursor-pointer active:scale-[0.99] focus:outline-none select-none"
-                      style={{
-                        backgroundColor: isSelected ? C.amber?.DEFAULT : 'transparent',
-                        color: isSelected ? C.dark?.bg : C.text?.body,
-                        fontWeight: isSelected ? '700' : '500',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.backgroundColor = C.dark?.surface || 'rgba(255,255,255,0.05)';
-                          e.currentTarget.style.color = C.text?.title;
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.color = C.text?.body;
-                        }
-                      }}
+                      className={`w-full text-start px-3 py-2.5 min-h-[40px] text-xs rounded-lg flex items-center justify-between transition-all duration-150 cursor-pointer active:scale-[0.99] focus:outline-none select-none ${
+                        isSelected
+                          ? 'bg-primary/20 text-primary font-bold border border-primary/40'
+                          : 'text-appText-main hover:bg-dark-input hover:text-white'
+                      }`}
                     >
                       <span className="truncate">{opt.label}</span>
                       {isSelected && (
                         <Check 
                           size={15} 
-                          className="shrink-0 ms-2" 
-                          style={{ color: C.dark?.bg }}
+                          className="shrink-0 ms-2 text-primary" 
                         />
                       )}
                     </button>
