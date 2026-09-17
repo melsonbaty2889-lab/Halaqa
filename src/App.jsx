@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense, useCallback } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { C } from '@/theme/colors';
 
@@ -69,8 +69,8 @@ const FallbackLoader = () => (
 );
 
 export default function App() {
-  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const view = urlParams.get('view');
+  const [searchParams] = useSearchParams();
+  const view = searchParams.get('view');
 
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -92,7 +92,7 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
-      {/* بقاء شريط التنبيهات والأوفلاين في أعلى الشجرة دائماً */}
+      {/* شريط التنبيهات والأوفلاين في أعلى الشجرة */}
       <OfflineAndUpdateBanner />
       
       <Suspense fallback={<FallbackLoader />}>
