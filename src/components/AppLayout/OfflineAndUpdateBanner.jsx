@@ -55,8 +55,8 @@ export default function OfflineAndUpdateBanner() {
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
           style={{
-            background: C.error?.DEFAULT || '#EF4444',
-            color: C.text?.title || '#FFFFFF',
+            background: C.error,
+            color: C.text.main,
             textAlign: 'center',
             padding: '8px 16px',
             position: 'fixed',
@@ -70,7 +70,7 @@ export default function OfflineAndUpdateBanner() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+            boxShadow: 'var(--shadow-main)',
             fontFamily: "'Cairo', system-ui, sans-serif"
           }}
         >
@@ -83,8 +83,8 @@ export default function OfflineAndUpdateBanner() {
         <div 
           dir={isRtl ? 'rtl' : 'ltr'}
           style={{
-            background: C.emerald?.DEFAULT || '#10B981',
-            color: C.dark?.bg || '#050811',
+            background: C.emerald.DEFAULT,
+            color: C.dark.bg,
             padding: '10px 16px',
             position: 'fixed',
             insetBlockEnd: '16px',
@@ -96,7 +96,7 @@ export default function OfflineAndUpdateBanner() {
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            boxShadow: 'var(--shadow-main)',
             fontFamily: "'Cairo', system-ui, sans-serif"
           }}
         >
@@ -106,8 +106,8 @@ export default function OfflineAndUpdateBanner() {
             aria-label={getText(t, 'pwa.updateNow', 'تحديث الآن')}
             title={getText(t, 'pwa.updateNow', 'تحديث الآن')}
             style={{
-              background: C.dark?.bg || '#050811',
-              color: C.emerald?.DEFAULT || '#10B981',
+              background: C.dark.bg,
+              color: C.emerald.DEFAULT,
               border: 'none',
               padding: '6px 14px',
               minHeight: '36px',
@@ -128,4 +128,3 @@ export default function OfflineAndUpdateBanner() {
     </>
   );
 }
-export default OfflineAndUpdateBanner;
