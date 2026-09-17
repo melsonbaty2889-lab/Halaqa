@@ -83,17 +83,26 @@ export default function App() {
     }
   });
   // 🧪 معاينة مؤقتة لشاشة الحظر (قم بحذف هذا السطر أو التعليق عليه بعد المعاينة)
-  return <BlockedView academy={{ name: "أكاديمية التجربة" }} onLogout={() => alert("تسجيل الخروج")} />;
+return (
+  <BlockedView 
+    academy={{ name: "أكاديمية التجربة" }} 
+    isDemo={true}
+    onLogout={() => {
+      console.log("Logout triggered successfully");
+      // يمكنك توجيه المستخدم أو إعادة تحميل الصفحة
+      window.location.reload();
+    }} 
+  />
+);
 
-  const handleSplashFinish = useCallback(() => {
-    try {
-      sessionStorage.setItem('app_splash_seen', 'true');
-    } catch {
-      // Ignored
-    }
-    setShowSplash(false);
-  }, []);
-
+const handleSplashFinish = useCallback(() => {
+  try {
+    sessionStorage.setItem('app_splash_seen', 'true');
+  } catch {
+    // Ignored
+  }
+  setShowSplash(false);
+}, []);
   return (
     <GlobalErrorBoundary>
       <div className="relative min-h-screen bg-transparent text-white font-cairo overflow-hidden">
