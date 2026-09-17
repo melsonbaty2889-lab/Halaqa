@@ -8,7 +8,6 @@ import { C } from '@/theme/colors';
 const BRAND_NAMES = {
   ar: 'الحلقة الذكية',
   ur: 'اسمارٹ حلقہ',
-  // تثبيت الاسم الإنجليزي لكافة اللغات اللاتينية
   en: 'Smart Halaqa',
   fr: 'Smart Halaqa',
   tr: 'Smart Halaqa',
@@ -18,7 +17,7 @@ const BRAND_NAMES = {
 export default function AppBrand({ className = '', subtitle }) {
   const { t, i18n } = useTranslation();
 
-  // الحصول على كود اللغة الحالي (مثلاً: 'id' أو 'tr')
+  // الحصول على كود اللغة الحالي
   const currentLang = i18n?.language?.split('-')[0] || 'ar';
 
   // تحديد اسم البراند برمجياً مع إمكانية التراجع لـ t()
@@ -26,30 +25,27 @@ export default function AppBrand({ className = '', subtitle }) {
 
   return (
     <div className={`flex flex-col items-center text-center select-none ${className}`}>
-      {/* غلاف اللوجو والتوهج */}
+      {/* غلاف اللوجو والتوهج الزمردي */}
       <div className="relative mb-3 flex items-center justify-center">
         <div
           className="absolute inset-0 rounded-full blur-xl opacity-60 pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${C?.emerald?.DEFAULT || '#10B981'} 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${C?.emerald?.DEFAULT || 'var(--emerald-text)'} 0%, transparent 70%)`,
           }}
         />
-        <div className="relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+        <div className="relative z-10 drop-shadow-[0_0_15px_var(--emerald-logo-glow)]">
           <SmartHalaqaProLogo size={64} />
         </div>
       </div>
 
-      {/* اسم المنصة باللون الأبيض */}
-      <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-white">
+      {/* اسم المنصة */}
+      <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-appText-main">
         {brandName}
       </h2>
 
-      {/* العنوان الفرعي المترجم */}
+      {/* العنوان الفرعي */}
       {subtitle && (
-        <p
-          className="text-xs sm:text-sm font-medium tracking-wide m-0 max-w-xs leading-relaxed"
-          style={{ color: C?.text?.muted || '#94A3B8' }}
-        >
+        <p className="text-xs sm:text-sm font-medium tracking-wide m-0 max-w-xs leading-relaxed text-appText-sub">
           {subtitle}
         </p>
       )}
