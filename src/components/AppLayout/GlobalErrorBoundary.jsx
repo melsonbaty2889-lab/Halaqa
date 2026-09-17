@@ -28,26 +28,27 @@ export default class GlobalErrorBoundary extends Component {
       return (
         <div style={{
           minHeight: '100vh',
-          background: C.dark?.bg || '#050811',
+          background: C.dark.bg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
           fontFamily: "'Cairo', system-ui, sans-serif",
-          color: C.text?.title || '#FFFFFF'
+          color: C.text.main
         }}>
           <div style={{
             width: '100%',
             maxWidth: '520px',
-            background: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
-            border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+            background: C.dark.card,
+            border: `1px solid ${C.border.card}`,
             borderRadius: '24px',
             padding: '36px 28px',
             textAlign: 'center',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+            boxShadow: 'var(--shadow-main)',
             position: 'relative',
             overflow: 'hidden'
           }}>
+            {/* Glow Accent */}
             <div style={{
               position: 'absolute',
               insetBlockStart: '-60px',
@@ -55,18 +56,20 @@ export default class GlobalErrorBoundary extends Component {
               transform: 'translateX(-50%)',
               width: '180px',
               height: '180px',
-              background: C.error?.DEFAULT || '#EF4444',
+              background: C.error,
               filter: 'blur(90px)',
               opacity: 0.25,
               pointerEvents: 'none'
             }} />
+
+            {/* Icon Wrapper */}
             <div style={{
               width: '72px',
               height: '72px',
               borderRadius: '20px',
               background: 'rgba(239, 68, 68, 0.15)',
-              border: `1px solid ${C.error?.DEFAULT || '#EF4444'}`,
-              color: C.error?.DEFAULT || '#EF4444',
+              border: `1px solid ${C.error}`,
+              color: C.error,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -74,27 +77,30 @@ export default class GlobalErrorBoundary extends Component {
             }}>
               <AlertTriangle size={36} />
             </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.text?.title || '#FFFFFF' }}>
+
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.text.main }}>
               عذراً، حدث خطأ تقني غير متوقع
             </h2>
-            <p style={{ fontSize: '0.875rem', color: C.text?.muted || '#94A3B8', marginBlockEnd: '24px', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '0.875rem', color: C.text.sub, marginBlockEnd: '24px', lineHeight: '1.6' }}>
               واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.
             </p>
+
+            {/* Error Log Box */}
             <div style={{
-              background: C.dark?.surface || '#0A0F1C',
-              border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
+              background: C.dark.input,
+              border: `1px solid ${C.border.card}`,
               borderRadius: '12px',
               padding: '14px 16px',
               textAlign: 'start',
               marginBlockEnd: '28px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: C.text?.muted || '#94A3B8', marginBlockEnd: '6px', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '0.75rem', color: C.text.sub, marginBlockEnd: '6px', display: 'flex', justifyContent: 'space-between' }}>
                 <span>تفاصيل الخطأ:</span>
-                <span style={{ color: '#FCA5A5' }}>CRASH_REPORT</span>
+                <span style={{ color: C.error }}>CRASH_REPORT</span>
               </div>
               <p style={{
                 fontSize: '0.8rem',
-                color: '#FCA5A5',
+                color: C.error,
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -104,6 +110,8 @@ export default class GlobalErrorBoundary extends Component {
                 {errorMessage}
               </p>
             </div>
+
+            {/* Reload Button */}
             <button
               onClick={this.handleReload}
               aria-label="إعادة تحميل الصفحة"
@@ -112,8 +120,8 @@ export default class GlobalErrorBoundary extends Component {
                 width: '100%',
                 padding: '12px 20px',
                 minHeight: '44px',
-                background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
-                color: C.text?.title || '#FFFFFF',
+                background: `linear-gradient(180deg, ${C.primary.btnStart} 0%, ${C.primary.btnEnd} 100%)`,
+                color: C.text.main,
                 border: 'none',
                 borderRadius: '12px',
                 fontWeight: '700',
@@ -122,7 +130,8 @@ export default class GlobalErrorBoundary extends Component {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '8px',
+                boxShadow: `0 4px 14px ${C.primary.glow}`
               }}
             >
               <RefreshCw size={18} />
