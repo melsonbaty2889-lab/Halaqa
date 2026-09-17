@@ -12,5 +12,4 @@ export const UI = {
   errorText: "text-appError text-xs font-semibold mt-1 animate-fade-in"
 };
 
-export const styles = UI;
 export default UI;
