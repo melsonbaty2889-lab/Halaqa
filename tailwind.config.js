@@ -38,7 +38,6 @@ export default {
           dark: 'var(--emerald-dark)',
           light: 'var(--emerald-light)',
           glow: 'var(--emerald-radial-glow)',
-          surface: 'rgba(9, 51, 44, <alpha-value>)',
         },
         appText: {
           main: 'var(--text-main)',
