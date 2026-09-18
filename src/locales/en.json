@@ -506,6 +506,7 @@
       "title": "تحديث النظام"
     },
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
+    "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
     "dangerModal": {
       "confirm": "نعم، احذف الحلقة",
@@ -544,6 +545,8 @@
     "selectDateLabel": "اختر التاريخ الحجري / الميلادي:",
     "selectedCode": "الكود المختار حالياً:",
     "selectedDate": "التاريخ المختار حالياً:",
+    "selectedRole": "الدور المختار حالياً:",
+    "selectRoleLabel": "اختر الدور الوظيفي:",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
     "warningBtn": "نافذة تحذير / أرشفة (Warning)",
@@ -849,14 +852,18 @@
     "toggleCalendarType": "Toggle Calendar"
   },
   "roles": {
+    "admin": "مدير النظام",
     "admin_desc": "To manage the entire Quranic institution, teachers, and halaqas",
     "admin_title": "Supervisor / Quranic Entity Manager",
+    "parent": "ولي أمر",
     "parent_desc": "To follow up on children's progress and attendance in halaqas",
     "parent_title": "Parent / Guardian",
     "select_header": "How would you like to use the platform?",
     "select_subheader": "Select your role to customize the interface for you",
+    "student": "طالب",
     "student_desc": "To join halaqas and follow memorization, revision, and lessons",
     "student_title": "Student / Reciter",
+    "teacher": "معلم الحلقة",
     "teacher_desc": "To manage halaqas, record progress, and evaluate mastery",
     "teacher_title": "Teacher / Memorization Tutor",
     "update_error": "An error occurred while saving role. Please try again."

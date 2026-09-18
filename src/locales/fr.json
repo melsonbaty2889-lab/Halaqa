@@ -506,6 +506,7 @@
       "title": "تحديث النظام"
     },
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
+    "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
     "dangerModal": {
       "confirm": "نعم، احذف الحلقة",
@@ -544,6 +545,8 @@
     "selectDateLabel": "اختر التاريخ الحجري / الميلادي:",
     "selectedCode": "الكود المختار حالياً:",
     "selectedDate": "التاريخ المختار حالياً:",
+    "selectedRole": "الدور المختار حالياً:",
+    "selectRoleLabel": "اختر الدور الوظيفي:",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
     "warningBtn": "نافذة تحذير / أرشفة (Warning)",
@@ -849,14 +852,18 @@
     "toggleCalendarType": "Changer le calendrier"
   },
   "roles": {
+    "admin": "مدير النظام",
     "admin_desc": "Pour gérer toute l'institution coranique, les enseignants et les halaqas",
     "admin_title": "Superviseur / Directeur de l'entité",
+    "parent": "ولي أمر",
     "parent_desc": "Pour suivre la progression et la présence des enfants aux halaqas",
     "parent_title": "Parent / Tuteur",
     "select_header": "Comment souhaitez-vous utiliser la plateforme ?",
     "select_subheader": "Sélectionnez votre rôle pour personnaliser votre interface",
+    "student": "طالب",
     "student_desc": "Pour rejoindre les halaqas et suivre la mémorisation et les cours",
     "student_title": "Élève / Récitateur",
+    "teacher": "معلم الحلقة",
     "teacher_desc": "Pour gérer les halaqas, enregistrer le suivi et évaluer le niveau",
     "teacher_title": "Enseignant / Récitateur",
     "update_error": "Erreur lors de l'enregistrement du rôle. Veuillez réessayer."

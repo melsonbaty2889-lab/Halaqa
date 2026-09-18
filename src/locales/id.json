@@ -506,6 +506,7 @@
       "title": "تحديث النظام"
     },
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
+    "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
     "dangerModal": {
       "confirm": "نعم، احذف الحلقة",
@@ -544,6 +545,8 @@
     "selectDateLabel": "اختر التاريخ الحجري / الميلادي:",
     "selectedCode": "الكود المختار حالياً:",
     "selectedDate": "التاريخ المختار حالياً:",
+    "selectedRole": "الدور المختار حالياً:",
+    "selectRoleLabel": "اختر الدور الوظيفي:",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
     "warningBtn": "نافذة تحذير / أرشفة (Warning)",
@@ -849,14 +852,18 @@
     "toggleCalendarType": "Ubah Kalender"
   },
   "roles": {
+    "admin": "مدير النظام",
     "admin_desc": "Untuk mengelola seluruh lembaga Quran, pengajar, dan halaqah",
     "admin_title": "Manajer / Pengawas Lembaga Quran",
+    "parent": "ولي أمر",
     "parent_desc": "Untuk memantau perkembangan dan kehadiran anak di halaqah",
     "parent_title": "Orang Tua / Wali Santri",
     "select_header": "Bagaimana Anda ingin menggunakan platform ini?",
     "select_subheader": "Pilih peran Anda untuk menyesuaikan antarmuka sesuai kebutuhan Anda",
+    "student": "طالب",
     "student_desc": "Untuk bergabung dengan halaqah dan mengikuti hafalan serta pelajaran",
     "student_title": "Santri / Qari",
+    "teacher": "معلم الحلقة",
     "teacher_desc": "Untuk mengelola halaqah, mencatat kemajuan, dan menilai penguasaan",
     "teacher_title": "Pengajar / Ustadz",
     "update_error": "Terjadi kesalahan saat menyimpan peran. Silakan coba lagi."

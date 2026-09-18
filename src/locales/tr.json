@@ -506,6 +506,7 @@
       "title": "تحديث النظام"
     },
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
+    "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
     "dangerModal": {
       "confirm": "نعم، احذف الحلقة",
@@ -544,6 +545,8 @@
     "selectDateLabel": "اختر التاريخ الحجري / الميلادي:",
     "selectedCode": "الكود المختار حالياً:",
     "selectedDate": "التاريخ المختار حالياً:",
+    "selectedRole": "الدور المختار حالياً:",
+    "selectRoleLabel": "اختر الدور الوظيفي:",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
     "warningBtn": "نافذة تحذير / أرشفة (Warning)",
@@ -849,14 +852,18 @@
     "toggleCalendarType": "Takvimi Değiştir"
   },
   "roles": {
+    "admin": "مدير النظام",
     "admin_desc": "Kurumun tamamını, öğretmenleri ve halkaları yönetmek için",
     "admin_title": "Yönetici / Kurum Müdürü",
+    "parent": "ولي أمر",
     "parent_desc": "Çocukların halkadaki takibini ve devamını izlemek için",
     "parent_title": "Veli / Vasisi",
     "select_header": "Platformu nasıl kullanmak istersiniz?",
     "select_subheader": "Arayüzü size göre özelleştirmemiz için rolünüzü seçin",
+    "student": "طالب",
     "student_desc": "Halkalara katılmak, ezber ve dersleri takip etmek için",
     "student_title": "Öğrenci / Okuyucu",
+    "teacher": "معلم الحلقة",
     "teacher_desc": "Halkaları yönetmek, takipleri girmek ve seviyeleri değerlendirmek için",
     "teacher_title": "Öğretmen / Eğitmen",
     "update_error": "Rol kaydedilirken bir hata oluştu. Lütfen tekrar deneyin."
