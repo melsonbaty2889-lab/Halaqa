@@ -5,7 +5,7 @@ import {
   ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter 
 } from 'lucide-react';
 
-import C from '@/theme/colors';
+import { UI } from '@/theme/styles';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import CountrySelect from '@/components/UI/CountrySelect';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
@@ -81,34 +81,24 @@ export default function DevPlayground({
 
   return (
     <div 
-      className="min-h-screen p-5 font-cairo"
+      className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
       dir={isRtl ? 'rtl' : 'ltr'}
-      style={{ 
-        backgroundColor: C?.dark?.bg,
-        color: C?.text?.title
-      }}
     >
       <div className="max-w-xl mx-auto space-y-6">
         
         {/* رأس الصفحة */}
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+          <h2 className={UI.title}>
             🎨 {t('devPlayground.title', 'مختبر العناصر الشامل (Dev Playground)')}
           </h2>
-          <p className="text-xs" style={{ color: C?.text?.sub }}>
+          <p className={UI.subtitle}>
             {t('devPlayground.subtitle', 'معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي')}
           </p>
         </div>
 
         {/* تجربة القائمة المخصصة CustomSelect */}
-        <section 
-          className="p-5 rounded-2xl border space-y-3 text-start"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
           </h3>
           
@@ -123,21 +113,15 @@ export default function DevPlayground({
               lang={cleanLang}
               t={t}
             />
-            <p className="text-[11px] pt-1" style={{ color: C?.text?.sub }}>
-              {t('devPlayground.selectedRole', 'الدور المختار حالياً:')} <strong style={{ color: C?.text?.title }}>{selectedRole}</strong>
+            <p className="text-[11px] pt-1 text-semantic-textSecondary">
+              {t('devPlayground.selectedRole', 'الدور المختار حالياً:')} <strong className="text-semantic-textPrimary">{selectedRole}</strong>
             </p>
           </div>
         </section>
 
         {/* تجربة مكون الحالة الفارغة (EmptyState) */}
-        <section 
-          className="p-5 rounded-2xl border space-y-3 text-start"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
           </h3>
           
@@ -155,19 +139,13 @@ export default function DevPlayground({
         </section>
 
         {/* تجربة مكون اختيار التاريخ */}
-        <section 
-          className="p-5 rounded-2xl border space-y-3 text-start"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
           </h3>
           
           <div className="space-y-2">
-            <label className="text-xs block" style={{ color: C?.text?.sub }}>
+            <label className="text-xs block text-semantic-textSecondary">
               {t('devPlayground.selectDateLabel', 'اختر التاريخ الهجري / الميلادي:')}
             </label>
             <CustomDatePicker
@@ -178,26 +156,20 @@ export default function DevPlayground({
               t={t}
               showAge={true}
             />
-            <p className="text-[11px] pt-1" style={{ color: C?.text?.sub }}>
-              {t('devPlayground.selectedDate', 'التاريخ المختار حالياً:')} <strong style={{ color: C?.text?.title }}>{selectedDate ? selectedDate.toLocaleDateString() : '—'}</strong>
+            <p className="text-[11px] pt-1 text-semantic-textSecondary">
+              {t('devPlayground.selectedDate', 'التاريخ المختار حالياً:')} <strong className="text-semantic-textPrimary">{selectedDate ? selectedDate.toLocaleDateString() : '—'}</strong>
             </p>
           </div>
         </section>
 
         {/* تجربة مكون اختيار الدولة */}
-        <section 
-          className="p-5 rounded-2xl border space-y-3 text-start"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
           </h3>
           
           <div className="space-y-2">
-            <label className="text-xs block" style={{ color: C?.text?.sub }}>
+            <label className="text-xs block text-semantic-textSecondary">
               {t('devPlayground.selectCountryLabel', 'اختر الدولة من القائمة:')}
             </label>
             <CountrySelect
@@ -207,21 +179,15 @@ export default function DevPlayground({
               lang={cleanLang}
               t={t}
             />
-            <p className="text-[11px] pt-1" style={{ color: C?.text?.sub }}>
-              {t('devPlayground.selectedCode', 'الكود المختار حالياً:')} <strong style={{ color: C?.text?.title }}>{selectedCountry}</strong>
+            <p className="text-[11px] pt-1 text-semantic-textSecondary">
+              {t('devPlayground.selectedCode', 'الكود المختار حالياً:')} <strong className="text-semantic-textPrimary">{selectedCountry}</strong>
             </p>
           </div>
         </section>
 
         {/* حالات النوافذ المنبثقة */}
-        <section 
-          className="p-5 rounded-2xl border space-y-4 text-start"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+        <section className={`${UI.card} space-y-4 text-start`}>
+          <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
           </h3>
           
@@ -236,12 +202,7 @@ export default function DevPlayground({
                 confirmText: t('devPlayground.dangerModal.confirm', 'نعم، احذف الحلقة'),
                 cancelText: t('common.cancel', 'إلغاء')
               })}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
-              style={{
-                backgroundColor: C?.dark?.card,
-                color: C?.error?.DEFAULT,
-                borderColor: C?.error?.DEFAULT
-              }}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-danger bg-semantic-surfaceInput text-semantic-danger flex items-center justify-between transition-all cursor-pointer hover:bg-semantic-dangerBg"
             >
               <span className="flex items-center gap-2">
                 <Trash2 size={16} /> 
@@ -260,12 +221,7 @@ export default function DevPlayground({
                 confirmText: t('devPlayground.secureDeleteModal.confirm', 'تأكيد الحذف النهائي'),
                 cancelText: t('common.cancel', 'إلغاء')
               })}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
-              style={{
-                backgroundColor: C?.dark?.card,
-                color: C?.error?.DEFAULT,
-                borderColor: C?.error?.DEFAULT
-              }}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-danger bg-semantic-surfaceInput text-semantic-danger flex items-center justify-between transition-all cursor-pointer hover:bg-semantic-dangerBg"
             >
               <span className="flex items-center gap-2">
                 <ShieldAlert size={16} /> 
@@ -283,12 +239,7 @@ export default function DevPlayground({
                 confirmText: t('devPlayground.warningModal.confirm', 'تأكيد الأرشفة'),
                 cancelText: t('common.cancel', 'إلغاء')
               })}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
-              style={{
-                backgroundColor: C?.dark?.card,
-                color: C?.amber?.DEFAULT || C?.primary?.DEFAULT,
-                borderColor: C?.amber?.DEFAULT || C?.primary?.DEFAULT
-              }}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-actionPrimary bg-semantic-surfaceInput text-semantic-actionPrimary flex items-center justify-between transition-all cursor-pointer hover:bg-semantic-actionPrimaryGlow/10"
             >
               <span className="flex items-center gap-2">
                 <AlertTriangle size={16} /> 
@@ -307,12 +258,7 @@ export default function DevPlayground({
                 confirmText: t('devPlayground.promptModal.confirm', 'إرسال وثبيت الإلغاء'),
                 cancelText: t('common.cancel', 'إلغاء')
               })}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
-              style={{
-                backgroundColor: C?.dark?.card,
-                color: C?.amber?.DEFAULT || C?.primary?.DEFAULT,
-                borderColor: C?.amber?.DEFAULT || C?.primary?.DEFAULT
-              }}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-actionPrimary bg-semantic-surfaceInput text-semantic-actionPrimary flex items-center justify-between transition-all cursor-pointer hover:bg-semantic-actionPrimaryGlow/10"
             >
               <span className="flex items-center gap-2">
                 <MessageSquare size={16} /> 
@@ -330,12 +276,7 @@ export default function DevPlayground({
                 confirmText: t('devPlayground.infoModal.confirm', 'استعادة الآن'),
                 cancelText: t('common.cancel', 'إلغاء')
               })}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
-              style={{
-                backgroundColor: C?.dark?.card,
-                color: C?.emerald?.DEFAULT || C?.success?.DEFAULT,
-                borderColor: C?.emerald?.DEFAULT || C?.success?.DEFAULT
-              }}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-successBg bg-semantic-surfaceInput text-semantic-success flex items-center justify-between transition-all cursor-pointer hover:bg-semantic-successBg/50"
             >
               <span className="flex items-center gap-2">
                 <CheckCircle size={16} /> 
@@ -352,12 +293,7 @@ export default function DevPlayground({
                 message: t('devPlayground.alertModal.message', 'تم إكمال عملية المزامنة بنجاح ولن تحتاج لإعادة التشغيل.'),
                 confirmText: t('devPlayground.alertModal.confirm', 'حسناً، فهمت')
               })}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
-              style={{
-                backgroundColor: C?.dark?.card,
-                color: C?.text?.title,
-                borderColor: C?.dark?.borderInput || C?.inputs?.border
-              }}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary flex items-center justify-between transition-all cursor-pointer hover:border-semantic-borderHover"
             >
               <span className="flex items-center gap-2">
                 <HelpCircle size={16} /> 
