@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Archive, ArchiveRestore, Trash2, X, Loader2 } from 'lucide-react';
 import C from '@/theme/colors';
@@ -16,13 +16,24 @@ const ConfirmModal = ({
 }) => {
   const { t, i18n } = useTranslation();
 
+  // إغلاق النافذة عند الضغط على زر Esc
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen && !isLoading) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isLoading, onClose]);
+
   if (!isOpen) return null;
 
   const currentLang = i18n.language || 'ar';
   const cleanLang = currentLang.toLowerCase().split('-')[0];
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
 
-  // استخراج الألوان القياسية من كائن C
+  // استخراج الألوان القياسية من C
   const mainBg = C.dark?.bg || '#0F172A';
   const surfaceBg = C.dark?.surface || '#1E293B';
   const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
@@ -33,7 +44,6 @@ const ConfirmModal = ({
   const successColor = C.emerald?.DEFAULT || C.success?.DEFAULT || '#10B981';
   const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8';
 
-  // تحديد الأيقونة والألوان حسب نوع الإجراء
   const getVariantStyles = () => {
     switch (variant) {
       case 'danger':
@@ -70,6 +80,8 @@ const ConfirmModal = ({
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-all"
       dir={isRtl ? 'rtl' : 'ltr'}
+      role="dialog"
+      aria-modal="true"
     >
       <div 
         className="border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 relative transition-all"
@@ -110,7 +122,7 @@ const ConfirmModal = ({
               {title || t('common.confirm_action', 'تأكيد الإجراء')}
             </h3>
             <p className="text-xs mt-1 leading-relaxed" style={{ color: subColor }}>
-              {message || t('common.confirm_message', 'هل أنت تأكد من الاستمرار في هذا الإجراء؟')}
+              {message || t('common.confirm_message', 'هل أنت متأكد من الاستمرار في هذا الإجراء؟')}
             </p>
           </div>
         </div>
