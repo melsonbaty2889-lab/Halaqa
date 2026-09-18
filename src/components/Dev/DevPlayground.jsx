@@ -84,8 +84,8 @@ export default function DevPlayground({
         
         {/* رأس الصفحة */}
         <div className="text-center space-y-2">
-          <h2 className={UI.title}>
-            🎨 {t('devPlayground.title', 'مختبر العناصر الشامل (Dev Playground)')}
+          <h2 className={`${UI.title} text-lg sm:text-xl font-bold`}>
+            🎨 {t('devPlayground.title', 'مختبر العناصر الشامل')} <span className="inline-block text-xs font-normal text-semantic-textSecondary">(Dev Playground)</span>
           </h2>
           <p className={UI.subtitle}>
             {t('devPlayground.subtitle', 'معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي')}
@@ -100,6 +100,8 @@ export default function DevPlayground({
           
           <div className="p-4 rounded-xl bg-semantic-surfaceInput/50 border border-semantic-borderCard">
             <AppBrand 
+              lang={cleanLang}
+              t={t}
               subtitle={t('devPlayground.appBrandSubtitle', 'منصة إدارة الحلقات القرآنية والتعليمية')}
             />
           </div>
