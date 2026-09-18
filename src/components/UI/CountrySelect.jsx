@@ -8,6 +8,8 @@ import C from '@/theme/colors';
 export default function CountrySelect({
   value,
   onChange,
+  t = (key, fallback) => fallback,
+  lang = 'ar',
   isArabic = true,
   placeholder,
   disabled = false,
@@ -15,7 +17,8 @@ export default function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const isRtl = isArabic;
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
   const cardBg = C?.dark?.surface || '#1E293B';
   const inputBg = C?.dark?.bg || '#0F172A';
@@ -71,7 +74,17 @@ export default function CountrySelect({
     );
   });
 
-  const defaultPlaceholder = placeholder || 'اختر الدولة...';
+  const defaultPlaceholder = placeholder || t('countrySelect.placeholder', 'اختر الدولة...');
+
+  // تحديد دالة جلب اسم الدولة حسب اللغة
+  const getCountryName = (c) => {
+    if (cleanLang === 'ar') return c.nameAr || c.nameEn;
+    if (cleanLang === 'fr') return c.nameFr || c.nameEn || c.nameAr;
+    if (cleanLang === 'tr') return c.nameTr || c.nameEn || c.nameAr;
+    if (cleanLang === 'ur') return c.nameUr || c.nameAr || c.nameEn;
+    if (cleanLang === 'id') return c.nameId || c.nameEn || c.nameAr;
+    return c.nameEn || c.nameAr;
+  };
 
   return (
     <div className="w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -96,7 +109,7 @@ export default function CountrySelect({
           <span className="flex items-center gap-2 truncate">
             <span>{selectedCountry.flag}</span>
             <span className="truncate" style={{ color: titleColor }}>
-              {isRtl ? selectedCountry.nameAr : (selectedCountry.nameEn || selectedCountry.nameAr)}
+              {getCountryName(selectedCountry)}
             </span>
             <span className="text-xs" dir="ltr" style={{ color: subColor }}>
               ({selectedCountry.dialCode})
@@ -159,7 +172,7 @@ export default function CountrySelect({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="ابحث باسم الدولة أو الكود..."
+                  placeholder={t('countrySelect.searchPlaceholder', 'ابحث باسم الدولة أو الكود...')}
                   className="w-full py-2 border rounded-lg text-xs focus:outline-none transition-colors"
                   style={{
                     paddingRight: isRtl ? '2.5rem' : '0.75rem',
@@ -200,7 +213,7 @@ export default function CountrySelect({
                       <span className="flex items-center gap-2 truncate">
                         <span>{c.flag}</span>
                         <span className="truncate">
-                          {isRtl ? c.nameAr : (c.nameEn || c.nameAr)}
+                          {getCountryName(c)}
                         </span>
                         <span dir="ltr" style={{ color: subColor }}>
                           ({c.dialCode})
@@ -217,7 +230,7 @@ export default function CountrySelect({
                   className="p-4 text-center text-xs"
                   style={{ color: subColor }}
                 >
-                  لم يتم العثور على نتائج
+                  {t('countrySelect.noResults', 'لم يتم العثور على نتائج')}
                 </div>
               )}
             </div>
