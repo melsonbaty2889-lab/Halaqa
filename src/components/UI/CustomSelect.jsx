@@ -33,7 +33,7 @@ const CustomSelect = ({
   const [searchTerm, setSearchTerm] = useState('');
 
   const bgMain = C?.dark?.bg;
-  const bgSurface = C?.dark?.surface;
+  const bgSurface = C?.dark?.surface || C?.dark?.card;
   const borderCol = C?.dark?.borderInput || C?.inputs?.border;
   const titleColor = C?.text?.title;
   const subColor = C?.text?.sub || C?.text?.muted;
@@ -126,7 +126,7 @@ const CustomSelect = ({
           setSearchTerm('');
           setIsOpen((prev) => !prev);
         }}
-        className="w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[42px] px-2.5 py-2 rounded-xl border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none"
+        className="w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[42px] px-3 py-2 rounded-xl border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none"
         style={{
           backgroundColor: bgMain,
           borderColor: error ? errorColor : (isOpen ? primaryColor : borderCol),
@@ -239,7 +239,7 @@ const CustomSelect = ({
                       onClick={(e) => handleSelect(e, opt.value)}
                       className="w-full text-start px-2.5 py-2 text-xs rounded-lg flex items-center justify-between gap-2 transition-all duration-150 cursor-pointer focus:outline-none select-none min-h-[36px]"
                       style={{
-                        backgroundColor: isSelected ? `${primaryColor}20` : 'transparent',
+                        backgroundColor: isSelected ? `${primaryColor}1A` : 'transparent',
                         color: isSelected ? primaryColor : titleColor,
                         fontWeight: isSelected ? '600' : '400'
                       }}
