@@ -12,14 +12,7 @@ import {
   getSavedHijriOffset 
 } from '@/utils/dateUtils';
 
-// جدول التواريخ التاريخية الموثقة بدقة للتغلب على فروق رؤية الهلال في Intl
-const HIJRI_OFFSETS = {
-  '1940-11-29': { day: 30, month: 9, year: 1359 }, // 30 شوال 1359 هـ
-  '1972-11-27': { day: 21, month: 9, year: 1392 }, // 21 شوال 1392 هـ
-  '1999-07-11': { day: 27, month: 2, year: 1420 }, // 27 ربيع الأول 1420 هـ
-};
-
-// دالة تحويل هجري -> ميلادي دقيقة
+// دالة تحويل هجري -> ميلادي ديناميكية دقيقة
 function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
   if (!hYear || isNaN(hYear)) return null;
   try {
@@ -27,15 +20,6 @@ function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
     const targetMonth = Number(hMonthIdx);
     const targetDay = Number(hDay);
 
-    // 1. الفحص المباشر في جدول التواريخ الموثقة
-    for (const [gDateStr, hDetails] of Object.entries(HIJRI_OFFSETS)) {
-      if (hDetails.year === targetYear && hDetails.month === targetMonth && hDetails.day === targetDay) {
-        const [y, m, d] = gDateStr.split('-').map(Number);
-        return new Date(y, m - 1, d);
-      }
-    }
-
-    // 2. التحويل التلقائي مع تعويض الهامش
     const approxGYear = Math.round((targetYear - 1397) * 0.970224 + 1977);
     const startDate = new Date(approxGYear, 0, 1);
 
@@ -64,7 +48,7 @@ function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
   }
 }
 
-// دالة استخراج تفاصيل التاريخ الهجري مع فحص جدول التواريخ والـ Offset
+// دالة استخراج تفاصيل التاريخ الهجري ديناميكياً بدون استثناءات يدوية
 function getHijriDetailsFormatted(date, lang = 'ar') {
   if (!date || isNaN(new Date(date).getTime())) return null;
   try {
@@ -72,24 +56,8 @@ function getHijriDetailsFormatted(date, lang = 'ar') {
     const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
     const isRtl = ['ar', 'ur'].includes(cleanLang);
 
-    let day, month, year;
-
-    // 1. فحص كائن التواريخ الموثقة
-    const dateKey = `${validDate.getFullYear()}-${String(validDate.getMonth() + 1).padStart(2, '0')}-${String(validDate.getDate()).padStart(2, '0')}`;
-    
-    if (HIJRI_OFFSETS[dateKey]) {
-      const fixed = HIJRI_OFFSETS[dateKey];
-      day = fixed.day;
-      month = fixed.month;
-      year = fixed.year;
-    } else {
-      // 2. الاعتماد على Intl مع إزاحة الهلال
-      const offset = getSavedHijriOffset();
-      const parts = getHijriParts(validDate, offset);
-      day = parts.day;
-      month = parts.month;
-      year = parts.year;
-    }
+    const offset = getSavedHijriOffset();
+    const { day, month, year } = getHijriParts(validDate, offset);
 
     const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
     const monthName = HIJRI_MONTHS[currentLangMap][month] || HIJRI_MONTHS.ar[month];
