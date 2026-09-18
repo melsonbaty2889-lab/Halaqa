@@ -160,42 +160,42 @@ export default function CustomDatePicker({
   ], [currentHijriYear, cleanLang, isRtl, t]);
 
   const handleGregorianChange = (d, m, y) => {
-    setGDay(Number(d));
-    setGMonth(Number(m));
+    const safeD = (d === '' || d === undefined || isNaN(Number(d))) ? 1 : Number(d);
+    const safeM = (m === '' || m === undefined || isNaN(Number(m))) ? 0 : Number(m);
+
+    setGDay(d);
+    setGMonth(safeM);
     setGYear(y);
 
     if (!y || y === '' || isNaN(Number(y))) return;
 
     const numY = Number(y);
-    const numM = Number(m);
-    const numD = Number(d);
-
     if (numY < 1900 || numY > 2100) return;
 
-    const maxDays = new Date(numY, numM + 1, 0).getDate();
-    const safeD = Math.min(numD, maxDays);
+    const maxDays = new Date(numY, safeM + 1, 0).getDate();
+    const safeDay = Math.min(safeD, maxDays);
 
-    const newDate = new Date(numY, numM, safeD);
-    if (!isNaN(newDate.getTime())) {
+    const newDate = new Date(numY, safeM, safeDay);
+    if (!isNaN(newDate.getTime()) && typeof onChange === 'function') {
       onChange(newDate);
     }
   };
 
   const handleHijriChange = (d, m, y) => {
-    setHDay(Number(d));
-    setHMonth(Number(m));
+    const safeD = (d === '' || d === undefined || isNaN(Number(d))) ? 1 : Number(d);
+    const safeM = (m === '' || m === undefined || isNaN(Number(m))) ? 0 : Number(m);
+
+    setHDay(d);
+    setHMonth(safeM);
     setHYear(y);
 
     if (!y || y === '' || isNaN(Number(y))) return;
 
     const numY = Number(y);
-    const numM = Number(m);
-    const numD = Number(d);
-
     if (numY < 1000 || numY > 1600) return;
 
-    const convertedGregorian = hijriToGregorian(numY, numM, numD);
-    if (convertedGregorian && !isNaN(convertedGregorian.getTime())) {
+    const convertedGregorian = hijriToGregorian(numY, safeM, safeD);
+    if (convertedGregorian && !isNaN(convertedGregorian.getTime()) && typeof onChange === 'function') {
       onChange(convertedGregorian);
     }
   };
@@ -236,7 +236,6 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* الترتيب الصحيح للمجموعات: اليوم - الشهر - السنة */}
       {calendarMode === 'gregorian' ? (
         <div className="grid grid-cols-3 gap-1.5 w-full">
           <CustomSelect
