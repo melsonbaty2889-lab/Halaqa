@@ -12,12 +12,14 @@ import {
   getSavedHijriOffset 
 } from '@/utils/dateUtils';
 
-// جدول التصحيحات التاريخية المباشرة والمضمونة 100%
+// جدول التواريخ التاريخية الموثقة بدقة للتغلب على فروق رؤية الهلال في Intl
 const HIJRI_OFFSETS = {
   '1940-11-29': { day: 30, month: 9, year: 1359 }, // 30 شوال 1359 هـ
+  '1972-11-27': { day: 21, month: 9, year: 1392 }, // 21 شوال 1392 هـ
+  '1999-07-11': { day: 27, month: 2, year: 1420 }, // 27 ربيع الأول 1420 هـ
 };
 
-// دالة تحويل هجري -> ميلادي مع فحص كائن التصحيحات أولاً
+// دالة تحويل هجري -> ميلادي دقيقة
 function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
   if (!hYear || isNaN(hYear)) return null;
   try {
@@ -25,7 +27,7 @@ function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
     const targetMonth = Number(hMonthIdx);
     const targetDay = Number(hDay);
 
-    // 1. فحص كائن التصحيحات المباشرة
+    // 1. الفحص المباشر في جدول التواريخ الموثقة
     for (const [gDateStr, hDetails] of Object.entries(HIJRI_OFFSETS)) {
       if (hDetails.year === targetYear && hDetails.month === targetMonth && hDetails.day === targetDay) {
         const [y, m, d] = gDateStr.split('-').map(Number);
@@ -33,7 +35,7 @@ function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
       }
     }
 
-    // 2. الحساب عبر البحث الخوارزمي في حال عدم وجود تصحيح يدوي
+    // 2. التحويل التلقائي مع تعويض الهامش
     const approxGYear = Math.round((targetYear - 1397) * 0.970224 + 1977);
     const startDate = new Date(approxGYear, 0, 1);
 
@@ -62,7 +64,7 @@ function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
   }
 }
 
-// دالة استخراج تفاصيل التاريخ الهجري مع دعم التوطين وجدول التصحيح اليدوي
+// دالة استخراج تفاصيل التاريخ الهجري مع فحص جدول التواريخ والـ Offset
 function getHijriDetailsFormatted(date, lang = 'ar') {
   if (!date || isNaN(new Date(date).getTime())) return null;
   try {
@@ -72,15 +74,16 @@ function getHijriDetailsFormatted(date, lang = 'ar') {
 
     let day, month, year;
 
-    // 1. فحص إذا كان التاريخ المختار موجوداً في جدول التصحيحات التاريخية
+    // 1. فحص كائن التواريخ الموثقة
     const dateKey = `${validDate.getFullYear()}-${String(validDate.getMonth() + 1).padStart(2, '0')}-${String(validDate.getDate()).padStart(2, '0')}`;
+    
     if (HIJRI_OFFSETS[dateKey]) {
       const fixed = HIJRI_OFFSETS[dateKey];
       day = fixed.day;
       month = fixed.month;
       year = fixed.year;
     } else {
-      // 2. استخدام Intl و dateUtils للتواريخ العادية
+      // 2. الاعتماد على Intl مع إزاحة الهلال
       const offset = getSavedHijriOffset();
       const parts = getHijriParts(validDate, offset);
       day = parts.day;
