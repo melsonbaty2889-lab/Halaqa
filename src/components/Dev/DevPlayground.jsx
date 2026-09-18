@@ -316,6 +316,8 @@ export default function DevPlayground({
         onClose={closeModal}
         onConfirm={handleModalConfirm}
         t={t}
+        lang={cleanLang}
+        isArabic={isRtl}
       />
     </div>
   );
