@@ -105,7 +105,7 @@ export const calculateAge = (birthDate) => {
 };
 
 export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
-  const date = dateObj instanceof Date ? new Date(dateObj) : new Date(dateObj);
+  const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
   if (isNaN(date.getTime())) return '';
 
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
@@ -172,7 +172,7 @@ export const formatHijriDate = (dateObj = new Date(), lang = 'ar') => {
 
 export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
   try {
-    const date = dateObj instanceof Date ? new Date(dateObj) : new Date(dateObj);
+    const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
     if (isNaN(date.getTime())) return '';
 
     const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
