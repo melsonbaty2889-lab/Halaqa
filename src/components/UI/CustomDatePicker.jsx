@@ -10,26 +10,15 @@ const HIJRI_MONTHS_AR = [
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
 ];
 
-// جدول التصحيحات التاريخية الدقيقة لتقويم أم القرى
-const HIJRI_OFFSETS = {
-  '1940-11-29': { day: 30, month: 9, year: 1359 }, // 30 شوال 1359 هـ
-};
-
+// دالة تحويل هجري -> ميلادي دقيقة باستخدام Intl مباشرة
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
   if (!hYear || isNaN(hYear)) return null;
   try {
+    const targetYear = Number(hYear);
     const targetMonth = Number(hMonthIdx) + 1;
     const targetDay = Number(hDay);
-    const targetYear = Number(hYear);
 
-    // فحص ما إذا كان هناك تاريخ ميلادي يوافق هذا التاريخ الهجري في جدول التصحيحات
-    for (const [gDateStr, hDetails] of Object.entries(HIJRI_OFFSETS)) {
-      if (hDetails.year === targetYear && hDetails.month === hMonthIdx && hDetails.day === targetDay) {
-        const [y, m, d] = gDateStr.split('-').map(Number);
-        return new Date(y, m - 1, d);
-      }
-    }
-
+    // تقدير التاريخ الميلادي التقريبي لتقليل نطاق البحث
     const approxGYear = Math.round((targetYear - 1397) * 0.970224 + 1977);
     const startDate = new Date(approxGYear, 0, 1);
 
@@ -37,7 +26,8 @@ function hijriToGregorian(hYear, hMonthIdx, hDay) {
       day: 'numeric', month: 'numeric', year: 'numeric'
     });
 
-    for (let i = -300; i <= 300; i++) {
+    // نطاق بحث دقيق بـ 400 يوم
+    for (let i = -400; i <= 400; i++) {
       const checkDate = new Date(startDate.getTime() + i * 86400000);
       const parts = formatter.formatToParts(checkDate);
       
@@ -55,25 +45,10 @@ function hijriToGregorian(hYear, hMonthIdx, hDay) {
   }
 }
 
+// دالة استخراج تفاصيل التاريخ الهجري من تاريخ ميلادي عبر Intl
 function getHijriDetails(date, lang = 'ar') {
   if (!date || isNaN(new Date(date).getTime())) return null;
   const validDate = new Date(date);
-
-  // فحص الجدول اليدوي للتصحيحات أولاً
-  const dateKey = `${validDate.getFullYear()}-${String(validDate.getMonth() + 1).padStart(2, '0')}-${String(validDate.getDate()).padStart(2, '0')}`;
-  if (HIJRI_OFFSETS[dateKey]) {
-    const fixed = HIJRI_OFFSETS[dateKey];
-    const monthName = HIJRI_MONTHS_AR[fixed.month];
-    const isRtl = ['ar', 'ur'].includes(lang);
-    const suffix = isRtl ? 'هـ' : 'AH';
-    return {
-      day: fixed.day,
-      month: fixed.month,
-      year: fixed.year,
-      text: `${fixed.day} ${monthName} ${fixed.year} ${suffix}`
-    };
-  }
-
   try {
     const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
@@ -85,14 +60,7 @@ function getHijriDetails(date, lang = 'ar') {
     const yearNum = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
 
     const monthIdx = Math.max(0, Math.min(11, monthNum - 1));
-
-    let monthName = HIJRI_MONTHS_AR[monthIdx];
-    try {
-      const hijriMonthFormat = new Intl.DateTimeFormat(`${lang}-u-ca-islamic-umalqura`, { month: 'long' });
-      monthName = hijriMonthFormat.format(validDate);
-    } catch (err) {
-      // Fallback
-    }
+    const monthName = HIJRI_MONTHS_AR[monthIdx];
 
     const isRtl = ['ar', 'ur'].includes(lang);
     const suffix = isRtl ? 'هـ' : 'AH';
@@ -154,6 +122,7 @@ export default function CustomDatePicker({
   const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
   const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
 
+  // التحديث والمزامنة الدقيقة لجميع الحقول (ميلادي وهجري) عند تغير التاريخ أو لغة العرض
   useEffect(() => {
     if (mainDate) {
       setGDay(mainDate.getDate());
@@ -201,16 +170,8 @@ export default function CustomDatePicker({
   ], [currentGregorianYear, t]);
 
   const hMonthOptions = useMemo(() => {
-    return HIJRI_MONTHS_AR.map((m, idx) => {
-      try {
-        const dummyDate = hijriToGregorian(1448, idx, 15) || new Date();
-        const label = new Intl.DateTimeFormat(`${cleanLang}-u-ca-islamic-umalqura`, { month: 'long' }).format(dummyDate);
-        return { label, value: idx };
-      } catch (e) {
-        return { label: m, value: idx };
-      }
-    });
-  }, [cleanLang]);
+    return HIJRI_MONTHS_AR.map((m, idx) => ({ label: m, value: idx }));
+  }, []);
 
   const hYearOptions = useMemo(() => [
     { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
