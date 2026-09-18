@@ -1,8 +1,8 @@
 /* src/components/Dev/DevPlayground.jsx */
 import React, { useState } from 'react';
 import { 
-  CheckCircle, AlertTriangle, User, BookOpen, Award, 
-  Settings, LogOut, Shield, Bell, Zap 
+  CheckCircle, AlertTriangle, Trash2, HelpCircle, 
+  ShieldAlert, MessageSquare 
 } from 'lucide-react';
 
 import C from '@/theme/colors';
@@ -14,29 +14,31 @@ export default function DevPlayground() {
     variant: 'warning',
     title: '',
     message: '',
+    confirmText: '',
+    cancelText: '',
+    promptPlaceholder: '',
+    requiredConfirmWord: '',
     isLoading: false
   });
 
-  const openTestModal = (variant, title, message) => {
+  const openTestModal = (config) => {
     setModalConfig({
       isOpen: true,
-      variant,
-      title,
-      message,
+      variant: config.variant || 'warning',
+      title: config.title || '',
+      message: config.message || '',
+      confirmText: config.confirmText || '',
+      cancelText: config.cancelText || '',
+      promptPlaceholder: config.promptPlaceholder || '',
+      requiredConfirmWord: config.requiredConfirmWord || '',
       isLoading: false
     });
   };
 
-  const handleModalConfirm = () => {
+  const handleModalConfirm = (val) => {
     setModalConfig(prev => ({ ...prev, isLoading: true }));
     setTimeout(() => {
-      setModalConfig({
-        isOpen: false,
-        variant: 'warning',
-        title: '',
-        message: '',
-        isLoading: false
-      });
+      setModalConfig(prev => ({ ...prev, isOpen: false, isLoading: false }));
     }, 1500);
   };
 
@@ -60,14 +62,14 @@ export default function DevPlayground() {
         {/* رأس الصفحة */}
         <div className="text-center space-y-2">
           <h2 className="text-xl font-bold" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
-            🎨 مختبر العناصر الحديث (Dev Playground)
+            🎨 مختبر العناصر الشامل (Dev Playground)
           </h2>
           <p className="text-xs" style={{ color: C?.text?.sub }}>
-            معاينة دقيقة لنظام الألوان القياسي والنوافذ التفاعلية
+            معاينة دقيقة لكافة حالات النوافذ المنبثقة والنظام القياسي
           </p>
         </div>
 
-        {/* 1️⃣ قسم الألوان القياسية */}
+        {/* 1️⃣ تجربة نوافذ التأكيد الشاملة */}
         <section 
           className="p-5 rounded-2xl border space-y-4"
           style={{ 
@@ -76,111 +78,118 @@ export default function DevPlayground() {
           }}
         >
           <h3 className="text-sm font-bold" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
-            1. لوحة الألوان المعتمدة (Theme Colors)
+            حالات النوافذ المنبثقة (ConfirmModal Variants)
           </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl border" style={{ backgroundColor: C?.dark?.bg, borderColor: C?.dark?.borderInput || C?.inputs?.border }}>
-              <div className="h-7 rounded mb-2 border" style={{ backgroundColor: C?.dark?.bg, borderColor: C?.dark?.borderInput || C?.inputs?.border }} />
-              <span className="text-[11px] block" style={{ color: C?.text?.sub }}>الخلفية (dark.bg)</span>
-            </div>
-            <div className="p-3 rounded-xl border" style={{ backgroundColor: C?.dark?.bg, borderColor: C?.dark?.borderInput || C?.inputs?.border }}>
-              <div className="h-7 rounded mb-2" style={{ backgroundColor: C?.amber?.DEFAULT || C?.primary?.DEFAULT }} />
-              <span className="text-[11px] block" style={{ color: C?.text?.sub }}>الذهبي/الرئيسي (amber)</span>
-            </div>
-            <div className="p-3 rounded-xl border" style={{ backgroundColor: C?.dark?.bg, borderColor: C?.dark?.borderInput || C?.inputs?.border }}>
-              <div className="h-7 rounded mb-2" style={{ backgroundColor: C?.emerald?.DEFAULT || C?.success?.DEFAULT }} />
-              <span className="text-[11px] block" style={{ color: C?.text?.sub }}>الزمردي/النجاح (emerald)</span>
-            </div>
-            <div className="p-3 rounded-xl border" style={{ backgroundColor: C?.dark?.bg, borderColor: C?.dark?.borderInput || C?.inputs?.border }}>
-              <div className="h-7 rounded mb-2" style={{ backgroundColor: C?.error?.DEFAULT }} />
-              <span className="text-[11px] block" style={{ color: C?.text?.sub }}>الخطأ/التحذير (error)</span>
-            </div>
-          </div>
-        </section>
-
-        {/* 2️⃣ قسم تجربة نافذة التأكيد (ConfirmModal) */}
-        <section 
-          className="p-5 rounded-2xl border space-y-4"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
-            2. تجربة نوافذ التأكيد (ConfirmModal)
-          </h3>
+          
           <div className="space-y-3">
-            
+            {/* خطر عاديا */}
             <button 
-              onClick={() => openTestModal('danger', 'حذف الحلقة الدراسية', 'هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.')}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer"
+              onClick={() => openTestModal({
+                variant: 'danger',
+                title: 'حذف الحلقة الدراسية',
+                message: 'هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.',
+                confirmText: 'نعم، احذف الحلقة'
+              })}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
                 backgroundColor: C?.dark?.card,
                 color: C?.error?.DEFAULT,
                 borderColor: C?.error?.DEFAULT
               }}
             >
-              <AlertTriangle size={16} /> تجربة نافذة خطر (Danger)
+              <span className="flex items-center gap-2"><Trash2 size={16} /> نافذة خطر عادي (Danger)</span>
             </button>
 
+            {/* خطر شديد - تأكيد بالكلمة */}
             <button 
-              onClick={() => openTestModal('warning', 'أرشفة بيانات الطالب', 'هل تريد أرشفة بيانات الطالب؟ يمكن إعادة استعادتها لاحقاً.')}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer"
+              onClick={() => openTestModal({
+                variant: 'secure-delete',
+                title: 'حذف الحساب نهائياً',
+                message: 'سيتم حذف كافة البيانات والصلاحيات المتعلقة بهذا الحساب تماماً.',
+                requiredConfirmWord: 'حذف',
+                confirmText: 'تأكيد الحذف النهائي'
+              })}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
+              style={{
+                backgroundColor: C?.dark?.card,
+                color: C?.error?.DEFAULT,
+                borderColor: C?.error?.DEFAULT
+              }}
+            >
+              <span className="flex items-center gap-2"><ShieldAlert size={16} /> نافذة حذف مشروط (Secure Delete)</span>
+            </button>
+
+            {/* تحذير / أرشفة */}
+            <button 
+              onClick={() => openTestModal({
+                variant: 'warning',
+                title: 'أرشفة بيانات الطالب',
+                message: 'هل تريد أرشفة بيانات الطالب؟ يمكن إعادة استعادتها لاحقاً.',
+                confirmText: 'تأكيد الأرشفة'
+              })}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
                 backgroundColor: C?.dark?.card,
                 color: C?.amber?.DEFAULT || C?.primary?.DEFAULT,
                 borderColor: C?.amber?.DEFAULT || C?.primary?.DEFAULT
               }}
             >
-              <AlertTriangle size={16} /> تجربة نافذة أرشفة (Warning)
+              <span className="flex items-center gap-2"><AlertTriangle size={16} /> نافذة تحذير / أرشفة (Warning)</span>
             </button>
 
+            {/* إدخال سبب / Prompt */}
             <button 
-              onClick={() => openTestModal('info', 'استعادة البيانات', 'هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟')}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer"
+              onClick={() => openTestModal({
+                variant: 'prompt',
+                title: 'إلغاء الموعد المحدد',
+                message: 'يرجى كتابة سبب إلغاء الجلسة الدراسية قبل الإرسال للطلاب:',
+                promptPlaceholder: 'اكتب سبب الإلغاء هنا...',
+                confirmText: 'إرسال وثبيت الإلغاء'
+              })}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
+              style={{
+                backgroundColor: C?.dark?.card,
+                color: C?.amber?.DEFAULT || C?.primary?.DEFAULT,
+                borderColor: C?.amber?.DEFAULT || C?.primary?.DEFAULT
+              }}
+            >
+              <span className="flex items-center gap-2"><MessageSquare size={16} /> نافذة إدخال نصي (Prompt Input)</span>
+            </button>
+
+            {/* استعادة / نجاح */}
+            <button 
+              onClick={() => openTestModal({
+                variant: 'info',
+                title: 'استعادة البيانات',
+                message: 'هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟',
+                confirmText: 'استعادة الآن'
+              })}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
                 backgroundColor: C?.dark?.card,
                 color: C?.emerald?.DEFAULT || C?.success?.DEFAULT,
                 borderColor: C?.emerald?.DEFAULT || C?.success?.DEFAULT
               }}
             >
-              <CheckCircle size={16} /> تجربة نافذة استعادة (Info)
+              <span className="flex items-center gap-2"><CheckCircle size={16} /> نافذة استعادة / نجاح (Info)</span>
             </button>
 
-          </div>
-        </section>
-
-        {/* 3️⃣ قسم الأزرار القياسية */}
-        <section 
-          className="p-5 rounded-2xl border space-y-4"
-          style={{ 
-            backgroundColor: C?.dark?.surface,
-            borderColor: C?.dark?.borderInput || C?.inputs?.border
-          }}
-        >
-          <h3 className="text-sm font-bold" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
-            3. الأزرار القياسية
-          </h3>
-          <div className="space-y-3">
+            {/* تنبيه بسيط */}
             <button 
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg"
-              style={{
-                backgroundColor: C?.amber?.DEFAULT || C?.primary?.DEFAULT,
-                color: C?.dark?.bg
-              }}
-            >
-              زر رئيسي (Primary Gold)
-            </button>
-
-            <button 
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer border"
+              onClick={() => openTestModal({
+                variant: 'alert',
+                title: 'تحديث النظام',
+                message: 'تم إكمال عملية المزامنة بنجاح ولن تحتاج لإعادة التشغيل.',
+                confirmText: 'حسناً، فهمت'
+              })}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
                 backgroundColor: C?.dark?.card,
                 color: C?.text?.title,
                 borderColor: C?.dark?.borderInput || C?.inputs?.border
               }}
             >
-              زر ثانوي (Secondary Card)
+              <span className="flex items-center gap-2"><HelpCircle size={16} /> نافذة تنبيه أحادي (Alert Only)</span>
             </button>
           </div>
         </section>
@@ -192,6 +201,10 @@ export default function DevPlayground() {
         variant={modalConfig.variant}
         title={modalConfig.title}
         message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        promptPlaceholder={modalConfig.promptPlaceholder}
+        requiredConfirmWord={modalConfig.requiredConfirmWord}
         isLoading={modalConfig.isLoading}
         onClose={closeModal}
         onConfirm={handleModalConfirm}
