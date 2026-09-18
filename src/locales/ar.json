@@ -329,11 +329,13 @@
     "search_placeholder": "بحث...",
     "searchPlaceholder": "بحث في الملفات...",
     "select": "اختر من القائمة...",
+    "send": "إرسال",
     "submit": "إرسال",
     "switchLanguage": "تغيير اللغة",
     "to_confirm_action": "للتأكيد:",
     "type_here": "اكتب هنا...",
     "type_to_confirm": "اكتب كلمة",
+    "typeHere": "اكتب هنا...",
     "unarchive": "إلغاء الأرشفة",
     "unexpectedError": "حدث خطأ غير متوقع",
     "unknown": "غير معروف",
@@ -343,6 +345,16 @@
     "verifying_permissions": "جاري التحقق من الصلاحيات...",
     "view": "عرض",
     "years_old": "سنة"
+  },
+  "confirmModal": {
+    "alertTitle": "تنبيه",
+    "dangerTitle": "تأكيد الحذف",
+    "defaultMessage": "هل أنت متأكد من الاستمرار في هذا الإجراء؟",
+    "promptTitle": "إدخال التفاصيل",
+    "restoreTitle": "تأكيد الاستعادة",
+    "toConfirm": "لتأكيد الإجراء:",
+    "typeWordToConfirm": "اكتب كلمة",
+    "warningTitle": "تأكيد الإجراء"
   },
   "countrySelect": {
     "noResults": "لم يتم العثور على نتائج",

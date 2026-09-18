@@ -366,6 +366,7 @@
     "search_placeholder": "تلاش کریں...",
     "searchPlaceholder": "فائلوں میں تلاش کریں...",
     "select": "منتخب کریں",
+    "send": "إرسال",
     "sending": "ارسال ہو رہا ہے...",
     "submit": "إرسال",
     "switch_language": "زبان تبدیل کریں",
@@ -373,6 +374,7 @@
     "to_confirm_action": "للتأكيد:",
     "type_here": "اكتب هنا...",
     "type_to_confirm": "اكتب كلمة",
+    "typeHere": "اكتب هنا...",
     "unarchive": "آرکائیو سے نکالیں",
     "unexpectedError": "ایک غیر متوقع خرابی پیش آئی",
     "unknown": "نامعلوم",
@@ -384,6 +386,16 @@
     "verifying_permissions": "تصدیق و اجازتیں دیکھی جا رہی ہیں...",
     "view": "دیکھیں",
     "years_old": "سال"
+  },
+  "confirmModal": {
+    "alertTitle": "تنبيه",
+    "dangerTitle": "تأكيد الحذف",
+    "defaultMessage": "هل أنت متأكد من الاستمرار في هذا الإجراء؟",
+    "promptTitle": "إدخال التفاصيل",
+    "restoreTitle": "تأكيد الاستعادة",
+    "toConfirm": "لتأكيد الإجراء:",
+    "typeWordToConfirm": "اكتب كلمة",
+    "warningTitle": "تأكيد الإجراء"
   },
   "countries": {
     "custom": "کوئی اور ملک..."
