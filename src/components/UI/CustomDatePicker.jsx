@@ -160,36 +160,42 @@ export default function CustomDatePicker({
   ], [currentHijriYear, cleanLang, isRtl, t]);
 
   const handleGregorianChange = (d, m, y) => {
-    const numD = Number(d);
-    const numM = Number(m);
-    const numY = Number(y);
-
-    setGDay(numD);
-    setGMonth(numM);
+    setGDay(Number(d));
+    setGMonth(Number(m));
     setGYear(y);
 
-    if (!y || isNaN(numY) || numY < 1900 || numY > 2100) return;
+    if (!y || y === '' || isNaN(Number(y))) return;
+
+    const numY = Number(y);
+    const numM = Number(m);
+    const numD = Number(d);
+
+    if (numY < 1900 || numY > 2100) return;
 
     const maxDays = new Date(numY, numM + 1, 0).getDate();
     const safeD = Math.min(numD, maxDays);
 
     const newDate = new Date(numY, numM, safeD);
-    onChange(newDate);
+    if (!isNaN(newDate.getTime())) {
+      onChange(newDate);
+    }
   };
 
   const handleHijriChange = (d, m, y) => {
-    const numD = Number(d);
-    const numM = Number(m);
-    const numY = Number(y);
-
-    setHDay(numD);
-    setHMonth(numM);
+    setHDay(Number(d));
+    setHMonth(Number(m));
     setHYear(y);
 
-    if (!y || isNaN(numY) || numY < 1000 || numY > 1600) return;
+    if (!y || y === '' || isNaN(Number(y))) return;
+
+    const numY = Number(y);
+    const numM = Number(m);
+    const numD = Number(d);
+
+    if (numY < 1000 || numY > 1600) return;
 
     const convertedGregorian = hijriToGregorian(numY, numM, numD);
-    if (convertedGregorian) {
+    if (convertedGregorian && !isNaN(convertedGregorian.getTime())) {
       onChange(convertedGregorian);
     }
   };
@@ -230,8 +236,9 @@ export default function CustomDatePicker({
         )}
       </div>
 
+      {/* الترتيب الصحيح للمجموعات: اليوم - الشهر - السنة */}
       {calendarMode === 'gregorian' ? (
-        <div className="grid grid-cols-[0.8fr_1.4fr_1.2fr] gap-1.5 w-full">
+        <div className="grid grid-cols-3 gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={gDay}
@@ -258,7 +265,7 @@ export default function CustomDatePicker({
           />
         </div>
       ) : (
-        <div className="grid grid-cols-[0.8fr_1.4fr_1.2fr] gap-1.5 w-full">
+        <div className="grid grid-cols-3 gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={hDay}
