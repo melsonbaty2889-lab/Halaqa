@@ -1,6 +1,5 @@
-// src/components/UI/AppBrand.jsx
+/* src/components/UI/AppBrand.jsx */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { C } from '@/theme/colors';
 
@@ -14,13 +13,16 @@ const BRAND_NAMES = {
   id: 'Smart Halaqa',
 };
 
-export default function AppBrand({ className = '', subtitle }) {
-  const { t, i18n } = useTranslation();
+export default function AppBrand({ 
+  className = '', 
+  subtitle,
+  lang = 'ar',
+  t = (key, fallback) => fallback 
+}) {
+  // الحصول على كود اللغة النظيف
+  const currentLang = (lang || 'ar').toLowerCase().split('-')[0];
 
-  // الحصول على كود اللغة الحالي
-  const currentLang = i18n?.language?.split('-')[0] || 'ar';
-
-  // تحديد اسم البراند برمجياً مع إمكانية التراجع لـ t()
+  // تحديد اسم البراند برمجياً بناءً على اللغة الحالية
   const brandName = BRAND_NAMES[currentLang] || t('common.appName', 'Smart Halaqa');
 
   return (
