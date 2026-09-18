@@ -32,13 +32,13 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const bgMain = C?.dark?.bg || '#0F172A';
-  const bgSurface = C?.dark?.surface || '#1E293B';
-  const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
-  const titleColor = C?.text?.title || '#F8FAFC';
-  const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
-  const errorColor = C?.error?.DEFAULT || '#EF4444';
-  const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#38BDF8';
+  const bgMain = C?.dark?.bg;
+  const bgSurface = C?.dark?.surface;
+  const borderCol = C?.dark?.borderInput || C?.inputs?.border;
+  const titleColor = C?.text?.title;
+  const subColor = C?.text?.sub || C?.text?.muted;
+  const errorColor = C?.error?.DEFAULT;
+  const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT;
 
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
@@ -126,7 +126,7 @@ const CustomSelect = ({
           setSearchTerm('');
           setIsOpen((prev) => !prev);
         }}
-        className="w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[42px] px-2 py-2 rounded-xl border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none"
+        className="w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[42px] px-2.5 py-2 rounded-xl border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none"
         style={{
           backgroundColor: bgMain,
           borderColor: error ? errorColor : (isOpen ? primaryColor : borderCol),
@@ -134,7 +134,7 @@ const CustomSelect = ({
         }}
       >
         <span 
-          className="text-[11px] whitespace-nowrap overflow-hidden text-center w-full"
+          className="text-xs whitespace-nowrap overflow-hidden text-start w-full"
           style={{ 
             fontWeight: selectedOption ? '600' : '400',
             color: selectedOption ? titleColor : subColor 
