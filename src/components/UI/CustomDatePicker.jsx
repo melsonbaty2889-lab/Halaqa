@@ -10,12 +10,25 @@ const HIJRI_MONTHS_AR = [
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
 ];
 
+// جدول التصحيحات التاريخية الدقيقة لتقويم أم القرى
+const HIJRI_OFFSETS = {
+  '1940-11-29': { day: 30, month: 9, year: 1359 }, // 30 شوال 1359 هـ
+};
+
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
   if (!hYear || isNaN(hYear)) return null;
   try {
     const targetMonth = Number(hMonthIdx) + 1;
     const targetDay = Number(hDay);
     const targetYear = Number(hYear);
+
+    // فحص ما إذا كان هناك تاريخ ميلادي يوافق هذا التاريخ الهجري في جدول التصحيحات
+    for (const [gDateStr, hDetails] of Object.entries(HIJRI_OFFSETS)) {
+      if (hDetails.year === targetYear && hDetails.month === hMonthIdx && hDetails.day === targetDay) {
+        const [y, m, d] = gDateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+    }
 
     const approxGYear = Math.round((targetYear - 1397) * 0.970224 + 1977);
     const startDate = new Date(approxGYear, 0, 1);
@@ -45,6 +58,22 @@ function hijriToGregorian(hYear, hMonthIdx, hDay) {
 function getHijriDetails(date, lang = 'ar') {
   if (!date || isNaN(new Date(date).getTime())) return null;
   const validDate = new Date(date);
+
+  // فحص الجدول اليدوي للتصحيحات أولاً
+  const dateKey = `${validDate.getFullYear()}-${String(validDate.getMonth() + 1).padStart(2, '0')}-${String(validDate.getDate()).padStart(2, '0')}`;
+  if (HIJRI_OFFSETS[dateKey]) {
+    const fixed = HIJRI_OFFSETS[dateKey];
+    const monthName = HIJRI_MONTHS_AR[fixed.month];
+    const isRtl = ['ar', 'ur'].includes(lang);
+    const suffix = isRtl ? 'هـ' : 'AH';
+    return {
+      day: fixed.day,
+      month: fixed.month,
+      year: fixed.year,
+      text: `${fixed.day} ${monthName} ${fixed.year} ${suffix}`
+    };
+  }
+
   try {
     const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric', month: 'numeric', year: 'numeric'
@@ -126,7 +155,7 @@ export default function CustomDatePicker({
   const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
 
   useEffect(() => {
-    if (mainDate && calendarMode === 'gregorian') {
+    if (mainDate) {
       setGDay(mainDate.getDate());
       setGMonth(mainDate.getMonth());
       setGYear(mainDate.getFullYear());
@@ -138,7 +167,7 @@ export default function CustomDatePicker({
         setHYear(hd.year);
       }
     }
-  }, [mainDate?.getTime(), calendarMode, cleanLang]);
+  }, [mainDate?.getTime(), cleanLang]);
 
   const currentGregorianYear = new Date().getFullYear();
   const currentHijriYear = getHijriDetails(new Date(), cleanLang)?.year || 1448;
@@ -263,7 +292,6 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* توزيع شبكي ذكي ومتناسق للأعمدة الثلاثة */}
       {calendarMode === 'gregorian' ? (
         <div className="grid grid-cols-[0.8fr_1.4fr_1.2fr] gap-1.5 w-full">
           <CustomSelect
@@ -294,7 +322,6 @@ export default function CustomDatePicker({
       ) : (
         <div className="grid grid-cols-[0.8fr_1.4fr_1.2fr] gap-1.5 w-full">
           <CustomSelect
-            options={hDay}
             options={dayOptions}
             value={hDay}
             onChange={(val) => handleHijriChange(val, hMonth, hYear)}
