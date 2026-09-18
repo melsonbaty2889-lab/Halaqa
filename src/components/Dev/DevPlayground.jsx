@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus 
+  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter 
 } from 'lucide-react';
 
 import C from '@/theme/colors';
@@ -10,6 +10,7 @@ import ConfirmModal from '@/components/UI/ConfirmModal';
 import CountrySelect from '@/components/UI/CountrySelect';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import EmptyState from '@/components/UI/EmptyState';
+import CustomSelect from '@/components/UI/CustomSelect';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -18,6 +19,9 @@ export default function DevPlayground({
 }) {
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
+
+  // حالة القائمة المختارة لتجربة CustomSelect
+  const [selectedRole, setSelectedRole] = useState('teacher');
 
   // حالة الدولة المختارة لتجربة CountrySelect
   const [selectedCountry, setSelectedCountry] = useState('SA');
@@ -68,6 +72,13 @@ export default function DevPlayground({
     }
   };
 
+  const roleOptions = [
+    { value: 'admin', label: t('roles.admin', 'مدير النظام') },
+    { value: 'teacher', label: t('roles.teacher', 'معلم الحلقة') },
+    { value: 'student', label: t('roles.student', 'طالب') },
+    { value: 'parent', label: t('roles.parent', 'ولي أمر') },
+  ];
+
   return (
     <div 
       className="min-h-screen p-5 font-cairo"
@@ -88,6 +99,35 @@ export default function DevPlayground({
             {t('devPlayground.subtitle', 'معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي')}
           </p>
         </div>
+
+        {/* تجربة القائمة المخصصة CustomSelect */}
+        <section 
+          className="p-5 rounded-2xl border space-y-3 text-start"
+          style={{ 
+            backgroundColor: C?.dark?.surface,
+            borderColor: C?.dark?.borderInput || C?.inputs?.border
+          }}
+        >
+          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+            <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
+          </h3>
+          
+          <div className="space-y-2">
+            <CustomSelect
+              label={t('devPlayground.selectRoleLabel', 'اختر الدور الوظيفي:')}
+              options={roleOptions}
+              value={selectedRole}
+              onChange={(val) => setSelectedRole(val)}
+              searchable={true}
+              isArabic={isRtl}
+              lang={cleanLang}
+              t={t}
+            />
+            <p className="text-[11px] pt-1" style={{ color: C?.text?.sub }}>
+              {t('devPlayground.selectedRole', 'الدور المختار حالياً:')} <strong style={{ color: C?.text?.title }}>{selectedRole}</strong>
+            </p>
+          </div>
+        </section>
 
         {/* تجربة مكون الحالة الفارغة (EmptyState) */}
         <section 
