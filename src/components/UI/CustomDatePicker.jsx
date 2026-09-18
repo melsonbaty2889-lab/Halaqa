@@ -6,49 +6,13 @@ import C from '@/theme/colors';
 import { 
   HIJRI_MONTHS, 
   getHijriParts, 
+  hijriToGregorian,
   calculateAge, 
   toArNums, 
-  toUrNums, 
-  getSavedHijriOffset 
+  toUrNums 
 } from '@/utils/dateUtils';
 
-// دالة تحويل هجري -> ميلادي ديناميكية دقيقة
-function hijriToGregorian(hYear, hMonthIdx, hDay, offset = 0) {
-  if (!hYear || isNaN(hYear)) return null;
-  try {
-    const targetYear = Number(hYear);
-    const targetMonth = Number(hMonthIdx);
-    const targetDay = Number(hDay);
-
-    const approxGYear = Math.round((targetYear - 1397) * 0.970224 + 1977);
-    const startDate = new Date(approxGYear, 0, 1);
-
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
-      day: 'numeric', month: 'numeric', year: 'numeric'
-    });
-
-    for (let i = -400; i <= 400; i++) {
-      const checkDate = new Date(startDate.getTime() + i * 86400000);
-      const parts = formatter.formatToParts(checkDate);
-      
-      const hy = parseInt(parts.find(p => p.type === 'year')?.value || '0', 10);
-      const hm = parseInt(parts.find(p => p.type === 'month')?.value || '0', 10);
-      const hd = parseInt(parts.find(p => p.type === 'day')?.value || '0', 10);
-
-      if (hy === targetYear && hm === (targetMonth + 1) && hd === targetDay) {
-        if (offset !== 0) {
-          checkDate.setDate(checkDate.getDate() - offset);
-        }
-        return checkDate;
-      }
-    }
-    return new Date(approxGYear, targetMonth, targetDay);
-  } catch (e) {
-    return null;
-  }
-}
-
-// دالة استخراج تفاصيل التاريخ الهجري ديناميكياً بدون استثناءات يدوية
+// دالة تنسيق التاريخ الهجري للعرض باستخدام moment-hijri
 function getHijriDetailsFormatted(date, lang = 'ar') {
   if (!date || isNaN(new Date(date).getTime())) return null;
   try {
@@ -56,8 +20,7 @@ function getHijriDetailsFormatted(date, lang = 'ar') {
     const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
     const isRtl = ['ar', 'ur'].includes(cleanLang);
 
-    const offset = getSavedHijriOffset();
-    const { day, month, year } = getHijriParts(validDate, offset);
+    const { day, month, year } = getHijriParts(validDate);
 
     const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
     const monthName = HIJRI_MONTHS[currentLangMap][month] || HIJRI_MONTHS.ar[month];
@@ -225,8 +188,7 @@ export default function CustomDatePicker({
 
     if (!numY || isNaN(numY)) return;
 
-    const offset = getSavedHijriOffset();
-    const convertedGregorian = hijriToGregorian(numY, numM, numD, offset);
+    const convertedGregorian = hijriToGregorian(numY, numM, numD);
     if (convertedGregorian) {
       onChange(convertedGregorian);
     }
@@ -308,7 +270,7 @@ export default function CustomDatePicker({
           <CustomSelect
             options={hMonthOptions}
             value={hMonth}
-            onChange={(val) => handleHijriChange(hDay, val, hYear)}
+            onChange={(val) => handleHijriChange(hDay, hMonth, val)}
             isArabic={isRtl}
             lang={cleanLang}
             t={t}
