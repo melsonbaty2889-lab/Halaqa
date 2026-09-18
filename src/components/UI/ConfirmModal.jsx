@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Trash2, Archive, ArchiveRestore, AlertTriangle, 
+  Trash2, Archive, ArchiveRestore,
   HelpCircle, X, Loader2 
 } from 'lucide-react';
 import C from '@/theme/colors';
@@ -17,8 +17,14 @@ const ConfirmModal = ({
   isLoading = false,
   promptPlaceholder = '',
   requiredConfirmWord = '',
+  t = (key, fallback) => fallback,
+  lang = 'ar',
+  isArabic = true,
   children
 }) => {
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
+
   const [inputValue, setInputValue] = useState('');
 
   // إعادة ضبط المدخلات عند فتح أو إغلاق النافذة
@@ -53,7 +59,7 @@ const ConfirmModal = ({
   const successColor = C?.emerald?.DEFAULT || C?.success?.DEFAULT || '#10B981';
   const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#F59E0B';
 
-  // تحديد أنماط الأيقونات والأزرار والنصوص الافتراضية بالعربية
+  // تحديد أنماط الأيقونات والأزرار والنصوص الافتراضية
   const getVariantStyles = () => {
     switch (variant) {
       case 'danger':
@@ -64,8 +70,8 @@ const ConfirmModal = ({
           borderIcon: errorColor,
           btnBg: errorColor,
           btnText: titleColor,
-          defaultTitle: 'تأكيد الحذف',
-          defaultConfirmText: 'حذف'
+          defaultTitle: t('confirmModal.dangerTitle', 'تأكيد الحذف'),
+          defaultConfirmText: t('common.delete', 'حذف')
         };
       case 'info':
         return {
@@ -74,8 +80,8 @@ const ConfirmModal = ({
           borderIcon: successColor,
           btnBg: successColor,
           btnText: bgMain,
-          defaultTitle: 'تأكيد الاستعادة',
-          defaultConfirmText: 'استعادة'
+          defaultTitle: t('confirmModal.restoreTitle', 'تأكيد الاستعادة'),
+          defaultConfirmText: t('common.restore', 'استعادة')
         };
       case 'alert':
         return {
@@ -84,8 +90,8 @@ const ConfirmModal = ({
           borderIcon: primaryColor,
           btnBg: primaryColor,
           btnText: bgMain,
-          defaultTitle: 'تنبيه',
-          defaultConfirmText: 'حسناً'
+          defaultTitle: t('confirmModal.alertTitle', 'تنبيه'),
+          defaultConfirmText: t('common.ok', 'حسناً')
         };
       case 'prompt':
         return {
@@ -94,8 +100,8 @@ const ConfirmModal = ({
           borderIcon: primaryColor,
           btnBg: primaryColor,
           btnText: bgMain,
-          defaultTitle: 'إدخال التفاصيل',
-          defaultConfirmText: 'إرسال'
+          defaultTitle: t('confirmModal.promptTitle', 'إدخال التفاصيل'),
+          defaultConfirmText: t('common.send', 'إرسال')
         };
       case 'warning':
       default:
@@ -105,8 +111,8 @@ const ConfirmModal = ({
           borderIcon: primaryColor,
           btnBg: primaryColor,
           btnText: bgMain,
-          defaultTitle: 'تأكيد الإجراء',
-          defaultConfirmText: 'تأكيد'
+          defaultTitle: t('confirmModal.warningTitle', 'تأكيد الإجراء'),
+          defaultConfirmText: t('common.confirm', 'تأكيد')
         };
     }
   };
@@ -135,12 +141,12 @@ const ConfirmModal = ({
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all"
-      dir="rtl"
+      dir={isRtl ? 'rtl' : 'ltr'}
       role="dialog"
       aria-modal="true"
     >
       <div 
-        className="border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 relative transition-all"
+        className="border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 relative transition-all text-start"
         style={{
           backgroundColor: bgSurface,
           borderColor: borderCol
@@ -151,8 +157,10 @@ const ConfirmModal = ({
           type="button"
           onClick={onClose}
           disabled={isLoading}
-          aria-label="إغلاق"
-          className="absolute top-4 left-4 p-2 rounded-xl cursor-pointer border-0 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+          aria-label={t('common.close', 'إغلاق')}
+          className={`absolute top-4 p-2 rounded-xl cursor-pointer border-0 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${
+            isRtl ? 'left-4' : 'right-4'
+          }`}
           style={{
             backgroundColor: 'transparent',
             color: subColor
@@ -172,12 +180,12 @@ const ConfirmModal = ({
           >
             {styles.icon}
           </div>
-          <div className="flex-1 pe-6">
+          <div className={`flex-1 ${isRtl ? 'pe-6' : 'ps-6'}`}>
             <h3 className="text-base font-bold" style={{ color: titleColor }}>
               {title || styles.defaultTitle}
             </h3>
             <p className="text-xs mt-1 leading-relaxed" style={{ color: subColor }}>
-              {message || 'هل أنت متأكد من الاستمرار في هذا الإجراء؟'}
+              {message || t('confirmModal.defaultMessage', 'هل أنت متأكد من الاستمرار في هذا الإجراء؟')}
             </p>
           </div>
         </div>
@@ -189,7 +197,7 @@ const ConfirmModal = ({
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={promptPlaceholder || 'اكتب هنا...'}
+              placeholder={promptPlaceholder || t('common.typeHere', 'اكتب هنا...')}
               className="w-full p-3 rounded-xl text-xs border outline-none transition-all"
               style={{
                 backgroundColor: bgCard,
@@ -203,7 +211,7 @@ const ConfirmModal = ({
         {variant === 'secure-delete' && requiredConfirmWord && (
           <div className="space-y-2">
             <p className="text-[11px]" style={{ color: subColor }}>
-              اكتب كلمة <strong style={{ color: errorColor }}>"{requiredConfirmWord}"</strong> للتأكيد:
+              {t('confirmModal.typeWordToConfirm', 'اكتب كلمة')} <strong style={{ color: errorColor }}>"{requiredConfirmWord}"</strong> {t('confirmModal.toConfirm', 'لتأكيد الإجراء:')}
             </p>
             <input
               type="text"
@@ -235,7 +243,7 @@ const ConfirmModal = ({
                 color: titleColor
               }}
             >
-              {cancelText || 'إلغاء'}
+              {cancelText || t('common.cancel', 'إلغاء')}
             </button>
           )}
 
