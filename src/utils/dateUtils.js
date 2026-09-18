@@ -45,7 +45,7 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * استخراج أجزاء التاريخ الهجري بدقة تقويم أم القرى باستخدام moment-hijri
+ * استخراج أجزاء التاريخ الهجري بدقة تقويم أم القرى
  */
 export const getHijriParts = (dateObj = new Date()) => {
   try {
@@ -57,7 +57,7 @@ export const getHijriParts = (dateObj = new Date()) => {
     const m = moment(date);
     return {
       day: m.iDate(),
-      month: m.iMonth(),
+      month: m.iMonth(), // يُرجع الفهرس من 0 إلى 11
       year: m.iYear()
     };
   } catch (e) {
@@ -66,14 +66,21 @@ export const getHijriParts = (dateObj = new Date()) => {
 };
 
 /**
- * تحويل تاريخ هجري إلى تاريخ ميلادي بدقة تقويم أم القرى
+ * تحويل تاريخ هجري إلى تاريخ ميلادي بدقة معالجة رقم الشهر
  */
 export const hijriToGregorian = (hYear, hMonthIdx, hDay) => {
   if (!hYear || isNaN(hYear)) return null;
   try {
-    const hMonthStr = String(Number(hMonthIdx) + 1).padStart(2, '0');
-    const hDayStr = String(hDay).padStart(2, '0');
-    const m = moment(`${hYear}/${hMonthStr}/${hDayStr}`, 'iYYYY/iMM/iDD');
+    const targetYear = Number(hYear);
+    const targetMonthIdx = Number(hMonthIdx); // الفهرس من 0 إلى 11
+    const targetDay = Number(hDay);
+
+    // إنشاء كائن moment بالتقويم الهجري وتعيين السنة، الشهر، واليوم مباشرة
+    const m = moment();
+    m.iYear(targetYear);
+    m.iMonth(targetMonthIdx);
+    m.iDate(targetDay);
+
     return m.toDate();
   } catch (e) {
     return null;
