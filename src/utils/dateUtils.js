@@ -1,4 +1,5 @@
 // src/utils/dateUtils.js
+import moment from 'moment-hijri';
 
 export const HIJRI_MONTHS = {
   ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
@@ -13,7 +14,7 @@ export const toEngNums = (str) => {
   if (!str) return '';
   return String(str)
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰讠۲۳۴۵۶۷۸۹'.indexOf(d));
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 };
 
 export const toArNums = (str) => {
@@ -44,49 +45,38 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * حساب أجزاء التاريخ الهجري ديناميكياً لجميع التواريخ مع دعم معامل الإزاحة العام (Offset)
+ * استخراج أجزاء التاريخ الهجري بدقة تقويم أم القرى باستخدام moment-hijri
  */
-export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset()) => {
+export const getHijriParts = (dateObj = new Date()) => {
   try {
-    const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
-    
-    // تطبيق إزاحة الأيام إذا كانت محددة
-    if (offset !== 0) {
-      date.setDate(date.getDate() + offset);
+    const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
+    if (isNaN(date.getTime())) {
+      return { day: 1, month: 0, year: 1448 };
     }
 
-    const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric'
-    });
-
-    const formatted = formatter.format(date);
-    const cleaned = toEngNums(formatted).replace(/[^\d/]/g, '');
-    const parts = cleaned.split('/');
-
-    let day = parseInt(parts[0], 10);
-    let month = parseInt(parts[1], 10) - 1;
-    let year = parseInt(parts[2], 10);
-
-    if (parts[0] && parts[0].length === 4) {
-      year = parseInt(parts[0], 10);
-      month = parseInt(parts[1], 10) - 1;
-      day = parseInt(parts[2], 10);
-    }
-
-    if (isNaN(year) || year > 1600) {
-      const gYear = date.getFullYear();
-      year = Math.floor((gYear - 622) * (33 / 32));
-    }
-
-    return { 
-      day: isNaN(day) ? 1 : day, 
-      month: (isNaN(month) || month < 0 || month > 11) ? 0 : month, 
-      year 
+    const m = moment(date);
+    return {
+      day: m.iDate(),
+      month: m.iMonth(),
+      year: m.iYear()
     };
   } catch (e) {
     return { day: 1, month: 0, year: 1448 };
+  }
+};
+
+/**
+ * تحويل تاريخ هجري إلى تاريخ ميلادي بدقة تقويم أم القرى
+ */
+export const hijriToGregorian = (hYear, hMonthIdx, hDay) => {
+  if (!hYear || isNaN(hYear)) return null;
+  try {
+    const hMonthStr = String(Number(hMonthIdx) + 1).padStart(2, '0');
+    const hDayStr = String(hDay).padStart(2, '0');
+    const m = moment(`${hYear}/${hMonthStr}/${hDayStr}`, 'iYYYY/iMM/iDD');
+    return m.toDate();
+  } catch (e) {
+    return null;
   }
 };
 
@@ -147,9 +137,9 @@ export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
   return `${formattedHours}:${minutes} ${ampm}`;
 };
 
-export const formatHijriDate = (dateObj = new Date(), lang = 'ar', offset = getSavedHijriOffset()) => {
+export const formatHijriDate = (dateObj = new Date(), lang = 'ar') => {
   try {
-    const { day, month, year } = getHijriParts(dateObj, offset);
+    const { day, month, year } = getHijriParts(dateObj);
 
     const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
     const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
