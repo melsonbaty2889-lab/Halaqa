@@ -1,3 +1,4 @@
+/* src/components/UI/CustomSelect.jsx */
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useFloating, autoUpdate, offset, shift, flip } from '@floating-ui/react-dom';
@@ -24,17 +25,15 @@ const CustomSelect = ({
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
-  const resolvedPlaceholder = placeholder || t('common.select', 'اختر من القائمة...');
+  const resolvedPlaceholder = placeholder || t('common.select', 'اختر...');
   const resolvedSearchPlaceholder = searchPlaceholder || t('common.search', 'بحث...');
   const resolvedNoOptionsMessage = noOptionsMessage || t('common.noOptions', 'لا توجد خيارات متاحة');
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // استخراج ألوان الهوية من كائن C
   const bgMain = C?.dark?.bg || '#0F172A';
   const bgSurface = C?.dark?.surface || '#1E293B';
-  const bgCard = C?.dark?.card || '#334155';
   const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
   const titleColor = C?.text?.title || '#F8FAFC';
   const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
@@ -50,7 +49,7 @@ const CustomSelect = ({
     middleware: [
       offset(4),
       flip({ fallbackPlacements: ['top-start', 'bottom-start'] }),
-      shift({ padding: 10 }),
+      shift({ padding: 8 }),
     ],
   });
 
@@ -127,7 +126,7 @@ const CustomSelect = ({
           setSearchTerm('');
           setIsOpen((prev) => !prev);
         }}
-        className="w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[42px] px-3 py-2 rounded-xl border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none"
+        className="w-full flex items-center justify-between cursor-pointer text-start transition-all duration-200 min-h-[42px] px-2 py-2 rounded-xl border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none"
         style={{
           backgroundColor: bgMain,
           borderColor: error ? errorColor : (isOpen ? primaryColor : borderCol),
@@ -135,7 +134,7 @@ const CustomSelect = ({
         }}
       >
         <span 
-          className="truncate text-xs"
+          className="text-[11px] whitespace-nowrap overflow-hidden text-center w-full"
           style={{ 
             fontWeight: selectedOption ? '600' : '400',
             color: selectedOption ? titleColor : subColor 
@@ -144,8 +143,8 @@ const CustomSelect = ({
           {selectedOption ? selectedOption.label : resolvedPlaceholder}
         </span>
         <ChevronDown
-          size={16}
-          className={`transition-transform duration-200 shrink-0 ms-2 ${
+          size={14}
+          className={`transition-transform duration-200 shrink-0 ms-1 ${
             isOpen ? 'rotate-180' : ''
           }`}
           style={{ color: isOpen ? primaryColor : subColor }}
@@ -238,14 +237,14 @@ const CustomSelect = ({
                       role="option"
                       aria-selected={isSelected}
                       onClick={(e) => handleSelect(e, opt.value)}
-                      className="w-full text-start px-3 py-2 text-xs rounded-lg flex items-center justify-between gap-2 transition-all duration-150 cursor-pointer focus:outline-none select-none min-h-[36px]"
+                      className="w-full text-start px-2.5 py-2 text-xs rounded-lg flex items-center justify-between gap-2 transition-all duration-150 cursor-pointer focus:outline-none select-none min-h-[36px]"
                       style={{
                         backgroundColor: isSelected ? `${primaryColor}20` : 'transparent',
                         color: isSelected ? primaryColor : titleColor,
                         fontWeight: isSelected ? '600' : '400'
                       }}
                     >
-                      <span className="whitespace-nowrap truncate">{opt.label}</span>
+                      <span className="whitespace-nowrap">{opt.label}</span>
                       {isSelected && (
                         <Check 
                           size={14} 
