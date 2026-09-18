@@ -2,11 +2,48 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, User, BookOpen, Award, 
-  Settings, LogOut, Shield, Bell, Search, Zap, Loader2 
+  Settings, LogOut, Shield, Bell, Zap, Loader2, MessageSquare 
 } from 'lucide-react';
 
+import ConfirmModal from '@/components/UI/ConfirmModal';
+
 export default function DevPlayground() {
-  const [activeTab, setActiveTab] = useState('all');
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    variant: 'warning',
+    title: '',
+    message: '',
+    isLoading: false
+  });
+
+  const openTestModal = (variant, title, message) => {
+    setModalConfig({
+      isOpen: true,
+      variant,
+      title,
+      message,
+      isLoading: false
+    });
+  };
+
+  const handleModalConfirm = () => {
+    setModalConfig(prev => ({ ...prev, isLoading: true }));
+    setTimeout(() => {
+      setModalConfig({
+        isOpen: false,
+        variant: 'warning',
+        title: '',
+        message: '',
+        isLoading: false
+      });
+    }, 1500);
+  };
+
+  const closeModal = () => {
+    if (!modalConfig.isLoading) {
+      setModalConfig(prev => ({ ...prev, isOpen: false }));
+    }
+  };
 
   return (
     <div style={{ 
@@ -22,7 +59,7 @@ export default function DevPlayground() {
         {/* رأس الصفحة */}
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h2 style={{ color: '#C9A84C', marginBottom: '8px' }}>🎨 مختبر العناصر الشامل</h2>
-          <p style={{ color: '#94A3B8', fontSize: '14px' }}>معاينة الألوان، الأيقونات، والأزرار الخاصة بالمنظومة في مكان واحد</p>
+          <p style={{ color: '#94A3B8', fontSize: '14px' }}>معاينة الألوان، الأيقونات، والنوافذ التفاعلية في مكان واحد</p>
         </div>
 
         {/* 1️⃣ قسم الألوان (Color Palette) */}
@@ -63,9 +100,80 @@ export default function DevPlayground() {
           </div>
         </section>
 
-        {/* 3️⃣ قسم الأزرار والحالات (Buttons & States) */}
+        {/* 3️⃣ قسم تجربة نافذة التأكيد (Confirm Modal Testing) */}
         <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>3. الأزرار والعناصر التفاعلية</h3>
+          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>3. تجربة نوافذ التأكيد (ConfirmModal)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            
+            <button 
+              onClick={() => openTestModal('danger', 'حذف الحلقة الدراسية', 'هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.')}
+              style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#EF4444',
+                border: '1px solid #EF4444',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <AlertTriangle size={16} /> تجربة نافذة حذف / خطر (Danger)
+            </button>
+
+            <button 
+              onClick={() => openTestModal('warning', 'أرشفة بيانات الطالب', 'هل تريد أرشفة بيانات الطالب؟ يمكن إعادة استعادتها لاحقاً.')}
+              style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                color: '#F59E0B',
+                border: '1px solid #F59E0B',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <AlertTriangle size={16} /> تجربة نافذة تحذير / أرشفة (Warning)
+            </button>
+
+            <button 
+              onClick={() => openTestModal('info', 'استعادة البيانات', 'هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟')}
+              style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                color: '#10B981',
+                border: '1px solid #10B981',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <CheckCircle size={16} /> تجربة نافذة تأكيد / استعادة (Info)
+            </button>
+
+          </div>
+        </section>
+
+        {/* 4️⃣ قسم الأزرار والحالات (Buttons & States) */}
+        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
+          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>4. الأزرار والعناصر التفاعلية</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             
             <button 
@@ -102,30 +210,21 @@ export default function DevPlayground() {
               زر ثانوي (Secondary Button)
             </button>
 
-            <button 
-              style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#EF4444',
-                border: '1px solid #EF4444',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <LogOut size={16} /> زر خروج / خطر (Danger)
-            </button>
-
           </div>
         </section>
 
       </div>
+
+      {/* المكون التفاعلي لاختبار النافذة */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        variant={modalConfig.variant}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        isLoading={modalConfig.isLoading}
+        onClose={closeModal}
+        onConfirm={handleModalConfirm}
+      />
     </div>
   );
 }
