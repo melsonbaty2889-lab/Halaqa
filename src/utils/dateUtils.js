@@ -14,7 +14,7 @@ export const toEngNums = (str) => {
   if (!str && str !== 0) return '';
   return String(str)
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴٥٦٧٨٩'.indexOf(d));
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 };
 
 export const toArNums = (str) => {
@@ -125,4 +125,49 @@ export const formatTimeString = (dateObj, lang = 'ar') => {
   }
 
   return formattedTime;
+};
+
+export const formatGregorianDate = (dateObj, lang = 'ar') => {
+  if (!dateObj) return '';
+  const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
+  if (isNaN(date.getTime())) return '';
+
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const formatted = new Intl.DateTimeFormat(cleanLang, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date);
+
+  if (cleanLang === 'ar') return toArNums(formatted);
+  if (cleanLang === 'ur') return toUrNums(formatted);
+  return formatted;
+};
+
+export const formatHijriDate = (dateObj, lang = 'ar') => {
+  if (!dateObj) return '';
+  const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
+  if (isNaN(date.getTime())) return '';
+
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const parts = getHijriParts(date);
+  if (!parts.year) return '';
+
+  const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
+  const monthName = HIJRI_MONTHS[currentLangMap][parts.month] || HIJRI_MONTHS.ar[parts.month];
+
+  let dayStr = String(parts.day);
+  let yearStr = String(parts.year);
+  let suffix = ['ar', 'ur'].includes(cleanLang) ? 'هـ' : 'AH';
+
+  if (cleanLang === 'ar') {
+    dayStr = toArNums(parts.day);
+    yearStr = toArNums(parts.year);
+  } else if (cleanLang === 'ur') {
+    dayStr = toUrNums(parts.day);
+    yearStr = toUrNums(parts.year);
+    suffix = 'ء';
+  }
+
+  return `${dayStr} ${monthName} ${yearStr} ${suffix}`;
 };
