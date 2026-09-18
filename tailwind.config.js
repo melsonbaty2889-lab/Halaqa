@@ -18,6 +18,7 @@ export default {
         },
       },
       colors: {
+        /* Direct Scale */
         dark: {
           bg: 'var(--bg-dark)',
           card: 'var(--surface-card)',
@@ -50,6 +51,28 @@ export default {
           hover: 'var(--border-hover)',
         },
         appError: 'var(--error)',
+
+        /* Semantic Tokens Layer */
+        semantic: {
+          bgPage: 'var(--color-bg-page)',
+          surfaceCard: 'var(--color-surface-card)',
+          surfaceInput: 'var(--color-surface-input)',
+          surfaceSecondary: 'var(--color-surface-secondary)',
+          actionPrimary: 'var(--color-action-primary)',
+          actionPrimaryHover: 'var(--color-action-primary-hover)',
+          actionPrimaryGlow: 'var(--color-action-primary-glow)',
+          success: 'var(--color-success)',
+          successBg: 'var(--color-success-bg)',
+          successBorder: 'var(--color-success-border)',
+          danger: 'var(--color-danger)',
+          dangerBg: 'var(--color-danger-bg)',
+          textPrimary: 'var(--color-text-primary)',
+          textSecondary: 'var(--color-text-secondary)',
+          textMuted: 'var(--color-text-muted)',
+          borderCard: 'var(--color-border-card)',
+          borderInput: 'var(--color-border-input)',
+          borderHover: 'var(--color-border-hover)',
+        }
       },
       boxShadow: {
         'main': 'var(--shadow-main)',
