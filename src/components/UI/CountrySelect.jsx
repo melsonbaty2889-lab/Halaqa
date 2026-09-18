@@ -2,38 +2,30 @@ import React, { useState, useEffect } from 'react';
 import ReactDom from 'react-dom';
 import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import C from '@/theme/colors';
 
 export default function CountrySelect({
   value,
   onChange,
-  isArabic,
+  isArabic = true,
   placeholder,
   disabled = false,
 }) {
-  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const currentLang = i18n.language || 'ar';
-  const cleanLang = currentLang.toLowerCase().split('-')[0];
-  
-  // تحديد اتجاه اللغة مع دعم الخيار اليدوي للبروب القديم إن وجد
-  const isRtl = isArabic !== undefined 
-    ? isArabic 
-    : (i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang));
+  const isRtl = isArabic;
 
-  // استخراج الألوان من كائن الألوان C
-  const cardBg = C.dark?.surface || '#1E293B';
-  const inputBg = C.dark?.bg || '#0F172A';
-  const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
-  const titleColor = C.text?.title || '#F8FAFC';
-  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
-  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8';
+  // استخراج الألوان القياسية المعتمدة من ملف C
+  const cardBg = C?.dark?.surface || '#1E293B';
+  const inputBg = C?.dark?.bg || '#0F172A';
+  const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
+  const titleColor = C?.text?.title || '#F8FAFC';
+  const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
+  const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#38BDF8';
 
-  // 1. استخراج isPositioned لمنع الوميض قبل تحديد الموقع
+  // حساب موقع القائمة المنسدلة بدون وميض
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
@@ -46,7 +38,7 @@ export default function CountrySelect({
     ],
   });
 
-  // 2. إغلاق القائمة عند اللمس خارجها
+  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     if (!isOpen) return;
 
@@ -83,7 +75,7 @@ export default function CountrySelect({
     );
   });
 
-  const defaultPlaceholder = placeholder || t('countrySelect.placeholder', 'اختر الدولة...');
+  const defaultPlaceholder = placeholder || 'اختر الدولة...';
 
   return (
     <div className="w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -129,7 +121,7 @@ export default function CountrySelect({
         />
       </button>
 
-      {/* القائمة المنسدلة بدون وميض */}
+      {/* القائمة المنسدلة */}
       {isOpen &&
         ReactDom.createPortal(
           <div
@@ -174,7 +166,7 @@ export default function CountrySelect({
                   autoFocus
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={t('countrySelect.searchPlaceholder', 'ابحث باسم الدولة أو الكود...')}
+                  placeholder="ابحث باسم الدولة أو الكود..."
                   className="w-full py-1.5 border rounded-lg text-xs focus:outline-none transition-colors"
                   style={{
                     paddingRight: isRtl ? '2.25rem' : '0.75rem',
@@ -233,7 +225,7 @@ export default function CountrySelect({
                   className="p-4 text-center text-xs"
                   style={{ color: subColor }}
                 >
-                  {t('countrySelect.noResults', 'لم يتم العثور على نتائج')}
+                  لم يتم العثور على نتائج
                 </div>
               )}
             </div>
