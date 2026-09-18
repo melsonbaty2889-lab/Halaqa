@@ -27,6 +27,23 @@ export const toUrNums = (str) => {
   return String(str).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
 };
 
+export const getSavedHijriOffset = () => {
+  try {
+    const saved = localStorage.getItem('hijri_offset');
+    return saved !== null ? parseInt(saved, 10) : 0;
+  } catch (e) {
+    return 0;
+  }
+};
+
+export const setSavedHijriOffset = (offset) => {
+  try {
+    localStorage.setItem('hijri_offset', String(offset));
+  } catch (e) {
+    console.error('Failed to save hijri offset:', e);
+  }
+};
+
 export const getHijriParts = (dateObj) => {
   try {
     if (!dateObj) return { day: 1, month: 0, year: '' };
@@ -85,4 +102,108 @@ export const calculateAge = (birthDate) => {
   }
 
   return age < 0 ? 0 : age;
+};
+
+export const formatTimeString = (dateObj = new Date(), lang = 'ar') => {
+  const date = dateObj instanceof Date ? new Date(dateObj) : new Date(dateObj);
+  if (isNaN(date.getTime())) return '';
+
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+
+  if (cleanLang === 'fr') {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  if (cleanLang === 'tr') {
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const period = hours >= 12 ? 'ÖS' : 'ÖÖ';
+    hours = hours % 12 || 12;
+    return `${period} ${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  if (cleanLang === 'ar') {
+    const ampm = hours >= 12 ? 'م' : 'ص';
+    hours = hours % 12 || 12;
+    const formattedHours = hours.toString().padStart(2, '0');
+    return toArNums(`${formattedHours}:${minutes} ${ampm}`);
+  }
+
+  if (cleanLang === 'ur') {
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const formattedHours = hours.toString().padStart(2, '0');
+    return `${toUrNums(formattedHours)}:${toUrNums(minutes)} ${ampm}`;
+  }
+
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const formattedHours = hours.toString().padStart(2, '0');
+  return `${formattedHours}:${minutes} ${ampm}`;
+};
+
+export const formatHijriDate = (dateObj = new Date(), lang = 'ar') => {
+  try {
+    const { day, month, year } = getHijriParts(dateObj);
+    if (!year) return '';
+
+    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+    const currentLang = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
+    const monthName = HIJRI_MONTHS[currentLang][month] || HIJRI_MONTHS.ar[month];
+
+    if (currentLang === 'ar') {
+      return `${toArNums(day)} ${monthName} ${toArNums(year)} هـ`;
+    }
+
+    if (currentLang === 'ur') {
+      return `${toUrNums(day)} ${monthName} ${toUrNums(year)} ء`;
+    }
+
+    return `${day} ${monthName} ${year} AH`;
+  } catch (e) {
+    return '';
+  }
+};
+
+export const formatGregorianDate = (dateObj = new Date(), lang = 'ar') => {
+  try {
+    const date = dateObj instanceof Date ? new Date(dateObj) : new Date(dateObj);
+    if (isNaN(date.getTime())) return '';
+
+    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+    
+    const localeMap = {
+      ar: 'ar-EG',
+      en: 'en-US',
+      fr: 'fr-FR',
+      tr: 'tr-TR',
+      ur: 'ur-PK',
+      id: 'id-ID'
+    };
+
+    const targetLocale = localeMap[cleanLang] || 'en-US';
+
+    const formatted = new Intl.DateTimeFormat(targetLocale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }).format(date);
+
+    if (cleanLang === 'ar') {
+      return toArNums(formatted);
+    }
+
+    if (cleanLang === 'ur') {
+      return toUrNums(formatted);
+    }
+
+    return formatted;
+  } catch (e) {
+    return '';
+  }
 };
