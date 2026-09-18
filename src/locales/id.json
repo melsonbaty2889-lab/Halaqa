@@ -496,6 +496,56 @@
     "tuesday": "Selasa",
     "wednesday": "Rabu"
   },
+  "devPlayground": {
+    "alertBtn": "نافذة تنبيه أحادي (Alert Only)",
+    "alertModal": {
+      "confirm": "حسناً، فهمت",
+      "message": "تم إكمال عملية المزامنة بنجاح ولن تحتاج لإعادة التشغيل.",
+      "title": "تحديث النظام"
+    },
+    "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
+    "dangerBtn": "نافذة خطر عادي (Danger)",
+    "dangerModal": {
+      "confirm": "نعم، احذف الحلقة",
+      "message": "هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.",
+      "title": "حذف الحلقة الدراسية"
+    },
+    "datePickerTitle": "تجربة اختيار التاريخ (CustomDatePicker)",
+    "infoBtn": "نافذة استعادة / نجاح (Info)",
+    "infoModal": {
+      "confirm": "استعادة الآن",
+      "message": "هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟",
+      "title": "استعادة البيانات"
+    },
+    "modalVariantsTitle": "حالات النوافذ المنبثقة (ConfirmModal Variants)",
+    "promptBtn": "نافذة إدخال نصي (Prompt Input)",
+    "promptModal": {
+      "confirm": "إرسال وثبيت الإلغاء",
+      "message": "يرجى كتابة سبب إلغاء الجلسة الدراسية قبل الإرسال للطلاب:",
+      "placeholder": "اكتب سبب الإلغاء هنا...",
+      "title": "إلغاء الموعد المحدد"
+    },
+    "receivedInput": "تم استلام القيمة المدخلة:",
+    "secureDeleteBtn": "نافذة حذف مشروط (Secure Delete)",
+    "secureDeleteModal": {
+      "confirm": "تأكيد الحذف النهائي",
+      "confirmWord": "حذف",
+      "message": "سيتم حذف كافة البيانات والصلاحيات المتعلقة بهذا الحساب تماماً.",
+      "title": "حذف الحساب نهائياً"
+    },
+    "selectCountryLabel": "اختر الدولة من القائمة:",
+    "selectDateLabel": "اختر التاريخ الحجري / الميلادي:",
+    "selectedCode": "الكود المختار حالياً:",
+    "selectedDate": "التاريخ المختار حالياً:",
+    "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
+    "title": "مختبر العناصر الشامل (Dev Playground)",
+    "warningBtn": "نافذة تحذير / أرشفة (Warning)",
+    "warningModal": {
+      "confirm": "تأكيد الأرشفة",
+      "message": "هل تريد أرشفة بيانات الطالب؟ يمكن إعادة استعادتها لاحقاً.",
+      "title": "أرشفة بيانات الطالب"
+    }
+  },
   "documents": {
     "cannot_preview": "Jenis berkas ini tidak dapat Pratinjau secara langsung.",
     "delete_confirm_text": "Apakah Anda yakin ingin menghapus dokumen ini secara permanen?",
