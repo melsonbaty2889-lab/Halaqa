@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDom from 'react-dom';
-import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react-dom';
+import { useFloating, autoUpdate, offset, shift } from '@floating-ui/react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import C from '@/theme/colors';
@@ -27,11 +27,10 @@ export default function CountrySelect({
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
-    placement: isRtl ? 'bottom-start' : 'bottom-end',
+    placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
     middleware: [
-      offset(8),
-      flip({ fallbackPlacements: ['top-start', 'top-end'] }),
+      offset(6),
       shift({ padding: 10 }),
     ],
   });
@@ -158,7 +157,6 @@ export default function CountrySelect({
                 />
                 <input
                   type="text"
-                  autoFocus
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="ابحث باسم الدولة أو الكود..."
