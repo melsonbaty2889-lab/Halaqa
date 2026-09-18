@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { C } from '@/theme/colors';
 
-// أسماء المنصة الموحدة
+// أسماء المنصة الموحدة لجميع اللغات المعتمدة
 const BRAND_NAMES = {
   ar: 'الحلقة الذكية',
   ur: 'اسمارٹ حلقہ',
@@ -30,7 +30,7 @@ export default function AppBrand({ className = '', subtitle }) {
         <div
           className="absolute inset-0 rounded-full blur-xl opacity-60 pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${C?.emerald?.DEFAULT || 'var(--emerald-text)'} 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${C?.brandEmerald?.DEFAULT || 'var(--color-success)'} 0%, transparent 70%)`,
           }}
         />
         <div className="relative z-10 drop-shadow-[0_0_15px_var(--emerald-logo-glow)]">
@@ -39,13 +39,13 @@ export default function AppBrand({ className = '', subtitle }) {
       </div>
 
       {/* اسم المنصة */}
-      <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-appText-main">
+      <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-semantic-textPrimary">
         {brandName}
       </h2>
 
       {/* العنوان الفرعي */}
       {subtitle && (
-        <p className="text-xs sm:text-sm font-medium tracking-wide m-0 max-w-xs leading-relaxed text-appText-sub">
+        <p className="text-xs sm:text-sm font-medium tracking-wide m-0 max-w-xs leading-relaxed text-semantic-textSecondary">
           {subtitle}
         </p>
       )}
