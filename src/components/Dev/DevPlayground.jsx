@@ -14,8 +14,8 @@ export default function DevPlayground() {
     variant: 'warning',
     title: '',
     message: '',
-    confirmText: '',
-    cancelText: '',
+    confirmText: 'تأكيد',
+    cancelText: 'إلغاء',
     promptPlaceholder: '',
     requiredConfirmWord: '',
     isLoading: false
@@ -27,19 +27,24 @@ export default function DevPlayground() {
       variant: config.variant || 'warning',
       title: config.title || '',
       message: config.message || '',
-      confirmText: config.confirmText || '',
-      cancelText: config.cancelText || '',
+      confirmText: config.confirmText || 'تأكيد',
+      cancelText: config.cancelText || 'إلغاء',
       promptPlaceholder: config.promptPlaceholder || '',
       requiredConfirmWord: config.requiredConfirmWord || '',
       isLoading: false
     });
   };
 
-  const handleModalConfirm = (val) => {
+  const handleModalConfirm = (inputValue) => {
     setModalConfig(prev => ({ ...prev, isLoading: true }));
+    
+    // محاكاة إرسال الطلب لشبكة البيانات
     setTimeout(() => {
       setModalConfig(prev => ({ ...prev, isOpen: false, isLoading: false }));
-    }, 1500);
+      if (inputValue) {
+        alert(`تم استلام القيمة المدخلة: ${inputValue}`);
+      }
+    }, 1200);
   };
 
   const closeModal = () => {
@@ -65,11 +70,11 @@ export default function DevPlayground() {
             🎨 مختبر العناصر الشامل (Dev Playground)
           </h2>
           <p className="text-xs" style={{ color: C?.text?.sub }}>
-            معاينة دقيقة لكافة حالات النوافذ المنبثقة والنظام القياسي
+            معاينة دقيقة ومطابقة تماماً لسلوك النوافذ المنبثقة والنظام القياسي
           </p>
         </div>
 
-        {/* 1️⃣ تجربة نوافذ التأكيد الشاملة */}
+        {/* حالات النوافذ المنبثقة */}
         <section 
           className="p-5 rounded-2xl border space-y-4"
           style={{ 
@@ -82,13 +87,14 @@ export default function DevPlayground() {
           </h3>
           
           <div className="space-y-3">
-            {/* خطر عاديا */}
+            {/* خطر عادي */}
             <button 
               onClick={() => openTestModal({
                 variant: 'danger',
                 title: 'حذف الحلقة الدراسية',
                 message: 'هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.',
-                confirmText: 'نعم، احذف الحلقة'
+                confirmText: 'نعم، احذف الحلقة',
+                cancelText: 'إلغاء'
               })}
               className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
@@ -107,7 +113,8 @@ export default function DevPlayground() {
                 title: 'حذف الحساب نهائياً',
                 message: 'سيتم حذف كافة البيانات والصلاحيات المتعلقة بهذا الحساب تماماً.',
                 requiredConfirmWord: 'حذف',
-                confirmText: 'تأكيد الحذف النهائي'
+                confirmText: 'تأكيد الحذف النهائي',
+                cancelText: 'تراجع'
               })}
               className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
@@ -125,7 +132,8 @@ export default function DevPlayground() {
                 variant: 'warning',
                 title: 'أرشفة بيانات الطالب',
                 message: 'هل تريد أرشفة بيانات الطالب؟ يمكن إعادة استعادتها لاحقاً.',
-                confirmText: 'تأكيد الأرشفة'
+                confirmText: 'تأكيد الأرشفة',
+                cancelText: 'إلغاء'
               })}
               className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
@@ -144,7 +152,8 @@ export default function DevPlayground() {
                 title: 'إلغاء الموعد المحدد',
                 message: 'يرجى كتابة سبب إلغاء الجلسة الدراسية قبل الإرسال للطلاب:',
                 promptPlaceholder: 'اكتب سبب الإلغاء هنا...',
-                confirmText: 'إرسال وثبيت الإلغاء'
+                confirmText: 'إرسال وثبيت الإلغاء',
+                cancelText: 'إلغاء'
               })}
               className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
@@ -162,7 +171,8 @@ export default function DevPlayground() {
                 variant: 'info',
                 title: 'استعادة البيانات',
                 message: 'هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟',
-                confirmText: 'استعادة الآن'
+                confirmText: 'استعادة الآن',
+                cancelText: 'إلغاء'
               })}
               className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer"
               style={{
