@@ -17,7 +17,6 @@ export default function CountrySelect({
 
   const isRtl = isArabic;
 
-  // استخراج الألوان القياسية المعتمدة من ملف C
   const cardBg = C?.dark?.surface || '#1E293B';
   const inputBg = C?.dark?.bg || '#0F172A';
   const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
@@ -25,20 +24,18 @@ export default function CountrySelect({
   const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
   const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#38BDF8';
 
-  // حساب موقع القائمة المنسدلة بدون وميض
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: isRtl ? 'bottom-start' : 'bottom-end',
     whileElementsMounted: autoUpdate,
     middleware: [
-      offset(6),
+      offset(8),
       flip({ fallbackPlacements: ['top-start', 'top-end'] }),
       shift({ padding: 10 }),
     ],
   });
 
-  // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     if (!isOpen) return;
 
@@ -79,7 +76,6 @@ export default function CountrySelect({
 
   return (
     <div className="w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* الزر الرئيسي */}
       <button
         ref={refs.setReference}
         type="button"
@@ -103,7 +99,7 @@ export default function CountrySelect({
             <span className="truncate" style={{ color: titleColor }}>
               {isRtl ? selectedCountry.nameAr : (selectedCountry.nameEn || selectedCountry.nameAr)}
             </span>
-            <span className="text-xs dir-ltr" style={{ color: subColor }}>
+            <span className="text-xs" dir="ltr" style={{ color: subColor }}>
               ({selectedCountry.dialCode})
             </span>
           </span>
@@ -121,7 +117,6 @@ export default function CountrySelect({
         />
       </button>
 
-      {/* القائمة المنسدلة */}
       {isOpen &&
         ReactDom.createPortal(
           <div
@@ -144,7 +139,6 @@ export default function CountrySelect({
               isPositioned ? 'transition-opacity duration-150' : ''
             }`}
           >
-            {/* حقل البحث */}
             <div 
               className="p-2 border-b sticky top-0 z-10"
               style={{ 
@@ -157,7 +151,8 @@ export default function CountrySelect({
                   size={16}
                   className="absolute pointer-events-none shrink-0"
                   style={{
-                    [isRtl ? 'right' : 'left']: '0.75rem',
+                    right: isRtl ? '0.75rem' : 'auto',
+                    left: isRtl ? 'auto' : '0.75rem',
                     color: subColor
                   }}
                 />
@@ -167,10 +162,10 @@ export default function CountrySelect({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="ابحث باسم الدولة أو الكود..."
-                  className="w-full py-1.5 border rounded-lg text-xs focus:outline-none transition-colors"
+                  className="w-full py-2 border rounded-lg text-xs focus:outline-none transition-colors"
                   style={{
-                    paddingRight: isRtl ? '2.25rem' : '0.75rem',
-                    paddingLeft: isRtl ? '0.75rem' : '2.25rem',
+                    paddingRight: isRtl ? '2.5rem' : '0.75rem',
+                    paddingLeft: isRtl ? '0.75rem' : '2.5rem',
                     borderColor: borderCol,
                     color: titleColor,
                     backgroundColor: inputBg
@@ -179,7 +174,6 @@ export default function CountrySelect({
               </div>
             </div>
 
-            {/* قائمة العناصر */}
             <div 
               className="overflow-y-auto flex-1 custom-scrollbar p-1 space-y-0.5"
               role="listbox"
@@ -210,7 +204,7 @@ export default function CountrySelect({
                         <span className="truncate">
                           {isRtl ? c.nameAr : (c.nameEn || c.nameAr)}
                         </span>
-                        <span className="dir-ltr" style={{ color: subColor }}>
+                        <span dir="ltr" style={{ color: subColor }}>
                           ({c.dialCode})
                         </span>
                       </span>
