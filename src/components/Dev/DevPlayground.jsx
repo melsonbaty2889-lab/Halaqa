@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, User, BookOpen, Award, 
-  Settings, LogOut, Shield, Bell, Zap, Loader2, MessageSquare 
+  Settings, LogOut, Shield, Bell, Zap, MessageSquare 
 } from 'lucide-react';
 
+import C from '@/theme/colors';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 
 export default function DevPlayground() {
@@ -46,170 +47,141 @@ export default function DevPlayground() {
   };
 
   return (
-    <div style={{ 
-      background: '#090F17', 
-      minHeight: '100vh', 
-      padding: '20px', 
-      direction: 'rtl',
-      color: '#FFF',
-      fontFamily: "'Cairo', system-ui, sans-serif"
-    }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div 
+      className="min-h-screen p-5 font-cairo"
+      dir="rtl"
+      style={{ 
+        backgroundColor: C.dark?.bg || '#0F172A',
+        color: C.text?.title || '#F8FAFC'
+      }}
+    >
+      <div className="max-w-xl mx-auto space-y-6">
         
         {/* رأس الصفحة */}
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h2 style={{ color: '#C9A84C', marginBottom: '8px' }}>🎨 مختبر العناصر الشامل</h2>
-          <p style={{ color: '#94A3B8', fontSize: '14px' }}>معاينة الألوان، الأيقونات، والنوافذ التفاعلية في مكان واحد</p>
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-bold" style={{ color: C.amber?.DEFAULT || '#F59E0B' }}>
+            🎨 مختبر العناصر الحديث (Dev Playground)
+          </h2>
+          <p className="text-xs" style={{ color: C.text?.sub || '#94A3B8' }}>
+            معاينة دقيقة لنظام الألوان القياسي والنوافذ التفاعلية
+          </p>
         </div>
 
-        {/* 1️⃣ قسم الألوان (Color Palette) */}
-        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>1. لوحة الألوان الأساسية</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-            <div style={{ background: '#090F17', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
-              <div style={{ background: '#090F17', height: '30px', borderRadius: '4px', marginBottom: '8px', border: '1px solid #555' }}></div>
-              <span style={{ fontSize: '12px', color: '#94A3B8' }}>الخلفية الداكنة (#090F17)</span>
+        {/* 1️⃣ قسم الألوان القياسية من C */}
+        <section 
+          className="p-5 rounded-2xl border space-y-4"
+          style={{ 
+            backgroundColor: C.dark?.surface || '#1E293B',
+            borderColor: C.dark?.borderInput || '#334155'
+          }}
+        >
+          <h3 className="text-sm font-bold" style={{ color: C.amber?.DEFAULT || '#F59E0B' }}>
+            1. لوحة الألوان المعتمدة (Theme Colors)
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl border" style={{ backgroundColor: C.dark?.bg, borderColor: C.dark?.borderInput }}>
+              <div className="h-7 rounded mb-2 border" style={{ backgroundColor: C.dark?.bg, borderColor: '#555' }} />
+              <span className="text-[11px] block" style={{ color: C.text?.sub }}>الخلفية (C.dark.bg)</span>
             </div>
-            <div style={{ background: '#111C2A', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
-              <div style={{ background: '#C9A84C', height: '30px', borderRadius: '4px', marginBottom: '8px' }}></div>
-              <span style={{ fontSize: '12px', color: '#94A3B8' }}>لون التميز الذهبي (#C9A84C)</span>
+            <div className="p-3 rounded-xl border" style={{ backgroundColor: C.dark?.bg, borderColor: C.dark?.borderInput }}>
+              <div className="h-7 rounded mb-2" style={{ backgroundColor: C.amber?.DEFAULT }} />
+              <span className="text-[11px] block" style={{ color: C.text?.sub }}>الذهبي/الرئيسي (C.amber)</span>
             </div>
-            <div style={{ background: '#111C2A', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
-              <div style={{ background: '#10B981', height: '30px', borderRadius: '4px', marginBottom: '8px' }}></div>
-              <span style={{ fontSize: '12px', color: '#94A3B8' }}>لون النجاح (#10B981)</span>
+            <div className="p-3 rounded-xl border" style={{ backgroundColor: C.dark?.bg, borderColor: C.dark?.borderInput }}>
+              <div className="h-7 rounded mb-2" style={{ backgroundColor: C.emerald?.DEFAULT }} />
+              <span className="text-[11px] block" style={{ color: C.text?.sub }}>الزمردي/النجاح (C.emerald)</span>
             </div>
-            <div style={{ background: '#111C2A', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
-              <div style={{ background: '#EF4444', height: '30px', borderRadius: '4px', marginBottom: '8px' }}></div>
-              <span style={{ fontSize: '12px', color: '#94A3B8' }}>لون التنبيه (#EF4444)</span>
+            <div className="p-3 rounded-xl border" style={{ backgroundColor: C.dark?.bg, borderColor: C.dark?.borderInput }}>
+              <div className="h-7 rounded mb-2" style={{ backgroundColor: C.error?.DEFAULT }} />
+              <span className="text-[11px] block" style={{ color: C.text?.sub }}>الخطأ/التحذير (C.error)</span>
             </div>
           </div>
         </section>
 
-        {/* 2️⃣ قسم الأيقونات (Icons) */}
-        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>2. مكتبة الأيقونات المستخدمة</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', textAlign: 'center' }}>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><User size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>مستخدم</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><BookOpen size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>حلقة</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Award size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>شهادة</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Shield size={24} color="#C9A84C" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>أمان</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Bell size={24} color="#10B981" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>تنبيه</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Settings size={24} color="#94A3B8" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>إعدادات</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><Zap size={24} color="#F59E0B" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>ترقية</span></div>
-            <div style={{ background: '#1E293B', padding: '12px', borderRadius: '10px' }}><CheckCircle size={24} color="#10B981" /><span style={{ display: 'block', fontSize: '11px', marginTop: '6px', color: '#94A3B8' }}>تأكيد</span></div>
-          </div>
-        </section>
-
-        {/* 3️⃣ قسم تجربة نافذة التأكيد (Confirm Modal Testing) */}
-        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>3. تجربة نوافذ التأكيد (ConfirmModal)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* 2️⃣ قسم تجربة نافذة التأكيد (ConfirmModal) */}
+        <section 
+          className="p-5 rounded-2xl border space-y-4"
+          style={{ 
+            backgroundColor: C.dark?.surface || '#1E293B',
+            borderColor: C.dark?.borderInput || '#334155'
+          }}
+        >
+          <h3 className="text-sm font-bold" style={{ color: C.amber?.DEFAULT || '#F59E0B' }}>
+            2. تجربة نوافذ التأكيد (ConfirmModal)
+          </h3>
+          <div className="space-y-3">
             
             <button 
               onClick={() => openTestModal('danger', 'حذف الحلقة الدراسية', 'هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.')}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer"
               style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#EF4444',
-                border: '1px solid #EF4444',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
+                backgroundColor: `${C.error?.DEFAULT}1A`,
+                color: C.error?.DEFAULT,
+                borderColor: C.error?.DEFAULT
               }}
             >
-              <AlertTriangle size={16} /> تجربة نافذة حذف / خطر (Danger)
+              <AlertTriangle size={16} /> تجربة نافذة خطر (Danger)
             </button>
 
             <button 
               onClick={() => openTestModal('warning', 'أرشفة بيانات الطالب', 'هل تريد أرشفة بيانات الطالب؟ يمكن إعادة استعادتها لاحقاً.')}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer"
               style={{
-                background: 'rgba(245, 158, 11, 0.1)',
-                color: '#F59E0B',
-                border: '1px solid #F59E0B',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
+                backgroundColor: `${C.amber?.DEFAULT}1A`,
+                color: C.amber?.DEFAULT,
+                borderColor: C.amber?.DEFAULT
               }}
             >
-              <AlertTriangle size={16} /> تجربة نافذة تحذير / أرشفة (Warning)
+              <AlertTriangle size={16} /> تجربة نافذة أرشفة (Warning)
             </button>
 
             <button 
               onClick={() => openTestModal('info', 'استعادة البيانات', 'هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟')}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer"
               style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                color: '#10B981',
-                border: '1px solid #10B981',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
+                backgroundColor: `${C.emerald?.DEFAULT}1A`,
+                color: C.emerald?.DEFAULT,
+                borderColor: C.emerald?.DEFAULT
               }}
             >
-              <CheckCircle size={16} /> تجربة نافذة تأكيد / استعادة (Info)
+              <CheckCircle size={16} /> تجربة نافذة استعادة (Info)
             </button>
 
           </div>
         </section>
 
-        {/* 4️⃣ قسم الأزرار والحالات (Buttons & States) */}
-        <section style={{ background: '#111C2A', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', color: '#C9A84C', marginBottom: '15px' }}>4. الأزرار والعناصر التفاعلية</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            
+        {/* 3️⃣ قسم الأزرار القياسية */}
+        <section 
+          className="p-5 rounded-2xl border space-y-4"
+          style={{ 
+            backgroundColor: C.dark?.surface || '#1E293B',
+            borderColor: C.dark?.borderInput || '#334155'
+          }}
+        >
+          <h3 className="text-sm font-bold" style={{ color: C.amber?.DEFAULT || '#F59E0B' }}>
+            3. الأزرار القياسية
+          </h3>
+          <div className="space-y-3">
             <button 
-              onClick={() => alert("تم النقر على الزر الرئيسي")}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg"
               style={{
-                background: 'linear-gradient(135deg, #C9A84C, #9A7B30)',
-                color: '#000',
-                border: 'none',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                width: '100%'
+                backgroundColor: C.amber?.DEFAULT || '#F59E0B',
+                color: C.dark?.bg || '#0F172A'
               }}
             >
-              زر رئيسي (Primary Button)
+              زر رئيسي (Primary Gold)
             </button>
 
             <button 
-              onClick={() => alert("تم النقر على الزر الثانوي")}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer border"
               style={{
-                background: '#1E293B',
-                color: '#FFF',
-                border: '1px solid #334155',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                width: '100%'
+                backgroundColor: C.dark?.card || '#1E293B',
+                color: C.text?.title || '#F8FAFC',
+                borderColor: C.dark?.borderInput || '#334155'
               }}
             >
-              زر ثانوي (Secondary Button)
+              زر ثانوي (Secondary Card)
             </button>
-
           </div>
         </section>
 
