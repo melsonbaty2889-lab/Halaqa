@@ -14,7 +14,7 @@ export const toEngNums = (str) => {
   if (!str && str !== 0) return '';
   return String(str)
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴٥٦٧٨٩'.indexOf(d));
 };
 
 export const toArNums = (str) => {
@@ -104,4 +104,25 @@ export const calculateAge = (birthDate) => {
   }
 
   return age < 0 ? 0 : age;
+};
+
+export const formatTimeString = (dateObj, lang = 'ar') => {
+  if (!dateObj) return '';
+  const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
+  if (isNaN(date.getTime())) return '';
+
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const formattedTime = new Intl.DateTimeFormat(cleanLang, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }).format(date);
+
+  if (cleanLang === 'ar') {
+    return toArNums(formattedTime);
+  } else if (cleanLang === 'ur') {
+    return toUrNums(formattedTime);
+  }
+
+  return formattedTime;
 };
