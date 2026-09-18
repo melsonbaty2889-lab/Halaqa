@@ -482,6 +482,7 @@
     "correspondingGregorian": "Corresponding Gregorian:",
     "correspondingHijri": "Corresponding Hijri:",
     "pleaseSelectYear": "Please select year",
+    "selectDayPlaceholder": "اختر...",
     "selectYear": "Select year...",
     "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Switch Calendar Type",
