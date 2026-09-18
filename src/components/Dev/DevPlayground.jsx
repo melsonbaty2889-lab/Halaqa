@@ -2,13 +2,17 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare 
+  ShieldAlert, MessageSquare, Globe 
 } from 'lucide-react';
 
 import C from '@/theme/colors';
 import ConfirmModal from '@/components/UI/ConfirmModal';
+import CountrySelect from '@/components/UI/CountrySelect';
 
 export default function DevPlayground() {
+  // حالة الدولة المختارة لتجربة CountrySelect
+  const [selectedCountry, setSelectedCountry] = useState('SA');
+
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     variant: 'warning',
@@ -38,7 +42,6 @@ export default function DevPlayground() {
   const handleModalConfirm = (inputValue) => {
     setModalConfig(prev => ({ ...prev, isLoading: true }));
     
-    // محاكاة إرسال الطلب لشبكة البيانات
     setTimeout(() => {
       setModalConfig(prev => ({ ...prev, isOpen: false, isLoading: false }));
       if (inputValue) {
@@ -70,9 +73,36 @@ export default function DevPlayground() {
             🎨 مختبر العناصر الشامل (Dev Playground)
           </h2>
           <p className="text-xs" style={{ color: C?.text?.sub }}>
-            معاينة دقيقة ومطابقة تماماً لسلوك النوافذ المنبثقة والنظام القياسي
+            معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي
           </p>
         </div>
+
+        {/* تجربة مكون اختيار الدولة */}
+        <section 
+          className="p-5 rounded-2xl border space-y-3"
+          style={{ 
+            backgroundColor: C?.dark?.surface,
+            borderColor: C?.dark?.borderInput || C?.inputs?.border
+          }}
+        >
+          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+            <Globe size={18} /> تجربة اختيار الدولة (CountrySelect)
+          </h3>
+          
+          <div className="space-y-2">
+            <label className="text-xs block" style={{ color: C?.text?.sub }}>
+              اختر الدولة من القائمة:
+            </label>
+            <CountrySelect
+              value={selectedCountry}
+              onChange={(code) => setSelectedCountry(code)}
+              isArabic={true}
+            />
+            <p className="text-[11px] pt-1" style={{ color: C?.text?.sub }}>
+              الكود المختار حالياً: <strong style={{ color: C?.text?.title }}>{selectedCountry}</strong>
+            </p>
+          </div>
+        </section>
 
         {/* حالات النوافذ المنبثقة */}
         <section 
