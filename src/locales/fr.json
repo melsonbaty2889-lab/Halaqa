@@ -483,6 +483,7 @@
     "correspondingHijri": "Correspondant à l'hégirien :",
     "pleaseSelectYear": "Veuillez choisir l'année",
     "selectYear": "Choisir l'année...",
+    "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Changer le type de calendrier",
     "switchToGregorian": "Passer au calendrier grégorien",
     "switchToHijri": "Passer au calendrier hégirien"

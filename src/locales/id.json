@@ -483,6 +483,7 @@
     "correspondingHijri": "Sesuai Hijriah:",
     "pleaseSelectYear": "Pilih tahun",
     "selectYear": "Pilih tahun...",
+    "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Beralih Jenis Kalender",
     "switchToGregorian": "Beralih ke Kalender Masehi",
     "switchToHijri": "Beralih ke Kalender Hijriah"

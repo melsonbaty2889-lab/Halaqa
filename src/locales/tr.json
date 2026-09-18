@@ -483,6 +483,7 @@
     "correspondingHijri": "Hicri Karşılığı:",
     "pleaseSelectYear": "Lütfen yılı seçin",
     "selectYear": "Yıl seçin...",
+    "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Takvim Türünü Değiştir",
     "switchToGregorian": "Miladi Takvime Geç",
     "switchToHijri": "Hicri Takvime Geç"

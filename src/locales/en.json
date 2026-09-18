@@ -483,6 +483,7 @@
     "correspondingHijri": "Corresponding Hijri:",
     "pleaseSelectYear": "Please select year",
     "selectYear": "Select year...",
+    "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Switch Calendar Type",
     "switchToGregorian": "Switch to Gregorian Calendar",
     "switchToHijri": "Switch to Hijri Calendar"

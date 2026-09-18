@@ -405,6 +405,7 @@
     "correspondingHijri": "الموافق هجرياً:",
     "pleaseSelectYear": "يرجى اختيار السنة",
     "selectYear": "اختر السنة...",
+    "selectYearPlaceholder": "السنة...",
     "switchCalendar": "تبديل نوع التقويم",
     "switchToGregorian": "التحويل للتقويم الميلادي",
     "switchToHijri": "التحويل للتقويم الهجري"
