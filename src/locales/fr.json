@@ -505,6 +505,8 @@
       "message": "تم إكمال عملية المزامنة بنجاح ولن تحتاج لإعادة التشغيل.",
       "title": "تحديث النظام"
     },
+    "appBrandSubtitle": "منصة إدارة الحلقات القرآنية والتعليمية",
+    "appBrandTitle": "معاينة شعار وهوية المنصة (AppBrand)",
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
     "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
