@@ -263,8 +263,9 @@ export default function CustomDatePicker({
         )}
       </div>
 
+      {/* توزيع شبكي ذكي ومتناسق للأعمدة الثلاثة */}
       {calendarMode === 'gregorian' ? (
-        <div className="grid grid-cols-3 gap-1.5 w-full">
+        <div className="grid grid-cols-[0.8fr_1.4fr_1.2fr] gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={gDay}
@@ -291,8 +292,9 @@ export default function CustomDatePicker({
           />
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-1.5 w-full">
+        <div className="grid grid-cols-[0.8fr_1.4fr_1.2fr] gap-1.5 w-full">
           <CustomSelect
+            options={hDay}
             options={dayOptions}
             value={hDay}
             onChange={(val) => handleHijriChange(val, hMonth, hYear)}
