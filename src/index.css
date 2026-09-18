@@ -6,6 +6,7 @@
 
 @layer base {
   :root {
+    /* Direct Color Scale */
     --bg-dark: #070B11;
     --surface-card: rgba(15, 23, 42, 0.85);
     --surface-input: #0A101D;
@@ -28,12 +29,37 @@
     --text-main: #FFFFFF;
     --text-sub: #94A3B8;
     --text-muted: #475569;
+    
     --border-card: rgba(255, 255, 255, 0.08);
     --border-input: #1B2738;
     --border-hover: #2E3E56;
     
     --shadow-main: 0 20px 50px rgba(0, 0, 0, 0.4);
     --error: #EF4444;
+
+    /* Semantic Color Tokens Layer */
+    --color-bg-page: var(--bg-dark);
+    --color-surface-card: var(--surface-card);
+    --color-surface-input: var(--surface-input);
+    --color-surface-secondary: var(--surface-google);
+
+    --color-action-primary: var(--primary);
+    --color-action-primary-hover: var(--primary-hover);
+    --color-action-primary-glow: var(--primary-glow);
+
+    --color-success: var(--emerald-text);
+    --color-success-bg: var(--emerald-bg);
+    --color-success-border: var(--emerald-border);
+    --color-danger: var(--error);
+    --color-danger-bg: rgba(239, 68, 68, 0.15);
+
+    --color-text-primary: var(--text-main);
+    --color-text-secondary: var(--text-sub);
+    --color-text-muted: var(--text-muted);
+
+    --color-border-card: var(--border-card);
+    --color-border-input: var(--border-input);
+    --color-border-hover: var(--border-hover);
   }
 
   html, body {
@@ -42,8 +68,8 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden !important;
-    background-color: var(--bg-dark);
-    color: var(--text-main);
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
     font-family: 'Cairo', sans-serif;
     direction: rtl;
     -webkit-font-smoothing: antialiased;
@@ -85,10 +111,10 @@
 
 @layer components {
   .card-surface {
-    background-color: var(--surface-card);
+    background-color: var(--color-surface-card);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-card);
+    border: 1px solid var(--color-border-card);
     border-radius: 1.25rem;
     padding: 1.25rem 1rem;
     box-shadow: var(--shadow-main);
@@ -97,9 +123,9 @@
   .app-input {
     width: 100%;
     height: 2.375rem;
-    background-color: var(--surface-input);
-    border: 1px solid var(--border-input);
-    color: var(--text-main);
+    background-color: var(--color-surface-input);
+    border: 1px solid var(--color-border-input);
+    color: var(--color-text-primary);
     border-radius: 0.625rem;
     padding: 0.375rem 0.75rem;
     font-size: 0.8125rem;
@@ -107,20 +133,20 @@
   }
 
   .app-input:hover {
-    border-color: var(--border-hover);
+    border-color: var(--color-border-hover);
   }
 
   .app-input:focus,
   .app-input:focus-within {
     outline: none !important;
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px var(--primary-glow) !important;
+    border-color: var(--color-action-primary) !important;
+    box-shadow: 0 0 0 3px var(--color-action-primary-glow) !important;
   }
 
   .btn-primary {
     width: 100%;
     background: linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%);
-    color: var(--text-main);
+    color: var(--color-text-primary);
     font-weight: 700;
     font-size: 0.875rem;
     padding: 0.625rem 1rem;
@@ -132,19 +158,19 @@
     gap: 0.5rem;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 14px var(--primary-glow);
+    box-shadow: 0 4px 14px var(--color-action-primary-glow);
   }
 
   .btn-primary:hover {
-    box-shadow: 0 6px 20px var(--primary-glow);
+    box-shadow: 0 6px 20px var(--color-action-primary-glow);
     transform: translateY(-1px);
   }
 
   .btn-secondary {
     width: 100%;
-    background-color: var(--surface-card);
-    border: 1px solid var(--border-card);
-    color: var(--text-main);
+    background-color: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
+    color: var(--color-text-primary);
     font-weight: 600;
     font-size: 0.875rem;
     padding: 0.625rem 1rem;
@@ -158,6 +184,6 @@
   }
 
   .btn-secondary:hover {
-    border-color: var(--border-hover);
+    border-color: var(--color-border-hover);
   }
 }
