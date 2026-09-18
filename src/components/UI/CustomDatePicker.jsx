@@ -12,7 +12,6 @@ import {
   toUrNums 
 } from '@/utils/dateUtils';
 
-// دالة تنسيق التاريخ الهجري للعرض باستخدام moment-hijri
 function getHijriDetailsFormatted(date, lang = 'ar') {
   if (!date || isNaN(new Date(date).getTime())) return null;
   try {
@@ -21,6 +20,7 @@ function getHijriDetailsFormatted(date, lang = 'ar') {
     const isRtl = ['ar', 'ur'].includes(cleanLang);
 
     const { day, month, year } = getHijriParts(validDate);
+    if (!year) return null;
 
     const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
     const monthName = HIJRI_MONTHS[currentLangMap][month] || HIJRI_MONTHS.ar[month];
@@ -103,8 +103,8 @@ export default function CustomDatePicker({
 
   const daysInMonth = useMemo(() => {
     if (calendarMode === 'gregorian') {
-      const year = gYear || currentGregorianYear;
-      return new Date(year, gMonth + 1, 0).getDate();
+      const year = Number(gYear) || currentGregorianYear;
+      return new Date(year, Number(gMonth) + 1, 0).getDate();
     }
     return 30;
   }, [calendarMode, gYear, gMonth, currentGregorianYear]);
@@ -166,9 +166,9 @@ export default function CustomDatePicker({
 
     setGDay(numD);
     setGMonth(numM);
-    setGYear(numY);
+    setGYear(y);
 
-    if (!numY || isNaN(numY)) return;
+    if (!y || isNaN(numY) || numY < 1900 || numY > 2100) return;
 
     const maxDays = new Date(numY, numM + 1, 0).getDate();
     const safeD = Math.min(numD, maxDays);
@@ -184,9 +184,9 @@ export default function CustomDatePicker({
 
     setHDay(numD);
     setHMonth(numM);
-    setHYear(numY);
+    setHYear(y);
 
-    if (!numY || isNaN(numY)) return;
+    if (!y || isNaN(numY) || numY < 1000 || numY > 1600) return;
 
     const convertedGregorian = hijriToGregorian(numY, numM, numD);
     if (convertedGregorian) {
@@ -216,7 +216,7 @@ export default function CustomDatePicker({
           </span>
         </button>
 
-        {age !== null && (
+        {age !== null && age >= 0 && (
           <span 
             className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border whitespace-nowrap"
             style={{
@@ -270,7 +270,7 @@ export default function CustomDatePicker({
           <CustomSelect
             options={hMonthOptions}
             value={hMonth}
-            onChange={(val) => handleHijriChange(hDay, hMonth, val)}
+            onChange={(val) => handleHijriChange(hDay, val, hYear)}
             isArabic={isRtl}
             lang={cleanLang}
             t={t}
@@ -300,7 +300,7 @@ export default function CustomDatePicker({
             : t('datePicker.correspondingGregorian', 'الموافق ميلادياً:')}
         </span>
         <span className="font-semibold tracking-wide" style={{ color: primaryColor }}>
-          {mainDate ? (
+          {mainDate && gYear && hYear ? (
             calendarMode === 'gregorian' 
               ? (hijriDetails?.text || '—') 
               : `${mainDate.getFullYear()}/${String(mainDate.getMonth() + 1).padStart(2, '0')}/${String(mainDate.getDate()).padStart(2, '0')} ${isRtl ? 'م' : 'AD'}`
