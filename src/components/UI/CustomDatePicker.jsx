@@ -1,6 +1,6 @@
+/* src/components/UI/CustomDatePicker.jsx */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Repeat } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import CustomSelect from './CustomSelect';
 import C from '@/theme/colors';
 
@@ -10,7 +10,6 @@ const HIJRI_MONTHS_AR = [
   "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
 ];
 
-// دالة تحويل هجري إلى ميلادي معتمدة على التقويم الرسمي للمتصفح
 function hijriToGregorian(hYear, hMonthIdx, hDay) {
   if (!hYear || isNaN(hYear)) return null;
   try {
@@ -54,7 +53,7 @@ function getHijriDetails(date, lang = 'ar') {
 
     const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
     const monthNum = parseInt(parts.find(p => p.type === 'month')?.value || '1', 10);
-    const yearNum = parseInt(parts.find(p => p.type === 'year')?.value || '1447', 10);
+    const yearNum = parseInt(parts.find(p => p.type === 'year')?.value || '1448', 10);
 
     const monthIdx = Math.max(0, Math.min(11, monthNum - 1));
 
@@ -63,10 +62,10 @@ function getHijriDetails(date, lang = 'ar') {
       const hijriMonthFormat = new Intl.DateTimeFormat(`${lang}-u-ca-islamic-umalqura`, { month: 'long' });
       monthName = hijriMonthFormat.format(validDate);
     } catch (err) {
-      // الرجوع إلى القائمة العربية في حال عدم دعم المتصفح
+      // Fallback
     }
 
-    const isRtl = ['ar', 'ur'].includes(lang.toLowerCase().split('-')[0]);
+    const isRtl = ['ar', 'ur'].includes(lang);
     const suffix = isRtl ? 'هـ' : 'AH';
 
     return {
@@ -96,14 +95,14 @@ export default function CustomDatePicker({
   selectedDate, 
   startDate, 
   onChange, 
-  isArabic, 
+  isArabic = true, 
+  lang = 'ar',
+  t = (key, fallback) => fallback,
   isRange = false,
   showAge = true
 }) {
-  const { t, i18n } = useTranslation();
-  const currentLang = i18n.language || 'ar';
-  const cleanLang = currentLang.toLowerCase().split('-')[0];
-  const isRtl = isArabic !== undefined ? isArabic : (i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang));
+  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
   const [calendarMode, setCalendarMode] = useState('gregorian');
 
@@ -121,13 +120,10 @@ export default function CustomDatePicker({
   const [hMonth, setHMonth] = useState(hijriDetails ? hijriDetails.month : 0);
   const [hYear, setHYear] = useState(hijriDetails ? hijriDetails.year : '');
 
-  // استخراج ألوان الثيم الديناميكية من C
-  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8';
-  const surfaceBg = C.dark?.surface || '#1E293B';
-  const mainBg = C.dark?.bg || '#0F172A';
-  const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
-  const titleColor = C.text?.title || '#F8FAFC';
-  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
+  const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#38BDF8';
+  const surfaceBg = C?.dark?.surface || '#1E293B';
+  const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
+  const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
 
   useEffect(() => {
     if (mainDate && calendarMode === 'gregorian') {
@@ -147,17 +143,25 @@ export default function CustomDatePicker({
   const currentGregorianYear = new Date().getFullYear();
   const currentHijriYear = getHijriDetails(new Date(), cleanLang)?.year || 1448;
 
+  const daysInMonth = useMemo(() => {
+    if (calendarMode === 'gregorian') {
+      const year = gYear || currentGregorianYear;
+      return new Date(year, gMonth + 1, 0).getDate();
+    }
+    return 30;
+  }, [calendarMode, gYear, gMonth, currentGregorianYear]);
+
   const dayOptions = useMemo(() => 
-    Array.from({ length: 30 }, (_, i) => ({ label: String(i + 1), value: i + 1 })),
-  []);
+    Array.from({ length: daysInMonth }, (_, i) => ({ label: String(i + 1), value: i + 1 })),
+  [daysInMonth]);
 
   const gMonthOptions = useMemo(() => {
     return Array.from({ length: 12 }, (_, idx) => {
       const d = new Date(2026, idx, 1);
-      const label = new Intl.DateTimeFormat(currentLang, { month: 'long' }).format(d);
+      const label = new Intl.DateTimeFormat(cleanLang, { month: 'long' }).format(d);
       return { label, value: idx };
     });
-  }, [currentLang]);
+  }, [cleanLang]);
 
   const gYearOptions = useMemo(() => [
     { label: t('datePicker.selectYear', 'اختر السنة...'), value: '' },
@@ -171,13 +175,13 @@ export default function CustomDatePicker({
     return HIJRI_MONTHS_AR.map((m, idx) => {
       try {
         const dummyDate = hijriToGregorian(1448, idx, 15) || new Date();
-        const label = new Intl.DateTimeFormat(`${currentLang}-u-ca-islamic-umalqura`, { month: 'long' }).format(dummyDate);
+        const label = new Intl.DateTimeFormat(`${cleanLang}-u-ca-islamic-umalqura`, { month: 'long' }).format(dummyDate);
         return { label, value: idx };
       } catch (e) {
         return { label: m, value: idx };
       }
     });
-  }, [currentLang]);
+  }, [cleanLang]);
 
   const hYearOptions = useMemo(() => [
     { label: t('datePicker.selectYear', 'اختر السنة...'), value: '' },
@@ -254,7 +258,7 @@ export default function CustomDatePicker({
               borderColor: `${primaryColor}30`
             }}
           >
-            {t('datePicker.ageFormat', 'العمر: {{age}} سنة', { age })}
+            {t('datePicker.ageFormat', `العمر: ${age} سنة`)}
           </span>
         )}
       </div>
