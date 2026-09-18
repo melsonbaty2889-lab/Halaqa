@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter 
+  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles 
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
@@ -11,6 +11,7 @@ import CountrySelect from '@/components/UI/CountrySelect';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import EmptyState from '@/components/UI/EmptyState';
 import CustomSelect from '@/components/UI/CustomSelect';
+import AppBrand from '@/components/UI/AppBrand';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -20,13 +21,8 @@ export default function DevPlayground({
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
-  // حالة القائمة المختارة لتجربة CustomSelect
   const [selectedRole, setSelectedRole] = useState('teacher');
-
-  // حالة الدولة المختارة لتجربة CountrySelect
   const [selectedCountry, setSelectedCountry] = useState('SA');
-
-  // حالة التاريخ المختار لتجربة CustomDatePicker
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [modalConfig, setModalConfig] = useState({
@@ -96,7 +92,20 @@ export default function DevPlayground({
           </p>
         </div>
 
-        {/* تجربة القائمة المخصصة CustomSelect */}
+        {/* 1. تجربة هويات وشعار التطبيق (AppBrand) */}
+        <section className={`${UI.card} space-y-4 text-center`}>
+          <h3 className="text-sm font-bold flex items-center justify-center gap-2 text-semantic-actionPrimary">
+            <Sparkles size={18} /> {t('devPlayground.appBrandTitle', 'معاينة شعار وهوية المنصة (AppBrand)')}
+          </h3>
+          
+          <div className="p-4 rounded-xl bg-semantic-surfaceInput/50 border border-semantic-borderCard">
+            <AppBrand 
+              subtitle={t('devPlayground.appBrandSubtitle', 'منصة إدارة الحلقات القرآنية والتعليمية')}
+            />
+          </div>
+        </section>
+
+        {/* 2. تجربة القائمة المخصصة CustomSelect */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
@@ -119,7 +128,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* تجربة مكون الحالة الفارغة (EmptyState) */}
+        {/* 3. تجربة مكون الحالة الفارغة (EmptyState) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
@@ -138,7 +147,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* تجربة مكون اختيار التاريخ */}
+        {/* 4. تجربة مكون اختيار التاريخ */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -162,7 +171,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* تجربة مكون اختيار الدولة */}
+        {/* 5. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -185,14 +194,13 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* حالات النوافذ المنبثقة */}
+        {/* 6. حالات النوافذ المنبثقة */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
           </h3>
           
           <div className="space-y-3">
-            {/* خطر عادي */}
             <button 
               type="button"
               onClick={() => openTestModal({
@@ -210,7 +218,6 @@ export default function DevPlayground({
               </span>
             </button>
 
-            {/* خطر شديد - تأكيد بالكلمة */}
             <button 
               type="button"
               onClick={() => openTestModal({
@@ -229,7 +236,6 @@ export default function DevPlayground({
               </span>
             </button>
 
-            {/* تحذير / أرشفة */}
             <button 
               type="button"
               onClick={() => openTestModal({
@@ -247,7 +253,6 @@ export default function DevPlayground({
               </span>
             </button>
 
-            {/* إدخال سبب / Prompt */}
             <button 
               type="button"
               onClick={() => openTestModal({
@@ -266,7 +271,6 @@ export default function DevPlayground({
               </span>
             </button>
 
-            {/* استعادة / نجاح */}
             <button 
               type="button"
               onClick={() => openTestModal({
@@ -284,7 +288,6 @@ export default function DevPlayground({
               </span>
             </button>
 
-            {/* تنبيه بسيط */}
             <button 
               type="button"
               onClick={() => openTestModal({
