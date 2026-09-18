@@ -9,18 +9,11 @@ export const HIJRI_MONTHS = {
   id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
 };
 
-// جدول التصحيحات التاريخية المباشرة للتواريخ الخاصة
-export const HIJRI_OFFSETS = {
-  '1940-11-29': { day: 30, month: 9, year: 1359 }, // 30 شوال 1359 هـ
-  '1972-11-27': { day: 21, month: 9, year: 1392 }, // 21 شوال 1392 هـ
-  '1999-07-11': { day: 27, month: 2, year: 1420 }, // 27 ربيع الأول 1420 هـ
-};
-
 export const toEngNums = (str) => {
   if (!str) return '';
   return String(str)
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    .replace(/[۰-۹]/g, (d) => '۰讠۲۳۴۵۶۷۸۹'.indexOf(d));
 };
 
 export const toArNums = (str) => {
@@ -51,19 +44,13 @@ export const setSavedHijriOffset = (offset) => {
 };
 
 /**
- * حساب أجزاء التاريخ الهجري بدقة مع دعم جدول التصحيح المباشر
+ * حساب أجزاء التاريخ الهجري ديناميكياً لجميع التواريخ مع دعم معامل الإزاحة العام (Offset)
  */
 export const getHijriParts = (dateObj = new Date(), offset = getSavedHijriOffset()) => {
   try {
     const date = dateObj instanceof Date ? new Date(dateObj) : new Date();
     
-    // 1. فحص جدول التصحيح المباشر أولاً
-    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    if (HIJRI_OFFSETS[dateKey]) {
-      return HIJRI_OFFSETS[dateKey];
-    }
-
-    // 2. معالجة الإزاحة العادية إذا تم ضبطها
+    // تطبيق إزاحة الأيام إذا كانت محددة
     if (offset !== 0) {
       date.setDate(date.getDate() + offset);
     }
