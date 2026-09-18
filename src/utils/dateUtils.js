@@ -11,7 +11,7 @@ export const HIJRI_MONTHS = {
 };
 
 export const toEngNums = (str) => {
-  if (!str) return '';
+  if (!str && str !== 0) return '';
   return String(str)
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
     .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
@@ -64,21 +64,24 @@ export const getHijriParts = (dateObj) => {
 };
 
 export const hijriToGregorian = (hYear, hMonthIdx, hDay) => {
-  const y = Number(hYear);
-  const mIdx = Number(hMonthIdx);
-  const d = Number(hDay) || 1;
+  const y = parseInt(hYear, 10);
+  const mIdx = parseInt(hMonthIdx, 10);
+  const d = parseInt(hDay, 10) || 1;
 
   if (!y || isNaN(y) || y < 1000 || y > 1600) return null;
   if (isNaN(mIdx) || mIdx < 0 || mIdx > 11) return null;
 
   try {
-    const m = moment();
-    m.iYear(y);
-    m.iMonth(mIdx);
-    m.iDate(Math.min(Math.max(d, 1), 30));
-    
+    const monthNum = String(mIdx + 1).padStart(2, '0');
+    const dayNum = String(Math.min(Math.max(d, 1), 30)).padStart(2, '0');
+
+    const m = moment(`${y}/${monthNum}/${dayNum}`, 'iYYYY/iMM/iDD');
+
+    if (!m.isValid()) return null;
+
     const resDate = m.toDate();
     if (isNaN(resDate.getTime())) return null;
+
     return resDate;
   } catch (e) {
     return null;
