@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare, Globe, Calendar 
+  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus 
 } from 'lucide-react';
 
 import C from '@/theme/colors';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import CountrySelect from '@/components/UI/CountrySelect';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
+import EmptyState from '@/components/UI/EmptyState';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -88,6 +89,31 @@ export default function DevPlayground({
           </p>
         </div>
 
+        {/* تجربة مكون الحالة الفارغة (EmptyState) */}
+        <section 
+          className="p-5 rounded-2xl border space-y-3 text-start"
+          style={{ 
+            backgroundColor: C?.dark?.surface,
+            borderColor: C?.dark?.borderInput || C?.inputs?.border
+          }}
+        >
+          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: C?.amber?.DEFAULT || C?.primary?.DEFAULT }}>
+            <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
+          </h3>
+          
+          <div className="pt-2">
+            <EmptyState 
+              icon={FolderSearch}
+              title={t('devPlayground.emptyTitle', 'لا توجد حلقات دراسية حالياً')}
+              description={t('devPlayground.emptyDesc', 'لم يتم العثور على أي حلقات مسجلة في هذا القسم. يمكنك البدء بإضافة حلقتك الأولى الآن.')}
+              actionText={t('devPlayground.emptyAction', 'إضافة حلقتك الأولى')}
+              actionIcon={Plus}
+              onAction={() => alert(t('devPlayground.emptyAlert', 'تم النقر على زر الإجراء بنجاح!'))}
+              isRtl={isRtl}
+            />
+          </div>
+        </section>
+
         {/* تجربة مكون اختيار التاريخ */}
         <section 
           className="p-5 rounded-2xl border space-y-3 text-start"
@@ -102,7 +128,7 @@ export default function DevPlayground({
           
           <div className="space-y-2">
             <label className="text-xs block" style={{ color: C?.text?.sub }}>
-              {t('devPlayground.selectDateLabel', 'اختر التاريخ الحجري / الميلادي:')}
+              {t('devPlayground.selectDateLabel', 'اختر التاريخ الهجري / الميلادي:')}
             </label>
             <CustomDatePicker
               selectedDate={selectedDate}
