@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles 
+  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound 
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
@@ -12,6 +12,7 @@ import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import EmptyState from '@/components/UI/EmptyState';
 import CustomSelect from '@/components/UI/CustomSelect';
 import AppBrand from '@/components/UI/AppBrand';
+import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -24,6 +25,9 @@ export default function DevPlayground({
   const [selectedRole, setSelectedRole] = useState('teacher');
   const [selectedCountry, setSelectedCountry] = useState('SA');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  
+  // حالة اختبار التحميل لأزرار AuthButtons
+  const [btnLoading, setBtnLoading] = useState(false);
 
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -68,6 +72,14 @@ export default function DevPlayground({
     }
   };
 
+  const handleTestAuthClick = () => {
+    setBtnLoading(true);
+    setTimeout(() => {
+      setBtnLoading(false);
+      alert(t('devPlayground.authSuccess', 'تم تنفيذ الإجراء بنجاح!'));
+    }, 1500);
+  };
+
   const roleOptions = [
     { value: 'admin', label: t('roles.admin', 'مدير النظام') },
     { value: 'teacher', label: t('roles.teacher', 'معلم الحلقة') },
@@ -107,7 +119,39 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 2. تجربة القائمة المخصصة CustomSelect */}
+        {/* 2. تجربة أزرار تسجيل الدخول والدخول السريع (AuthButtons) */}
+        <section className={`${UI.card} space-y-4 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <KeyRound size={18} /> {t('devPlayground.authButtonsTitle', 'تجربة أزرار الهوية وتأكيد العمليات (AuthButtons)')}
+          </h3>
+          
+          <div className="space-y-3 pt-1">
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">
+                {t('devPlayground.primaryButtonLabel', 'الزر الرئيسي (PrimaryButton):')}
+              </label>
+              <PrimaryButton 
+                loading={btnLoading} 
+                onClick={handleTestAuthClick}
+              >
+                {t('auth.login', 'تسجيل الدخول')}
+              </PrimaryButton>
+            </div>
+
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">
+                {t('devPlayground.googleButtonLabel', 'زر دخول Google الموحد (GoogleButton):')}
+              </label>
+              <GoogleButton 
+                loading={btnLoading} 
+                onClick={handleTestAuthClick}
+                t={t}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* 3. تجربة القائمة المخصصة CustomSelect */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
@@ -130,7 +174,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 3. تجربة مكون الحالة الفارغة (EmptyState) */}
+        {/* 4. تجربة مكون الحالة الفارغة (EmptyState) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
@@ -149,7 +193,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 4. تجربة مكون اختيار التاريخ */}
+        {/* 5. تجربة مكون اختيار التاريخ */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -173,7 +217,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 5. تجربة مكون اختيار الدولة */}
+        {/* 6. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -196,7 +240,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 6. حالات النوافذ المنبثقة */}
+        {/* 7. حالات النوافذ المنبثقة */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
