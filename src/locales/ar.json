@@ -430,6 +430,8 @@
     },
     "appBrandSubtitle": "منصة إدارة الحلقات القرآنية والتعليمية",
     "appBrandTitle": "معاينة شعار وهوية المنصة (AppBrand)",
+    "authButtonsTitle": "تجربة أزرار الهوية وتأكيد العمليات (AuthButtons)",
+    "authSuccess": "تم تنفيذ الإجراء بنجاح!",
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
     "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
@@ -444,6 +446,7 @@
     "emptyDesc": "لم يتم العثور على أي حلقات مسجلة في هذا القسم. يمكنك البدء بإضافة حلقتك الأولى الآن.",
     "emptyStateTitle": "تجربة الحالة الفارغة (EmptyState)",
     "emptyTitle": "لا توجد حلقات دراسية حالياً",
+    "googleButtonLabel": "زر دخول Google الموحد (GoogleButton):",
     "infoBtn": "نافذة استعادة / نجاح (Info)",
     "infoModal": {
       "confirm": "استعادة الآن",
@@ -451,6 +454,7 @@
       "title": "استعادة البيانات"
     },
     "modalVariantsTitle": "حالات النوافذ المنبثقة (ConfirmModal Variants)",
+    "primaryButtonLabel": "الزر الرئيسي (PrimaryButton):",
     "promptBtn": "نافذة إدخال نصي (Prompt Input)",
     "promptModal": {
       "confirm": "إرسال وثبيت الإلغاء",
