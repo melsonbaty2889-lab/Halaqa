@@ -164,7 +164,7 @@ export default function CustomDatePicker({
   }, [cleanLang]);
 
   const gYearOptions = useMemo(() => [
-    { label: t('datePicker.selectYear', 'اختر السنة...'), value: '' },
+    { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
     ...Array.from({ length: 100 }, (_, i) => {
       const y = currentGregorianYear - i;
       return { label: String(y), value: y };
@@ -184,7 +184,7 @@ export default function CustomDatePicker({
   }, [cleanLang]);
 
   const hYearOptions = useMemo(() => [
-    { label: t('datePicker.selectYear', 'اختر السنة...'), value: '' },
+    { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
     ...Array.from({ length: 100 }, (_, i) => {
       const y = currentHijriYear - i;
       const suffix = isRtl ? 'هـ' : 'AH';
@@ -264,45 +264,57 @@ export default function CustomDatePicker({
       </div>
 
       {calendarMode === 'gregorian' ? (
-        <div className="grid grid-cols-[1fr_1.2fr_1.1fr] gap-1.5 w-full">
+        <div className="grid grid-cols-3 gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={gDay}
             onChange={(val) => handleGregorianChange(val, gMonth, gYear)}
-            className="text-[11px]"
+            isArabic={isRtl}
+            lang={cleanLang}
+            t={t}
           />
           <CustomSelect
             options={gMonthOptions}
             value={gMonth}
             onChange={(val) => handleGregorianChange(gDay, val, gYear)}
-            className="text-[11px]"
+            isArabic={isRtl}
+            lang={cleanLang}
+            t={t}
           />
           <CustomSelect
             options={gYearOptions}
             value={gYear}
             onChange={(val) => handleGregorianChange(gDay, gMonth, val)}
-            className="text-[11px]"
+            isArabic={isRtl}
+            lang={cleanLang}
+            t={t}
           />
         </div>
       ) : (
-        <div className="grid grid-cols-[1fr_1.2fr_1.1fr] gap-1.5 w-full">
+        <div className="grid grid-cols-3 gap-1.5 w-full">
           <CustomSelect
             options={dayOptions}
             value={hDay}
             onChange={(val) => handleHijriChange(val, hMonth, hYear)}
-            className="text-[11px]"
+            isArabic={isRtl}
+            lang={cleanLang}
+            t={t}
           />
           <CustomSelect
             options={hMonthOptions}
             value={hMonth}
             onChange={(val) => handleHijriChange(hDay, val, hYear)}
-            className="text-[11px]"
+            isArabic={isRtl}
+            lang={cleanLang}
+            t={t}
           />
           <CustomSelect
             options={hYearOptions}
             value={hYear}
             onChange={(val) => handleHijriChange(hDay, hMonth, val)}
-            className="text-[11px]"
+            isArabic={isRtl}
+            lang={cleanLang}
+            t={t}
           />
         </div>
       )}
