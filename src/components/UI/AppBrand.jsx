@@ -36,7 +36,7 @@ export default function AppBrand({
           }}
         />
         <div className="relative z-10 drop-shadow-[0_0_15px_var(--emerald-logo-glow)]">
-          <SmartHalaqaProLogo size={64} />
+          <SmartHalaqaProLogo size={76} />
         </div>
       </div>
 
