@@ -52,9 +52,9 @@ export default function LanguageSwitcher() {
         <ChevronDown className={`w-3 h-3 text-semantic-textSecondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* القائمة المنسدلة: استخدام end-0 لفتح القائمة للداخل دائماً */}
+      {/* القائمة المنسدلة المُحسّنة بحجم ملموم وأنيق */}
       {isOpen && (
-        <div className="absolute top-full mt-1.5 end-0 w-44 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-xl">
+        <div className="absolute top-full mt-1.5 end-0 w-36 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-xl py-1 z-50 overflow-hidden backdrop-blur-xl">
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
             return (
@@ -63,14 +63,14 @@ export default function LanguageSwitcher() {
                 type="button"
                 onClick={() => handleLanguageChange(lang)}
                 dir={lang.dir}
-                className={`w-full px-3.5 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                className={`w-full px-2.5 py-1.5 text-[11px] flex items-center justify-between transition-colors cursor-pointer ${
                   isSelected
                     ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold'
                     : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
                 }`}
               >
                 <span className="truncate">{lang.name}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />}
+                {isSelected && <Check className="w-3 h-3 text-semantic-actionPrimary shrink-0" />}
               </button>
             );
           })}
