@@ -453,6 +453,7 @@
       "message": "هل ترغب في استعادة البيانات المؤرشفة وإعادتها للعمل؟",
       "title": "استعادة البيانات"
     },
+    "languageSwitcherTitle": "تجربة محول اللغة (LanguageSwitcher)",
     "modalVariantsTitle": "حالات النوافذ المنبثقة (ConfirmModal Variants)",
     "primaryButtonLabel": "الزر الرئيسي (PrimaryButton):",
     "promptBtn": "نافذة إدخال نصي (Prompt Input)",
@@ -475,6 +476,7 @@
     "selectedCode": "الكود المختار حالياً:",
     "selectedDate": "التاريخ المختار حالياً:",
     "selectedRole": "الدور المختار حالياً:",
+    "selectLanguageLabel": "اختر لغة الواجهة:",
     "selectRoleLabel": "اختر الدور الوظيفي:",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
