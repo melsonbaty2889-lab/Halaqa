@@ -480,6 +480,7 @@
     "welcome": "Selamat datang,"
   },
   "datePicker": {
+    "age": "العمر:",
     "ageFormat": "Usia: {{age}} tahun",
     "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "Sesuai Masehi:",
@@ -488,6 +489,7 @@
     "selectDayPlaceholder": "اختر...",
     "selectYear": "Pilih tahun...",
     "selectYearPlaceholder": "السنة...",
+    "sightAdjustment": "تعديل الرؤية:",
     "switchCalendar": "Beralih Jenis Kalender",
     "switchToGregorian": "Beralih ke Kalender Masehi",
     "switchToHijri": "Beralih ke Kalender Hijriah",

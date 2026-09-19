@@ -480,6 +480,7 @@
     "welcome": "Hoş geldiniz,"
   },
   "datePicker": {
+    "age": "العمر:",
     "ageFormat": "Yaş: {{age}} yaşında",
     "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "Miladi Karşılığı:",
@@ -488,6 +489,7 @@
     "selectDayPlaceholder": "اختر...",
     "selectYear": "Yıl seçin...",
     "selectYearPlaceholder": "السنة...",
+    "sightAdjustment": "تعديل الرؤية:",
     "switchCalendar": "Takvim Türünü Değiştir",
     "switchToGregorian": "Miladi Takvime Geç",
     "switchToHijri": "Hicri Takvime Geç",

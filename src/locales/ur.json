@@ -480,6 +480,7 @@
     "welcome": "خوش آمدید،"
   },
   "datePicker": {
+    "age": "العمر:",
     "ageFormat": "عمر: {{age}} سال",
     "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "مطابق عیسوی:",
@@ -488,6 +489,7 @@
     "selectDayPlaceholder": "اختر...",
     "selectYear": "سال منتخب کریں...",
     "selectYearPlaceholder": "السنة...",
+    "sightAdjustment": "تعديل الرؤية:",
     "switchCalendar": "تقویم کی قسم تبدیل کریں",
     "switchToGregorian": "عیسوی تقویم پر منتقل ہوں",
     "switchToHijri": "ہجری تقویم پر منتقل ہوں",

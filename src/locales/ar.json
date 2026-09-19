@@ -402,6 +402,7 @@
     "welcome": "أهلاً بك،"
   },
   "datePicker": {
+    "age": "العمر:",
     "ageFormat": "العمر: {{age}} سنة",
     "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "الموافق ميلادياً:",
@@ -410,6 +411,7 @@
     "selectDayPlaceholder": "اختر...",
     "selectYear": "اختر السنة...",
     "selectYearPlaceholder": "السنة...",
+    "sightAdjustment": "تعديل الرؤية:",
     "switchCalendar": "تبديل نوع التقويم",
     "switchToGregorian": "التحويل للتقويم الميلادي",
     "switchToHijri": "التحويل للتقويم الهجري",
