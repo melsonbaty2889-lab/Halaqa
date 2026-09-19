@@ -28,19 +28,19 @@ export default function DevPlayground({
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
+  // الحالات التفاعلية للنماذج والقوائم
   const [selectedRole, setSelectedRole] = useState('teacher');
   const [selectedCountry, setSelectedCountry] = useState('SA');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [reportDate, setReportDate] = useState('2026-09-19');
-  
-  // حالة اختبار محول التاريخ
   const [converterDate, setConverterDate] = useState(new Date());
 
-  // حالة اختبار التحميل لأزرار AuthButtons
+  // حالات التحميل لأزرار الإجراءات والدخول
   const [btnLoading, setBtnLoading] = useState(false);
-
-  // حالة اختبار التحميل لأزرار LoadingButton
   const [loadingBtnState, setLoadingBtnState] = useState(false);
+
+  // حالات النوافذ المنبثقة
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  const [selectedModalValue, setSelectedModalValue] = useState('student_1');
 
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -54,6 +54,7 @@ export default function DevPlayground({
     isLoading: false
   });
 
+  // معالجات النوافذ المنبثقة الإرشاديّة والتأكيدية
   const openTestModal = (config) => {
     setModalConfig({
       isOpen: true,
@@ -70,7 +71,6 @@ export default function DevPlayground({
 
   const handleModalConfirm = (inputValue) => {
     setModalConfig(prev => ({ ...prev, isLoading: true }));
-    
     setTimeout(() => {
       setModalConfig(prev => ({ ...prev, isOpen: false, isLoading: false }));
       if (inputValue) {
@@ -85,6 +85,7 @@ export default function DevPlayground({
     }
   };
 
+  // معالجات اختبار التحميل للزر
   const handleTestAuthClick = () => {
     setBtnLoading(true);
     setTimeout(() => {
@@ -100,6 +101,7 @@ export default function DevPlayground({
     }, 1500);
   };
 
+  // بيانات الأدوار والنوافذ المنسدلة
   const roleOptions = [
     { value: 'admin', label: t('roles.admin', 'مدير النظام') },
     { value: 'teacher', label: t('roles.teacher', 'معلم الحلقة') },
@@ -107,7 +109,16 @@ export default function DevPlayground({
     { value: 'parent', label: t('roles.parent', 'ولي أمر') },
   ];
 
-  // دالة تحويل وتحضير بيانات التاريخ للمحول
+  const modalOptions = [
+    { value: 'student_1', label: 'محمد أحمد علي', subLabel: 'حلقة الإيمان - الجزء 30' },
+    { value: 'student_2', label: 'عبدالرحمن خالد', subLabel: 'حلقة النور - الجزء 29' },
+    { value: 'student_3', label: 'عمر فاروق', subLabel: 'حلقة الفرقان - الجزء 1' },
+    { value: 'student_4', label: 'يوسف إبراهيم', subLabel: 'حلقة الترتيل - الجزء 15' },
+    { value: 'student_5', label: 'حمزة محمود', subLabel: 'حلقة الحفاظ - الجزء 5' },
+    { value: 'student_6', label: 'بلال عثمان', subLabel: 'حلقة التقوى - الجزء 10' },
+  ];
+
+  // عمليات حسابية مشتقة من التاريخ للمحول
   const converterDateObj = converterDate instanceof Date ? converterDate : new Date(converterDate);
   const formattedGregorian = converterDateObj.toLocaleDateString(cleanLang, {
     weekday: 'long',
@@ -118,19 +129,6 @@ export default function DevPlayground({
   const formattedHijri = formatHijriDate(converterDateObj, cleanLang, 0);
   const computedAge = calculateAge(converterDateObj);
 
-  // حالة تجربة النافذة المنسدلة SelectModal
-  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
-  const [selectedModalValue, setSelectedModalValue] = useState('student_1');
-
-  const modalOptions = [
-    { value: 'student_1', label: 'محمد أحمد علي', subLabel: 'حلقة الإيمان - الجزء 30' },
-    { value: 'student_2', label: 'عبدالرحمن خالد', subLabel: 'حلقة النور - الجزء 29' },
-    { value: 'student_3', label: 'عمر فاروق', subLabel: 'حلقة الفرقان - الجزء 1' },
-    { value: 'student_4', label: 'يوسف إبراهيم', subLabel: 'حلقة الترتيل - الجزء 15' },
-    { value: 'student_5', label: 'حمزة محمود', subLabel: 'حلقة الحفاظ - الجزء 5' },
-    { value: 'student_6', label: 'بلال عثمان', subLabel: 'حلقة التقوى - الجزء 10' },
-  ];
-  
   return (
     <div 
       className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
@@ -139,16 +137,16 @@ export default function DevPlayground({
       <div className="max-w-xl mx-auto space-y-6">
         
         {/* رأس الصفحة */}
-        <div className="text-center space-y-2">
+        <header className="text-center space-y-2">
           <h2 className={`${UI.title} text-lg sm:text-xl font-bold`}>
             🎨 {t('devPlayground.title', 'مختبر العناصر الشامل')} <span className="inline-block text-xs font-normal text-semantic-textSecondary">(Dev Playground)</span>
           </h2>
           <p className={UI.subtitle}>
             {t('devPlayground.subtitle', 'معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي')}
           </p>
-        </div>
+        </header>
 
-        {/* 1. تجربة هويات وشعار التطبيق (AppBrand) */}
+        {/* 1. شعار المنصة الهوية (AppBrand) */}
         <section className={`${UI.card} space-y-4 text-center`}>
           <h3 className="text-sm font-bold flex items-center justify-center gap-2 text-semantic-actionPrimary">
             <Sparkles size={18} /> {t('devPlayground.appBrandTitle', 'معاينة شعار وهوية المنصة (AppBrand)')}
@@ -163,7 +161,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 2. تجربة أزرار تسجيل الدخول والدخول السريع (AuthButtons) */}
+        {/* 2. أزرار الهوية والدخول (AuthButtons) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <KeyRound size={18} /> {t('devPlayground.authButtonsTitle', 'تجربة أزرار الهوية وتأكيد العمليات (AuthButtons)')}
@@ -195,7 +193,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 3. تجربة أزرار التحميل (LoadingButton) */}
+        {/* 3. أزرار التحميل والتفاعلات (LoadingButton) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
@@ -203,7 +201,7 @@ export default function DevPlayground({
           
           <div className="space-y-3 pt-1">
             <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">
                 Primary Variant:
               </label>
               <LoadingButton 
@@ -217,7 +215,7 @@ export default function DevPlayground({
             </div>
 
             <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">
                 Emerald Variant:
               </label>
               <LoadingButton 
@@ -231,7 +229,7 @@ export default function DevPlayground({
             </div>
 
             <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">
                 Danger Variant:
               </label>
               <LoadingButton 
@@ -245,7 +243,7 @@ export default function DevPlayground({
             </div>
 
             <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">
                 Outline Variant:
               </label>
               <LoadingButton 
@@ -260,7 +258,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 4. تجربة القائمة المخصصة CustomSelect */}
+        {/* 4. القائمة المخصصة (CustomSelect) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
@@ -283,7 +281,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 5. تجربة مكون الحالة الفارغة (EmptyState) */}
+        {/* 5. الحالة الفارغة (EmptyState) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
@@ -302,7 +300,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 6. تجربة مكون اختيار التاريخ (CustomDatePicker Standard) */}
+        {/* 6. مكون اختيار التاريخ القياسي (CustomDatePicker) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -323,7 +321,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 7. تجربة محول التاريخ التفاعلي (Date Converter Card) */}
+        {/* 7. محول التاريخ التفاعلي (Date Converter) */}
         <section className={`${UI.card} space-y-4 text-start border-semantic-actionPrimary/30 bg-semantic-surfaceInput/20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <RefreshCw size={18} /> {t('devPlayground.dateConverterTitle', 'معاينة محول التاريخ الهجري والميلادي (Date Converter)')}
@@ -340,7 +338,6 @@ export default function DevPlayground({
               showAge={false}
             />
 
-            {/* بطاقة عرض نتائج التحويل */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
               <div className="p-3 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput space-y-1">
                 <span className="text-[10px] font-bold text-semantic-textSecondary uppercase tracking-wider block">
@@ -361,7 +358,6 @@ export default function DevPlayground({
               </div>
             </div>
 
-            {/* عرض العمر المحسوب في المحول */}
             {computedAge !== null && (
               <div className="p-2.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceCard flex justify-between items-center">
                 <span className="text-xs font-medium text-semantic-textSecondary">
@@ -375,7 +371,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 9. تجربة مكون اختيار الدولة */}
+        {/* 8. اختيار الدولة (CountrySelect) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -398,7 +394,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 10. تجربة محول اللغة (LanguageSwitcher) */}
+        {/* 9. محول اللغة (LanguageSwitcher) */}
         <section className={`${UI.card} space-y-3 text-start relative z-20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
@@ -412,7 +408,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 11. حالات النوافذ المنبثقة */}
+        {/* 10. حالات النوافذ المنبثقة التنبيهية والتأكيدية (ConfirmModal) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
@@ -524,7 +520,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 12. تجربة النافذة المنسدلة الاختيارية (SelectModal) */}
+        {/* 11. النافذة المنسدلة الاختيارية (SelectModal) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.selectModalTitle', 'تجربة النافذة المنسدلة (SelectModal)')}
@@ -548,13 +544,12 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 13. تجربة الهيكل العظمي (Skeleton Loading) */}
+        {/* 12. الهيكل العظمي والتحميل (Skeleton) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Layout size={18} /> {t('devPlayground.skeletonTitle', 'تجربة تحميل الهيكل العظمي (Skeleton)')}
           </h3>
 
-          {/* عناصر مفردة */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-semantic-textSecondary">
               {t('devPlayground.skeletonBasic', 'عناصر تحميل منفصلة:')}
@@ -568,7 +563,6 @@ export default function DevPlayground({
             </div>
           </div>
 
-          {/* بطاقة إحصائية */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-semantic-textSecondary">
               {t('devPlayground.skeletonCard', 'بطاقة إحصائية (CardSkeleton):')}
@@ -576,7 +570,6 @@ export default function DevPlayground({
             <CardSkeleton />
           </div>
 
-          {/* هيكل كامل للصفحة */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-semantic-textSecondary">
               {t('devPlayground.skeletonPage', 'هيكل كامل للصفحة (PageSkeleton):')}
@@ -587,6 +580,7 @@ export default function DevPlayground({
 
       </div>
 
+      {/* المكونات المنبثقة */}
       <SelectModal
         isOpen={isSelectModalOpen}
         onClose={() => setIsSelectModalOpen(false)}
